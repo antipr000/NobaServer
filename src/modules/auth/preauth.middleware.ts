@@ -1,12 +1,15 @@
-import {  HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
+import {  Inject, Injectable, NestMiddleware } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
-import { AppEnvironment } from 'src/config/ConfigurationUtils';
 import { AuthenticatedUser } from './domain/AuthenticatedUser';
-import * as fs from 'fs-extra';
 import { AuthService } from './auth.service';
+import { AppEnvironment } from '../../config/ConfigurationUtils';
 
 
+const PUBLIC_URL_REGEXES = [
+    /\/auth\/otp/,
+    /\/auth\/otp\/verify/,
+]
 
 
 
@@ -14,32 +17,38 @@ import { AuthService } from './auth.service';
 @Injectable()
 export class PreauthMiddleware implements NestMiddleware {
 
+    @Inject()
+    private readonly configService: ConfigService;
+    
 
-    constructor(private readonly configService: ConfigService, private readonly authService: AuthService) {
-        
+    private readonly authService: AuthService;
+    
+    constructor() {
+        this.authService = new AuthService(); //cannot inject directly as belongs to same module as this middleware
     }
 
+   
     use(req: Request, res: Response, next: ()=>void) {
 
         const envType = this.configService.get("envType");
         
-        if(envType===AppEnvironment.DEV){
-            // console.log("auth token", req.headers.authorization); //TO get your auth token to put in localdevelopment.yaml file uncomment this line, take the token and restart server
-            if(!req.headers.authorization) {//only for testing
-                req.headers.authorization = fs.readFileSync("./authtoken.txt",'utf8');
-            }
-            else {
-                fs.writeFileSync("./authtoken.txt", req.headers.authorization);
-            }
+        const url =  req.originalUrl;
+        let token = req.headers.authorization; //TODO remove this when authentication is setup properly
+
+        if (!token && envType === AppEnvironment.DEV) {
+            token = "testtoken"; //only for local testing this token will always resolve to John.Doe@noba.com
         }
 
-
-        const url =  req.originalUrl;
-        const token = req.headers.authorization;
+        if (PUBLIC_URL_REGEXES.some(regex => regex.test(url))) { 
+            console.log("URL matches public url allowing without authentication"); //TODO remove this log line? 
+            next();
+            return;
+        }
 
         if (token) {
             this.authService.getEmailIDForToken(token)
             .then(emailID => {
+
                     if(!emailID) { 
                         throw new Error ("Token is not valid");
                     }

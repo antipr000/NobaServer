@@ -3,10 +3,11 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { DBProvider } from '../../infraproviders/DBProvider';
 import { InfraProvidersModule } from '../../infraproviders/infra.module';
+import { ConfigModule } from '@nestjs/config';
 
 
 @Module({
-  imports: [InfraProvidersModule],
+  imports: [InfraProvidersModule, ConfigModule],
   controllers: [UserController],
   providers: [UserService, DBProvider],
   exports: [UserService]  //Need to access in PublicController

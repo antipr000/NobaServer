@@ -13,6 +13,7 @@ import { ConfigModule } from '@nestjs/config';
 import loadAppConfigs from './config/AppConfigurations';
 import { InfraProvidersModule } from './infraproviders/infra.module';
 import { UserModule } from './modules/user/user.module';
+import { TransactionModule } from './modules/transactions/tramsaction.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UserModule } from './modules/user/user.module';
     InfraProvidersModule,
     AuthModule,
     UserModule, 
+    TransactionModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

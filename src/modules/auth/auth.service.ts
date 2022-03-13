@@ -6,7 +6,6 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Entity } from "../../core/domain/Entity";
 import { BadRequestError } from "../../core/exception/CommonAppException";
-  import { DBProvider } from "../../infraproviders/DBProvider";
 import { IOTPRepo, OTPRepo } from "./repo/OTPRepo";
 
   
@@ -20,7 +19,7 @@ import { IOTPRepo, OTPRepo } from "./repo/OTPRepo";
     private readonly otpRepo: IOTPRepo;
   
   
-    constructor(dbProvider: DBProvider) {
+    constructor() {
         this.otpRepo = new OTPRepo();
     }
   
@@ -33,18 +32,22 @@ import { IOTPRepo, OTPRepo } from "./repo/OTPRepo";
         return this.otpRepo.getOTP(emailID);
     }
 
-    async verifyOTPAndSaveToken(emailID: string, otp: string): Promise<void>{
+    async verifyOTPAndSaveToken(emailID: string, otp: string): Promise<string>{
         const savedOTP = await this.getOTP(emailID);
         if(savedOTP === otp){
             const sessionToken = Entity.getNewID();
-            this.otpRepo.saveAuthToken(emailID, sessionToken);
+            await this.otpRepo.saveAuthToken(emailID, sessionToken);
+            return sessionToken;
         } else {
             throw new BadRequestError({messageForClient: "Invalid OTP"});
         }
     }
 
     async getEmailIDForToken(authToken: string): Promise<string> { 
-        return this.otpRepo.getEmailIDForAuthToken(authToken);
+
+        if(authToken=="testtoken") return "John.Doe@noba.com";
+
+        return this.otpRepo.getEmailIDForAuthToken(authToken); //TODO remove this only for testing
     }   
 
 

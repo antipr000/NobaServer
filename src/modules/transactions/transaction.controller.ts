@@ -19,7 +19,7 @@ export class TransactionController {
   }
 
  
-  @Get("/:transaction_id")
+  @Get("/status/:transaction_id")
   @ApiResponse({status:HttpStatus.OK})
   async getTransactionStatus(@Param(UserID) userID: string, @Param("transaction_id") transactionId: string): Promise<string>{
     return null;
@@ -36,6 +36,4 @@ export class TransactionController {
   async getTransactions(@Param(UserID) userID: string): Promise<string>{
     return null;
   }
-
-
 }
