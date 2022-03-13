@@ -9,6 +9,16 @@ export class AddPaymentMethodDTO  {
     @ApiPropertyOptional()
     cardNumber?: string;
 
+    
+    @ApiPropertyOptional()
+    cardExpiryMonth?: number;
+
+    @ApiPropertyOptional()
+    cardExpiryYear?: number;
+
+    @ApiPropertyOptional()
+    cardCVV?: number;
+
     @ApiPropertyOptional()
     billingAdress?: string;
 

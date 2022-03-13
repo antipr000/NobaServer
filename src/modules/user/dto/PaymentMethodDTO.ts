@@ -12,6 +12,12 @@ export class PaymentMethodDTO  {
     //send masked number only to client
     @ApiPropertyOptional()
     cardNumber?: string;
+
+    @ApiPropertyOptional()
+    billingAdress?: string;
+
+    @ApiPropertyOptional()
+    cardHolderName?: string;
 } 
 
 
