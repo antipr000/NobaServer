@@ -9,6 +9,7 @@ import { AppEnvironment } from '../../config/ConfigurationUtils';
 const PUBLIC_URL_REGEXES = [
     /\/auth\/otp/,
     /\/auth\/otp\/verify/,
+    /exchangerates/
 ]
 
 

@@ -4,11 +4,12 @@ import { TransactionService } from './transaction.service';
 import { DBProvider } from '../../infraproviders/DBProvider';
 import { InfraProvidersModule } from '../../infraproviders/infra.module';
 import { ConfigModule } from '@nestjs/config';
+import { ExchangeRateController } from './exchangerate.controller';
 
 
 @Module({
   imports: [InfraProvidersModule, ConfigModule],
-  controllers: [TransactionController],
+  controllers: [TransactionController, ExchangeRateController],
   providers: [TransactionService, DBProvider],
   exports: [TransactionService]  //Need to access in PublicController
 })

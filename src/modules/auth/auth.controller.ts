@@ -1,7 +1,6 @@
 import { Controller, Get, HttpStatus, Inject, Logger, Param, Post, Query } from "@nestjs/common";
 import { ApiResponse } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { UserService } from "../user/user.service";
 import { AuthUser } from "./auth.decorator";
 import { AuthService } from "./auth.service";
 import { AuthenticatedUser } from "./domain/AuthenticatedUser";
