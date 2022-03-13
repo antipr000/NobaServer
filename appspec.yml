@@ -1,0 +1,22 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/NobaServer
+hooks:
+  BeforeInstall:
+    - location: deployscripts/installdeps.sh
+      timeout: 300
+      runas: root
+  # AfterInstall:
+  #   - location: scripts/change_permissions.sh
+  #     timeout: 300
+  #     runas: root
+  ApplicationStart:
+    - location: deployscripts/start_main_server.sh
+      timeout: 300
+      runas: root
+  ApplicationStop:
+    - location: deployscripts/stop_all.sh
+      timeout: 300
+      runas: root

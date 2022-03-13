@@ -1,0 +1,1 @@
+export type KeysRequired<T> = { [P in keyof Required<T>]: any };

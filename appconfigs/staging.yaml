@@ -1,0 +1,23 @@
+envType: "production"
+
+# ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE, 
+# ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
+
+apiPrefix: "/api/v1"
+
+awsCommonRegion: &awsCommonRegion "ap-southeast-1"
+
+
+#todo put production configs
+dynamodb:
+  #schema should match the one in DynamoDbConfigs.ts
+  endpoint: 'https://dynamodb.ap-southeast-1.amazonaws.com'
+  awsRegion: *awsCommonRegion #yaml anchor reference
+  logQueries: false
+
+#TODO move to vault
+
+stripe:
+  secretKey: "sk_test_51Jg7yTSGxLg8vKcYZvztf1EPIf3FJp0YZVOs5kmltOZVqA6bBO6bFd3UtzQjsP35nmn3AN0yDTWGnTmCpVYAsVNb00KxL9GQGo"
+  
+
