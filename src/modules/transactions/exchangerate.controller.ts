@@ -34,7 +34,7 @@ export class ExchangeRateController {
         return price_data.data[cryptoCurrencyCode]["usd"];
   }
 
-  @Get("/fiat/:crypto_currency_code/:fiat_currency_code")
+  @Get("/priceinfiat/:crypto_currency_code/:fiat_currency_code")
   @ApiResponse({status:HttpStatus.OK})
   async priceInFiat(@Param('crypto_currency_code') cryptoCurrencyCode : string, @Param('fiat_currency_code') fiatCurrencyCode: string ): Promise<string>{
     throw new Error("Not implemented");

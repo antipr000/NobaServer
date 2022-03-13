@@ -13,7 +13,7 @@ import { ConfigModule } from '@nestjs/config';
 import loadAppConfigs from './config/AppConfigurations';
 import { InfraProvidersModule } from './infraproviders/infra.module';
 import { UserModule } from './modules/user/user.module';
-import { TransactionModule } from './modules/transactions/tramsaction.module';
+import { TransactionModule } from './modules/transactions/transaction.module';
 
 @Module({
   imports: [
