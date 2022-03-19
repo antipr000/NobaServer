@@ -82,7 +82,6 @@ jobs:
           cp -R ./deployscripts/ artifacts 
           cp -R ./dist/ artifacts/
           cp -R ./node_modules/ artifacts
-          cp -R ./devtools/ artifacts
           ls -ltr artifacts
           7z a -tzip  artifacts ./artifacts/*
           ls -ltr 
