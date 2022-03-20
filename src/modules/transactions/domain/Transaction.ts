@@ -7,13 +7,16 @@ import { TransactionStatus } from './Types';
 export interface TransactionProps extends VersioningInfo {
     id: string,
     userId: string,
-    stripePaymentID?: string,
+    paymentMethodId: string,
+    stripePaymentIntentId?: string,
+    sourceWalletAddress?: string,
+    destinationWalletAddress?: string,
     leg1Amount: number,
     leg2Amount: number,
     leg1: string,
     leg2: string,
     diagnosis?: string,
-    cryptoTransactionID?: string,
+    cryptoTransactionId?: string,
     transactionStatus: TransactionStatus,
 }
 
@@ -22,14 +25,17 @@ export const transactionJoiValidationKeys : KeysRequired<TransactionProps> = {
     ...versioningInfoJoiSchemaKeys,
     id: Joi.string().min(10).required(),
     userId: Joi.string().required(),
+    paymentMethodId: Joi.string().required(),
     transactionStatus: Joi.string().valid(...Object.values(TransactionStatus)).required(),
     leg1Amount: Joi.number().required(),
     leg2Amount: Joi.number().required(),
     leg1: Joi.string().required(),
     leg2: Joi.string().required(),
     diagnosis: Joi.string().optional(),
-    stripePaymentID: Joi.string().optional(),
-    cryptoTransactionID: Joi.string().optional(),
+    sourceWalletAddress: Joi.string().optional(),
+    destinationWalletAddress: Joi.string().optional(),
+    stripePaymentIntentId: Joi.string().optional(),
+    cryptoTransactionId: Joi.string().optional(),
 }
 
 export const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({stripUnknown: true}); 

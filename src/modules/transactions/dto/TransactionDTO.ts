@@ -25,6 +25,15 @@ export class TransactionDTO {
     leg2Amount: number;
 
     @ApiPropertyOptional()
+    paymentMethodId?: string;
+
+    @ApiPropertyOptional()
+    fiatTransactionId?: string;
+
+    @ApiPropertyOptional()
+    cryptoTransactionId?: string;
+
+    @ApiPropertyOptional()
     sourceWalletAdress?: string;
 
     @ApiPropertyOptional()

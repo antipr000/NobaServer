@@ -19,6 +19,10 @@ export class TransactionMapper  implements Mapper<Transaction>{
             leg2: props.leg2,
             leg1Amount: props.leg1Amount,
             leg2Amount: props.leg2Amount,
+            paymentMethodId: props.paymentMethodId,
+            fiatTransactionId: props.stripePaymentIntentId,
+            cryptoTransactionId: props.cryptoTransactionId,
+            destinationWalletAdress: props.destinationWalletAddress,
         }
     }
   

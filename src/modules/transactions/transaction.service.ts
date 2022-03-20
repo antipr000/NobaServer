@@ -18,6 +18,7 @@ import { DynamoDB } from "aws-sdk";
 import Stripe from "stripe";
 import { StripeService } from "../common/stripe.service";
 import { Web3ProviderService } from "../common/web3providers.service";
+import { Web3TransactionHandler } from "../common/domain/Types";
 
 
 
@@ -45,8 +46,18 @@ export class TransactionService {
     this.userRepo = new DyanamoDBUserRepo(dbProvider);
   }
 
-  async getTransactionStatus(id: string): Promise<string> {
-    return null;
+  async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {
+    const transaction =  await this.transactionsRepo.getTransaction(transactionId);
+    return this.transactionsMapper.toDTO(transaction);
+  }
+
+  async getUserTransactions(userId: string): Promise<TransactionDTO[]> { 
+    return (await this.transactionsRepo.getUserTransactions(userId)).map(transaction => this.transactionsMapper.toDTO(transaction));
+  }
+
+  //makes sure only app admins should be able to access this method, don't want to expose this method to public users
+  async getAllTransactions(): Promise<TransactionDTO[]> {
+    return (await this.transactionsRepo.getAll()).map(transaction => this.transactionsMapper.toDTO(transaction));
   }
 
   //TODO add proper logs without leaking sensitive information
@@ -72,11 +83,12 @@ export class TransactionService {
     this.logger.info(`bidPrice: ${bidPrice}, currentPrice: ${currentPrice}`);
 
     if (! this.withinSlippage(bidPrice, currentPrice, slippageAllowed)) { 
-      throw new BadRequestError({messageForClient: "Bid price is not within slippage allowed"});
+      throw new BadRequestError({messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}`});
     }
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: userID,
+      paymentMethodId: details.paymentMethodId,
       leg1Amount: details.leg1Amount,
       leg2Amount: details.leg2Amount,
       leg1: leg1,
@@ -93,7 +105,7 @@ export class TransactionService {
 
     const params: Stripe.PaymentIntentCreateParams = {
       // if we want to charge 20 USD we can use amount: 2000 USD here. Here it is a multiple of 100. So to charge 32.45 USD we can use amount: 3245
-      amount: leg1Amount*100, //in cents
+      amount: Math.ceil(leg1Amount*100), //in cents
       currency: 'usd', //TODO make this generic
       customer: user.props.stripeCustomerID,
       payment_method: details.paymentMethodId,
@@ -103,30 +115,62 @@ export class TransactionService {
   
     const paymentIntent = await this.stripe.paymentIntents.create(params);
 
-    
-    this.transactionsRepo.updateTransaction(Transaction.createTransaction(
+    let updatedTransaction = Transaction.createTransaction(
       {...newTransaction.props,
          transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING, 
-         stripePaymentID: paymentIntent.id
-      }));
+         stripePaymentIntentId: paymentIntent.id
+      });
+    
+    this.transactionsRepo.updateTransaction(updatedTransaction);
     
     //TODO wait here for the transaction to complete and update the status
-  
+      
     //updating the status to fiat transaction succeeded for now
-    this.transactionsRepo.updateTransaction(Transaction.createTransaction(
-      {...newTransaction.props,
+    updatedTransaction = Transaction.createTransaction(
+      {...updatedTransaction.props,
          transactionStatus: TransactionStatus.FIAT_INCOMING_CONFIRMED,  
-         stripePaymentID: paymentIntent.id
-      }));
+         stripePaymentIntentId: paymentIntent.id
+      })
+    this.transactionsRepo.updateTransaction(updatedTransaction);
 
     this.logger.info(`Transaction ${newTransaction.props.id} is waiting for payment confirmation, payment intent id: ${paymentIntent.id}, status: ${paymentIntent.status}`);
 
     //*** assuming that fiat transfer completed*/
 
-    //TODO what is transactionID on web3/ethereum chain
-    await this.web3ProviderService.transferEther(leg2Amount, details.destinationWalletAdress);
-    
-    return undefined;
+    const promise = new Promise<TransactionDTO>((resolve, reject) => {
+      const web3TransactionHandler: Web3TransactionHandler = {
+        onTransactionHash: async (transactionHash: string) => {
+          this.logger.info(`Transaction ${newTransaction.props.id} has crypto transaction hash: ${transactionHash}`);
+          updatedTransaction = Transaction.createTransaction(
+            {...updatedTransaction.props,
+               transactionStatus: TransactionStatus.WALLET_OUTGOING_PENDING,  
+               cryptoTransactionId: transactionHash
+            });
+          await this.transactionsRepo.updateTransaction(updatedTransaction);
+
+          //TODO check with Lane or Gal if we should only confirm on the receipt of the transaction or is it fine to confirm the transaction on transaction hash
+          resolve(this.transactionsMapper.toDTO(updatedTransaction));
+        },
+
+        /* onReceipt: async (receipt: any) => { 
+          this.logger.info(`Transaction ${newTransaction.props.id} has crypto transaction receipt: ${JSON.stringify(receipt)}`);
+        }, */
+      
+        onError: async (error: any) => { 
+          this.logger.info(`Transaction ${newTransaction.props.id} has crypto transaction error: ${JSON.stringify(error)}`);
+          await this.transactionsRepo.updateTransaction(Transaction.createTransaction({
+            ...newTransaction.props,
+            transactionStatus: TransactionStatus.WALLET_OUTGOING_FAILED,
+            diagnosis: JSON.stringify(error)
+          }));
+          reject(error);
+        }
+      };
+
+     this.web3ProviderService.transferEther(leg2Amount, details.destinationWalletAdress, web3TransactionHandler);
+     });
+
+    return promise;
   }
 
   //TODO put in some utility class?

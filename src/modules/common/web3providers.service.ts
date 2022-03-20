@@ -1,10 +1,9 @@
-import { Injectable } from "@nestjs/common";
 //TODO check why import doesn't work
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Web3 = require('web3');
 import {Transaction as EthTransaction} from 'ethereumjs-tx';
-
-
+import { Injectable } from "@nestjs/common";
+import { Web3TransactionHandler } from './domain/Types';
 
 
 // We should not store the private key of our hard wallet in code. //TODO create configs for this and inject from AWS vault
@@ -20,7 +19,7 @@ export class Web3ProviderService {
     private readonly hexPrivateKey = Buffer.from(this.private_key_for_senders_account, 'hex');
     private readonly web3  = new Web3(this.httpProvider);
 
-    async transferEther(amount: number, destinationAddress: string) {
+    async transferEther(amount: number, destinationAddress: string, web3TransactionHandler: Web3TransactionHandler) {
         
         //TODO change this to actual destianation address
         destinationAddress = this.public_address_of_test_recipient_account;
@@ -33,14 +32,15 @@ export class Web3ProviderService {
         // txCount = web3.eth.getTransactionCount(public_address_of_senders_account);
 
         const rawTx = {
+            //TODO take this from configs??
             gasLimit: this.web3.utils.toHex(25000),
-            gasPrice: this.web3.utils.toHex(10e9), // 10 Gwei
+            gasPrice: this.web3.utils.toHex(10e9), 
             to: destinationAddress,
             from: this.public_address_of_senders_account,
-            value: this.web3.utils.toHex(this.web3.utils.toWei(''+amount, 'wei'))
+            value: this.web3.utils.toHex(this.web3.utils.toWei(''+amount, 'ether')),
         }
 
-        await this.sendRawTransaction(rawTx);
+        await this.sendRawTransaction(rawTx, web3TransactionHandler);
     }
 
     /** Signs the given transaction data and sends it. Abstracts some of the details of 
@@ -48,16 +48,18 @@ export class Web3ProviderService {
     * @returns A promise of an object that emits events: transactionHash, receipt, confirmaton, error
     */
 
-    private async sendRawTransaction(rawTx) {
+    private async sendRawTransaction(rawTx, web3TransactionHandler: Web3TransactionHandler) {
         // get the number of transactions sent so far so we can create a fresh nonce
 
-        const txCount = await this.web3.eth.getTransactionCount(rawTx.to);
+        const txCount = await this.web3.eth.getTransactionCount(rawTx.from);
 
         // Set a variable of transaction count for nonce
         const newNonce = this.web3.utils.toHex(txCount)
 
+        console.log(`newNonce: ${newNonce}, txCount: ${txCount}`);
+
         // Add the nonce and chain info to the transaction as a new Tx()
-        const transaction = new EthTransaction({ ...rawTx, nonce: newNonce }, { chain: 'ropsten' })
+        const transaction = new EthTransaction({ ...rawTx, nonce: newNonce }, { chain: 'ropsten' }) //TODO take chain from configs!!
 
         // Sign the transaction
         transaction.sign(this.hexPrivateKey)
@@ -68,19 +70,19 @@ export class Web3ProviderService {
         // Return transaction along with promised steps, TODO poll the status instead of waiting here till eternity, below approach will lead to partial failures
         return this.web3.eth.sendSignedTransaction('0x' + serializedTx)
             .on('transactionHash', txHash => {
-            console.log('transactionHash:', txHash)
+                web3TransactionHandler.onTransactionHash(txHash);
             })
             .on('receipt', receipt => {
-            console.log('receipt:', receipt)
+                web3TransactionHandler.onReceipt(receipt);
             })
-            .on('confirmation', (confirmationNumber, receipt) => {
+           /*  .on('confirmation', (confirmationNumber, receipt) => {
             if (confirmationNumber >= 1) {
                 console.log('confirmations:', confirmationNumber, receipt)
             }
-            })
+            }) */
             .on('error', error => {
-            console.error(error)
-        })
+                web3TransactionHandler.onError(error);
+            });
 
     }
   
