@@ -6,7 +6,7 @@ const usersTableSKAttr = "sk";
 
 
 export const UsersTableMeta: TableMeta = {
-	tableName: "Users",
+	tableName: "DevUsers",
 	partitionKeyAttribute: usersTableIDAttr,
     sortKeyAttribute: usersTableSKAttr,
     description: "Table containing, users info, teams info, organizations info etc."

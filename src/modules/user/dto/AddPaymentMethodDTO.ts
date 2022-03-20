@@ -5,11 +5,9 @@ export class AddPaymentMethodDTO  {
     @ApiProperty({enum: Object.values(PaymentMethodType)})
     paymentMethodType: string;                
 
-    //send masked number only to client
     @ApiPropertyOptional()
     cardNumber?: string;
 
-    
     @ApiPropertyOptional()
     cardExpiryMonth?: number;
 
@@ -17,7 +15,7 @@ export class AddPaymentMethodDTO  {
     cardExpiryYear?: number;
 
     @ApiPropertyOptional()
-    cardCVV?: number;
+    cardCVC?: string;
 
     @ApiPropertyOptional()
     billingAdress?: string;

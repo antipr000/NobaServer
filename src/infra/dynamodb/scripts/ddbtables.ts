@@ -6,7 +6,7 @@ import { HASH_KEY_TYPE, RANGE_KEY_TYPE } from "../DDBUtils";
 import {
   UsersTableMeta,
 } from "../UsersTable";
-import { LookupTableGSI1, LookupTableMeta } from "../LookupTable";
+import { LookupTableMeta } from "../LookupTable";
 
 
 //Only for local, in production we would use dynamic pricing, and cloudformation to create tables but below definition can be used to create cloudformation/terraform definitions
@@ -40,33 +40,7 @@ const lookUpTable: DynamoDB.CreateTableInput = {
   AttributeDefinitions: getUniqueAttributeDefinitions([
     { AttributeName: LookupTableMeta.partitionKeyAttribute, AttributeType: "S", },
     { AttributeName: LookupTableMeta.sortKeyAttribute, AttributeType: "S" },
-    { AttributeName: LookupTableGSI1.partitionKeyAttribute, AttributeType: "S" },
-    { AttributeName: LookupTableGSI1.sortKeyAttribute, AttributeType: "S" },
   ]),
-
-  GlobalSecondaryIndexes: [
-    {
-      IndexName: LookupTableGSI1.gsiName,
-      KeySchema: [
-        {
-          AttributeName: LookupTableGSI1.partitionKeyAttribute,
-          KeyType: "HASH",
-        },
-        {
-          AttributeName: LookupTableGSI1.sortKeyAttribute,
-          KeyType: "RANGE",
-        },
-      ],
-
-      Projection: {
-        ProjectionType: "ALL",
-      },
-      ProvisionedThroughput: {
-        ReadCapacityUnits: 1,
-        WriteCapacityUnits: 1,
-      },
-    }
-  ],
 
   ProvisionedThroughput: {
     ReadCapacityUnits: 1,

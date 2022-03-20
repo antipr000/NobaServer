@@ -3,7 +3,7 @@ import { KeysRequired } from "src/modules/common/domain/Types";
 
 
 export interface StripeConfigs {
-    secretKey: string
+    secretKey: string,
 }
 
 export const stripeConfigsJoiValidationSchema: KeysRequired<StripeConfigs> = {

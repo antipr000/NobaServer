@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiOAuth2, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PaymentMethodType } from '../domain/Types';
 
 export class PaymentMethodDTO  { 
@@ -21,7 +21,3 @@ export class PaymentMethodDTO  {
 } 
 
 
-export class PaymentMethodsDTO {
-    @ApiProperty({type: [PaymentMethodDTO]})
-    paymentMethods: PaymentMethodDTO[];
-}

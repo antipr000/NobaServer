@@ -8,10 +8,10 @@ export class CreateTransactionDTO {
     tradePair: string;
 
     @ApiProperty()
-    leg1Amount: string;
+    leg1Amount: number;
 
     @ApiProperty()
-    leg2Amount: string;
+    leg2Amount: number;
 
     @ApiPropertyOptional()
     sourceWalletAdress?: string;

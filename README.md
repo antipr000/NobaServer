@@ -11,6 +11,7 @@ Noba server side code.
 
 ### Running the code (includes running localstack for local dynamodb setup, first setup docker desktop on your machine, google search how to setup Docker on YOUR_OS_HERE)
 - run --> yarn install   (in root of project directory)
+## Setting up Dynamodb (ignore this for now, we will setup a common shared dev instance)
 - docker run --rm -v "C:\Users\${REPLACE_WITH_YOUR_WINDOWS_USERNAME_HERE}\localstack\data":"/tmp/localstack/data" -e "DATA_DIR=/tmp/localstack/data" -p 4566:4566 localstack/localstack
 - create dynamodb tables: In the root of the project run `npx ts-node src\infra\dynamodb\scripts\createddbtables.ts` in git bash 
 - git bash(in new terminal):  `export AWS_SECRET_ACCESS_KEY=test && export AWS_ACCESS_KEY_ID=test && export AWS_REGION=ap-southeast-1 && export DYNAMO_ENDPOINT=http://localhost:4566 && npx dynamodb-admin`  (uses dynamodb-admin nmp package, ddb admin can be accessed on this http://localhost:8001/)
@@ -69,11 +70,19 @@ Don't change attribute names in classes/joischema etc. as we put them as they ar
 * Joi schema cannot have any more required fields if the schema was released once already in the production as previously saved objects won't comply
 * Never log/print app configurations in production as it can leak secrets/passwords
 * Avoid logging in production, only log unexpected events, put debug logs if code is complex, avoid making code complex
+
+
 ### How are configurations loaded? what is ConfigService?
 ConfigService is a service available globally using Config module (by nestjs), see app.module.ts to know how it sources all the configuration properties.
 We load configs from yaml files (in appConfig folder) in app.module.ts while registering config module.
 See AppConfigurations.ts file to know how props are sourced from yaml files and some of them are merged with environments and secrets variables. 
 Or in vscode ctrl+shift+f and search for `Application configurations loading logic here`
+
+### Authentication and Authorization 
+* See preauth.middelware.ts,  'user' attribute on http request object are details for authenticated user
+* We use autorization based on the Roles specified on the endpoints. See roles.guard.ts and roles.decorator.ts
+
+
 ### Dynamodb Internal Docs
 https://github.com/nobapay/NobaServer/blob/master/src/infra/dynamodb/README.md
 

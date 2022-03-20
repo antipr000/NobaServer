@@ -17,21 +17,22 @@ export class AuthenticationController {
 
     }
 
-    @ApiResponse({ status: HttpStatus.OK, description: "Returns id of authenticated user" })
-    @Get("uid")
+    @ApiResponse({ status: HttpStatus.OK, description: "Returns uuid of authenticated user" })
+    @Get("userID")
     async getUID(@AuthUser() user: AuthenticatedUser): Promise<string> {
         return user.uid;
     }
 
-    @ApiResponse({ status: HttpStatus.OK, description: "Returns id of authenticated user" })
+    //TODO set limit on number of OTPs sent to user 
+    @ApiResponse({ status: HttpStatus.OK, description: "Sends OTP on the given email" })
     @Post("otp/:emailID")
-    async getOTP(@Param("emailID") emailID: string): Promise<string> {
+    async sendOTP(@Param("emailID") emailID: string): Promise<string> {
         //TODO write logic to genrate 6 digit number save in some cache or db with expiry time
-        await this.authService.genOTP(emailID);
+        await this.authService.sendOTP(emailID);
         return "OTP Sent to email";
     }
 
-    @ApiResponse({ status: HttpStatus.OK, description: "Returns id of authenticated user" })
+    @ApiResponse({ status: HttpStatus.OK, description: "Verifies the OTP and creates user authenticated session. If user doesn't exist with this email will create user entry also in the database" })
     @Post("otp/verify/:emailID/:otp")
     async verifyOTP(@Param("emailID") emailID: string, @Param("otp")otp: string): Promise<string> {
         return await this.authService.verifyOTPAndSaveToken(emailID, otp);

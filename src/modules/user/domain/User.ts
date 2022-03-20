@@ -4,11 +4,12 @@ import { KeysRequired } from '../../common/domain/Types';
 import * as Joi from 'joi';
 
 export interface UserProps extends VersioningInfo {
-    //TODO create self link with 'a-z', '0-9', '-', or '_'
     id: string,
     name?: string,
     email: string,
-    isEmailVerified?: boolean, 
+    isEmailVerified?: boolean,
+    stripeCustomerID?: string, 
+    phone?: string,
 }
 
 
@@ -16,8 +17,10 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     ...versioningInfoJoiSchemaKeys,
     id: Joi.string().min(10).required(),
     name: Joi.string().min(2).max(100).optional(),
-    email: Joi.string().email().required(),
-    isEmailVerified: Joi.boolean().default(false), 
+    email: Joi.string().email().required(), 
+    stripeCustomerID: Joi.string().optional(),
+    phone: Joi.string().optional(), //TODO phone number validation, how do we want to store phone number? country code + phone number?
+    isEmailVerified: Joi.boolean().default(false) 
 }
 
 export const userJoiSchema = Joi.object(userJoiValidationKeys).options({stripUnknown: true}); 

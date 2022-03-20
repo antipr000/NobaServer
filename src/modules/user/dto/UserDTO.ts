@@ -18,5 +18,6 @@ export class UserDTO implements Partial<UserProps> {
     @ApiProperty()
     email: string;
 
- 
+    @ApiPropertyOptional()
+    phone?: string;
 } 

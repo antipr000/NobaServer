@@ -4,6 +4,8 @@ import { Request, Response } from 'express';
 import { AuthenticatedUser } from './domain/AuthenticatedUser';
 import { AuthService } from './auth.service';
 import { AppEnvironment } from '../../config/ConfigurationUtils';
+import { DBProvider } from '../../infraproviders/DBProvider';
+import { UserService } from '../user/user.service';
 
 
 const PUBLIC_URL_REGEXES = [
@@ -20,12 +22,18 @@ export class PreauthMiddleware implements NestMiddleware {
 
     @Inject()
     private readonly configService: ConfigService;
+
+    @Inject()
+    private readonly dbProvider: DBProvider; 
+
+    @Inject() 
+    private readonly userService: UserService
     
 
     private readonly authService: AuthService;
     
     constructor() {
-        this.authService = new AuthService(); //cannot inject directly as belongs to same module as this middleware
+        this.authService = new AuthService(this.dbProvider, this.userService);//cannot inject directly as belongs to same module as this middleware
     }
 
    

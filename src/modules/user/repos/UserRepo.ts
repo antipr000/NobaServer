@@ -10,7 +10,7 @@ import { DBProvider } from "src/infraproviders/DBProvider";
 
 
 export interface IUserRepo extends Repo<User> {
-    getUser(id: string): Promise<User>
+    getUser(userID: string): Promise<User>
     createUser(user: User): Promise<User> 
     getUserIfExists(id: string): Promise<Result<User>>
     exists(id: string): Promise<boolean>
@@ -29,8 +29,8 @@ export class DyanamoDBUserRepo implements IUserRepo {
         this.userMapper = new UserMapper(); 
     }
 
-    async getUser(id: string): Promise<User> {
-        const userModel = this.userMapper.toPersistence({id: id}, { isReading: true }); 
+    async getUser(userID: string): Promise<User> {
+        const userModel = this.userMapper.toPersistence({id: userID}, { isReading: true }); 
         const dbResp = await this.dynamoMapper.get(userModel); //Todo handle failures
         return this.userMapper.toDomain(dbResp);
     }

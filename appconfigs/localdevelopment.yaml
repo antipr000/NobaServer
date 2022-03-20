@@ -32,6 +32,6 @@ ses:
 
 
 stripe:
-  secretKey: "sk_test_51Jg7yTSGxLg8vKcYZvztf1EPIf3FJp0YZVOs5kmltOZVqA6bBO6bFd3UtzQjsP35nmn3AN0yDTWGnTmCpVYAsVNb00KxL9GQGo"
+  secretKey: 'sk_test_51KZIlsEe2pZC45hcq7Tjpoi3M7nCc6A5ki95cA8UGF1Ei7b4mCUf6wnAgTJAPzVlpamVGUj7cjQMMhegPYgqELyx00yqpROABj'
   
 

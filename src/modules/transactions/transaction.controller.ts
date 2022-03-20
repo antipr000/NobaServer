@@ -7,7 +7,7 @@ import { Role } from '../auth/role.enum';
 import { ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { CreateTransactionDTO } from './dto/CreateTransactionDTO';
-import { TransactionStatusDTO } from './dto/TransactionStatusDTO';
+import { TransactionDTO } from './dto/TransactionDTO';
 
 @Roles(Role.User)
 @Controller("user/:"+UserID+"/transactions")
@@ -22,30 +22,21 @@ export class TransactionController {
 
  
   @Get("/status/:transactionId")
-  @ApiResponse({status:HttpStatus.OK, type: TransactionStatusDTO})
-  async getTransactionStatus(@Param(UserID) userID: string, @Param("transactionId") transactionId: string): Promise<string>{
-    return "pending";
+  @ApiResponse({status:HttpStatus.OK, type: TransactionDTO})
+  async getTransactionStatus(@Param(UserID) userID: string, @Param("transactionId") transactionId: string): Promise<TransactionDTO>{
+    return null;
   }
 
-  @Post("/:trasact")
+  @Post("/trasact")
   @ApiResponse({status:HttpStatus.OK , description: "Returns transaction id if transaction is placed successfully"})
-  async transact(@Param(UserID) userID: string, @Body() orderDetails: CreateTransactionDTO): Promise<string>{
-    //TODO implement
-    /* 
-    1. check the slippage within limit if in limit then save the transaction with status pending
-    2. charge the selected payment method with stripe api
-    3. if 2 succeeds check the slippage again
-    4. if slippage within limit then create the transaction else revert the transaction and update the status
-    5. wait for the transaction to be placed
-    6. return the transaction id
-    
-    */
-    return "transaction_id_1544242424";
+  async transact(@Param(UserID) userID: string, @Body() orderDetails: CreateTransactionDTO): Promise<TransactionDTO>{
+    return this.transactionService.transact(userID, orderDetails); 
   }
 
+  //TODO take filter options, pagitination token etc?
   @Get("/")
-  @ApiResponse({status:HttpStatus.OK, type: [TransactionStatusDTO]})
-  async getTransactions(@Param(UserID) userID: string): Promise<TransactionStatusDTO[]>{
+  @ApiResponse({status:HttpStatus.OK, type: [TransactionDTO]})
+  async getTransactions(@Param(UserID) userID: string): Promise<TransactionDTO[]>{
     return null;
   }
 }

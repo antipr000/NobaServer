@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { TransactionStatus } from "../domain/Types";
 
-export class TransactionStatusDTO {
+export class TransactionDTO {
     @ApiProperty()
     id: string;
     
@@ -13,13 +13,16 @@ export class TransactionStatusDTO {
     statusMessage?: string;
 
     @ApiProperty()
-    tradePair: string;
+    leg1: string;
 
     @ApiProperty()
-    leg1Amount: string;
+    leg2: string;
 
     @ApiProperty()
-    leg2Amount: string;
+    leg1Amount: number;
+
+    @ApiProperty()
+    leg2Amount: number;
 
     @ApiPropertyOptional()
     sourceWalletAdress?: string;

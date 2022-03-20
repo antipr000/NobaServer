@@ -14,15 +14,19 @@ import loadAppConfigs from './config/AppConfigurations';
 import { InfraProvidersModule } from './infraproviders/infra.module';
 import { UserModule } from './modules/user/user.module';
 import { TransactionModule } from './modules/transactions/transaction.module';
+import { CommonModule } from './modules/common/common.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
     getAppConfigModule(),
     getWinstonModule(),
     InfraProvidersModule,
+    CommonModule,
     AuthModule,
     UserModule, 
     TransactionModule,
+    AdminModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
