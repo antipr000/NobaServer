@@ -14,8 +14,10 @@ import loadAppConfigs from './config/AppConfigurations';
 import { InfraProvidersModule } from './infraproviders/infra.module';
 import { UserModule } from './modules/user/user.module';
 import { TransactionModule } from './modules/transactions/transaction.module';
+import { VerificationModule } from './modules/verification/verification.module';
 import { CommonModule } from './modules/common/common.module';
 import { AdminModule } from './modules/admin/admin.module';
+
 
 @Module({
   imports: [
@@ -24,7 +26,8 @@ import { AdminModule } from './modules/admin/admin.module';
     InfraProvidersModule,
     CommonModule,
     AuthModule,
-    UserModule, 
+    UserModule,
+    VerificationModule,
     TransactionModule,
     AdminModule,
     ScheduleModule.forRoot(),
