@@ -61,13 +61,14 @@ export class TransactionService {
   }
 
   //TODO add proper logs without leaking sensitive information
+  //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc. 
   async transact(userID: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
     const slippageAllowed = 2; //2%, todo take from config or user input
 
     const user = await this.userRepo.getUser(userID);
 
-    const leg1: string = details.tradePair.split("-")[0];
-    const leg2: string = details.tradePair.split("-")[1];
+    const leg1: string = details.leg1;
+    const leg2: string = details.leg2;
 
     const leg1Amount = details.leg1Amount;
     const leg2Amount = details.leg2Amount;

@@ -31,10 +31,12 @@ export class Web3ProviderService {
 
         // txCount = web3.eth.getTransactionCount(public_address_of_senders_account);
 
+        console.log("ether amount", amount);
+
         const rawTx = {
             //TODO take this from configs??
-            gasLimit: this.web3.utils.toHex(25000),
-            gasPrice: this.web3.utils.toHex(10e9), 
+            gasLimit: this.web3.utils.toHex(250000),
+            gasPrice: this.web3.utils.toHex(10e11), 
             to: destinationAddress,
             from: this.public_address_of_senders_account,
             value: this.web3.utils.toHex(this.web3.utils.toWei(''+amount, 'ether')),
@@ -50,6 +52,8 @@ export class Web3ProviderService {
 
     private async sendRawTransaction(rawTx, web3TransactionHandler: Web3TransactionHandler) {
         // get the number of transactions sent so far so we can create a fresh nonce
+
+        console.log("Raw transaction", rawTx);
 
         const txCount = await this.web3.eth.getTransactionCount(rawTx.from);
 

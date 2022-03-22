@@ -24,12 +24,15 @@ export class TransactionController {
   @Get("/status/:transactionId")
   @ApiResponse({status:HttpStatus.OK, type: TransactionDTO})
   async getTransactionStatus(@Param(UserID) userID: string, @Param("transactionId") transactionId: string): Promise<TransactionDTO>{
-    return null;
+    return this.transactionService.getTransactionStatus(transactionId); //TODO check that transactionId belongs to this user?
   }
 
+  //We should create buy sell api differently otherwise lot of if else logic in core logic. basically different api for on-ramp and off-ramp
   @Post("/trasact")
   @ApiResponse({status:HttpStatus.OK , description: "Returns transaction id if transaction is placed successfully"})
   async transact(@Param(UserID) userID: string, @Body() orderDetails: CreateTransactionDTO): Promise<TransactionDTO>{
+    console.log("raw transaction input", orderDetails); //TODO better logging
+
     return this.transactionService.transact(userID, orderDetails); 
   }
 
@@ -37,6 +40,13 @@ export class TransactionController {
   @Get("/")
   @ApiResponse({status:HttpStatus.OK, type: [TransactionDTO]})
   async getTransactions(@Param(UserID) userID: string): Promise<TransactionDTO[]>{
-    return null;
+    return this.transactionService.getUserTransactions(userID);
+  }
+
+  //TODO move this to admin service
+  @Get("/all")
+  @ApiResponse({status:HttpStatus.OK, type: [TransactionDTO]})
+  async getAllTransactions(@Param(UserID) userID: string): Promise<TransactionDTO[]>{
+    return this.transactionService.getAllTransactions();
   }
 }

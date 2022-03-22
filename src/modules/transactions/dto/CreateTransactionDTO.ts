@@ -5,7 +5,10 @@ export class CreateTransactionDTO {
     paymentMethodId: string;
     
     @ApiProperty()
-    tradePair: string;
+    leg1: string;
+
+    @ApiProperty()
+    leg2: string;
 
     @ApiProperty()
     leg1Amount: number;
