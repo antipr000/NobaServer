@@ -9,6 +9,8 @@ import { IDVerificationRequestDTO } from './dto/IDVerificationRequestDTO';
 import { Logger } from 'winston';
 import { ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { ConsentDTO } from './dto/ConsentDTO';
+import { SubdivisionDTO } from './dto/SubdivisionDTO';
 
 
 @Controller("verify")
@@ -30,9 +32,27 @@ export class VerificationController {
         return "Hello Noba user. Verification seems to work fine!";
     }
 
+    @Get("/countryCodes")
+    @ApiResponse({ status: HttpStatus.OK, description: "Get country codes for supported countries" })
+    async getCountryCodes(): Promise<Array<string>> {
+        return this.idvProvider.getCountryCodes();
+    }
+
+    @Get("/consents/:countryCode")
+    @ApiResponse({ status: HttpStatus.OK, type: [ConsentDTO] })
+    async getConsents(@Param('countryCode') countryCode: string): Promise<Array<ConsentDTO>> {
+        return this.idvProvider.getConsents(countryCode);
+    }
+
+    @Get("/subdivisions/:countryCode")
+    @ApiResponse({ status: HttpStatus.OK, type: [SubdivisionDTO] })
+    async getSubdivisions(@Param('countryCode') countryCode: string): Promise<Array<SubdivisionDTO>> {
+        return this.idvProvider.getCountrySubdivisions(countryCode);
+    }
+
     @Post("/id")
     @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO })
-    async verifyUser(@Body() request: IDVerificationRequestDTO): Promise<IDResponse> {
+    async verifyUser(@Body() request: IDVerificationRequestDTO): Promise<VerificationResultDTO> {
         return this.idvProvider.verify(request);
 	}
 }

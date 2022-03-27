@@ -399,3 +399,4 @@ Temporary Items
 .env
 dist
 package-lock.json
+*.pem

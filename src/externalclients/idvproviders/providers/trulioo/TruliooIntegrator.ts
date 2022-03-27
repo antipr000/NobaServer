@@ -1,22 +1,22 @@
 import { AxiosRequestConfig } from 'axios';
-import { IDRequest, IDResponse, Status } from '../../definitions';
+import { Consent, IDRequest, IDResponse, Status, Subdivision } from '../../definitions';
+import { NationalIDTypes } from '../../definitions/NationalID';
 import { TruliooRequest } from './TruliooDefinitions';
+import { configurations } from './Configurations';
 import IDVIntegrator from '../../IDVIntegrator';
-
-const VERIFY_URL = "https://api.globaldatacompany.com/verifications/v1/verify";
 
 export default class TruliooIntegrator extends IDVIntegrator {
 
     apiToken: string;
 
     constructor() {
-        super(VERIFY_URL);
+        super(configurations);
         this.apiToken = process.env.TruliooApiKey;
         console.log("Trullio configured. Key=" + this.apiToken);
     }
 
     parseRequest(request: IDRequest): TruliooRequest {
-        return {
+        const requestData: TruliooRequest =  {
             AcceptTruliooTermsAndConditions: true,
             ConfigurationName: "Identity Verification",
             CountryCode: request.countryCode,
@@ -33,14 +33,71 @@ export default class TruliooIntegrator extends IDVIntegrator {
                     City: request.city,
                     Country: request.countryCode,
                     PostalCode: request.postalCode
-                },
-                NationalIds: [
-                    {
-                        Number: request.nationalID.number,
-                        Type: request.nationalID.type
-                    }
-                ]
+                }
             }
+        };
+
+        switch(request.nationalID.type) {
+            case NationalIDTypes.DriverLicence:
+                requestData.DataFields.DriverLicence = {
+                    Number: request.nationalID.number,
+                    State: request.nationalID.state,
+                    DayOfExpiry: request.nationalID.dayOfExpiry,
+                    MonthOfExpiry: request.nationalID.monthOfExpiry,
+                    YearOfExpiry: request.nationalID.yearOfExpiry
+                };
+                break;
+            case NationalIDTypes.Passport:
+                requestData.DataFields.Passport = {
+                    Number: request.nationalID.number,
+                    Mrz1: request.nationalID.mrz1,
+                    Mrz2: request.nationalID.mrz2,
+                    DayOfExpiry: request.nationalID.dayOfExpiry,
+                    MonthOfExpiry: request.nationalID.monthOfExpiry,
+                    YearOfExpiry: request.nationalID.yearOfExpiry
+                };
+                break;
+            case NationalIDTypes.HealthID:
+                requestData.DataFields.NationalIds = [
+                    {
+                        Type: "healthid",
+                        Number: request.nationalID.number
+                    }
+                ];
+                break;
+            case NationalIDTypes.NationalID:
+                requestData.DataFields.NationalIds = [
+                    {
+                        Type: "nationalid",
+                        Number: request.nationalID.number
+                    }
+                ];
+                break;
+            case NationalIDTypes.SocialService:
+                requestData.DataFields.NationalIds = [
+                    {
+                        Type: "socialservice",
+                        Number: request.nationalID.number
+                    }
+                ];
+                break;
+            default:
+                throw Error("ID is not supported");
+        }
+        return requestData;
+    }
+
+    parseConsent(consent: any): Consent {
+        return {
+            name: consent.Name,
+            message: consent.Text
+        };
+    }
+
+    parseCountrySubdivision(subdivision: any): Subdivision {
+        return {
+            name: subdivision.Name,
+            code: subdivision.Code
         };
     }
 

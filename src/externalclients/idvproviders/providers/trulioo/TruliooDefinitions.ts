@@ -18,10 +18,29 @@ type NationalId = {
     Type: string;
 };
 
+type Passport = {
+    Mrz1: string;
+    Mrz2: string;
+    Number: string;
+    DayOfExpiry: number;
+    MonthOfExpiry: number;
+    YearOfExpiry: number;
+}
+
+type DriverLicence = {
+    Number: string;
+    State: string;
+    DayOfExpiry: number;
+    MonthOfExpiry: number;
+    YearOfExpiry: number;
+}
+
 type DataFields = {
     PersonInfo: PersonInfo;
     Location: Address;
-    NationalIds: NationalId[];
+    NationalIds?: NationalId[];
+    Passport?: Passport;
+    DriverLicence?: DriverLicence;
 };
 
 export type TruliooRequest = {
