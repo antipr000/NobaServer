@@ -1,5 +1,4 @@
 import { Module, NestModule, RequestMethod } from '@nestjs/common';
-import fs from "fs";
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import * as winston from 'winston';
