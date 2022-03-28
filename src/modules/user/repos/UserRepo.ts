@@ -18,7 +18,7 @@ export interface IUserRepo extends Repo<User> {
     updateUser(user: User): Promise<User>   
 }
 
-export class DyanamoDBUserRepo implements IUserRepo {
+export class DynamoDBUserRepo implements IUserRepo {
 
     private readonly dynamoMapper: DyanamoDataMapperExtended; 
     private readonly userMapper: UserMapper; 
@@ -30,14 +30,14 @@ export class DyanamoDBUserRepo implements IUserRepo {
     }
 
     async getUser(userID: string): Promise<User> {
-        const userModel = this.userMapper.toPersistence({id: userID}, { isReading: true }); 
+        const userModel = this.userMapper.toPersistence({_id: userID}, { isReading: true }); 
         const dbResp = await this.dynamoMapper.get(userModel); //Todo handle failures
         return this.userMapper.toDomain(dbResp);
     }
 
 
     async batchGetUsers(userIds: string[]) {
-       const userIterator =  this.dynamoMapper.batchGet(userIds.map(id=>this.userMapper.toPersistence({id},{isReading:true}))); 
+       const userIterator =  this.dynamoMapper.batchGet(userIds.map(id=>this.userMapper.toPersistence({_id: id},{isReading:true}))); 
        const userDBItems = await getAllItems(userIterator); 
     //    console.log(userDBItems);
        return userDBItems.map(item => this.userMapper.toDomain(item)); 
@@ -87,3 +87,5 @@ export class DyanamoDBUserRepo implements IUserRepo {
     }
 
 }
+
+

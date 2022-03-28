@@ -13,12 +13,12 @@ import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { ITransactionRepo, MockTransactionRepo } from "./repo/TransactionRepo";
 import { TransactionMapper } from "./mapper/TransactionMapper";
-import { DyanamoDBUserRepo, IUserRepo } from "../user/repos/UserRepo";
-import { DynamoDB } from "aws-sdk";
 import Stripe from "stripe";
 import { StripeService } from "../common/stripe.service";
 import { Web3ProviderService } from "../common/web3providers.service";
 import { Web3TransactionHandler } from "../common/domain/Types";
+import { IUserRepo } from "../user/repos/UserRepo";
+import { MongoDBUserRepo } from "../user/repos/MongoDBUserRepo";
 
 
 
@@ -43,7 +43,7 @@ export class TransactionService {
     this.stripe = stripeServie.stripeApi;
     this.transactionsRepo = new MockTransactionRepo();
     this.transactionsMapper = new TransactionMapper();
-    this.userRepo = new DyanamoDBUserRepo(dbProvider);
+    this.userRepo = new MongoDBUserRepo(dbProvider);
   }
 
   async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {

@@ -7,13 +7,13 @@ import { Mapper } from '../../../core/infra/Mapper';
 import { UsersTableMeta } from 'src/infra/dynamodb/UsersTable';
 
 
-export type UserMinPropertySetForDBLookUp = Pick<UserProps, "id">
+export type UserMinPropertySetForDBLookUp = Pick<UserProps, "_id">
 
 export class UserMapper implements Mapper<User> {
     public toPersistence(raw: UserMinPropertySetForDBLookUp | User , options: CrudOptions): UserModel{
         const lookupProps =  getProps(raw);
         const model =  toDDBModelInstance(raw, UserModel, options);
-        model[UserModel.table.partitionKeyAttribute] = lookupProps.id; 
+        model[UserModel.table.partitionKeyAttribute] = lookupProps._id; 
         model[UserModel.table.sortKeyAttribute] = this.getDDBSortKey();
         return model; 
     }
@@ -27,7 +27,7 @@ export class UserMapper implements Mapper<User> {
     public toDTO(user: User): UserDTO{
         const p = user.props; 
         return {
-            id: p.id,
+            _id: p._id,
             version: p.version,
             name: p.name,
             email: p.email,

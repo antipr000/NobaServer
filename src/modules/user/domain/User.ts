@@ -4,7 +4,7 @@ import { KeysRequired } from '../../common/domain/Types';
 import * as Joi from 'joi';
 
 export interface UserProps extends VersioningInfo {
-    id: string,
+    _id: string,
     name?: string,
     email: string,
     isEmailVerified?: boolean,
@@ -15,7 +15,7 @@ export interface UserProps extends VersioningInfo {
 
 export const userJoiValidationKeys : KeysRequired<UserProps> = {
     ...versioningInfoJoiSchemaKeys,
-    id: Joi.string().min(10).required(),
+    _id: Joi.string().min(10).required(),
     name: Joi.string().min(2).max(100).optional(),
     email: Joi.string().email().required(), 
     stripeCustomerID: Joi.string().optional(),
@@ -32,7 +32,7 @@ export class User extends AggregateRoot<UserProps>​​ {
     }
 
     public static createUser(userProps: Partial<UserProps>): User{ //set email verified to true when user authenticates via third party and not purely via email
-        if(!userProps.id) userProps.id = userProps.email;
+        if(!userProps._id) userProps._id = userProps.email;
         return new User(Joi.attempt(userProps,userJoiSchema));
     }
     

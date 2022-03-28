@@ -1,6 +1,5 @@
 import { Module, NestModule, RequestMethod } from '@nestjs/common';
 import fs from "fs";
-import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import * as winston from 'winston';
@@ -32,11 +31,7 @@ import { AdminModule } from './modules/admin/admin.module';
     TransactionModule,
     AdminModule,
     ScheduleModule.forRoot(),
-    MongooseModule.forRoot(getMongoDbUri(), {
-      tls: true,
-      sslValidate: false,
-      tlsCAFile: 'rds-combined-ca-bundle.pem',
-    })
+   
   ],
   controllers: [AppController],
   providers: [
@@ -86,15 +81,3 @@ function getWinstonModule(){
   })
 }
 
-function getMongoDbUri(): string {
-  const username: string = process.env.DBUsername;
-  const password: string = process.env.DBPassword;
-  const environment = process.env.NODE_ENV;
-  let clusterEndpoint: string;
-  if(environment == "development") {
-    clusterEndpoint = '0.0.0.0:27017'
-  } else {
-    clusterEndpoint = 'docdb-2022-03-27-08-31-32.cluster-cultavdhwi1h.us-east-1.docdb.amazonaws.com:27017';
-  }
-  return `mongodb://${username}:${password}@${clusterEndpoint}`;
-}

@@ -4,12 +4,13 @@ import {
 } from "@nestjs/common";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { User } from "./domain/User";
-import { IUserRepo, DyanamoDBUserRepo } from "./repos/UserRepo";
+import { IUserRepo } from "./repos/UserRepo";
 import { UserDTO } from "./dto/UserDTO";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { UserMapper } from "./mappers/UserMapper";
 import { StripeService } from "../common/stripe.service";
+import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
 
 
 
@@ -23,7 +24,7 @@ export class UserService {
   
 
   constructor(dbProvider: DBProvider, private readonly stripeService: StripeService) {
-    this.userRepo = new DyanamoDBUserRepo(dbProvider);
+    this.userRepo = new MongoDBUserRepo(dbProvider);
     this.userMapper = new UserMapper();
   }
 

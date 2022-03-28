@@ -9,10 +9,11 @@ import { UserMapper } from "./mappers/UserMapper";
 import {  PaymentMethodDTO } from "./dto/PaymentMethodDTO";
 
 import Stripe from 'stripe';
-import { DyanamoDBUserRepo, IUserRepo } from "./repos/UserRepo";
 import { convertStripePaymentMethodToPaymentMethodDTO } from "./mappers/PaymentMethodMappers";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { StripeService } from "../common/stripe.service";
+import { IUserRepo } from "./repos/UserRepo";
+import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
   
   
   
@@ -31,7 +32,7 @@ import { StripeService } from "../common/stripe.service";
         
         this.stripeApi = stripeService.stripeApi;
         
-        this.userRepo = new DyanamoDBUserRepo(dbProvider);
+        this.userRepo = new MongoDBUserRepo(dbProvider);
         this.userMapper = new UserMapper();
     }
 

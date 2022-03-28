@@ -4,7 +4,7 @@ import { UserProps } from '../domain/User';
 
 export class UserDTO implements Partial<UserProps> { 
     @ApiProperty()
-    id: string;
+    _id: string;
     
     @ApiProperty()
     version?: number;

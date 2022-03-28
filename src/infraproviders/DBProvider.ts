@@ -7,6 +7,8 @@ import { DDB_CONFIG_KEY } from 'src/config/ConfigurationUtils';
 import { DyanamoDataMapperExtended } from 'src/infra/dynamodb/DDBDataMapperExtended';
 import { Logger } from 'winston';
 
+import * as Mongoose from "mongoose";
+
 
 
 @Injectable()
@@ -33,6 +35,10 @@ export class DBProvider {
       region: ddbConfigs.awsRegion,
       logger: ddbConfigs.logQueries? console : undefined
     }); 
+
+    const mongoUri =  `mongodb+srv://nobamongo:NobaMongo@cluster0.wjsia.mongodb.net/devdb`; //TODO create configs for this and separate url from creds
+
+    Mongoose.connect(mongoUri, {serverSelectionTimeoutMS: 2000});
   }
 
   get dynamoClient(): DynamoDB {
