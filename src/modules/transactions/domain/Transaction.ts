@@ -38,7 +38,7 @@ export const transactionJoiValidationKeys : KeysRequired<TransactionProps> = {
     cryptoTransactionId: Joi.string().optional(),
 }
 
-export const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({stripUnknown: true}); 
+export const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({allowUnknown: true}); 
 
 export class Transaction extends AggregateRoot<TransactionProps>​​ {
 
