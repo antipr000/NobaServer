@@ -11,7 +11,8 @@ import { ExchangeRateService } from "./exchangerate.service";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
-import { ITransactionRepo, MockTransactionRepo } from "./repo/TransactionRepo";
+import { ITransactionRepo } from "./repo/TransactionRepo";
+import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import Stripe from "stripe";
 import { StripeService } from "../common/stripe.service";
@@ -41,7 +42,7 @@ export class TransactionService {
     stripeServie: StripeService) {
     
     this.stripe = stripeServie.stripeApi;
-    this.transactionsRepo = new MockTransactionRepo();
+    this.transactionsRepo = new MongoDBTransactionRepo(dbProvider);
     this.transactionsMapper = new TransactionMapper();
     this.userRepo = new MongoDBUserRepo(dbProvider);
   }
@@ -134,14 +135,14 @@ export class TransactionService {
       })
     this.transactionsRepo.updateTransaction(updatedTransaction);
 
-    this.logger.info(`Transaction ${newTransaction.props.id} is waiting for payment confirmation, payment intent id: ${paymentIntent.id}, status: ${paymentIntent.status}`);
+    this.logger.info(`Transaction ${newTransaction.props._id} is waiting for payment confirmation, payment intent id: ${paymentIntent.id}, status: ${paymentIntent.status}`);
 
     //*** assuming that fiat transfer completed*/
 
     const promise = new Promise<TransactionDTO>((resolve, reject) => {
       const web3TransactionHandler: Web3TransactionHandler = {
         onTransactionHash: async (transactionHash: string) => {
-          this.logger.info(`Transaction ${newTransaction.props.id} has crypto transaction hash: ${transactionHash}`);
+          this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
           updatedTransaction = Transaction.createTransaction(
             {...updatedTransaction.props,
                transactionStatus: TransactionStatus.WALLET_OUTGOING_PENDING,  
@@ -158,7 +159,7 @@ export class TransactionService {
         }, */
       
         onError: async (error: any) => { 
-          this.logger.info(`Transaction ${newTransaction.props.id} has crypto transaction error: ${JSON.stringify(error)}`);
+          this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`);
           await this.transactionsRepo.updateTransaction(Transaction.createTransaction({
             ...newTransaction.props,
             transactionStatus: TransactionStatus.WALLET_OUTGOING_FAILED,

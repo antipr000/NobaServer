@@ -13,7 +13,7 @@ export class TransactionMapper  implements Mapper<Transaction>{
     toDTO(t: Transaction): TransactionDTO {
         const props = t.props;
         return {
-            id: props.id,
+            _id: props._id,
             status: props.transactionStatus,
             leg1: props.leg1,
             leg2: props.leg2,

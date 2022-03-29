@@ -2,9 +2,9 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as DynamoDB from 'aws-sdk/clients/dynamodb';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { DynamoDBConfigs } from 'src/config/configtypes/DynamoDBConfigs';
-import { DDB_CONFIG_KEY } from 'src/config/ConfigurationUtils';
-import { DyanamoDataMapperExtended } from 'src/infra/dynamodb/DDBDataMapperExtended';
+import { DynamoDBConfigs } from '../config/configtypes/DynamoDBConfigs';
+import { DDB_CONFIG_KEY } from '../config/ConfigurationUtils';
+import { DyanamoDataMapperExtended } from '../infra/dynamodb/DDBDataMapperExtended';
 import { Logger } from 'winston';
 
 import * as Mongoose from "mongoose";

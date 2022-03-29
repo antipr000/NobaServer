@@ -3,7 +3,7 @@ import { TransactionStatus } from "../domain/Types";
 
 export class TransactionDTO {
     @ApiProperty()
-    id: string;
+    _id: string;
     
 
     @ApiProperty({enum: Object.values(TransactionStatus)})

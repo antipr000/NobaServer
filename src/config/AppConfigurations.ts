@@ -1,6 +1,6 @@
 import * as Joi from 'joi';
-import { join } from 'path';
-import { readConfigsFromYamlFiles } from 'src/core/utils/YamlJsonUtils';
+import { join, dirname } from 'path';
+import { readConfigsFromYamlFiles } from '../core/utils/YamlJsonUtils';
 import { appConfigsJoiValidationSchema, AppEnvironment,  getEnvironmentName } from './ConfigurationUtils';
 
 

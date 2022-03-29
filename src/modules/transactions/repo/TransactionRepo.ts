@@ -22,12 +22,12 @@ export class MockTransactionRepo implements ITransactionRepo {
     }
     
     async createTransaction(transaction: Transaction): Promise<Transaction> {
-        this.allTransactions[transaction.props.id] = transaction;
+        this.allTransactions[transaction.props._id] = transaction;
         return transaction;
     }
     
     async updateTransaction(transaction: Transaction): Promise<Transaction> {
-        this.allTransactions[transaction.props.id] = transaction;
+        this.allTransactions[transaction.props._id] = transaction;
         return transaction;
     }
     
@@ -35,24 +35,4 @@ export class MockTransactionRepo implements ITransactionRepo {
         return Object.values(this.allTransactions).filter(transaction => transaction.props.userId === userId);
     } 
 
-}
-
-
-
-export class MongoDBTransactionRepo implements ITransactionRepo {
-    getAll(): Promise<Transaction[]> {
-        throw new Error("Method not implemented.");
-    }
-    getTransaction(transactionId: string): Promise<Transaction> {
-        throw new Error("Method not implemented.");
-    }
-    createTransaction(transaction: Transaction): Promise<Transaction> {
-        throw new Error("Method not implemented.");
-    }
-    updateTransaction(transaction: Transaction): Promise<Transaction> {
-        throw new Error("Method not implemented.");
-    }
-    getUserTransactions(userId: string): Promise<Transaction[]> {
-        throw new Error("Method not implemented.");
-    }
 }
