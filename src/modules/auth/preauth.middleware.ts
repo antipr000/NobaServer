@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { AppEnvironment } from '../../config/ConfigurationUtils';
 import { DBProvider } from '../../infraproviders/DBProvider';
 import { UserService } from '../user/user.service';
+import { EmailService } from '../common/email.service';
 
 
 const PUBLIC_URL_REGEXES = [
@@ -28,12 +29,15 @@ export class PreauthMiddleware implements NestMiddleware {
 
     @Inject() 
     private readonly userService: UserService
+
+    @Inject()
+    private readonly emailService: EmailService;
     
 
     private readonly authService: AuthService;
     
     constructor() {
-        this.authService = new AuthService(this.dbProvider, this.userService);//cannot inject directly as belongs to same module as this middleware
+        this.authService = new AuthService(this.dbProvider, this.userService, this.emailService);//cannot inject directly as belongs to same module as this middleware
     }
 
    

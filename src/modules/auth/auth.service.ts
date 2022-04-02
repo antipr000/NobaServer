@@ -7,6 +7,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Entity } from "../../core/domain/Entity";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { DBProvider } from "../../infraproviders/DBProvider";
+import { EmailService } from "../common/email.service";
 import { UserService } from "../user/user.service";
 import { IOTPRepo, OTPRepo } from "./repo/OTPRepo";
 
@@ -21,7 +22,9 @@ import { IOTPRepo, OTPRepo } from "./repo/OTPRepo";
     private readonly otpRepo: IOTPRepo;
   
   
-    constructor(dbProvider: DBProvider, private readonly userService: UserService) {
+    constructor(dbProvider: DBProvider, 
+      private readonly userService: UserService, 
+      private readonly emailService: EmailService) {
         this.otpRepo = new OTPRepo();
     }
   
@@ -31,7 +34,8 @@ import { IOTPRepo, OTPRepo } from "./repo/OTPRepo";
 
     async sendOTP(emailID: string): Promise<void> {
       const otp = this.createOTP();
-      this.otpRepo.saveOTP(emailID, "123456"); //we cannot send an email for now so hard coding to 123456
+      this.otpRepo.saveOTP(emailID, otp); 
+      await this.emailService.sendOtp(emailID, otp);
     }
 
     async getOTP(emailID: string): Promise<string> {
