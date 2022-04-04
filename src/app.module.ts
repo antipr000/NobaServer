@@ -2,7 +2,6 @@ import { Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MiddlewareConsumer } from '@nestjs/common';
-import { PreauthMiddleware } from './modules/auth/preauth.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './modules/auth/roles.guard';
@@ -15,6 +14,7 @@ import { TransactionModule } from './modules/transactions/transaction.module';
 import { VerificationModule } from './modules/verification/verification.module';
 import { CommonModule } from './modules/common/common.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { JwtAuthGuard } from './modules/auth/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -27,23 +27,19 @@ import { AdminModule } from './modules/admin/admin.module';
     VerificationModule,
     TransactionModule,
     AdminModule,
-    ScheduleModule.forRoot(),
-   
+    ScheduleModule.forRoot(),   
   ],
   controllers: [AppController],
   providers: [
     AppService,  
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: JwtAuthGuard
     }
   ]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(PreauthMiddleware).forRoutes({
-      path: '*', method: RequestMethod.ALL
-    });
   }
 }
 

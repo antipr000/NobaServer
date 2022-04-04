@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { IDRequest, IDResponse, Consent, Subdivision } from './definitions';
+import { IDRequest, IDResponse, Consent, Subdivision, DocumentRequest, Status } from './definitions';
 
 export default abstract class IDVIntegrator {
     configuration: any
@@ -62,5 +62,15 @@ export default abstract class IDVIntegrator {
         const parsedResponse: IDResponse = this.parseResponse(data);
         this.saveResponseInDB(data, parsedResponse);
         return parsedResponse;
+    }
+
+    /**
+     * Verify document. Accepts base 64 encoded document image, live photo and
+     * document type and calls integrator APIs with the data. 
+     */
+    async verifyDocument(request: DocumentRequest): Promise<IDResponse> {
+        return {
+            status: Status.PENDING
+        };
     }
 }

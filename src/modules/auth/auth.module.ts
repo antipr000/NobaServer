@@ -1,17 +1,32 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { AuthService } from './auth.service';
+import { LocalStrategy } from './local.strategy';
+import { UserModule } from "../user/user.module";
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './jwt.strategy';
+import { jwtConstants } from './constants';
 import { DBProvider } from '../../infraproviders/DBProvider';
 import { InfraProvidersModule } from '../../infraproviders/infra.module';
+import { ConfigModule } from '@nestjs/config';
+import { AuthController } from './auth.controller';
 import { CommonModule } from '../common/common.module';
-import { UserModule } from '../user/user.module';
-import { AuthenticationController } from './auth.controller';
-import { AuthService } from './auth.service';
 
 @Module({
-  imports: [InfraProvidersModule,  ConfigModule, UserModule, CommonModule],
-  controllers: [AuthenticationController],
-  providers: [ DBProvider, AuthService],
+  imports: [
+    UserModule,
+    PassportModule,
+    JwtModule.register({
+      secret: jwtConstants.secret,
+      signOptions: { expiresIn: '86400s' }  /* 1 day */
+    }),
+    InfraProvidersModule,
+    ConfigModule,
+    CommonModule
+  ],
+  providers: [
+    AuthService, LocalStrategy, JwtStrategy, DBProvider],
+  controllers: [AuthController],
+  exports: [AuthService]
 })
 export class AuthModule {}
-
-//https://docs.nestjs.com/custom-decorators

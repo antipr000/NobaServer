@@ -1,43 +1,37 @@
-import { Controller, Get, HttpStatus, Inject, Logger, Param, Post, Query } from "@nestjs/common";
-import { ApiResponse } from "@nestjs/swagger";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { AuthUser } from "./auth.decorator";
+import { Controller, Body, Post, UseGuards, Request, Get, HttpStatus } from "@nestjs/common";
+import { LocalAuthGuard } from "./local-auth.guard";
 import { AuthService } from "./auth.service";
-import { AuthenticatedUser } from "./domain/AuthenticatedUser";
+import { EmailService } from "../common/email.service";
+import { LoginRequestDTO } from "./dto/LoginRequest";
+import { ApiResponse } from "@nestjs/swagger";
+import { Public } from "./public.decorator";
+import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
+import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 
+@Controller("auth/")
+export class AuthController {
+    constructor(
+        private authService: AuthService, 
+        private emailService: EmailService) {}
 
-
-@Controller("auth")
-export class AuthenticationController {
-
-    @Inject(WINSTON_MODULE_PROVIDER)
-    private readonly logger: Logger;
-
-    constructor(private readonly authService: AuthService) {
-
+    @Public()
+    @UseGuards(LocalAuthGuard)
+    @Post('/verifyOtp')
+    async verifyOtp(@Request() request, @Body() requestBody: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
+        return this.authService.login(request.user);
     }
 
-    @ApiResponse({ status: HttpStatus.OK, description: "Returns uuid of authenticated user" })
-    @Get("userID")
-    async getUID(@AuthUser() user: AuthenticatedUser): Promise<string> {
-        return user.uid;
+    @Public()
+    @ApiResponse({ status: HttpStatus.OK, description: "Sends email with otp" })
+    @Post("/login")
+    async loginUser(@Body() request: LoginRequestDTO) {
+        const otp = this.authService.createOtp();
+        this.authService.saveOtp(request.email, otp);
+        return this.emailService.sendOtp(request["email"], otp.toString());
     }
 
-    //TODO set limit on number of OTPs sent to user 
-    @ApiResponse({ status: HttpStatus.OK, description: "Sends OTP on the given email" })
-    @Post("otp/:emailID")
-    async sendOTP(@Param("emailID") emailID: string): Promise<string> {
-        //TODO write logic to genrate 6 digit number save in some cache or db with expiry time
-        await this.authService.sendOTP(emailID);
-        return "OTP Sent to email";
+    @Get("/userId")
+    async testAuth(@Request() request): Promise<string> {
+        return request.user._id;
     }
-
-    @ApiResponse({ status: HttpStatus.OK, description: "Verifies the OTP and creates user authenticated session. If user doesn't exist with this email will create user entry also in the database" })
-    @Post("otp/verify/:emailID/:otp")
-    async verifyOTP(@Param("emailID") emailID: string, @Param("otp")otp: string): Promise<string> {
-        return await this.authService.verifyOTPAndSaveToken(emailID, otp);
-    }
-
 }
-
-

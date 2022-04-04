@@ -20,4 +20,13 @@ export class UserDTO implements Partial<UserProps> {
 
     @ApiPropertyOptional()
     phone?: string;
+
+    @ApiPropertyOptional()
+    isEmailVerified?: boolean;
+
+    @ApiPropertyOptional()
+    idVerified?: boolean;
+
+    @ApiPropertyOptional()
+    documentVerified?: boolean;
 } 

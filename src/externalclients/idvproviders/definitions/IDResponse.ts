@@ -1,6 +1,7 @@
 export enum Status {
     OK = "OK",
-    FAILED = "FAILED"
+    FAILED = "FAILED",
+    PENDING = "PENDING"
 };
 
 export type IDResponse = {

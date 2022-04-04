@@ -1,10 +1,9 @@
 
 import { User, UserProps } from '../domain/User';
 import { UserDTO } from '../dto/UserDTO';
-import { CrudOptions, getProps, toDDBModelInstance,  unwrapDDBItem } from '../../../infra/dynamodb/DDBUtils';
-import { UserModel } from 'src/infra/dynamodb/UserModel';
+import { CrudOptions, getProps, toDDBModelInstance } from '../../../infra/dynamodb/DDBUtils';
+import { UserModel } from '../../../infra/dynamodb/UserModel';
 import { Mapper } from '../../../core/infra/Mapper';
-import { UsersTableMeta } from 'src/infra/dynamodb/UsersTable';
 
 
 export type UserMinPropertySetForDBLookUp = Pick<UserProps, "_id">
@@ -19,9 +18,7 @@ export class UserMapper implements Mapper<User> {
     }
 
     public toDomain(raw: any): User{ 
-        delete raw[UsersTableMeta.sortKeyAttribute]; // sortkey attribute is not part of user domain model 
-
-        return User.createUser(unwrapDDBItem(raw));
+        return User.createUser(raw);
     }
 
     public toDTO(user: User): UserDTO{
@@ -31,7 +28,10 @@ export class UserMapper implements Mapper<User> {
             version: p.version,
             name: p.name,
             email: p.email,
-        }        
+            isEmailVerified: p.isEmailVerified,
+            idVerified: p.idVerified,
+            documentVerified: p.documentVerified
+        };        
     }
 
     public getDDBSortKey(): string{

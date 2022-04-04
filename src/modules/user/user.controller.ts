@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Param,  HttpStatus } from '@nestjs/common';
+import { Controller, Get, Inject, Param,  HttpStatus, Request, HttpException, Put, Req, Body } from '@nestjs/common';
 import { UserService } from './user.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -21,8 +21,24 @@ export class UserController {
  
   @Get("/")
   @ApiResponse({status:HttpStatus.OK,   type: UserDTO})
-  async getUser(@Param(UserID)id: string): Promise<UserDTO>{
+  async getUser(@Param(UserID)id: string, @Request() request): Promise<UserDTO>{
+    if(request.user._id !== id) {
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+    }
     return await this.userService.getUser(id);
+  }
+
+  @Put("/")
+  @ApiResponse({ status: HttpStatus.OK, type: UserDTO })
+  async updateUser(@Param(UserID)id: string, @Request() request, @Body() requestBody): Promise<UserDTO> {
+    if(request.user._id !== id) {
+      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+    }
+    const userProps = {
+      ...request.user,
+      ...requestBody
+    };
+    return await this.userService.updateUser(userProps);
   }
 
 }

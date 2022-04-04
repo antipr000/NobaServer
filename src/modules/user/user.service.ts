@@ -3,7 +3,7 @@ import {
   Injectable,
 } from "@nestjs/common";
 import { DBProvider } from "../../infraproviders/DBProvider";
-import { User } from "./domain/User";
+import { User, UserProps } from "./domain/User";
 import { IUserRepo } from "./repos/UserRepo";
 import { UserDTO } from "./dto/UserDTO";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -11,8 +11,7 @@ import { Logger } from "winston";
 import { UserMapper } from "./mappers/UserMapper";
 import { StripeService } from "../common/stripe.service";
 import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
-
-
+import { Result } from "src/core/logic/Result";
 
 @Injectable()
 export class UserService {
@@ -44,9 +43,19 @@ export class UserService {
       await this.userRepo.createUser(newUser);
       return this.userMapper.toDTO(newUser);
     }
-
+  
     return this.userMapper.toDTO(userResult.getValue());
   }
 
-
+  async updateUser(userProps: Partial<UserProps>): Promise<UserDTO> {
+    const user = User.createUser(userProps);
+    const updatedUser = await this.userRepo.updateUser(user);
+    return this.userMapper.toDTO(updatedUser);
+  }
+  
+  async findOne(emailID: string): Promise<User> {
+    const userResult = await this.userRepo.getUserByEmail(emailID);
+    // TODO: Throw error when user is not present
+    return userResult.getValue();
+  }
 }

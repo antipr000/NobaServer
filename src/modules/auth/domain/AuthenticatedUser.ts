@@ -1,6 +1,3 @@
-export class AuthenticatedUser {
-    name?: string;
+export type AuthenticatedUser = {
     email: string;
-    uid: string;
-    emailVerified?: boolean;
-}
+};

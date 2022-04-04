@@ -3,7 +3,6 @@ import { VerificationService } from './verification.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import IDVIntegrator from '../../externalclients/idvproviders/IDVIntegrator';
 import TruliooIntegrator from '../../externalclients/idvproviders/providers/trulioo/TruliooIntegrator';
-import { IDResponse, IDRequest } from '../../externalclients/idvproviders/definitions';
 import { VerificationResultDTO } from './dto/VerificationResultDTO';
 import { IDVerificationRequestDTO } from './dto/IDVerificationRequestDTO';
 import { Logger } from 'winston';
@@ -11,6 +10,7 @@ import { ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ConsentDTO } from './dto/ConsentDTO';
 import { SubdivisionDTO } from './dto/SubdivisionDTO';
+import { DocVerificationRequestDTO } from './dto/DocVerificationRequestDTO';
 
 
 @Controller("verify")
@@ -55,4 +55,11 @@ export class VerificationController {
     async verifyUser(@Body() request: IDVerificationRequestDTO): Promise<VerificationResultDTO> {
         return this.idvProvider.verify(request);
 	}
+
+    @Post("/doc")
+    @ApiResponse({ status: HttpStatus.ACCEPTED, type: VerificationResultDTO })
+    async verifyDocument(@Body() request: DocVerificationRequestDTO): Promise<VerificationResultDTO> {
+        return this.idvProvider.verifyDocument(request);
+    }
+    
 }

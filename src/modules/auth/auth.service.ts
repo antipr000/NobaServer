@@ -1,67 +1,51 @@
-import {
-    Inject,
-    Injectable,
-    Logger,
-  } from "@nestjs/common";
+import { Injectable, Inject, Logger } from '@nestjs/common';
+import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Entity } from "../../core/domain/Entity";
-import { BadRequestError } from "../../core/exception/CommonAppException";
-import { DBProvider } from "../../infraproviders/DBProvider";
-import { EmailService } from "../common/email.service";
-import { UserService } from "../user/user.service";
-import { IOTPRepo, OTPRepo } from "./repo/OTPRepo";
+import { OTPRepo, IOTPRepo } from './repo/OTPRepo';
+import { Otp } from './domain/Otp';
+import { AuthenticatedUser } from './domain/AuthenticatedUser';
+import { UserService } from '../user/user.service';
+import { VerifyOtpResponseDTO } from './dto/VerifyOtpReponse';
+import { DBProvider } from '../../infraproviders/DBProvider';
+import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
 
-  
-  
-  @Injectable()
-  export class AuthService {
+@Injectable()
+export class AuthService {
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger;
-
-
     private readonly otpRepo: IOTPRepo;
-  
-  
-    constructor(dbProvider: DBProvider, 
-      private readonly userService: UserService, 
-      private readonly emailService: EmailService) {
-        this.otpRepo = new OTPRepo();
-    }
-  
-    private createOTP(length=6): string {
-      return Math.floor(100000 + Math.random() * 900000).toString();
+    constructor(
+        dbProvider: DBProvider,
+        private jwtService: JwtService,
+        private userService: UserService
+    ) {
+        this.otpRepo = new MongoDBOtpRepo(dbProvider);
     }
 
-    async sendOTP(emailID: string): Promise<void> {
-      const otp = this.createOTP();
-      this.otpRepo.saveOTP(emailID, otp); 
-      await this.emailService.sendOtp(emailID, otp);
-    }
-
-    async getOTP(emailID: string): Promise<string> {
-        return this.otpRepo.getOTP(emailID);
-    }
-
-    async verifyOTPAndSaveToken(emailID: string, otp: string): Promise<string>{
-        const savedOTP = await this.getOTP(emailID);
-        console.log("saved otp", savedOTP);
-        if(savedOTP === otp){
-            //create user in db if logging in for first time
-            await this.userService.createUserIfFirstTimeLogin(emailID);
-            const sessionToken = Entity.getNewID();
-            await this.otpRepo.saveAuthToken(emailID, sessionToken);//TODO save expiry on session token
-            return sessionToken;
-        } else {
-            throw new BadRequestError({messageForClient: "Invalid OTP"});
+    async validateUser(email: string, otp: number): Promise<AuthenticatedUser> {
+        const user: Otp = await this.otpRepo.getOTP(email);
+        const currentDateTime: Date = new Date();
+        if(user.props.otp === otp && currentDateTime <= user.props.otpExpiryTime) {
+            this.userService.createUserIfFirstTimeLogin(email);
+            return {
+                email
+            };
         }
+        return null;
     }
 
+    async login(user: AuthenticatedUser): Promise<VerifyOtpResponseDTO> {
+        const payload = { email: user.email };
+        return {
+            access_token: this.jwtService.sign(payload)
+        };
+    }
 
-    async getEmailIDForToken(authToken: string): Promise<string> { 
-        if(authToken=="testtoken") return "John.Doe@noba.com"; //TODO remove this only for testing
-        return this.otpRepo.getEmailIDForAuthToken(authToken); 
-    }   
+    async saveOtp(email: string, otp: number): Promise<void> {
+        await this.otpRepo.saveOTP(email, otp);
+    }
 
-
-  }
-  
+    public createOtp(): number {
+        return Math.floor(100000 + Math.random() * 900000);
+    }
+}

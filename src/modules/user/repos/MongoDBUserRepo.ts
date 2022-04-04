@@ -29,15 +29,19 @@ export class MongoDBUserRepo implements IUserRepo {
 
     
     async updateUser(user: User): Promise<User> {
-        const userProps = await UserModel.findByIdAndUpdate(user.props._id, user.props).exec(); 
+        const userProps = await UserModel.findByIdAndUpdate(user.props._id, {
+            $set: user.props
+        }, {
+            new: true
+        }).exec(); 
         return this.userMapper.toDomain(userProps);
     }
     
 
-    async getUserIfExists(id: string): Promise<Result<User>>{
+    async getUserIfExists(email: string): Promise<Result<User>>{
        try {
-           const user = await this.getUser(id);
-            return Result.ok(user);
+           const user = await UserModel.findOne({ "email": email }).exec();
+            return Result.ok(this.userMapper.toDomain(user));
        } catch(err) {
             return Result.fail("Couldn't find user in the db");
        }
@@ -47,14 +51,18 @@ export class MongoDBUserRepo implements IUserRepo {
         return this.getUserIfExists(email);
     }
 
-    async exists(id: string):Promise<boolean>{
-        const res = await this.getUserIfExists(id);
+    async exists(email: string):Promise<boolean>{
+        const res = await this.getUserIfExists(email);
         return res.isSuccess; 
     }
 
     async createUser(user: User) : Promise<User> {
-        const userProps = await UserModel.create(user.props);
-        return this.userMapper.toDomain(userProps);
+        if(this.exists(user.props.email)) {
+            throw Error("User with given email already exists");
+        } else {
+            const userProps = await UserModel.create(user.props);
+            return this.userMapper.toDomain(userProps);
+        }
     }
 
 }

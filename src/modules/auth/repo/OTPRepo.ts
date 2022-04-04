@@ -1,33 +1,33 @@
+import { Otp, OtpProps } from "../domain/Otp";
+import { OtpMapper } from "../mapper/OtpMapper";
+import { otpConstants } from "../constants";
+
 export interface IOTPRepo {
-    getOTP(emailID: string): Promise<string>;
-    saveOTP(emailID: string, otp: string): Promise<void>;
-    saveAuthToken(emailID: string, authToken: string): Promise<void>;
-    getEmailIDForAuthToken(authToken: string): Promise<string>;
+    getOTP(emailID: string): Promise<Otp>;
+    saveOTP(emailID: string, otp: number): Promise<void>;
 }
 
 export class OTPRepo implements IOTPRepo {
 
-    private readonly emailToOTPMap; //TODO use reddis or store in Dynamodb? 
-    private readonly authTokenToEmailIDMap; 
+    private readonly emailToOTPMap; //TODO use redis or store in MongoDB? 
+    private readonly otpMapper: OtpMapper;
 
     constructor() {
         this.emailToOTPMap = {};
-        this.authTokenToEmailIDMap = {};
+        this.otpMapper = new OtpMapper();
     }
 
-    async getOTP(emailID: string): Promise<string> {
-        return this.emailToOTPMap[emailID];
+    async getOTP(emailID: string): Promise<Otp> {
+        return this.otpMapper.toDomain(this.emailToOTPMap[emailID]);
     }
     
-    async saveOTP(emailID: string, otp: string): Promise<void> {
-        this.emailToOTPMap[emailID] = otp;
-    }
-
-    async saveAuthToken(emailID: string, authToken: string): Promise<void> {
-        this.authTokenToEmailIDMap[authToken] = emailID;
-    }
-
-    async getEmailIDForAuthToken(authToken: string): Promise<string> {
-        return this.authTokenToEmailIDMap[authToken];
+    async saveOTP(emailID: string, otp: number): Promise<void> {
+        const expiryTime = new Date(new Date().getTime() + otpConstants.EXPIRY_TIME_IN_MINUTES * 60000);
+        const otpProps: OtpProps = {
+            _id: emailID,
+            otp: otp,
+            otpExpiryTime: expiryTime.getTime()
+        };
+        this.emailToOTPMap[emailID] = otpProps;
     }
 }

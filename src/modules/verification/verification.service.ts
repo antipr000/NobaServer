@@ -17,7 +17,7 @@ export class VerificationService {
         return this;
     }
 
-    async getTransactionStatus(id: string): Promise<string> {
+    async getVerificationStatus(id: string): Promise<string> {
         return null;
     }
 }
