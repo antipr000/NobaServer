@@ -24,7 +24,7 @@ export class AuthService {
 
     async validateUser(email: string, otp: number): Promise<AuthenticatedUser> {
         const user: Otp = await this.otpRepo.getOTP(email);
-        const currentDateTime: Date = new Date();
+        const currentDateTime: number = new Date().getTime();
         if(user.props.otp === otp && currentDateTime <= user.props.otpExpiryTime) {
             this.userService.createUserIfFirstTimeLogin(email);
             return {
