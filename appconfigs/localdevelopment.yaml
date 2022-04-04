@@ -8,24 +8,6 @@ awsCommonRegion: &awsCommonRegion "ap-southeast-1"
 awsCommonAccessKeyID: &awsCommonAccessKeyID "test"
 awsCommonAccessKeySecret: &awsCommonAccessKeySecret "test"
 
-dynamodb:
-  #schema should match the one in DynamoDbConfigs.ts
-  endpoint: 'http://localhost:4566'
-  awsRegion: *awsCommonRegion #yaml anchor reference
-  logQueries: false
-
-s3: 
-  endpoint: 'http://localhost:4566'
-  awsRegion: *awsCommonRegion
-  s3ForcePathStyle: true
-  s3BucketName: "devNobaphotosbucket"
-  loggingEnabled: true
-
-ses:
-  endpoint: 'http://localhost:4566'
-  awsRegion: *awsCommonRegion
-  loggingEnabled: true
-  sourceEmailAddress: "notifications@noba.io"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:

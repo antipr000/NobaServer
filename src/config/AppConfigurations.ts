@@ -7,7 +7,8 @@ import { appConfigsJoiValidationSchema, AppEnvironment,  getEnvironmentName } fr
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.DEV] : "localdevelopment.yaml",
-  [AppEnvironment.PROD] : "production.yaml"
+  [AppEnvironment.PROD] : "production.yaml",
+  [AppEnvironment.STAGING] : "staging.yaml"
 } as const;
 
 

@@ -5,17 +5,14 @@ envType: "production"
 
 apiPrefix: "/api/v1"
 
-awsCommonRegion: &awsCommonRegion "ap-southeast-1"
+awsCommonRegion: &awsCommonRegion "us-east-1"
 
-dynamodb:
-  #schema should match the one in DynamoDbConfigs.ts
-  endpoint: 'https://dynamodb.ap-southeast-1.amazonaws.com'
-  awsRegion: *awsCommonRegion #yaml anchor reference
-  logQueries: false
+#in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
+sendgrid:
+  apiKey: "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"
 
-#TODO move to vault
 stripe:
-  secretKey: "sk_test_51Jg7yTSGxLg8vKcYZvztf1EPIf3FJp0YZVOs5kmltOZVqA6bBO6bFd3UtzQjsP35nmn3AN0yDTWGnTmCpVYAsVNb00KxL9GQGo"
+  secretKey: 'sk_test_51KZIlsEe2pZC45hcq7Tjpoi3M7nCc6A5ki95cA8UGF1Ei7b4mCUf6wnAgTJAPzVlpamVGUj7cjQMMhegPYgqELyx00yqpROABj'
   
 
 

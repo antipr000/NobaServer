@@ -9,7 +9,6 @@ export enum AppEnvironment {
 }
 
 export const NODE_ENV_CONFIG_KEY = "NODE_ENV";
-export const DDB_CONFIG_KEY = "dynamodb";
 export const REDIS_CONFIG_CONFIG_KEY = "redis"
 export const SES_CONFIG_KEY = "ses";
 export const S3_CONFIG_KEY = "s3";
@@ -22,7 +21,6 @@ export const appConfigsJoiValidationSchema = Joi.object({
     awsCommonAccessKeyID: Joi.string().required(),
     awsCommonAccessKeySecret: Joi.string().required(),
     [NODE_ENV_CONFIG_KEY]: Joi.string().default(AppEnvironment.DEV), 
-    [DDB_CONFIG_KEY]: ddbConfigsJoiValidationSchema,
     //TODO add schema for other configs too
     //TODO add others
 }).options({allowUnknown: true});
