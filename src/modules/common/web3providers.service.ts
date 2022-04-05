@@ -1,14 +1,14 @@
 //TODO check why import doesn't work
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Web3 = require('web3');
-import {Transaction as EthTransaction} from 'ethereumjs-tx';
 import { Injectable } from "@nestjs/common";
+import { Transaction as EthTransaction } from 'ethereumjs-tx';
 import { Web3TransactionHandler } from './domain/Types';
 
 
 // We should not store the private key of our hard wallet in code. //TODO create configs for this and inject from AWS vault
 @Injectable()
-export class Web3ProviderService {
+export class EthereumWeb3ProviderService {
     //TODO take these from configs and aws secret vault instead of hardcoding
     private readonly private_key_for_senders_account = 'da35ce7a3c27c294ef7237280074b963d5784aa1fdaa0c0c96741a660ad10708'
     private readonly public_address_of_senders_account = '0x73D20Fd99adE20aC3ae7fd36169974E2846a7Cb9'
@@ -31,7 +31,7 @@ export class Web3ProviderService {
 
         // txCount = web3.eth.getTransactionCount(public_address_of_senders_account);
 
-        console.log("ether amount", amount);
+        // console.log("ether amount", amount);
 
         const rawTx = {
             //TODO take this from configs??
@@ -53,14 +53,14 @@ export class Web3ProviderService {
     private async sendRawTransaction(rawTx, web3TransactionHandler: Web3TransactionHandler) {
         // get the number of transactions sent so far so we can create a fresh nonce
 
-        console.log("Raw transaction", rawTx);
+        // console.log("Raw transaction", rawTx);
 
         const txCount = await this.web3.eth.getTransactionCount(rawTx.from);
 
         // Set a variable of transaction count for nonce
         const newNonce = this.web3.utils.toHex(txCount)
 
-        console.log(`newNonce: ${newNonce}, txCount: ${txCount}`);
+        // console.log(`newNonce: ${newNonce}, txCount: ${txCount}`);
 
         // Add the nonce and chain info to the transaction as a new Tx()
         const transaction = new EthTransaction({ ...rawTx, nonce: newNonce }, { chain: 'ropsten' }) //TODO take chain from configs!!
@@ -89,10 +89,72 @@ export class Web3ProviderService {
             });
 
     }
-  
+}
 
+@Injectable()
+export class TerraWeb3ProviderService {
 
+    private readonly chain_ids = {
+        "terra-main":"columbus-5",
+        "terra-test":"bombay-12"
+    }
 
-  
+    private readonly provider = "https://restless-aged-grass.terra-testnet.quiknode.pro/ebb527319a9f248f0e3840a10a61487b5a0bf850/";
+      
 
+    // Throwaway Wallets (Created via Terra Station)
+    // MENMONICS SHOULD NEVER BE AVAILABLE IN OUR CODE 
+    // TODO: Setup AWS Vault to store these later on
+    // THESE ARE THROWAWAYS
+    // Wallet 1
+    // Monitor: https://finder.terra.money/testnet/address/terra1trrnqzkyef3wv78y745wnjy0re905gthxm4jy0
+    private readonly wallet_1_mnemonic = "double sort claw reform negative manage swift aspect people bulk huge library orient divorce battle first dignity truth coin hill wealth stone twice invest";
+    
+    // We can find this dynamically
+    // private readonly wallet_1_address = "terra1trrnqzkyef3wv78y745wnjy0re905gthxm4jy0";
+
+    // Wallet 2
+    // Monitor: https://finder.terra.money/testnet/address/terra13wfl4kq7yd6lpmyym4tlhl5wu3rmhe3devtfgc
+    // const wallet_2_mnemonic = "base nurse velvet author egg yard repair rival champion street awesome music tunnel silent lava climb scheme tornado gaze unaware lizard top easily parrot";
+    // no need of above mnemonic
+    // private readonly wallet_2_address = "terra13wfl4kq7yd6lpmyym4tlhl5wu3rmhe3devtfgc";
+    // Wallet 2 can be used for testing purposes and so please do not delete this comment
+
+    async transferTerra(amount: number, destinationAddress: string, web3TransactionHandler: Web3TransactionHandler, coinID: string) {
+        // Inline import to make sure we don't have to install the Terra package for other providers
+        // todo ask ankit if there is a way to do this at class level, it didnt seem to work for me
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { MsgSend, MnemonicKey, LCDClient} = require('@terra-money/terra.js');
+        const terra = new LCDClient({
+            URL: this.provider,
+            chainID: this.chain_ids['terra-test'],
+          });
+
+        // Sender and Recipient Details
+        const senderMnemonic = new MnemonicKey({
+            mnemonic: this.wallet_1_mnemonic,
+        });          
+
+        const senderWallet = terra.wallet(senderMnemonic);
+        const senderAddress = senderWallet.key.accAddress;
+        const ucoinID = (coinID === 'terrausd') ? 'uusd' : 'uluna';  
+        const send = new MsgSend(
+            senderAddress,
+            destinationAddress,
+            { [ucoinID]: amount*1e6 }
+        );
+        
+        // console.log(send);
+
+        const broadcastResult = await senderWallet.createAndSignTx({
+            msgs: [send],
+            memo: 'test!',
+        }).then(tx => terra.tx.broadcast(tx))
+        .then(broadcastResult => web3TransactionHandler.onTransactionHash(broadcastResult.txHash)) // TODO: even though i update txHash, it is not getting set as cryptoTx id in response. Ask Ankit what am I missing here in code review
+        .catch(web3TransactionHandler.onError);
+
+        // console.log(signedTx);
+        // const broadcastResult = await terra.tx.broadcast(signedTx);        
+        // console.log('txhash is: ', broadcastResult.txhash);
+    }
 }

@@ -1,11 +1,11 @@
-import { Controller, Get, Inject, Param,  HttpStatus, Post, Delete, Put, Body} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Inject, Param, Post } from '@nestjs/common';
+import { ApiResponse } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { Roles, UserID } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
-import { ApiResponse } from '@nestjs/swagger';
-import { PaymentMethodDTO } from './dto/PaymentMethodDTO';
+import { Roles, UserID } from '../auth/roles.decorator';
 import { AddPaymentMethodDTO } from './dto/AddPaymentMethodDTO';
+import { PaymentMethodDTO } from './dto/PaymentMethodDTO';
 import { PaymentMethodsService } from './paymentmethods.service';
 
 @Roles(Role.User)
@@ -28,6 +28,7 @@ export class PaymentMethodsController {
   @Post()
   @ApiResponse({status:HttpStatus.OK,   type: PaymentMethodDTO})
   async addPaymentMethod(@Param(UserID) userID: string,  @Body() methodDetails: AddPaymentMethodDTO): Promise<PaymentMethodDTO>{
+    console.log("validations passed and method Details is ", methodDetails);
     return this.paymentMethodService.addPaymentMethod(userID, methodDetails);
   }
 

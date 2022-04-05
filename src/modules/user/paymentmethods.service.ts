@@ -47,7 +47,8 @@ import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
             customer: stripeCustomerID,
             type: 'card',
           });
-
+        
+        console.log(stripePaymentMethods);
         return  (stripePaymentMethods.data??[]).map(stripePaymentMethod =>  convertStripePaymentMethodToPaymentMethodDTO(stripePaymentMethod));
     }
   

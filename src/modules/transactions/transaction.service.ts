@@ -1,25 +1,25 @@
 import {
   Inject,
-  Injectable,
+  Injectable
 } from "@nestjs/common";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import Stripe from "stripe";
 import { Logger } from "winston";
+import { BadRequestError } from "../../core/exception/CommonAppException";
+import { DBProvider } from "../../infraproviders/DBProvider";
+import { Web3TransactionHandler } from "../common/domain/Types";
+import { StripeService } from "../common/stripe.service";
+import { EthereumWeb3ProviderService, TerraWeb3ProviderService } from "../common/web3providers.service";
+import { MongoDBUserRepo } from "../user/repos/MongoDBUserRepo";
+import { IUserRepo } from "../user/repos/UserRepo";
+import { Transaction } from "./domain/Transaction";
+import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { ExchangeRateService } from "./exchangerate.service";
-import { BadRequestError } from "../../core/exception/CommonAppException";
-import { Transaction } from "./domain/Transaction";
-import { TransactionStatus } from "./domain/Types";
-import { ITransactionRepo } from "./repo/TransactionRepo";
-import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionMapper } from "./mapper/TransactionMapper";
-import Stripe from "stripe";
-import { StripeService } from "../common/stripe.service";
-import { Web3ProviderService } from "../common/web3providers.service";
-import { Web3TransactionHandler } from "../common/domain/Types";
-import { IUserRepo } from "../user/repos/UserRepo";
-import { MongoDBUserRepo } from "../user/repos/MongoDBUserRepo";
+import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
+import { ITransactionRepo } from "./repo/TransactionRepo";
 
 
 
@@ -35,10 +35,17 @@ export class TransactionService {
 
   private readonly stripe: Stripe;
 
+  // This is the id used at coinGecko, so do not change the allowed constants below
+  private readonly allowedFiats: string[] = ["usd"];
+  private readonly allowedCryptoCurrencies: string[] = ["ethereum", "terrausd", "terra-luna"];
+  
+  private readonly slippageAllowed = 2; //2%, todo take from config or user input
+
 
   constructor(dbProvider: DBProvider, 
     private readonly exchangeRateService: ExchangeRateService,
-    private readonly web3ProviderService: Web3ProviderService,
+    private readonly EthereumWeb3ProviderService: EthereumWeb3ProviderService,
+    private readonly TerraWeb3ProviderService: TerraWeb3ProviderService,
     stripeServie: StripeService) {
     
     this.stripe = stripeServie.stripeApi;
@@ -64,8 +71,6 @@ export class TransactionService {
   //TODO add proper logs without leaking sensitive information
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc. 
   async transact(userID: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
-    const slippageAllowed = 2; //2%, todo take from config or user input
-
     const user = await this.userRepo.getUser(userID);
 
     const leg1: string = details.leg1;
@@ -74,8 +79,8 @@ export class TransactionService {
     const leg1Amount = details.leg1Amount;
     const leg2Amount = details.leg2Amount;
 
-    if (leg1 != "usd" && leg2 != "ethereum") {
-      throw new Error("Only USD to ETH transaction is supported at the moment");
+    if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
+      throw new BadRequestError({messageForClient: "Supported leg1 (i.e fiat) are " + this.allowedFiats.join(", ") + " and leg2 (i.e crypto) are " + this.allowedCryptoCurrencies.join(", ")});
     }
 
     const currentPrice = await this.exchangeRateService.priceInFiat(leg2, leg1);
@@ -84,7 +89,7 @@ export class TransactionService {
 
     this.logger.info(`bidPrice: ${bidPrice}, currentPrice: ${currentPrice}`);
 
-    if (! this.withinSlippage(bidPrice, currentPrice, slippageAllowed)) { 
+    if (! this.withinSlippage(bidPrice, currentPrice, this.slippageAllowed)) { 
       throw new BadRequestError({messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}`});
     }
 
@@ -169,7 +174,15 @@ export class TransactionService {
         }
       };
 
-     this.web3ProviderService.transferEther(leg2Amount, details.destinationWalletAdress, web3TransactionHandler);
+      
+      
+      if (leg2=='ethereum') {
+        this.EthereumWeb3ProviderService.transferEther(leg2Amount, details.destinationWalletAdress, web3TransactionHandler);
+      }
+      else {
+        // if its not ethereum then it is terra ust or luna
+        this.TerraWeb3ProviderService.transferTerra(leg2Amount, details.destinationWalletAdress, web3TransactionHandler, leg2);
+      }
      });
 
     return promise;
@@ -179,5 +192,4 @@ export class TransactionService {
   private withinSlippage(bidPrice: number, marketPrice: number, slippagePercentage: number): boolean {
     return Math.abs(bidPrice - marketPrice) <= (slippagePercentage / 100) * bidPrice;
   }
-
 }
