@@ -31,7 +31,7 @@ export class EthereumWeb3ProviderService {
 
         // txCount = web3.eth.getTransactionCount(public_address_of_senders_account);
 
-        console.log("ether amount", amount);
+        // console.log("ether amount", amount);
 
         const rawTx = {
             //TODO take this from configs??
@@ -53,14 +53,14 @@ export class EthereumWeb3ProviderService {
     private async sendRawTransaction(rawTx, web3TransactionHandler: Web3TransactionHandler) {
         // get the number of transactions sent so far so we can create a fresh nonce
 
-        console.log("Raw transaction", rawTx);
+        // console.log("Raw transaction", rawTx);
 
         const txCount = await this.web3.eth.getTransactionCount(rawTx.from);
 
         // Set a variable of transaction count for nonce
         const newNonce = this.web3.utils.toHex(txCount)
 
-        console.log(`newNonce: ${newNonce}, txCount: ${txCount}`);
+        // console.log(`newNonce: ${newNonce}, txCount: ${txCount}`);
 
         // Add the nonce and chain info to the transaction as a new Tx()
         const transaction = new EthTransaction({ ...rawTx, nonce: newNonce }, { chain: 'ropsten' }) //TODO take chain from configs!!
@@ -137,17 +137,14 @@ export class TerraWeb3ProviderService {
 
         const senderWallet = terra.wallet(senderMnemonic);
         const senderAddress = senderWallet.key.accAddress;
-        const ucoinID = (coinID === 'terrausd') ? 'uusd' : 'uluna';
-        console.log("this is the amount", amount);
-        // log the type of amount
-        console.log("this is the type of amount", typeof amount);
+        const ucoinID = (coinID === 'terrausd') ? 'uusd' : 'uluna';  
         const send = new MsgSend(
             senderAddress,
             destinationAddress,
             { [ucoinID]: amount*1e6 }
         );
         
-        console.log(send);
+        // console.log(send);
 
         const broadcastResult = await senderWallet.createAndSignTx({
             msgs: [send],
@@ -158,6 +155,6 @@ export class TerraWeb3ProviderService {
 
         // console.log(signedTx);
         // const broadcastResult = await terra.tx.broadcast(signedTx);        
-        console.log('txhash is: ', broadcastResult.txhash);
+        // console.log('txhash is: ', broadcastResult.txhash);
     }
 }
