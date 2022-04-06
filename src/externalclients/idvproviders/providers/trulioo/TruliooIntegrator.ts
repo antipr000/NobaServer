@@ -1,17 +1,22 @@
 import { AxiosRequestConfig } from 'axios';
-import { Consent, IDRequest, IDResponse, Status, Subdivision } from '../../definitions';
+import { Consent, DocumentRequest, DocumentTypes, IDRequest, IDResponse, Status, Subdivision } from '../../definitions';
 import { NationalIDTypes } from '../../definitions/NationalID';
-import { TruliooRequest } from './TruliooDefinitions';
+import { TruliooDocRequest, TruliooRequest } from './TruliooDefinitions';
 import { configurations } from './Configurations';
 import IDVIntegrator from '../../IDVIntegrator';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export default class TruliooIntegrator extends IDVIntegrator {
 
     apiToken: string;
+    docVerificationApiToken: string;
 
     constructor() {
         super(configurations);
-        this.apiToken = process.env.TruliooApiKey;
+        this.apiToken = process.env.TruliooIDVApiKey;
+        this.docVerificationApiToken = process.env.TruliooDocVApiKey;
+
         console.log("Trullio configured. Key=" + this.apiToken);
     }
 
@@ -32,7 +37,8 @@ export default class TruliooIntegrator extends IDVIntegrator {
                     StreetName: request.streetName,
                     City: request.city,
                     Country: request.countryCode,
-                    PostalCode: request.postalCode
+                    PostalCode: request.postalCode,
+                    StateProvinceCode: request.state
                 }
             }
         };
@@ -87,6 +93,23 @@ export default class TruliooIntegrator extends IDVIntegrator {
         return requestData;
     }
 
+    parseDocumentRequest(request: DocumentRequest): TruliooDocRequest {
+        return {
+            AcceptTruliooTermsAndConditions: true,
+            CallBackUrl: "",
+            CountryCode: request.countryCode,
+            ConfigurationName: "Identity Verification",
+            DataFields: {
+                Document: {
+                    DocumentFrontImage: request.documentFrontImage,
+                    DocumentBackImage: request.documentBackImage,
+                    LivePhoto: request.livePhoto,
+                    DocumentType: request.documentType
+                }
+            }
+        };
+    }
+
     parseConsent(consent: any): Consent {
         return {
             name: consent.Name,
@@ -101,7 +124,7 @@ export default class TruliooIntegrator extends IDVIntegrator {
         };
     }
 
-    parseResponse(response: any): IDResponse {
+    parseResponse(response: any, userID: string): IDResponse {
         if (response["Record"]["RecordStatus"] === "match") {
             return {
                 status: Status.OK
@@ -116,6 +139,14 @@ export default class TruliooIntegrator extends IDVIntegrator {
         return {
             headers: {
                 'Authorization': 'Basic ' + this.apiToken
+            }
+        };
+    }
+
+    getAxiosConfigForDocumentVerification(): AxiosRequestConfig {
+        return {
+            headers: {
+                'Authorization': 'Basic ' + this.docVerificationApiToken
             }
         };
     }

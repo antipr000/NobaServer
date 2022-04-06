@@ -1,17 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { DocumentRequest, DocumentTypes } from "src/externalclients/idvproviders/definitions";
+import { ApiProperty } from "@nestjs/swagger";
+import { DocumentTypes } from "../../../externalclients/idvproviders/definitions";
 
-export class DocVerificationRequestDTO implements DocumentRequest {
-    @ApiProperty()
-    documentFrontImage: string;
-
-    @ApiPropertyOptional()
-    documentBackImage?: string;
-
-    @ApiProperty()
-    livePhoto: string;
-
+export class DocVerificationRequestDTO {
     @ApiProperty({ enum: DocumentTypes })
     documentType: DocumentTypes;
 
+    @ApiProperty()
+    countryCode: string;
 };

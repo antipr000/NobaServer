@@ -10,7 +10,8 @@ type Address = {
     StreetName: string;
     City: string;
     PostalCode: string;
-    Country: String;
+    Country: string;
+    StateProvinceCode: string;
 };
 
 type NationalId = {
@@ -43,6 +44,17 @@ type DataFields = {
     DriverLicence?: DriverLicence;
 };
 
+type Document = {
+    DocumentFrontImage: string;
+    DocumentBackImage: string;
+    LivePhoto: string;
+    DocumentType: string;
+};
+
+type DocumentDataFields = {
+    Document: Document;
+};
+
 export type TruliooRequest = {
     AcceptTruliooTermsAndConditions: boolean;
     CallBackUrl?: string;
@@ -50,3 +62,11 @@ export type TruliooRequest = {
     CountryCode: string;
     DataFields: DataFields;
 };
+
+export type TruliooDocRequest = {
+    AcceptTruliooTermsAndConditions: boolean;
+    CallBackUrl?: string;
+    ConfigurationName: string;
+    CountryCode: string;
+    DataFields: DocumentDataFields;
+}

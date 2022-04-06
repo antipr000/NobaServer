@@ -3,7 +3,10 @@ import {
     Injectable,
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Status } from "../../externalclients/idvproviders/definitions";
 import { Logger } from "winston";
+import { UserService } from "../user/user.service";
+import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 
 
 
@@ -13,8 +16,18 @@ export class VerificationService {
     private readonly logger: Logger;
 
 
-    constructor() {
+    constructor(private userService: UserService) {
         return this;
+    }
+
+    async updateIdVerificationStatus(verificationResult: VerificationResultDTO, userID: string, email: string) {
+        if(verificationResult.status === Status.OK) {
+            await this.userService.updateUser({
+                _id: userID,
+                idVerified: true,
+                email: email
+            });
+        }
     }
 
     async getVerificationStatus(id: string): Promise<string> {

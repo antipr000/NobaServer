@@ -41,7 +41,11 @@ export class MongoDBUserRepo implements IUserRepo {
     async getUserIfExists(email: string): Promise<Result<User>>{
        try {
            const user = await UserModel.findOne({ "email": email }).exec();
+           if(user) {
             return Result.ok(this.userMapper.toDomain(user));
+           } else {
+            return Result.fail("Couldn't find user in the db"); 
+           }
        } catch(err) {
             return Result.fail("Couldn't find user in the db");
        }
@@ -53,11 +57,11 @@ export class MongoDBUserRepo implements IUserRepo {
 
     async exists(email: string):Promise<boolean>{
         const res = await this.getUserIfExists(email);
-        return res.isSuccess; 
+        return res.isSuccess;
     }
 
     async createUser(user: User) : Promise<User> {
-        if(this.exists(user.props.email)) {
+        if(await this.exists(user.props.email)) {
             throw Error("User with given email already exists");
         } else {
             const userProps = await UserModel.create(user.props);
