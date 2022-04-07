@@ -55,6 +55,14 @@ type DocumentDataFields = {
     Document: Document;
 };
 
+export enum TransactionStatus {
+    InProgress = "InProgress",
+    Completed = "Completed",
+    Failed = "Failed",
+    Canceled = "Canceled",
+    TimeoutCanceled = "TimeoutCanceled"
+};
+
 export type TruliooRequest = {
     AcceptTruliooTermsAndConditions: boolean;
     CallBackUrl?: string;
@@ -70,3 +78,21 @@ export type TruliooDocRequest = {
     CountryCode: string;
     DataFields: DocumentDataFields;
 }
+
+export type TruliooDocResponse = {
+    TransactionID: string;
+    UploadedDt: string;
+    CountryCode: string;
+    ProductName: string;
+    Record: {
+        RecordStatus: string;
+    }
+};
+
+export type TransactionStatusResponse = {
+    TransactionId: string;
+    TransactionRecordId: string;
+    Status: TransactionStatus;
+    UploadedDt: string;
+    IsTimedOut: boolean;
+};

@@ -10,11 +10,7 @@ export type UserMinPropertySetForDBLookUp = Pick<UserProps, "_id">
 
 export class UserMapper implements Mapper<User> {
     public toPersistence(raw: UserMinPropertySetForDBLookUp | User , options: CrudOptions): UserModel{
-        const lookupProps =  getProps(raw);
-        const model =  toDDBModelInstance(raw, UserModel, options);
-        model[UserModel.table.partitionKeyAttribute] = lookupProps._id; 
-        model[UserModel.table.sortKeyAttribute] = this.getDDBSortKey();
-        return model; 
+        throw new Error("Method not implemented");
     }
 
     public toDomain(raw: any): User{ 
@@ -28,14 +24,9 @@ export class UserMapper implements Mapper<User> {
             version: p.version,
             name: p.name,
             email: p.email,
-            isEmailVerified: p.isEmailVerified,
             idVerified: p.idVerified,
             documentVerified: p.documentVerified
         };        
-    }
-
-    public getDDBSortKey(): string{
-        return "User"
     }
 
 }

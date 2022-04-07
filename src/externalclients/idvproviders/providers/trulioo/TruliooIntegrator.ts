@@ -1,10 +1,13 @@
-import { AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
+import { ConfigService } from '@nestjs/config';
 import { Consent, DocumentRequest, DocumentTypes, IDRequest, IDResponse, Status, Subdivision } from '../../definitions';
 import { NationalIDTypes } from '../../definitions/NationalID';
-import { TruliooDocRequest, TruliooRequest } from './TruliooDefinitions';
+import { TruliooDocRequest, TruliooDocResponse, TruliooRequest, TransactionStatus, TransactionStatusResponse } from './TruliooDefinitions';
 import { configurations } from './Configurations';
 import IDVIntegrator from '../../IDVIntegrator';
 import { Injectable } from '@nestjs/common';
+import { TruliooConfigs } from '../../../../config/configtypes/TruliooConfigs';
+import { TRULIOO_CONFIG_KEY } from '../../../../config/ConfigurationUtils';
 
 @Injectable()
 export default class TruliooIntegrator extends IDVIntegrator {
@@ -12,10 +15,10 @@ export default class TruliooIntegrator extends IDVIntegrator {
     apiToken: string;
     docVerificationApiToken: string;
 
-    constructor() {
+    constructor(configService: ConfigService) {
         super(configurations);
-        this.apiToken = process.env.TruliooIDVApiKey;
-        this.docVerificationApiToken = process.env.TruliooDocVApiKey;
+        this.apiToken = configService.get<TruliooConfigs>(TRULIOO_CONFIG_KEY).TruliooIDVApiKey;
+        this.docVerificationApiToken = configService.get<TruliooConfigs>(TRULIOO_CONFIG_KEY).TruliooDocVApiKey;
 
         console.log("Trullio configured. Key=" + this.apiToken);
     }
@@ -96,7 +99,7 @@ export default class TruliooIntegrator extends IDVIntegrator {
     parseDocumentRequest(request: DocumentRequest): TruliooDocRequest {
         return {
             AcceptTruliooTermsAndConditions: true,
-            CallBackUrl: "",
+            CallBackUrl: configurations.CALLBACK_URL,
             CountryCode: request.countryCode,
             ConfigurationName: "Identity Verification",
             DataFields: {
@@ -149,6 +152,49 @@ export default class TruliooIntegrator extends IDVIntegrator {
                 'Authorization': 'Basic ' + this.docVerificationApiToken
             }
         };
+    }
+
+    transactionStatusMapper(transactionStatus: string): TransactionStatus {
+        switch(transactionStatus) {
+            case "Completed":
+                return TransactionStatus.Completed;
+            case "Failed":
+                return TransactionStatus.Failed;
+            case "Canceled":
+                return TransactionStatus.Canceled;
+            case "TimeoutCanceled":
+                return TransactionStatus.TimeoutCanceled;
+            default:
+                return TransactionStatus.InProgress;
+        }
+    }
+
+    async getTransactionStatus(transactionID: string): Promise<TransactionStatusResponse> {
+        console.log(transactionID);
+        const { data } = await axios.get(
+            configurations.GET_TRANSACTION_STATUS + transactionID + "/status", 
+            this.getAxiosConfigForDocumentVerification());
+        return {
+            TransactionId: transactionID,
+            TransactionRecordId: data["TransactionRecordId"],
+            UploadedDt: data["UploadedDt"],
+            IsTimedOut: data["isTimedOut"],
+            Status: this.transactionStatusMapper(data["Status"])
+        }
+    }
+
+    async getTransactionResult(transactionRecordId: string): Promise<boolean> {
+        const { data } = await axios.get(
+            configurations.GET_TRANSACTION_RECORD + transactionRecordId,
+            this.getAxiosConfigForDocumentVerification()
+        );
+        if(data["Record"]["RecordStatus"] === "match") return true;
+        return false;
+    }
+
+    async parseDocumentResponse(response: TruliooDocResponse): Promise<string> {
+        const transactionId: string = response.TransactionID;
+        return transactionId;
     }
 
 }
