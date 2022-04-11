@@ -8,8 +8,10 @@ import { ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { CreateTransactionDTO } from './dto/CreateTransactionDTO';
 import { TransactionDTO } from './dto/TransactionDTO';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Roles(Role.User)
+@ApiBearerAuth()
 @Controller("user/:"+UserID+"/transactions")
 export class TransactionController {
 

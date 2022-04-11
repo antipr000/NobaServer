@@ -7,8 +7,10 @@ import { ApiResponse } from '@nestjs/swagger';
 import { PaymentMethodDTO } from './dto/PaymentMethodDTO';
 import { AddPaymentMethodDTO } from './dto/AddPaymentMethodDTO';
 import { PaymentMethodsService } from './paymentmethods.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Roles(Role.User)
+@ApiBearerAuth()
 @Controller("paymentmethods/:"+UserID)
 export class PaymentMethodsController {
 

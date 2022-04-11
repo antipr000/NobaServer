@@ -7,8 +7,9 @@ import { ApiResponse } from "@nestjs/swagger";
 import { Public } from "./public.decorator";
 import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
+import { ApiBearerAuth } from "@nestjs/swagger";
 
-@Controller("auth/")
+@Controller("auth")
 export class AuthController {
     constructor(
         private authService: AuthService, 
@@ -30,6 +31,7 @@ export class AuthController {
         return this.emailService.sendOtp(request["email"], otp.toString());
     }
 
+    @ApiBearerAuth()
     @Get("/userId")
     async testAuth(@Request() request): Promise<string> {
         return request.user._id;

@@ -18,9 +18,11 @@ import { Status } from '../../externalclients/idvproviders/definitions';
 import { VerificationStatusDTO } from './dto/VerificationStatusDTO';
 import { User } from '../auth/domain/User';
 import { UserService } from '../user/user.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 
 @Roles(Role.User)
+@ApiBearerAuth()
 @Controller("verify")
 export class VerificationController {
 

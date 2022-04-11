@@ -6,9 +6,11 @@ import { UserDTO } from './dto/UserDTO';
 import { Roles, UserID } from '../auth/roles.decorator';
 import { Role } from '../auth/role.enum';
 import { ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 
 @Roles(Role.User)
+@ApiBearerAuth()
 @Controller("user/:"+UserID)
 export class UserController {
 
