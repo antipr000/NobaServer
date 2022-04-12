@@ -10,7 +10,8 @@ type Address = {
     StreetName: string;
     City: string;
     PostalCode: string;
-    Country: String;
+    Country: string;
+    StateProvinceCode: string;
 };
 
 type NationalId = {
@@ -43,10 +44,55 @@ type DataFields = {
     DriverLicence?: DriverLicence;
 };
 
+type Document = {
+    DocumentFrontImage: string;
+    DocumentBackImage: string;
+    LivePhoto: string;
+    DocumentType: string;
+};
+
+type DocumentDataFields = {
+    Document: Document;
+};
+
+export enum TransactionStatus {
+    InProgress = "InProgress",
+    Completed = "Completed",
+    Failed = "Failed",
+    Canceled = "Canceled",
+    TimeoutCanceled = "TimeoutCanceled"
+};
+
 export type TruliooRequest = {
     AcceptTruliooTermsAndConditions: boolean;
     CallBackUrl?: string;
     ConfigurationName: string;
     CountryCode: string;
     DataFields: DataFields;
+};
+
+export type TruliooDocRequest = {
+    AcceptTruliooTermsAndConditions: boolean;
+    CallBackUrl?: string;
+    ConfigurationName: string;
+    CountryCode: string;
+    DataFields: DocumentDataFields;
+}
+
+export type TruliooDocResponse = {
+    TransactionID: string;
+    UploadedDt: string;
+    CountryCode: string;
+    ProductName: string;
+    Record: {
+        RecordStatus: string;
+    }
+};
+
+export type TransactionStatusResponse = {
+    TransactionId: string;
+    TransactionRecordId: string;
+    Status: TransactionStatus;
+    UploadedDt: string;
+    IsTimedOut: boolean;
 };

@@ -1,6 +1,8 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { IDRequest, IDResponse, Consent, Subdivision, DocumentRequest, Status } from './definitions';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export default abstract class IDVIntegrator {
     configuration: any
 
@@ -12,19 +14,28 @@ export default abstract class IDVIntegrator {
 
     }
 
-    private saveResponseInDB(respone: any, parsedResponse: IDResponse) {
-      
+    private saveResponseInDB(respone: any, parsedResponse: IDResponse, userId: string) {
     }
 
     // Convert request to integrator specific request data
     abstract parseRequest(request: IDRequest): any;
 
     // Convert integrator specific response data to a Response object
-    abstract parseResponse(response: any): IDResponse;
+    abstract parseResponse(response: any, userID: string): IDResponse;
+
+    abstract parseDocumentRequest(request: DocumentRequest): any;
+
+    abstract parseDocumentResponse(response: any): Promise<string>;
+
+    abstract getTransactionStatus(transactionID: string): Promise<any>;
+
+    abstract getTransactionResult(transactionRecordId: string): Promise<boolean>;
 
     /* Get axios configuration for integrator. 
      * Mostly will be used for providing authentication headers to integrators */
     abstract getAxiosConfig(): AxiosRequestConfig;
+
+    abstract getAxiosConfigForDocumentVerification(): AxiosRequestConfig;
 
     abstract parseConsent(consent: any): Consent;
 
@@ -46,7 +57,7 @@ export default abstract class IDVIntegrator {
     // Returns list of subdivisions for a country
     async getCountrySubdivisions(countryCode: string): Promise<Array<Subdivision>> {
         const { data } = await axios.get(this.configuration.SUBDIVISIONS_URL + countryCode, this.getAxiosConfig());
-        const subdivisions: Array<Subdivision> = data.map(subdivision => this.parseCountrySubdivision);
+        const subdivisions: Array<Subdivision> = data.map(this.parseCountrySubdivision);
         return subdivisions;
     }
 
@@ -55,12 +66,12 @@ export default abstract class IDVIntegrator {
      * Should do all heavy lifting like calling provider endpoints,
      * storing relevant information, some added validations etc.
      */
-    async verify(request: IDRequest): Promise<IDResponse> {
+    async verify(userId: string, request: IDRequest): Promise<IDResponse> {
         this.saveRequestInDB(request);
         const parsedRequest = this.parseRequest(request);
         const { data } = await axios.post(this.configuration.VERIFY_URL, parsedRequest, this.getAxiosConfig());
-        const parsedResponse: IDResponse = this.parseResponse(data);
-        this.saveResponseInDB(data, parsedResponse);
+        const parsedResponse: IDResponse = this.parseResponse(data, userId);
+        this.saveResponseInDB(data, parsedResponse, userId);
         return parsedResponse;
     }
 
@@ -68,9 +79,14 @@ export default abstract class IDVIntegrator {
      * Verify document. Accepts base 64 encoded document image, live photo and
      * document type and calls integrator APIs with the data. 
      */
-    async verifyDocument(request: DocumentRequest): Promise<IDResponse> {
-        return {
-            status: Status.PENDING
-        };
+    async verifyDocument(userId: string, request: DocumentRequest): Promise<string> {
+        try{
+            const parsedRequest = this.parseDocumentRequest(request);
+            const { data } = await axios.post(this.configuration.VERIFY_URL, parsedRequest, this.getAxiosConfigForDocumentVerification());
+            console.log(data);
+            return await this.parseDocumentResponse(data);
+        } catch(e) {
+            console.log(e);
+        }
     }
 }

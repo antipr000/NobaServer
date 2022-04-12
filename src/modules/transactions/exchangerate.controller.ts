@@ -5,11 +5,13 @@ import { Logger } from 'winston';
 import { ApiParam, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ExchangeRateService } from './exchangerate.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 
 
 //TODO fetch exchange rates on client side? or at least add rate limitation from single ip to prevent mis-use of price api provider on our behalf??
 @Controller("exchangerates")
+@ApiBearerAuth()
 export class ExchangeRateController {
 
   @Inject(WINSTON_MODULE_PROVIDER) 

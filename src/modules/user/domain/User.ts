@@ -12,7 +12,8 @@ export interface UserProps extends VersioningInfo {
     phone?: string,
     isAdmin?: boolean,
     idVerified?: boolean,
-    documentVerified?: boolean
+    documentVerified?: boolean,
+    documentVerificationTransactionId?: string;
 }
 
 
@@ -25,7 +26,8 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     phone: Joi.string().optional(), //TODO phone number validation, how do we want to store phone number? country code + phone number?
     isAdmin: Joi.boolean().default(false),
     idVerified: Joi.boolean().default(false),
-    documentVerified: Joi.boolean().default(false)
+    documentVerified: Joi.boolean().default(false),
+    documentVerificationTransactionId: Joi.string().optional(),
 }
 
 export const userJoiSchema = Joi.object(userJoiValidationKeys).options({allowUnknown: true}); 

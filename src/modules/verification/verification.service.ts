@@ -4,6 +4,7 @@ import {
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { UserService } from "../user/user.service";
 
 
 
@@ -13,11 +14,7 @@ export class VerificationService {
     private readonly logger: Logger;
 
 
-    constructor() {
+    constructor(private userService: UserService) {
         return this;
-    }
-
-    async getVerificationStatus(id: string): Promise<string> {
-        return null;
     }
 }

@@ -45,6 +45,7 @@ async function bootstrap() {
     .setTitle('Noba Server')
     .setDescription('Noba Server API')
     .setVersion('1.0')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' })
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, config,  { operationIdFactory: (controllerKey: string, methodKey: string) => methodKey });

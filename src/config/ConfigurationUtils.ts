@@ -14,6 +14,7 @@ export const SES_CONFIG_KEY = "ses";
 export const S3_CONFIG_KEY = "s3";
 export const STRIPE_CONFIG_KEY = "stripe";
 export const SENDGRID_CONFIG_KEY = "sendgrid";
+export const TRULIOO_CONFIG_KEY = "trulioo";
 
 
 export const appConfigsJoiValidationSchema = Joi.object({

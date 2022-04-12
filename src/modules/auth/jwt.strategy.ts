@@ -2,7 +2,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable } from "@nestjs/common";
 import { jwtConstants } from "./constants";
-import { UserDTO } from "../user/dto/UserDTO";
+import { User } from "./domain/User";
 import { UserService } from "../user/user.service";
 import { UserMapper } from "../user/mappers/UserMapper";
 
@@ -19,8 +19,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         this.userMapper = new UserMapper();
     }
 
-    async validate(payload: any): Promise<UserDTO> {
+    async validate(payload: any): Promise<User> {
         const email = payload.email;
-        return this.userMapper.toDTO(await this.userService.findOne(email));
+        const user = await this.userService.findOne(email);
+        return user.props;
     }
 }

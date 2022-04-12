@@ -7,8 +7,10 @@ import { Roles, UserID } from '../auth/roles.decorator';
 import { AddPaymentMethodDTO } from './dto/AddPaymentMethodDTO';
 import { PaymentMethodDTO } from './dto/PaymentMethodDTO';
 import { PaymentMethodsService } from './paymentmethods.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Roles(Role.User)
+@ApiBearerAuth()
 @Controller("paymentmethods/:"+UserID)
 export class PaymentMethodsController {
 

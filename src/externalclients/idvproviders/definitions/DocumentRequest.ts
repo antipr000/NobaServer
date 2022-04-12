@@ -10,4 +10,5 @@ export type DocumentRequest = {
     documentBackImage?: string;
     livePhoto: string;
     documentType: DocumentTypes;
+    countryCode: string;
 };

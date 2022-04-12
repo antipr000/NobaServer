@@ -1,4 +1,5 @@
-import { Controller, Get, Inject, Param, Body, Post, Put, HttpStatus, Response } from '@nestjs/common';
+import { Controller, Get, Inject, Param, Body, Post, HttpStatus, Request, UseInterceptors, UploadedFiles, Req } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { VerificationService } from './verification.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import IDVIntegrator from '../../externalclients/idvproviders/IDVIntegrator';
@@ -11,8 +12,17 @@ import { ConfigService } from '@nestjs/config';
 import { ConsentDTO } from './dto/ConsentDTO';
 import { SubdivisionDTO } from './dto/SubdivisionDTO';
 import { DocVerificationRequestDTO } from './dto/DocVerificationRequestDTO';
+import { Roles, UserID } from '../auth/roles.decorator';
+import { Role } from '../auth/role.enum';
+import { Status } from '../../externalclients/idvproviders/definitions';
+import { VerificationStatusDTO } from './dto/VerificationStatusDTO';
+import { User } from '../auth/domain/User';
+import { UserService } from '../user/user.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 
+@Roles(Role.User)
+@ApiBearerAuth()
 @Controller("verify")
 export class VerificationController {
 
@@ -21,8 +31,11 @@ export class VerificationController {
 
     idvProvider: IDVIntegrator;
 
-    constructor(private readonly verificationService: VerificationService, private readonly configService: ConfigService) {
-        this.idvProvider = new TruliooIntegrator();
+    constructor(
+        private readonly verificationService: VerificationService, 
+        private readonly userService: UserService,
+        private readonly configService: ConfigService) {
+        this.idvProvider = new TruliooIntegrator(configService);
     }
 
 
@@ -50,16 +63,81 @@ export class VerificationController {
         return this.idvProvider.getCountrySubdivisions(countryCode);
     }
 
-    @Post("/id")
+    @Post(`/:${UserID}` + "/id")
     @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO })
-    async verifyUser(@Body() request: IDVerificationRequestDTO): Promise<VerificationResultDTO> {
-        return this.idvProvider.verify(request);
+    async verifyUser(@Param(UserID) id: string, 
+                    @Body() requestBody: IDVerificationRequestDTO,
+                    @Request() request): Promise<VerificationResultDTO> {
+        const result: VerificationResultDTO = await this.idvProvider.verify(id, requestBody);
+        const user: User = request.user._doc;
+        if(result.status === Status.OK) {
+            await this.userService.updateUser({
+                ...user,
+                idVerified: true
+            });
+        }
+        return result;
 	}
 
-    @Post("/doc")
+    //TODO: Setting data type of request to DocVerificationRequestDTO throws error. Figure out why
+    // TODO: Figure out type for files
+    @Post(`/:${UserID}` + "/doc")
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'documentFrontImage', maxCount: 1 },
+        { name: 'documentBackImage', maxCount: 1 },
+        { name: 'livePhoto', maxCount: 1 }
+    ]))
     @ApiResponse({ status: HttpStatus.ACCEPTED, type: VerificationResultDTO })
-    async verifyDocument(@Body() request: DocVerificationRequestDTO): Promise<VerificationResultDTO> {
-        return this.idvProvider.verifyDocument(request);
+    async verifyDocument(@Param(UserID) id: string, @UploadedFiles() files, @Body() requestData, @Request() request): Promise<VerificationResultDTO> {
+        const documentFrontImageb64 = files.documentFrontImage[0].buffer.toString('base64');
+        const documentBackImageb64 = files.documentBackImage[0].buffer.toString('base64');
+        const livePhotob64 = files.livePhoto[0].buffer.toString('base64');
+        const transactionId = await this.idvProvider.verifyDocument(id, {
+            documentFrontImage: documentFrontImageb64,
+            documentBackImage: documentBackImageb64,
+            livePhoto: livePhotob64,
+            countryCode: requestData.countryCode,
+            documentType: requestData.documentType
+        });
+        const user: User = request.user._doc;
+        await this.userService.updateUser({
+            ...user,
+            documentVerificationTransactionId: transactionId
+        });
+        return {
+            status: Status.PENDING
+        };
     }
     
+
+    @Get(`/:${UserID}` + "/doc/status")
+    @ApiResponse({ status: HttpStatus.OK, type: VerificationStatusDTO })
+    async getDocumentVerificationStatus(@Param(UserID) id: string, @Request() request): Promise<VerificationStatusDTO> {
+        console.log(request.user);
+        const transactionID = request.user.documentVerificationTransactionId;
+        return await this.idvProvider.getTransactionStatus(transactionID);
+    }
+
+    @Get(`/:${UserID}` + "/doc/result")
+    @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO }) 
+    async getDocumentVerificationResult(@Param(UserID) id: string, @Request() request): Promise<VerificationResultDTO> {
+        const transactionID = request.user.documentVerificationTransactionId;
+        const transactionStatus = await this.idvProvider.getTransactionStatus(transactionID);
+        const transactionRecordId = transactionStatus.TransactionRecordId;
+        const isMatch: boolean = await this.idvProvider.getTransactionResult(transactionRecordId);
+        const user: User = request.user._doc;
+        await this.userService.updateUser({
+            ...user,
+            documentVerified: isMatch
+        });
+        if(isMatch) {
+            return {
+                status: Status.OK
+            };
+        } else {
+            return {
+                status: Status.FAILED
+            };
+        }
+    }
 }
