@@ -40,6 +40,7 @@ import { JwtAuthGuard } from './modules/auth/jwt-auth.guard';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    //
   }
 }
 
