@@ -71,10 +71,17 @@ export class TransactionService {
   //TODO add proper logs without leaking sensitive information
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc. 
   async transact(userID: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
-    const user = await this.userRepo.getUser(userID);
 
     const leg1: string = details.leg1;
     const leg2: string = details.leg2;
+    const destinationWalletAdress: string = details.destinationWalletAdress;
+    
+    // Validate that destination wallet address is a valid address for given currency
+    if (!this.isValidDestinationAddress(leg2, destinationWalletAdress)) {
+      throw new BadRequestError({messageForClient: "Invalid destination wallet address " + destinationWalletAdress + " for " + leg2});
+    }
+
+    const user = await this.userRepo.getUser(userID);
 
     const leg1Amount = details.leg1Amount;
     const leg2Amount = details.leg2Amount;
@@ -191,5 +198,19 @@ export class TransactionService {
   //TODO put in some utility class?
   private withinSlippage(bidPrice: number, marketPrice: number, slippagePercentage: number): boolean {
     return Math.abs(bidPrice - marketPrice) <= (slippagePercentage / 100) * bidPrice;
+  }
+
+  private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
+    // if curr is ethereum then validate that the destination wallet address is a valid ethereum address
+    if (curr == 'ethereum') {
+      return this.EthereumWeb3ProviderService.isValidAddress(destinationWalletAdress);
+    }
+    
+    // if curr is terra or luna then validate that the destination wallet address is a valid terra address
+    if (curr == 'terrausd' || curr == 'terra-luna') {
+      return this.TerraWeb3ProviderService.isValidAddress(destinationWalletAdress);
+    }
+
+    return false;
   }
 }

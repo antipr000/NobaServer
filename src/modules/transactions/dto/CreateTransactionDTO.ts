@@ -17,8 +17,5 @@ export class CreateTransactionDTO {
     leg2Amount: number;
 
     @ApiPropertyOptional()
-    sourceWalletAdress?: string;
-
-    @ApiPropertyOptional()
     destinationWalletAdress?: string; 
 }

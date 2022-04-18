@@ -1,19 +1,19 @@
 import {
-    Inject,
-    Injectable,
-  } from "@nestjs/common";
-import { DBProvider } from "../../infraproviders/DBProvider";
+  Inject,
+  Injectable
+} from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Logger } from "winston";
-import { UserMapper } from "./mappers/UserMapper";
-import {  PaymentMethodDTO } from "./dto/PaymentMethodDTO";
-
 import Stripe from 'stripe';
-import { convertStripePaymentMethodToPaymentMethodDTO } from "./mappers/PaymentMethodMappers";
-import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
+import { Logger } from "winston";
+import { DBProvider } from "../../infraproviders/DBProvider";
 import { StripeService } from "../common/stripe.service";
-import { IUserRepo } from "./repos/UserRepo";
+import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
+import { PaymentMethodDTO } from "./dto/PaymentMethodDTO";
+import { convertStripePaymentMethodToPaymentMethodDTO } from "./mappers/PaymentMethodMappers";
+import { UserMapper } from "./mappers/UserMapper";
 import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
+import { IUserRepo } from "./repos/UserRepo";
+
   
   
   
@@ -75,8 +75,7 @@ import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
         return convertStripePaymentMethodToPaymentMethodDTO(stripePaymentMethod);
     }
 
-    async removePaymentMethod(userID: string, paymentMethodID: string): Promise<void> { 
-        
+    async removePaymentMethod(paymentMethodID: string): Promise<void> { 
         //weird that attach api takes the payment method id and customer id but detach api does not!
         await this.stripeApi.paymentMethods.detach(paymentMethodID);
     }

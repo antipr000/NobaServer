@@ -14,4 +14,12 @@ export class AppController {
   appHealth(): string {
     return "Running!"; //Todo implement advance health check like here like db connectivity etc.?  
   }
+
+  @Public()
+  @Get('cryptocurrencies')
+  supportedCryptocurrencies(): string {
+    // This is list of all crypto we support for on ramp
+    return "ethereum, terrausd, terra-luna";
+  }
+
 }

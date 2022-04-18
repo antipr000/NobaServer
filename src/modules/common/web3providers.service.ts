@@ -2,9 +2,9 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const Web3 = require('web3');
 import { Injectable } from "@nestjs/common";
+import { bech32 } from 'bech32';
 import { Transaction as EthTransaction } from 'ethereumjs-tx';
 import { Web3TransactionHandler } from './domain/Types';
-
 
 // We should not store the private key of our hard wallet in code. //TODO create configs for this and inject from AWS vault
 @Injectable()
@@ -18,6 +18,10 @@ export class EthereumWeb3ProviderService {
     private readonly httpProvider = new Web3.providers.HttpProvider(this.provider);
     private readonly hexPrivateKey = Buffer.from(this.private_key_for_senders_account, 'hex');
     private readonly web3  = new Web3(this.httpProvider);
+
+    isValidAddress(address: string) {
+        return this.web3.utils.isAddress(address);
+    }
 
     async transferEther(amount: number, destinationAddress: string, web3TransactionHandler: Web3TransactionHandler) {
         
@@ -119,6 +123,19 @@ export class TerraWeb3ProviderService {
     // no need of above mnemonic
     // private readonly wallet_2_address = "terra13wfl4kq7yd6lpmyym4tlhl5wu3rmhe3devtfgc";
     // Wallet 2 can be used for testing purposes and so please do not delete this comment
+
+    // check whether it is a valid terra address
+    // advanced address validation, it verify also the bech32 checksum
+    isValidAddress(address) {
+        try {
+        const { prefix: decodedPrefix } = bech32.decode(address); // throw error if checksum is invalid
+        // verify address prefix
+        return decodedPrefix === 'terra';
+        } catch {
+        // invalid checksum
+        return false; 
+        }
+    }
 
     async transferTerra(amount: number, destinationAddress: string, web3TransactionHandler: Web3TransactionHandler, coinID: string) {
         // Inline import to make sure we don't have to install the Terra package for other providers
