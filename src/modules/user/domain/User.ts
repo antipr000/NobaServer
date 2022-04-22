@@ -28,6 +28,8 @@ const dobValidationJoiKeys: KeysRequired<DOB> = {
     year: Joi.number().required()
 };
 
+const dobJoiValidationSchema = Joi.object(dobValidationJoiKeys).options({  stripUnknown: true })
+
 const addressValidationJoiKeys: KeysRequired<Address> = {
     streetName: Joi.string().optional(),
     city: Joi.string().optional(),
@@ -49,8 +51,8 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     documentVerificationTransactionId: Joi.string().optional(),
     idVerificationTimestamp: Joi.number().optional(),
     documentVerificationTimestamp: Joi.number().optional(),
-    dateOfBirth: Joi.object().keys(dobValidationJoiKeys).optional(),
-    address: Joi.object().keys(addressValidationJoiKeys).optional()
+    dateOfBirth: dobJoiValidationSchema.optional(),
+    address: Joi.object().optional()
 }
 
 export const userJoiSchema = Joi.object(userJoiValidationKeys).options({allowUnknown: true, stripUnknown: false}); 
