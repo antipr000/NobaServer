@@ -3,6 +3,8 @@ import {  VersioningInfo, versioningInfoJoiSchemaKeys } from '../../../core/doma
 import { KeysRequired } from '../../common/domain/Types';
 import * as Joi from 'joi';
 import { Entity } from '../../../core/domain/Entity';
+import { DOB } from '../../../externalclients/idvproviders/definitions';
+import { Address } from './Address';
 
 export interface UserProps extends VersioningInfo {
     _id: string,
@@ -14,8 +16,27 @@ export interface UserProps extends VersioningInfo {
     idVerified?: boolean,
     documentVerified?: boolean,
     documentVerificationTransactionId?: string;
+    idVerificationTimestamp?: number;
+    documentVerificationTimestamp?: number;
+    dateOfBirth?: DOB;
+    address?: Address;
 }
 
+const dobValidationJoiKeys: KeysRequired<DOB> = {
+    date:  Joi.number().required(),
+    month: Joi.number().required(),
+    year: Joi.number().required()
+};
+
+const dobJoiValidationSchema = Joi.object(dobValidationJoiKeys).options({  stripUnknown: true })
+
+const addressValidationJoiKeys: KeysRequired<Address> = {
+    streetName: Joi.string().optional(),
+    city: Joi.string().optional(),
+    state: Joi.string().optional(),
+    countryCode: Joi.string().optional(),
+    postalCode: Joi.string().optional()
+}
 
 export const userJoiValidationKeys : KeysRequired<UserProps> = {
     ...versioningInfoJoiSchemaKeys,
@@ -28,9 +49,13 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     idVerified: Joi.boolean().default(false),
     documentVerified: Joi.boolean().default(false),
     documentVerificationTransactionId: Joi.string().optional(),
+    idVerificationTimestamp: Joi.number().optional(),
+    documentVerificationTimestamp: Joi.number().optional(),
+    dateOfBirth: dobJoiValidationSchema.optional(),
+    address: Joi.object().optional()
 }
 
-export const userJoiSchema = Joi.object(userJoiValidationKeys).options({allowUnknown: true}); 
+export const userJoiSchema = Joi.object(userJoiValidationKeys).options({allowUnknown: true, stripUnknown: false}); 
 
 export class User extends AggregateRoot<UserProps>​​ {
 
@@ -40,7 +65,8 @@ export class User extends AggregateRoot<UserProps>​​ {
 
     public static createUser(userProps: Partial<UserProps>): User{ //set email verified to true when user authenticates via third party and not purely via email
         if(!userProps._id) userProps._id = Entity.getNewID();
-        return new User(Joi.attempt(userProps,userJoiSchema));
+        const user = new User(Joi.attempt(userProps,userJoiSchema));
+        return user;
     }
     
 }

@@ -26,4 +26,13 @@ export class ExchangeRateController {
   async priceInFiat(@Param('crypto_currency_code') cryptoCurrencyCode : string, @Param('fiat_currency_code') fiatCurrencyCode: string ): Promise<number>{
     return this.exchangeRateService.priceInFiat(cryptoCurrencyCode, fiatCurrencyCode);
   }
+
+  @Get("/processingfee/:crypto_currency_code/:fiat_currency_code/:fiat_amount")
+  @ApiResponse({ status: HttpStatus.OK })
+  async processingFee(
+    @Param('crypto_currency_code') cryptoCurrencyCode : string, 
+    @Param('fiat_currency_code') fiatCurrencyCode: string,
+    @Param('fiat_amount') fiatAmount: number): Promise<number> {
+      return this.exchangeRateService.processingFee(cryptoCurrencyCode, fiatCurrencyCode, fiatAmount);
+  }
 }

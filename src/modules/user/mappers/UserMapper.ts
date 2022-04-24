@@ -25,7 +25,9 @@ export class UserMapper implements Mapper<User> {
             name: p.name,
             email: p.email,
             idVerified: p.idVerified,
-            documentVerified: p.documentVerified
+            documentVerified: p.documentVerified,
+            dateOfBirth: p.dateOfBirth,
+            address: p.address
         };        
     }
 

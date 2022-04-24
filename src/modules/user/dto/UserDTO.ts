@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { DOB } from 'src/externalclients/idvproviders/definitions';
+import { Address } from '../domain/Address';
 
 import { UserProps } from '../domain/User';
 
@@ -29,4 +31,10 @@ export class UserDTO implements Partial<UserProps> {
 
     @ApiPropertyOptional()
     documentVerified?: boolean;
+
+    @ApiPropertyOptional()
+    dateOfBirth?: DOB;
+
+    @ApiPropertyOptional()
+    address?: Address;
 } 

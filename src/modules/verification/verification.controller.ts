@@ -73,8 +73,29 @@ export class VerificationController {
         if(result.status === Status.OK) {
             await this.userService.updateUser({
                 ...user,
-                idVerified: true
+                idVerified: true,
+                idVerificationTimestamp: new Date().getTime(),
+                dateOfBirth: requestBody.dateOfBirth,
+                address: {
+                    streetName: requestBody.streetName,
+                    city: requestBody.city,
+                    state: requestBody.state,
+                    countryCode: requestBody.countryCode,
+                    postalCode: requestBody.postalCode
+                }
             });
+        } else {
+            await this.userService.updateUser({
+                ...user,
+                dateOfBirth: requestBody.dateOfBirth,
+                address: {
+                    streetName: requestBody.streetName,
+                    city: requestBody.city,
+                    state: requestBody.state,
+                    countryCode: requestBody.countryCode,
+                    postalCode: requestBody.postalCode
+                }
+            })
         }
         return result;
 	}
@@ -102,7 +123,8 @@ export class VerificationController {
         const user: User = request.user._doc;
         await this.userService.updateUser({
             ...user,
-            documentVerificationTransactionId: transactionId
+            documentVerificationTransactionId: transactionId,
+            documentVerificationTimestamp: new Date().getTime()
         });
         return {
             status: Status.PENDING

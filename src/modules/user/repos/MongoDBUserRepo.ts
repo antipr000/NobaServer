@@ -4,6 +4,7 @@ import { DBProvider } from "../../../infraproviders/DBProvider";
 import { User, UserProps } from "../domain/User";
 import { UserMapper } from "../mappers/UserMapper";
 import { IUserRepo } from "./UserRepo";
+import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
  
 
 
@@ -18,8 +19,9 @@ export class MongoDBUserRepo implements IUserRepo {
     }
 
     async getUser(userID: string): Promise<User> {
-       const  result : UserProps  = await  UserModel.findById(userID).exec();
-       return this.userMapper.toDomain(result);
+       const  result :any  = await  UserModel.findById(userID).exec();
+       const userData: UserProps = convertDBResponseToJsObject(result);
+       return this.userMapper.toDomain(userData);
     }
 
 
@@ -29,19 +31,21 @@ export class MongoDBUserRepo implements IUserRepo {
 
     
     async updateUser(user: User): Promise<User> {
-        const userProps = await UserModel.findByIdAndUpdate(user.props._id, {
+        const result = await UserModel.findByIdAndUpdate(user.props._id, {
             $set: user.props
         }, {
             new: true
         }).exec(); 
+        const userProps: UserProps = convertDBResponseToJsObject(result);
         return this.userMapper.toDomain(userProps);
     }
     
 
     async getUserIfExists(email: string): Promise<Result<User>>{
        try {
-           const user = await UserModel.findOne({ "email": email }).exec();
-           if(user) {
+           const result = await UserModel.findOne({ "email": email }).exec();
+           if(result) {
+            const user: UserProps = convertDBResponseToJsObject(result);
             return Result.ok(this.userMapper.toDomain(user));
            } else {
             return Result.fail("Couldn't find user in the db"); 
@@ -64,7 +68,8 @@ export class MongoDBUserRepo implements IUserRepo {
         if(await this.exists(user.props.email)) {
             throw Error("User with given email already exists");
         } else {
-            const userProps = await UserModel.create(user.props);
+            const result = await UserModel.create(user.props);
+            const userProps: UserProps = convertDBResponseToJsObject(result);
             return this.userMapper.toDomain(userProps);
         }
     }

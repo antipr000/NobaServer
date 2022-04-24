@@ -31,7 +31,7 @@ export class UserController {
   @ApiResponse({ status: HttpStatus.OK, type: UserDTO })
   async updateUser(@Param(UserID)id: string, @Request() request, @Body() requestBody): Promise<UserDTO> {
     const userProps = {
-      ...request.user,
+      ...request.user._doc,
       ...requestBody
     };
     return await this.userService.updateUser(userProps);
