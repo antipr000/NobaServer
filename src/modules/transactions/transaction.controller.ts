@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Inject, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Request } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
@@ -8,6 +8,9 @@ import { Roles, UserID } from '../auth/roles.decorator';
 import { CreateTransactionDTO } from './dto/CreateTransactionDTO';
 import { TransactionDTO } from './dto/TransactionDTO';
 import { TransactionService } from './transaction.service';
+import { LimitsService } from './limits.service';
+import { CheckTransactionDTO } from './dto/CheckTransactionDTO';
+import { TransactionAllowedStatus } from './domain/TransactionAllowedStatus';
 
 @Roles(Role.User)
 @ApiBearerAuth()
@@ -17,7 +20,10 @@ export class TransactionController {
   @Inject(WINSTON_MODULE_PROVIDER) 
   private readonly logger: Logger;
 
-  constructor(private readonly transactionService: TransactionService, private readonly configService: ConfigService) {
+  constructor(
+    private readonly transactionService: TransactionService, 
+    private readonly configService: ConfigService,
+    private readonly limitsService: LimitsService) {
       
   }
 
@@ -26,6 +32,19 @@ export class TransactionController {
   @ApiResponse({status:HttpStatus.OK, type: TransactionDTO, description:"Transaction details for the given transactionId"})
   async getTransactionStatus(@Param(UserID) userID: string, @Param("transactionId") transactionId: string): Promise<TransactionDTO>{
     return this.transactionService.getTransactionStatus(transactionId); //TODO check that transactionId belongs to this user?
+  }
+
+  @Get("/check/:transactionAmount")
+  @ApiResponse({status: HttpStatus.OK, type: CheckTransactionDTO })
+  async checkIfTransactionPossible(
+    @Param(UserID) userID: string, 
+    @Param("transactionAmount") transactionAmount: string,
+    @Request() request): Promise<CheckTransactionDTO> {
+    const tAmount = parseInt(transactionAmount);
+    const status: TransactionAllowedStatus = await this.limitsService.canMakeTransaction(request.user, tAmount);
+    return {
+      status: status
+    };
   }
 
   //We should create buy sell api differently otherwise lot of if else logic in core logic. basically different api for on-ramp and off-ramp

@@ -5,6 +5,12 @@ import { Transaction, TransactionProps } from "../domain/Transaction";
 import { TransactionMapper } from "../mapper/TransactionMapper";
 import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
+import { getWeek } from "../../../core/utils/DateUtils";
+
+type AggregateResultType = {
+    _id: number,
+    totalSum: number;
+};
 
 export class MongoDBTransactionRepo implements ITransactionRepo {
 
@@ -38,8 +44,127 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     }
 
     async getUserTransactions(userId: string): Promise<Transaction[]> {
-        const result: any = await TransactionModel.find({ "userId": userId });
+        const result: any = await TransactionModel.find({ "userId": userId }).exec();
         const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
         return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
+    }
+
+    async getTotalUserTransactionAmount(userId: string): Promise<number> {
+        const result: AggregateResultType[] = await TransactionModel.aggregate([{
+            $match: {
+               userId: userId 
+            }
+        },{
+            $group: {
+                "_id": 1,
+                "totalSum": {
+                    $sum: "$leg1Amount"
+                }
+            }
+        }]).exec();
+        if(result.length === 0) return 0;
+        return result[0].totalSum;
+    }
+
+    async getMonthlyUserTransactionAmount(userId: string): Promise<number> {
+        const month: number = new Date().getUTCMonth() + 1;
+        const year: number = new Date().getUTCFullYear();
+        const result: AggregateResultType[] = await TransactionModel.aggregate([{
+            $addFields: {
+                month: {
+                    $month: {
+                        $toDate: "$transactionTimestamp"
+                    }
+                },
+                year: {
+                    $year: {
+                        $toDate: "$transactionTimestamp"
+                    }
+                }
+            }
+        },{
+            $match: {
+                userId: userId,
+                month: month,
+                year: year
+            }
+        }, {
+            $group: {
+                "_id": 1,
+                "totalSum": {
+                    $sum: "$leg1Amount"
+                }
+            }
+        }]).exec();
+        if(result.length === 0) return 0;
+        return result[0].totalSum;
+    }
+
+    async getWeeklyUserTransactionAmount(userId: string): Promise<number> {
+        const week: number = getWeek(new Date());
+        const year: number = new Date().getUTCFullYear();
+        const result: AggregateResultType[] = await TransactionModel.aggregate([{
+            $addFields: {
+                week: {
+                    $week: {
+                        $toDate: "$transactionTimestamp"
+                    }
+                },
+                year: {
+                    $year: {
+                        $toDate: "$transactionTimestamp"
+                    }
+                }
+            }
+        },{
+            $match: {
+                userId: userId,
+                week: week,
+                year: year
+            }
+        }, {
+            $group: {
+                "_id": 1,
+                "totalSum": {
+                    $sum: "$leg1Amount"
+                }
+            }
+        }]).exec();
+        if(result.length === 0) return 0;
+        return result[0].totalSum;
+    }
+
+    async getDailyUserTransactionAmount(userId: string): Promise<number> {
+        const day: number = new Date().getUTCDate();
+        const year: number = new Date().getUTCFullYear();
+        const result: AggregateResultType[] = await TransactionModel.aggregate([{
+            $addFields: {
+                day: {
+                    $dayOfMonth: {
+                        $toDate: "$transactionTimestamp"
+                    }
+                },
+                year: {
+                    $year: {
+                        $toDate: "$transactionTimestamp"
+                    }
+                }
+            }
+        },{
+            $match: {
+                userId: userId,
+                day: day,
+                year: year
+            }
+        }, {
+            $group: {
+                "_id": 1,
+                "totalSum": {
+                    $sum: "$leg1Amount"
+                }
+            }
+        }]).exec();
+        if(result.length === 0) return 0;
+        return result[0].totalSum;
     }
 }

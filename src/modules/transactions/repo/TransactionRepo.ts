@@ -6,10 +6,26 @@ export interface ITransactionRepo {
     createTransaction(transaction: Transaction): Promise<Transaction>;
     updateTransaction(transaction: Transaction): Promise<Transaction>;
     getUserTransactions(userId: string): Promise<Transaction[]>; //TODO pagination? transaction filter options?
+    getTotalUserTransactionAmount(userId: string): Promise<number>;
+    getMonthlyUserTransactionAmount(userId: string): Promise<number>;
+    getWeeklyUserTransactionAmount(userId: string): Promise<number>;
+    getDailyUserTransactionAmount(userId: string): Promise<number>;
 }
 
 //TODO create mongodb or dynamodb repository? //We should use Mongodb as transaction api requires a lot of indexing and querying. (query by userID, transactionID, transactionStatus,merchantID,lookup by stripe payment id, last 100 etc)
 export class MockTransactionRepo implements ITransactionRepo {
+    getTotalUserTransactionAmount(userId: string): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+    getMonthlyUserTransactionAmount(userId: string): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+    getWeeklyUserTransactionAmount(userId: string): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
+    getDailyUserTransactionAmount(userId: string): Promise<number> {
+        throw new Error("Method not implemented.");
+    }
     
     private readonly allTransactions: {[transactionId: string]: Transaction} = {};
 

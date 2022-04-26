@@ -10,36 +10,36 @@ export interface Limit {
 
 
 export const DailyLimitBuyOnly: KeysRequired<Limit> = {
-    max_amount_limit: 0,
+    max_amount_limit: 100,
     max_usage_limit: 0,
-    no_kyc_max_amount_limit: 0,
-    partial_kyc_max_amount_limit: 0
+    no_kyc_max_amount_limit: 20,
+    partial_kyc_max_amount_limit: 100
 }
 
 export const WeeklyLimitBuyOnly: KeysRequired<Limit> = {
-    max_amount_limit: 0,
+    max_amount_limit: 500,
     max_usage_limit: 0,
-    no_kyc_max_amount_limit: 0,
-    partial_kyc_max_amount_limit: 0
+    no_kyc_max_amount_limit: 100,
+    partial_kyc_max_amount_limit: 200
 }
 
 export const MonthlyLimitBuyOnly: KeysRequired<Limit> = {
-    max_amount_limit: 0,
+    max_amount_limit: 1500,
     max_usage_limit: 0,
-    no_kyc_max_amount_limit: 0,
-    partial_kyc_max_amount_limit: 0
+    no_kyc_max_amount_limit: 300,
+    partial_kyc_max_amount_limit: 600
 }
 
 export const LifetimeLimitBuyOnly: KeysRequired<Limit> = {
-    max_amount_limit: 0,
+    max_amount_limit: 10000,
     max_usage_limit: 0,
-    no_kyc_max_amount_limit: 0,
-    partial_kyc_max_amount_limit: 0
+    no_kyc_max_amount_limit: 5000,
+    partial_kyc_max_amount_limit: 7000
 }
 
 export const TransactionLimitBuyOnly: KeysRequired<Limit> = {
-    max_amount_limit: 0,
+    max_amount_limit: 100,
     max_usage_limit: 0,
-    no_kyc_max_amount_limit: 0,
-    partial_kyc_max_amount_limit: 0
+    no_kyc_max_amount_limit: 20,
+    partial_kyc_max_amount_limit: 100
 }
