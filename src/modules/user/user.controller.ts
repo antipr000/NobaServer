@@ -22,13 +22,13 @@ export class UserController {
   }
  
   @Get("/")
-  @ApiResponse({status:HttpStatus.OK,   type: UserDTO})
+  @ApiResponse({status:HttpStatus.OK,   type: UserDTO, description: 'Returns the user ID of the currently logged in user'})
   async getUser(@Param(UserID)id: string): Promise<UserDTO>{
     return await this.userService.getUser(id);
   }
 
   @Put("/")
-  @ApiResponse({ status: HttpStatus.OK, type: UserDTO })
+  @ApiResponse({ status: HttpStatus.OK, type: UserDTO, description: 'Update user details on the Noba server for currrenly logged in user' })
   async updateUser(@Param(UserID)id: string, @Request() request, @Body() requestBody): Promise<UserDTO> {
     const userProps = {
       ...request.user._doc,

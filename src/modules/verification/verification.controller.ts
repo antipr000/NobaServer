@@ -1,24 +1,22 @@
-import { Controller, Get, Inject, Param, Body, Post, HttpStatus, Request, UseInterceptors, UploadedFiles, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Request, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { VerificationService } from './verification.service';
+import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
+import { Status } from '../../externalclients/idvproviders/definitions';
 import IDVIntegrator from '../../externalclients/idvproviders/IDVIntegrator';
 import TruliooIntegrator from '../../externalclients/idvproviders/providers/trulioo/TruliooIntegrator';
-import { VerificationResultDTO } from './dto/VerificationResultDTO';
-import { IDVerificationRequestDTO } from './dto/IDVerificationRequestDTO';
-import { Logger } from 'winston';
-import { ApiResponse } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
-import { ConsentDTO } from './dto/ConsentDTO';
-import { SubdivisionDTO } from './dto/SubdivisionDTO';
-import { DocVerificationRequestDTO } from './dto/DocVerificationRequestDTO';
-import { Roles, UserID } from '../auth/roles.decorator';
-import { Role } from '../auth/role.enum';
-import { Status } from '../../externalclients/idvproviders/definitions';
-import { VerificationStatusDTO } from './dto/VerificationStatusDTO';
 import { User } from '../auth/domain/User';
+import { Role } from '../auth/role.enum';
+import { Roles, UserID } from '../auth/roles.decorator';
 import { UserService } from '../user/user.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ConsentDTO } from './dto/ConsentDTO';
+import { IDVerificationRequestDTO } from './dto/IDVerificationRequestDTO';
+import { SubdivisionDTO } from './dto/SubdivisionDTO';
+import { VerificationResultDTO } from './dto/VerificationResultDTO';
+import { VerificationStatusDTO } from './dto/VerificationStatusDTO';
+import { VerificationService } from './verification.service';
 
 
 @Roles(Role.User)
@@ -52,19 +50,19 @@ export class VerificationController {
     }
 
     @Get("/consents/:countryCode")
-    @ApiResponse({ status: HttpStatus.OK, type: [ConsentDTO] })
+    @ApiResponse({ status: HttpStatus.OK, type: [ConsentDTO], description: "Get all consents" })
     async getConsents(@Param('countryCode') countryCode: string): Promise<Array<ConsentDTO>> {
         return this.idvProvider.getConsents(countryCode);
     }
 
     @Get("/subdivisions/:countryCode")
-    @ApiResponse({ status: HttpStatus.OK, type: [SubdivisionDTO] })
+    @ApiResponse({ status: HttpStatus.OK, type: [SubdivisionDTO], description: "Get subdivision for the given country code" })
     async getSubdivisions(@Param('countryCode') countryCode: string): Promise<Array<SubdivisionDTO>> {
         return this.idvProvider.getCountrySubdivisions(countryCode);
     }
 
     @Post(`/:${UserID}` + "/id")
-    @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO })
+    @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Get verification result" })
     async verifyUser(@Param(UserID) id: string, 
                     @Body() requestBody: IDVerificationRequestDTO,
                     @Request() request): Promise<VerificationResultDTO> {
@@ -108,7 +106,7 @@ export class VerificationController {
         { name: 'documentBackImage', maxCount: 1 },
         { name: 'livePhoto', maxCount: 1 }
     ]))
-    @ApiResponse({ status: HttpStatus.ACCEPTED, type: VerificationResultDTO })
+    @ApiResponse({ status: HttpStatus.ACCEPTED, type: VerificationResultDTO , description: "Get verification result" })
     async verifyDocument(@Param(UserID) id: string, @UploadedFiles() files, @Body() requestData, @Request() request): Promise<VerificationResultDTO> {
         const documentFrontImageb64 = files.documentFrontImage[0].buffer.toString('base64');
         const documentBackImageb64 = files.documentBackImage[0].buffer.toString('base64');
@@ -133,7 +131,7 @@ export class VerificationController {
     
 
     @Get(`/:${UserID}` + "/doc/status")
-    @ApiResponse({ status: HttpStatus.OK, type: VerificationStatusDTO })
+    @ApiResponse({ status: HttpStatus.OK, type: VerificationStatusDTO, description: "Get KYC status of the given user" })
     async getDocumentVerificationStatus(@Param(UserID) id: string, @Request() request): Promise<VerificationStatusDTO> {
         console.log(request.user);
         const transactionID = request.user.documentVerificationTransactionId;
@@ -141,7 +139,7 @@ export class VerificationController {
     }
 
     @Get(`/:${UserID}` + "/doc/result")
-    @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO }) 
+    @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "TODO Ask soham from usability perspective how is this any different than /status" }) 
     async getDocumentVerificationResult(@Param(UserID) id: string, @Request() request): Promise<VerificationResultDTO> {
         const transactionID = request.user.documentVerificationTransactionId;
         const transactionStatus = await this.idvProvider.getTransactionStatus(transactionID);

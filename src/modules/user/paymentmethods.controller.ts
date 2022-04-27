@@ -21,13 +21,13 @@ export class PaymentMethodsController {
   }
  
   @Get()
-  @ApiResponse({status:HttpStatus.OK,   type: [PaymentMethodDTO]})
+  @ApiResponse({status:HttpStatus.OK,   type: [PaymentMethodDTO], description: 'Returns a list of all payment methods for the given user ID'})
   async getUserPaymentMethods(@Param(UserID) userID: string): Promise<PaymentMethodDTO[]>{
       return this.paymentMethodService.getPaymentMethods(userID);
   }
 
   @Post()
-  @ApiResponse({status:HttpStatus.OK,   type: PaymentMethodDTO})
+  @ApiResponse({status:HttpStatus.OK,   type: PaymentMethodDTO, description: 'Add a payment method for the desired user'})
   async addPaymentMethod(@Param(UserID) userID: string,  @Body() methodDetails: AddPaymentMethodDTO): Promise<PaymentMethodDTO>{
     console.log("validations passed and method Details is ", methodDetails);
     return this.paymentMethodService.addPaymentMethod(userID, methodDetails);
@@ -49,9 +49,12 @@ export class DetachPaymentMethodController {
     }
   
     @Delete()
-    @ApiResponse({status:HttpStatus.OK,  type: String})
+    @ApiResponse({status:HttpStatus.OK,  type: String, description: 'Remove a previously added payment method'})
     async removePaymentMethod(@Param(PaymentMethodId) paymentMethodId: string): Promise<string>{
       await this.paymentMethodService.removePaymentMethod(paymentMethodId);
       return "Payment method removed";
     }
+
+    // TODO add a endpoint to delete all payment methods for a user
+    // Simple to implement as we can just call the above endpoint for each payment method
 }
