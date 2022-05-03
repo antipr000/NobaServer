@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpStatus, Inject, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Role } from '../auth/role.enum';
@@ -21,13 +21,17 @@ export class PaymentMethodsController {
   }
  
   @Get()
-  @ApiResponse({status:HttpStatus.OK,   type: [PaymentMethodDTO], description: 'Returns a list of all payment methods for the given user ID'})
+  @ApiOperation({ summary: 'Get all payment methods for a user' })
+  @ApiResponse({status:HttpStatus.OK,   type: [PaymentMethodDTO], description: 'List of all payment methods for the given user ID'})
+  @ApiBadRequestResponse({ description: 'Invalid payment method ID / request parameters' })
   async getUserPaymentMethods(@Param(UserID) userID: string): Promise<PaymentMethodDTO[]>{
       return this.paymentMethodService.getPaymentMethods(userID);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Attach a payment method to a user' })
   @ApiResponse({status:HttpStatus.OK,   type: PaymentMethodDTO, description: 'Add a payment method for the desired user'})
+  @ApiBadRequestResponse({ description: 'Invalid payment method ID / request parameters' })
   async addPaymentMethod(@Param(UserID) userID: string,  @Body() methodDetails: AddPaymentMethodDTO): Promise<PaymentMethodDTO>{
     console.log("validations passed and method Details is ", methodDetails);
     return this.paymentMethodService.addPaymentMethod(userID, methodDetails);
@@ -49,7 +53,9 @@ export class DetachPaymentMethodController {
     }
   
     @Delete()
+    @ApiOperation({ summary: 'Remove a payment method from a user' })
     @ApiResponse({status:HttpStatus.OK,  type: String, description: 'Remove a previously added payment method'})
+    @ApiBadRequestResponse({ description: 'Invalid request parameters' })
     async removePaymentMethod(@Param(PaymentMethodId) paymentMethodId: string): Promise<string>{
       await this.paymentMethodService.removePaymentMethod(paymentMethodId);
       return "Payment method removed";

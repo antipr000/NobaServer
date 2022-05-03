@@ -1,9 +1,8 @@
-import { Controller, Get, Inject, Param, HttpStatus } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Inject, Param } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
-import { ApiResponse } from '@nestjs/swagger';
 import { ExchangeRateService } from './exchangerate.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
 
 
 
@@ -20,13 +19,15 @@ export class ExchangeRateController {
   }
 
   @Get("/priceinfiat/:crypto_currency_code/:fiat_currency_code")
-  @ApiResponse({ status: HttpStatus.OK, description: "Get the fiat price (leg 2) for the desired crypto currency (leg1)" })
+  @ApiOperation({ summary: 'Get price of a crypto (leg1) in fiat (leg 2)' })
+  @ApiResponse({ status: HttpStatus.OK, description: "Fiat price (leg 2) for the desired crypto currency (leg1)" })
   async priceInFiat(@Param('crypto_currency_code') cryptoCurrencyCode : string, @Param('fiat_currency_code') fiatCurrencyCode: string ): Promise<number>{
     return this.exchangeRateService.priceInFiat(cryptoCurrencyCode, fiatCurrencyCode);
   }
 
   @Get("/processingfee/:crypto_currency_code/:fiat_currency_code/:fiat_amount")
-  @ApiResponse({ status: HttpStatus.OK })
+  @ApiOperation({ summary: 'Get the processing fee for a crypto fiat conversion' })
+  @ApiResponse({ status: HttpStatus.OK, description: "Processing fee for given crypto fiat conversion" })
   async processingFee(
     @Param('crypto_currency_code') cryptoCurrencyCode : string, 
     @Param('fiat_currency_code') fiatCurrencyCode: string,
