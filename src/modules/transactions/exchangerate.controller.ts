@@ -2,6 +2,7 @@ import { Controller, Get, HttpStatus, Inject, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
+import { Public } from '../auth/public.decorator';
 import { ExchangeRateService } from './exchangerate.service';
 import { Public } from '../auth/public.decorator';
 
