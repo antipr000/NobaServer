@@ -19,6 +19,7 @@ export class ExchangeRateController {
     
   }
 
+  @Public()
   @Get("/priceinfiat/:crypto_currency_code/:fiat_currency_code")
   @ApiOperation({ summary: 'Get price of a crypto (leg1) in fiat (leg 2)' })
   @ApiResponse({ status: HttpStatus.OK, description: "Fiat price (leg 2) for the desired crypto currency (leg1)" })
