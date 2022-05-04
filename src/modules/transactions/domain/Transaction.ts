@@ -18,6 +18,7 @@ export interface TransactionProps extends VersioningInfo {
     diagnosis?: string,
     cryptoTransactionId?: string,
     transactionStatus: TransactionStatus,
+    transactionTimestamp?: Date
 }
 
 
@@ -36,6 +37,7 @@ export const transactionJoiValidationKeys : KeysRequired<TransactionProps> = {
     destinationWalletAddress: Joi.string().optional(),
     stripePaymentIntentId: Joi.string().optional(),
     cryptoTransactionId: Joi.string().optional(),
+    transactionTimestamp: Joi.date().optional()
 }
 
 export const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({allowUnknown: true}); 
@@ -48,6 +50,7 @@ export class Transaction extends AggregateRoot<TransactionProps>​​ {
 
     public static createTransaction(transactionProps: Partial<TransactionProps>): Transaction{ //set email verified to true when user authenticates via third party and not purely via email
         transactionProps._id = transactionProps._id ?? "transaction_"+Entity.getNewID();
+        transactionProps.transactionTimestamp = transactionProps.transactionTimestamp ?? new Date();
         return new Transaction(Joi.attempt(transactionProps,transactionJoiSchema));
     }
     

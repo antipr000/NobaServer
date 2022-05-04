@@ -12,6 +12,7 @@ import { UserMapper } from "./mappers/UserMapper";
 import { StripeService } from "../common/stripe.service";
 import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
 import { Result } from "src/core/logic/Result";
+import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 
 @Injectable()
 export class UserService {
@@ -57,5 +58,11 @@ export class UserService {
     const userResult = await this.userRepo.getUserByEmail(emailID);
     // TODO: Throw error when user is not present
     return userResult.getValue();
+  }
+
+  getVerificationStatus(user: UserProps): UserVerificationStatus {
+    if(user.idVerified && user.documentVerified) return UserVerificationStatus.VERIFIED;
+    else if(user.idVerified) return UserVerificationStatus.PARTIALLY_VERIFIED;
+    return UserVerificationStatus.NOT_VERIFIED;
   }
 }
