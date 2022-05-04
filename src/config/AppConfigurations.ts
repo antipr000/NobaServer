@@ -2,7 +2,6 @@ import * as Joi from 'joi';
 import { join, dirname } from 'path';
 import { readConfigsFromYamlFiles } from '../core/utils/YamlJsonUtils';
 import { appConfigsJoiValidationSchema, AppEnvironment,  getEnvironmentName } from './ConfigurationUtils';
-import { SecretProvider } from './SecretProvider';
 
 
 
@@ -32,9 +31,8 @@ export default function loadAppConfigs(){
   console.log(`Configs directory is ${configsDir} and config file name is ${configFileName}`); 
   console.log(`Override files are ${overrideFilesPaths}`);
 
-  let configs =  readConfigsFromYamlFiles(mainPropertyFile, ...overrideFilesPaths);
-  configs = SecretProvider.setSecretsInConfigs(configs);
-
+  const configs =  readConfigsFromYamlFiles(mainPropertyFile, ...overrideFilesPaths);
+  
   //merge configs with override files
 
   //TODO if needed merge configs here with environment variable configs (some variables may be coming from secrets manager)
@@ -54,9 +52,9 @@ function setEnvVariables(finalConfigs: Record<string, any>): void
 {
    //setting up aws creds in env variable, this may not be the best place
 
-   process.env.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID ?? finalConfigs["awsCommonAccessKeyID"]
-   process.env.AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY ?? finalConfigs["awsCommonAccessKeySecret"];
-   process.env.AWS_REGION = process.env.AWS_REGION ?? finalConfigs["awsCommonRegion"];
+   process.env.AWS_ACCESS_KEY_ID = finalConfigs["awsCommonAccessKeyID"]
+   process.env.AWS_SECRET_ACCESS_KEY = finalConfigs["awsCommonAccessKeySecret"];
+   process.env.AWS_REGION = finalConfigs["awsCommonRegion"];
    process.env.AWS_DEFAULT_REGION = process.env.AWS_REGION;
 }
 
