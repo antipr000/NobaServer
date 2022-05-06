@@ -4,7 +4,6 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Public } from '../auth/public.decorator';
 import { ExchangeRateService } from './exchangerate.service';
-import { Public } from '../auth/public.decorator';
 
 
 
