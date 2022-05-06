@@ -18,9 +18,6 @@ import * as helmet from 'helmet';
 //acutal bootstrapping function
 async function bootstrap() {
 
-
-  await SecretProvider.cacheAllSecrets();
-
   const app = await NestFactory.create(AppModule);
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type  
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type

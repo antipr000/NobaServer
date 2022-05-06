@@ -40,12 +40,3 @@ export function getPropertyFromEvironment(key: string) {
     return process.env[key];
 }
 
-//first checks for a property from environment else loads from secrets
-export function loadFromEvironmentOrSecret(key: string): string {
-    const fromEnv = getPropertyFromEvironment(key);
-    if(fromEnv) {
-        return fromEnv;
-    }else {//only load from secrets if not present in environment
-        return SecretProvider.getSecret(key);
-    }
-}
