@@ -21,14 +21,12 @@ export interface UserProps extends VersioningInfo {
     dateOfBirth?: DOB;
     address?: Address;
 }
-
+// TODO: Schema should have required keys, object should be optional
 const dobValidationJoiKeys: KeysRequired<DOB> = {
-    date:  Joi.number().required(),
-    month: Joi.number().required(),
-    year: Joi.number().required()
+    date:  Joi.number().optional(),
+    month: Joi.number().optional(),
+    year: Joi.number().optional()
 };
-
-const dobJoiValidationSchema = Joi.object(dobValidationJoiKeys).options({  stripUnknown: true })
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
     streetName: Joi.string().optional(),
@@ -51,8 +49,8 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     documentVerificationTransactionId: Joi.string().optional(),
     idVerificationTimestamp: Joi.number().optional(),
     documentVerificationTimestamp: Joi.number().optional(),
-    dateOfBirth: dobJoiValidationSchema.optional(),
-    address: Joi.object().optional()
+    dateOfBirth: Joi.object().keys(dobValidationJoiKeys).optional(),
+    address: Joi.object().keys(addressValidationJoiKeys).optional()
 }
 
 export const userJoiSchema = Joi.object(userJoiValidationKeys).options({allowUnknown: true, stripUnknown: false}); 
