@@ -11,7 +11,7 @@ export function getWinstonModule() {
 
   return WinstonModule.forRoot({
     transports: [
-      new winston.transports.File({ filename: 'noba_server.log', level: 'debug' }),
+      new winston.transports.File({ filename: './noba_server.log', level: 'debug' }),
       new winston.transports.Console({
         format: winstonFormat
       }),
