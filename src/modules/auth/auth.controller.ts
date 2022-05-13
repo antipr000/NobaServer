@@ -24,13 +24,13 @@ export class AuthController {
     }
 
     @Public()
-    @ApiOperation({ summary: 'Sends otp to the email provided' })
+    @ApiOperation({ summary: 'Sends otp to the email/phone provided' })
     @ApiResponse({ status: HttpStatus.OK, description: "Email successfully sent" })
     @Post("/login")
     async loginUser(@Body() request: LoginRequestDTO) {
         const otp = this.authService.createOtp();
-        this.authService.saveOtp(request.email, otp);
-        return this.emailService.sendOtp(request["email"], otp.toString());
+        await this.authService.saveOtp(request.email, otp);
+        return this.authService.sendOtp(request["email"], otp.toString());//TODO change parameter to emailOrPhone, front end client also need to be updated
     }
 
     @ApiBearerAuth()

@@ -48,7 +48,7 @@ import { IUserRepo } from "./repos/UserRepo";
             type: 'card',
           });
         
-        console.log(stripePaymentMethods);
+        // console.log(stripePaymentMethods);
         return  (stripePaymentMethods.data??[]).map(stripePaymentMethod =>  convertStripePaymentMethodToPaymentMethodDTO(stripePaymentMethod));
     }
   

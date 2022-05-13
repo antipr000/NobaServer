@@ -1,6 +1,5 @@
 import * as Joi from "joi";
-import { ddbConfigsJoiValidationSchema } from "./configtypes/DynamoDBConfigs";
-import { SecretProvider } from "./SecretProvider";
+
 
 export enum AppEnvironment {
     DEV = "development",
@@ -15,6 +14,7 @@ export const S3_CONFIG_KEY = "s3";
 export const STRIPE_CONFIG_KEY = "stripe";
 export const SENDGRID_CONFIG_KEY = "sendgrid";
 export const TRULIOO_CONFIG_KEY = "trulioo";
+export const TWILIO_CONFIG_KEY = "twilio";
 
 
 export const appConfigsJoiValidationSchema = Joi.object({

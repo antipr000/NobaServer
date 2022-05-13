@@ -8,6 +8,8 @@ import { UserService } from '../user/user.service';
 import { VerifyOtpResponseDTO } from './dto/VerifyOtpReponse';
 import { DBProvider } from '../../infraproviders/DBProvider';
 import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
+import { EmailService } from '../common/email.service';
+import { SMSService } from '../common/sms.service';
 
 @Injectable()
 export class AuthService {
@@ -17,32 +19,44 @@ export class AuthService {
     constructor(
         dbProvider: DBProvider,
         private jwtService: JwtService,
-        private userService: UserService
+        private userService: UserService,
+        private emailService: EmailService,
+        private smsService: SMSService
     ) {
         this.otpRepo = new MongoDBOtpRepo(dbProvider);
     }
 
-    async validateUser(email: string, otp: number): Promise<AuthenticatedUser> {
-        const user: Otp = await this.otpRepo.getOTP(email);
+    async validateUser(emailOrPhone: string, otp: number): Promise<AuthenticatedUser> {
+        const user: Otp = await this.otpRepo.getOTP(emailOrPhone);
         const currentDateTime: number = new Date().getTime();
         if(user.props.otp === otp && currentDateTime <= user.props.otpExpiryTime) {
-            this.userService.createUserIfFirstTimeLogin(email);
+            const user = await this.userService.createUserIfFirstTimeLogin(emailOrPhone);
             return {
-                email
+                emailOrPhone: emailOrPhone,
+                uid: user._id
             };
         }
         return null;
     }
 
     async login(user: AuthenticatedUser): Promise<VerifyOtpResponseDTO> {
-        const payload = { email: user.email };
+        const payload = { email: user.emailOrPhone };
         return {
             access_token: this.jwtService.sign(payload)
         };
     }
 
-    async saveOtp(email: string, otp: number): Promise<void> {
-        await this.otpRepo.saveOTP(email, otp);
+    async saveOtp(emailOrPhone: string, otp: number): Promise<void> {
+        await this.otpRepo.saveOTP(emailOrPhone, otp);
+    }
+
+    async sendOtp(emailOrPhone: string, otp: string): Promise<void> { 
+        const isEmail = emailOrPhone.includes('@'); 
+        if(isEmail) { 
+            await this.emailService.sendOtp(emailOrPhone, otp);
+        } else {
+            await this.smsService.sendOtp(emailOrPhone, otp);
+        }
     }
 
     public createOtp(): number {

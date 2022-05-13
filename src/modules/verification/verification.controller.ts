@@ -146,7 +146,7 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, type: VerificationStatusDTO, description: "Get KYC status of the given user" })
     @ApiBadRequestResponse({ description: 'Invalid request parameters!' })
     async getDocumentVerificationStatus(@Param(UserID) id: string, @Request() request): Promise<VerificationStatusDTO> {
-        console.log(request.user);
+        // console.log(request.user);
         const transactionID = request.user.documentVerificationTransactionId;
         return await this.idvProvider.getTransactionStatus(transactionID);
     }

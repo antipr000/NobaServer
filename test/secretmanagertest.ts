@@ -6,5 +6,5 @@ import { SecretProvider } from "../src/config/SecretProvider";
 run();
 
 async function run() {
-    SecretProvider.cacheAllSecrets();
+    //
 }

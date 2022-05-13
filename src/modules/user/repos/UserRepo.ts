@@ -15,6 +15,7 @@ export interface IUserRepo extends Repo<User> {
     getUserIfExists(id: string): Promise<Result<User>>
     exists(id: string): Promise<boolean>
     getUserByEmail(email:string): Promise<Result<User>>
+    getUserByPhone(phone: string): Promise<Result<User>>
     updateUser(user: User): Promise<User>   
 }
 
@@ -27,6 +28,10 @@ export class DynamoDBUserRepo implements IUserRepo {
     constructor( private readonly dbProvider: DBProvider) { 
         this.dynamoMapper = dbProvider.dynamoDataMapper,
         this.userMapper = new UserMapper(); 
+    }
+    
+    getUserByPhone(phone: string): Promise<Result<User>> {
+        throw new Error("Method not implemented.");
     }
 
     async getUser(userID: string): Promise<User> {

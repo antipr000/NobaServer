@@ -11,7 +11,6 @@ import { joiToSwagger } from './joi2Swagger';
 import { NoUnExpectedKeysValidationPipe, createClassTypeToPropertiesMapFromSwaggerSchemas } from './core/utils/NoUnexpectedKeysValidationPipe';
 import { AllExceptionsFilter } from './core/exception/ExceptionsFilter';
 import { AuthenticatedUser } from './modules/auth/domain/AuthenticatedUser';
-import { SecretProvider } from './config/SecretProvider';
 import { ConfigService } from '@nestjs/config';
 import * as helmet from 'helmet';
 

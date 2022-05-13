@@ -13,8 +13,8 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
     constructor(private readonly dbProvider: DBProvider) {}
 
-    async getOTP(emailID: string): Promise<Otp> {
-        const result: OtpProps = await OtpModel.findById(emailID).exec()
+    async getOTP(emailOrPhone: string): Promise<Otp> {
+        const result: OtpProps = await OtpModel.findById(emailOrPhone).exec()
         return this.otpMapper.toDomain(result);
     }
 

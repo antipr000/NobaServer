@@ -33,14 +33,19 @@ export class UserService {
     return this.userMapper.toDTO(res);
   }
 
-  async createUserIfFirstTimeLogin(emailID: string): Promise<UserDTO> {
-    const userResult = await this.userRepo.getUserByEmail(emailID);
+  async createUserIfFirstTimeLogin(emailOrPhone: string): Promise<UserDTO> {
+
+    const isEmail = emailOrPhone.includes('@');
+    const email =  isEmail? emailOrPhone: null;
+    const phone = !isEmail? emailOrPhone: null;
+
+    const userResult = await this.findUserByEmailOrPhone(emailOrPhone);
     if (userResult.isFailure) { //user doesn't exist already
       //first create stripe customer
-      this.logger.info(`Creating user for first time for ${emailID}`);
-      const stripeCustomer = await this.stripeService.stripeApi.customers.create({ email: emailID});
+      this.logger.info(`Creating user for first time for ${emailOrPhone}`);
+      const stripeCustomer = await this.stripeService.stripeApi.customers.create({ email: email, phone: phone });
       const stripeCustomerID = stripeCustomer.id;
-      const newUser = User.createUser({email: emailID, stripeCustomerID});
+      const newUser = User.createUser({email: email, phone: phone, stripeCustomerID});
       await this.userRepo.createUser(newUser);
       return this.userMapper.toDTO(newUser);
     }
@@ -54,10 +59,10 @@ export class UserService {
     return this.userMapper.toDTO(updatedUser);
   }
   
-  async findOne(emailID: string): Promise<User> {
-    const userResult = await this.userRepo.getUserByEmail(emailID);
-    // TODO: Throw error when user is not present
-    return userResult.getValue();
+  async findUserByEmailOrPhone(emailOrPhone: string): Promise<Result<User>> {
+    const isEmail = emailOrPhone.includes('@');
+    const userResult = isEmail ? await this.userRepo.getUserByEmail(emailOrPhone) : await this.userRepo.getUserByPhone(emailOrPhone);
+    return userResult;
   }
 
   getVerificationStatus(user: UserProps): UserVerificationStatus {

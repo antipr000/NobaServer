@@ -17,6 +17,7 @@ export class MongoDBUserRepo implements IUserRepo {
     constructor( private readonly dbProvider: DBProvider) { 
      
     }
+    
 
     async getUser(userID: string): Promise<User> {
        const  result :any  = await  UserModel.findById(userID).exec();
@@ -57,6 +58,20 @@ export class MongoDBUserRepo implements IUserRepo {
 
     async getUserByEmail(email:string): Promise<Result<User>> {
         return this.getUserIfExists(email);
+    }
+
+    async getUserByPhone(phone: string): Promise<Result<User>> {
+        try {
+            const result = await UserModel.findOne({ "phone": phone}).exec();
+            if(result) {
+             const user: UserProps = convertDBResponseToJsObject(result);
+             return Result.ok(this.userMapper.toDomain(user));
+            } else {
+             return Result.fail("Couldn't find user in the db"); 
+            }
+        } catch(err) {
+             return Result.fail("Couldn't find user in the db");
+        };
     }
 
     async exists(email: string):Promise<boolean>{

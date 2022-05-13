@@ -5,11 +5,12 @@ import * as Joi from 'joi';
 import { Entity } from '../../../core/domain/Entity';
 import { DOB } from '../../../externalclients/idvproviders/definitions';
 import { Address } from './Address';
+import { optional } from 'joi';
 
 export interface UserProps extends VersioningInfo {
     _id: string,
     name?: string,
-    email: string,
+    email?: string,
     stripeCustomerID?: string, 
     phone?: string,
     isAdmin?: boolean,
@@ -40,9 +41,9 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     ...versioningInfoJoiSchemaKeys,
     _id: Joi.string().min(10).required(),
     name: Joi.string().min(2).max(100).optional(),
-    email: Joi.string().email().required().meta({ _mongoose: { index: true } }), 
+    email: Joi.string().email().allow(null).optional().meta({ _mongoose: { index: true } }), 
     stripeCustomerID: Joi.string().optional(),
-    phone: Joi.string().optional(), //TODO phone number validation, how do we want to store phone number? country code + phone number?
+    phone: Joi.string().optional().allow(null).meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
     isAdmin: Joi.boolean().default(false),
     idVerified: Joi.boolean().default(false),
     documentVerified: Joi.boolean().default(false),
@@ -53,7 +54,7 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     address: Joi.object().keys(addressValidationJoiKeys).optional()
 }
 
-export const userJoiSchema = Joi.object(userJoiValidationKeys).options({allowUnknown: true, stripUnknown: false}); 
+export const userJoiSchema = Joi.object(userJoiValidationKeys).options({allowUnknown: true, stripUnknown: false, }); 
 
 export class User extends AggregateRoot<UserProps>​​ {
 
@@ -63,6 +64,9 @@ export class User extends AggregateRoot<UserProps>​​ {
 
     public static createUser(userProps: Partial<UserProps>): User{ //set email verified to true when user authenticates via third party and not purely via email
         if(!userProps._id) userProps._id = Entity.getNewID();
+
+        if(!userProps.phone && !userProps.email) throw new Error('User must have either phone or email');
+
         const user = new User(Joi.attempt(userProps,userJoiSchema));
         return user;
     }
