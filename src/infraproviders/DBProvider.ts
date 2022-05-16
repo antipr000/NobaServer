@@ -4,8 +4,12 @@ import * as DynamoDB from 'aws-sdk/clients/dynamodb';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { DyanamoDataMapperExtended } from '../infra/dynamodb/DDBDataMapperExtended';
 import { Logger } from 'winston';
-
+import {Model} from "mongoose";
+import { UserProps } from '../modules/user/domain/User';
+import { UserModel } from "../infra/mongodb/models/UserModel";
 import * as Mongoose from "mongoose";
+import { TransactionProps } from '../modules/transactions/domain/Transaction';
+import { TransactionModel } from '../infra/mongodb/models/TransactionModel';
 
 
 
@@ -34,5 +38,13 @@ export class DBProvider {
   get dynamoDataMapper(): DyanamoDataMapperExtended {
     //DONOT CHANGE ANYTHING HERE IF YOU DON"T KNOW WHAT YOU ARE DOING!!
     return new DyanamoDataMapperExtended({client: this._dynamoClient, skipVersionCheck: false});
+  }
+
+  get userModel(): Model<UserProps> {
+    return UserModel;
+  }
+
+  get transactionModel(): Model<TransactionProps> {
+    return TransactionModel;
   }
 }

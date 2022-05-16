@@ -1,5 +1,4 @@
 import { Result } from "../../../core/logic/Result";
-import { UserModel } from "../../../infra/mongodb/models/UserModel";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { User, UserProps } from "../domain/User";
 import { UserMapper } from "../mappers/UserMapper";
@@ -20,7 +19,7 @@ export class MongoDBUserRepo implements IUserRepo {
     
 
     async getUser(userID: string): Promise<User> {
-       const  result :any  = await  UserModel.findById(userID).exec();
+       const  result :any  = await  this.dbProvider.userModel.findById(userID).exec();
        const userData: UserProps = convertDBResponseToJsObject(result);
        return this.userMapper.toDomain(userData);
     }
@@ -32,7 +31,7 @@ export class MongoDBUserRepo implements IUserRepo {
 
     
     async updateUser(user: User): Promise<User> {
-        const result = await UserModel.findByIdAndUpdate(user.props._id, {
+        const result = await this.dbProvider.userModel.findByIdAndUpdate(user.props._id, {
             $set: user.props
         }, {
             new: true
@@ -44,7 +43,7 @@ export class MongoDBUserRepo implements IUserRepo {
 
     async getUserIfExists(email: string): Promise<Result<User>>{
        try {
-           const result = await UserModel.findOne({ "email": email }).exec();
+           const result = await this.dbProvider.userModel.findOne({ "email": email }).exec();
            if(result) {
             const user: UserProps = convertDBResponseToJsObject(result);
             return Result.ok(this.userMapper.toDomain(user));
@@ -62,7 +61,7 @@ export class MongoDBUserRepo implements IUserRepo {
 
     async getUserByPhone(phone: string): Promise<Result<User>> {
         try {
-            const result = await UserModel.findOne({ "phone": phone}).exec();
+            const result = await this.dbProvider.userModel.findOne({ "phone": phone}).exec();
             if(result) {
              const user: UserProps = convertDBResponseToJsObject(result);
              return Result.ok(this.userMapper.toDomain(user));
@@ -83,7 +82,7 @@ export class MongoDBUserRepo implements IUserRepo {
         if(await this.exists(user.props.email)) {
             throw Error("User with given email already exists");
         } else {
-            const result = await UserModel.create(user.props);
+            const result = await this.dbProvider.userModel.create(user.props);
             const userProps: UserProps = convertDBResponseToJsObject(result);
             return this.userMapper.toDomain(userProps);
         }
