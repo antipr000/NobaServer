@@ -4,9 +4,10 @@ envType: "staging"
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
 
 apiPrefix: "/api/v1"
+logFilePath: "/home/ubuntu/noba_server.log"
 
-awsCommonRegion: &awsCommonRegion "us-east-1"
-
+awsRegion: "us-east-1"
+awsDefaultRegion: "us-east-1"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:

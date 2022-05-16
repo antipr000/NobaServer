@@ -397,6 +397,7 @@ Temporary Items
 =======
 # Local
 .env
+appconfigs/secrets.yaml
 dist
 package-lock.json
 *.pem

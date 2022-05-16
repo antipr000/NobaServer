@@ -15,6 +15,7 @@ then
 
 else
     echo "Skipping the configuration of CloudWatch Log Agent as \"$DEPLOYMENT_GROUP_NAME\" DEPLOYMENT_GROUP is not configured."
+    export NODE_ENV=development
 fi
 
 echo "Starting NobaServer ..."
@@ -28,6 +29,7 @@ export CONFIGS_OVERRIDE_FILES="/home/ubuntu/secrets.yaml"
 
 cd $APP_DIR
 
+rm ~/.aws/credentials   # cleanup credetials file (if any) so that EC2 role credentials are used.
 pm2 stop $APP_NAME
 
 pm2 start node --name $APP_NAME -- ./dist/main.js 

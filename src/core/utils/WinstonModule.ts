@@ -1,20 +1,30 @@
 import * as winston from 'winston';
 import { utilities as nestWinstonModuleUtilities, WinstonModule } from 'nest-winston';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SERVER_LOG_FILE_PATH } from 'src/config/ConfigurationUtils';
 
 export function getWinstonModule() {
-  const winstonFormat = winston.format.combine(
-    //somewhere magic happens and z time gets converted back to local time so 
-    // need to add something to prevent that conversion
-    winston.format.timestamp({ format: () => (new Date().toISOString()) + " " }),
-    nestWinstonModuleUtilities.format.nestLike("NobaServer")
-  );
+  return WinstonModule.forRootAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: async (configService: ConfigService) => {
+      const logFilePath = configService.get<string>(SERVER_LOG_FILE_PATH);
 
-  return WinstonModule.forRoot({
-    transports: [
-      new winston.transports.File({ filename: '/home/ubuntu/noba_server.log', level: 'debug' }),
-      new winston.transports.Console({
-        format: winstonFormat
-      }),
-    ],
+      const winstonFormat = winston.format.combine(
+        //somewhere magic happens and z time gets converted back to local time so 
+        // need to add something to prevent that conversion
+        winston.format.timestamp({ format: () => (new Date().toISOString()) + " " }),
+        nestWinstonModuleUtilities.format.nestLike("NobaServer")
+      );
+
+      return {
+        transports: [
+          new winston.transports.File({ filename: logFilePath, level: 'debug' }),
+          new winston.transports.Console({
+            format: winstonFormat
+          }),
+        ],
+      }
+    }
   })
 }
