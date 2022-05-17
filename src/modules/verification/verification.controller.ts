@@ -20,7 +20,7 @@ import { VerificationService } from './verification.service';
 
 
 @Roles(Role.User)
-@ApiBearerAuth()
+@ApiBearerAuth("JWT-auth")
 @Controller("verify")
 export class VerificationController {
 

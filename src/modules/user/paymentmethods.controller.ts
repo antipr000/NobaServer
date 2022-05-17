@@ -9,7 +9,7 @@ import { PaymentMethodDTO } from './dto/PaymentMethodDTO';
 import { PaymentMethodsService } from './paymentmethods.service';
 
 @Roles(Role.User)
-@ApiBearerAuth()
+@ApiBearerAuth("JWT-auth")
 @Controller("paymentmethods/:"+UserID)
 export class PaymentMethodsController {
 

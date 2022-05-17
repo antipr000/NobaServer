@@ -13,7 +13,7 @@ import { CheckTransactionDTO } from './dto/CheckTransactionDTO';
 import { TransactionAllowedStatus } from './domain/TransactionAllowedStatus';
 
 @Roles(Role.User)
-@ApiBearerAuth()
+@ApiBearerAuth("JWT-auth")
 @Controller("user/:"+UserID+"/transactions")
 export class TransactionController {
 
