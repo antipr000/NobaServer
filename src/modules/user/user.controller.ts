@@ -9,7 +9,7 @@ import { UserService } from './user.service';
 
 
 @Roles(Role.User)
-@ApiBearerAuth()
+@ApiBearerAuth("JWT-auth")
 @Controller("user/:"+UserID)
 export class UserController {
 

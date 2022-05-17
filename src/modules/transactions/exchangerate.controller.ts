@@ -9,7 +9,7 @@ import { ExchangeRateService } from './exchangerate.service';
 
 //TODO fetch exchange rates on client side? or at least add rate limitation from single ip to prevent mis-use of price api provider on our behalf??
 @Controller("exchangerates")
-@ApiBearerAuth()
+@ApiBearerAuth("JWT-auth")
 export class ExchangeRateController {
 
   @Inject(WINSTON_MODULE_PROVIDER) 
