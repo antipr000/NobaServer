@@ -1,18 +1,18 @@
-import {  NestFactory } from '@nestjs/core';
-import {  Logger } from '@nestjs/common';
-import { AppModule } from './app.module';
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as helmet from 'helmet';
+import * as morgan from 'morgan';
 import {
   WINSTON_MODULE_NEST_PROVIDER,
-  WINSTON_MODULE_PROVIDER,
+  WINSTON_MODULE_PROVIDER
 } from 'nest-winston';
-import * as morgan from 'morgan';
-import { DocumentBuilder,  SwaggerModule } from '@nestjs/swagger';
-import { joiToSwagger } from './joi2Swagger';
-import { NoUnExpectedKeysValidationPipe, createClassTypeToPropertiesMapFromSwaggerSchemas } from './core/utils/NoUnexpectedKeysValidationPipe';
+import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './core/exception/ExceptionsFilter';
+import { createClassTypeToPropertiesMapFromSwaggerSchemas, NoUnExpectedKeysValidationPipe } from './core/utils/NoUnexpectedKeysValidationPipe';
+import { joiToSwagger } from './joi2Swagger';
 import { AuthenticatedUser } from './modules/auth/domain/AuthenticatedUser';
-import { ConfigService } from '@nestjs/config';
-import * as helmet from 'helmet';
 
 //acutal bootstrapping function
 async function bootstrap() {
@@ -47,6 +47,7 @@ async function bootstrap() {
         bearerFormat: "JWT",
     },
     'JWT-auth')
+    .addServer('https://api.noba.com/')
     .build();
 
   const swaggerDocument = SwaggerModule.createDocument(app, config,  { operationIdFactory: (controllerKey: string, methodKey: string) => methodKey });
