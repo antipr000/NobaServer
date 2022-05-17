@@ -42,12 +42,9 @@ async function bootstrap() {
     .setDescription('Noba Server API')
     .setVersion('1.0')
     .addBearerAuth({
-      type: 'http',
-      scheme: 'bearer',
-      bearerFormat: 'JWT',
-      name: 'JWT',
-      description: 'Enter JWT token',
-      in: 'header',
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
     },
     'JWT-auth')
     .build();
