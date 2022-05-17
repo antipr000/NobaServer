@@ -7,6 +7,11 @@ logFilePath: "/tmp/noba_server.log"
 
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
+# AWS Credentials for local development & testing. 
+# The changes to this file will not be push to github, so feel free to paste the secrets of development environment here.
+
+awsAccessKeyId: "test"
+awsSecretAccessKey: "test"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
