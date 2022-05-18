@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpStatus, Post, Request, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { EmailService } from "../common/email.service";
 import { AuthService } from "./auth.service";
 import { LoginRequestDTO } from "./dto/LoginRequest";
@@ -9,6 +9,7 @@ import { LocalAuthGuard } from "./local-auth.guard";
 import { Public } from "./public.decorator";
 
 @Controller("auth")
+@ApiTags('Authentication')
 export class AuthController {
     constructor(
         private authService: AuthService, 

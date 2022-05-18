@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpStatus, Inject, Param, Post } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Role } from '../auth/role.enum';
@@ -11,6 +11,7 @@ import { PaymentMethodsService } from './paymentmethods.service';
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("paymentmethods/:"+UserID)
+@ApiTags('Payment Methods')
 export class PaymentMethodsController {
 
   @Inject(WINSTON_MODULE_PROVIDER) 
@@ -42,6 +43,7 @@ export class PaymentMethodsController {
 // Write as a separate controller as this doesn't need userID
 @Roles(Role.User)
 @ApiBearerAuth()
+@ApiTags('Payment Methods')
 @Controller("paymentmethods/:"+PaymentMethodId)
 export class DetachPaymentMethodController {
   

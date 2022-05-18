@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Request, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Status } from '../../externalclients/idvproviders/definitions';
@@ -22,6 +22,7 @@ import { VerificationService } from './verification.service';
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("verify")
+@ApiTags('Verification')
 export class VerificationController {
 
     @Inject(WINSTON_MODULE_PROVIDER)

@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpStatus, Inject, Param, Put, Request } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Role } from '../auth/role.enum';
@@ -11,6 +11,7 @@ import { UserService } from './user.service';
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("user/:"+UserID)
+@ApiTags('User')
 export class UserController {
 
   @Inject(WINSTON_MODULE_PROVIDER) 

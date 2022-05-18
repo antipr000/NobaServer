@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Request } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiBadGatewayResponse, ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBadGatewayResponse, ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Role } from '../auth/role.enum';
@@ -15,6 +15,7 @@ import { TransactionAllowedStatus } from './domain/TransactionAllowedStatus';
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("user/:"+UserID+"/transactions")
+@ApiTags('Transactions')
 export class TransactionController {
 
   @Inject(WINSTON_MODULE_PROVIDER) 
