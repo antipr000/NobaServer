@@ -13,6 +13,7 @@ import { AllExceptionsFilter } from './core/exception/ExceptionsFilter';
 import { createClassTypeToPropertiesMapFromSwaggerSchemas, NoUnExpectedKeysValidationPipe } from './core/utils/NoUnexpectedKeysValidationPipe';
 import { joiToSwagger } from './joi2Swagger';
 import { AuthenticatedUser } from './modules/auth/domain/AuthenticatedUser';
+import { writeFileSync } from 'fs';
 
 //acutal bootstrapping function
 async function bootstrap() {
@@ -53,6 +54,7 @@ async function bootstrap() {
   const swaggerDocument = SwaggerModule.createDocument(app, config,  { operationIdFactory: (controllerKey: string, methodKey: string) => methodKey });
   swaggerDocument.components = joiToSwagger(swaggerDocument.components) as any; //merge swagger-plugin generated components with joi generated components
   
+  writeFileSync("./swagger.json", JSON.stringify(swaggerDocument), {encoding: 'utf-8'});
   app.useGlobalPipes(
     //we won't accept the keys/fields/attributes in the input if they are not defined in the accepted Type of a controller route
     new NoUnExpectedKeysValidationPipe(createClassTypeToPropertiesMapFromSwaggerSchemas(swaggerDocument.components.schemas), false)
