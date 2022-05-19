@@ -11,25 +11,25 @@ awsDefaultRegion: "us-east-1"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
-  awsSecretNameForApiKey: '' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  apiKey: "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"
+  awsSecretNameForApiKey: 'PROD_SENDGRID_SECRET' # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  apiKey: "bogus-value"
 
 stripe:
-  awsSecretNameForSecretKey: '' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  secretKey: 'sk_test_51KZIlsEe2pZC45hcq7Tjpoi3M7nCc6A5ki95cA8UGF1Ei7b4mCUf6wnAgTJAPzVlpamVGUj7cjQMMhegPYgqELyx00yqpROABj'
+  awsSecretNameForSecretKey: 'PROD_STRIPE_SECRET' # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  secretKey: 'bogus-value'
 
 trulioo:
-  awsSecretNameForIDVApiKey: '' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForDocVApiKey: ''
-  TruliooIDVApiKey: UGVyZWdyaW5lX1NhbmRib3hfSURWX0FQSV8yOkNvZGVuYW1lZ29kQDEyMzQ=
-  TruliooDocVApiKey: UGVyZWdyaW5lX1NhbmRib3hfRG9jVl9BUElfMjpDb2RlbmFtZWdvZEAxMjM0
+  awsSecretNameForIDVApiKey: 'PROD_TRULIOO_IDV_SECRET' # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForDocVApiKey: 'PROD_TRULIOO_DOCV_SECRET'
+  TruliooIDVApiKey: "bogus-value"
+  TruliooDocVApiKey: "bogus-value"
 
 
 twilio:
-  awsSecretNameForSID: ''
-  awsSecretNameForAuthToken: ''
-  SID: "AC4efa22156849ec40b383a80f45525409"
-  authToken:  "c34165debbb0a77e3507884e86b88772"
+  awsSecretNameForSID: 'PROD_TWILIO_SID'
+  awsSecretNameForAuthToken: 'PROD_TWILIO_SECRET'
+  SID: "bogus-value"
+  authToken:  "bogus-value"
   fromPhoneNumber: "+19894557345"
   
   

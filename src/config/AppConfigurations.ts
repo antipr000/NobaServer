@@ -1,5 +1,5 @@
 import * as Joi from 'joi';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { readConfigsFromYamlFiles } from '../core/utils/YamlJsonUtils';
 import {
   appConfigsJoiValidationSchema,
@@ -13,12 +13,34 @@ import {
   AWS_SECRET_ACCESS_KEY_ATTR,
   AWS_SECRET_ACCESS_KEY_ENV_VARIABLE,
   getEnvironmentName,
+  getParameterValue,
   resetPropertyFromEnvironment,
-  setEnvironmentProperty
+  SENDGRID_API_KEY,
+  SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
+  SENDGRID_CONFIG_KEY,
+  setEnvironmentProperty,
+  STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR,
+  STRIPE_CONFIG_KEY,
+  STRIPE_SECRET_KEY,
+  TRULIOO_AWS_SECRET_KEY_FOR_DOCV_API_KEY_ATTR,
+  TRULIOO_AWS_SECRET_KEY_FOR_IDV_ATTR,
+  TRULIOO_CONFIG_KEY,
+  TRULIOO_DOCV_API_KEY,
+  TRULIOO_IDV,
+  TWILIO_AUTH_TOKEN,
+  TWILIO_AWS_SECRET_KEY_FOR_AUTH_TOKEN_ATTR,
+  TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR,
+  TWILIO_CONFIG_KEY,
+  TWILIO_FROM_PHONE_NUMBER,
+  TWILIO_SID,
 } from './ConfigurationUtils';
 import { SecretProvider } from './SecretProvider';
 import * as fs from 'fs';
 
+import { TwilioConfigs } from './configtypes/TwilioConfigs';
+import { TruliooConfigs } from './configtypes/TruliooConfigs';
+import { SendGridConfigs } from './configtypes/SendGridConfigs';
+import { StripeConfigs } from './configtypes/StripeConfigs';
 
 
 const envNameToPropertyFileNameMap = {
@@ -27,7 +49,7 @@ const envNameToPropertyFileNameMap = {
   [AppEnvironment.STAGING]: "staging.yaml"
 } as const;
 
-export default function loadAppConfigs() {
+export default async function loadAppConfigs() {
 
   // *** Application configurations loading logic here ***
 
@@ -52,12 +74,14 @@ export default function loadAppConfigs() {
   console.log(`Other secrets files: ${extraSecretsFiles}`);
 
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
-  // configs = SecretProvider.loadSecrets(configs);
-
   //merge configs with override files
 
   //TODO if needed merge configs here with environment variable configs (some variables may be coming from secrets manager)
-  return configureAwsCredentials(environment, Joi.attempt(configs, appConfigsJoiValidationSchema)); //validate configs  
+  const updatedAwsConfigs = configureAwsCredentials(environment, configs);
+  const finalConfigs = await configureAllVendorCredentials(updatedAwsConfigs);
+
+  //validate configs  
+  return Joi.attempt(finalConfigs, appConfigsJoiValidationSchema);
 };
 
 function configureAwsCredentials(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
@@ -99,5 +123,93 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
 
   setEnvironmentProperty(AWS_DEFAULT_REGION_ENV_VARIABLE, awsDefaultRegion);
   setEnvironmentProperty(AWS_REGION_ENV_VARIABLE, awsRegion);
+
+  return configs;
+}
+
+async function configureStripeCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+  const stripeConfigs: StripeConfigs = configs[STRIPE_CONFIG_KEY];
+
+  if (stripeConfigs === undefined) {
+    const errorMessage = `\n'stripe' configurations are required. Please configure the stripe credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+      `You should configure the key "${STRIPE_CONFIG_KEY}" and populate "${STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR}" or "${STRIPE_SECRET_KEY}" ` +
+      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+
+    throw Error(errorMessage);
+  }
+
+  stripeConfigs.secretKey = await getParameterValue(stripeConfigs.awsSecretNameForSecretKey, stripeConfigs.secretKey);
+
+  configs[STRIPE_CONFIG_KEY] = stripeConfigs;
+  return configs;
+}
+
+async function configureTwilioCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+  const twilioConfigs: TwilioConfigs = configs[TWILIO_CONFIG_KEY];
+
+  if (twilioConfigs === undefined) {
+    const errorMessage = `\n'Twilio' configurations are required. Please configure the Twilio credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+      `You should configure the key "${TWILIO_CONFIG_KEY}" and populate ("${TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR}" or "${TWILIO_SID}") AND ` +
+      `("${TWILIO_AWS_SECRET_KEY_FOR_AUTH_TOKEN_ATTR}" or "${TWILIO_AUTH_TOKEN}") ` +
+      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+
+    throw Error(errorMessage);
+  }
+
+  twilioConfigs.SID = await getParameterValue(twilioConfigs.awsSecretNameForSID, twilioConfigs.SID);
+  twilioConfigs.authToken = await getParameterValue(twilioConfigs.awsSecretNameForAuthToken, twilioConfigs.authToken);
+  twilioConfigs.fromPhoneNumber = twilioConfigs.fromPhoneNumber;
+
+  configs[TWILIO_CONFIG_KEY] = twilioConfigs;
+  return configs;
+}
+
+async function configureTruliooCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+  const truliooConfigs: TruliooConfigs = configs[TRULIOO_CONFIG_KEY];
+
+  if (truliooConfigs === undefined) {
+    const errorMessage = `\n'Trulioo' configurations are required. Please configure the Trulioo credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+      `You should configure the key "${TRULIOO_CONFIG_KEY}" and populate ("${TRULIOO_AWS_SECRET_KEY_FOR_IDV_ATTR}" or "${TRULIOO_IDV}") AND ` +
+      `("${TRULIOO_AWS_SECRET_KEY_FOR_DOCV_API_KEY_ATTR}" or "${TRULIOO_DOCV_API_KEY}") ` +
+      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+
+    throw Error(errorMessage);
+  }
+
+  truliooConfigs.TruliooDocVApiKey = await getParameterValue(truliooConfigs.awsSecretNameForDocVApiKey, truliooConfigs.TruliooDocVApiKey);
+  truliooConfigs.TruliooIDVApiKey = await getParameterValue(truliooConfigs.awsSecretNameForIDVApiKey, truliooConfigs.TruliooIDVApiKey);
+
+  configs[TRULIOO_CONFIG_KEY] = truliooConfigs;
+  return configs;
+}
+
+async function configureSendgridCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+  const sendgridConfigs: SendGridConfigs = configs[SENDGRID_CONFIG_KEY];
+
+  if (sendgridConfigs === undefined) {
+    const errorMessage = `\n'Sendgrid' configurations are required. Please configure the Sendgrid credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+      `You should configure the key "${SENDGRID_CONFIG_KEY}" and populate "${SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR}" or "${SENDGRID_API_KEY}" ` +
+      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+
+    throw Error(errorMessage);
+  }
+
+  sendgridConfigs.apiKey = await getParameterValue(sendgridConfigs.awsSecretNameForApiKey, sendgridConfigs.apiKey);
+
+  configs[SENDGRID_CONFIG_KEY] = sendgridConfigs;
+  return configs;
+}
+
+async function configureAllVendorCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+  const vendorCredentialConfigurators = [
+    configureSendgridCredentials,
+    configureTruliooCredentials,
+    configureTwilioCredentials,
+    configureStripeCredentials,
+  ];
+  for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
+    configs = await vendorCredentialConfigurators[i](configs);
+    // console.log(`After ${i}: `, configs);
+  }
   return configs;
 }

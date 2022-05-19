@@ -10,7 +10,7 @@ export class StripeService {
   private readonly stripe: Stripe;
 
   constructor(configService: ConfigService) {
-    this.stripe =  new Stripe(configService.get<StripeConfigs>(STRIPE_CONFIG_KEY).secretKey, {apiVersion: '2020-08-27' });
+    this.stripe = new Stripe(configService.get<StripeConfigs>(STRIPE_CONFIG_KEY).secretKey, { apiVersion: '2020-08-27' });
   }
 
   public get stripeApi() {
