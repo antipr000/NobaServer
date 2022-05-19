@@ -42,7 +42,8 @@ export class AuthService {
     async login(user: AuthenticatedUser): Promise<VerifyOtpResponseDTO> {
         const payload = { email: user.emailOrPhone };
         return {
-            access_token: this.jwtService.sign(payload)
+            access_token: this.jwtService.sign(payload),
+            user_id: user.uid
         };
     }
 
