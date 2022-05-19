@@ -35,7 +35,7 @@ export class UserController {
   @ApiBadRequestResponse({ description: 'Invalid request parameters' })
   async updateUser(@Param(UserID)id: string, @Request() request, @Body() requestBody): Promise<UserDTO> {
     const userProps = {
-      ...request.user._doc,
+      ...request.user,
       ...requestBody
     };
     return await this.userService.updateUser(userProps);

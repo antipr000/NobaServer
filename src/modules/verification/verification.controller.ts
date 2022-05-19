@@ -50,7 +50,7 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, description: "Get country codes for supported countries" })
     @ApiBadRequestResponse({ description: 'Invalid request parameters!' })
     async getCountryCodes(): Promise<Array<string>> {
-        return this.idvProvider.getCountryCodes();
+        return this.verificationService.getCountryCodes();
     }
 
     @Get("/consents/:countryCode")
@@ -58,7 +58,7 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, type: [ConsentDTO], description: "Get all consents" })
     @ApiBadRequestResponse({ description: 'Invalid request parameters!' })
     async getConsents(@Param('countryCode') countryCode: string): Promise<Array<ConsentDTO>> {
-        return this.idvProvider.getConsents(countryCode);
+        return this.verificationService.getConsents(countryCode);
     }
 
     @Get("/subdivisions/:countryCode")
@@ -66,7 +66,7 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, type: [SubdivisionDTO], description: "Get subdivision for the given country code" })
     @ApiBadRequestResponse({ description: 'Invalid request parameters!' })
     async getSubdivisions(@Param('countryCode') countryCode: string): Promise<Array<SubdivisionDTO>> {
-        return this.idvProvider.getCountrySubdivisions(countryCode);
+        return this.verificationService.getSubdivisions(countryCode);
     }
 
     @Post(`/:${UserID}` + "/id")
@@ -76,36 +76,7 @@ export class VerificationController {
     async verifyUser(@Param(UserID) id: string, 
                     @Body() requestBody: IDVerificationRequestDTO,
                     @Request() request): Promise<VerificationResultDTO> {
-        const result: VerificationResultDTO = await this.idvProvider.verify(id, requestBody);
-        const user: User = request.user._doc;
-        if(result.status === Status.OK) {
-            await this.userService.updateUser({
-                ...user,
-                idVerified: true,
-                idVerificationTimestamp: new Date().getTime(),
-                dateOfBirth: requestBody.dateOfBirth,
-                address: {
-                    streetName: requestBody.streetName,
-                    city: requestBody.city,
-                    state: requestBody.state,
-                    countryCode: requestBody.countryCode,
-                    postalCode: requestBody.postalCode
-                }
-            });
-        } else {
-            await this.userService.updateUser({
-                ...user,
-                dateOfBirth: requestBody.dateOfBirth,
-                address: {
-                    streetName: requestBody.streetName,
-                    city: requestBody.city,
-                    state: requestBody.state,
-                    countryCode: requestBody.countryCode,
-                    postalCode: requestBody.postalCode
-                }
-            })
-        }
-        return result;
+        return this.verificationService.performIdentityVerification(request.user, requestBody);
 	}
 
     //TODO: Setting data type of request to DocVerificationRequestDTO throws error. Figure out why
@@ -123,19 +94,13 @@ export class VerificationController {
         const documentFrontImageb64 = files.documentFrontImage[0].buffer.toString('base64');
         const documentBackImageb64 = files.documentBackImage[0].buffer.toString('base64');
         const livePhotob64 = files.livePhoto[0].buffer.toString('base64');
-        const transactionId = await this.idvProvider.verifyDocument(id, {
-            documentFrontImage: documentFrontImageb64,
-            documentBackImage: documentBackImageb64,
-            livePhoto: livePhotob64,
-            countryCode: requestData.countryCode,
-            documentType: requestData.documentType
-        });
-        const user: User = request.user._doc;
-        await this.userService.updateUser({
-            ...user,
-            documentVerificationTransactionId: transactionId,
-            documentVerificationTimestamp: new Date().getTime()
-        });
+        this.verificationService.performDocumentVerification(
+            documentFrontImageb64, 
+            documentBackImageb64, 
+            livePhotob64, 
+            request.user, 
+            requestData["countryCode"], 
+            requestData["documentType"])
         return {
             status: Status.PENDING
         };
@@ -147,9 +112,7 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, type: VerificationStatusDTO, description: "Get KYC status of the given user" })
     @ApiBadRequestResponse({ description: 'Invalid request parameters!' })
     async getDocumentVerificationStatus(@Param(UserID) id: string, @Request() request): Promise<VerificationStatusDTO> {
-        // console.log(request.user);
-        const transactionID = request.user.documentVerificationTransactionId;
-        return await this.idvProvider.getTransactionStatus(transactionID);
+        return this.verificationService.getDocumentVerificationStatus(request.user);
     }
 
     @Get(`/:${UserID}` + "/doc/result")
@@ -157,23 +120,6 @@ export class VerificationController {
     @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "TODO Ask soham from usability perspective how is this any different than /status" }) 
     @ApiBadRequestResponse({ description: 'Invalid request parameters!' })
     async getDocumentVerificationResult(@Param(UserID) id: string, @Request() request): Promise<VerificationResultDTO> {
-        const transactionID = request.user.documentVerificationTransactionId;
-        const transactionStatus = await this.idvProvider.getTransactionStatus(transactionID);
-        const transactionRecordId = transactionStatus.TransactionRecordId;
-        const isMatch: boolean = await this.idvProvider.getTransactionResult(transactionRecordId);
-        const user: User = request.user._doc;
-        await this.userService.updateUser({
-            ...user,
-            documentVerified: isMatch
-        });
-        if(isMatch) {
-            return {
-                status: Status.OK
-            };
-        } else {
-            return {
-                status: Status.FAILED
-            };
-        }
+        return this.verificationService.getDocumentVerificationResult(request.user);
     }
 }
