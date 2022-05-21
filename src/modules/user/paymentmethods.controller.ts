@@ -6,7 +6,7 @@ import { Role } from '../auth/role.enum';
 import { PaymentMethodId, Roles, UserID } from '../auth/roles.decorator';
 import { AddPaymentMethodDTO } from './dto/AddPaymentMethodDTO';
 import { PaymentMethodDTO } from './dto/PaymentMethodDTO';
-import { PaymentMethodsService } from './paymentmethods.service';
+import { StripePaymentMethodsService } from './paymentmethods.service';
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -17,7 +17,7 @@ export class PaymentMethodsController {
   @Inject(WINSTON_MODULE_PROVIDER) 
   private readonly logger: Logger;
 
-  constructor(private readonly paymentMethodService: PaymentMethodsService) {
+  constructor(private readonly paymentMethodService: StripePaymentMethodsService) {
 
   }
  
@@ -50,7 +50,7 @@ export class DetachPaymentMethodController {
     @Inject(WINSTON_MODULE_PROVIDER) 
     private readonly logger: Logger;
   
-    constructor(private readonly paymentMethodService: PaymentMethodsService) {
+    constructor(private readonly paymentMethodService: StripePaymentMethodsService) {
   
     }
   
