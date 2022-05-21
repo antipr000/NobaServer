@@ -152,7 +152,7 @@ import { IUserRepo } from "./repos/UserRepo";
 
     async removePaymentMethod(paymentMethodID: string): Promise<void> { 
         //weird that attach api takes the payment method id and customer id but detach api does not!
-        await this.stripeApi.paymentMethods.detach(paymentMethodID);
+        // await this.stripeApi.paymentMethods.detach(paymentMethodID);
     }
     
   }
