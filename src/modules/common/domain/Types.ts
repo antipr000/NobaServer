@@ -6,5 +6,3 @@ export type Web3TransactionHandler = {
     onError: (error: any) => void;
     onConfirmation?: (confirmationNumber: number) => void;
 }
-
-// export interface CsvFormat { }

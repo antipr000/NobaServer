@@ -1,16 +1,19 @@
-import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Query, Request } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Query, Request, Response } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBadGatewayResponse, ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Role } from '../auth/role.enum';
-import { FromDate, Roles, ToDate, UserID } from '../auth/roles.decorator';
+import { DownloadFormat, FromDate, Roles, ToDate, UserID } from '../auth/roles.decorator';
 import { CreateTransactionDTO } from './dto/CreateTransactionDTO';
 import { TransactionDTO } from './dto/TransactionDTO';
 import { TransactionService } from './transaction.service';
 import { LimitsService } from './limits.service';
 import { CheckTransactionDTO } from './dto/CheckTransactionDTO';
 import { TransactionAllowedStatus } from './domain/TransactionAllowedStatus';
+import { CsvService } from '../common/csv.service';
+import * as fs from 'fs';
+import { BadRequestError } from 'src/core/exception/CommonAppException';
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -80,5 +83,31 @@ export class TransactionController {
     // TODO No need of keeping this under /user route.
     // TODO Added userID param temporarily, this will be removed once moved under AdminController
     return this.transactionService.getAllTransactions();
+  }
+
+  @Get("/download")
+  @ApiOperation({ summary: 'Download all the transactions of a particular user.' })
+  @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO], description: "A CSV or PDF file containing details of all the transactions made by the user." })
+  async downloadTransactions(@Param(UserID) userID: string, @Query(FromDate) fromDate: Date, @Query(ToDate) toDate: Date, @Query(DownloadFormat) format: string, @Response() response) {
+    const fromDateInUTC = new Date(fromDate).toUTCString();
+    const toDateInUTC = new Date(toDate).toUTCString();
+
+    let filePath = "";
+    const transactions: TransactionDTO[] = await this.transactionService.getTransactionsInInterval(userID, new Date(fromDateInUTC), new Date(toDateInUTC));
+
+    if (format === "CSV") {
+      filePath = await CsvService.convertToCsvAndSaveToDisk(transactions);
+      response.writeHead(200, {
+        'Content-Type': 'text/csv'
+      })
+      fs.createReadStream(filePath)
+        .on('finish', () => {
+          this.logger.debug(`Deleting the file '${filePath}'...`);
+          fs.unlinkSync(filePath);
+        })
+        .pipe(response);
+    } else {
+      throw new BadRequestError({ messageForClient: "Only 'CSV' format is supported." });
+    }
   }
 }
