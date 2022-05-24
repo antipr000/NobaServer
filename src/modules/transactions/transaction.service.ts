@@ -38,16 +38,16 @@ export class TransactionService {
   // This is the id used at coinGecko, so do not change the allowed constants below
   private readonly allowedFiats: string[] = ["usd"];
   private readonly allowedCryptoCurrencies: string[] = ["ethereum", "terrausd", "terra-luna"];
-  
+
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
 
-  constructor(dbProvider: DBProvider, 
+  constructor(dbProvider: DBProvider,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly EthereumWeb3ProviderService: EthereumWeb3ProviderService,
     private readonly TerraWeb3ProviderService: TerraWeb3ProviderService,
     stripeServie: StripeService) {
-    
+
     this.stripe = stripeServie.stripeApi;
     this.transactionsRepo = new MongoDBTransactionRepo(dbProvider);
     this.transactionsMapper = new TransactionMapper();
@@ -55,12 +55,16 @@ export class TransactionService {
   }
 
   async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {
-    const transaction =  await this.transactionsRepo.getTransaction(transactionId);
+    const transaction = await this.transactionsRepo.getTransaction(transactionId);
     return this.transactionsMapper.toDTO(transaction);
   }
 
-  async getUserTransactions(userId: string): Promise<TransactionDTO[]> { 
+  async getUserTransactions(userId: string): Promise<TransactionDTO[]> {
     return (await this.transactionsRepo.getUserTransactions(userId)).map(transaction => this.transactionsMapper.toDTO(transaction));
+  }
+
+  async getTransactionsInInterval(userId: string, fromDate: Date, toDate: Date): Promise<TransactionDTO[]> {
+    return (await this.transactionsRepo.getUserTransactionInAnInterval(userId, fromDate, toDate)).map(transaction => this.transactionsMapper.toDTO(transaction));
   }
 
   //makes sure only app admins should be able to access this method, don't want to expose this method to public users
@@ -75,10 +79,10 @@ export class TransactionService {
     const leg1: string = details.leg1;
     const leg2: string = details.leg2;
     const destinationWalletAdress: string = details.destinationWalletAdress;
-    
+
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(leg2, destinationWalletAdress)) {
-      throw new BadRequestError({messageForClient: "Invalid destination wallet address " + destinationWalletAdress + " for " + leg2});
+      throw new BadRequestError({ messageForClient: "Invalid destination wallet address " + destinationWalletAdress + " for " + leg2 });
     }
 
     const user = await this.userRepo.getUser(userID);
@@ -87,17 +91,17 @@ export class TransactionService {
     const leg2Amount = details.leg2Amount;
 
     if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
-      throw new BadRequestError({messageForClient: "Supported leg1 (i.e fiat) are " + this.allowedFiats.join(", ") + " and leg2 (i.e crypto) are " + this.allowedCryptoCurrencies.join(", ")});
+      throw new BadRequestError({ messageForClient: "Supported leg1 (i.e fiat) are " + this.allowedFiats.join(", ") + " and leg2 (i.e crypto) are " + this.allowedCryptoCurrencies.join(", ") });
     }
 
     const currentPrice = await this.exchangeRateService.priceInFiat(leg2, leg1);
-    const bidPrice = (leg1Amount * 1.0)/ leg2Amount;
+    const bidPrice = (leg1Amount * 1.0) / leg2Amount;
 
 
     this.logger.info(`bidPrice: ${bidPrice}, currentPrice: ${currentPrice}`);
 
-    if (! this.withinSlippage(bidPrice, currentPrice, this.slippageAllowed)) { 
-      throw new BadRequestError({messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}`});
+    if (!this.withinSlippage(bidPrice, currentPrice, this.slippageAllowed)) {
+      throw new BadRequestError({ messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}` });
     }
 
     const newTransaction: Transaction = Transaction.createTransaction({
@@ -119,31 +123,33 @@ export class TransactionService {
 
     const params: Stripe.PaymentIntentCreateParams = {
       // if we want to charge 20 USD we can use amount: 2000 USD here. Here it is a multiple of 100. So to charge 32.45 USD we can use amount: 3245
-      amount: Math.ceil(leg1Amount*100), //in cents
+      amount: Math.ceil(leg1Amount * 100), //in cents
       currency: 'usd', //TODO make this generic
       customer: user.props.stripeCustomerID,
       payment_method: details.paymentMethodId,
       confirmation_method: 'automatic',
       confirm: true,
     };
-  
+
     const paymentIntent = await this.stripe.paymentIntents.create(params);
 
     let updatedTransaction = Transaction.createTransaction(
-      {...newTransaction.props,
-         transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING, 
-         stripePaymentIntentId: paymentIntent.id
+      {
+        ...newTransaction.props,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING,
+        stripePaymentIntentId: paymentIntent.id
       });
-    
+
     this.transactionsRepo.updateTransaction(updatedTransaction);
-    
+
     //TODO wait here for the transaction to complete and update the status
-      
+
     //updating the status to fiat transaction succeeded for now
     updatedTransaction = Transaction.createTransaction(
-      {...updatedTransaction.props,
-         transactionStatus: TransactionStatus.FIAT_INCOMING_CONFIRMED,  
-         stripePaymentIntentId: paymentIntent.id
+      {
+        ...updatedTransaction.props,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_CONFIRMED,
+        stripePaymentIntentId: paymentIntent.id
       })
     this.transactionsRepo.updateTransaction(updatedTransaction);
 
@@ -156,9 +162,10 @@ export class TransactionService {
         onTransactionHash: async (transactionHash: string) => {
           this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
           updatedTransaction = Transaction.createTransaction(
-            {...updatedTransaction.props,
-               transactionStatus: TransactionStatus.WALLET_OUTGOING_PENDING,  
-               cryptoTransactionId: transactionHash
+            {
+              ...updatedTransaction.props,
+              transactionStatus: TransactionStatus.WALLET_OUTGOING_PENDING,
+              cryptoTransactionId: transactionHash
             });
           await this.transactionsRepo.updateTransaction(updatedTransaction);
 
@@ -169,8 +176,8 @@ export class TransactionService {
         /* onReceipt: async (receipt: any) => { 
           this.logger.info(`Transaction ${newTransaction.props.id} has crypto transaction receipt: ${JSON.stringify(receipt)}`);
         }, */
-      
-        onError: async (error: any) => { 
+
+        onError: async (error: any) => {
           this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`);
           await this.transactionsRepo.updateTransaction(Transaction.createTransaction({
             ...newTransaction.props,
@@ -181,16 +188,16 @@ export class TransactionService {
         }
       };
 
-      
-      
-      if (leg2=='ethereum') {
+
+
+      if (leg2 == 'ethereum') {
         this.EthereumWeb3ProviderService.transferEther(leg2Amount, details.destinationWalletAdress, web3TransactionHandler);
       }
       else {
         // if its not ethereum then it is terra ust or luna
         this.TerraWeb3ProviderService.transferTerra(leg2Amount, details.destinationWalletAdress, web3TransactionHandler, leg2);
       }
-     });
+    });
 
     return promise;
   }
@@ -205,7 +212,7 @@ export class TransactionService {
     if (curr == 'ethereum') {
       return this.EthereumWeb3ProviderService.isValidAddress(destinationWalletAdress);
     }
-    
+
     // if curr is terra or luna then validate that the destination wallet address is a valid terra address
     if (curr == 'terrausd' || curr == 'terra-luna') {
       return this.TerraWeb3ProviderService.isValidAddress(destinationWalletAdress);

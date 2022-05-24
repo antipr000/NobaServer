@@ -4,12 +4,12 @@ import { TransactionStatus } from "../domain/Types";
 export class TransactionDTO {
     @ApiProperty()
     _id: string;
-    
 
-    @ApiProperty({enum: Object.values(TransactionStatus)})
+
+    @ApiProperty({ enum: Object.values(TransactionStatus) })
     status: TransactionStatus;
 
-    @ApiPropertyOptional() 
+    @ApiPropertyOptional()
     statusMessage?: string;
 
     @ApiProperty()
@@ -24,6 +24,9 @@ export class TransactionDTO {
     @ApiProperty()
     leg2Amount: number;
 
+    @ApiProperty()
+    transactionTimestamp: Date;
+
     @ApiPropertyOptional()
     paymentMethodId?: string;
 
@@ -37,5 +40,5 @@ export class TransactionDTO {
     sourceWalletAdress?: string;
 
     @ApiPropertyOptional()
-    destinationWalletAdress?: string; 
+    destinationWalletAdress?: string;
 }

@@ -6,6 +6,7 @@ export interface ITransactionRepo {
     createTransaction(transaction: Transaction): Promise<Transaction>;
     updateTransaction(transaction: Transaction): Promise<Transaction>;
     getUserTransactions(userId: string): Promise<Transaction[]>; //TODO pagination? transaction filter options?
+    getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]>;
     getTotalUserTransactionAmount(userId: string): Promise<number>;
     getMonthlyUserTransactionAmount(userId: string): Promise<number>;
     getWeeklyUserTransactionAmount(userId: string): Promise<number>;
@@ -26,29 +27,32 @@ export class MockTransactionRepo implements ITransactionRepo {
     getDailyUserTransactionAmount(userId: string): Promise<number> {
         throw new Error("Method not implemented.");
     }
-    
-    private readonly allTransactions: {[transactionId: string]: Transaction} = {};
+
+    getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
+        throw new Error("Method not implemented.");
+    }
+
+    private readonly allTransactions: { [transactionId: string]: Transaction } = {};
 
     async getAll(): Promise<Transaction[]> {
         return Object.values(this.allTransactions);
     }
-    
+
     async getTransaction(transactionId: string): Promise<Transaction> {
         return this.allTransactions[transactionId];
     }
-    
+
     async createTransaction(transaction: Transaction): Promise<Transaction> {
         this.allTransactions[transaction.props._id] = transaction;
         return transaction;
     }
-    
+
     async updateTransaction(transaction: Transaction): Promise<Transaction> {
         this.allTransactions[transaction.props._id] = transaction;
         return transaction;
     }
-    
+
     async getUserTransactions(userId: string): Promise<Transaction[]> {
         return Object.values(this.allTransactions).filter(transaction => transaction.props.userId === userId);
-    } 
-
+    }
 }
