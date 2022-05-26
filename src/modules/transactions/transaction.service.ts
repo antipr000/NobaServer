@@ -117,6 +117,8 @@ export class TransactionService {
 
     //**** starting fiat transaction ***/
 
+    // todo refactor this piece when we have the routing flow in place
+    // create a method in paymentmethods.service.ts instead for Stripe and checkout
     const params: Stripe.PaymentIntentCreateParams = {
       // if we want to charge 20 USD we can use amount: 2000 USD here. Here it is a multiple of 100. So to charge 32.45 USD we can use amount: 3245
       amount: Math.ceil(leg1Amount*100), //in cents

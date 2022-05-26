@@ -6,13 +6,13 @@ import { InfraProvidersModule } from '../../infraproviders/infra.module';
 import { ConfigModule } from '@nestjs/config';
 import { DetachPaymentMethodController, PaymentMethodsController } from './paymentmethods.controller';
 import { CommonModule } from '../common/common.module';
-import { PaymentMethodsService } from './paymentmethods.service';
+import { StripePaymentMethodsService } from './paymentmethods.service';
 
 
 @Module({
   imports: [InfraProvidersModule, ConfigModule, CommonModule],
   controllers: [UserController, PaymentMethodsController, DetachPaymentMethodController],
-  providers: [UserService, DBProvider, PaymentMethodsService],
+  providers: [UserService, DBProvider, StripePaymentMethodsService],
   exports: [UserService]  //Need to access in PublicController
 })
 export class UserModule {}

@@ -12,6 +12,7 @@ export interface UserProps extends VersioningInfo {
     name?: string,
     email?: string,
     stripeCustomerID?: string, 
+    checkoutCustomerID?: string,
     phone?: string,
     isAdmin?: boolean,
     idVerified?: boolean,
@@ -43,6 +44,7 @@ export const userJoiValidationKeys : KeysRequired<UserProps> = {
     name: Joi.string().min(2).max(100).optional(),
     email: Joi.string().email().allow(null).optional().meta({ _mongoose: { index: true } }), 
     stripeCustomerID: Joi.string().optional(),
+    checkoutCustomerID: Joi.string().optional(),
     phone: Joi.string().optional().allow(null).meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
     isAdmin: Joi.boolean().default(false),
     idVerified: Joi.boolean().default(false),
