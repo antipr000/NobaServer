@@ -4,7 +4,7 @@ import { ApiBadGatewayResponse, ApiBadRequestResponse, ApiBearerAuth, ApiOperati
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { Role } from '../auth/role.enum';
-import { DownloadFormat, FromDate, Roles, ToDate, UserID } from '../auth/roles.decorator';
+import { Roles, UserID } from '../auth/roles.decorator';
 import { CreateTransactionDTO } from './dto/CreateTransactionDTO';
 import { TransactionDTO } from './dto/TransactionDTO';
 import { TransactionService } from './transaction.service';
@@ -14,6 +14,8 @@ import { TransactionAllowedStatus } from './domain/TransactionAllowedStatus';
 import { CsvService } from '../common/csv.service';
 import * as fs from 'fs';
 import { BadRequestError } from 'src/core/exception/CommonAppException';
+import { TransactionFilterDTO } from './dto/TransactionFilterDTO';
+import { DownloadFormat, DownloadTransactionsDTO } from './dto/DownloadTransactionsDTO';
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -68,9 +70,9 @@ export class TransactionController {
   @Get("/")
   @ApiOperation({ summary: 'Get all transactions for a particular user' })
   @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO], description: "List of all transactions that happened through Noba for given userID" })
-  async getTransactions(@Param(UserID) userID: string, @Query(FromDate) fromDate: Date, @Query(ToDate) toDate: Date): Promise<TransactionDTO[]> {
-    const fromDateInUTC = new Date(fromDate).toUTCString();
-    const toDateInUTC = new Date(toDate).toUTCString();
+  async getTransactions(@Param(UserID) userID: string, @Query() transactionFilters: TransactionFilterDTO): Promise<TransactionDTO[]> {
+    const fromDateInUTC = new Date(transactionFilters.startDate).toUTCString();
+    const toDateInUTC = new Date(transactionFilters.endDate).toUTCString();
 
     return this.transactionService.getTransactionsInInterval(userID, new Date(fromDateInUTC), new Date(toDateInUTC));
   }
@@ -88,14 +90,14 @@ export class TransactionController {
   @Get("/download")
   @ApiOperation({ summary: 'Download all the transactions of a particular user.' })
   @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO], description: "A CSV or PDF file containing details of all the transactions made by the user." })
-  async downloadTransactions(@Param(UserID) userID: string, @Query(FromDate) fromDate: Date, @Query(ToDate) toDate: Date, @Query(DownloadFormat) format: string, @Response() response) {
-    const fromDateInUTC = new Date(fromDate).toUTCString();
-    const toDateInUTC = new Date(toDate).toUTCString();
+  async downloadTransactions(@Param(UserID) userID: string, @Query() downloadParames: DownloadTransactionsDTO, @Response() response) {
+    const fromDateInUTC = new Date(downloadParames.startDate).toUTCString();
+    const toDateInUTC = new Date(downloadParames.endDate).toUTCString();
 
     let filePath = "";
     const transactions: TransactionDTO[] = await this.transactionService.getTransactionsInInterval(userID, new Date(fromDateInUTC), new Date(toDateInUTC));
 
-    if (format === "CSV") {
+    if (downloadParames.reportFormat == DownloadFormat.CSV) {
       filePath = await CsvService.convertToCsvAndSaveToDisk(transactions);
       response.writeHead(200, {
         'Content-Type': 'text/csv'
