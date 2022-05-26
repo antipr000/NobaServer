@@ -16,7 +16,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
     private readonly transactionMapper = new TransactionMapper();
 
-    constructor( private readonly dbProvider: DBProvider) { 
+    constructor(private readonly dbProvider: DBProvider) {
     }
 
     async getAll(): Promise<Transaction[]> {
@@ -52,9 +52,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     async getTotalUserTransactionAmount(userId: string): Promise<number> {
         const result: AggregateResultType[] = await TransactionModel.aggregate([{
             $match: {
-               userId: userId 
+                userId: userId
             }
-        },{
+        }, {
             $group: {
                 "_id": 1,
                 "totalSum": {
@@ -62,7 +62,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
                 }
             }
         }]).exec();
-        if(result.length === 0) return 0;
+        if (result.length === 0) return 0;
         return result[0].totalSum;
     }
 
@@ -82,7 +82,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
                     }
                 }
             }
-        },{
+        }, {
             $match: {
                 userId: userId,
                 month: month,
@@ -96,7 +96,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
                 }
             }
         }]).exec();
-        if(result.length === 0) return 0;
+        if (result.length === 0) return 0;
         return result[0].totalSum;
     }
 
@@ -116,7 +116,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
                     }
                 }
             }
-        },{
+        }, {
             $match: {
                 userId: userId,
                 week: week,
@@ -130,7 +130,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
                 }
             }
         }]).exec();
-        if(result.length === 0) return 0;
+        if (result.length === 0) return 0;
         return result[0].totalSum;
     }
 
@@ -150,7 +150,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
                     }
                 }
             }
-        },{
+        }, {
             $match: {
                 userId: userId,
                 day: day,
@@ -164,7 +164,18 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
                 }
             }
         }]).exec();
-        if(result.length === 0) return 0;
+        if (result.length === 0) return 0;
         return result[0].totalSum;
+    }
+
+    async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
+        const result: any = await TransactionModel.find({
+            userId: userId, transactionTimestamp: {
+                $gt: `${fromDate.toISOString()}`,
+                $lt: `${toDate.toISOString()}`
+            }
+        }).exec();
+        const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
+        return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
     }
 }

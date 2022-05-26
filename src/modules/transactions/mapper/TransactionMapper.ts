@@ -2,9 +2,9 @@ import { Transaction } from "../domain/Transaction";
 import { Mapper } from '../../../core/infra/Mapper';
 import { TransactionDTO } from "../dto/TransactionDTO";
 
-export class TransactionMapper  implements Mapper<Transaction>{
-    
-   
+export class TransactionMapper implements Mapper<Transaction>{
+
+
     toPersistence(t: any, options: any) {
         throw new Error("Method not implemented.");
     }
@@ -23,12 +23,13 @@ export class TransactionMapper  implements Mapper<Transaction>{
             fiatTransactionId: props.stripePaymentIntentId,
             cryptoTransactionId: props.cryptoTransactionId,
             destinationWalletAdress: props.destinationWalletAddress,
+            transactionTimestamp: props.transactionTimestamp
         }
     }
-  
+
 
     toDomain(t: any): Transaction {
-        return Transaction.createTransaction(t); 
+        return Transaction.createTransaction(t);
     }
 
 }
