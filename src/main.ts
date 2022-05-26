@@ -26,9 +26,7 @@ async function bootstrap() {
   const apiPrefix = configService.get<string>("apiPrefix");
   winstonLogger.info("Setting API prefix to " + apiPrefix);
 
-  app.enableCors({
-    origin: "http://localhost:3000" //In production we are not allowing cors, enable if needed
-  });
+  app.enableCors(); //allowing all origins for now but in future we can dynamically set allowed origins based on the enviornment (localhost:3000, noba.com etc)
   // app.use(csurf()); we don't need csurf as we take auth-token from header and not cookies --> https://security.stackexchange.com/questions/166724/should-i-use-csrf-protection-on-rest-api-endpoints?newreg=98a29ea4aaa8448785ffc3ab53b3c475
   app.use(helmet())
   app.useLogger(logger);
