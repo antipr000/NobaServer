@@ -11,7 +11,7 @@ awsDefaultRegion: "us-east-1"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
-  awsSecretNameForApiKey: 'PROD_SENDGRID_SECRET' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForApiKey: 'TEST_SENDGRID_SECRET' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "bogus-value"
 
 stripe:
