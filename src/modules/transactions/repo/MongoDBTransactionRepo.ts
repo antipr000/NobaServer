@@ -167,7 +167,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     }
 
     async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
-        const result: any = await TransactionModel.find({
+        const result: any = await this.dbProvider.transactionModel.find({
             userId: userId, transactionTimestamp: {
                 $gt: `${fromDate.toISOString()}`,
                 $lt: `${toDate.toISOString()}`
