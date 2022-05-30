@@ -6,7 +6,10 @@ export const userDTO: UserDTO = {
     _id: userID,
     email: userEmail,
     name: "John Doe",
-    isEmailVerified: true,
     idVerified: false,
-    documentVerified: false
+    documentVerified: false,
+    address: undefined,
+    dateOfBirth: undefined,
+    phone: undefined,
+    version: undefined
 };

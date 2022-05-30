@@ -4,15 +4,16 @@ import { User, UserProps } from "../domain/User";
 import { UserMapper } from "../mappers/UserMapper";
 import { IUserRepo } from "./UserRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
+import { Inject, Injectable } from "@nestjs/common";
  
 
 
 //TODO figure out a way to create indices using joi schema and joigoose
+@Injectable()
 export class MongoDBUserRepo implements IUserRepo {
 
    
     private readonly userMapper = new UserMapper();
-
     constructor( private readonly dbProvider: DBProvider) { 
      
     }

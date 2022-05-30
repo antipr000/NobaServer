@@ -1,27 +1,28 @@
 import { mock, when } from "ts-mockito";
-import { UserService } from "../user.service";
+import { MongoDBUserRepo } from "../repos/MongoDBUserRepo";
+import { IUserRepo } from "../repos/UserRepo";
 import { userEmail, userDTO, userID } from "../../../core/tests/constants";
 import { Result } from "../../../core/logic/Result";
 import {User} from "../domain/User";
 
-const mockedUserService: UserService = mock(UserService);
+const mockedUserRepo: IUserRepo = mock(MongoDBUserRepo);
 const user = User.createUser(userDTO);
 
-when(mockedUserService.createUserIfFirstTimeLogin(userEmail))
+when(mockedUserRepo.createUser(user))
     .thenReturn(new Promise((resolve, _) => {
-        resolve(userDTO);
+        resolve(user);
     }));
 
-when(mockedUserService.findUserByEmailOrPhone(userEmail))
+when(mockedUserRepo.getUser(userID))
     .thenReturn(new Promise((resolve, _) => {
-        resolve(Result.ok(user))
+        resolve(user);
     }));
 
-when(mockedUserService.getUser(userID))
+when(mockedUserRepo.getUserByEmail(userEmail))
     .thenReturn(new Promise((resolve, _) => {
-        resolve(userDTO);
+        resolve(Result.ok(user));
     }));
-    
+
 export {
-    mockedUserService
+    mockedUserRepo
 };

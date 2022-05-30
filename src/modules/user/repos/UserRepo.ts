@@ -7,16 +7,31 @@ import { DyanamoDataMapperExtended } from '../../../infra/dynamodb/DDBDataMapper
 import { getAllItems } from '../../../infra/dynamodb/DDBUtils';
 import { BadRequestError} from '../../../core/exception/CommonAppException';
 import { DBProvider } from "src/infraproviders/DBProvider";
+import { Injectable } from "@nestjs/common";
 
-
-export interface IUserRepo extends Repo<User> {
-    getUser(userID: string): Promise<User>
-    createUser(user: User): Promise<User> 
-    getUserIfExists(id: string): Promise<Result<User>>
-    exists(id: string): Promise<boolean>
-    getUserByEmail(email:string): Promise<Result<User>>
-    getUserByPhone(phone: string): Promise<Result<User>>
-    updateUser(user: User): Promise<User>   
+@Injectable()
+export abstract class IUserRepo implements Repo<User> {
+    getUser(userID: string): Promise<User> {
+        throw new Error("Method not implemented")
+    }
+    createUser(user: User): Promise<User> {
+        throw new Error("Method not implemented")
+    }
+    getUserIfExists(id: string): Promise<Result<User>> {
+        throw new Error("Method not implemented")
+    }
+    exists(id: string): Promise<boolean> {
+        throw new Error("Method not implemented")
+    }
+    getUserByEmail(email:string): Promise<Result<User>> {
+        throw new Error("Method not implemented")
+    }
+    getUserByPhone(phone: string): Promise<Result<User>> {
+        throw new Error("Method not implemented")
+    }
+    updateUser(user: User): Promise<User> {
+        throw new Error("Method not implemented")
+    }
 }
 
 export class DynamoDBUserRepo implements IUserRepo {
