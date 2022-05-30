@@ -43,7 +43,13 @@ jobs:
         run: | 
           yarn install
           echo [SUCCESS] yarn install succeeded.
-          
+      
+      # Run all tests first to prevent broken builds
+      - name: Run tests
+        run: |
+          yarn run test
+          echo [SUCCESS] tests successfully passed
+
       # Generates a build_info file which can be shown in buildInfo controller of the server
       - name: Generate build info file
         run: | 
