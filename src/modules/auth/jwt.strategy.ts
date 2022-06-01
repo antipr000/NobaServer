@@ -2,9 +2,9 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
 import { Injectable } from "@nestjs/common";
 import { jwtConstants } from "./constants";
-import { User } from "./domain/User";
 import { UserService } from "../user/user.service";
 import { UserMapper } from "../user/mappers/UserMapper";
+import { UserProps } from "../user/domain/User";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -19,7 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         this.userMapper = new UserMapper();
     }
 
-    async validate(payload: any): Promise<User> {
+    async validate(payload: any): Promise<UserProps> {
         const email = payload.email;
         const userResult = await this.userService.findUserByEmailOrPhone(email);
         return userResult.getValue().props;
