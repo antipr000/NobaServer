@@ -8,7 +8,6 @@ import { DetachPaymentMethodController, PaymentMethodsController } from './payme
 import { CommonModule } from '../common/common.module';
 import { StripePaymentMethodsService } from './paymentmethods.service';
 import { UserRepoModule, userRepoProvider } from './repos/UserRepoModule';
-import { IUserRepo } from './repos/UserRepo';
 
 
 @Module({
