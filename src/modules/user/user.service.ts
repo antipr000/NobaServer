@@ -2,9 +2,7 @@ import {
   Inject,
   Injectable,
 } from "@nestjs/common";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { User, UserProps } from "./domain/User";
-import { IUserRepo } from "./repos/UserRepo";
 import { UserDTO } from "./dto/UserDTO";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -13,18 +11,18 @@ import { StripeService } from "../common/stripe.service";
 import { MongoDBUserRepo } from "./repos/MongoDBUserRepo";
 import { Result } from "src/core/logic/Result";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
+import { IUserRepo } from "./repos/UserRepo";
 
 @Injectable()
 export class UserService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
-
-  private readonly userRepo: IUserRepo;
   private readonly userMapper: UserMapper;
   
 
-  constructor(dbProvider: DBProvider, private readonly stripeService: StripeService) {
-    this.userRepo = new MongoDBUserRepo(dbProvider);
+  constructor(
+    private readonly userRepo: IUserRepo, 
+    private readonly stripeService: StripeService) {
     this.userMapper = new UserMapper();
   }
 
