@@ -76,17 +76,7 @@ export class TransactionController {
 
     return this.transactionService.getTransactionsInInterval(userID, new Date(fromDateInUTC), new Date(toDateInUTC));
   }
-
-  @Get("/all")
-  @ApiOperation({ summary: 'Get all transactions on Noba' })
-  @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO], description: "Returns all transactions that took place on Noba (aggregated transations from all users) TODO: We need to move the to admin service" })
-  async getAllTransactions(@Param(UserID) userID: string): Promise<TransactionDTO[]> {
-    // TODO move this to admin service (very important to secure per user data) !! BEFORE MVP LAUNCH !!
-    // TODO No need of keeping this under /user route.
-    // TODO Added userID param temporarily, this will be removed once moved under AdminController
-    return this.transactionService.getAllTransactions();
-  }
-
+  
   @Get("/download")
   @ApiOperation({ summary: 'Download all the transactions of a particular user.' })
   @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO], description: "A CSV or PDF file containing details of all the transactions made by the user." })
