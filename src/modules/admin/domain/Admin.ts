@@ -57,7 +57,7 @@ export const AdminKeys: KeysRequired<AdminProps> = {
     _id: Joi.string().min(10).required(),
     name: Joi.string().min(2).max(100).optional(),
     email: Joi.string().email().allow(null).optional().meta({ _mongoose: { index: true } }),
-    role: Joi.string().valid(...Object.keys(AdminRolesWithTheirPrivileges))
+    role: Joi.string().valid(...Object.keys(AdminRolesWithTheirPrivileges)).required()
 }
 
 export const adminSchema = Joi.object(AdminKeys).options({ allowUnknown: true, stripUnknown: false, });

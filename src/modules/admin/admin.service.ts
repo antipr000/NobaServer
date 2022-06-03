@@ -5,7 +5,7 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { Logger } from "winston";
-import { IAdminTransactionRepo, MongoDBAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
+import { IAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { Transaction } from "../transactions/domain/Transaction";
@@ -18,10 +18,13 @@ import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
 export class AdminService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject('AdminTransactionRepo')
   private readonly adminTransactionRepo: IAdminTransactionRepo;
+
   private readonly transactionsMapper: TransactionMapper;
-  constructor(dbProvider: DBProvider) {
-    this.adminTransactionRepo = new MongoDBAdminTransactionRepo(dbProvider);
+
+  constructor() {
     this.transactionsMapper = new TransactionMapper();
   }
 
