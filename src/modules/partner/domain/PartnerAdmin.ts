@@ -7,8 +7,8 @@ import { Entity } from '../../../core/domain/Entity';
 
 export interface PartnerAdminProps extends VersioningInfo {
     _id: string,
-    name: string,
-    email: string,
+    name?: string,
+    email?: string,
     partnerId: string,
     privileges: string
 };
