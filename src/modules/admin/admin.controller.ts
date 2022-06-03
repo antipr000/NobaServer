@@ -11,17 +11,17 @@ import { TransactionsFilterDTO } from './dto/TransactionsFilterDTO';
 
 
 @Admin()
-@Controller("admin/:"+UserID)
+@Controller("admin/:" + UserID)
 @ApiTags("Admin")
 export class AdminController {
 
-  @Inject(WINSTON_MODULE_PROVIDER) 
+  @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
   constructor(private readonly adminService: AdminService) {
 
   }
-  
+
   @Get("/transaction_metrics")
   @ApiOperation({ summary: 'Get all transaction metrics for a given partner.' })
   @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: 'Get transaction statistics' })
@@ -33,8 +33,8 @@ export class AdminController {
   @ApiOperation({ summary: "Get all transactions filtered by the specified date range" })
   @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO] })
   async getAllTransactions(
-    @Param(UserID)userID: string, 
-    @Query()filterQuery: TransactionsFilterDTO): Promise<TransactionDTO[]> {
+    @Param(UserID) userID: string,
+    @Query() filterQuery: TransactionsFilterDTO): Promise<TransactionDTO[]> {
     return await this.adminService.getAllTransactions(filterQuery.startDate, filterQuery.endDate);
   }
 

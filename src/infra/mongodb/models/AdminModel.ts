@@ -7,7 +7,7 @@ const joigoose = Joigoose(Mongoose, null, {});
 
 const mongooseAdminSchema = new Schema(joigoose.convert(adminJoiSchema));
 
-export const TRANSACTION_MODEL_NAME = "transaction";
+export const TRANSACTION_MODEL_NAME = "admin";
 
 export const AdminModel: Model<AdminProps> =
     model<AdminProps>(TRANSACTION_MODEL_NAME, mongooseAdminSchema);

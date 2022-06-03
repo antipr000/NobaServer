@@ -9,6 +9,7 @@ import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { Transaction } from "../transactions/domain/Transaction";
 import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
+import { Admin } from "./domain/Admin";
 
 
 @Injectable()
@@ -32,5 +33,15 @@ export class AdminService {
   async getAllTransactions(startDate: string, endDate: string): Promise<TransactionDTO[]> {
     const transactions: Transaction[] = await this.adminTransactionRepo.getAllTransactions(startDate, endDate);
     return transactions.map(transaction => this.transactionsMapper.toDTO(transaction));
+  }
+
+  async addNobaAdmin(nobaAdmin: Admin): Promise<Admin> {
+    const adminWithSameEmail =
+      await this.adminTransactionRepo.getNobaAdminByEmail(nobaAdmin.props.email);
+    if (adminWithSameEmail !== undefined) {
+      return undefined;
+    }
+
+    return this.adminTransactionRepo.addNobaAdmin(nobaAdmin);
   }
 }

@@ -5,14 +5,19 @@ import { CommonModule } from '../common/common.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { MongoDBAdminTransactionRepo } from './repos/transactions/AdminTransactionRepo';
+import { AdminMapper } from './mappers/AdminMapper';
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, CommonModule],
+  imports: [ConfigModule, CommonModule],
   controllers: [AdminController],
-  providers: [AdminService, {
-    provide: 'AdminTransactionRepo',
-    useClass: MongoDBAdminTransactionRepo
-  }],
+  providers: [
+    AdminService,
+    {
+      provide: 'AdminTransactionRepo',
+      useClass: MongoDBAdminTransactionRepo
+    },
+    AdminMapper
+  ],
   exports: []
 })
 export class AdminModule { }
