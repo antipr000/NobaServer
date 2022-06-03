@@ -3,7 +3,6 @@ import {
   Injectable,
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { Logger } from "winston";
 import { IAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
