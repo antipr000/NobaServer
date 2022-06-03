@@ -60,7 +60,7 @@ export const AdminKeys: KeysRequired<AdminProps> = {
     role: Joi.string().valid(...Object.keys(AdminRolesWithTheirPrivileges)).required()
 }
 
-export const adminSchema = Joi.object(AdminKeys).options({ allowUnknown: true, stripUnknown: false, });
+export const adminJoiSchema = Joi.object(AdminKeys).options({ allowUnknown: true, stripUnknown: false, });
 
 export class Admin extends AggregateRoot<AdminProps>​​ {
 
@@ -70,7 +70,7 @@ export class Admin extends AggregateRoot<AdminProps>​​ {
 
     public static createAdmin(adminProps: Partial<AdminProps>): Admin {
         if (!adminProps._id) adminProps._id = Entity.getNewID();
-        return new Admin(Joi.attempt(adminProps, adminSchema));
+        return new Admin(Joi.attempt(adminProps, adminJoiSchema));
     }
 
     public canViewNobaDashboards(): boolean {

@@ -11,8 +11,6 @@ import { Transaction } from "../transactions/domain/Transaction";
 import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
 
 
-
-
 @Injectable()
 export class AdminService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -35,5 +33,4 @@ export class AdminService {
     const transactions: Transaction[] = await this.adminTransactionRepo.getAllTransactions(startDate, endDate);
     return transactions.map(transaction => this.transactionsMapper.toDTO(transaction));
   }
-
 }

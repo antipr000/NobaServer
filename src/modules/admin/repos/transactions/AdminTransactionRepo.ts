@@ -1,5 +1,6 @@
 import { TransactionStatsDTO } from "../../dto/TransactionStats";
 import { TransactionModel } from "../../../../infra/mongodb/models/TransactionModel";
+import { AdminModel } from '../../../../infra/mongodb/models/AdminModel';
 import { Transaction, TransactionProps } from "../../../../modules/transactions/domain/Transaction";
 import { convertDBResponseToJsObject } from "src/infra/mongodb/MongoDBUtils";
 import { Injectable } from "@nestjs/common";
