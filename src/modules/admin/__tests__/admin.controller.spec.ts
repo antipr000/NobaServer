@@ -11,6 +11,7 @@ import { ConflictException, NotFoundException } from "@nestjs/common";
 import { OutputNobaAdminDTO } from "../dto/OutputNobaAdminDTO";
 import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
 import { UpdateNobaAdminDTO } from "../dto/UpdateNobaAdminDTO";
+import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -134,6 +135,33 @@ describe('AdminController', () => {
             const result = await adminController.updateNobaAdmin(request);
 
             expect(result).toEqual(updatedAdmin.props);
+        });
+    });
+
+    describe('Delete a NobaAdmin with given ID', () => {
+        it('should throw "NotFoundException" if user with ID doesn\'t exists', async () => {
+            const adminId = "1111111111";
+            when(mockAdminService.deleteNobaAdmin(adminId))
+                .thenReject(new NotFoundException());
+
+            try {
+                const request: DeleteNobaAdminDTO = { _id: adminId };
+                await adminController.deleteNobaAdmin(request);
+                expect(true).toBe(false);
+            } catch (err) {
+                expect(err).toBeInstanceOf(NotFoundException);
+            }
+        });
+
+        it('should delete the specified NobaAdmin & returns it\'s ID', async () => {
+            const adminId = "1111111111";
+            when(mockAdminService.deleteNobaAdmin(adminId))
+                .thenResolve(adminId);
+
+            const request: DeleteNobaAdminDTO = { _id: adminId };
+            const result = await adminController.deleteNobaAdmin(request);
+
+            expect(result).toEqual(request);
         });
     });
 });

@@ -187,7 +187,7 @@ describe('AdminService', () => {
 
       const result = await adminService.deleteNobaAdmin(adminId);
 
-      expect(result).toBe(true);
+      expect(result).toBe(adminId);
     })
   })
 });

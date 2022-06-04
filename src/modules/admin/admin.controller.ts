@@ -1,19 +1,20 @@
-import { Controller, Get, Inject, HttpStatus, Query, Param, Post, Body, ConflictException, Put } from '@nestjs/common';
+import { Controller, Get, Inject, HttpStatus, Query, Param, Post, Body, ConflictException, Put, Delete } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { UserID } from '../auth/roles.decorator';
-import { Admin } from '../auth/admin.decorator';
+import { Admin as AdminGuard } from '../auth/admin.decorator';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TransactionStatsDTO } from './dto/TransactionStats';
 import { TransactionDTO } from '../transactions/dto/TransactionDTO';
 import { TransactionsFilterDTO } from './dto/TransactionsFilterDTO';
 import { NobaAdminDTO } from './dto/NobaAdminDTO';
-import { Admin as AdminDomain } from './domain/Admin';
+import { Admin } from './domain/Admin';
 import { OutputNobaAdminDTO } from './dto/OutputNobaAdminDTO';
 import { AdminMapper } from './mappers/AdminMapper';
 import { Public } from '../auth/public.decorator';
 import { UpdateNobaAdminDTO } from './dto/UpdateNobaAdminDTO';
+import { DeleteNobaAdminDTO } from './dto/DeleteNobaAdminDTO';
 
 // TODO: Add proper AuthN & AuthZ
 @Public()
@@ -53,7 +54,7 @@ export class AdminController {
   @ApiOperation({ summary: "Creates a new NobaAdmin with a specified role." })
   @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The newly created Noba Admin." })
   async createNobaAdmin(@Body() nobaAdmin: NobaAdminDTO): Promise<OutputNobaAdminDTO> {
-    const savedAdmin: AdminDomain = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
+    const savedAdmin: Admin = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
 
     if (savedAdmin === undefined)
       throw new ConflictException('User is already registerd as a NobaAdmin');
@@ -65,8 +66,16 @@ export class AdminController {
   @ApiOperation({ summary: "Updates the role of a NobaAdmin." })
   @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The updated NobaAdmin." })
   async updateNobaAdmin(@Body() req: UpdateNobaAdminDTO): Promise<OutputNobaAdminDTO> {
-    const updatedAdmin: AdminDomain = await this.adminService.changeNobaAdminRole(req.email, req.role);
+    const updatedAdmin: Admin = await this.adminService.changeNobaAdminRole(req.email, req.role);
     return this.adminMapper.toOutputDto(updatedAdmin);
   }
 
+  @Delete('/')
+  @ApiOperation({ summary: "Deletes the NobaAdmin with a given ID" })
+  @ApiResponse({ status: HttpStatus.OK, type: DeleteNobaAdminDTO, description: "The ID of the deleted NobaAdmin." })
+  async deleteNobaAdmin(@Body() req: DeleteNobaAdminDTO): Promise<DeleteNobaAdminDTO> {
+    // TODO: Add check if the deleted Admin ID is equal to the Admin performing the operation.
+    const deletedAdminId: string = await this.adminService.deleteNobaAdmin(req._id);
+    return { _id: deletedAdminId };
+  }
 }
