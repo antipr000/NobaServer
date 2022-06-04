@@ -13,6 +13,7 @@ export interface IAdminTransactionRepo {
     addNobaAdmin(nobaAdmin: Admin): Promise<Admin>;
     getNobaAdminByEmail(email: string): Promise<Admin>;
     updateNobaAdmin(updatedNobaAdmin: Admin): Promise<Admin>;
+    deleteNobaAdmin(id: string): Promise<number>;
 }
 
 type AggregateTransactionType = {
@@ -87,5 +88,13 @@ export class MongoDBAdminTransactionRepo implements IAdminTransactionRepo {
         const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
 
         return this.adminMapper.toDomain(nobaAdminProps);
+    }
+
+    async deleteNobaAdmin(id: string): Promise<number> {
+        const result = await AdminModel.deleteOne({ _id: id });
+        if (result.acknowledged === false)
+            throw Error('Internal error!');
+
+        return result.deletedCount;
     }
 }

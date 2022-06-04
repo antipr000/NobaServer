@@ -12,6 +12,8 @@ export const getMockAdminServiceWithDefaults = () => {
         .thenReject(new Error('Not implemented!'));
     when(mockAdminService.changeNobaAdminRole(anything(), anything()))
         .thenReject(new Error('Not implemented!'));
+    when(mockAdminService.deleteNobaAdmin(anyString()))
+        .thenReject(new Error('Not implemented!'));
 
     return mockAdminService;
 }

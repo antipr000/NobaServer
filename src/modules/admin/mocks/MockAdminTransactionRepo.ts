@@ -14,6 +14,8 @@ export const getMockAdminTransactionRepoWithDefaults = () => {
         .thenReject(new Error('Not implemented!'));
     when(mockAdminTransactionRepo.getNobaAdminByEmail(anyString()))
         .thenReject(new Error('Not implemented!'));
+    when(mockAdminTransactionRepo.deleteNobaAdmin(anyString()))
+        .thenReject(new Error('Not implemented!'));
 
     return mockAdminTransactionRepo;
 }

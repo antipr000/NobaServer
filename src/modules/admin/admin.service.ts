@@ -62,4 +62,12 @@ export class AdminService {
     adminState.props.role = newRole;
     return this.adminTransactionRepo.updateNobaAdmin(adminState);
   }
+
+  async deleteNobaAdmin(adminId: string): Promise<boolean> {
+    const deletedRecords = await this.adminTransactionRepo.deleteNobaAdmin(adminId);
+    if (deletedRecords !== 1)
+      throw new NotFoundException(`User with ID '${adminId} not found.`);
+
+    return true;
+  }
 }

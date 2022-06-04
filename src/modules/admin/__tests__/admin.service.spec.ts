@@ -165,4 +165,29 @@ describe('AdminService', () => {
       expect(result).toEqual(nobaAdmin);
     })
   });
+
+  describe('deleteNobaAdmin', () => {
+    it('should throw "NotFoundException" if user with given ID doesn\'t exists', async () => {
+      const adminId = "1111111111";
+      when(mockAdminTransactionRepo.deleteNobaAdmin(adminId))
+        .thenResolve(0);
+
+      try {
+        await adminService.deleteNobaAdmin(adminId);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it('should delete the admin with given ID successfully', async () => {
+      const adminId = "1111111111";
+      when(mockAdminTransactionRepo.deleteNobaAdmin(adminId))
+        .thenResolve(1);
+
+      const result = await adminService.deleteNobaAdmin(adminId);
+
+      expect(result).toBe(true);
+    })
+  })
 });
