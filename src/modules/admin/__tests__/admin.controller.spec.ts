@@ -1,52 +1,33 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { instance } from "ts-mockito";
+import { anything, capture, instance, when } from "ts-mockito";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
 import { AdminService } from "../admin.service";
-import { TransactionStatsDTO } from "../dto/TransactionStats";
-import { TransactionDTO } from "src/modules/transactions/dto/TransactionDTO";
 import { Admin } from "../domain/Admin";
 import { AdminController } from "../admin.controller";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
 import { ConflictException } from "@nestjs/common";
 import { OutputNobaAdminDTO } from "../dto/OutputNobaAdminDTO";
+import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
 
-class FakeAdminService extends AdminService {
-    async getTransactionStatus(): Promise<TransactionStatsDTO> {
-        throw Error('Not implemented!');
-    }
-
-    async getAllTransactions(startDate: string, endDate: string): Promise<TransactionDTO[]> {
-        throw Error('Not implemented!');
-    }
-
-    async addNobaAdmin(nobaAdmin: Admin): Promise<Admin> {
-        if (nobaAdmin.props.email === EXISTING_ADMIN_EMAIL)
-            return undefined;
-        if (nobaAdmin.props.email === NEW_ADMIN_EMAIL)
-            return nobaAdmin;
-
-        throw Error('Unrecognised email!');
-    }
-}
-
 describe('AdminController', () => {
-    let adminController: AdminController;
-    let adminService: AdminService;
-
     jest.setTimeout(2000);
-    const OLD_ENV = process.env;
+
+    let adminController: AdminController;
+    let mockAdminService: AdminService;
 
     beforeEach(async () => {
         process.env = {
-            ...OLD_ENV,
+            ...process.env,
             NODE_ENV: "development",
             CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs"
         };
+
+        mockAdminService = getMockAdminServiceWithDefaults();
 
         const app: TestingModule = await Test.createTestingModule({
             imports: [
@@ -57,14 +38,13 @@ describe('AdminController', () => {
             providers: [
                 {
                     provide: 'AdminService',
-                    useFactory: () => new FakeAdminService()
+                    useFactory: () => instance(mockAdminService)
                 },
                 AdminMapper
             ],
         }).compile();
 
         adminController = app.get<AdminController>(AdminController);
-        adminService = app.get<FakeAdminService>('AdminService');
     });
 
     describe('Creating a new NobaAdmin', () => {
@@ -75,8 +55,12 @@ describe('AdminController', () => {
                 name: "Admin"
             };
 
+            when(mockAdminService.addNobaAdmin(anything()))
+                .thenResolve(undefined);
+
             try {
                 const result = await adminController.createNobaAdmin(newNobaAdmin);
+                expect(result).toBeUndefined();
             } catch (err) {
                 expect(err).toBeInstanceOf(ConflictException);
             }
@@ -89,11 +73,26 @@ describe('AdminController', () => {
                 name: "Admin"
             };
 
-            const result = await adminController.createNobaAdmin(newNobaAdmin);
+            when(mockAdminService.addNobaAdmin(anything()))
+                .thenResolve(Admin.createAdmin({
+                    _id: "1111111111",
+                    email: newNobaAdmin.email,
+                    name: newNobaAdmin.name,
+                    role: newNobaAdmin.role
+                }));
+
+            const result: OutputNobaAdminDTO =
+                await adminController.createNobaAdmin(newNobaAdmin);
+            const addNobaAdminArgument: Admin = capture(mockAdminService.addNobaAdmin).last()[0];
+
             expect(result._id).toBeDefined();
             expect(result.email).toEqual(newNobaAdmin.email);
             expect(result.name).toEqual(newNobaAdmin.name);
             expect(result.role).toEqual(newNobaAdmin.role);
+
+            expect(addNobaAdminArgument.props.email).toEqual(newNobaAdmin.email);
+            expect(addNobaAdminArgument.props.name).toEqual(newNobaAdmin.name);
+            expect(addNobaAdminArgument.props.role).toEqual(newNobaAdmin.role);
         });
     });
 });

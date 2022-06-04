@@ -45,6 +45,12 @@ const AdminRolesWithTheirPrivileges = {
     }
 };
 
+export const AllRoles = Object.keys(AdminRolesWithTheirPrivileges);
+
+export const isValidRole = (role) => {
+    return (AllRoles.find(validRole => role === validRole ? role : undefined) !== undefined);
+};
+
 export interface AdminProps extends VersioningInfo {
     _id: string,
     name: string,

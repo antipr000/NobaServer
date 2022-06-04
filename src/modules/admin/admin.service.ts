@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -9,7 +11,7 @@ import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { Transaction } from "../transactions/domain/Transaction";
 import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
-import { Admin } from "./domain/Admin";
+import { Admin, AllRoles, isValidRole } from "./domain/Admin";
 
 
 @Injectable()
@@ -43,5 +45,19 @@ export class AdminService {
     }
 
     return this.adminTransactionRepo.addNobaAdmin(nobaAdmin);
+  }
+
+  async changeNobaAdminRole(adminEmail: string, newRole: string): Promise<Admin> {
+    if (!isValidRole(newRole))
+      throw new BadRequestException(`Role should be one of ${AllRoles}.`);
+
+    const adminState: Admin = await this.adminTransactionRepo.getNobaAdminByEmail(adminEmail);
+
+    if (adminState === undefined)
+      throw new NotFoundException(`Admin with email '${adminEmail}' doesn't exists.`);
+
+    if (adminState.props.role === newRole)
+      return adminState;
+    return this.adminTransactionRepo.updateNobaAdmin(adminState);
   }
 }

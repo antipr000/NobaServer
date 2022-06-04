@@ -2,7 +2,7 @@ import { TransactionStatsDTO } from "../../dto/TransactionStats";
 import { TransactionModel } from "../../../../infra/mongodb/models/TransactionModel";
 import { AdminModel } from '../../../../infra/mongodb/models/AdminModel';
 import { Transaction, TransactionProps } from "../../../../modules/transactions/domain/Transaction";
-import { convertDBResponseToJsObject } from "src/infra/mongodb/MongoDBUtils";
+import { convertDBResponseToJsObject } from "../../../../../src/infra/mongodb/MongoDBUtils";
 import { Inject, Injectable } from "@nestjs/common";
 import { Admin, AdminProps } from '../../domain/Admin';
 import { AdminMapper } from "../../mappers/AdminMapper";
@@ -12,6 +12,7 @@ export interface IAdminTransactionRepo {
     getAllTransactions(startDate: string, endDate: string): Promise<Transaction[]>;
     addNobaAdmin(nobaAdmin: Admin): Promise<Admin>;
     getNobaAdminByEmail(email: string): Promise<Admin>;
+    updateNobaAdmin(updatedNobaAdmin: Admin): Promise<Admin>;
 }
 
 type AggregateTransactionType = {
@@ -74,6 +75,16 @@ export class MongoDBAdminTransactionRepo implements IAdminTransactionRepo {
         const nobaAdminProps: AdminProps[] = convertDBResponseToJsObject(result);
 
         if (nobaAdminProps.length === 0) return undefined;
+        return this.adminMapper.toDomain(nobaAdminProps);
+    }
+
+    async updateNobaAdmin(updatedNobaAdmin: Admin): Promise<Admin> {
+        const result = await AdminModel.updateOne(
+            { _id: updatedNobaAdmin.props._id },
+            updatedNobaAdmin
+        );
+        const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
+
         return this.adminMapper.toDomain(nobaAdminProps);
     }
 }
