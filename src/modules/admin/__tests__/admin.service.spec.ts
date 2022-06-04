@@ -88,7 +88,7 @@ describe('AdminService', () => {
       const invalidRole: string = "INVALID_ROLE";
 
       try {
-        await adminService.changeNobaAdminRole("a@a.in", invalidRole);
+        await adminService.changeNobaAdminRole("1111111111", invalidRole);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(BadRequestException);
@@ -96,13 +96,13 @@ describe('AdminService', () => {
     });
 
     it('should throw "NotFoundException" if admin with given email doesn\'t exist', async () => {
-      const INVALID_EMAIL: string = "abc@noba.com";
+      const INVALID_ID: string = "2222222222";
 
-      when(mockAdminTransactionRepo.getNobaAdminByEmail(INVALID_EMAIL))
+      when(mockAdminTransactionRepo.getNobaAdminById(INVALID_ID))
         .thenResolve(undefined);
 
       try {
-        await adminService.changeNobaAdminRole(INVALID_EMAIL, "BASIC");
+        await adminService.changeNobaAdminRole(INVALID_ID, "BASIC");
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(NotFoundException);
@@ -110,57 +110,57 @@ describe('AdminService', () => {
     });
 
     it('should successfully update the role to the new role', async () => {
-      const VALID_EMAIL: string = "abc@noba.com";
+      const VALID_ADMIN_ID: string = "1111111111";
       const CURRENT_ROLE: string = "BASIC";
       const CHANGED_ROLE: string = "INTERMEDIATE";
 
       const nobaAdmin: Admin = Admin.createAdmin({
-        _id: "1111111111",
-        email: VALID_EMAIL,
+        _id: VALID_ADMIN_ID,
+        email: "abc@noba.com",
         name: "Admin",
         role: CURRENT_ROLE
       });
       const updatedNobaAdmin = Admin.createAdmin({
         _id: "1111111111",
-        email: VALID_EMAIL,
+        email: "abc@noba.com",
         name: "Admin",
         role: CHANGED_ROLE
       });
 
-      when(mockAdminTransactionRepo.getNobaAdminByEmail(VALID_EMAIL))
+      when(mockAdminTransactionRepo.getNobaAdminById(VALID_ADMIN_ID))
         .thenResolve(nobaAdmin);
       when(mockAdminTransactionRepo.updateNobaAdmin(anything()))
         .thenResolve(updatedNobaAdmin);
 
-      const result = await adminService.changeNobaAdminRole(VALID_EMAIL, CHANGED_ROLE);
+      const result = await adminService.changeNobaAdminRole(VALID_ADMIN_ID, CHANGED_ROLE);
       const updateNobaAdminArgument: Admin =
         capture(mockAdminTransactionRepo.updateNobaAdmin).last()[0];
 
       expect(result).toBe(updatedNobaAdmin);
       expect(updateNobaAdminArgument.props).toEqual({
-        _id: "1111111111",
-        email: VALID_EMAIL,
+        _id: VALID_ADMIN_ID,
+        email: "abc@noba.com",
         name: "Admin",
         role: CHANGED_ROLE
       });
     });
 
     it('should not call the db when the "role" if the target "role" is same as current', async () => {
-      const VALID_EMAIL: string = "abc@noba.com";
+      const VALID_ADMIN_ID: string = "1111111111";
       const CURRENT_ROLE: string = "BASIC";
       const CHANGED_ROLE: string = "BASIC";
 
       const nobaAdmin: Admin = Admin.createAdmin({
         _id: "1111111111",
-        email: VALID_EMAIL,
+        email: "abc@noba.com",
         name: "Admin",
         role: CURRENT_ROLE
       });
 
-      when(mockAdminTransactionRepo.getNobaAdminByEmail(VALID_EMAIL))
+      when(mockAdminTransactionRepo.getNobaAdminById(VALID_ADMIN_ID))
         .thenResolve(nobaAdmin);
 
-      const result = await adminService.changeNobaAdminRole(VALID_EMAIL, CHANGED_ROLE);
+      const result = await adminService.changeNobaAdminRole(VALID_ADMIN_ID, CHANGED_ROLE);
 
       expect(result).toEqual(nobaAdmin);
     })

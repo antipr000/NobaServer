@@ -66,7 +66,7 @@ export class AdminController {
   @ApiOperation({ summary: "Updates the role of a NobaAdmin." })
   @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The updated NobaAdmin." })
   async updateNobaAdmin(@Body() req: UpdateNobaAdminDTO): Promise<OutputNobaAdminDTO> {
-    const updatedAdmin: Admin = await this.adminService.changeNobaAdminRole(req.email, req.role);
+    const updatedAdmin: Admin = await this.adminService.changeNobaAdminRole(req._id, req.role);
     return this.adminMapper.toOutputDto(updatedAdmin);
   }
 

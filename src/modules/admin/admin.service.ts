@@ -47,14 +47,14 @@ export class AdminService {
     return this.adminTransactionRepo.addNobaAdmin(nobaAdmin);
   }
 
-  async changeNobaAdminRole(adminEmail: string, newRole: string): Promise<Admin> {
+  async changeNobaAdminRole(adminId: string, newRole: string): Promise<Admin> {
     if (!isValidRole(newRole))
       throw new BadRequestException(`Role should be one of ${AllRoles}.`);
 
-    const adminState: Admin = await this.adminTransactionRepo.getNobaAdminByEmail(adminEmail);
+    const adminState: Admin = await this.adminTransactionRepo.getNobaAdminById(adminId);
 
     if (adminState === undefined)
-      throw new NotFoundException(`Admin with email '${adminEmail}' doesn't exists.`);
+      throw new NotFoundException(`Admin with ID '${adminId}' doesn't exists.`);
 
     if (adminState.props.role === newRole)
       return adminState;

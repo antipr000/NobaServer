@@ -100,12 +100,13 @@ describe('AdminController', () => {
 
     describe('Update the role of a NobaAdmin', () => {
         it('should throw error if email doesn\'t exists.', async () => {
-            when(mockAdminService.changeNobaAdminRole(NEW_ADMIN_EMAIL, "INTERMEDIATE"))
+            const ADMIN_ID = "1111111111";
+            when(mockAdminService.changeNobaAdminRole(ADMIN_ID, "INTERMEDIATE"))
                 .thenReject(new NotFoundException());
 
             try {
                 const request: UpdateNobaAdminDTO = {
-                    email: NEW_ADMIN_EMAIL,
+                    _id: ADMIN_ID,
                     role: "INTERMEDIATE"
                 };
                 await adminController.updateNobaAdmin(request);
@@ -116,20 +117,21 @@ describe('AdminController', () => {
         });
 
         it('should successfully update the role of the specified admin', async () => {
+            const ADMIN_ID = "1111111111";
             const CURRENT_ROLE: string = "BASIC";
             const UPDATED_ROLE: string = "INTERMEDIATE";
 
             const updatedAdmin: Admin = Admin.createAdmin({
-                _id: "1111111111",
+                _id: ADMIN_ID,
                 name: "Admin",
                 email: EXISTING_ADMIN_EMAIL,
                 role: UPDATED_ROLE
             });
-            when(mockAdminService.changeNobaAdminRole(EXISTING_ADMIN_EMAIL, UPDATED_ROLE))
+            when(mockAdminService.changeNobaAdminRole(ADMIN_ID, UPDATED_ROLE))
                 .thenResolve(updatedAdmin);
 
             const request: UpdateNobaAdminDTO = {
-                email: EXISTING_ADMIN_EMAIL,
+                _id: ADMIN_ID,
                 role: UPDATED_ROLE
             };
             const result = await adminController.updateNobaAdmin(request);
