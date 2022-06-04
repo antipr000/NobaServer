@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, HttpStatus, Query, Param, Post, Body, ConflictException } from '@nestjs/common';
+import { Controller, Get, Inject, HttpStatus, Query, Param, Post, Body, ConflictException, Put } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
@@ -13,6 +13,7 @@ import { Admin as AdminDomain } from './domain/Admin';
 import { OutputNobaAdminDTO } from './dto/OutputNobaAdminDTO';
 import { AdminMapper } from './mappers/AdminMapper';
 import { Public } from '../auth/public.decorator';
+import { UpdateNobaAdminDTO } from './dto/UpdateNobaAdminDTO';
 
 // TODO: Add proper AuthN & AuthZ
 @Public()
@@ -58,6 +59,14 @@ export class AdminController {
       throw new ConflictException('User is already registerd as a NobaAdmin');
 
     return this.adminMapper.toOutputDto(savedAdmin);
+  }
+
+  @Put('/')
+  @ApiOperation({ summary: "Updates the role of a NobaAdmin." })
+  @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The updated NobaAdmin." })
+  async updateNobaAdmin(@Body() req: UpdateNobaAdminDTO): Promise<OutputNobaAdminDTO> {
+    const updatedAdmin: AdminDomain = await this.adminService.changeNobaAdminRole(req.email, req.role);
+    return this.adminMapper.toOutputDto(updatedAdmin);
   }
 
 }

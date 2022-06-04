@@ -7,9 +7,10 @@ import { Admin } from "../domain/Admin";
 import { AdminController } from "../admin.controller";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
-import { ConflictException } from "@nestjs/common";
+import { ConflictException, NotFoundException } from "@nestjs/common";
 import { OutputNobaAdminDTO } from "../dto/OutputNobaAdminDTO";
 import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
+import { UpdateNobaAdminDTO } from "../dto/UpdateNobaAdminDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -93,6 +94,46 @@ describe('AdminController', () => {
             expect(addNobaAdminArgument.props.email).toEqual(newNobaAdmin.email);
             expect(addNobaAdminArgument.props.name).toEqual(newNobaAdmin.name);
             expect(addNobaAdminArgument.props.role).toEqual(newNobaAdmin.role);
+        });
+    });
+
+    describe('Update the role of a NobaAdmin', () => {
+        it('should throw error if email doesn\'t exists.', async () => {
+            when(mockAdminService.changeNobaAdminRole(NEW_ADMIN_EMAIL, "INTERMEDIATE"))
+                .thenReject(new NotFoundException());
+
+            try {
+                const request: UpdateNobaAdminDTO = {
+                    email: NEW_ADMIN_EMAIL,
+                    role: "INTERMEDIATE"
+                };
+                await adminController.updateNobaAdmin(request);
+                expect(true).toBe(false);
+            } catch (err) {
+                expect(err).toBeInstanceOf(NotFoundException);
+            }
+        });
+
+        it('should successfully update the role of the specified admin', async () => {
+            const CURRENT_ROLE: string = "BASIC";
+            const UPDATED_ROLE: string = "INTERMEDIATE";
+
+            const updatedAdmin: Admin = Admin.createAdmin({
+                _id: "1111111111",
+                name: "Admin",
+                email: EXISTING_ADMIN_EMAIL,
+                role: UPDATED_ROLE
+            });
+            when(mockAdminService.changeNobaAdminRole(EXISTING_ADMIN_EMAIL, UPDATED_ROLE))
+                .thenResolve(updatedAdmin);
+
+            const request: UpdateNobaAdminDTO = {
+                email: EXISTING_ADMIN_EMAIL,
+                role: UPDATED_ROLE
+            };
+            const result = await adminController.updateNobaAdmin(request);
+
+            expect(result).toEqual(updatedAdmin.props);
         });
     });
 });
