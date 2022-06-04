@@ -58,6 +58,8 @@ export class AdminService {
 
     if (adminState.props.role === newRole)
       return adminState;
+
+    adminState.props.role = newRole;
     return this.adminTransactionRepo.updateNobaAdmin(adminState);
   }
 }
