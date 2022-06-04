@@ -59,8 +59,8 @@ describe('AdminController', () => {
                 .thenResolve(undefined);
 
             try {
-                const result = await adminController.createNobaAdmin(newNobaAdmin);
-                expect(result).toBeUndefined();
+                await adminController.createNobaAdmin(newNobaAdmin);
+                expect(true).toBe(false);
             } catch (err) {
                 expect(err).toBeInstanceOf(ConflictException);
             }
