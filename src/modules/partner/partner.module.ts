@@ -14,6 +14,6 @@ import { partnerAdminRepoProvider, PartnerRepoModule, partnerRepoProvider } from
   imports: [InfraProvidersModule, ConfigModule, CommonModule, PartnerRepoModule, UserModule, TransactionModule],
   controllers: [],
   providers: [UserService, DBProvider, TransactionService, partnerRepoProvider, partnerAdminRepoProvider],
-  exports: [UserService]  //Need to access in PublicController
+  exports: []  //Need to access in PublicController
 })
 export class PartnerModule {}

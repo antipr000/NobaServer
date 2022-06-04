@@ -17,30 +17,30 @@ import { IPartnerRepo } from "./repo/PartnerRepo";
       private readonly partnerRepo: IPartnerRepo) {
     }
   
-    async getPartner(partnerId: string): Promise<PartnerProps> {
+    async getPartner(partnerId: string): Promise<Partner> {
         const partner: Partner = await this.partnerRepo.getPartner(partnerId);
-        return partner.props;
+        return partner;
     }
 
-    async createPartner(partnerName: string): Promise<PartnerProps> {
+    async createPartner(partnerName: string): Promise<Partner> {
         const partner = Partner.createPartner({ name: partnerName });
         const partnerResult: Partner = await this.partnerRepo.addPartner(partner);
-        return partnerResult.props;
+        return partnerResult;
     }
 
-    async updateTakeRate(partnerId: string, takeRate: number): Promise<PartnerProps> {
+    async updateTakeRate(partnerId: string, takeRate: number): Promise<Partner> {
         const partner: Partner = await this.partnerRepo.updateTakeRate(partnerId, takeRate);
-        return partner.props;
+        return partner;
     }
 
-    async updatePartner(partnerId: string, partialPartnerProps: Partial<PartnerProps>): Promise<PartnerProps> {
+    async updatePartner(partnerId: string, partialPartnerProps: Partial<PartnerProps>): Promise<Partner> {
         const partnerProps = await this.getPartner(partnerId);
         const updatedPatner = Partner.createPartner({
             ...partnerProps,
             ...partialPartnerProps
         });
         const partnerResult: Partner = await this.partnerRepo.updatePartner(updatedPatner);
-        return partnerResult.props;
+        return partnerResult;
     } 
   }
   

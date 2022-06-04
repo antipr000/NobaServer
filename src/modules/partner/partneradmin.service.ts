@@ -23,29 +23,29 @@ import { TransactionDTO } from "../transactions/dto/TransactionDTO";
       private readonly userService: UserService,
       private readonly transactionService: TransactionService) {}
   
-    async getPartnerAdmin(partnerAdminId: string): Promise<PartnerAdminProps> {
+    async getPartnerAdmin(partnerAdminId: string): Promise<PartnerAdmin> {
         const partnerAdmin: PartnerAdmin = await this.partnerAdminRepo.getPartnerAdmin(partnerAdminId);
-        return partnerAdmin.props;
+        return partnerAdmin;
     }
 
-    async getPartnerAdminFromEmail(emailID: string): Promise<PartnerAdminProps> {
+    async getPartnerAdminFromEmail(emailID: string): Promise<PartnerAdmin> {
         const partnerAdmin: PartnerAdmin = await this.partnerAdminRepo.getPartnerAdminUsingEmail(emailID);
-        return partnerAdmin.props;
+        return partnerAdmin;
     }
 
     // Internal use only. Do not expose in controllers
-    async addPartnerAdminInternal(partnerId: string, emailID: string): Promise<PartnerAdminProps> {
+    async addPartnerAdminInternal(partnerId: string, emailID: string): Promise<PartnerAdmin> {
         const newPartnerAdmin = PartnerAdmin.createPartnerAdmin({
             email: emailID,
             partnerId: partnerId
         });
         const partnerAdmin: PartnerAdmin = await this.partnerAdminRepo.addPartnerAdmin(newPartnerAdmin);
-        return partnerAdmin.props;
+        return partnerAdmin;
     }
 
     async addPartnerAdmin(
         requestingPartnerAdmin: PartnerAdminProps,
-         emailID: string): Promise<PartnerAdminProps> {
+         emailID: string): Promise<PartnerAdmin> {
         if(false) {
             // add permission check here
             throw new ForbiddenException();
@@ -70,12 +70,12 @@ import { TransactionDTO } from "../transactions/dto/TransactionDTO";
     }
 
     // Internal use only. Do not expose in controller
-    async getAllPartnerAdminsInternal(partnerId: string): Promise<PartnerAdminProps[]> {
+    async getAllPartnerAdminsInternal(partnerId: string): Promise<PartnerAdmin[]> {
         const partnerAdmins: PartnerAdmin[] = await this.partnerAdminRepo.getAllAdminsForPartner(partnerId);
-        return partnerAdmins.map(partnerAdmin => partnerAdmin.props);
+        return partnerAdmins.map(partnerAdmin => partnerAdmin);
     }
     
-    async getAllPartnerAdmins(requestingPartnerAdmin: PartnerAdminProps): Promise<PartnerAdminProps[]> {
+    async getAllPartnerAdmins(requestingPartnerAdmin: PartnerAdminProps): Promise<PartnerAdmin[]> {
         if (false) {
             // add condition checks here
             throw new ForbiddenException();
