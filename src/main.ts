@@ -31,7 +31,7 @@ async function bootstrap() {
   // app.use(csurf()); we don't need csurf as we take auth-token from header and not cookies --> https://security.stackexchange.com/questions/166724/should-i-use-csrf-protection-on-rest-api-endpoints?newreg=98a29ea4aaa8448785ffc3ab53b3c475
   app.use(helmet())
   app.useLogger(logger);
-  app.setGlobalPrefix(apiPrefix??'');
+  app.setGlobalPrefix(apiPrefix ?? '');
   app.use(getMorgan(winstonLogger));
   app.useGlobalFilters(new AllExceptionsFilter(winstonLogger));
 
@@ -42,23 +42,24 @@ async function bootstrap() {
     .setDescription('Noba Server API ' + `(${appEnvType.toUpperCase()})`)
     .setVersion('1.0')
     .addBearerAuth({
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
+      type: "http",
+      scheme: "bearer",
+      bearerFormat: "JWT",
     },
-    'JWT-auth')
+      'JWT-auth')
     .addServer('https://api.noba.com/')
+    .addServer('http://localhost:8080')
     .build();
 
-  const swaggerDocument = SwaggerModule.createDocument(app, config,  { operationIdFactory: (controllerKey: string, methodKey: string) => methodKey });
+  const swaggerDocument = SwaggerModule.createDocument(app, config, { operationIdFactory: (controllerKey: string, methodKey: string) => methodKey });
   swaggerDocument.components = joiToSwagger(swaggerDocument.components) as any; //merge swagger-plugin generated components with joi generated components
-  
-  writeFileSync("./swagger.json", JSON.stringify(swaggerDocument), {encoding: 'utf-8'});
+
+  writeFileSync("./swagger.json", JSON.stringify(swaggerDocument), { encoding: 'utf-8' });
   app.useGlobalPipes(
     //we won't accept the keys/fields/attributes in the input if they are not defined in the accepted Type of a controller route
     new NoUnExpectedKeysValidationPipe(createClassTypeToPropertiesMapFromSwaggerSchemas(swaggerDocument.components.schemas), false)
   );
-  
+
   //TODO IMPORTANT show swagger ui only in non-production
   SwaggerModule.setup('swagger-ui', app, swaggerDocument);
 
@@ -81,14 +82,15 @@ function getMorgan(winstonLogger) {
     const userID = ((req as any).user as AuthenticatedUser)?.uid;
 
     return [
-      userID??"noauth",
+      userID ?? "noauth",
       req.socket.remoteAddress, //TODO any privacy issue here?  as developers can see both uid and ip, best practice? 
       tokens.method(req, res),
       tokens.url(req, res),
       tokens.status(req, res),
       tokens.res(req, res, 'content-length'), '-',
       tokens['response-time'](req, res), 'ms'
-    ].join(' ')}, morganOptions);
+    ].join(' ')
+  }, morganOptions);
 }
 
 

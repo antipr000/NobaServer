@@ -12,9 +12,10 @@ import { NobaAdminDTO } from './dto/NobaAdminDTO';
 import { Admin as AdminDomain } from './domain/Admin';
 import { OutputNobaAdminDTO } from './dto/OutputNobaAdminDTO';
 import { AdminMapper } from './mappers/AdminMapper';
+import { Public } from '../auth/public.decorator';
 
-
-@Admin()
+// TODO: Add proper AuthN & AuthZ
+@Public()
 @Controller("admin/:" + UserID)
 @ApiTags("Admin")
 export class AdminController {

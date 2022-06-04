@@ -67,10 +67,13 @@ export class MongoDBAdminTransactionRepo implements IAdminTransactionRepo {
     }
 
     async getNobaAdminByEmail(email: string): Promise<Admin> {
+        console.log('Find by email: ', email);
         const result: any = await AdminModel.find({
             email: email
         });
-        const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
+        const nobaAdminProps: AdminProps[] = convertDBResponseToJsObject(result);
+
+        if (nobaAdminProps.length === 0) return undefined;
         return this.adminMapper.toDomain(nobaAdminProps);
     }
 }
