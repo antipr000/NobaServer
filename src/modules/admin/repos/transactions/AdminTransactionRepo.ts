@@ -75,13 +75,14 @@ export class MongoDBAdminTransactionRepo implements IAdminTransactionRepo {
         const nobaAdminProps: AdminProps[] = convertDBResponseToJsObject(result);
 
         if (nobaAdminProps.length === 0) return undefined;
-        return this.adminMapper.toDomain(nobaAdminProps);
+        return this.adminMapper.toDomain(nobaAdminProps[0]);
     }
 
     async updateNobaAdmin(updatedNobaAdmin: Admin): Promise<Admin> {
-        const result = await AdminModel.updateOne(
-            { _id: updatedNobaAdmin.props._id },
-            updatedNobaAdmin
+        const result = await AdminModel.findByIdAndUpdate(
+            updatedNobaAdmin.props._id,
+            { $set: updatedNobaAdmin.props },
+            { new: true }
         );
         const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
 
