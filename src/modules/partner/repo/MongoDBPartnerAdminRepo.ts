@@ -1,7 +1,10 @@
 import { DBProvider } from "../../../infraproviders/DBProvider";
-import { PartnerAdmin } from "../domain/PartnerAdmin";
-import { Injectable } from "@nestjs/common";
+import { PartnerAdmin, PartnerAdminProps } from "../domain/PartnerAdmin";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { IPartnerAdminRepo } from "./PartnerAdminRepo";
+import { Result } from "../../../core/logic/Result";
+import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
+import { convertDBResponseToJsObject } from "src/infra/mongodb/MongoDBUtils";
  
 
 
@@ -9,27 +12,68 @@ import { IPartnerAdminRepo } from "./PartnerAdminRepo";
 @Injectable()
 export class MongoDBPartnerAdminRepo implements IPartnerAdminRepo {
 
+    private readonly partnerAdminMapper: PartnerAdminMapper;
+
     constructor(private readonly dbProvider: DBProvider) {
-        
+        this.partnerAdminMapper = new PartnerAdminMapper();
     }
 
-    getPartnerAdmin(partnerAdminId: string): Promise<PartnerAdmin> {
-        throw new Error("Method not implemented.");
+    async getPartnerAdmin(partnerAdminId: string): Promise<Result<PartnerAdmin>> {
+        try{
+            const result: any = await this.dbProvider.partnerAdminModel.findById(partnerAdminId).exec();
+            const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
+            return Result.ok(this.partnerAdminMapper.toDomain(partnerAdminProps));
+        }catch(e) {
+            return Result.fail("Could not find admin in db");
+        }
     }
-    getPartnerAdminUsingEmail(emailID: string): Promise<PartnerAdmin> {
-        throw new Error("Method not implemented.");
+
+    async getPartnerAdminUsingEmail(emailID: string): Promise<Result<PartnerAdmin>> {
+        try{
+            const result: any = await this.dbProvider.partnerAdminModel.findOne({ email: emailID }).exec();
+            const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
+            return Result.ok(this.partnerAdminMapper.toDomain(partnerAdminProps));
+        }catch(e) {
+            return Result.fail("Could not find admin with given email in db");
+        }
     }
-    addPartnerAdmin(partnerAdmin: PartnerAdmin): Promise<PartnerAdmin> {
-        throw new Error("Method not implemented.");
+
+    async addPartnerAdmin(partnerAdmin: PartnerAdmin): Promise<PartnerAdmin> {
+        const getResult = await this.getPartnerAdminUsingEmail(partnerAdmin.props.email);
+        if(getResult.isSuccess) throw new BadRequestException("Admin with given email already exists");
+        else {
+            try{
+                const result: any = await this.dbProvider.partnerAdminModel.create(partnerAdmin.props);
+                const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
+                return this.partnerAdminMapper.toDomain(partnerAdminProps);
+            }catch(e) {
+                throw new BadRequestException(e.message);
+            }
+        }
     }
-    getAllAdminsForPartner(partnerId: string): Promise<PartnerAdmin[]> {
-        throw new Error("Method not implemented.");
+    async getAllAdminsForPartner(partnerId: string): Promise<PartnerAdmin[]> {
+        const result: any = await this.dbProvider.partnerAdminModel.find({ partnerId: partnerId }).exec();
+        const partnerAdmins: PartnerAdmin[] = convertDBResponseToJsObject(result);
+        return partnerAdmins.map(partnerAdmin => this.partnerAdminMapper.toDomain(partnerAdmin));
     }
-    removePartnerAdmin(partnerAdminId: string): void {
-        throw new Error("Method not implemented.");
+    async removePartnerAdmin(partnerAdminId: string): Promise<void> {
+        try{
+            await this.dbProvider.partnerModel.findByIdAndDelete(partnerAdminId).exec();
+        }catch(e) {
+            throw new NotFoundException(e.message);
+        }
     }
-    updatePartnerAdmin(partnerAdmin: PartnerAdmin): Promise<PartnerAdmin> {
-        throw new Error("Method not implemented.");
+
+    async updatePartnerAdmin(partnerAdmin: PartnerAdmin): Promise<PartnerAdmin> {
+        try{
+            const result = await this.dbProvider.partnerAdminModel.updateOne({ _id: partnerAdmin.props._id }, {
+                $set: partnerAdmin.props
+            }).exec();
+            const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
+            return this.partnerAdminMapper.toDomain(partnerAdminProps);
+        }catch(e) {
+            throw new BadRequestException(e.message);
+        }
     }
     
 }
