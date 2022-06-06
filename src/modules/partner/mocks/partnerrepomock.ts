@@ -1,4 +1,4 @@
-import { mock, when, deepEqual } from "ts-mockito";
+import { mock, when, deepEqual, anything } from "ts-mockito";
 import { MongoDBPartnerRepo } from "../repo/MongoDBPartnerRepo";
 import { IPartnerRepo } from "../repo/PartnerRepo";
 import { mockPartner, updatePartnerName, updateTakeRate } from "../../../core/tests/constants";
@@ -11,6 +11,10 @@ const updatePartner = Partner.createPartner({
     name: updatePartnerName
 });
 
+when(mockedPartnerRepo.addPartner(anything()))
+    .thenReturn(new Promise((resolve, _) => {
+        resolve(partner);
+    }));
 
 when(mockedPartnerRepo.getPartner(mockPartner._id))
     .thenReturn(new Promise((resolve, _) => {

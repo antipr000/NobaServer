@@ -40,6 +40,11 @@ describe('PartnerService', () => {
     });
   
     describe('partner service tests', () => {
+      
+      it('should add a new partner', async() => {
+          const result = await partnerService.createPartner(mockPartner.name);
+          expect(result.props).toStrictEqual(mockPartner);
+      });
 
       it('should get partner given id', async() => {
           const result = await partnerService.getPartner(mockPartner._id);

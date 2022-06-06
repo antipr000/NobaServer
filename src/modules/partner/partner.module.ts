@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { UserService } from '../user/user.service';
-import { TransactionService } from '../transactions/transaction.service';
 import { UserModule } from '../user/user.module';
-import { TransactionModule } from '../transactions/transaction.module';
 import { DBProvider } from '../../infraproviders/DBProvider';
 import { InfraProvidersModule } from '../../infraproviders/infra.module';
 import { ConfigModule } from '@nestjs/config';
@@ -13,9 +11,9 @@ import { PartnerAdminService } from './partneradmin.service';
 
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, CommonModule, PartnerRepoModule, UserModule, TransactionModule],
+  imports: [InfraProvidersModule, ConfigModule, CommonModule, PartnerRepoModule, UserModule],
   controllers: [],
-  providers: [UserService, DBProvider, TransactionService, partnerRepoProvider, partnerAdminRepoProvider, PartnerService, PartnerAdminService],
+  providers: [UserService, DBProvider, partnerRepoProvider, partnerAdminRepoProvider, PartnerService, PartnerAdminService],
   exports: [PartnerService, PartnerAdminService]  //Need to access in PublicController
 })
 export class PartnerModule {}

@@ -46,3 +46,4 @@ export const mockPartnerAdminWithIntermediateAccess: PartnerAdminProps = {
     role: "INTERMEDIATE"
 };
 
+export const mockFailureEmailAddress = "mock4@partner.com";

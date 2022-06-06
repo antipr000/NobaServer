@@ -1,16 +1,14 @@
 import {
-    ForbiddenException,
     Inject,
     Injectable,
     NotFoundException,
     NotImplementedException,
   } from "@nestjs/common";
-import { PartnerAdminProps, PartnerAdmin } from "./domain/PartnerAdmin";
+import { PartnerAdmin } from "./domain/PartnerAdmin";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IPartnerAdminRepo } from "./repo/PartnerAdminRepo";
 import { UserService } from "../user/user.service";
-import { TransactionService } from "../transactions/transaction.service";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { Result } from "../../core/logic/Result";
   
@@ -22,8 +20,7 @@ import { Result } from "../../core/logic/Result";
   
     constructor(
       private readonly partnerAdminRepo: IPartnerAdminRepo,
-      private readonly userService: UserService,
-      private readonly transactionService: TransactionService) {}
+      private readonly userService: UserService) {}
   
     async getPartnerAdmin(partnerAdminId: string): Promise<PartnerAdmin> {
         const partnerAdmin: Result<PartnerAdmin> = await this.partnerAdminRepo.getPartnerAdmin(partnerAdminId);
@@ -62,8 +59,7 @@ import { Result } from "../../core/logic/Result";
     }
 
     async getAllTransactionsForPartner(partnerId: string): Promise<TransactionDTO[]> {
-        const transactions: TransactionDTO[] = await this.transactionService.getAllTransactions();
-        return transactions;
+        throw new Error("Method not implemented");
     }
   }
   
