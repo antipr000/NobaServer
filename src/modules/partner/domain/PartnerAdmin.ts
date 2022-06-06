@@ -27,7 +27,7 @@ const PartnerAdminRolePrivileges = {
             Permissions.VIEW_ALL_TRANSACTIONS,
             Permissions.VIEW_ALL_USERS]
     },
-    ADVANCED: {
+    ALL: {
         permissions: [
             Permissions.UPDATE_PARTNER_DETAILS,
             Permissions.GET_PARTNER_DETAILS,

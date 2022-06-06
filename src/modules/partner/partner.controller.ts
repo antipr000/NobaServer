@@ -73,7 +73,7 @@ export class PartnerController {
 
     @Get("/admins")
     @ApiOperation({ summary: 'Get all admins for the partner' })
-    @ApiResponse({ status: HttpStatus.OK, type: Array<PartnerAdminDTO>, description: 'Returns details for all admins of the partner' })
+    @ApiResponse({ status: HttpStatus.OK, type: [PartnerAdminDTO], description: 'Returns details for all admins of the partner' })
     @ApiBadRequestResponse({ description: "Not authorized" })
     async getAllPartnerAdmins(
         @Param(PartnerID) partnerID: string,

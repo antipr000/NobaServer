@@ -34,9 +34,9 @@ import { IPartnerRepo } from "./repo/PartnerRepo";
     }
 
     async updatePartner(partnerId: string, partialPartnerProps: Partial<PartnerProps>): Promise<Partner> {
-        const partnerProps = await this.getPartner(partnerId);
+        const partner = await this.getPartner(partnerId);
         const updatedPatner = Partner.createPartner({
-            ...partnerProps,
+            ...partner.props,
             ...partialPartnerProps
         });
         const partnerResult: Partner = await this.partnerRepo.updatePartner(updatedPatner);

@@ -4,7 +4,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { IPartnerAdminRepo } from "./PartnerAdminRepo";
 import { Result } from "../../../core/logic/Result";
 import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
-import { convertDBResponseToJsObject } from "src/infra/mongodb/MongoDBUtils";
+import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
  
 
 

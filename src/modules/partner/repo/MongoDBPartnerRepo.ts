@@ -2,7 +2,7 @@ import { DBProvider } from "../../../infraproviders/DBProvider";
 import { Partner, PartnerProps } from "../domain/Partner";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { IPartnerRepo } from "./PartnerRepo";
-import { convertDBResponseToJsObject } from "src/infra/mongodb/MongoDBUtils";
+import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { PartnerMapper } from "../mappers/PartnerMapper";
 
 //TODO figure out a way to create indices using joi schema and joigoose
