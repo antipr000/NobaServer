@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalStrategy } from './local.strategy';
 import { UserModule } from "../user/user.module";
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -11,6 +10,7 @@ import { InfraProvidersModule } from '../../infraproviders/infra.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { CommonModule } from '../common/common.module';
+import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
 
 @Module({
   imports: [
@@ -25,8 +25,15 @@ import { CommonModule } from '../common/common.module';
     CommonModule
   ],
   providers: [
-    AuthService, LocalStrategy, JwtStrategy, DBProvider],
+    JwtStrategy,
+    DBProvider,
+    {
+      provide: 'OTPRepo',
+      useClass: MongoDBOtpRepo
+    },
+    AuthService
+  ],
   controllers: [AuthController],
   exports: [AuthService]
 })
-export class AuthModule {}
+export class AuthModule { }

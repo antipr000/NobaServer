@@ -21,6 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     async validate(payload: any): Promise<UserProps> {
         const email = payload.email;
+        // TODO: based on type, find the proper domain.
         const userResult = await this.userService.findUserByEmailOrPhone(email);
         return userResult.getValue().props;
     }

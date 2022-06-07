@@ -11,25 +11,35 @@ import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
 import { EmailService } from '../common/email.service';
 import { SMSService } from '../common/sms.service';
 
+// abstract class with all common functionalities
+// 
+// user.auth.service.ts
+// partner.auth.service.ts
+// admin.auth.service.ts
+//      - validateUser()
+//      - getType()
+//      - if-user-can-be-abstracted in ValidateUser
+
 @Injectable()
 export class AuthService {
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger;
+
+    @Inject('OTPRepo')
     private readonly otpRepo: IOTPRepo;
+
     constructor(
-        dbProvider: DBProvider,
         private jwtService: JwtService,
         private userService: UserService,
         private emailService: EmailService,
         private smsService: SMSService
     ) {
-        this.otpRepo = new MongoDBOtpRepo(dbProvider);
     }
 
     async validateUser(emailOrPhone: string, otp: number): Promise<AuthenticatedUser> {
         const user: Otp = await this.otpRepo.getOTP(emailOrPhone);
         const currentDateTime: number = new Date().getTime();
-        if(user.props.otp === otp && currentDateTime <= user.props.otpExpiryTime) {
+        if (user.props.otp === otp && currentDateTime <= user.props.otpExpiryTime) {
             const user = await this.userService.createUserIfFirstTimeLogin(emailOrPhone);
             return {
                 emailOrPhone: emailOrPhone,
@@ -38,6 +48,8 @@ export class AuthService {
         }
         return null;
     }
+
+    // getJwtPayload ()
 
     async login(user: AuthenticatedUser): Promise<VerifyOtpResponseDTO> {
         const payload = { email: user.emailOrPhone };
@@ -51,9 +63,9 @@ export class AuthService {
         await this.otpRepo.saveOTP(emailOrPhone, otp);
     }
 
-    async sendOtp(emailOrPhone: string, otp: string): Promise<void> { 
-        const isEmail = emailOrPhone.includes('@'); 
-        if(isEmail) { 
+    async sendOtp(emailOrPhone: string, otp: string): Promise<void> {
+        const isEmail = emailOrPhone.includes('@');
+        if (isEmail) {
             await this.emailService.sendOtp(emailOrPhone, otp);
         } else {
             await this.smsService.sendOtp(emailOrPhone, otp);
