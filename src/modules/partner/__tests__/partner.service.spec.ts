@@ -69,9 +69,5 @@ describe('PartnerService', () => {
             takeRate: updateTakeRate
         });
     });
-
     });
-
-    
-    
 });

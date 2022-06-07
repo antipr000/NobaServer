@@ -2,9 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { instance } from "ts-mockito";
 import { mockedPartnerAdminRepo } from "../mocks/partneradminrepomock";
 import { 
-    mockPartnerAdminWithAllAccess, 
-    mockPartnerAdminWithBasicAccess, 
-    mockPartnerAdminWithIntermediateAccess,
+    mockPartnerAdminWithAllAccess,
     mockFailureEmailAddress  } from "../../../core/tests/constants";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
