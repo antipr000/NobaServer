@@ -10,7 +10,6 @@ import { CommonModule } from '../../common/common.module';
 
 describe('PartnerService', () => {
     let partnerService: PartnerService;
-    let partnerRepo: IPartnerRepo;
 
     jest.setTimeout(20000);
     const OLD_ENV = process.env;
@@ -22,7 +21,7 @@ describe('PartnerService', () => {
          CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs"
      };
       const PartnerRepoProvider = {
-        provide: IPartnerRepo,
+        provide: 'PartnerRepo',
         useFactory: () => instance(mockedPartnerRepo)
       };
       const app: TestingModule = await Test.createTestingModule({
@@ -36,7 +35,6 @@ describe('PartnerService', () => {
       }).compile();
   
       partnerService = app.get<PartnerService>(PartnerService);
-      partnerRepo = app.get<IPartnerRepo>(IPartnerRepo);
     });
   
     describe('partner service tests', () => {

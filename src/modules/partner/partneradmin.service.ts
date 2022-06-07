@@ -17,10 +17,10 @@ import { Result } from "../../core/logic/Result";
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger;
     
+    @Inject('PartnerAdminRepo')
+    private readonly partnerAdminRepo: IPartnerAdminRepo
   
-    constructor(
-      private readonly partnerAdminRepo: IPartnerAdminRepo,
-      private readonly userService: UserService) {}
+    constructor(private readonly userService: UserService) {}
   
     async getPartnerAdmin(partnerAdminId: string): Promise<PartnerAdmin> {
         const partnerAdmin: Result<PartnerAdmin> = await this.partnerAdminRepo.getPartnerAdmin(partnerAdminId);
@@ -51,7 +51,7 @@ import { Result } from "../../core/logic/Result";
 
     async getAllPartnerAdmins(partnerId: string): Promise<PartnerAdmin[]> {
         const partnerAdmins: PartnerAdmin[] = await this.partnerAdminRepo.getAllAdminsForPartner(partnerId);
-        return partnerAdmins.map(partnerAdmin => partnerAdmin);
+        return partnerAdmins;
     }
 
     async getAllUsersForPartner(partnerId: string): Promise<any> {

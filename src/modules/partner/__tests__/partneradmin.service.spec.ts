@@ -15,7 +15,6 @@ import { NotFoundException } from "@nestjs/common";
 
 describe('PartnerService', () => {
     let partnerAdminService: PartnerAdminService
-    let partnerAdminRepo: IPartnerAdminRepo;
 
     jest.setTimeout(20000);
     const OLD_ENV = process.env;
@@ -27,7 +26,7 @@ describe('PartnerService', () => {
          CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs"
      };
       const PartnerAdminRepoProvider = {
-        provide: IPartnerAdminRepo,
+        provide: 'PartnerAdminRepo',
         useFactory: () => instance(mockedPartnerAdminRepo)
       };
       const UserServiceMockProvider = {
@@ -49,7 +48,6 @@ describe('PartnerService', () => {
       }).compile();
   
       partnerAdminService = app.get<PartnerAdminService>(PartnerAdminService);
-      partnerAdminRepo = app.get<IPartnerAdminRepo>(IPartnerAdminRepo);
     });
   
     describe('partner admin service tests', () => {

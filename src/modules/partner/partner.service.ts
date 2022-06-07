@@ -12,10 +12,10 @@ import { IPartnerRepo } from "./repo/PartnerRepo";
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger;
     
-  
-    constructor(
-      private readonly partnerRepo: IPartnerRepo) {
-    }
+    @Inject('PartnerRepo')
+    private readonly partnerRepo: IPartnerRepo;
+
+    constructor() {}
   
     async getPartner(partnerId: string): Promise<Partner> {
         const partner: Partner = await this.partnerRepo.getPartner(partnerId);
