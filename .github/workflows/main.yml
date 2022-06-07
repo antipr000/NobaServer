@@ -8,7 +8,7 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
-    branches: [ master  ] 
+    branches: [ master,dev  ] 
   
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -67,20 +67,26 @@ jobs:
           echo [SUCCESS] yarn build succeeded.
 
       
-      - name: Check If Release Tag
+      - name: Check If Release Tag and Decide deployment type
         id: check-tag
         run: |
           #TODO setup release and staging builds
           echo ::set-output name=release::false
-          if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ ${GITHUB_REF:-noref} =~ master ]] || [[ ${GITHUB_REF:-noref} =~ dev ]]; then
               echo ::set-output name=release::true
-          else 
-            if [[ ${GITHUB_REF:-noref} =~ master ]]; then
-              echo ::set-output name=release::true 
-            fi
           fi
+
+          #figure out AWS code deployment Group
+          export deploymentGroup=Staging
+          if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              export deploymentGroup=Production
+          fi
+          
+          echo "*** Will deploy to $deploymentGroup ***"
+
+          echo ::set-output name=deploymentGroup::$deploymentGroup
       
-      - name: Create Artifacts Directory
+      - name: Create Artifacts Directory 
         if: steps.check-tag.outputs.release == 'true'
         run: |
           mkdir artifacts
@@ -92,21 +98,21 @@ jobs:
           cp -R ./node_modules/ artifacts
           cp -R ./cloudwatch_agents/ artifacts
           ls -ltr artifacts
-          7z a -tzip  artifacts ./artifacts/*
-          ls -ltr 
-          mv artifacts.zip ./uploads   
-          ls -ltr ./uploads 
-          
-   
-      - name: Upload release artifcts to S3
-        uses: jakejarvis/s3-sync-action@v0.5.1
+        
+      - name: AWS CodeDeploy
+        uses: sourcetoad/aws-codedeploy-action@v1
         if: steps.check-tag.outputs.release == 'true'
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: 'us-east-1'   
-          SOURCE_DIR: 'uploads'      # optional: defaults to entire repository
-          DEST_DIR: 'server'
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: us-east-1
+          codedeploy_name: NobaServer
+          codedeploy_group: ${{ steps.check-tag.outputs.deploymentGroup }}
+          codedeploy_register_only: false
+          s3_bucket: github-code-artifacts
+          s3_folder: server
+          # excluded_files: '.git/* .env storage/framework/cache/* node_modules/*'
+          max_polling_iterations: 60
+          directory: ./artifacts
 
 

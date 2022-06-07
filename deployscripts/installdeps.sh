@@ -21,3 +21,6 @@ curl https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setu
 
 sudo apt-get update
 sudo apt-get install python -y
+
+export APP_DIR="/home/ubuntu/NobaServer"
+rm -rf $APP_DIR/*
