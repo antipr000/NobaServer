@@ -7,6 +7,7 @@ export const ROLES_KEY = 'roles';
 export const ONE_OF_ROLES_KEY = 'oneOfRoles';
 
 export const UserID = "userID"; //user id
+export const AdminId = "adminID";
 export const PartnerID = "partnerID";
 export const PartnerAdminID = "partnerAdminID";
 export const PaymentMethodId = "paymentMethodId"; //payment method id

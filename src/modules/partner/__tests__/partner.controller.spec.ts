@@ -3,12 +3,13 @@ import { instance } from "ts-mockito";
 import { PartnerService } from "../partner.service";
 import { mockedPartnerAdminService } from "../mocks/partneradminservicemock";
 import { mockedPartnerService } from "../mocks/partnerservicemock";
-import { 
+import {
     mockPartner,
     mockPartnerAdminWithAllAccess,
     mockPartnerAdminWithBasicAccess,
-    mockPartnerAdminWithIntermediateAccess, 
-    updateTakeRate} from "../../../core/tests/constants";
+    mockPartnerAdminWithIntermediateAccess,
+    updateTakeRate
+} from "../../../core/tests/constants";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
 import { PartnerAdminService } from "../partneradmin.service";
@@ -24,7 +25,7 @@ describe('PartnerController', () => {
     let partnerMapper: PartnerMapper = new PartnerMapper();
     let partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
 
-    jest.setTimeout(20000);
+    jest.setTimeout(30000);
     const OLD_ENV = process.env;
 
     beforeEach(async () => {
@@ -66,9 +67,9 @@ describe('PartnerController', () => {
 
             const result = await partnerController.addPartnerAdmin(
                 partnerAdminToAdd.props.partnerId, {
-                    email: partnerAdminToAdd.props.email
-                }, mockRequest);
-            
+                email: partnerAdminToAdd.props.email
+            }, mockRequest);
+
             expect(result).toStrictEqual(partnerAdminMapper.toDTO(partnerAdminToAdd));
         });
 
@@ -78,14 +79,14 @@ describe('PartnerController', () => {
             const mockRequest = {
                 user: requestingPartnerAdmin
             };
-            
-            try{
+
+            try {
                 await partnerController.addPartnerAdmin(
-                partnerAdminToAdd.props.partnerId, {
+                    partnerAdminToAdd.props.partnerId, {
                     email: partnerAdminToAdd.props.email
                 }, mockRequest);
-                
-            }catch(e) {
+
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException)
             }
         });
@@ -96,14 +97,14 @@ describe('PartnerController', () => {
             const mockRequest = {
                 user: requestingPartnerAdmin
             };
-            
-            try{
+
+            try {
                 await partnerController.addPartnerAdmin(
-                partnerAdminToAdd.props.partnerId, {
+                    partnerAdminToAdd.props.partnerId, {
                     email: partnerAdminToAdd.props.email
                 }, mockRequest);
-                
-            }catch(e) {
+
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException)
             }
         });
@@ -120,7 +121,7 @@ describe('PartnerController', () => {
 
             const allAccessResult = await partnerController
                 .getPartnerAdmin(
-                    partnerId, 
+                    partnerId,
                     partnerAdminAllAccessId,
                     {
                         user: allAccessAdmin
@@ -141,10 +142,10 @@ describe('PartnerController', () => {
                         user: intermediateAccessAdmin
                     }
                 );
-            
+
             expect(allAccessResult).toStrictEqual(partnerAdminMapper.toDTO(allAccessAdmin));
             expect(basicAccessResult).toStrictEqual(partnerAdminMapper.toDTO(basicAccessAdmin));
-            expect(intermediateAccessResult).toStrictEqual(partnerAdminMapper.toDTO(intermediateAccessAdmin)); 
+            expect(intermediateAccessResult).toStrictEqual(partnerAdminMapper.toDTO(intermediateAccessAdmin));
         });
 
         it('should get data of any admin with all access', async () => {
@@ -168,7 +169,7 @@ describe('PartnerController', () => {
             const partnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithAllAccess);
             const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithBasicAccess);
 
-            try{
+            try {
                 await partnerController.getPartnerAdmin(
                     partnerId,
                     partnerAdmin.props._id,
@@ -176,7 +177,7 @@ describe('PartnerController', () => {
                         user: requestingPartnerAdmin
                     }
                 );
-            }catch(e) {
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException);
             }
         });
@@ -186,7 +187,7 @@ describe('PartnerController', () => {
             const partnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithAllAccess);
             const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithIntermediateAccess);
 
-            try{
+            try {
                 await partnerController.getPartnerAdmin(
                     partnerId,
                     partnerAdmin.props._id,
@@ -194,12 +195,12 @@ describe('PartnerController', () => {
                         user: requestingPartnerAdmin
                     }
                 );
-            }catch(e) {
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException);
             }
         });
 
-        it('should get all admins when requesting user has all access', async() => {
+        it('should get all admins when requesting user has all access', async () => {
             const partnerId = mockPartnerAdminWithAllAccess.partnerId;
             const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithAllAccess);
             const result = await partnerController.getAllPartnerAdmins(partnerId, {
@@ -212,11 +213,11 @@ describe('PartnerController', () => {
         it('should throw error when admin with basic access tries getting all admins', async () => {
             const partnerId = mockPartnerAdminWithAllAccess.partnerId;
             const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithBasicAccess);
-            try{
+            try {
                 partnerController.getAllPartnerAdmins(partnerId, {
                     user: requestingPartnerAdmin
                 });
-            }catch(e) {
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException);
             }
         });
@@ -224,11 +225,11 @@ describe('PartnerController', () => {
         it('should throw error when admin with intermediate access tries getting all admins', async () => {
             const partnerId = mockPartnerAdminWithAllAccess.partnerId;
             const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithIntermediateAccess);
-            try{
+            try {
                 partnerController.getAllPartnerAdmins(partnerId, {
                     user: requestingPartnerAdmin
                 });
-            }catch(e) {
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException);
             }
         });
@@ -256,39 +257,39 @@ describe('PartnerController', () => {
 
             expect(result).toStrictEqual(
                 partnerMapper
-                .toDTO(Partner.createPartner({
-                    ...mockPartner,
-                    takeRate: updateTakeRate
-                })));
+                    .toDTO(Partner.createPartner({
+                        ...mockPartner,
+                        takeRate: updateTakeRate
+                    })));
         });
 
         it('throw error on update partner details when requesting admin has basic access', async () => {
             const partner = Partner.createPartner(mockPartner);
             const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithBasicAccess);
 
-            try{
+            try {
                 await partnerController.updateTakeRate(partner.props._id, {
                     takeRate: updateTakeRate
                 }, {
                     user: requestingPartnerAdmin
                 });
-            }catch(e) {
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException);
-            }        
+            }
         });
 
         it('throw error on update partner details when requesting admin has intermediate access', async () => {
             const partner = Partner.createPartner(mockPartner);
             const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithIntermediateAccess);
-            try{
+            try {
                 await partnerController.updateTakeRate(partner.props._id, {
                     takeRate: updateTakeRate
                 }, {
                     user: requestingPartnerAdmin
                 });
-            }catch(e) {
+            } catch (e) {
                 expect(e).toBeInstanceOf(ForbiddenException);
-            }   
+            }
         });
 
     });

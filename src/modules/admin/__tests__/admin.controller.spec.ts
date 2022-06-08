@@ -61,7 +61,7 @@ describe('AdminController', () => {
                 .thenResolve(undefined);
 
             try {
-                await adminController.createNobaAdmin(newNobaAdmin);
+                await adminController.createNobaAdmin("id", newNobaAdmin);
                 expect(true).toBe(false);
             } catch (err) {
                 expect(err).toBeInstanceOf(ConflictException);
@@ -84,7 +84,7 @@ describe('AdminController', () => {
                 }));
 
             const result: OutputNobaAdminDTO =
-                await adminController.createNobaAdmin(newNobaAdmin);
+                await adminController.createNobaAdmin("id", newNobaAdmin);
             const addNobaAdminArgument: Admin = capture(mockAdminService.addNobaAdmin).last()[0];
 
             expect(result._id).toBeDefined();
@@ -109,7 +109,7 @@ describe('AdminController', () => {
                     _id: ADMIN_ID,
                     role: "INTERMEDIATE"
                 };
-                await adminController.updateNobaAdmin(request);
+                await adminController.updateNobaAdmin("id", request);
                 expect(true).toBe(false);
             } catch (err) {
                 expect(err).toBeInstanceOf(NotFoundException);
@@ -134,7 +134,7 @@ describe('AdminController', () => {
                 _id: ADMIN_ID,
                 role: UPDATED_ROLE
             };
-            const result = await adminController.updateNobaAdmin(request);
+            const result = await adminController.updateNobaAdmin("id", request);
 
             expect(result).toEqual(updatedAdmin.props);
         });
@@ -148,7 +148,7 @@ describe('AdminController', () => {
 
             try {
                 const request: DeleteNobaAdminDTO = { _id: adminId };
-                await adminController.deleteNobaAdmin(request);
+                await adminController.deleteNobaAdmin("id", request);
                 expect(true).toBe(false);
             } catch (err) {
                 expect(err).toBeInstanceOf(NotFoundException);
@@ -161,7 +161,7 @@ describe('AdminController', () => {
                 .thenResolve(adminId);
 
             const request: DeleteNobaAdminDTO = { _id: adminId };
-            const result = await adminController.deleteNobaAdmin(request);
+            const result = await adminController.deleteNobaAdmin("id", request);
 
             expect(result).toEqual(request);
         });
