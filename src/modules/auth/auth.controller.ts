@@ -1,16 +1,16 @@
-import { Body, Controller, Get, HttpStatus, Post, Request } from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Inject, Post, Request } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { AuthService } from "./auth.service";
-import { AuthenticatedUser } from "./domain/AuthenticatedUser";
 import { LoginRequestDTO } from "./dto/LoginRequest";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { Public } from "./public.decorator";
+import { UserAuthService } from "./user.auth.service";
 
 @Controller("auth")
 @ApiTags('Authentication')
 export class AuthController {
-    constructor(private authService: AuthService) { }
+    @Inject()
+    private readonly authService: UserAuthService;
 
     @Public()
     @Post('/verifyOtp')

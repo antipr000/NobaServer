@@ -11,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { CommonModule } from '../common/common.module';
 import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
+import { UserAuthService } from './user.auth.service';
 
 @Module({
   imports: [
@@ -31,9 +32,9 @@ import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
       provide: 'OTPRepo',
       useClass: MongoDBOtpRepo
     },
-    AuthService
+    UserAuthService,
   ],
   controllers: [AuthController],
-  exports: [AuthService]
+  exports: [UserAuthService]
 })
 export class AuthModule { }
