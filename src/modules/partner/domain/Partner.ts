@@ -18,7 +18,7 @@ export interface PartnerProps extends VersioningInfo {
 export const partnerKeys : KeysRequired<PartnerProps> = {
     ...versioningInfoJoiSchemaKeys,
     _id: Joi.string().min(10).required(),
-    name: Joi.string().min(2).max(100).optional(),
+    name: Joi.string().min(2).max(100).required(),
     publicKey: Joi.string().required(),
     privateKey: Joi.string().required(),
     verificationData: Joi.object().optional(),
@@ -35,7 +35,9 @@ export class Partner extends AggregateRoot<PartnerProps>​​ {
 
     public static createPartner(partnerProps: Partial<PartnerProps>): Partner{ 
         if(!partnerProps._id) partnerProps._id = Entity.getNewID();
-        // assign public and private keys here
+        // assign public and private keys here (https://github.com/nobapay/NobaServer/issues/46)
+        if(!partnerProps.publicKey) partnerProps.publicKey = "dummyKey";
+        if(!partnerProps.privateKey) partnerProps.privateKey = "dummyPrivateKey";
         return new Partner(Joi.attempt(partnerProps, partnerSchema));
     }
     

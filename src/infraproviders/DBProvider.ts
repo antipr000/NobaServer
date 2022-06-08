@@ -10,6 +10,10 @@ import { UserModel } from "../infra/mongodb/models/UserModel";
 import * as Mongoose from "mongoose";
 import { TransactionProps } from '../modules/transactions/domain/Transaction';
 import { TransactionModel } from '../infra/mongodb/models/TransactionModel';
+import { PartnerProps } from '../modules/partner/domain/Partner';
+import { PartnerAdminProps } from '../modules/partner/domain/PartnerAdmin';
+import { PartnerModel } from '../infra/mongodb/models/PartnerModel';
+import { PartnerAdminModel } from '../infra/mongodb/models/PartnerAdminModel';
 
 
 
@@ -46,5 +50,13 @@ export class DBProvider {
 
   get transactionModel(): Model<TransactionProps> {
     return TransactionModel;
+  }
+
+  get partnerModel(): Model<PartnerProps> {
+    return PartnerModel;
+  }
+
+  get partnerAdminModel(): Model<PartnerAdminProps> {
+    return PartnerAdminModel;
   }
 }

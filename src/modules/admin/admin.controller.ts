@@ -1,27 +1,38 @@
-import { Controller, Get, Inject, HttpStatus, Query, Param } from '@nestjs/common';
+import { Controller, Get, Inject, HttpStatus, Query, Param, Post, Body, ConflictException, Put, Delete } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
 import { UserID } from '../auth/roles.decorator';
-import { Admin } from '../auth/admin.decorator';
+import { Admin as AdminGuard } from '../auth/admin.decorator';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TransactionStatsDTO } from './dto/TransactionStats';
 import { TransactionDTO } from '../transactions/dto/TransactionDTO';
 import { TransactionsFilterDTO } from './dto/TransactionsFilterDTO';
+import { NobaAdminDTO } from './dto/NobaAdminDTO';
+import { Admin } from './domain/Admin';
+import { OutputNobaAdminDTO } from './dto/OutputNobaAdminDTO';
+import { AdminMapper } from './mappers/AdminMapper';
+import { Public } from '../auth/public.decorator';
+import { UpdateNobaAdminDTO } from './dto/UpdateNobaAdminDTO';
+import { DeleteNobaAdminDTO } from './dto/DeleteNobaAdminDTO';
 
-
-@Admin()
-@Controller("admin/:"+UserID)
+// TODO: Add proper AuthN & AuthZ
+@Public()
+@Controller("admin/:" + UserID)
 @ApiTags("Admin")
 export class AdminController {
 
-  @Inject(WINSTON_MODULE_PROVIDER) 
+  @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  constructor(private readonly adminService: AdminService) {
+  @Inject()
+  private readonly adminService: AdminService;
 
-  }
-  
+  @Inject()
+  private readonly adminMapper: AdminMapper;
+
+  constructor() { }
+
   @Get("/transaction_metrics")
   @ApiOperation({ summary: 'Get all transaction metrics for a given partner.' })
   @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: 'Get transaction statistics' })
@@ -33,9 +44,38 @@ export class AdminController {
   @ApiOperation({ summary: "Get all transactions filtered by the specified date range" })
   @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO] })
   async getAllTransactions(
-    @Param(UserID)userID: string, 
-    @Query()filterQuery: TransactionsFilterDTO): Promise<TransactionDTO[]> {
+    @Param(UserID) userID: string,
+    @Query() filterQuery: TransactionsFilterDTO): Promise<TransactionDTO[]> {
     return await this.adminService.getAllTransactions(filterQuery.startDate, filterQuery.endDate);
   }
 
+  // TODO: Decide the different URLs for NobaAdmins, Partners & PartnerAdmins.
+  @Post('/')
+  @ApiOperation({ summary: "Creates a new NobaAdmin with a specified role." })
+  @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The newly created Noba Admin." })
+  async createNobaAdmin(@Body() nobaAdmin: NobaAdminDTO): Promise<OutputNobaAdminDTO> {
+    const savedAdmin: Admin = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
+
+    if (savedAdmin === undefined)
+      throw new ConflictException('User is already registerd as a NobaAdmin');
+
+    return this.adminMapper.toOutputDto(savedAdmin);
+  }
+
+  @Put('/')
+  @ApiOperation({ summary: "Updates the role of a NobaAdmin." })
+  @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The updated NobaAdmin." })
+  async updateNobaAdmin(@Body() req: UpdateNobaAdminDTO): Promise<OutputNobaAdminDTO> {
+    const updatedAdmin: Admin = await this.adminService.changeNobaAdminRole(req._id, req.role);
+    return this.adminMapper.toOutputDto(updatedAdmin);
+  }
+
+  @Delete('/')
+  @ApiOperation({ summary: "Deletes the NobaAdmin with a given ID" })
+  @ApiResponse({ status: HttpStatus.OK, type: DeleteNobaAdminDTO, description: "The ID of the deleted NobaAdmin." })
+  async deleteNobaAdmin(@Body() req: DeleteNobaAdminDTO): Promise<DeleteNobaAdminDTO> {
+    // TODO: Add check if the deleted Admin ID is equal to the Admin performing the operation.
+    const deletedAdminId: string = await this.adminService.deleteNobaAdmin(req._id);
+    return { _id: deletedAdminId };
+  }
 }

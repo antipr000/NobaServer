@@ -13,7 +13,7 @@ import { CheckTransactionDTO } from './dto/CheckTransactionDTO';
 import { TransactionAllowedStatus } from './domain/TransactionAllowedStatus';
 import { CsvService } from '../common/csv.service';
 import * as fs from 'fs';
-import { BadRequestError } from 'src/core/exception/CommonAppException';
+import { BadRequestError } from '../../core/exception/CommonAppException';
 import { TransactionFilterDTO } from './dto/TransactionFilterDTO';
 import { DownloadFormat, DownloadTransactionsDTO } from './dto/DownloadTransactionsDTO';
 

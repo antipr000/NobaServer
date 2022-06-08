@@ -45,6 +45,12 @@ const AdminRolesWithTheirPrivileges = {
     }
 };
 
+export const AllRoles = Object.keys(AdminRolesWithTheirPrivileges);
+
+export const isValidRole = (role) => {
+    return (AllRoles.find(validRole => role === validRole ? role : undefined) !== undefined);
+};
+
 export interface AdminProps extends VersioningInfo {
     _id: string,
     name: string,
@@ -57,10 +63,10 @@ export const AdminKeys: KeysRequired<AdminProps> = {
     _id: Joi.string().min(10).required(),
     name: Joi.string().min(2).max(100).optional(),
     email: Joi.string().email().allow(null).optional().meta({ _mongoose: { index: true } }),
-    role: Joi.string().valid(...Object.keys(AdminRolesWithTheirPrivileges))
+    role: Joi.string().valid(...Object.keys(AdminRolesWithTheirPrivileges)).required()
 }
 
-export const adminSchema = Joi.object(AdminKeys).options({ allowUnknown: true, stripUnknown: false, });
+export const adminJoiSchema = Joi.object(AdminKeys).options({ allowUnknown: true, stripUnknown: false, });
 
 export class Admin extends AggregateRoot<AdminProps>​​ {
 
@@ -70,7 +76,7 @@ export class Admin extends AggregateRoot<AdminProps>​​ {
 
     public static createAdmin(adminProps: Partial<AdminProps>): Admin {
         if (!adminProps._id) adminProps._id = Entity.getNewID();
-        return new Admin(Joi.attempt(adminProps, adminSchema));
+        return new Admin(Joi.attempt(adminProps, adminJoiSchema));
     }
 
     public canViewNobaDashboards(): boolean {
