@@ -1,27 +1,25 @@
-import { Body, Controller, Get, HttpStatus, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Inject, Post, Request } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { EmailService } from "../common/email.service";
-import { AuthService } from "./auth.service";
 import { LoginRequestDTO } from "./dto/LoginRequest";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
-import { LocalAuthGuard } from "./local-auth.guard";
 import { Public } from "./public.decorator";
+import { UserAuthService } from "./user.auth.service";
 
 @Controller("auth")
 @ApiTags('Authentication')
 export class AuthController {
-    constructor(
-        private authService: AuthService, 
-        private emailService: EmailService) {}
+    @Inject()
+    private readonly authService: UserAuthService;
 
     @Public()
-    @UseGuards(LocalAuthGuard)
     @Post('/verifyOtp')
     @ApiOperation({ summary: 'Send the OTP filled in by the user to Noba Server and get the access token' })
     @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "Noba access token of the user" })
-    async verifyOtp(@Request() request, @Body() requestBody: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
-        return this.authService.login(request.user);
+    async verifyOtp(@Body() request: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
+        const userId: string =
+            await this.authService.validateAndGetUserId(request.emailOrPhone, request.otp);
+        return this.authService.generateAccessToken(userId);
     }
 
     @Public()

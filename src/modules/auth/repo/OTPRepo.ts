@@ -7,6 +7,7 @@ export interface IOTPRepo {
     saveOTP(emailID: string, otp: number): Promise<void>;
 }
 
+// TODO: Check & remove this as it might not be actually required. 
 export class OTPRepo implements IOTPRepo {
 
     private readonly emailToOTPMap; //TODO use redis or store in MongoDB? 
@@ -20,7 +21,7 @@ export class OTPRepo implements IOTPRepo {
     async getOTP(emailID: string): Promise<Otp> {
         return this.otpMapper.toDomain(this.emailToOTPMap[emailID]);
     }
-    
+
     async saveOTP(emailID: string, otp: number): Promise<void> {
         const expiryTime = new Date(new Date().getTime() + otpConstants.EXPIRY_TIME_IN_MINUTES * 60000);
         const otpProps: OtpProps = {

@@ -4,18 +4,19 @@ import { Otp, OtpProps } from "../domain/Otp";
 import { OtpModel } from "../../../infra/mongodb/models/OtpModel";
 import { OtpMapper } from "../mapper/OtpMapper";
 import { otpConstants } from "../constants";
+import { Injectable } from "@nestjs/common";
+import { convertDBResponseToJsObject } from "src/infra/mongodb/MongoDBUtils";
 
 
-
+@Injectable()
 export class MongoDBOtpRepo implements IOTPRepo {
 
     private readonly otpMapper: OtpMapper = new OtpMapper();
 
-    constructor(private readonly dbProvider: DBProvider) {}
-
     async getOTP(emailOrPhone: string): Promise<Otp> {
-        const result: OtpProps = await OtpModel.findById(emailOrPhone).exec()
-        return this.otpMapper.toDomain(result);
+        const result = await OtpModel.findById(emailOrPhone).exec();
+        const otpProps: OtpProps = convertDBResponseToJsObject(result);
+        return this.otpMapper.toDomain(otpProps);
     }
 
     async saveOTP(emailID: string, otp: number): Promise<void> {
@@ -25,12 +26,12 @@ export class MongoDBOtpRepo implements IOTPRepo {
             otp: otp,
             otpExpiryTime: expiryTime.getTime()
         };
-        try{
+        try {
             await OtpModel.create(otpProps);
-        }catch(e) {
+        } catch (e) {
             // Already exists. We should update now
             await OtpModel.findByIdAndUpdate(emailID, otpProps)
         }
     }
-    
+
 }

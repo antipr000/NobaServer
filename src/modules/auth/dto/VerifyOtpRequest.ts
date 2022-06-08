@@ -2,8 +2,11 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class VerifyOtpRequestDTO {
     @ApiProperty()
-    email: string;
+    emailOrPhone: string;
 
     @ApiProperty()
     otp: number;
+
+    @ApiProperty()
+    identityType: string;
 }

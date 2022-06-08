@@ -1,49 +1,52 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Inject, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { OTPRepo, IOTPRepo } from './repo/OTPRepo';
+import { IOTPRepo } from './repo/OTPRepo';
 import { Otp } from './domain/Otp';
-import { AuthenticatedUser } from './domain/AuthenticatedUser';
-import { UserService } from '../user/user.service';
 import { VerifyOtpResponseDTO } from './dto/VerifyOtpReponse';
-import { DBProvider } from '../../infraproviders/DBProvider';
-import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
 import { EmailService } from '../common/email.service';
 import { SMSService } from '../common/sms.service';
 
-@Injectable()
-export class AuthService {
+// abstract class with all common functionalities
+// 
+// partner.auth.service.ts
+// admin.auth.service.ts
+
+export abstract class AuthService {
     @Inject(WINSTON_MODULE_PROVIDER)
     private readonly logger: Logger;
+
+    @Inject('OTPRepo')
     private readonly otpRepo: IOTPRepo;
-    constructor(
-        dbProvider: DBProvider,
-        private jwtService: JwtService,
-        private userService: UserService,
-        private emailService: EmailService,
-        private smsService: SMSService
-    ) {
-        this.otpRepo = new MongoDBOtpRepo(dbProvider);
-    }
 
-    async validateUser(emailOrPhone: string, otp: number): Promise<AuthenticatedUser> {
-        const user: Otp = await this.otpRepo.getOTP(emailOrPhone);
+    @Inject()
+    private readonly emailService: EmailService;
+
+    @Inject()
+    private readonly smsService: SMSService;
+
+    @Inject()
+    private readonly jwtService: JwtService;
+
+    // TODO: try to separate 'emailOrPhone' by introducing an interface. 
+    async validateAndGetUserId(emailOrPhone: string, enteredOtp: number): Promise<string> {
+        const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone);
         const currentDateTime: number = new Date().getTime();
-        if(user.props.otp === otp && currentDateTime <= user.props.otpExpiryTime) {
-            const user = await this.userService.createUserIfFirstTimeLogin(emailOrPhone);
-            return {
-                emailOrPhone: emailOrPhone,
-                uid: user._id
-            };
+
+        if (actualOtp.props.otp !== enteredOtp || currentDateTime > actualOtp.props.otpExpiryTime) {
+            throw new UnauthorizedException();
         }
-        return null;
+        return this.getUserId(emailOrPhone);
     }
 
-    async login(user: AuthenticatedUser): Promise<VerifyOtpResponseDTO> {
-        const payload = { email: user.emailOrPhone };
+    async generateAccessToken(id: string): Promise<VerifyOtpResponseDTO> {
+        const payload = {
+            id: id,
+            identityType: this.getIdentityType()
+        };
         return {
             access_token: this.jwtService.sign(payload),
-            user_id: user.uid
+            user_id: id
         };
     }
 
@@ -51,9 +54,10 @@ export class AuthService {
         await this.otpRepo.saveOTP(emailOrPhone, otp);
     }
 
-    async sendOtp(emailOrPhone: string, otp: string): Promise<void> { 
-        const isEmail = emailOrPhone.includes('@'); 
-        if(isEmail) { 
+    // TODO: try to separate 'emailOrPhone' by introducing an interface. 
+    async sendOtp(emailOrPhone: string, otp: string): Promise<void> {
+        const isEmail = emailOrPhone.includes('@');
+        if (isEmail) {
             await this.emailService.sendOtp(emailOrPhone, otp);
         } else {
             await this.smsService.sendOtp(emailOrPhone, otp);
@@ -63,4 +67,8 @@ export class AuthService {
     public createOtp(): number {
         return Math.floor(100000 + Math.random() * 900000);
     }
+
+    abstract getIdentityType();
+    // TODO: try to separate 'emailOrPhone' by introducing an interface. 
+    abstract getUserId(emailOrPhone: string): Promise<string>;
 }
