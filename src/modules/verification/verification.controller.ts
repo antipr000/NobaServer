@@ -12,6 +12,7 @@ import { Role } from '../auth/role.enum';
 import { Roles, UserID } from '../auth/roles.decorator';
 import { UserService } from '../user/user.service';
 import { ConsentDTO } from './dto/ConsentDTO';
+import { DocVerificationRequestDTO } from './dto/DocVerificationRequestDTO';
 import { IDVerificationRequestDTO } from './dto/IDVerificationRequestDTO';
 import { SubdivisionDTO } from './dto/SubdivisionDTO';
 import { VerificationResultDTO } from './dto/VerificationResultDTO';
@@ -82,22 +83,18 @@ export class VerificationController {
     //TODO: Setting data type of request to DocVerificationRequestDTO throws error. Figure out why
     // TODO: Figure out type for files
     @Post(`/:${UserID}` + "/doc")
-    @UseInterceptors(FileFieldsInterceptor([
-        { name: 'documentFrontImage', maxCount: 1 },
-        { name: 'documentBackImage', maxCount: 1 },
-        { name: 'livePhoto', maxCount: 1 }
-    ]))
     @ApiOperation({ summary: 'Get verification result' })
     @ApiResponse({ status: HttpStatus.ACCEPTED, type: VerificationResultDTO , description: "Get verification result" })
     @ApiBadRequestResponse({ description: 'Invalid request parameters!' })
-    async verifyDocument(@Param(UserID) id: string, @UploadedFiles() files, @Body() requestData, @Request() request): Promise<VerificationResultDTO> {
-        const documentFrontImageb64 = files.documentFrontImage[0].buffer.toString('base64');
-        const documentBackImageb64 = files.documentBackImage[0].buffer.toString('base64');
-        const livePhotob64 = files.livePhoto[0].buffer.toString('base64');
+    async verifyDocument(
+        @Param(UserID) id: string, 
+        @Body() requestData: DocVerificationRequestDTO, 
+        @Request() request): Promise<VerificationResultDTO> {
+        const documentFrontImageb64 = requestData.documentFrontImage;
+        const documentBackImageb64 = requestData.documentBackImage;
         this.verificationService.performDocumentVerification(
             documentFrontImageb64, 
-            documentBackImageb64, 
-            livePhotob64, 
+            documentBackImageb64,
             request.user, 
             requestData["countryCode"], 
             requestData["documentType"])

@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { DocumentTypes } from "../../../externalclients/idvproviders/definitions";
 
 export class DocVerificationRequestDTO {
@@ -7,4 +7,10 @@ export class DocVerificationRequestDTO {
 
     @ApiProperty()
     countryCode: string;
+
+    @ApiProperty()
+    documentFrontImage: string;
+
+    @ApiPropertyOptional()
+    documentBackImage: string;
 };
