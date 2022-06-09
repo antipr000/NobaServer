@@ -70,4 +70,12 @@ export class AdminService {
 
     return adminId;
   }
+
+  async getAdminByEmail(email: string): Promise<Admin> {
+    const admin: Admin | undefined = await this.adminTransactionRepo.getNobaAdminByEmail(email);
+    if (admin === undefined) {
+      throw new NotFoundException(`Admin with email '${email}' is not found.`);
+    }
+    return admin;
+  }
 }

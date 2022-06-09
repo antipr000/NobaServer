@@ -3,7 +3,7 @@ import { OtpMapper } from "../mapper/OtpMapper";
 import { otpConstants } from "../constants";
 
 export interface IOTPRepo {
-    getOTP(emailID: string): Promise<Otp>;
+    getOTP(emailID: string, identityType: string): Promise<Otp>;
     saveOTP(emailID: string, otp: number): Promise<void>;
 }
 
@@ -18,7 +18,7 @@ export class OTPRepo implements IOTPRepo {
         this.otpMapper = new OtpMapper();
     }
 
-    async getOTP(emailID: string): Promise<Otp> {
+    async getOTP(emailID: string, identityType: string): Promise<Otp> {
         return this.otpMapper.toDomain(this.emailToOTPMap[emailID]);
     }
 

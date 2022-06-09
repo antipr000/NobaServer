@@ -11,11 +11,11 @@ export class UserAuthService extends AuthService {
   @Inject()
   private readonly userService: UserService;
 
-  getIdentityType() {
+  protected getIdentityType(): string {
     return this.identityType;
   }
 
-  async getUserId(emailOrPhone: string): Promise<string> {
+  protected async getUserId(emailOrPhone: string): Promise<string> {
     const userDto: UserDTO = await this.userService.createUserIfFirstTimeLogin(emailOrPhone);
     return userDto._id;
   }
