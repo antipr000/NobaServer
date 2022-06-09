@@ -106,7 +106,6 @@ export default class TruliooIntegrator extends IDVIntegrator {
                 Document: {
                     DocumentFrontImage: request.documentFrontImage,
                     DocumentBackImage: request.documentBackImage,
-                    LivePhoto: request.livePhoto,
                     DocumentType: request.documentType
                 }
             }
