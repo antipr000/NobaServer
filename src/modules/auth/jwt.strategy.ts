@@ -1,16 +1,28 @@
 import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, InternalServerErrorException, UnauthorizedException } from "@nestjs/common";
 import { jwtConstants } from "./constants";
 import { UserService } from "../user/user.service";
 import { UserMapper } from "../user/mappers/UserMapper";
-import { UserProps } from "../user/domain/User";
+import { User, UserProps } from "../user/domain/User";
+import { Admin } from "../admin/domain/Admin";
+import { PartnerAdmin } from "../partner/domain/PartnerAdmin";
+import { allIdentities, consumerIdentityIdentifier, nobaAdminIdentityIdentifier, partnerAdminIdentityIdenitfier } from "./domain/IdentityType";
+import { AdminService } from "../admin/admin.service";
+import { PartnerAdminService } from "../partner/partneradmin.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
     private userMapper: UserMapper;
-    constructor(
-        private userService: UserService) {
+
+    @Inject()
+    private userService: UserService;
+    @Inject()
+    private adminService: AdminService;
+    // @Inject()
+    // private partnerAdminService: PartnerAdminService;
+
+    constructor() {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
@@ -19,10 +31,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         this.userMapper = new UserMapper();
     }
 
+    // TODO: Move all the payload related logic to a single file.
     async validate(payload: any): Promise<UserProps> {
-        const userId = payload.id;
-        // TODO: based on type, find the proper domain.
-        const userResult = await this.userService.findUserById(userId);
+        const userResult = await this.getIdentityDomain(payload.id, payload.identityType);
         return userResult.props;
+    }
+
+    private async getIdentityDomain(
+        id: string, identityType: string
+    ): Promise<Admin | User | PartnerAdmin> {
+        console.log(id, identityType);
+
+        switch (identityType) {
+            case consumerIdentityIdentifier:
+                return this.userService.findUserById(id);
+            case nobaAdminIdentityIdentifier:
+                return this.adminService.getAdminById(id);
+            // case partnerAdminIdentityIdenitfier:
+            //     return this.partnerAdminService.getPartnerAdmin(id);
+            default:
+                throw new UnauthorizedException(`IdentityType should be one of "${allIdentities}"`);
+        }
+        throw new InternalServerErrorException();
     }
 }

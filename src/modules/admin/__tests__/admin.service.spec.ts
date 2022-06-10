@@ -222,4 +222,36 @@ describe('AdminService', () => {
       expect(result).toEqual(existingNobaAdmin);
     });
   });
+
+  describe('getAdminById', () => {
+    it('should throw "NotFoundException" if ID doesn\'t exist', async () => {
+      const NON_EXISTING_ADMIN_ID = "1111111111";
+
+      when(mockAdminTransactionRepo.getNobaAdminById(NON_EXISTING_ADMIN_ID))
+        .thenReject(new NotFoundException());
+
+      try {
+        await adminService.getAdminById(NON_EXISTING_ADMIN_ID);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it('should successfully return an Admin with given ID', async () => {
+      const EXISTING_ADMIN_ID = "1111111111";
+      const existingNobaAdmin = Admin.createAdmin({
+        _id: EXISTING_ADMIN_ID,
+        name: "Admin",
+        email: "abcd@noba.com",
+        role: "INTERMEDIATE"
+      });
+
+      when(mockAdminTransactionRepo.getNobaAdminById(EXISTING_ADMIN_ID))
+        .thenResolve(existingNobaAdmin);
+
+      const result = await adminService.getAdminById(EXISTING_ADMIN_ID);
+      expect(result).toEqual(existingNobaAdmin);
+    });
+  });
 });

@@ -78,4 +78,8 @@ export class AdminService {
     }
     return admin;
   }
+
+  async getAdminById(id: string): Promise<Admin> {
+    return this.adminTransactionRepo.getNobaAdminById(id);
+  }
 }

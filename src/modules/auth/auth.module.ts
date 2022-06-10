@@ -11,13 +11,15 @@ import { AuthController } from './auth.controller';
 import { CommonModule } from '../common/common.module';
 import { MongoDBOtpRepo } from './repo/MongoDBOtpRepo';
 import { UserAuthService } from './user.auth.service';
-import { AdminModule } from '../admin/admin.module';
 import { AdminAuthService } from './admin.auth.service';
+import { AdminModule } from '../admin/admin.module';
+// import { PartnerModule } from '../partner/partner.module';
 
 @Module({
   imports: [
     UserModule,
     AdminModule,
+    // PartnerModule,
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,
