@@ -32,19 +32,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     // TODO: Move all the payload related logic to a single file.
-    async validate(payload: any): Promise<UserProps> {
-        const userResult = await this.getIdentityDomain(payload.id, payload.identityType);
-        return userResult.props;
+    // TODO: Modify 'UserProps' to 'User'.
+    async validate(payload: any): Promise<UserProps | Admin | PartnerAdmin> {
+        return this.getIdentityDomain(payload.id, payload.identityType);
     }
 
     private async getIdentityDomain(
         id: string, identityType: string
-    ): Promise<Admin | User | PartnerAdmin> {
+    ): Promise<Admin | UserProps | PartnerAdmin> {
         console.log(id, identityType);
 
         switch (identityType) {
             case consumerIdentityIdentifier:
-                return this.userService.findUserById(id);
+                return (await this.userService.findUserById(id)).props;
             case nobaAdminIdentityIdentifier:
                 return this.adminService.getAdminById(id);
             // case partnerAdminIdentityIdenitfier:
