@@ -8,7 +8,6 @@ export enum DocumentTypes {
 export type DocumentRequest = {
     documentFrontImage: string;
     documentBackImage?: string;
-    livePhoto: string;
     documentType: DocumentTypes;
     countryCode: string;
 };

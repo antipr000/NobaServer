@@ -47,7 +47,6 @@ type DataFields = {
 type Document = {
     DocumentFrontImage: string;
     DocumentBackImage: string;
-    LivePhoto: string;
     DocumentType: string;
 };
 

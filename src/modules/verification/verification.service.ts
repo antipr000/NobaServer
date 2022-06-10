@@ -77,14 +77,12 @@ export class VerificationService {
     async performDocumentVerification(
         documentFrontImageb64: string,
         documentBackImageb64: string, 
-        livePhotob64: string, 
         user: UserProps,
         countryCode: string,
         documentType: DocumentTypes) {
         const transactionId = await this.idvProvider.verifyDocument(user._id, {
             documentFrontImage: documentFrontImageb64,
             documentBackImage: documentBackImageb64,
-            livePhoto: livePhotob64,
             countryCode: countryCode,
             documentType: documentType
         });

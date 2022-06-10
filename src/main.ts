@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { urlencoded, json } from 'express';
 import * as helmet from 'helmet';
 import * as morgan from 'morgan';
 import {
@@ -34,6 +35,9 @@ async function bootstrap() {
   app.setGlobalPrefix(apiPrefix ?? '');
   app.use(getMorgan(winstonLogger));
   app.useGlobalFilters(new AllExceptionsFilter(winstonLogger));
+  // the next two lines did the trick
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   //Todo we shouldn't be showing swagger-ui in production or put a admin role on this end-point
   //https://docs.nestjs.com/openapi/introduction
