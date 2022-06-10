@@ -18,6 +18,6 @@ import { AdminMapper } from './mappers/AdminMapper';
     },
     AdminMapper
   ],
-  exports: []
+  exports: [AdminService]
 })
 export class AdminModule { }

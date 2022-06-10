@@ -120,7 +120,7 @@ export class Admin extends AggregateRoot<AdminProps>​​ {
         if (Object.values(Permissions).find(permission => permission === requiredPermission ? permission : undefined) === undefined)
             return false;
 
-        const allowedPermissions: Array<string> = AdminRolesWithTheirPrivileges[this.props.role];
+        const allowedPermissions: string[] = AdminRolesWithTheirPrivileges[this.props.role].permissions;
         return allowedPermissions.find(permission => permission === requiredPermission ? permission : undefined) !== undefined;
     }
 };

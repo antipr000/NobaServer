@@ -10,7 +10,6 @@ import { SMSService } from '../common/sms.service';
 // abstract class with all common functionalities
 // 
 // partner.auth.service.ts
-// admin.auth.service.ts
 
 export abstract class AuthService {
     @Inject(WINSTON_MODULE_PROVIDER)
@@ -30,7 +29,7 @@ export abstract class AuthService {
 
     // TODO: try to separate 'emailOrPhone' by introducing an interface. 
     async validateAndGetUserId(emailOrPhone: string, enteredOtp: number): Promise<string> {
-        const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone);
+        const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType());
         const currentDateTime: number = new Date().getTime();
 
         if (actualOtp.props.otp !== enteredOtp || currentDateTime > actualOtp.props.otpExpiryTime) {
@@ -68,7 +67,7 @@ export abstract class AuthService {
         return Math.floor(100000 + Math.random() * 900000);
     }
 
-    abstract getIdentityType();
+    protected abstract getIdentityType();
     // TODO: try to separate 'emailOrPhone' by introducing an interface. 
-    abstract getUserId(emailOrPhone: string): Promise<string>;
+    protected abstract getUserId(emailOrPhone: string): Promise<string>;
 }
