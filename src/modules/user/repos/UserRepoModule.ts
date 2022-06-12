@@ -5,14 +5,13 @@ import { DBProvider } from "../../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 
 export const userRepoProvider = {
-    provide: IUserRepo,
-    useClass: MongoDBUserRepo
-  };
-  
-  @Module({
-    imports: [InfraProvidersModule],
-    providers: [DBProvider, userRepoProvider],
-    exports: [userRepoProvider]
-  })
+  provide: IUserRepo,
+  useClass: MongoDBUserRepo,
+};
 
+@Module({
+  imports: [InfraProvidersModule],
+  providers: [DBProvider, userRepoProvider],
+  exports: [userRepoProvider],
+})
 export class UserRepoModule {}

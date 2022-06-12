@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
@@ -13,13 +8,12 @@ import { Transaction } from "../transactions/domain/Transaction";
 import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
 import { Admin, AllRoles, isValidRole } from "./domain/Admin";
 
-
 @Injectable()
 export class AdminService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  @Inject('AdminTransactionRepo')
+  @Inject("AdminTransactionRepo")
   private readonly adminTransactionRepo: IAdminTransactionRepo;
 
   private readonly transactionsMapper: TransactionMapper;
@@ -38,8 +32,7 @@ export class AdminService {
   }
 
   async addNobaAdmin(nobaAdmin: Admin): Promise<Admin> {
-    const adminWithSameEmail =
-      await this.adminTransactionRepo.getNobaAdminByEmail(nobaAdmin.props.email);
+    const adminWithSameEmail = await this.adminTransactionRepo.getNobaAdminByEmail(nobaAdmin.props.email);
     if (adminWithSameEmail !== undefined) {
       return undefined;
     }
@@ -48,16 +41,13 @@ export class AdminService {
   }
 
   async changeNobaAdminRole(adminId: string, newRole: string): Promise<Admin> {
-    if (!isValidRole(newRole))
-      throw new BadRequestException(`Role should be one of ${AllRoles}.`);
+    if (!isValidRole(newRole)) throw new BadRequestException(`Role should be one of ${AllRoles}.`);
 
     const adminState: Admin = await this.adminTransactionRepo.getNobaAdminById(adminId);
 
-    if (adminState === undefined)
-      throw new NotFoundException(`Admin with ID '${adminId}' doesn't exists.`);
+    if (adminState === undefined) throw new NotFoundException(`Admin with ID '${adminId}' doesn't exists.`);
 
-    if (adminState.props.role === newRole)
-      return adminState;
+    if (adminState.props.role === newRole) return adminState;
 
     adminState.props.role = newRole;
     return this.adminTransactionRepo.updateNobaAdmin(adminState);
@@ -65,8 +55,7 @@ export class AdminService {
 
   async deleteNobaAdmin(adminId: string): Promise<string> {
     const deletedRecords = await this.adminTransactionRepo.deleteNobaAdmin(adminId);
-    if (deletedRecords !== 1)
-      throw new NotFoundException(`User with ID '${adminId} not found.`);
+    if (deletedRecords !== 1) throw new NotFoundException(`User with ID '${adminId} not found.`);
 
     return adminId;
   }

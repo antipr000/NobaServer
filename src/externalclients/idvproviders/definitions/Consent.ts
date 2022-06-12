@@ -1,4 +1,4 @@
 export type Consent = {
-    name: string;
-    message: string;
-}
+  name: string;
+  message: string;
+};

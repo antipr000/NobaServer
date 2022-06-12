@@ -1,10 +1,9 @@
-
 export enum KybStatus {
-    VERIFIED = "VERIFIED",
-    NOT_VERIFIED = "NOT_VERIFIED"
+  VERIFIED = "VERIFIED",
+  NOT_VERIFIED = "NOT_VERIFIED",
 }
 
 export type KybStatusInfo = {
-    kybStatus: KybStatus;
-    kybProvider: string;
-}
+  kybStatus: KybStatus;
+  kybProvider: string;
+};

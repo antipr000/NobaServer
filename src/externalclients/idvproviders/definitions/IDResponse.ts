@@ -1,9 +1,9 @@
 export enum Status {
-    OK = "OK",
-    FAILED = "FAILED",
-    PENDING = "PENDING"
-};
+  OK = "OK",
+  FAILED = "FAILED",
+  PENDING = "PENDING",
+}
 
 export type IDResponse = {
-    status: Status
+  status: Status;
 };

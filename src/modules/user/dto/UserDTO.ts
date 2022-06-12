@@ -1,40 +1,40 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DOB } from 'src/externalclients/idvproviders/definitions';
-import { Address } from '../domain/Address';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { DOB } from "src/externalclients/idvproviders/definitions";
+import { Address } from "../domain/Address";
 
-import { UserProps } from '../domain/User';
+import { UserProps } from "../domain/User";
 
-export class UserDTO implements Partial<UserProps> { 
-    @ApiProperty()
-    _id: string;
-    
-    @ApiProperty()
-    version?: number;
+export class UserDTO implements Partial<UserProps> {
+  @ApiProperty()
+  _id: string;
 
-    createdAt?: string;
-    updatedAt?: string;                 
+  @ApiProperty()
+  version?: number;
 
-    @ApiPropertyOptional()
-    name?: string;
+  createdAt?: string;
+  updatedAt?: string;
 
-    @ApiProperty()
-    email: string;
+  @ApiPropertyOptional()
+  name?: string;
 
-    @ApiPropertyOptional()
-    phone?: string;
+  @ApiProperty()
+  email: string;
 
-    @ApiPropertyOptional()
-    isEmailVerified?: boolean;
+  @ApiPropertyOptional()
+  phone?: string;
 
-    @ApiPropertyOptional()
-    idVerified?: boolean;
+  @ApiPropertyOptional()
+  isEmailVerified?: boolean;
 
-    @ApiPropertyOptional()
-    documentVerified?: boolean;
+  @ApiPropertyOptional()
+  idVerified?: boolean;
 
-    @ApiPropertyOptional()
-    dateOfBirth?: DOB;
+  @ApiPropertyOptional()
+  documentVerified?: boolean;
 
-    @ApiPropertyOptional()
-    address?: Address;
-} 
+  @ApiPropertyOptional()
+  dateOfBirth?: DOB;
+
+  @ApiPropertyOptional()
+  address?: Address;
+}

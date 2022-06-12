@@ -1,21 +1,21 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class CreateTransactionDTO {
-    @ApiProperty()
-    paymentMethodId: string;
-    
-    @ApiProperty()
-    leg1: string;
+  @ApiProperty()
+  paymentMethodId: string;
 
-    @ApiProperty()
-    leg2: string;
+  @ApiProperty()
+  leg1: string;
 
-    @ApiProperty()
-    leg1Amount: number;
+  @ApiProperty()
+  leg2: string;
 
-    @ApiProperty()
-    leg2Amount: number;
+  @ApiProperty()
+  leg1Amount: number;
 
-    @ApiPropertyOptional()
-    destinationWalletAdress?: string; 
+  @ApiProperty()
+  leg2Amount: number;
+
+  @ApiPropertyOptional()
+  destinationWalletAdress?: string;
 }

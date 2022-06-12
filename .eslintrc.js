@@ -5,8 +5,7 @@ module.exports = {
     sourceType: 'module',
   },
 
-
-  plugins: ['@typescript-eslint/eslint-plugin'],
+  plugins: ['@typescript-eslint', 'unused-imports', 'prettier'],
   extends: [
     'plugin:@typescript-eslint/recommended',
     'plugin:prettier/recommended',
@@ -18,11 +17,46 @@ module.exports = {
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
+    'prettier/prettier': [
+      'error',
+      {
+        endOfLine: 'auto',
+      },
+      {
+        usePrettierrc: true,
+      },
+    ],
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     // "prettier/prettier": ["error", { "endOfLine": "auto" }]
     'prettier/prettier': 0,
+    quotes: ['error', 'double'],
+    // we want to force semicolons
+    semi: ['error', 'always'],
+    // we use 2 spaces to indent our code
+    indent: ['error', 2],
+    // we want to avoid extraneous spaces
+    'no-multi-spaces': ['error'],
+    'no-unused-vars': 'off',
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      {
+        vars: 'all',
+        varsIgnorePattern: '^_',
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+      },
+    ],
+    'keyword-spacing': 'off',
+    '@typescript-eslint/keyword-spacing': [
+      'error',
+      {
+        before: true,
+        after: true,
+      },
+    ],
   },
 };

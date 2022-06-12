@@ -1,7 +1,4 @@
-import {
-  Inject,
-  Injectable
-} from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import Stripe from "stripe";
 import { Logger } from "winston";
@@ -21,8 +18,6 @@ import { TransactionMapper } from "./mapper/TransactionMapper";
 import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 
-
-
 @Injectable()
 export class TransactionService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -41,13 +36,13 @@ export class TransactionService {
 
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
-
-  constructor(dbProvider: DBProvider,
+  constructor(
+    dbProvider: DBProvider,
     private readonly exchangeRateService: ExchangeRateService,
-    private readonly EthereumWeb3ProviderService: EthereumWeb3ProviderService,
-    private readonly TerraWeb3ProviderService: TerraWeb3ProviderService,
-    stripeServie: StripeService) {
-
+    private readonly ethereumWeb3ProviderService: EthereumWeb3ProviderService,
+    private readonly terraWeb3ProviderService: TerraWeb3ProviderService,
+    stripeServie: StripeService,
+  ) {
     this.stripe = stripeServie.stripeApi;
     this.transactionsRepo = new MongoDBTransactionRepo(dbProvider);
     this.transactionsMapper = new TransactionMapper();
@@ -60,11 +55,15 @@ export class TransactionService {
   }
 
   async getUserTransactions(userId: string): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactions(userId)).map(transaction => this.transactionsMapper.toDTO(transaction));
+    return (await this.transactionsRepo.getUserTransactions(userId)).map(transaction =>
+      this.transactionsMapper.toDTO(transaction),
+    );
   }
 
   async getTransactionsInInterval(userId: string, fromDate: Date, toDate: Date): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactionInAnInterval(userId, fromDate, toDate)).map(transaction => this.transactionsMapper.toDTO(transaction));
+    return (await this.transactionsRepo.getUserTransactionInAnInterval(userId, fromDate, toDate)).map(transaction =>
+      this.transactionsMapper.toDTO(transaction),
+    );
   }
 
   //makes sure only app admins should be able to access this method, don't want to expose this method to public users
@@ -73,16 +72,17 @@ export class TransactionService {
   }
 
   //TODO add proper logs without leaking sensitive information
-  //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc. 
+  //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
   async transact(userID: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
-
     const leg1: string = details.leg1;
     const leg2: string = details.leg2;
     const destinationWalletAdress: string = details.destinationWalletAdress;
 
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(leg2, destinationWalletAdress)) {
-      throw new BadRequestError({ messageForClient: "Invalid destination wallet address " + destinationWalletAdress + " for " + leg2 });
+      throw new BadRequestError({
+        messageForClient: "Invalid destination wallet address " + destinationWalletAdress + " for " + leg2,
+      });
     }
 
     const user = await this.userRepo.getUser(userID);
@@ -91,17 +91,24 @@ export class TransactionService {
     const leg2Amount = details.leg2Amount;
 
     if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
-      throw new BadRequestError({ messageForClient: "Supported leg1 (i.e fiat) are " + this.allowedFiats.join(", ") + " and leg2 (i.e crypto) are " + this.allowedCryptoCurrencies.join(", ") });
+      throw new BadRequestError({
+        messageForClient:
+          "Supported leg1 (i.e fiat) are " +
+          this.allowedFiats.join(", ") +
+          " and leg2 (i.e crypto) are " +
+          this.allowedCryptoCurrencies.join(", "),
+      });
     }
 
     const currentPrice = await this.exchangeRateService.priceInFiat(leg2, leg1);
     const bidPrice = (leg1Amount * 1.0) / leg2Amount;
 
-
     this.logger.info(`bidPrice: ${bidPrice}, currentPrice: ${currentPrice}`);
 
     if (!this.withinSlippage(bidPrice, currentPrice, this.slippageAllowed)) {
-      throw new BadRequestError({ messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}` });
+      throw new BadRequestError({
+        messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}`,
+      });
     }
 
     const newTransaction: Transaction = Transaction.createTransaction({
@@ -111,13 +118,13 @@ export class TransactionService {
       leg2Amount: details.leg2Amount,
       leg1: leg1,
       leg2: leg2,
-      transactionStatus: TransactionStatus.INITIATED
+      transactionStatus: TransactionStatus.INITIATED,
     });
 
     this.transactionsRepo.createTransaction(newTransaction);
 
     //TODO we shouldn't be processing the below steps synchronously as there may be some partial failures
-    //We should have some sort of transaction queues to process all the scenarios incrementally 
+    //We should have some sort of transaction queues to process all the scenarios incrementally
 
     //**** starting fiat transaction ***/
 
@@ -126,36 +133,36 @@ export class TransactionService {
     const params: Stripe.PaymentIntentCreateParams = {
       // if we want to charge 20 USD we can use amount: 2000 USD here. Here it is a multiple of 100. So to charge 32.45 USD we can use amount: 3245
       amount: Math.ceil(leg1Amount * 100), //in cents
-      currency: 'usd', //TODO make this generic
+      currency: "usd", //TODO make this generic
       customer: user.props.stripeCustomerID,
       payment_method: details.paymentMethodId,
-      confirmation_method: 'automatic',
+      confirmation_method: "automatic",
       confirm: true,
     };
 
     const paymentIntent = await this.stripe.paymentIntents.create(params);
 
-    let updatedTransaction = Transaction.createTransaction(
-      {
-        ...newTransaction.props,
-        transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING,
-        stripePaymentIntentId: paymentIntent.id
-      });
+    let updatedTransaction = Transaction.createTransaction({
+      ...newTransaction.props,
+      transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING,
+      stripePaymentIntentId: paymentIntent.id,
+    });
 
     this.transactionsRepo.updateTransaction(updatedTransaction);
 
     //TODO wait here for the transaction to complete and update the status
 
     //updating the status to fiat transaction succeeded for now
-    updatedTransaction = Transaction.createTransaction(
-      {
-        ...updatedTransaction.props,
-        transactionStatus: TransactionStatus.FIAT_INCOMING_CONFIRMED,
-        stripePaymentIntentId: paymentIntent.id
-      })
+    updatedTransaction = Transaction.createTransaction({
+      ...updatedTransaction.props,
+      transactionStatus: TransactionStatus.FIAT_INCOMING_CONFIRMED,
+      stripePaymentIntentId: paymentIntent.id,
+    });
     this.transactionsRepo.updateTransaction(updatedTransaction);
 
-    this.logger.info(`Transaction ${newTransaction.props._id} is waiting for payment confirmation, payment intent id: ${paymentIntent.id}, status: ${paymentIntent.status}`);
+    this.logger.info(
+      `Transaction ${newTransaction.props._id} is waiting for payment confirmation, payment intent id: ${paymentIntent.id}, status: ${paymentIntent.status}`,
+    );
 
     //*** assuming that fiat transfer completed*/
 
@@ -163,12 +170,11 @@ export class TransactionService {
       const web3TransactionHandler: Web3TransactionHandler = {
         onTransactionHash: async (transactionHash: string) => {
           this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
-          updatedTransaction = Transaction.createTransaction(
-            {
-              ...updatedTransaction.props,
-              transactionStatus: TransactionStatus.WALLET_OUTGOING_PENDING,
-              cryptoTransactionId: transactionHash
-            });
+          updatedTransaction = Transaction.createTransaction({
+            ...updatedTransaction.props,
+            transactionStatus: TransactionStatus.WALLET_OUTGOING_PENDING,
+            cryptoTransactionId: transactionHash,
+          });
           await this.transactionsRepo.updateTransaction(updatedTransaction);
 
           //TODO check with Lane or Gal if we should only confirm on the receipt of the transaction or is it fine to confirm the transaction on transaction hash
@@ -180,24 +186,34 @@ export class TransactionService {
         }, */
 
         onError: async (error: any) => {
-          this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`);
-          await this.transactionsRepo.updateTransaction(Transaction.createTransaction({
-            ...newTransaction.props,
-            transactionStatus: TransactionStatus.WALLET_OUTGOING_FAILED,
-            diagnosis: JSON.stringify(error)
-          }));
+          this.logger.info(
+            `Transaction ${newTransaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`,
+          );
+          await this.transactionsRepo.updateTransaction(
+            Transaction.createTransaction({
+              ...newTransaction.props,
+              transactionStatus: TransactionStatus.WALLET_OUTGOING_FAILED,
+              diagnosis: JSON.stringify(error),
+            }),
+          );
           reject(error);
-        }
+        },
       };
 
-
-
-      if (leg2 == 'ethereum') {
-        this.EthereumWeb3ProviderService.transferEther(leg2Amount, details.destinationWalletAdress, web3TransactionHandler);
-      }
-      else {
+      if (leg2 == "ethereum") {
+        this.ethereumWeb3ProviderService.transferEther(
+          leg2Amount,
+          details.destinationWalletAdress,
+          web3TransactionHandler,
+        );
+      } else {
         // if its not ethereum then it is terra ust or luna
-        this.TerraWeb3ProviderService.transferTerra(leg2Amount, details.destinationWalletAdress, web3TransactionHandler, leg2);
+        this.terraWeb3ProviderService.transferTerra(
+          leg2Amount,
+          details.destinationWalletAdress,
+          web3TransactionHandler,
+          leg2,
+        );
       }
     });
 
@@ -211,13 +227,13 @@ export class TransactionService {
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
     // if curr is ethereum then validate that the destination wallet address is a valid ethereum address
-    if (curr == 'ethereum') {
-      return this.EthereumWeb3ProviderService.isValidAddress(destinationWalletAdress);
+    if (curr == "ethereum") {
+      return this.ethereumWeb3ProviderService.isValidAddress(destinationWalletAdress);
     }
 
     // if curr is terra or luna then validate that the destination wallet address is a valid terra address
-    if (curr == 'terrausd' || curr == 'terra-luna') {
-      return this.TerraWeb3ProviderService.isValidAddress(destinationWalletAdress);
+    if (curr == "terrausd" || curr == "terra-luna") {
+      return this.terraWeb3ProviderService.isValidAddress(destinationWalletAdress);
     }
 
     return false;

@@ -4,8 +4,7 @@ import { EmailService } from "../email.service";
 export const getMockEmailServiceWithDefaults = () => {
   const mockEmailService: EmailService = mock(EmailService);
 
-  when(mockEmailService.sendOtp(anyString(), anyString(), anyString()))
-    .thenReject(new Error('Not implemented!'));
+  when(mockEmailService.sendOtp(anyString(), anyString(), anyString())).thenReject(new Error("Not implemented!"));
 
   return mockEmailService;
-}
+};

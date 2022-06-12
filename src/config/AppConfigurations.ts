@@ -1,6 +1,6 @@
-import * as Joi from 'joi';
-import { join } from 'path';
-import { readConfigsFromYamlFiles } from '../core/utils/YamlJsonUtils';
+import * as Joi from "joi";
+import { join } from "path";
+import { readConfigsFromYamlFiles } from "../core/utils/YamlJsonUtils";
 import {
   appConfigsJoiValidationSchema,
   AppEnvironment,
@@ -31,26 +31,22 @@ import {
   TWILIO_AWS_SECRET_KEY_FOR_AUTH_TOKEN_ATTR,
   TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR,
   TWILIO_CONFIG_KEY,
-  TWILIO_FROM_PHONE_NUMBER,
   TWILIO_SID,
-} from './ConfigurationUtils';
-import { SecretProvider } from './SecretProvider';
-import * as fs from 'fs';
+} from "./ConfigurationUtils";
+import * as fs from "fs";
 
-import { TwilioConfigs } from './configtypes/TwilioConfigs';
-import { TruliooConfigs } from './configtypes/TruliooConfigs';
-import { SendGridConfigs } from './configtypes/SendGridConfigs';
-import { StripeConfigs } from './configtypes/StripeConfigs';
-
+import { TwilioConfigs } from "./configtypes/TwilioConfigs";
+import { TruliooConfigs } from "./configtypes/TruliooConfigs";
+import { SendGridConfigs } from "./configtypes/SendGridConfigs";
+import { StripeConfigs } from "./configtypes/StripeConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.DEV]: "localdevelopment.yaml",
   [AppEnvironment.PROD]: "production.yaml",
-  [AppEnvironment.STAGING]: "staging.yaml"
+  [AppEnvironment.STAGING]: "staging.yaml",
 } as const;
 
 export default async function loadAppConfigs() {
-
   // *** Application configurations loading logic here ***
 
   const environment: AppEnvironment = getEnvironmentName();
@@ -64,7 +60,7 @@ export default async function loadAppConfigs() {
   // const overrideFilesPaths = process.env["CONFIGS_OVERRIDE_FILES"]?.split(",") ?? [];
 
   const mainPropertyFile = join(configsDir, configFileName);
-  let extraSecretsFiles = [];
+  const extraSecretsFiles = [];
 
   if (fs.existsSync(join(configsDir, "secrets.yaml"))) {
     extraSecretsFiles.push(join(configsDir, "secrets.yaml"));
@@ -80,18 +76,19 @@ export default async function loadAppConfigs() {
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const finalConfigs = await configureAllVendorCredentials(updatedAwsConfigs);
 
-  //validate configs  
+  //validate configs
   return Joi.attempt(finalConfigs, appConfigsJoiValidationSchema);
-};
+}
 
 function configureAwsCredentials(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
   if (environment === AppEnvironment.DEV) {
-    // 'DEV' is for local development and hence AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY environment variables are required. 
+    // 'DEV' is for local development and hence AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY environment variables are required.
     const awsAccessKeyId = configs[AWS_ACCESS_KEY_ID_ATTR];
     const awsSecretAccessKey = configs[AWS_SECRET_ACCESS_KEY_ATTR];
 
     if (awsAccessKeyId === undefined || awsSecretAccessKey === undefined) {
-      const errorMessage = `\n\nAWS Credentials needs to be configured in environment variables for local testing.\n` +
+      const errorMessage =
+        "\n\nAWS Credentials needs to be configured in environment variables for local testing.\n" +
         `Please set the value of "${AWS_ACCESS_KEY_ID_ATTR}" and "${AWS_SECRET_ACCESS_KEY_ATTR}" in 'appconfigs/secrets.yaml' file.\n\n`;
 
       throw Error(errorMessage);
@@ -99,12 +96,11 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
 
     setEnvironmentProperty(AWS_ACCESS_KEY_ID_ENV_VARIABLE, awsAccessKeyId);
     setEnvironmentProperty(AWS_SECRET_ACCESS_KEY_ENV_VARIABLE, awsSecretAccessKey);
-  }
-  else {
-    // 'STAGING' or 'PROD' will be expected to run in 'EC2' (with a role attached). 
+  } else {
+    // 'STAGING' or 'PROD' will be expected to run in 'EC2' (with a role attached).
     // So, for these environments temporary role credentials will be used for any AWS services.
     //
-    // If more than one credential source is available to the SDK (eg - both env-variables & ec2-role), 
+    // If more than one credential source is available to the SDK (eg - both env-variables & ec2-role),
     // the default precedence of selection can be found at:
     // https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-credentials-node.html
     //
@@ -131,9 +127,10 @@ async function configureStripeCredentials(configs: Record<string, any>): Promise
   const stripeConfigs: StripeConfigs = configs[STRIPE_CONFIG_KEY];
 
   if (stripeConfigs === undefined) {
-    const errorMessage = `\n'stripe' configurations are required. Please configure the stripe credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+    const errorMessage =
+      "\n'stripe' configurations are required. Please configure the stripe credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${STRIPE_CONFIG_KEY}" and populate "${STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR}" or "${STRIPE_SECRET_KEY}" ` +
-      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
 
     throw Error(errorMessage);
   }
@@ -148,10 +145,11 @@ async function configureTwilioCredentials(configs: Record<string, any>): Promise
   const twilioConfigs: TwilioConfigs = configs[TWILIO_CONFIG_KEY];
 
   if (twilioConfigs === undefined) {
-    const errorMessage = `\n'Twilio' configurations are required. Please configure the Twilio credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+    const errorMessage =
+      "\n'Twilio' configurations are required. Please configure the Twilio credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${TWILIO_CONFIG_KEY}" and populate ("${TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR}" or "${TWILIO_SID}") AND ` +
       `("${TWILIO_AWS_SECRET_KEY_FOR_AUTH_TOKEN_ATTR}" or "${TWILIO_AUTH_TOKEN}") ` +
-      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
 
     throw Error(errorMessage);
   }
@@ -168,16 +166,23 @@ async function configureTruliooCredentials(configs: Record<string, any>): Promis
   const truliooConfigs: TruliooConfigs = configs[TRULIOO_CONFIG_KEY];
 
   if (truliooConfigs === undefined) {
-    const errorMessage = `\n'Trulioo' configurations are required. Please configure the Trulioo credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+    const errorMessage =
+      "\n'Trulioo' configurations are required. Please configure the Trulioo credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${TRULIOO_CONFIG_KEY}" and populate ("${TRULIOO_AWS_SECRET_KEY_FOR_IDV_ATTR}" or "${TRULIOO_IDV}") AND ` +
       `("${TRULIOO_AWS_SECRET_KEY_FOR_DOCV_API_KEY_ATTR}" or "${TRULIOO_DOCV_API_KEY}") ` +
-      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
 
     throw Error(errorMessage);
   }
 
-  truliooConfigs.TruliooDocVApiKey = await getParameterValue(truliooConfigs.awsSecretNameForDocVApiKey, truliooConfigs.TruliooDocVApiKey);
-  truliooConfigs.TruliooIDVApiKey = await getParameterValue(truliooConfigs.awsSecretNameForIDVApiKey, truliooConfigs.TruliooIDVApiKey);
+  truliooConfigs.TruliooDocVApiKey = await getParameterValue(
+    truliooConfigs.awsSecretNameForDocVApiKey,
+    truliooConfigs.TruliooDocVApiKey,
+  );
+  truliooConfigs.TruliooIDVApiKey = await getParameterValue(
+    truliooConfigs.awsSecretNameForIDVApiKey,
+    truliooConfigs.TruliooIDVApiKey,
+  );
 
   configs[TRULIOO_CONFIG_KEY] = truliooConfigs;
   return configs;
@@ -187,9 +192,10 @@ async function configureSendgridCredentials(configs: Record<string, any>): Promi
   const sendgridConfigs: SendGridConfigs = configs[SENDGRID_CONFIG_KEY];
 
   if (sendgridConfigs === undefined) {
-    const errorMessage = `\n'Sendgrid' configurations are required. Please configure the Sendgrid credentials in 'appconfigs/<ENV>.yaml' file.\n` +
+    const errorMessage =
+      "\n'Sendgrid' configurations are required. Please configure the Sendgrid credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${SENDGRID_CONFIG_KEY}" and populate "${SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR}" or "${SENDGRID_API_KEY}" ` +
-      `based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n`;
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
 
     throw Error(errorMessage);
   }

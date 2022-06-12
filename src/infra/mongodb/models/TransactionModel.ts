@@ -9,4 +9,7 @@ const mongooseTransactionSchema = new Schema(joigoose.convert(transactionJoiSche
 
 export const TRANSACTION_MODEL_NAME = "transaction";
 
-export const TransactionModel: Model<TransactionProps> = model<TransactionProps>(TRANSACTION_MODEL_NAME, mongooseTransactionSchema);
+export const TransactionModel: Model<TransactionProps> = model<TransactionProps>(
+  TRANSACTION_MODEL_NAME,
+  mongooseTransactionSchema,
+);

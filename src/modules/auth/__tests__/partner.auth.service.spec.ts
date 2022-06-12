@@ -2,36 +2,36 @@ import { JwtModule } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
 import { getWinstonModule } from "../../../../src/core/utils/WinstonModule";
-import { AdminService } from "../../../../src/modules/admin/admin.service";
-import { getMockAdminServiceWithDefaults } from "../../../../src/modules/admin/mocks/MockAdminService";
+import { PartnerAdminService } from "../../../modules/partner/partneradmin.service";
+import { mockedPartnerAdminService } from "../../../modules/partner/mocks/partneradminservicemock";
 import { EmailService } from "../../../../src/modules/common/email.service";
 import { getMockEmailServiceWithDefaults } from "../../../../src/modules/common/mocks/mock.email.service";
 import { getMockSmsServiceWithDefaults } from "../../../../src/modules/common/mocks/mock.sms.service";
 import { SMSService } from "../../../../src/modules/common/sms.service";
 import { instance, when } from "ts-mockito";
-import { AdminAuthService } from "../admin.auth.service";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../repo/OTPRepo";
 import { NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
+import { partnerAdminIdentityIdenitfier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
-import { Admin } from "../../../../src/modules/admin/domain/Admin";
+import { PartnerAuthService } from "../partner.auth.service";
+import { mockPartnerAdminWithAllAccess } from "../../../core/tests/constants";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
 
-  let mockAdminService: AdminService;
+  let mockPartnerAdminService: PartnerAdminService;
   let mockOtpRepo: IOTPRepo;
   let mockEmailService: EmailService;
   let mockSmsService: SMSService;
 
-  let adminAuthService: AdminAuthService;
+  let partnerAuthService: PartnerAuthService;
 
   const testJwtSecret = "TEST_SECRET";
-  const identityType: string = nobaAdminIdentityIdentifier;
+  const identityType: string = partnerAdminIdentityIdenitfier;
 
   beforeEach(async () => {
-    mockAdminService = getMockAdminServiceWithDefaults();
+    mockPartnerAdminService = mockedPartnerAdminService;
     mockOtpRepo = getMockOtpRepoWithDefaults();
     mockEmailService = getMockEmailServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
@@ -54,8 +54,8 @@ describe("AdminService", () => {
       controllers: [],
       providers: [
         {
-          provide: AdminService,
-          useFactory: () => instance(mockAdminService),
+          provide: PartnerAdminService,
+          useFactory: () => instance(mockPartnerAdminService),
         },
         {
           provide: "OTPRepo",
@@ -69,94 +69,78 @@ describe("AdminService", () => {
           provide: SMSService,
           useFactory: () => instance(mockSmsService),
         },
-        AdminAuthService,
+        PartnerAuthService,
       ],
     }).compile();
 
-    adminAuthService = app.get<AdminAuthService>(AdminAuthService);
+    partnerAuthService = app.get<PartnerAuthService>(PartnerAuthService);
   });
 
   describe("validateAndGetUserId", () => {
-    it("should throw \"NotFoundException\" if user with given email doesn't exist", async () => {
-      const NON_EXISTING_ADMIN_EMAIL = "abcd@noba.com";
+    it("should throw NotFoundException if user with given email doesn't exist", async () => {
+      const NON_EXISTING_PARTNER_ADMIN_EMAIL = "abcd@noba.com";
 
-      when(mockOtpRepo.getOTP(NON_EXISTING_ADMIN_EMAIL, identityType)).thenReject(new NotFoundException());
+      when(mockOtpRepo.getOTP(NON_EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenReject(new NotFoundException());
 
       try {
-        await adminAuthService.validateAndGetUserId(NON_EXISTING_ADMIN_EMAIL, 123456);
-        expect(true).toBe(false);
+        await partnerAuthService.validateAndGetUserId(NON_EXISTING_PARTNER_ADMIN_EMAIL, 123456);
       } catch (err) {
-        console.log(err);
         expect(err).toBeInstanceOf(NotFoundException);
       }
     });
 
-    it("should throw \"UnauthorizedException\" if otp is incorrect", async () => {
-      const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
+    it("should throw UnauthorizedException if otp is incorrect", async () => {
+      const EXISTING_PARTNER_ADMIN_EMAIL = "abcd@noba.com";
       const CORRECT_OTP = 123456;
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: EXISTING_ADMIN_EMAIL,
+        _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
       });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
 
       try {
-        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, 1234567);
-        expect(true).toBe(false);
+        await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, 1234567);
       } catch (err) {
-        console.log(err);
         expect(err).toBeInstanceOf(UnauthorizedException);
       }
     });
 
-    it("should throw \"UnauthorizedException\" if otp is expired", async () => {
-      const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
+    it("should throw UnauthorizedException if otp is expired", async () => {
+      const EXISTING_PARTNER_ADMIN_EMAIL = "abcd@noba.com";
       const CORRECT_OTP = 123456;
       const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: EXISTING_ADMIN_EMAIL,
+        _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
       });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
 
       try {
-        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP);
-        expect(true).toBe(false);
+        await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
       } catch (err) {
-        console.log(err);
         expect(err).toBeInstanceOf(UnauthorizedException);
       }
     });
 
-    it("should throw \"UnauthorizedException\" if otp is expired", async () => {
-      const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
-      const ADMIN_ID = "1111111111";
+    it("should return PartnerAdmin._id for correct PartnerAdmin", async () => {
+      const EXISTING_PARTNER_ADMIN_EMAIL = mockPartnerAdminWithAllAccess.email;
       const CORRECT_OTP = 123456;
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: EXISTING_ADMIN_EMAIL,
+        _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
       });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
 
-      when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL)).thenResolve(
-        Admin.createAdmin({
-          _id: ADMIN_ID,
-          email: EXISTING_ADMIN_EMAIL,
-          name: "ADMIN",
-          role: "BASIC",
-        }),
-      );
-
-      const receivedAdminId = await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP);
-      expect(receivedAdminId).toEqual(ADMIN_ID);
+      const receivedAdminId = await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
+      expect(receivedAdminId).toEqual(mockPartnerAdminWithAllAccess._id);
     });
   });
 });

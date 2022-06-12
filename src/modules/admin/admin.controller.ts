@@ -1,25 +1,38 @@
-import { Controller, Get, Inject, HttpStatus, Query, Param, Post, Body, ConflictException, Put, Delete, Request, ForbiddenException } from '@nestjs/common';
-import { AdminService } from './admin.service';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { Logger } from 'winston';
-import { AdminId } from '../auth/roles.decorator';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { TransactionStatsDTO } from './dto/TransactionStats';
-import { TransactionDTO } from '../transactions/dto/TransactionDTO';
-import { TransactionsFilterDTO } from './dto/TransactionsFilterDTO';
-import { NobaAdminDTO } from './dto/NobaAdminDTO';
-import { Admin } from './domain/Admin';
-import { OutputNobaAdminDTO } from './dto/OutputNobaAdminDTO';
-import { AdminMapper } from './mappers/AdminMapper';
-import { Public } from '../auth/public.decorator';
-import { UpdateNobaAdminDTO } from './dto/UpdateNobaAdminDTO';
-import { DeleteNobaAdminDTO } from './dto/DeleteNobaAdminDTO';
+import {
+  Controller,
+  Get,
+  Inject,
+  HttpStatus,
+  Query,
+  Param,
+  Post,
+  Body,
+  ConflictException,
+  Put,
+  Delete,
+  Request,
+  ForbiddenException,
+} from "@nestjs/common";
+import { AdminService } from "./admin.service";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
+import { AdminId } from "../auth/roles.decorator";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { TransactionStatsDTO } from "./dto/TransactionStats";
+import { TransactionDTO } from "../transactions/dto/TransactionDTO";
+import { TransactionsFilterDTO } from "./dto/TransactionsFilterDTO";
+import { NobaAdminDTO } from "./dto/NobaAdminDTO";
+import { Admin } from "./domain/Admin";
+import { OutputNobaAdminDTO } from "./dto/OutputNobaAdminDTO";
+import { AdminMapper } from "./mappers/AdminMapper";
+import { Public } from "../auth/public.decorator";
+import { UpdateNobaAdminDTO } from "./dto/UpdateNobaAdminDTO";
+import { DeleteNobaAdminDTO } from "./dto/DeleteNobaAdminDTO";
 
 @Controller("admin")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Admin")
 export class AdminController {
-
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
@@ -29,13 +42,14 @@ export class AdminController {
   @Inject()
   private readonly adminMapper: AdminMapper;
 
-  constructor() { }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  constructor() {}
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
   @Get(`/:${AdminId}/transaction_metrics`)
-  @ApiOperation({ summary: 'Get all transaction metrics for a given partner.' })
-  @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: 'Get transaction statistics' })
+  @ApiOperation({ summary: "Get all transaction metrics for a given partner." })
+  @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: "Get transaction statistics" })
   async getTransactionMetrics(@Param(AdminId) adminId: string): Promise<TransactionStatsDTO> {
     return await this.adminService.getTransactionStatus();
   }
@@ -47,28 +61,24 @@ export class AdminController {
   @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO] })
   async getAllTransactions(
     @Param(AdminId) adminId: string,
-    @Query() filterQuery: TransactionsFilterDTO): Promise<TransactionDTO[]> {
+    @Query() filterQuery: TransactionsFilterDTO,
+  ): Promise<TransactionDTO[]> {
     return await this.adminService.getAllTransactions(filterQuery.startDate, filterQuery.endDate);
   }
 
   // TODO: Decide the different URLs for NobaAdmins, Partners & PartnerAdmins.
-  @Post('/')
+  @Post("/")
   @ApiOperation({ summary: "Creates a new NobaAdmin with a specified role." })
   @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The newly created Noba Admin." })
-  async createNobaAdmin(
-    @Request() request,
-    @Body() nobaAdmin: NobaAdminDTO
-  ): Promise<OutputNobaAdminDTO> {
+  async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<OutputNobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddNobaAdmin()) {
-      throw new ForbiddenException(
-        `Admins with role '${authenticatedUser.props.role}' can't add a new Noba Admin.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba Admin.`);
     }
 
     const savedAdmin: Admin = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
 
-    if (savedAdmin === undefined)
-      throw new ConflictException('User is already registerd as a NobaAdmin');
+    if (savedAdmin === undefined) throw new ConflictException("User is already registerd as a NobaAdmin");
 
     return this.adminMapper.toOutputDto(savedAdmin);
   }
@@ -79,16 +89,15 @@ export class AdminController {
   async updateNobaAdmin(
     @Request() request,
     @Param(AdminId) adminId: string,
-    @Body() req: UpdateNobaAdminDTO
+    @Body() req: UpdateNobaAdminDTO,
   ): Promise<OutputNobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canChangeNobaAdminPrivileges()) {
-      throw new ForbiddenException(
-        `Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
     }
 
     if (authenticatedUser.props._id === adminId) {
-      throw new ForbiddenException(`You can't update your own privileges.`);
+      throw new ForbiddenException("You can't update your own privileges.");
     }
 
     const updatedAdmin: Admin = await this.adminService.changeNobaAdminRole(adminId, req.role);
@@ -98,18 +107,14 @@ export class AdminController {
   @Delete(`/:${AdminId}`)
   @ApiOperation({ summary: "Deletes the NobaAdmin with a given ID" })
   @ApiResponse({ status: HttpStatus.OK, type: DeleteNobaAdminDTO, description: "The ID of the deleted NobaAdmin." })
-  async deleteNobaAdmin(
-    @Request() request,
-    @Param(AdminId) adminId: string
-  ): Promise<DeleteNobaAdminDTO> {
+  async deleteNobaAdmin(@Request() request, @Param(AdminId) adminId: string): Promise<DeleteNobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveNobaAdmin()) {
-      throw new ForbiddenException(
-        `Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
     }
 
     if (authenticatedUser.props._id === adminId) {
-      throw new ForbiddenException(`You can't delete your own account.`);
+      throw new ForbiddenException("You can't delete your own account.");
     }
 
     const deletedAdminId: string = await this.adminService.deleteNobaAdmin(adminId);

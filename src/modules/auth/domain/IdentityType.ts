@@ -1,7 +1,7 @@
 const IdentityType = {
   consumer: "CONSUMER",
   partnerAdmin: "PARTNER_ADMIN",
-  nobaAdmin: "NOBA_ADMIN"
+  nobaAdmin: "NOBA_ADMIN",
 };
 
 export const allIdentities = Object.values(IdentityType);

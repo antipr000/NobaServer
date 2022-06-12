@@ -1,11 +1,12 @@
-import { PipeTransform, ArgumentMetadata } from '@nestjs/common';
-import { BadRequestError, AppExceptionCode } from '../exception/CommonAppException';
+import { PipeTransform, ArgumentMetadata } from "@nestjs/common";
+import { BadRequestError, AppExceptionCode } from "../exception/CommonAppException";
 
-type ClassTypeToPropertiesMap =  { [key: string]: string[]; }
+type ClassTypeToPropertiesMap = { [key: string]: string[] };
 
-export class NoUnExpectedKeysValidationPipe implements PipeTransform<any> { //TODO we can make this pipe better by also doing validation for nested types but for now just checking root level keys is sufficient
-    
-    /* 
+export class NoUnExpectedKeysValidationPipe implements PipeTransform<any> {
+  //TODO we can make this pipe better by also doing validation for nested types but for now just checking root level keys is sufficient
+
+  /* 
         typescript classes without prototype are like interfaces only, i.e. no information about the fields is available when they are compiled to javascript 
         e.g. 
         class UserDTO { name:string, age:number } will be compiled to just class UserDTO {}
@@ -23,45 +24,59 @@ export class NoUnExpectedKeysValidationPipe implements PipeTransform<any> { //TO
 
     */
 
-   
+  constructor(
+    readonly classTypeToPropertiesMap: ClassTypeToPropertiesMap,
+    readonly throwIfUnexpectedKeys: boolean = false,
+  ) {}
 
-    constructor (readonly classTypeToPropertiesMap: ClassTypeToPropertiesMap, readonly throwIfUnexpectedKeys:boolean = false) { // {UserDTO : ['name', 'email']}
-        // console.log(`**********************ClassTypeToPropertiesMap***************************\n ${JSON.stringify(classTypeToPropertiesMap,null,1)}`); 
-    }
+  transform(apiRequestArgument, argumentMetaData: ArgumentMetadata) {
+    if (argumentMetaData.type === "body") {
+      //for now we only transform request's body to strip the fields which are not in controller's accepted body type
+      const transformedArgument = {};
+      const classType = argumentMetaData.metatype.name;
+      if (!this.classTypeToPropertiesMap[classType]) {
+        console.warn(
+          "Didn't find any type definition for api argument type:" +
+            classType +
+            "for controller function arguments we expect some types as we don't want to accepty 'any' object as that may cause serious security issues if the services are not validating the full object before processing. Remove any type from controller function argument! and have well defined type!",
+        );
+        return apiRequestArgument; //return original as this is unknown type and its a mistake from our developers
+      } else {
+        this.classTypeToPropertiesMap[classType]
+          .filter(k => apiRequestArgument.hasOwnProperty(k))
+          .forEach(typeKey => (transformedArgument[typeKey] = apiRequestArgument[typeKey]));
 
-    transform(apiRequestArgument, argumentMetaData: ArgumentMetadata) {
-        if(argumentMetaData.type==='body') {//for now we only transform request's body to strip the fields which are not in controller's accepted body type
-            const transformedArgument = {}; 
-            const classType = argumentMetaData.metatype.name; 
-            if(!this.classTypeToPropertiesMap[classType]){
-                console.warn("Didn't find any type definition for api argument type:"+classType+ "for controller function arguments we expect some types as we don't want to accepty 'any' object as that may cause serious security issues if the services are not validating the full object before processing. Remove any type from controller function argument! and have well defined type!");
-                return apiRequestArgument; //return original as this is unknown type and its a mistake from our developers
-            }else{
-                this.classTypeToPropertiesMap[classType].filter(k=>apiRequestArgument.hasOwnProperty(k)).forEach(typeKey=>transformedArgument[typeKey] = apiRequestArgument[typeKey]);
-                
-                //logging stripped fields
-                const removedKeys = Object.keys(apiRequestArgument).filter(x=> !transformedArgument.hasOwnProperty(x)); 
-                if(removedKeys.length>0) {
-                    if (!this.throwIfUnexpectedKeys) {
-                        console.warn(`Unexpected keys are filtered for object type ${classType}, filteredKeys:${removedKeys.join(",")}`);
-                    }else{
-                        const msg = `Unexpected keys received in the input, unexpectedKeys:${removedKeys.join(",")}`
-                        throw new BadRequestError({messageForClient:msg, clientExceptionCode: AppExceptionCode.INVALID_INPUT});
-                    }
-                }
-                return transformedArgument; 
-            }
-        }else{
-            return apiRequestArgument; //no stripping for query params and path arguments of the request
+        //logging stripped fields
+        const removedKeys = Object.keys(apiRequestArgument).filter(x => !transformedArgument.hasOwnProperty(x));
+        if (removedKeys.length > 0) {
+          if (!this.throwIfUnexpectedKeys) {
+            console.warn(
+              `Unexpected keys are filtered for object type ${classType}, filteredKeys:${removedKeys.join(",")}`,
+            );
+          } else {
+            const msg = `Unexpected keys received in the input, unexpectedKeys:${removedKeys.join(",")}`;
+            throw new BadRequestError({
+              messageForClient: msg,
+              clientExceptionCode: AppExceptionCode.INVALID_INPUT,
+            });
+          }
         }
+        return transformedArgument;
+      }
+    } else {
+      return apiRequestArgument; //no stripping for query params and path arguments of the request
     }
+  }
 }
 
-
-export function createClassTypeToPropertiesMapFromSwaggerSchemas(schemas: Record<string, any>): ClassTypeToPropertiesMap {
-    const res = {}; 
-    Object.getOwnPropertyNames(schemas).forEach(schemaType=>{
-        res[schemaType] = schemas[schemaType].properties ? Object.getOwnPropertyNames(schemas[schemaType].properties): undefined;
-    })
-    return res; 
+export function createClassTypeToPropertiesMapFromSwaggerSchemas(
+  schemas: Record<string, any>,
+): ClassTypeToPropertiesMap {
+  const res = {};
+  Object.getOwnPropertyNames(schemas).forEach(schemaType => {
+    res[schemaType] = schemas[schemaType].properties
+      ? Object.getOwnPropertyNames(schemas[schemaType].properties)
+      : undefined;
+  });
+  return res;
 }

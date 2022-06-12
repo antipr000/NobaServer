@@ -1,23 +1,20 @@
-import { ApiOAuth2, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PaymentMethodType } from '../domain/Types';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PaymentMethodType } from "../domain/Types";
 
-export class PaymentMethodDTO  { 
+export class PaymentMethodDTO {
+  @ApiProperty()
+  paymentMethodId: string;
 
-    @ApiProperty() 
-    paymentMethodId: string;
+  @ApiProperty({ enum: Object.values(PaymentMethodType) })
+  paymentMethodType: string;
 
-    @ApiProperty({enum: Object.values(PaymentMethodType)})
-    paymentMethodType: string;                
+  //send masked number only to client
+  @ApiPropertyOptional()
+  cardNumber?: string;
 
-    //send masked number only to client
-    @ApiPropertyOptional()
-    cardNumber?: string;
+  @ApiPropertyOptional()
+  billingAdress?: string;
 
-    @ApiPropertyOptional()
-    billingAdress?: string;
-
-    @ApiPropertyOptional()
-    cardHolderName?: string;
-} 
-
-
+  @ApiPropertyOptional()
+  cardHolderName?: string;
+}

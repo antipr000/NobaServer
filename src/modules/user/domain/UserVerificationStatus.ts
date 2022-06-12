@@ -1,5 +1,5 @@
 export enum UserVerificationStatus {
-    VERIFIED,
-    PARTIALLY_VERIFIED,
-    NOT_VERIFIED
+  VERIFIED,
+  PARTIALLY_VERIFIED,
+  NOT_VERIFIED,
 }

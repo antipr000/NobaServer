@@ -1,15 +1,14 @@
 import * as Joi from "joi";
 import { SecretProvider } from "./SecretProvider";
 
-
 export enum AppEnvironment {
-    DEV = "development",
-    PROD = "production",
-    STAGING = "staging"
+  DEV = "development",
+  PROD = "production",
+  STAGING = "staging",
 }
 
 export const NODE_ENV_CONFIG_KEY = "NODE_ENV";
-export const REDIS_CONFIG_CONFIG_KEY = "redis"
+export const REDIS_CONFIG_CONFIG_KEY = "redis";
 export const SES_CONFIG_KEY = "ses";
 export const S3_CONFIG_KEY = "s3";
 
@@ -46,40 +45,40 @@ export const SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey"
 export const SENDGRID_API_KEY = "apiKey";
 
 export const appConfigsJoiValidationSchema = Joi.object({
-    [AWS_REGION_ATTR]: Joi.string().required(),
-    [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),
-    [NODE_ENV_CONFIG_KEY]: Joi.string().default(AppEnvironment.DEV),
-    logFilePath: Joi.string().required()
+  [AWS_REGION_ATTR]: Joi.string().required(),
+  [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),
+  [NODE_ENV_CONFIG_KEY]: Joi.string().default(AppEnvironment.DEV),
+  logFilePath: Joi.string().required(),
 }).options({ allowUnknown: true });
 
 export function getEnvironmentName(): AppEnvironment {
-    const envType: any = getPropertyFromEvironment(NODE_ENV_CONFIG_KEY);
-    if (!envType) throw new Error("Expect NODE_ENV environment variable to be present in the environment");
-    if (!Object.values(AppEnvironment).includes(envType)) {
-        throw new Error("NODE_ENV should be one of " + Object.values(AppEnvironment).join(","));
-    }
-    return envType as AppEnvironment;
+  const envType: any = getPropertyFromEvironment(NODE_ENV_CONFIG_KEY);
+  if (!envType) throw new Error("Expect NODE_ENV environment variable to be present in the environment");
+  if (!Object.values(AppEnvironment).includes(envType)) {
+    throw new Error("NODE_ENV should be one of " + Object.values(AppEnvironment).join(","));
+  }
+  return envType as AppEnvironment;
 }
 
 export function getPropertyFromEvironment(key: string) {
-    return process.env[key];
+  return process.env[key];
 }
 
 export function isPropertyPresentInEnvironmentVariables(key: string): boolean {
-    const value = getPropertyFromEvironment(key);
-    if (value === '' || value === undefined || value === null) return false;
-    return true;
+  const value = getPropertyFromEvironment(key);
+  if (value === "" || value === undefined || value === null) return false;
+  return true;
 }
 
 export function resetPropertyFromEnvironment(key: string): void {
-    delete process.env[key];
+  delete process.env[key];
 }
 
 export function setEnvironmentProperty(key: string, value: string): void {
-    process.env[key] = value;
+  process.env[key] = value;
 }
 
 export async function getParameterValue(awsSecretKey: string, customValue: string): Promise<string> {
-    if (awsSecretKey === undefined || awsSecretKey === "") return customValue;
-    return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
+  if (awsSecretKey === undefined || awsSecretKey === "") return customValue;
+  return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
 }

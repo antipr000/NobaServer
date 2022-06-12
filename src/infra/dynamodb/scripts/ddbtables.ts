@@ -3,11 +3,8 @@ import DynamoDB, { AttributeDefinitions } from "aws-sdk/clients/dynamodb";
 import * as _ from "lodash";
 import { HASH_KEY_TYPE, RANGE_KEY_TYPE } from "../DDBUtils";
 
-import {
-  UsersTableMeta,
-} from "../UsersTable";
+import { UsersTableMeta } from "../UsersTable";
 import { LookupTableMeta } from "../LookupTable";
-
 
 //Only for local, in production we would use dynamic pricing, and cloudformation to create tables but below definition can be used to create cloudformation/terraform definitions
 const usersTable: DynamoDB.CreateTableInput = {
@@ -22,14 +19,12 @@ const usersTable: DynamoDB.CreateTableInput = {
   AttributeDefinitions: getUniqueAttributeDefinitions([
     { AttributeName: UsersTableMeta.partitionKeyAttribute, AttributeType: "S" },
     { AttributeName: UsersTableMeta.sortKeyAttribute, AttributeType: "S" },
-    
   ]),
   ProvisionedThroughput: {
     ReadCapacityUnits: 1,
     WriteCapacityUnits: 1,
-  }
+  },
 };
-
 
 const lookUpTable: DynamoDB.CreateTableInput = {
   TableName: LookupTableMeta.tableName,
@@ -38,7 +33,10 @@ const lookUpTable: DynamoDB.CreateTableInput = {
     { AttributeName: LookupTableMeta.sortKeyAttribute, KeyType: "RANGE" },
   ],
   AttributeDefinitions: getUniqueAttributeDefinitions([
-    { AttributeName: LookupTableMeta.partitionKeyAttribute, AttributeType: "S", },
+    {
+      AttributeName: LookupTableMeta.partitionKeyAttribute,
+      AttributeType: "S",
+    },
     { AttributeName: LookupTableMeta.sortKeyAttribute, AttributeType: "S" },
   ]),
 
@@ -48,17 +46,10 @@ const lookUpTable: DynamoDB.CreateTableInput = {
   },
 };
 
-
-
-function getUniqueAttributeDefinitions(
-  attrs: AttributeDefinitions
-): AttributeDefinitions {
+function getUniqueAttributeDefinitions(attrs: AttributeDefinitions): AttributeDefinitions {
   return _.uniqBy(attrs, function (e) {
     return e.AttributeName;
   });
 }
 
-export const ddbTables: DynamoDB.CreateTableInput[] = [
-  usersTable,
-  lookUpTable,
-];
+export const ddbTables: DynamoDB.CreateTableInput[] = [usersTable, lookUpTable];

@@ -3,7 +3,7 @@ import {
   TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR,
   TWILIO_FROM_PHONE_NUMBER,
   TWILIO_AUTH_TOKEN,
-  TWILIO_SID
+  TWILIO_SID,
 } from "../ConfigurationUtils";
 
 export interface TwilioConfigs {

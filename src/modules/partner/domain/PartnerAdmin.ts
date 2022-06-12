@@ -1,120 +1,128 @@
-import {AggregateRoot} from '../../../core/domain/AggregateRoot';
-import {  VersioningInfo, versioningInfoJoiSchemaKeys } from '../../../core/domain/Entity';
-import { KeysRequired } from '../../common/domain/Types';
-import * as Joi from 'joi';
-import { Entity } from '../../../core/domain/Entity';
+import { AggregateRoot } from "../../../core/domain/AggregateRoot";
+import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { KeysRequired } from "../../common/domain/Types";
+import * as Joi from "joi";
+import { Entity } from "../../../core/domain/Entity";
 
 const Permissions = {
-    UPDATE_PARTNER_DETAILS: "UPDATE_PARTNER_DETAILS",
-    GET_PARTNER_DETAILS: "GET_PARTNER_DETAILS",
-    ADD_PARTNER_ADMIN: "ADD_PARTNER_ADMIN",
-    REMOVE_PARTNER_ADMIN: "REMOVE_PARTNER_ADMIN",
-    GET_ALL_ADMINS: "GET_ALL_ADMINS",
-    UPDATE_PARTNER_ADMIN: "UPDATE_PARTNER_ADMIN",
-    VIEW_ALL_TRANSACTIONS: "VIEW_ALL_TRANSACTIONS",
-    VIEW_ALL_USERS: "VIEW_ALL_USERS",
-    VIEW_STATS: "VIEW_STATS"
-}
-
-const PartnerAdminRolePrivileges = {
-    BASIC: {
-        permissions: [Permissions.GET_PARTNER_DETAILS, Permissions.VIEW_STATS]
-    },
-    INTERMEDIATE: {
-        permissions: [
-            Permissions.GET_PARTNER_DETAILS, 
-            Permissions.VIEW_STATS,
-            Permissions.VIEW_ALL_TRANSACTIONS,
-            Permissions.VIEW_ALL_USERS]
-    },
-    ALL: {
-        permissions: [
-            Permissions.UPDATE_PARTNER_DETAILS,
-            Permissions.GET_PARTNER_DETAILS,
-            Permissions.ADD_PARTNER_ADMIN,
-            Permissions.REMOVE_PARTNER_ADMIN,
-            Permissions.GET_ALL_ADMINS,
-            Permissions.UPDATE_PARTNER_ADMIN,
-            Permissions.VIEW_ALL_TRANSACTIONS,
-            Permissions.VIEW_ALL_USERS,
-            Permissions.VIEW_STATS
-        ]
-    }
-}
-
-export interface PartnerAdminProps extends VersioningInfo {
-    _id: string,
-    name?: string,
-    email: string,
-    partnerId: string,
-    role: string
+  UPDATE_PARTNER_DETAILS: "UPDATE_PARTNER_DETAILS",
+  GET_PARTNER_DETAILS: "GET_PARTNER_DETAILS",
+  ADD_PARTNER_ADMIN: "ADD_PARTNER_ADMIN",
+  REMOVE_PARTNER_ADMIN: "REMOVE_PARTNER_ADMIN",
+  GET_ALL_ADMINS: "GET_ALL_ADMINS",
+  UPDATE_PARTNER_ADMIN: "UPDATE_PARTNER_ADMIN",
+  VIEW_ALL_TRANSACTIONS: "VIEW_ALL_TRANSACTIONS",
+  VIEW_ALL_USERS: "VIEW_ALL_USERS",
+  VIEW_STATS: "VIEW_STATS",
 };
 
-export const partnerAdminKeys : KeysRequired<PartnerAdminProps> = {
-    ...versioningInfoJoiSchemaKeys,
-    _id: Joi.string().min(10).required(),
-    name: Joi.string().min(2).max(100).optional(),
-    email: Joi.string().email().allow(null).required().meta({ _mongoose: { index: true } }),
-    partnerId: Joi.string().required(),
-    role: Joi.string().default("BASIC")
+const PartnerAdminRolePrivileges = {
+  BASIC: {
+    permissions: [Permissions.GET_PARTNER_DETAILS, Permissions.VIEW_STATS],
+  },
+  INTERMEDIATE: {
+    permissions: [
+      Permissions.GET_PARTNER_DETAILS,
+      Permissions.VIEW_STATS,
+      Permissions.VIEW_ALL_TRANSACTIONS,
+      Permissions.VIEW_ALL_USERS,
+    ],
+  },
+  ALL: {
+    permissions: [
+      Permissions.UPDATE_PARTNER_DETAILS,
+      Permissions.GET_PARTNER_DETAILS,
+      Permissions.ADD_PARTNER_ADMIN,
+      Permissions.REMOVE_PARTNER_ADMIN,
+      Permissions.GET_ALL_ADMINS,
+      Permissions.UPDATE_PARTNER_ADMIN,
+      Permissions.VIEW_ALL_TRANSACTIONS,
+      Permissions.VIEW_ALL_USERS,
+      Permissions.VIEW_STATS,
+    ],
+  },
+};
+
+export interface PartnerAdminProps extends VersioningInfo {
+  _id: string;
+  name?: string;
+  email: string;
+  partnerId: string;
+  role: string;
 }
 
-export const partnerAdminSchema = Joi.object(partnerAdminKeys).options({allowUnknown: true, stripUnknown: false, }); 
+export const partnerAdminKeys: KeysRequired<PartnerAdminProps> = {
+  ...versioningInfoJoiSchemaKeys,
+  _id: Joi.string().min(10).required(),
+  name: Joi.string().min(2).max(100).optional(),
+  email: Joi.string()
+    .email()
+    .allow(null)
+    .required()
+    .meta({ _mongoose: { index: true } }),
+  partnerId: Joi.string().required(),
+  role: Joi.string().default("BASIC"),
+};
 
-export class PartnerAdmin extends AggregateRoot<PartnerAdminProps>​​ {
+export const partnerAdminSchema = Joi.object(partnerAdminKeys).options({ allowUnknown: true, stripUnknown: false });
 
-    private constructor (  partnerAdminProps: PartnerAdminProps ) { 
-        super( partnerAdminProps ); 
-    }
+export class PartnerAdmin extends AggregateRoot<PartnerAdminProps> {
+  private constructor(partnerAdminProps: PartnerAdminProps) {
+    super(partnerAdminProps);
+  }
 
-    public static createPartnerAdmin(partnerAdminProps: Partial<PartnerAdminProps>): PartnerAdmin{ 
-        if(!partnerAdminProps._id) partnerAdminProps._id = Entity.getNewID();
-        return new PartnerAdmin(Joi.attempt(partnerAdminProps, partnerAdminSchema));
-    }
+  public static createPartnerAdmin(partnerAdminProps: Partial<PartnerAdminProps>): PartnerAdmin {
+    if (!partnerAdminProps._id) partnerAdminProps._id = Entity.getNewID();
+    return new PartnerAdmin(Joi.attempt(partnerAdminProps, partnerAdminSchema));
+  }
 
-    public canUpdatePartnerDetails(): boolean {
-        return this.hasPermission(Permissions.UPDATE_PARTNER_DETAILS);
-    }
+  public canUpdatePartnerDetails(): boolean {
+    return this.hasPermission(Permissions.UPDATE_PARTNER_DETAILS);
+  }
 
-    public canGetPartnerDetails(): boolean {
-        return this.hasPermission(Permissions.GET_PARTNER_DETAILS);
-    }
+  public canGetPartnerDetails(): boolean {
+    return this.hasPermission(Permissions.GET_PARTNER_DETAILS);
+  }
 
-    public canAddPartnerAdmin(): boolean {
-        return this.hasPermission(Permissions.ADD_PARTNER_ADMIN);
-    }
+  public canAddPartnerAdmin(): boolean {
+    return this.hasPermission(Permissions.ADD_PARTNER_ADMIN);
+  }
 
-    public canRemovePartnerAdmin(): boolean {
-        return this.hasPermission(Permissions.REMOVE_PARTNER_ADMIN);
-    }
+  public canRemovePartnerAdmin(): boolean {
+    return this.hasPermission(Permissions.REMOVE_PARTNER_ADMIN);
+  }
 
-    public canUpdatePartnerAdmin(): boolean {
-        return this.hasPermission(Permissions.UPDATE_PARTNER_ADMIN);
-    }
+  public canUpdatePartnerAdmin(): boolean {
+    return this.hasPermission(Permissions.UPDATE_PARTNER_ADMIN);
+  }
 
-    public canGetAllAdmins(): boolean {
-        return this.hasPermission(Permissions.GET_ALL_ADMINS);
-    }
+  public canGetAllAdmins(): boolean {
+    return this.hasPermission(Permissions.GET_ALL_ADMINS);
+  }
 
-    public canViewAllTransactions(): boolean {
-        return this.hasPermission(Permissions.VIEW_ALL_TRANSACTIONS);
-    }
+  public canViewAllTransactions(): boolean {
+    return this.hasPermission(Permissions.VIEW_ALL_TRANSACTIONS);
+  }
 
-    public canViewAllUsers(): boolean {
-        return this.hasPermission(Permissions.VIEW_ALL_USERS);
-    }
+  public canViewAllUsers(): boolean {
+    return this.hasPermission(Permissions.VIEW_ALL_USERS);
+  }
 
-    public canViewStats(): boolean {
-        return this.hasPermission(Permissions.VIEW_STATS);
-    }
+  public canViewStats(): boolean {
+    return this.hasPermission(Permissions.VIEW_STATS);
+  }
 
-    private hasPermission(requiredPermission: string): boolean {
-        // The permission must be one of the permissions in the 'Permission' array. 
-        if (Object.values(Permissions).find(permission => permission === requiredPermission ? permission : undefined) === undefined)
-            return false;
+  private hasPermission(requiredPermission: string): boolean {
+    // The permission must be one of the permissions in the 'Permission' array.
+    if (
+      Object.values(Permissions).find(permission => (permission === requiredPermission ? permission : undefined)) ===
+      undefined
+    )
+      return false;
 
-        const allowedPermissions: Array<string> = PartnerAdminRolePrivileges[this.props.role].permissions;
-        return allowedPermissions.find(permission => permission === requiredPermission ? permission : undefined) !== undefined;
-    }
-    
+    const allowedPermissions: Array<string> = PartnerAdminRolePrivileges[this.props.role].permissions;
+    return (
+      allowedPermissions.find(permission => (permission === requiredPermission ? permission : undefined)) !== undefined
+    );
+  }
 }

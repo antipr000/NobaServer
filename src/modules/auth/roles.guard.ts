@@ -1,7 +1,7 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { Role } from './role.enum';
-import { ONE_OF_ROLES_KEY, ROLES_KEY, UserID } from './roles.decorator';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { Role } from "./role.enum";
+import { ONE_OF_ROLES_KEY, ROLES_KEY } from "./roles.decorator";
 
 //***************** https://docs.nestjs.com/security/authorization */
 
@@ -10,11 +10,10 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-
     //user needs to have all of these roles
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-        context.getHandler(),
-        context.getClass(),
+      context.getHandler(),
+      context.getClass(),
     ]);
 
     //user needs to have one of these roles along with the required roles
@@ -26,13 +25,10 @@ export class RolesGuard implements CanActivate {
     // return true; //not activiting while testing
 
     const req = context.switchToHttp().getRequest();
-    
 
     const urlParams = req.params;
 
     return true;
-
-
 
     /* if (!requiredRoles || requiredRoles.length === 0) {//no roles required, this will never happen as if no roles required then why even put decorator on resource?
       console.log("no roles required", requiredRoles); //TODO remove
@@ -55,27 +51,19 @@ export class RolesGuard implements CanActivate {
   */
   }
 
-  private getAuthenticatedUsersRolesOnRequestedResource(
-    authUser,
-    resourceUserID: string,
-   
-  ): Role[] {
-    const eligbleRoles = []; 
-    if(authUser) {
-        if(resourceUserID && authUser.uid === resourceUserID) {//resource owner userID matches with requesting user's uid
-            eligbleRoles.push(Role.User);
-        }
+  private getAuthenticatedUsersRolesOnRequestedResource(authUser, resourceUserID: string): Role[] {
+    const eligbleRoles = [];
+    if (authUser) {
+      if (resourceUserID && authUser.uid === resourceUserID) {
+        //resource owner userID matches with requesting user's uid
+        eligbleRoles.push(Role.User);
+      }
     }
 
     return eligbleRoles;
   }
 
   private getContextValue(key: string, context: ExecutionContext): any {
-    this.reflector.getAllAndOverride<Role[]>(key, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    this.reflector.getAllAndOverride<Role[]>(key, [context.getHandler(), context.getClass()]);
   }
 }
-
-

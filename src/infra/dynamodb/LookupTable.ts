@@ -1,9 +1,4 @@
-import {
-  DDB_KEY_TYPE,
-  HASH_KEY_TYPE,
-  RANGE_KEY_TYPE,
-  VERSION_ATTRIBUTE,
-} from "./DDBUtils";
+import { DDB_KEY_TYPE, HASH_KEY_TYPE, RANGE_KEY_TYPE, VERSION_ATTRIBUTE } from "./DDBUtils";
 
 export const LookupTableMeta = {
   tableName: "Lookup",
@@ -12,7 +7,6 @@ export const LookupTableMeta = {
   description:
     "General purpose table, can be used for storing any type of model (preffered transient data, i.e. not so important, like storing OTPs etc.)",
 } as const;
-
 
 export const lookUpTableBaseSchema = {
   pk: {
