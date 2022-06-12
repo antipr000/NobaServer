@@ -42,14 +42,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     console.log(id, identityType);
 
     switch (identityType) {
-    case consumerIdentityIdentifier:
-      return (await this.userService.findUserById(id)).props;
-    case nobaAdminIdentityIdentifier:
-      return this.adminService.getAdminById(id);
-    case partnerAdminIdentityIdenitfier:
-      return this.partnerAdminService.getPartnerAdmin(id);
-    default:
-      throw new UnauthorizedException(`IdentityType should be one of "${allIdentities}"`);
+      case consumerIdentityIdentifier:
+        return (await this.userService.findUserById(id)).props;
+      case nobaAdminIdentityIdentifier:
+        return this.adminService.getAdminById(id);
+      case partnerAdminIdentityIdenitfier:
+        return this.partnerAdminService.getPartnerAdmin(id);
+      default:
+        throw new UnauthorizedException(`IdentityType should be one of "${allIdentities}"`);
     }
   }
 }

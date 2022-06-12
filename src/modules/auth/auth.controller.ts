@@ -27,14 +27,14 @@ export class AuthController {
 
   private getAuthService(identityType: string): AuthService {
     switch (identityType) {
-    case consumerIdentityIdentifier:
-      return this.consumerAuthService;
-    case nobaAdminIdentityIdentifier:
-      return this.adminAuthService;
-    case partnerAdminIdentityIdenitfier:
-      return this.partnerAuthService;
-    default:
-      throw new BadRequestException(`"identityType" should be one of "${allIdentities}"`);
+      case consumerIdentityIdentifier:
+        return this.consumerAuthService;
+      case nobaAdminIdentityIdentifier:
+        return this.adminAuthService;
+      case partnerAdminIdentityIdenitfier:
+        return this.partnerAuthService;
+      default:
+        throw new BadRequestException(`"identityType" should be one of "${allIdentities}"`);
     }
   }
 

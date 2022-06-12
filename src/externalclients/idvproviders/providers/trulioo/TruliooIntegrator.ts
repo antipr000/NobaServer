@@ -52,51 +52,51 @@ export default class TruliooIntegrator extends IDVIntegrator {
     };
 
     switch (request.nationalID.type) {
-    case NationalIDTypes.DriverLicence:
-      requestData.DataFields.DriverLicence = {
-        Number: request.nationalID.number,
-        State: request.nationalID.state,
-        DayOfExpiry: request.nationalID.dayOfExpiry,
-        MonthOfExpiry: request.nationalID.monthOfExpiry,
-        YearOfExpiry: request.nationalID.yearOfExpiry,
-      };
-      break;
-    case NationalIDTypes.Passport:
-      requestData.DataFields.Passport = {
-        Number: request.nationalID.number,
-        Mrz1: request.nationalID.mrz1,
-        Mrz2: request.nationalID.mrz2,
-        DayOfExpiry: request.nationalID.dayOfExpiry,
-        MonthOfExpiry: request.nationalID.monthOfExpiry,
-        YearOfExpiry: request.nationalID.yearOfExpiry,
-      };
-      break;
-    case NationalIDTypes.HealthID:
-      requestData.DataFields.NationalIds = [
-        {
-          Type: "healthid",
+      case NationalIDTypes.DriverLicence:
+        requestData.DataFields.DriverLicence = {
           Number: request.nationalID.number,
-        },
-      ];
-      break;
-    case NationalIDTypes.NationalID:
-      requestData.DataFields.NationalIds = [
-        {
-          Type: "nationalid",
+          State: request.nationalID.state,
+          DayOfExpiry: request.nationalID.dayOfExpiry,
+          MonthOfExpiry: request.nationalID.monthOfExpiry,
+          YearOfExpiry: request.nationalID.yearOfExpiry,
+        };
+        break;
+      case NationalIDTypes.Passport:
+        requestData.DataFields.Passport = {
           Number: request.nationalID.number,
-        },
-      ];
-      break;
-    case NationalIDTypes.SocialService:
-      requestData.DataFields.NationalIds = [
-        {
-          Type: "socialservice",
-          Number: request.nationalID.number,
-        },
-      ];
-      break;
-    default:
-      throw Error("ID is not supported");
+          Mrz1: request.nationalID.mrz1,
+          Mrz2: request.nationalID.mrz2,
+          DayOfExpiry: request.nationalID.dayOfExpiry,
+          MonthOfExpiry: request.nationalID.monthOfExpiry,
+          YearOfExpiry: request.nationalID.yearOfExpiry,
+        };
+        break;
+      case NationalIDTypes.HealthID:
+        requestData.DataFields.NationalIds = [
+          {
+            Type: "healthid",
+            Number: request.nationalID.number,
+          },
+        ];
+        break;
+      case NationalIDTypes.NationalID:
+        requestData.DataFields.NationalIds = [
+          {
+            Type: "nationalid",
+            Number: request.nationalID.number,
+          },
+        ];
+        break;
+      case NationalIDTypes.SocialService:
+        requestData.DataFields.NationalIds = [
+          {
+            Type: "socialservice",
+            Number: request.nationalID.number,
+          },
+        ];
+        break;
+      default:
+        throw Error("ID is not supported");
     }
     return requestData;
   }
@@ -160,16 +160,16 @@ export default class TruliooIntegrator extends IDVIntegrator {
 
   transactionStatusMapper(transactionStatus: string): TransactionStatus {
     switch (transactionStatus) {
-    case "Completed":
-      return TransactionStatus.Completed;
-    case "Failed":
-      return TransactionStatus.Failed;
-    case "Canceled":
-      return TransactionStatus.Canceled;
-    case "TimeoutCanceled":
-      return TransactionStatus.TimeoutCanceled;
-    default:
-      return TransactionStatus.InProgress;
+      case "Completed":
+        return TransactionStatus.Completed;
+      case "Failed":
+        return TransactionStatus.Failed;
+      case "Canceled":
+        return TransactionStatus.Canceled;
+      case "TimeoutCanceled":
+        return TransactionStatus.TimeoutCanceled;
+      default:
+        return TransactionStatus.InProgress;
     }
   }
 
