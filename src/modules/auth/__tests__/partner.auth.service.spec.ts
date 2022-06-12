@@ -98,6 +98,7 @@ describe("AdminService", () => {
         _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
+        identityType: partnerAdminIdentityIdenitfier,
       });
       when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
 
@@ -117,6 +118,7 @@ describe("AdminService", () => {
         _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
+        identityType: partnerAdminIdentityIdenitfier,
       });
       when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
 
@@ -136,6 +138,7 @@ describe("AdminService", () => {
         _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
+        identityType: partnerAdminIdentityIdenitfier,
       });
       when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
 

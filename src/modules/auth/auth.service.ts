@@ -7,9 +7,6 @@ import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { EmailService } from "../common/email.service";
 import { SMSService } from "../common/sms.service";
 
-// abstract class with all common functionalities
-//
-// partner.auth.service.ts
 
 export abstract class AuthService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -50,7 +47,7 @@ export abstract class AuthService {
   }
 
   async saveOtp(emailOrPhone: string, otp: number): Promise<void> {
-    await this.otpRepo.saveOTP(emailOrPhone, otp);
+    await this.otpRepo.saveOTP(emailOrPhone, otp, this.getIdentityType());
   }
 
   // TODO: try to separate 'emailOrPhone' by introducing an interface.

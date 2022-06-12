@@ -2,11 +2,13 @@ import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
+import { allIdentities } from "./IdentityType";
 
 export interface OtpProps extends VersioningInfo {
   _id: string;
   otp: number;
   otpExpiryTime: number;
+  identityType: string;
 }
 
 export const otpValidationKeys: KeysRequired<OtpProps> = {
@@ -14,6 +16,7 @@ export const otpValidationKeys: KeysRequired<OtpProps> = {
   _id: Joi.string().required(),
   otp: Joi.number().required(),
   otpExpiryTime: Joi.number().required(),
+  identityType: Joi.string().valid(...allIdentities),
 };
 
 export const otpJoiSchema = Joi.object(otpValidationKeys).options({ allowUnknown: true });
