@@ -22,9 +22,10 @@ Noba server side code.
 - Eslint and Prettier has configurations has been added and also configurations of them with VSCode has been added. To make them work make sure to install the extensions mentioned above.
 - Although eslint and prettier are configured to run on save, it's always better to run both of them before commiting your changes. You can run using:
 ``` 
-npx eslint --fix src/
 npx prettier --write src/
+npx eslint --fix src/
 ```
+Also make sure to run prettier first and then eslint.
 - Make sure to add unit and integration tests for your changes. You can find best practices around writing tests [here](https://www.notion.so/onenoba/Best-Practices-on-Testing-a29dc328521d481bba97ae4f268aa37a).
 - Make sure your changes are not breaking any existing tests. If it's intended to break, make sure to update the tests accordingly. Also before commiting your changes run all tests once using: `yarn run test`
 - Follow best coding practices while writing code. You can find some examples around best practices in [this]() document.
