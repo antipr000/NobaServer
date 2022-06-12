@@ -43,7 +43,7 @@ describe("AdminService", () => {
   });
 
   describe("addNobaAdmin", () => {
-    it("should return \"undfined\" if email already exists", async () => {
+    it("should return 'undefined' if email already exists", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const existingNobaAdmin = Admin.createAdmin({
         _id: "1111111111",
@@ -76,7 +76,7 @@ describe("AdminService", () => {
   });
 
   describe("changeNobaAdminRole", () => {
-    it("should throw \"BadRequestException\" if \"role\" is invalid", async () => {
+    it("should throw 'BadRequestException' if \"role\" is invalid", async () => {
       const invalidRole = "INVALID_ROLE";
 
       try {
@@ -87,7 +87,7 @@ describe("AdminService", () => {
       }
     });
 
-    it("should throw \"NotFoundException\" if admin with given email doesn't exist", async () => {
+    it("should throw 'NotFoundException' if admin with given email doesn't exist", async () => {
       const INVALID_ID = "2222222222";
 
       when(mockAdminTransactionRepo.getNobaAdminById(INVALID_ID)).thenResolve(undefined);
@@ -133,7 +133,7 @@ describe("AdminService", () => {
       });
     });
 
-    it("should not call the db when the \"role\" if the target \"role\" is same as current", async () => {
+    it("should not call the db when the 'role' if the target 'role' is same as current", async () => {
       const VALID_ADMIN_ID = "1111111111";
       const CURRENT_ROLE = "BASIC";
       const CHANGED_ROLE = "BASIC";
@@ -154,7 +154,7 @@ describe("AdminService", () => {
   });
 
   describe("deleteNobaAdmin", () => {
-    it("should throw \"NotFoundException\" if user with given ID doesn't exists", async () => {
+    it("should throw 'NotFoundException' if user with given ID doesn't exists", async () => {
       const adminId = "1111111111";
       when(mockAdminTransactionRepo.deleteNobaAdmin(adminId)).thenResolve(0);
 
@@ -177,7 +177,7 @@ describe("AdminService", () => {
   });
 
   describe("getAdminByEmail", () => {
-    it("should throw \"NotFoundException\" if email doesn't exist", async () => {
+    it("should throw 'NotFoundException' if email doesn't exist", async () => {
       const NON_EXISTING_ADMIN_EMAIL = "abcd@noba.com";
 
       when(mockAdminTransactionRepo.getNobaAdminByEmail(NON_EXISTING_ADMIN_EMAIL)).thenReject(new NotFoundException());
@@ -207,7 +207,7 @@ describe("AdminService", () => {
   });
 
   describe("getAdminById", () => {
-    it("should throw \"NotFoundException\" if ID doesn't exist", async () => {
+    it("should throw 'NotFoundException' if ID doesn't exist", async () => {
       const NON_EXISTING_ADMIN_ID = "1111111111";
 
       when(mockAdminTransactionRepo.getNobaAdminById(NON_EXISTING_ADMIN_ID)).thenReject(new NotFoundException());

@@ -90,7 +90,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("NobaAdmin with \"BASIC\" role shouldn't be able to create a new NobaAdmin", async () => {
+    it("NobaAdmin with 'BASIC' role shouldn't be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
         role: "BASIC",
@@ -110,7 +110,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("NobaAdmin with \"INTERMEDIATE\" role shouldn't be able to create a new NobaAdmin", async () => {
+    it("NobaAdmin with 'INTERMEDIATE' role shouldn't be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
         role: "BASIC",
@@ -130,7 +130,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("NobaAdmin with \"ADMIN\" role should be able to create a new NobaAdmin", async () => {
+    it("NobaAdmin with 'ADMIN' role should be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
         role: "BASIC",
@@ -203,7 +203,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        const result = await adminController.updateNobaAdmin({ user: authenticatedConsumer }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: authenticatedConsumer }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -224,14 +224,14 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        const result = await adminController.updateNobaAdmin({ user: authenticatedParterAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: authenticatedParterAdmin }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
       }
     });
 
-    it("NobaAdmin with \"BASIC\" role shouldn't be able to update the role of the an admin", async () => {
+    it("NobaAdmin with 'BASIC' role shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
       const UPDATED_ROLE = "INTERMEDIATE";
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
@@ -244,14 +244,14 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        const result = await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
       }
     });
 
-    it("NobaAdmin with \"INTERMEDIATE\" role shouldn't be able to update the role of the an admin", async () => {
+    it("NobaAdmin with 'INTERMEDIATE' role shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
       const UPDATED_ROLE = "INTERMEDIATE";
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
@@ -264,14 +264,14 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        const result = await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
       }
     });
 
-    it("NobaAdmin with \"ADMIN\" role should be able to update the role of the an admin", async () => {
+    it("NobaAdmin with 'ADMIN' role should be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
       const UPDATED_ROLE = "INTERMEDIATE";
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
@@ -309,7 +309,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        const result = await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -346,7 +346,7 @@ describe("AdminController", () => {
         email: LOGGED_IN_ADMIN_EMAIL,
       });
       try {
-        const result = await adminController.deleteNobaAdmin({ user: authenticatedConsumer }, "id");
+        await adminController.deleteNobaAdmin({ user: authenticatedConsumer }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -354,7 +354,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("PartnerAdmin with \"most\" privileged role shouldn't be able to delete any NobaAdmin", async () => {
+    it("PartnerAdmin with 'most' privileged role shouldn't be able to delete any NobaAdmin", async () => {
       const authenticatedParterAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
@@ -363,7 +363,7 @@ describe("AdminController", () => {
       });
 
       try {
-        const result = await adminController.deleteNobaAdmin({ user: authenticatedParterAdmin }, "id");
+        await adminController.deleteNobaAdmin({ user: authenticatedParterAdmin }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -371,7 +371,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("NobaAdmin with \"BASIC\" role shouldn't be able to delete any NobaAdmin", async () => {
+    it("NobaAdmin with 'BASIC' role shouldn't be able to delete any NobaAdmin", async () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
@@ -379,7 +379,7 @@ describe("AdminController", () => {
       });
 
       try {
-        const result = await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, "id");
+        await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -387,7 +387,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("NobaAdmin with \"INTERMEDIATE\" role shouldn't be able to delete any NobaAdmin", async () => {
+    it("NobaAdmin with 'INTERMEDIATE' role shouldn't be able to delete any NobaAdmin", async () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
@@ -395,7 +395,7 @@ describe("AdminController", () => {
       });
 
       try {
-        const result = await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, "id");
+        await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -403,7 +403,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("NobaAdmin with \"ADMIN\" role should delete the specified NobaAdmin & returns it's ID", async () => {
+    it("NobaAdmin with 'ADMIN' role should delete the specified NobaAdmin & returns it's ID", async () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
@@ -421,7 +421,7 @@ describe("AdminController", () => {
       expect(result._id).toEqual(adminId);
     });
 
-    it("should throw \"NotFoundException\" if user with ID doesn't exists", async () => {
+    it("should throw 'NotFoundException' if user with ID doesn't exists", async () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
@@ -447,10 +447,7 @@ describe("AdminController", () => {
       });
 
       try {
-        const result = await adminController.deleteNobaAdmin(
-          { user: authenticatedNobaAdmin },
-          authenticatedNobaAdmin.props._id,
-        );
+        await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, authenticatedNobaAdmin.props._id);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);

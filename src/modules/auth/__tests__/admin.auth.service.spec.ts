@@ -77,7 +77,7 @@ describe("AdminService", () => {
   });
 
   describe("validateAndGetUserId", () => {
-    it("should throw \"NotFoundException\" if user with given email doesn't exist", async () => {
+    it("should throw 'NotFoundException' if user with given email doesn't exist", async () => {
       const NON_EXISTING_ADMIN_EMAIL = "abcd@noba.com";
 
       when(mockOtpRepo.getOTP(NON_EXISTING_ADMIN_EMAIL, identityType)).thenReject(new NotFoundException());
@@ -91,7 +91,7 @@ describe("AdminService", () => {
       }
     });
 
-    it("should throw \"UnauthorizedException\" if otp is incorrect", async () => {
+    it("should throw 'UnauthorizedException' if otp is incorrect", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const CORRECT_OTP = 123456;
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
@@ -113,7 +113,7 @@ describe("AdminService", () => {
       }
     });
 
-    it("should throw \"UnauthorizedException\" if otp is expired", async () => {
+    it("should throw 'UnauthorizedException' if otp is expired", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const CORRECT_OTP = 123456;
       const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
@@ -135,7 +135,7 @@ describe("AdminService", () => {
       }
     });
 
-    it("should throw \"UnauthorizedException\" if otp is expired", async () => {
+    it("should throw 'UnauthorizedException' if otp is expired", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const ADMIN_ID = "1111111111";
       const CORRECT_OTP = 123456;

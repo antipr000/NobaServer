@@ -55,7 +55,7 @@ describe("AdminService", () => {
   });
 
   describe("verifyOtp", () => {
-    it("should use \"AdminAuthService\" if \"identityType\" is \"NOBA_ADMIN\"", async () => {
+    it("should use 'AdminAuthService' if 'identityType' is 'NOBA_ADMIN'", async () => {
       const adminId = "1111111111";
       const adminEmail = "admin@noba.com";
       const identityType: string = nobaAdminIdentityIdentifier;
@@ -77,7 +77,7 @@ describe("AdminService", () => {
       expect(result).toEqual(generateAccessTokenResponse);
     });
 
-    it("should use \"UserAuthService\" if \"identityType\" is \"CONSUMER\"", async () => {
+    it("should use 'UserAuthService' if 'identityType' is 'CONSUMER'", async () => {
       const consumerId = "1111111111";
       const consumerEmail = "consumer@noba.com";
       const identityType: string = consumerIdentityIdentifier;
@@ -101,7 +101,7 @@ describe("AdminService", () => {
   });
 
   describe("login", () => {
-    it("should use \"AdminAuthService\" if \"identityType\" is \"NOBA_ADMIN\"", async () => {
+    it("should use 'AdminAuthService' if 'identityType' is 'NOBA_ADMIN'", async () => {
       const adminEmail = "admin@noba.com";
       const identityType: string = nobaAdminIdentityIdentifier;
       const otp = 123456;
@@ -116,7 +116,7 @@ describe("AdminService", () => {
       });
     });
 
-    it("should use \"UserAuthService\" if \"identityType\" is \"CONSUMER\"", async () => {
+    it("should use 'UserAuthService' if 'identityType' is 'CONSUMER'", async () => {
       const consumerEmail = "consumer@noba.com";
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
