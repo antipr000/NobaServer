@@ -7,7 +7,6 @@ import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { EmailService } from "../common/email.service";
 import { SMSService } from "../common/sms.service";
 
-
 export abstract class AuthService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
