@@ -196,7 +196,7 @@ describe("PartnerController", () => {
       const partnerId = mockPartnerAdminWithAllAccess.partnerId;
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithBasicAccess);
       try {
-        partnerController.getAllPartnerAdmins(partnerId, {
+        await partnerController.getAllPartnerAdmins(partnerId, {
           user: requestingPartnerAdmin,
         });
       } catch (e) {
@@ -208,7 +208,7 @@ describe("PartnerController", () => {
       const partnerId = mockPartnerAdminWithAllAccess.partnerId;
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithIntermediateAccess);
       try {
-        partnerController.getAllPartnerAdmins(partnerId, {
+        await partnerController.getAllPartnerAdmins(partnerId, {
           user: requestingPartnerAdmin,
         });
       } catch (e) {
