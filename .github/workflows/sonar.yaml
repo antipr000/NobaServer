@@ -11,10 +11,22 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.4.0
+        with:
+          node-version: 14.x
+
+      - name: Setup Yarn
+        uses: mskelton/setup-yarn@v1.0.1
+        with:
+          node-version: 14.x
+      
       - name: Install dependencies
         run: yarn install
+      
       - name: Test and coverage
         run: yarn jest --coverage
+      
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
