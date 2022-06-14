@@ -5,9 +5,10 @@ import { AdminController } from "./admin.controller";
 import { AdminService } from "./admin.service";
 import { MongoDBAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
 import { AdminMapper } from "./mappers/AdminMapper";
+import { PartnerModule } from "../partner/partner.module";
 
 @Module({
-  imports: [ConfigModule, CommonModule],
+  imports: [ConfigModule, CommonModule, PartnerModule],
   controllers: [AdminController],
   providers: [
     AdminService,
@@ -19,4 +20,4 @@ import { AdminMapper } from "./mappers/AdminMapper";
   ],
   exports: [AdminService],
 })
-export class AdminModule {}
+export class AdminModule { }

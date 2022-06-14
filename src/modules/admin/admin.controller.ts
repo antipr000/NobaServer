@@ -16,8 +16,8 @@ import {
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AdminId } from "../auth/roles.decorator";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { AdminId, PartnerID } from "../auth/roles.decorator";
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { TransactionsFilterDTO } from "./dto/TransactionsFilterDTO";
@@ -28,6 +28,11 @@ import { AdminMapper } from "./mappers/AdminMapper";
 import { Public } from "../auth/public.decorator";
 import { UpdateNobaAdminDTO } from "./dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "./dto/DeleteNobaAdminDTO";
+import { PartnerAdminDTO } from "../partner/dto/PartnerAdminDTO";
+import { AddPartnerAdminRequestDTO } from "../partner/dto/AddPartnerAdminRequestDTO";
+import { PartnerAdmin } from "../partner/domain/PartnerAdmin";
+import { PartnerAdminService } from "../partner/partneradmin.service";
+import { PartnerAdminMapper } from "../partner/mappers/PartnerAdminMapper";
 
 @Controller("admin")
 @ApiBearerAuth("JWT-auth")
@@ -42,8 +47,13 @@ export class AdminController {
   @Inject()
   private readonly adminMapper: AdminMapper;
 
+  @Inject()
+  private readonly partnerAdminService: PartnerAdminService;
+
+  private readonly partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() {}
+  constructor() { }
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
@@ -122,5 +132,26 @@ export class AdminController {
     const result = new DeleteNobaAdminDTO();
     result._id = deletedAdminId;
     return result;
+  }
+
+  @Post(`/:${AdminId}/partners/:${PartnerID}/admins`)
+  @ApiOperation({ summary: "Add a new partner admin" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async addPartnerAdmin(
+    @Param(AdminId) adminId: string,
+    @Param(PartnerID) partnerId: string,
+    @Body() requestBody: AddPartnerAdminRequestDTO,
+    @Request() request,
+  ): Promise<PartnerAdminDTO> {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
+      throw new ForbiddenException(
+        `Admins with role '${authenticatedUser.props.role}' can't add PartnerAdmins.`);
+    }
+
+    const partnerAdmin: PartnerAdmin =
+      await this.partnerAdminService.addPartnerAdmin(partnerId, requestBody.email);
+    return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 }

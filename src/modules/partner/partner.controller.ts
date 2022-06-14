@@ -116,19 +116,8 @@ export class PartnerController {
     @Body() requestBody: AddPartnerAdminRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    // *************************  AuthZ ***************************
-    if (request.user instanceof PartnerAdmin) {
-      const requestUser: PartnerAdmin = request.user;
-      if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
-    }
-    else if (request.user instanceof Admin) {
-      const requestUser: Admin = request.user;
-      if (!requestUser.canAddAdminsToPartner()) throw new ForbiddenException();
-    }
-    else {
-      throw new ForbiddenException();
-    }
-    // *************************  AuthZ ***************************
+    const requestUser: PartnerAdmin = request.user;
+    if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
 
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addPartnerAdmin(partnerID, requestBody.email);
     return this.partnerAdminMapper.toDTO(partnerAdmin);
