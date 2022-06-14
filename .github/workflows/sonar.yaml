@@ -2,7 +2,7 @@ name: Sonar
 on:
   push:
     branches:
-      - master # or the name of your main branch
+      - master
 jobs:
   build:
     name: Build
@@ -13,8 +13,6 @@ jobs:
           fetch-depth: 0
       - name: Install dependencies
         run: yarn install
-      - name: add Jest
-        run: yarn add jest
       - name: Test and coverage
         run: yarn jest --coverage
       - uses: sonarsource/sonarqube-scan-action@master
