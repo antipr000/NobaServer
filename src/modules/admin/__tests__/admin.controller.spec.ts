@@ -503,6 +503,34 @@ describe("AdminController", () => {
       }
     });
 
+    it("PartnerAdmin with 'ALL' privileges shouldn't be able to create a new PartnerAdmin using ADMIN API", async () => {
+      const adminId = "AAAAAAAAAA";
+      const partnerAdminId = "PAPAPAPAPPA";
+      const partnerId = "PPPPPPPPPP";
+      const newPartnerAdminEmail = "partner.admin@noba.com";
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: partnerAdminId,
+        email: "partner.admin@noba.com",
+        name: "Partner Admin",
+        partnerId: partnerId,
+        role: "ALL"
+      });
+
+      const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
+        email: newPartnerAdminEmail,
+      };
+
+      try {
+        await adminController.addAdminsForPartners(
+          adminId, partnerId, addPartnerAdminRequest, { user: requestingPartnerAdmin });
+
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
     it("NobaAdmin with 'BASIC' role shouldn't be able to create a new PartnerAdmin", async () => {
       const adminId = "AAAAAAAAAA";
       const partnerId = "PPPPPPPPPP";
@@ -611,6 +639,33 @@ describe("AdminController", () => {
         };
         await adminController.registerPartner(
           adminId, addPartnerRequest, { user: requestingConsumer });
+
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("PartnerAdmin with 'ALL' privileges shouldn't be able to register a new Partner", async () => {
+      const adminId = "AAAAAAAAAA";
+      const partnerId = "PPPPPPPPPP";
+      const partnerAdminId = "PAPAPAPAPA";
+      const newPartnerName = "Noba Partner";
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: partnerAdminId,
+        email: "partner.admin@noba.com",
+        name: "Partner Admin",
+        partnerId: partnerId,
+        role: "ALL"
+      });
+
+      try {
+        const addPartnerRequest: AddPartnerRequestDTO = {
+          name: newPartnerName,
+        };
+        await adminController.registerPartner(
+          adminId, addPartnerRequest, { user: requestingPartnerAdmin });
 
         expect(true).toBe(false);
       } catch (err) {
