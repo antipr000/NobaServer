@@ -13,6 +13,7 @@ import {
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { Admin } from "../admin/domain/Admin";
 import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
 import { Partner } from "./domain/Partner";
 import { PartnerAdmin } from "./domain/PartnerAdmin";
@@ -115,8 +116,20 @@ export class PartnerController {
     @Body() requestBody: AddPartnerAdminRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user;
-    if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
+    // *************************  AuthZ ***************************
+    if (request.user instanceof PartnerAdmin) {
+      const requestUser: PartnerAdmin = request.user;
+      if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
+    }
+    else if (request.user instanceof Admin) {
+      const requestUser: Admin = request.user;
+      if (!requestUser.canAddAdminsToPartner()) throw new ForbiddenException();
+    }
+    else {
+      throw new ForbiddenException();
+    }
+    // *************************  AuthZ ***************************
+
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addPartnerAdmin(partnerID, requestBody.email);
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }

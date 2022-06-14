@@ -52,11 +52,8 @@ when(mockedPartnerAdminService.getAllPartnerAdmins(mockPartnerAdminWithAllAccess
   }),
 );
 
-when(mockedPartnerAdminService.getPartnerAdminFromEmail(mockFailureEmailAddress)).thenReturn(
-  new Promise((_, reject) => {
-    reject(new NotFoundException("Admin not found"));
-  }),
-);
+when(mockedPartnerAdminService.getPartnerAdminFromEmail(mockFailureEmailAddress))
+  .thenReject(new NotFoundException("Admin not found"));
 
 when(mockedPartnerAdminService.getPartnerAdminFromEmail(mockPartnerAdminWithAllAccess.email)).thenReturn(
   new Promise((resolve, _) => {

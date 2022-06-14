@@ -19,6 +19,9 @@ import { PartnerController } from "../partner.controller";
 import { PartnerAdmin } from "../domain/PartnerAdmin";
 import { ForbiddenException } from "@nestjs/common";
 import { Partner } from "../domain/Partner";
+import { User } from "../../../../src/modules/user/domain/User";
+import { AddPartnerAdminRequestDTO } from "../dto/AddPartnerAdminRequestDTO";
+import { Admin } from "../../../../src/modules/admin/domain/Admin";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
@@ -286,6 +289,88 @@ describe("PartnerController", () => {
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
+    });
+  });
+
+  describe("addPartnerAdmin", () => {
+    it("Consumers shouldn't be able to create a new PartnerAdmin", async () => {
+      const partnerAdminToAdd = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithAllAccess);
+      const requestingConsumer = User.createUser({
+        _id: "UUUUUUUUUU",
+        email: "consumer@noba.com",
+        name: "Consumer A"
+      });
+
+      const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
+        email: partnerAdminToAdd.props.email,
+      };
+
+      try {
+        await partnerController.addPartnerAdmin(
+          partnerAdminToAdd.props.partnerId, addPartnerAdminRequest, { user: requestingConsumer }
+        );
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("NobaAdmin with 'BASIC' role shouldn't be able to create a new PartnerAdmin", async () => {
+      const partnerAdminToAdd = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithAllAccess);
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: "AAAAAAAAAA",
+        email: "admin@noba.com",
+        role: "BASIC"
+      });
+
+      const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
+        email: partnerAdminToAdd.props.email,
+      };
+
+      try {
+        await partnerController.addPartnerAdmin(
+          partnerAdminToAdd.props.partnerId, addPartnerAdminRequest, { user: requestingNobaAdmin }
+        );
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("NobaAdmin with 'INTERMEDIATE' role should be able to create a new PartnerAdmin", async () => {
+      const partnerAdminToAdd = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithAllAccess);
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: "AAAAAAAAAA",
+        email: "admin@noba.com",
+        role: "INTERMEDIATE"
+      });
+
+      const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
+        email: partnerAdminToAdd.props.email,
+      };
+
+      const result = await partnerController.addPartnerAdmin(
+        partnerAdminToAdd.props.partnerId, addPartnerAdminRequest, { user: requestingNobaAdmin }
+      );
+      expect(result).toStrictEqual(partnerAdminMapper.toDTO(partnerAdminToAdd));
+    });
+
+    it("NobaAdmin with 'ADMIN' role should be able to create a new PartnerAdmin", async () => {
+      const partnerAdminToAdd = PartnerAdmin.createPartnerAdmin(mockPartnerAdminWithAllAccess);
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: "AAAAAAAAAA",
+        email: "admin@noba.com",
+        role: "ADMIN"
+      });
+
+      const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
+        email: partnerAdminToAdd.props.email,
+      };
+
+      const result = await partnerController.addPartnerAdmin(
+        partnerAdminToAdd.props.partnerId, addPartnerAdminRequest, { user: requestingNobaAdmin }
+      );
+      expect(result).toStrictEqual(partnerAdminMapper.toDTO(partnerAdminToAdd));
     });
   });
 });
