@@ -2,7 +2,9 @@ name: Sonar
 on:
   push:
     branches:
-      - master
+      - master # or the name of your main branch
+      - dev
+
 jobs:
   build:
     name: Build
