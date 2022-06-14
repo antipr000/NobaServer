@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, HttpStatus, Inject, Post, Request } from "@nestjs/common";
+import { BadRequestException, Body, Controller, ForbiddenException, Get, HttpStatus, Inject, Post, Request } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AdminAuthService } from "./admin.auth.service";
 import { AuthService } from "./auth.service";
@@ -55,6 +55,13 @@ export class AuthController {
   @Post("/login")
   async loginUser(@Body() request: LoginRequestDTO) {
     const authService: AuthService = this.getAuthService(request.identityType);
+
+    const isLoginAllowed = await authService.verifyUserExistence(request.email);
+    if (!isLoginAllowed) {
+      throw new ForbiddenException(
+        `User "${request.email}" is not allowed to login as identity "${request.identityType}". ` +
+        `Please contact support team, if you think this is an error.`);
+    }
 
     const otp = authService.createOtp();
     await authService.saveOtp(request.email, otp);

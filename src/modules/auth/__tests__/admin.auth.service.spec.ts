@@ -12,7 +12,7 @@ import { instance, when } from "ts-mockito";
 import { AdminAuthService } from "../admin.auth.service";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../repo/OTPRepo";
-import { NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
@@ -160,6 +160,49 @@ describe("AdminService", () => {
 
       const receivedAdminId = await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP);
       expect(receivedAdminId).toEqual(ADMIN_ID);
+    });
+  });
+
+  describe("verifyUserExistence", () => {
+    it("should return 'false' if service throws NotFoundException", async () => {
+      const NON_EXISTING_ADMIN_EMAIL = "admin@noba.com";
+
+      when(mockAdminService.getAdminByEmail(NON_EXISTING_ADMIN_EMAIL))
+        .thenReject(new NotFoundException());
+
+      const result = await adminAuthService.verifyUserExistence(NON_EXISTING_ADMIN_EMAIL);
+
+      expect(result).toBe(false);
+    });
+
+    it("should return 'true' if service returns true", async () => {
+      const EXISTING_ADMIN_EMAIL = "admin@noba.com";
+      const admin: Admin = Admin.createAdmin({
+        _id: "1111111111",
+        email: EXISTING_ADMIN_EMAIL,
+        role: "BASIC",
+      });
+
+      when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL))
+        .thenResolve(admin);
+
+      const result = await adminAuthService.verifyUserExistence(EXISTING_ADMIN_EMAIL);
+
+      expect(result).toBe(true);
+    });
+
+    it("should rethrows 'InternalServerErrorException' if service throws it", async () => {
+      const NON_EXISTING_ADMIN_EMAIL = "admin@noba.com";
+
+      when(mockAdminService.getAdminByEmail(NON_EXISTING_ADMIN_EMAIL))
+        .thenReject(new InternalServerErrorException());
+
+      try {
+        await adminAuthService.verifyUserExistence(NON_EXISTING_ADMIN_EMAIL);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(InternalServerErrorException);
+      }
     });
   });
 });

@@ -63,7 +63,12 @@ export abstract class AuthService {
     return Math.floor(100000 + Math.random() * 900000);
   }
 
+  async verifyUserExistence(email: string): Promise<boolean> {
+    return this.isUserSignedUp(email);
+  }
+
   protected abstract getIdentityType();
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
   protected abstract getUserId(emailOrPhone: string): Promise<string>;
+  protected abstract isUserSignedUp(email: string): Promise<boolean>;
 }
