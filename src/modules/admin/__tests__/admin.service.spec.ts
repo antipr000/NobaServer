@@ -28,7 +28,6 @@ describe("AdminService", () => {
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [getWinstonModule(), getAppConfigModule(), CommonModule],
-      controllers: [AdminController],
       providers: [
         AdminService,
         {

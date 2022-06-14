@@ -33,6 +33,11 @@ import { AddPartnerAdminRequestDTO } from "../partner/dto/AddPartnerAdminRequest
 import { PartnerAdmin } from "../partner/domain/PartnerAdmin";
 import { PartnerAdminService } from "../partner/partneradmin.service";
 import { PartnerAdminMapper } from "../partner/mappers/PartnerAdminMapper";
+import { AddPartnerRequestDTO } from "./dto/AddPartnerRequestDTO";
+import { PartnerDTO } from "../partner/dto/PartnerDTO";
+import { PartnerService } from "../partner/partner.service";
+import { Partner } from "../partner/domain/Partner";
+import { PartnerMapper } from "../partner/mappers/PartnerMapper";
 
 @Controller("admin")
 @ApiBearerAuth("JWT-auth")
@@ -50,7 +55,11 @@ export class AdminController {
   @Inject()
   private readonly partnerAdminService: PartnerAdminService;
 
+  @Inject()
+  private readonly partnerService: PartnerService;
+
   private readonly partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
+  private readonly partnerMapper: PartnerMapper = new PartnerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() { }
@@ -138,7 +147,7 @@ export class AdminController {
   @ApiOperation({ summary: "Add a new partner admin" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
   @ApiBadRequestResponse({ description: "Bad request" })
-  async addPartnerAdmin(
+  async addAdminsForPartners(
     @Param(AdminId) adminId: string,
     @Param(PartnerID) partnerId: string,
     @Body() requestBody: AddPartnerAdminRequestDTO,
@@ -153,5 +162,24 @@ export class AdminController {
     const partnerAdmin: PartnerAdmin =
       await this.partnerAdminService.addPartnerAdmin(partnerId, requestBody.email);
     return this.partnerAdminMapper.toDTO(partnerAdmin);
+  }
+
+  @Post(`/:${AdminId}/partners`)
+  @ApiOperation({ summary: "Add a new partner" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner" })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async registerPartner(
+    @Param(AdminId) adminId: string,
+    @Body() requestBody: AddPartnerRequestDTO,
+    @Request() request,
+  ): Promise<PartnerDTO> {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
+      throw new ForbiddenException(
+        `Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);
+    }
+
+    const createdPartner: Partner = await this.partnerService.createPartner(requestBody.name);
+    return this.partnerMapper.toDTO(createdPartner);
   }
 }
