@@ -11,11 +11,12 @@ import { SMSService } from "../../../../src/modules/common/sms.service";
 import { instance, when } from "ts-mockito";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../repo/OTPRepo";
-import { NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { partnerAdminIdentityIdenitfier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
 import { PartnerAuthService } from "../partner.auth.service";
 import { mockPartnerAdminWithAllAccess } from "../../../core/tests/constants";
+import { PartnerAdmin } from "../../../../src/modules/partner/domain/PartnerAdmin";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -144,6 +145,50 @@ describe("AdminService", () => {
 
       const receivedAdminId = await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
       expect(receivedAdminId).toEqual(mockPartnerAdminWithAllAccess._id);
+    });
+  });
+
+  describe("verifyUserExistence", () => {
+    it("should return 'false' if service throws NotFoundException", async () => {
+      const NON_EXISTING_PARTNER_ADMIN_EMAIL = "partner.admin@noba.com";
+
+      when(mockPartnerAdminService.getPartnerAdminFromEmail(NON_EXISTING_PARTNER_ADMIN_EMAIL))
+        .thenReject(new NotFoundException());
+
+      const result = await partnerAuthService.verifyUserExistence(NON_EXISTING_PARTNER_ADMIN_EMAIL);
+
+      expect(result).toBe(false);
+    });
+
+    it("should return 'true' if service returns true", async () => {
+      const EXISTING_PARTNER_ADMIN_EMAIL = "partner.admin@noba.com";
+      const partnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "1111111111",
+        email: EXISTING_PARTNER_ADMIN_EMAIL,
+        role: "BASIC",
+        partnerId: "PPPPPPPPPPP"
+      });
+
+      when(mockPartnerAdminService.getPartnerAdminFromEmail(EXISTING_PARTNER_ADMIN_EMAIL))
+        .thenResolve(partnerAdmin);
+
+      const result = await partnerAuthService.verifyUserExistence(EXISTING_PARTNER_ADMIN_EMAIL);
+
+      expect(result).toBe(true);
+    });
+
+    it("should rethrows 'InternalServerErrorException' if service throws it", async () => {
+      const NON_EXISTING_PARTNER_ADMIN_EMAIL = "partner.admin@noba.com";
+
+      when(mockPartnerAdminService.getPartnerAdminFromEmail(NON_EXISTING_PARTNER_ADMIN_EMAIL))
+        .thenReject(new InternalServerErrorException());
+
+      try {
+        await partnerAuthService.verifyUserExistence(NON_EXISTING_PARTNER_ADMIN_EMAIL);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(InternalServerErrorException);
+      }
     });
   });
 });

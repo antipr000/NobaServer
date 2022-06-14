@@ -19,4 +19,10 @@ export class UserAuthService extends AuthService {
     const userDto: UserDTO = await this.userService.createUserIfFirstTimeLogin(emailOrPhone);
     return userDto._id;
   }
+
+  protected async isUserSignedUp (email: string): Promise<boolean> {
+    // Signup & login flow for 'CONSUMER' is same. i.e.
+    // If a user is not signed up (an account doesn't exist), user-account will be created.
+    return true;
+  }
 }
