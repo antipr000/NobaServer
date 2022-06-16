@@ -61,7 +61,8 @@ export const partnerAdminKeys: KeysRequired<PartnerAdminProps> = {
     .required()
     .meta({ _mongoose: { index: true } }),
   partnerId: Joi.string().required(),
-  role: Joi.string().default("BASIC"),
+  // TODO: Remove the default & make the role required after fixing the tests
+  role: Joi.string().valid(...Object.keys(PartnerAdminRolePrivileges)).default("BASIC"),
 };
 
 export const partnerAdminSchema = Joi.object(partnerAdminKeys).options({ allowUnknown: true, stripUnknown: false });

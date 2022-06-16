@@ -156,7 +156,7 @@ export class AdminController {
 
   @Post(`/partners/:${PartnerID}/admins`)
   @ApiOperation({ summary: "Add a new partner admin" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: AddPartnerAdminRequestDTO, description: "Add a new partner admin" })
   @ApiBadRequestResponse({ description: "Bad request" })
   async addAdminsForPartners(
     @Param(PartnerID) partnerId: string,
@@ -170,13 +170,13 @@ export class AdminController {
     }
 
     const partnerAdmin: PartnerAdmin =
-      await this.partnerAdminService.addPartnerAdmin(partnerId, requestBody.email);
+      await this.partnerAdminService.addAdminForPartner(partnerId, requestBody.email, requestBody.name, requestBody.role);
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
   @Post(`/partners`)
   @ApiOperation({ summary: "Add a new partner" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "Add a new partner" })
   @ApiBadRequestResponse({ description: "Bad request" })
   async registerPartner(
     @Body() requestBody: AddPartnerRequestDTO,

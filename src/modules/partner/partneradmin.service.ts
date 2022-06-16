@@ -15,7 +15,7 @@ export class PartnerAdminService {
   @Inject("PartnerAdminRepo")
   private readonly partnerAdminRepo: IPartnerAdminRepo;
 
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   async getPartnerAdmin(partnerAdminId: string): Promise<PartnerAdmin> {
     const partnerAdmin: Result<PartnerAdmin> = await this.partnerAdminRepo.getPartnerAdmin(partnerAdminId);
@@ -37,6 +37,19 @@ export class PartnerAdminService {
     const partnerAdmin: PartnerAdmin = await this.partnerAdminRepo.addPartnerAdmin(newPartnerAdmin);
     return partnerAdmin;
   }
+
+  // TODO: Deprecate addPartnerAdmin with this method. Add the appropriate tests.
+  async addAdminForPartner(partnerId: string, emailId: string, name: string, role: string): Promise<PartnerAdmin> {
+    const newPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+      email: emailId,
+      role: role,
+      name: name,
+      partnerId: partnerId,
+    });
+    const partnerAdmin: PartnerAdmin = await this.partnerAdminRepo.addPartnerAdmin(newPartnerAdmin);
+    return partnerAdmin;
+  }
+
 
   async deletePartnerAdmin(partnerAdminId: string): Promise<void> {
     this.partnerAdminRepo.removePartnerAdmin(partnerAdminId);
