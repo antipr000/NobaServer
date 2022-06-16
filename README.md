@@ -14,10 +14,11 @@ Noba server side code.
 - Install [Format Code Action](https://marketplace.visualstudio.com/items?itemName=rohit-gohri.format-code-action) extension
 - Install [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extension
 
-### Deploying to production
+### Deployment Instructions
 
-- We have github actions setup that will automatically deploy changes in production instances when pushed into master.
-- You can find production logs [here]().
+- We have github actions setup that will automatically deploy changes in staging instance when pushed into master.
+- To create production release (deployment) create a tag with syntax like v0.0.1 (see previous release to find new version), deployment logs are available [here]().
+- Check Github Actions to find the progress of build and deployment progress [here](https://github.com/nobapay/NobaServer/actions)
 - You can find documentation about our deployment process [here]().
 
 ### Things to keep in mind
