@@ -1,4 +1,5 @@
 import { UserProps } from "../../../modules/user/domain/User";
+import { VerificationStatusType } from "../../../modules/user/domain/Types";
 
 export class User implements UserProps {
   _id: string;
@@ -7,7 +8,7 @@ export class User implements UserProps {
   stripeCustomerID?: string;
   phone?: string;
   isAdmin?: boolean;
-  idVerified?: boolean;
+  verificationStatus?: VerificationStatusType;
   documentVerified?: boolean;
   documentVerificationTransactionId?: string;
   version?: number;
