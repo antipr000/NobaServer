@@ -13,7 +13,6 @@ import {
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { Admin } from "../admin/domain/Admin";
 import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
 import { Partner } from "./domain/Partner";
 import { PartnerAdmin } from "./domain/PartnerAdmin";

@@ -20,4 +20,4 @@ import { PartnerModule } from "../partner/partner.module";
   ],
   exports: [AdminService],
 })
-export class AdminModule { }
+export class AdminModule {}

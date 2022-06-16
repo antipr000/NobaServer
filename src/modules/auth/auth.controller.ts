@@ -1,4 +1,14 @@
-import { BadRequestException, Body, Controller, ForbiddenException, Get, HttpStatus, Inject, Post, Request } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpStatus,
+  Inject,
+  Post,
+  Request,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AdminAuthService } from "./admin.auth.service";
 import { AuthService } from "./auth.service";
@@ -60,7 +70,8 @@ export class AuthController {
     if (!isLoginAllowed) {
       throw new ForbiddenException(
         `User "${request.email}" is not allowed to login as identity "${request.identityType}". ` +
-        `Please contact support team, if you think this is an error.`);
+          "Please contact support team, if you think this is an error.",
+      );
     }
 
     const otp = authService.createOtp();

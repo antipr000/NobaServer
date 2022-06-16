@@ -19,9 +19,6 @@ import { PartnerController } from "../partner.controller";
 import { PartnerAdmin } from "../domain/PartnerAdmin";
 import { ForbiddenException } from "@nestjs/common";
 import { Partner } from "../domain/Partner";
-import { User } from "../../../../src/modules/user/domain/User";
-import { AddPartnerAdminRequestDTO } from "../dto/AddPartnerAdminRequestDTO";
-import { Admin } from "../../../../src/modules/admin/domain/Admin";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;

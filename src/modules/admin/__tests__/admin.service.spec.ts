@@ -5,7 +5,6 @@ import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
 import { IAdminTransactionRepo } from "../repos/transactions/AdminTransactionRepo";
 import { CommonModule } from "../../common/common.module";
 import { Admin } from "../domain/Admin";
-import { AdminController } from "../admin.controller";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { getWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { getMockAdminTransactionRepoWithDefaults } from "../mocks/MockAdminTransactionRepo";

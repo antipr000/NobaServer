@@ -20,14 +20,12 @@ export class PartnerAuthService extends AuthService {
     return partnerAdmin.props._id;
   }
 
-  protected async isUserSignedUp (email: string): Promise<boolean> {
+  protected async isUserSignedUp(email: string): Promise<boolean> {
     try {
-      const partnerAdmin: PartnerAdmin = 
-        await this.partnerAdminService.getPartnerAdminFromEmail(email);
-      return (partnerAdmin !== null && partnerAdmin !== undefined);
+      const partnerAdmin: PartnerAdmin = await this.partnerAdminService.getPartnerAdminFromEmail(email);
+      return partnerAdmin !== null && partnerAdmin !== undefined;
     } catch (err) {
-      if (err instanceof NotFoundException)
-        return false;
+      if (err instanceof NotFoundException) return false;
       throw err;
     }
   }

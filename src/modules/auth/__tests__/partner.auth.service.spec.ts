@@ -152,8 +152,9 @@ describe("AdminService", () => {
     it("should return 'false' if service throws NotFoundException", async () => {
       const NON_EXISTING_PARTNER_ADMIN_EMAIL = "partner.admin@noba.com";
 
-      when(mockPartnerAdminService.getPartnerAdminFromEmail(NON_EXISTING_PARTNER_ADMIN_EMAIL))
-        .thenReject(new NotFoundException());
+      when(mockPartnerAdminService.getPartnerAdminFromEmail(NON_EXISTING_PARTNER_ADMIN_EMAIL)).thenReject(
+        new NotFoundException(),
+      );
 
       const result = await partnerAuthService.verifyUserExistence(NON_EXISTING_PARTNER_ADMIN_EMAIL);
 
@@ -166,11 +167,10 @@ describe("AdminService", () => {
         _id: "1111111111",
         email: EXISTING_PARTNER_ADMIN_EMAIL,
         role: "BASIC",
-        partnerId: "PPPPPPPPPPP"
+        partnerId: "PPPPPPPPPPP",
       });
 
-      when(mockPartnerAdminService.getPartnerAdminFromEmail(EXISTING_PARTNER_ADMIN_EMAIL))
-        .thenResolve(partnerAdmin);
+      when(mockPartnerAdminService.getPartnerAdminFromEmail(EXISTING_PARTNER_ADMIN_EMAIL)).thenResolve(partnerAdmin);
 
       const result = await partnerAuthService.verifyUserExistence(EXISTING_PARTNER_ADMIN_EMAIL);
 
@@ -180,8 +180,9 @@ describe("AdminService", () => {
     it("should rethrows 'InternalServerErrorException' if service throws it", async () => {
       const NON_EXISTING_PARTNER_ADMIN_EMAIL = "partner.admin@noba.com";
 
-      when(mockPartnerAdminService.getPartnerAdminFromEmail(NON_EXISTING_PARTNER_ADMIN_EMAIL))
-        .thenReject(new InternalServerErrorException());
+      when(mockPartnerAdminService.getPartnerAdminFromEmail(NON_EXISTING_PARTNER_ADMIN_EMAIL)).thenReject(
+        new InternalServerErrorException(),
+      );
 
       try {
         await partnerAuthService.verifyUserExistence(NON_EXISTING_PARTNER_ADMIN_EMAIL);

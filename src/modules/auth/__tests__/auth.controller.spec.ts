@@ -8,7 +8,11 @@ import { getMockAdminAuthServiceWithDefaults } from "../mocks/mock.admin.auth.se
 import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.service";
 import { getMockPartnerAuthServiceWithDefaults } from "../mocks/mock.partner.auth.service";
 import { AuthController } from "../auth.controller";
-import { consumerIdentityIdentifier, nobaAdminIdentityIdentifier, partnerAdminIdentityIdenitfier } from "../domain/IdentityType";
+import {
+  consumerIdentityIdentifier,
+  nobaAdminIdentityIdentifier,
+  partnerAdminIdentityIdenitfier,
+} from "../domain/IdentityType";
 import { VerifyOtpResponseDTO } from "../dto/VerifyOtpReponse";
 import { PartnerAuthService } from "../partner.auth.service";
 import { ForbiddenException } from "@nestjs/common";
@@ -110,8 +114,7 @@ describe("AdminService", () => {
       when(mockAdminAuthService.createOtp()).thenReturn(otp);
       when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
       when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
-      when(mockAdminAuthService.verifyUserExistence(adminEmail))
-        .thenResolve(true);
+      when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
 
       await authController.loginUser({
         email: adminEmail,
@@ -127,8 +130,7 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.createOtp()).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString()))
-        .thenResolve(true);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser({
         email: consumerEmail,
@@ -144,8 +146,7 @@ describe("AdminService", () => {
       when(mockPartnerAuthService.createOtp()).thenReturn(otp);
       when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp)).thenResolve();
       when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString())).thenResolve();
-      when(mockPartnerAuthService.verifyUserExistence(anyString()))
-        .thenResolve(true);
+      when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser({
         email: partnerAdminEmail,
@@ -157,8 +158,7 @@ describe("AdminService", () => {
       const unregisteredAdminEmail = "admin@noba.com";
       const identityType: string = nobaAdminIdentityIdentifier;
 
-      when(mockAdminAuthService.verifyUserExistence(unregisteredAdminEmail))
-        .thenResolve(false);
+      when(mockAdminAuthService.verifyUserExistence(unregisteredAdminEmail)).thenResolve(false);
 
       try {
         await authController.loginUser({
@@ -175,8 +175,7 @@ describe("AdminService", () => {
       const unregisteredPartnerAdminEmail = "partner-admin@noba.com";
       const identityType: string = partnerAdminIdentityIdenitfier;
 
-      when(mockPartnerAuthService.verifyUserExistence(unregisteredPartnerAdminEmail))
-        .thenResolve(false);
+      when(mockPartnerAuthService.verifyUserExistence(unregisteredPartnerAdminEmail)).thenResolve(false);
 
       try {
         await authController.loginUser({

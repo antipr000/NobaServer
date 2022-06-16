@@ -486,7 +486,7 @@ describe("AdminController", () => {
       const requestingConsumer = User.createUser({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A"
+        name: "Consumer A",
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
@@ -494,8 +494,9 @@ describe("AdminController", () => {
       };
 
       try {
-        await adminController.addAdminsForPartners(
-          adminId, partnerId, addPartnerAdminRequest, { user: requestingConsumer });
+        await adminController.addAdminsForPartners(adminId, partnerId, addPartnerAdminRequest, {
+          user: requestingConsumer,
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -514,7 +515,7 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL"
+        role: "ALL",
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
@@ -522,8 +523,9 @@ describe("AdminController", () => {
       };
 
       try {
-        await adminController.addAdminsForPartners(
-          adminId, partnerId, addPartnerAdminRequest, { user: requestingPartnerAdmin });
+        await adminController.addAdminsForPartners(adminId, partnerId, addPartnerAdminRequest, {
+          user: requestingPartnerAdmin,
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -539,7 +541,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "BASIC"
+        role: "BASIC",
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
@@ -547,8 +549,9 @@ describe("AdminController", () => {
       };
 
       try {
-        await adminController.addAdminsForPartners(
-          adminId, partnerId, addPartnerAdminRequest, { user: requestingNobaAdmin });
+        await adminController.addAdminsForPartners(adminId, partnerId, addPartnerAdminRequest, {
+          user: requestingNobaAdmin,
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -563,22 +566,24 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "INTERMEDIATE"
+        role: "INTERMEDIATE",
       });
 
-      when(mockPartnerAdminService.addPartnerAdmin(partnerId, newPartnerAdminEmail))
-        .thenResolve(PartnerAdmin.createPartnerAdmin({
+      when(mockPartnerAdminService.addPartnerAdmin(partnerId, newPartnerAdminEmail)).thenResolve(
+        PartnerAdmin.createPartnerAdmin({
           _id: "PAPAPAPAPA",
           email: newPartnerAdminEmail,
           role: "BASIC",
           partnerId: partnerId,
-        }));
+        }),
+      );
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
         email: newPartnerAdminEmail,
       };
-      const result = await adminController.addAdminsForPartners(
-        adminId, partnerId, addPartnerAdminRequest, { user: requestingNobaAdmin });
+      const result = await adminController.addAdminsForPartners(adminId, partnerId, addPartnerAdminRequest, {
+        user: requestingNobaAdmin,
+      });
 
       expect(result).toEqual({
         _id: "PAPAPAPAPA",
@@ -595,22 +600,24 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "INTERMEDIATE"
+        role: "INTERMEDIATE",
       });
 
-      when(mockPartnerAdminService.addPartnerAdmin(partnerId, newPartnerAdminEmail))
-        .thenResolve(PartnerAdmin.createPartnerAdmin({
+      when(mockPartnerAdminService.addPartnerAdmin(partnerId, newPartnerAdminEmail)).thenResolve(
+        PartnerAdmin.createPartnerAdmin({
           _id: "PAPAPAPAPA",
           email: newPartnerAdminEmail,
           role: "BASIC",
           partnerId: partnerId,
-        }));
+        }),
+      );
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
         email: newPartnerAdminEmail,
       };
-      const result = await adminController.addAdminsForPartners(
-        adminId, partnerId, addPartnerAdminRequest, { user: requestingNobaAdmin });
+      const result = await adminController.addAdminsForPartners(adminId, partnerId, addPartnerAdminRequest, {
+        user: requestingNobaAdmin,
+      });
 
       expect(result).toEqual({
         _id: "PAPAPAPAPA",
@@ -630,15 +637,14 @@ describe("AdminController", () => {
       const requestingConsumer = User.createUser({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A"
+        name: "Consumer A",
       });
 
       try {
         const addPartnerRequest: AddPartnerRequestDTO = {
           name: newPartnerName,
         };
-        await adminController.registerPartner(
-          adminId, addPartnerRequest, { user: requestingConsumer });
+        await adminController.registerPartner(adminId, addPartnerRequest, { user: requestingConsumer });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -657,15 +663,14 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL"
+        role: "ALL",
       });
 
       try {
         const addPartnerRequest: AddPartnerRequestDTO = {
           name: newPartnerName,
         };
-        await adminController.registerPartner(
-          adminId, addPartnerRequest, { user: requestingPartnerAdmin });
+        await adminController.registerPartner(adminId, addPartnerRequest, { user: requestingPartnerAdmin });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -680,15 +685,14 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "BASIC"
+        role: "BASIC",
       });
 
       try {
         const addPartnerRequest: AddPartnerRequestDTO = {
           name: newPartnerName,
         };
-        await adminController.registerPartner(
-          adminId, addPartnerRequest, { user: requestingNobaAdmin });
+        await adminController.registerPartner(adminId, addPartnerRequest, { user: requestingNobaAdmin });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -704,20 +708,22 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "INTERMEDIATE"
+        role: "INTERMEDIATE",
       });
 
-      when(mockPartnerService.createPartner(newPartnerName))
-        .thenResolve(Partner.createPartner({
+      when(mockPartnerService.createPartner(newPartnerName)).thenResolve(
+        Partner.createPartner({
           _id: createdPartnerId,
           name: newPartnerName,
-        }));
+        }),
+      );
 
       const addPartnerRequest: AddPartnerRequestDTO = {
         name: newPartnerName,
       };
-      const result: PartnerDTO = await adminController.registerPartner(
-        adminId, addPartnerRequest, { user: requestingNobaAdmin });
+      const result: PartnerDTO = await adminController.registerPartner(adminId, addPartnerRequest, {
+        user: requestingNobaAdmin,
+      });
 
       expect(result).toEqual({
         _id: createdPartnerId,
@@ -733,20 +739,22 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "ADMIN"
+        role: "ADMIN",
       });
 
-      when(mockPartnerService.createPartner(newPartnerName))
-        .thenResolve(Partner.createPartner({
+      when(mockPartnerService.createPartner(newPartnerName)).thenResolve(
+        Partner.createPartner({
           _id: createdPartnerId,
           name: newPartnerName,
-        }));
+        }),
+      );
 
       const addPartnerRequest: AddPartnerRequestDTO = {
         name: newPartnerName,
       };
-      const result: PartnerDTO = await adminController.registerPartner(
-        adminId, addPartnerRequest, { user: requestingNobaAdmin });
+      const result: PartnerDTO = await adminController.registerPartner(adminId, addPartnerRequest, {
+        user: requestingNobaAdmin,
+      });
 
       expect(result).toEqual({
         _id: createdPartnerId,

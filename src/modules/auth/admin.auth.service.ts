@@ -20,14 +20,12 @@ export class AdminAuthService extends AuthService {
     return admin.props._id;
   }
 
-  protected async isUserSignedUp (email: string): Promise<boolean> {
+  protected async isUserSignedUp(email: string): Promise<boolean> {
     try {
-      const nobaAdmin: Admin = 
-        await this.adminService.getAdminByEmail(email);
-      return (nobaAdmin !== null && nobaAdmin !== undefined);
-    } catch(err) {
-      if (err instanceof NotFoundException)
-        return false;
+      const nobaAdmin: Admin = await this.adminService.getAdminByEmail(email);
+      return nobaAdmin !== null && nobaAdmin !== undefined;
+    } catch (err) {
+      if (err instanceof NotFoundException) return false;
       throw err;
     }
   }
