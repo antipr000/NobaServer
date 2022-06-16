@@ -19,7 +19,13 @@ export class AdminMapper implements Mapper<Admin> {
   }
 
   public toDTO(nobaAdmin: Admin): NobaAdminDTO {
-    throw new Error("Method not implemented");
+    const dto: NobaAdminDTO = new NobaAdminDTO();
+    dto._id = nobaAdmin.props._id;
+    dto.email = nobaAdmin.props.email;
+    dto.name = nobaAdmin.props.name;
+    dto.role = nobaAdmin.props.role;
+
+    return dto;
   }
 
   public toOutputDto(nobaAdmin: Admin): OutputNobaAdminDTO {

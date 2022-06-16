@@ -3,5 +3,8 @@ import { AdminProps } from "../domain/Admin";
 
 export class UpdateNobaAdminDTO implements Partial<AdminProps> {
   @ApiProperty()
-  role: string;
+  name?: string;
+
+  @ApiProperty()
+  role?: string;
 }

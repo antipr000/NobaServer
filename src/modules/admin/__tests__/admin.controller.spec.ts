@@ -292,29 +292,138 @@ describe("AdminController", () => {
     });
 
     it("NobaAdmin with 'ADMIN' role should be able to update the role of the an admin", async () => {
-      const ADMIN_ID = "1111111111";
+      const TARGET_ADMIN_ID = "1111111111";
+      const TARGET_ADMIN_EMAIL = "admin.to.update@noba.com";
       const UPDATED_ROLE = "INTERMEDIATE";
+      const CURRENT_ROLE = "BASIC";
+
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
         role: "ADMIN",
       });
 
-      const updatedAdmin: Admin = Admin.createAdmin({
-        _id: ADMIN_ID,
-        name: "Admin",
-        email: EXISTING_ADMIN_EMAIL,
-        role: UPDATED_ROLE,
-      });
-      when(mockAdminService.changeNobaAdminRole(ADMIN_ID, UPDATED_ROLE)).thenResolve(updatedAdmin);
+      when(mockAdminService.getAdminById(TARGET_ADMIN_ID))
+        .thenResolve(Admin.createAdmin({
+          _id: TARGET_ADMIN_ID,
+          name: "Admin",
+          email: TARGET_ADMIN_EMAIL,
+          role: CURRENT_ROLE,
+        }));
+
+      when(mockAdminService.updateNobaAdmin(TARGET_ADMIN_ID, UPDATED_ROLE, "Admin"))
+        .thenResolve(Admin.createAdmin({
+          _id: TARGET_ADMIN_ID,
+          name: "Admin",
+          email: TARGET_ADMIN_EMAIL,
+          role: UPDATED_ROLE,
+        }));
 
       const request: UpdateNobaAdminDTO = {
         role: UPDATED_ROLE,
       };
-      const result = await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+      const result =
+        await adminController.updateNobaAdmin(
+          { user: authenticatedNobaAdmin }, TARGET_ADMIN_ID, request);
 
-      expect(result).toEqual(updatedAdmin.props);
+      expect(result).toEqual({
+        _id: TARGET_ADMIN_ID,
+        name: "Admin",
+        email: TARGET_ADMIN_EMAIL,
+        role: UPDATED_ROLE,
+      });
     });
+
+    it("NobaAdmin with 'ADMIN' role should be able to update the 'name' of the an admin", async () => {
+      const TARGET_ADMIN_ID = "1111111111";
+      const TARGET_ADMIN_EMAIL = "admin.to.update@noba.com";
+      const UPDATED_NAME = "New Admin Name";
+      const CURRENT_NAME = "Admin Name";
+
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        _id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+        role: "ADMIN",
+      });
+
+      when(mockAdminService.getAdminById(TARGET_ADMIN_ID))
+        .thenResolve(Admin.createAdmin({
+          _id: TARGET_ADMIN_ID,
+          name: CURRENT_NAME,
+          email: TARGET_ADMIN_EMAIL,
+          role: "BASIC",
+        }));
+
+      when(mockAdminService.updateNobaAdmin(TARGET_ADMIN_ID, "BASIC", UPDATED_NAME))
+        .thenResolve(Admin.createAdmin({
+          _id: TARGET_ADMIN_ID,
+          name: UPDATED_NAME,
+          email: TARGET_ADMIN_EMAIL,
+          role: "BASIC",
+        }));
+
+      const request: UpdateNobaAdminDTO = {
+        name: UPDATED_NAME,
+      };
+      const result =
+        await adminController.updateNobaAdmin(
+          { user: authenticatedNobaAdmin }, TARGET_ADMIN_ID, request);
+
+      expect(result).toEqual({
+        _id: TARGET_ADMIN_ID,
+        name: UPDATED_NAME,
+        email: TARGET_ADMIN_EMAIL,
+        role: "BASIC",
+      });
+    });
+
+    it("NobaAdmin with 'ADMIN' role should be able to update both 'name' & 'role' of the an admin", async () => {
+      const TARGET_ADMIN_ID = "1111111111";
+      const TARGET_ADMIN_EMAIL = "admin.to.update@noba.com";
+
+      const UPDATED_NAME = "New Admin Name";
+      const CURRENT_NAME = "Admin Name";
+      const UPDATE_ROLE = "BASIC";
+      const CURRENT_ROLE = "INTERMEDIATE";
+
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        _id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+        role: "ADMIN",
+      });
+
+      when(mockAdminService.getAdminById(TARGET_ADMIN_ID))
+        .thenResolve(Admin.createAdmin({
+          _id: TARGET_ADMIN_ID,
+          name: CURRENT_NAME,
+          email: TARGET_ADMIN_EMAIL,
+          role: CURRENT_ROLE,
+        }));
+
+      when(mockAdminService.updateNobaAdmin(TARGET_ADMIN_ID, UPDATE_ROLE, UPDATED_NAME))
+        .thenResolve(Admin.createAdmin({
+          _id: TARGET_ADMIN_ID,
+          name: UPDATED_NAME,
+          email: TARGET_ADMIN_EMAIL,
+          role: UPDATE_ROLE,
+        }));
+
+      const request: UpdateNobaAdminDTO = {
+        name: UPDATED_NAME,
+        role: UPDATE_ROLE
+      };
+      const result =
+        await adminController.updateNobaAdmin(
+          { user: authenticatedNobaAdmin }, TARGET_ADMIN_ID, request);
+
+      expect(result).toEqual({
+        _id: TARGET_ADMIN_ID,
+        name: UPDATED_NAME,
+        email: TARGET_ADMIN_EMAIL,
+        role: UPDATE_ROLE,
+      });
+    });
+
 
     it("NobaAdmin shouldn't be able to update it's own role", async () => {
       const ADMIN_ID = "1111111111";
@@ -337,7 +446,7 @@ describe("AdminController", () => {
       }
     });
 
-    it("should throw error if email doesn't exists.", async () => {
+    it("should throw 'NotFoundException' error if AdminId doesn't exists.", async () => {
       const ADMIN_ID = "1111111111";
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
@@ -345,7 +454,7 @@ describe("AdminController", () => {
         role: "ADMIN",
       });
 
-      when(mockAdminService.changeNobaAdminRole(ADMIN_ID, "INTERMEDIATE")).thenReject(new NotFoundException());
+      when(mockAdminService.getAdminById(ADMIN_ID)).thenReject(new NotFoundException());
 
       try {
         const request: UpdateNobaAdminDTO = {

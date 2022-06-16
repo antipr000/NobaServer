@@ -40,16 +40,21 @@ export class AdminService {
     return this.adminTransactionRepo.addNobaAdmin(nobaAdmin);
   }
 
-  async changeNobaAdminRole(adminId: string, newRole: string): Promise<Admin> {
-    if (!isValidRole(newRole)) throw new BadRequestException(`Role should be one of ${AllRoles}.`);
+  async updateNobaAdmin(adminId: string, targetRole: string, targetName: string): Promise<Admin> {
+    if (!isValidRole(targetRole)) {
+      throw new BadRequestException(`Role should be one of ${AllRoles}.`);
+    }
+    if (targetName === undefined || targetName === "" || targetName === null) {
+      throw new BadRequestException("Name should be not empty.");
+    }
 
     const adminState: Admin = await this.adminTransactionRepo.getNobaAdminById(adminId);
+    if (adminState === undefined) {
+      throw new NotFoundException(`Admin with ID '${adminId}' doesn't exists.`);
+    }
 
-    if (adminState === undefined) throw new NotFoundException(`Admin with ID '${adminId}' doesn't exists.`);
-
-    if (adminState.props.role === newRole) return adminState;
-
-    adminState.props.role = newRole;
+    adminState.props.role = targetRole;
+    adminState.props.name = targetName;
     return this.adminTransactionRepo.updateNobaAdmin(adminState);
   }
 
