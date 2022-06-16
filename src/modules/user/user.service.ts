@@ -64,8 +64,10 @@ export class UserService {
   }
 
   getVerificationStatus(user: UserProps): UserVerificationStatus {
-    if (user.verificationStatus === VerificationStatusType.VERIFIED  && user.documentVerified) return UserVerificationStatus.VERIFIED;
-    else if (user.verificationStatus === VerificationStatusType.VERIFIED) return UserVerificationStatus.PARTIALLY_VERIFIED;
+    if (user.verificationStatus === VerificationStatusType.VERIFIED && user.documentVerified)
+      return UserVerificationStatus.VERIFIED;
+    else if (user.verificationStatus === VerificationStatusType.VERIFIED)
+      return UserVerificationStatus.PARTIALLY_VERIFIED;
     return UserVerificationStatus.NOT_VERIFIED;
   }
 }

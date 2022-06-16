@@ -7,5 +7,5 @@ export enum VerificationStatusType {
   PENDING = "Pending",
   REJECTED = "Rejected",
   FLAGGED = "Flagged",
-  VERIFIED = "Verified"
+  VERIFIED = "Verified",
 }
