@@ -8,7 +8,6 @@ import { AdminController } from "../admin.controller";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
 import { ConflictException, ForbiddenException, NotFoundException } from "@nestjs/common";
-import { OutputNobaAdminDTO } from "../dto/OutputNobaAdminDTO";
 import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
 import { UpdateNobaAdminDTO } from "../dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
@@ -171,7 +170,7 @@ describe("AdminController", () => {
         }),
       );
 
-      const result: OutputNobaAdminDTO = await adminController.createNobaAdmin(
+      const result: NobaAdminDTO = await adminController.createNobaAdmin(
         { user: authenticatedNobaAdmin },
         newNobaAdmin,
       );

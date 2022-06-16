@@ -25,7 +25,6 @@ import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { TransactionsFilterDTO } from "./dto/TransactionsFilterDTO";
 import { NobaAdminDTO } from "./dto/NobaAdminDTO";
 import { Admin } from "./domain/Admin";
-import { OutputNobaAdminDTO } from "./dto/OutputNobaAdminDTO";
 import { AdminMapper } from "./mappers/AdminMapper";
 import { Public } from "../auth/public.decorator";
 import { UpdateNobaAdminDTO } from "./dto/UpdateNobaAdminDTO";
@@ -89,18 +88,19 @@ export class AdminController {
 
   @Post("/")
   @ApiOperation({ summary: "Creates a new NobaAdmin with a specified role." })
-  @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The newly created Noba Admin." })
-  async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<OutputNobaAdminDTO> {
+  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The newly created Noba Admin." })
+  async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<NobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddNobaAdmin()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba Admin.`);
     }
 
     const savedAdmin: Admin = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
+    if (savedAdmin === undefined) {
+      throw new ConflictException("User is already registerd as a NobaAdmin");
+    }
 
-    if (savedAdmin === undefined) throw new ConflictException("User is already registerd as a NobaAdmin");
-
-    return this.adminMapper.toOutputDto(savedAdmin);
+    return this.adminMapper.toDTO(savedAdmin);
   }
 
   @Patch(`/:${AdminId}`)
