@@ -12,7 +12,7 @@ import { IDVerificationRequestDTO } from "./dto/IDVerificationRequestDTO";
 import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { DocumentTypes, Status } from "../../externalclients/idvproviders/definitions";
 import { VerificationStatusDTO } from "./dto/VerificationStatusDTO";
-
+import { VerificationStatusType } from "../user/domain/Types";
 @Injectable()
 export class VerificationService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -44,7 +44,7 @@ export class VerificationService {
     if (result.status === Status.OK) {
       await this.userService.updateUser({
         ...user,
-        idVerified: true,
+        verificationStatus: VerificationStatusType.VERIFIED,
         idVerificationTimestamp: new Date().getTime(),
         dateOfBirth: requestBody.dateOfBirth,
         address: {

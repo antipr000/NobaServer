@@ -1,5 +1,5 @@
 export enum PaymentMethodType {
-  CARD = "Card"
+  CARD = "Card",
 }
 
 export enum VerificationStatusType {
