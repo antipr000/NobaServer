@@ -50,6 +50,17 @@ export class PartnerAdminService {
     return partnerAdmin;
   }
 
+  // Deprecate 'deletePartnerAdmin' with this method. Add the appropriate tests.
+  async deleteAdminForPartner(partnerId: string, partnerAdminId: string): Promise<PartnerAdmin> {
+    const currentPartnerAdmin: PartnerAdmin = await this.getPartnerAdmin(partnerAdminId);
+    if (currentPartnerAdmin.props.partnerId !== partnerId) {
+      throw new NotFoundException(`PartnerAdmin with ID '${partnerAdminId}' does not exists in Partner with ID '${partnerId}'`);
+    }
+
+    await this.partnerAdminRepo.removePartnerAdmin(partnerAdminId);
+    return currentPartnerAdmin;
+  }
+
 
   async deletePartnerAdmin(partnerAdminId: string): Promise<void> {
     this.partnerAdminRepo.removePartnerAdmin(partnerAdminId);

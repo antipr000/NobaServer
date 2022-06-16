@@ -18,7 +18,7 @@ import {
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AdminId, PartnerID } from "../auth/roles.decorator";
+import { AdminId, PartnerAdminID, PartnerID } from "../auth/roles.decorator";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
@@ -156,7 +156,7 @@ export class AdminController {
 
   @Post(`/partners/:${PartnerID}/admins`)
   @ApiOperation({ summary: "Add a new partner admin" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: AddPartnerAdminRequestDTO, description: "Add a new partner admin" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
   @ApiBadRequestResponse({ description: "Bad request" })
   async addAdminsForPartners(
     @Param(PartnerID) partnerId: string,
@@ -172,6 +172,26 @@ export class AdminController {
     const partnerAdmin: PartnerAdmin =
       await this.partnerAdminService.addAdminForPartner(partnerId, requestBody.email, requestBody.name, requestBody.role);
     return this.partnerAdminMapper.toDTO(partnerAdmin);
+  }
+
+  @Delete(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
+  @ApiOperation({ summary: "Add a new partner admin" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async deleteAdminsForPartners(
+    @Param(PartnerID) partnerId: string,
+    @Param(PartnerAdminID) partnerAdminId: string,
+    @Request() request,
+  ): Promise<PartnerAdminDTO> {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveAdminsFromPartner()) {
+      throw new ForbiddenException(
+        `Admins with role '${authenticatedUser.props.role}' can't remove PartnerAdmins.`);
+    }
+
+    const deletedPartnerAdmin: PartnerAdmin =
+      await this.partnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId);
+    return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
   }
 
   @Post(`/partners`)

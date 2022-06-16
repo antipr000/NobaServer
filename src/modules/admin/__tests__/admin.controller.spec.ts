@@ -747,6 +747,166 @@ describe("AdminController", () => {
     });
   });
 
+  describe("deleteAdminsForPartners", () => {
+    it("Consumers shouldn't be able to delete a PartnerAdmin", async () => {
+      const consumerId = "CCCCCCCCCC";
+      const partnerId = "PPPPPPPPPP";
+      const partnerAdminId = "partner.admin@noba.com";
+
+      const requestingConsumer = User.createUser({
+        _id: consumerId,
+        email: "consumer@noba.com",
+        name: "Consumer A"
+      });
+
+      try {
+        await adminController.deleteAdminsForPartners(
+          partnerId, partnerAdminId, { user: requestingConsumer });
+
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("PartnerAdmin with 'ALL' privileges shouldn't be able to delete a PartnerAdmin using ADMIN API", async () => {
+      const partnerAdminId = "AAAAAAAAAAA";
+      const partnerId = "PPPPPPPPPP";
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "PAPAPAPAPPA",
+        email: "partner.admin@noba.com",
+        name: "Partner Admin",
+        partnerId: partnerId,
+        role: "ALL"
+      });
+
+      try {
+        await adminController.deleteAdminsForPartners(
+          partnerId, partnerAdminId, { user: requestingPartnerAdmin });
+
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("NobaAdmin with 'BASIC' role shouldn't be able to delete a PartnerAdmin", async () => {
+      const adminId = "AAAAAAAAAA";
+      const partnerId = "PPPPPPPPPP";
+      const partnerAdminId = "PAPAPAPAPAPA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: "BASIC"
+      });
+
+      try {
+        await adminController.deleteAdminsForPartners(
+          partnerId, partnerAdminId, { user: requestingNobaAdmin });
+
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("NobaAdmin with 'INTERMEDIATE' role should be able to create a new PartnerAdmin", async () => {
+      const partnerId = "PPPPPPPPPP";
+      const partnerAdminId = "PAPAPAPAPAPA";
+      const partnerAdminEmail = "partner.admin@noba.com";
+      const partnerAdminName = "Partner Admin A";
+      const partnerAdminRole = "ALL";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: "AAAAAAAAAA",
+        email: "admin@noba.com",
+        role: "INTERMEDIATE"
+      });
+
+      when(mockPartnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId))
+        .thenResolve(PartnerAdmin.createPartnerAdmin({
+          _id: partnerAdminId,
+          email: partnerAdminEmail,
+          role: partnerAdminRole,
+          partnerId: partnerId,
+          name: partnerAdminName,
+        }));
+
+      const result = await adminController.deleteAdminsForPartners(
+        partnerId, partnerAdminId, { user: requestingNobaAdmin });
+
+      expect(result).toEqual({
+        _id: partnerAdminId,
+        email: partnerAdminEmail,
+        role: partnerAdminRole,
+        partnerId: partnerId,
+        name: partnerAdminName,
+      });
+    });
+
+    it("NobaAdmin with 'ADMIN' role should be able to create a new PartnerAdmin", async () => {
+      const adminId = "AAAAAAAAAA";
+
+      const partnerId = "PPPPPPPPPP";
+      const partnerAdminId = "PAPAPAPAPAPA";
+      const partnerAdminEmail = "partner.admin@noba.com";
+      const partnerAdminName = "Partner Admin A";
+      const partnerAdminRole = "ALL";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: "INTERMEDIATE"
+      });
+
+      when(mockPartnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId))
+        .thenResolve(PartnerAdmin.createPartnerAdmin({
+          _id: partnerAdminId,
+          email: partnerAdminEmail,
+          role: partnerAdminRole,
+          partnerId: partnerId,
+          name: partnerAdminName,
+        }));
+
+      const result = await adminController.deleteAdminsForPartners(
+        partnerId, partnerAdminId, { user: requestingNobaAdmin });
+
+      expect(result).toEqual({
+        _id: partnerAdminId,
+        email: partnerAdminEmail,
+        role: partnerAdminRole,
+        partnerId: partnerId,
+        name: partnerAdminName,
+      });
+    });
+
+    it("should throw 'NotFoundException' if given PartnerAdminId exists with some other PartnerId", async () => {
+      const adminId = "AAAAAAAAAA";
+      const partnerId = "PPPPPPPPPP";
+      const partnerAdminId = "PAPAPAPAPAPA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: "INTERMEDIATE"
+      });
+
+      when(mockPartnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId))
+        .thenReject(new NotFoundException());
+
+      try {
+        await adminController.deleteAdminsForPartners(
+          partnerId, partnerAdminId, { user: requestingNobaAdmin });
+
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(NotFoundException);
+      }
+    });
+  });
+
   describe("registerPartner", () => {
     it("Consumers shouldn't be able to register a new Partner", async () => {
       const consumerId = "CCCCCCCCCC";
