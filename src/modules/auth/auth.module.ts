@@ -24,7 +24,7 @@ import { PartnerAuthService } from "./partner.auth.service";
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: "86400s" } /* 1 day */,
+      signOptions: { expiresIn: "604800s" } /* 1 week */,
     }),
     InfraProvidersModule,
     ConfigModule,

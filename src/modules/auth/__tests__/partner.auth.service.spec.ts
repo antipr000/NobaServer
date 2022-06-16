@@ -49,7 +49,7 @@ describe("AdminService", () => {
         getAppConfigModule(),
         JwtModule.register({
           secret: testJwtSecret,
-          signOptions: { expiresIn: "86400s" } /* 1 day */,
+          signOptions: { expiresIn: "604800s" } /* 1 week */,
         }),
       ],
       controllers: [],
