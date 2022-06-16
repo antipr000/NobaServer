@@ -54,7 +54,7 @@ export const userJoiValidationKeys: KeysRequired<UserProps> = {
     .allow(null)
     .meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
   isAdmin: Joi.boolean().default(false),
-  verificationStatus: Joi.string().optional(),
+  verificationStatus: Joi.string().default(VerificationStatusType.NOT_STARTED),
   documentVerified: Joi.boolean().default(false),
   documentVerificationTransactionId: Joi.string().optional(),
   idVerificationTimestamp: Joi.number().optional(),
@@ -75,9 +75,6 @@ export class User extends AggregateRoot<UserProps> {
     if (!userProps._id) userProps._id = Entity.getNewID();
 
     if (!userProps.phone && !userProps.email) throw new Error("User must have either phone or email");
-
-    // Default new user to verification status not started
-    if (!userProps.verificationStatus) userProps.verificationStatus = VerificationStatusType.NOT_STARTED;
 
     const user = new User(Joi.attempt(userProps, userJoiSchema));
     return user;
