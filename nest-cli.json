@@ -3,15 +3,15 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "assets": [
-        {"include": "../appconfigs/*.yaml", "outDir": "./dist/appconfigs"},
-        {"include": "../src/data/*", "outDir": "./dist/src/"}
-      ]
+      { "include": "../appconfigs/*.yaml", "outDir": "./dist/appconfigs" },
+      { "include": "../src/data/*", "outDir": "./dist/src/" }
+    ]
   },
   "plugins": [
     {
       "name": "@nestjs/swagger",
       "options": {
-        "dtoFileNameSuffix" : [".ts"]
+        "dtoFileNameSuffix": [".ts"]
       }
     }
   ]

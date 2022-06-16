@@ -7,9 +7,9 @@ on:
   # Only deploy the changes on push to master branch
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-    branches: [ master,dev  ] 
-  
+      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches: [master, dev]
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -24,8 +24,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
-      
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.0
         with:
@@ -38,10 +37,10 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Install all packages
-        run: | 
+        run: |
           yarn install
           echo [SUCCESS] yarn install succeeded.
-      
+
       # Run all tests first to prevent broken builds
       - name: Run tests
         run: |
@@ -50,15 +49,15 @@ jobs:
 
       # Generates a build_info file which can be shown in buildInfo controller of the server
       - name: Generate build info file
-        run: | 
+        run: |
           cat > build_info.yml <<- EOM
           commitSHA: $GITHUB_SHA
           commitRef: $GITHUB_REF
           buildTime: $( date -u )
           EOM
-          
+
           cat build_info.yml
-        
+
       # Runs a set of commands using the runners shell
       - name: Build
         run: |
@@ -66,7 +65,6 @@ jobs:
           ls -l
           echo [SUCCESS] yarn build succeeded.
 
-      
       - name: Check If Release Tag and Decide deployment type
         id: check-tag
         run: |
@@ -81,12 +79,12 @@ jobs:
           if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               export deploymentGroup=Production
           fi
-          
+
           echo "*** Will deploy to $deploymentGroup ***"
 
           echo ::set-output name=deploymentGroup::$deploymentGroup
-      
-      - name: Create Artifacts Directory 
+
+      - name: Create Artifacts Directory
         if: steps.check-tag.outputs.release == 'true'
         run: |
           mkdir artifacts
@@ -98,7 +96,7 @@ jobs:
           cp -R ./node_modules/ artifacts
           cp -R ./cloudwatch_agents/ artifacts
           ls -ltr artifacts
-        
+
       - name: AWS CodeDeploy
         uses: sourcetoad/aws-codedeploy-action@v1
         if: steps.check-tag.outputs.release == 'true'
@@ -114,5 +112,3 @@ jobs:
           # excluded_files: '.git/* .env storage/framework/cache/* node_modules/*'
           max_polling_iterations: 60
           directory: ./artifacts
-
-

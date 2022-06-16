@@ -1,6 +1,6 @@
 envType: "production"
 
-# ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE, 
+# ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE,
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
 
 apiPrefix: "/v1"
@@ -11,27 +11,22 @@ awsDefaultRegion: "us-east-1"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
-  awsSecretNameForApiKey: 'PROD_SENDGRID_SECRET' # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForApiKey: "PROD_SENDGRID_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "bogus-value"
 
 stripe:
-  awsSecretNameForSecretKey: 'PROD_STRIPE_SECRET' # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  secretKey: 'bogus-value'
+  awsSecretNameForSecretKey: "PROD_STRIPE_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  secretKey: "bogus-value"
 
 trulioo:
-  awsSecretNameForIDVApiKey: 'PROD_TRULIOO_IDV_SECRET' # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForDocVApiKey: 'PROD_TRULIOO_DOCV_SECRET'
+  awsSecretNameForIDVApiKey: "PROD_TRULIOO_IDV_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForDocVApiKey: "PROD_TRULIOO_DOCV_SECRET"
   TruliooIDVApiKey: "bogus-value"
   TruliooDocVApiKey: "bogus-value"
 
-
 twilio:
-  awsSecretNameForSID: 'PROD_TWILIO_SID'
-  awsSecretNameForAuthToken: 'PROD_TWILIO_SECRET'
+  awsSecretNameForSID: "PROD_TWILIO_SID"
+  awsSecretNameForAuthToken: "PROD_TWILIO_SECRET"
   SID: "bogus-value"
-  authToken:  "bogus-value"
+  authToken: "bogus-value"
   fromPhoneNumber: "+19894557345"
-  
-  
-
-

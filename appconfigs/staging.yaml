@@ -1,6 +1,6 @@
 envType: "staging"
 
-# ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE, 
+# ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE,
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
 
 apiPrefix: "/v1"
@@ -11,26 +11,22 @@ awsDefaultRegion: "us-east-1"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
-  awsSecretNameForApiKey: 'TEST_SENDGRID_SECRET' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForApiKey: "TEST_SENDGRID_SECRET" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "bogus-value"
 
 stripe:
-  awsSecretNameForSecretKey: 'TEST_STRIPE_SECRET' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  secretKey: 'bogus-value'
+  awsSecretNameForSecretKey: "TEST_STRIPE_SECRET" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  secretKey: "bogus-value"
 
 trulioo:
-  awsSecretNameForSecretKey: '' #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForDocVApiKey: ''
+  awsSecretNameForSecretKey: "" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForDocVApiKey: ""
   TruliooIDVApiKey: UGVyZWdyaW5lX1NhbmRib3hfSURWX0FQSV8yOkNvZGVuYW1lZ29kQDEyMzQ=
   TruliooDocVApiKey: UGVyZWdyaW5lX1NhbmRib3hfRG9jVl9BUElfMjpDb2RlbmFtZWdvZEAxMjM0
 
 twilio:
-  awsSecretNameForSID: ''
-  awsSecretNameForAuthToken: ''
+  awsSecretNameForSID: ""
+  awsSecretNameForAuthToken: ""
   SID: "AC4efa22156849ec40b383a80f45525409"
-  authToken:  "c34165debbb0a77e3507884e86b88772"
+  authToken: "c34165debbb0a77e3507884e86b88772"
   fromPhoneNumber: "+19894557345"
-  
-  
-
-
