@@ -2,7 +2,7 @@
 
 envType: development
 
-apiPrefix: "/api/v1"
+apiPrefix: "/v1"
 logFilePath: "/tmp/noba_server.log"
 
 awsRegion: "us-east-1"
