@@ -49,7 +49,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post("/verifyOtp")
+  @Post("/verifyotp")
   @ApiOperation({ summary: "Send the OTP filled in by the user to Noba Server and get the access token" })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "Noba access token of the user" })
   async verifyOtp(@Body() request: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
@@ -70,7 +70,7 @@ export class AuthController {
     if (!isLoginAllowed) {
       throw new ForbiddenException(
         `User "${request.email}" is not allowed to login as identity "${request.identityType}". ` +
-          "Please contact support team, if you think this is an error.",
+        "Please contact support team, if you think this is an error.",
       );
     }
 
