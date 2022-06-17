@@ -63,7 +63,7 @@ export class AdminController {
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() { }
+  constructor() {}
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
@@ -125,11 +125,11 @@ export class AdminController {
       throw new NotFoundException(`Admin with id ${adminId} not found.`);
     }
 
-    const updatedAdmin: Admin =
-      await this.adminService.updateNobaAdmin(
-        adminId,
-        req.role ?? adminToUpdate.props.role,
-        req.name ?? adminToUpdate.props.name);
+    const updatedAdmin: Admin = await this.adminService.updateNobaAdmin(
+      adminId,
+      req.role ?? adminToUpdate.props.role,
+      req.name ?? adminToUpdate.props.name,
+    );
 
     return this.adminMapper.toDTO(updatedAdmin);
   }
@@ -168,8 +168,12 @@ export class AdminController {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add PartnerAdmins.`);
     }
 
-    const partnerAdmin: PartnerAdmin =
-      await this.partnerAdminService.addAdminForPartner(partnerId, requestBody.email, requestBody.name, requestBody.role);
+    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addAdminForPartner(
+      partnerId,
+      requestBody.email,
+      requestBody.name,
+      requestBody.role,
+    );
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
@@ -184,12 +188,13 @@ export class AdminController {
   ): Promise<PartnerAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveAdminsFromPartner()) {
-      throw new ForbiddenException(
-        `Admins with role '${authenticatedUser.props.role}' can't remove PartnerAdmins.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't remove PartnerAdmins.`);
     }
 
-    const deletedPartnerAdmin: PartnerAdmin =
-      await this.partnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId);
+    const deletedPartnerAdmin: PartnerAdmin = await this.partnerAdminService.deleteAdminForPartner(
+      partnerId,
+      partnerAdminId,
+    );
     return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
   }
 
@@ -197,10 +202,7 @@ export class AdminController {
   @ApiOperation({ summary: "Add a new partner" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "Add a new partner" })
   @ApiBadRequestResponse({ description: "Bad request" })
-  async registerPartner(
-    @Body() requestBody: AddPartnerRequestDTO,
-    @Request() request,
-  ): Promise<PartnerDTO> {
+  async registerPartner(@Body() requestBody: AddPartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);
