@@ -18,7 +18,7 @@ import { PartnerAdminService } from "../../../../src/modules/partner/partneradmi
 import { getMockPartnerAdminServiceWithDefaults } from "../../../../src/modules/partner/mocks/mock.partner.admin.service";
 import { AddPartnerAdminRequestDTO } from "../../../../src/modules/partner/dto/AddPartnerAdminRequestDTO";
 import { PartnerService } from "../../partner/partner.service";
-import { getmockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
+import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
 import { AddPartnerRequestDTO } from "../dto/AddPartnerRequestDTO";
 import { Partner } from "../../partner/domain/Partner";
 import { PartnerDTO } from "../../partner/dto/PartnerDTO";
@@ -44,7 +44,7 @@ describe("AdminController", () => {
 
     mockAdminService = getMockAdminServiceWithDefaults();
     mockPartnerAdminService = getMockPartnerAdminServiceWithDefaults();
-    mockPartnerService = getmockPartnerServiceWithDefaults();
+    mockPartnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [getWinstonModule(), getAppConfigModule()],

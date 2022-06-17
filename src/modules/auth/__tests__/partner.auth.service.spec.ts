@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
 import { getWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { PartnerAdminService } from "../../../modules/partner/partneradmin.service";
-import { mockedPartnerAdminService } from "../../../modules/partner/mocks/partneradminservicemock";
+import { getMockPartnerAdminServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.admin.service";
 import { EmailService } from "../../../../src/modules/common/email.service";
 import { getMockEmailServiceWithDefaults } from "../../../../src/modules/common/mocks/mock.email.service";
 import { getMockSmsServiceWithDefaults } from "../../../../src/modules/common/mocks/mock.sms.service";
@@ -15,7 +15,6 @@ import { InternalServerErrorException, NotFoundException, UnauthorizedException 
 import { partnerAdminIdentityIdenitfier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
 import { PartnerAuthService } from "../partner.auth.service";
-import { mockPartnerAdminWithAllAccess } from "../../../core/tests/constants";
 import { PartnerAdmin } from "../../../../src/modules/partner/domain/PartnerAdmin";
 
 describe("AdminService", () => {
@@ -32,7 +31,7 @@ describe("AdminService", () => {
   const identityType: string = partnerAdminIdentityIdenitfier;
 
   beforeEach(async () => {
-    mockPartnerAdminService = mockedPartnerAdminService;
+    mockPartnerAdminService = getMockPartnerAdminServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
     mockEmailService = getMockEmailServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
@@ -131,7 +130,13 @@ describe("AdminService", () => {
     });
 
     it("should return PartnerAdmin._id for correct PartnerAdmin", async () => {
-      const EXISTING_PARTNER_ADMIN_EMAIL = mockPartnerAdminWithAllAccess.email;
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+      const EXISTING_PARTNER_ADMIN_EMAIL = partnerAdmin.props.email;
       const CORRECT_OTP = 123456;
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
@@ -142,9 +147,10 @@ describe("AdminService", () => {
         identityType: partnerAdminIdentityIdenitfier,
       });
       when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockPartnerAdminService.getPartnerAdminFromEmail(EXISTING_PARTNER_ADMIN_EMAIL)).thenResolve(partnerAdmin);
 
       const receivedAdminId = await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
-      expect(receivedAdminId).toEqual(mockPartnerAdminWithAllAccess._id);
+      expect(receivedAdminId).toEqual(partnerAdmin.props._id);
     });
   });
 
