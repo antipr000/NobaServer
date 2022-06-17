@@ -5,6 +5,7 @@ import * as Joi from "joi";
 import { Entity } from "../../../core/domain/Entity";
 import { DOB } from "../../../externalclients/idvproviders/definitions";
 import { Address } from "./Address";
+import { VerificationStatusType } from "./Types";
 
 export interface UserProps extends VersioningInfo {
   _id: string;
@@ -14,7 +15,7 @@ export interface UserProps extends VersioningInfo {
   checkoutCustomerID?: string;
   phone?: string;
   isAdmin?: boolean;
-  idVerified?: boolean;
+  verificationStatus?: string;
   documentVerified?: boolean;
   documentVerificationTransactionId?: string;
   idVerificationTimestamp?: number;
@@ -53,7 +54,7 @@ export const userJoiValidationKeys: KeysRequired<UserProps> = {
     .allow(null)
     .meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
   isAdmin: Joi.boolean().default(false),
-  idVerified: Joi.boolean().default(false),
+  verificationStatus: Joi.string().default(VerificationStatusType.NOT_STARTED),
   documentVerified: Joi.boolean().default(false),
   documentVerificationTransactionId: Joi.string().optional(),
   idVerificationTimestamp: Joi.number().optional(),

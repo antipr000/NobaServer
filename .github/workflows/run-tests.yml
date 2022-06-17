@@ -4,10 +4,10 @@ name: CI
 
 # Controls when the workflow will run
 on:
-  # Triggers the tests on creating a pull request for master branch 
+  # Triggers the tests on creating a pull request for master branch
   pull_request:
-    branches: [ master ]
-  
+    branches: [master]
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -22,8 +22,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
-      
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.0
         with:
@@ -34,12 +33,21 @@ jobs:
         with:
           node-version: 14.x
 
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          prettier: true
+          auto_fix: false
+          eslint_auto_fix: false
+          prettier_auto_fix: false
+
       # Runs a single command using the runners shell
       - name: Install all packages
-        run: | 
+        run: |
           yarn install
           echo [SUCCESS] yarn install succeeded.
-      
+
       # Run all tests first to prevent broken builds
       - name: Run tests
         run: |

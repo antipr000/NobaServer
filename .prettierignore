@@ -1,0 +1,4 @@
+swagger.json
+build/*
+node_modules/*
+.gitHub/*

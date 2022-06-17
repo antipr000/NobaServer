@@ -2,5 +2,6 @@
   "editor.formatOnSave": false,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": ["source.formatDocument", "source.fixAll.eslint"],
-  "eslint.validate": ["typescript"]
+  "eslint.validate": ["typescript"],
+  "editor.tabSize": 2
 }

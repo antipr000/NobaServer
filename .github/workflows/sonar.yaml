@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - master # or the name of your main branch
+      
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,13 +23,13 @@ jobs:
         uses: mskelton/setup-yarn@v1.0.1
         with:
           node-version: 14.x
-      
+
       - name: Install dependencies
         run: yarn install
-      
+
       - name: Test and coverage
         run: yarn jest --coverage
-      
+
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

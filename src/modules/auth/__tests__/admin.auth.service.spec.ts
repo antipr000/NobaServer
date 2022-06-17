@@ -48,7 +48,7 @@ describe("AdminService", () => {
         getAppConfigModule(),
         JwtModule.register({
           secret: testJwtSecret,
-          signOptions: { expiresIn: "86400s" } /* 1 day */,
+          signOptions: { expiresIn: "604800s" } /* 1 week */,
         }),
       ],
       controllers: [],
@@ -167,8 +167,7 @@ describe("AdminService", () => {
     it("should return 'false' if service throws NotFoundException", async () => {
       const NON_EXISTING_ADMIN_EMAIL = "admin@noba.com";
 
-      when(mockAdminService.getAdminByEmail(NON_EXISTING_ADMIN_EMAIL))
-        .thenReject(new NotFoundException());
+      when(mockAdminService.getAdminByEmail(NON_EXISTING_ADMIN_EMAIL)).thenReject(new NotFoundException());
 
       const result = await adminAuthService.verifyUserExistence(NON_EXISTING_ADMIN_EMAIL);
 
@@ -183,8 +182,7 @@ describe("AdminService", () => {
         role: "BASIC",
       });
 
-      when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL))
-        .thenResolve(admin);
+      when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL)).thenResolve(admin);
 
       const result = await adminAuthService.verifyUserExistence(EXISTING_ADMIN_EMAIL);
 
@@ -194,8 +192,7 @@ describe("AdminService", () => {
     it("should rethrows 'InternalServerErrorException' if service throws it", async () => {
       const NON_EXISTING_ADMIN_EMAIL = "admin@noba.com";
 
-      when(mockAdminService.getAdminByEmail(NON_EXISTING_ADMIN_EMAIL))
-        .thenReject(new InternalServerErrorException());
+      when(mockAdminService.getAdminByEmail(NON_EXISTING_ADMIN_EMAIL)).thenReject(new InternalServerErrorException());
 
       try {
         await adminAuthService.verifyUserExistence(NON_EXISTING_ADMIN_EMAIL);

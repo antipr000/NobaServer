@@ -17,7 +17,7 @@ import { PartnerAdminService } from "../../../../src/modules/partner/partneradmi
 import { getMockPartnerAdminServiceWithDefaults } from "../../../../src/modules/partner/mocks/mock.partner.admin.service";
 import { AddPartnerAdminRequestDTO } from "../../../../src/modules/partner/dto/AddPartnerAdminRequestDTO";
 import { PartnerService } from "../../partner/partner.service";
-import { getmockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
+import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
 import { AddPartnerRequestDTO } from "../dto/AddPartnerRequestDTO";
 import { Partner } from "../../partner/domain/Partner";
 import { PartnerDTO } from "../../partner/dto/PartnerDTO";
@@ -43,7 +43,7 @@ describe("AdminController", () => {
 
     mockAdminService = getMockAdminServiceWithDefaults();
     mockPartnerAdminService = getMockPartnerAdminServiceWithDefaults();
-    mockPartnerService = getmockPartnerServiceWithDefaults();
+    mockPartnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [getWinstonModule(), getAppConfigModule()],
@@ -593,7 +593,7 @@ describe("AdminController", () => {
       const requestingConsumer = User.createUser({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A"
+        name: "Consumer A",
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
@@ -622,7 +622,7 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL"
+        role: "ALL",
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
@@ -649,7 +649,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "BASIC"
+        role: "BASIC",
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
@@ -677,7 +677,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "INTERMEDIATE"
+        role: "INTERMEDIATE",
       });
 
       when(mockPartnerAdminService.addAdminForPartner(partnerId, newPartnerAdminEmail, newPartnerAdminName, newPartnerAdminRole))
@@ -717,7 +717,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE"
+        role: "INTERMEDIATE",
       });
 
       when(mockPartnerAdminService.addAdminForPartner(partnerId, newPartnerAdminEmail, newPartnerAdminName, newPartnerAdminRole))
@@ -915,7 +915,7 @@ describe("AdminController", () => {
       const requestingConsumer = User.createUser({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A"
+        name: "Consumer A",
       });
 
       try {
@@ -941,7 +941,7 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL"
+        role: "ALL",
       });
 
       try {
@@ -964,7 +964,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "BASIC"
+        role: "BASIC",
       });
 
       try {
@@ -988,14 +988,15 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE"
+        role: "INTERMEDIATE",
       });
 
-      when(mockPartnerService.createPartner(newPartnerName))
-        .thenResolve(Partner.createPartner({
+      when(mockPartnerService.createPartner(newPartnerName)).thenResolve(
+        Partner.createPartner({
           _id: createdPartnerId,
           name: newPartnerName,
-        }));
+        }),
+      );
 
       const addPartnerRequest: AddPartnerRequestDTO = {
         name: newPartnerName,
@@ -1017,14 +1018,15 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "ADMIN"
+        role: "ADMIN",
       });
 
-      when(mockPartnerService.createPartner(newPartnerName))
-        .thenResolve(Partner.createPartner({
+      when(mockPartnerService.createPartner(newPartnerName)).thenResolve(
+        Partner.createPartner({
           _id: createdPartnerId,
           name: newPartnerName,
-        }));
+        }),
+      );
 
       const addPartnerRequest: AddPartnerRequestDTO = {
         name: newPartnerName,

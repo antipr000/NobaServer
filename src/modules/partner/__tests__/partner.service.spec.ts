@@ -1,14 +1,16 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { instance } from "ts-mockito";
+import { anything, instance, when, deepEqual } from "ts-mockito";
 import { PartnerService } from "../partner.service";
-import { mockedPartnerRepo } from "../mocks/partnerrepomock";
-import { mockPartner, updatePartnerName, updateTakeRate } from "../../../core/tests/constants";
+import { getMockPartnerRepoWithDefaults } from "../mocks/mock.partner.repo";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
 import { CommonModule } from "../../common/common.module";
+import { Partner } from "../domain/Partner";
 
 describe("PartnerService", () => {
   let partnerService: PartnerService;
+
+  const partnerRepo = getMockPartnerRepoWithDefaults();
 
   jest.setTimeout(20000);
   const OLD_ENV = process.env;
@@ -21,7 +23,7 @@ describe("PartnerService", () => {
     };
     const PartnerRepoProvider = {
       provide: "PartnerRepo",
-      useFactory: () => instance(mockedPartnerRepo),
+      useFactory: () => instance(partnerRepo),
     };
     const app: TestingModule = await Test.createTestingModule({
       imports: [getWinstonModule(), getAppConfigModule(), CommonModule],
@@ -34,32 +36,74 @@ describe("PartnerService", () => {
 
   describe("partner service tests", () => {
     it("should add a new partner", async () => {
-      const result = await partnerService.createPartner(mockPartner.name);
-      expect(result.props).toStrictEqual(mockPartner);
+      const partner: Partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        publicKey: "mockPublicKey",
+        privateKey: "mockPrivateKey",
+      });
+
+      when(partnerRepo.addPartner(anything())).thenResolve(partner);
+
+      const result = await partnerService.createPartner(partner.props.name);
+      expect(result).toStrictEqual(partner);
     });
 
     it("should get partner given id", async () => {
-      const result = await partnerService.getPartner(mockPartner._id);
-      expect(result.props).toStrictEqual(mockPartner);
+      const partner: Partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        publicKey: "mockPublicKey",
+        privateKey: "mockPrivateKey",
+      });
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+      const result = await partnerService.getPartner(partner.props._id);
+      expect(result).toStrictEqual(partner);
     });
 
     it("should update partner", async () => {
-      const result = await partnerService.updatePartner(mockPartner._id, {
-        ...mockPartner,
-        name: updatePartnerName,
+      const partner: Partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        publicKey: "mockPublicKey",
+        privateKey: "mockPrivateKey",
       });
-      expect(result.props).toStrictEqual({
-        ...mockPartner,
-        name: updatePartnerName,
+      const updatedPartner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "New Partner Name",
+        publicKey: "mockPublicKey",
+        privateKey: "mockPrivateKey",
       });
+
+      when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+
+      const result = await partnerService.updatePartner(partner.props._id, {
+        name: updatedPartner.props.name,
+      });
+      expect(result.props).toStrictEqual(updatedPartner.props);
     });
 
     it("should update take rate", async () => {
-      const result = await partnerService.updateTakeRate(mockPartner._id, updateTakeRate);
-      expect(result.props).toStrictEqual({
-        ...mockPartner,
-        takeRate: updateTakeRate,
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        publicKey: "mockPublicKey",
+        privateKey: "mockPrivateKey",
       });
+      const newTakeRate = 20;
+      const updatePartner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        publicKey: "mockPublicKey",
+        privateKey: "mockPrivateKey",
+        takeRate: newTakeRate,
+      });
+
+      when(partnerRepo.updateTakeRate(partner.props._id, newTakeRate)).thenResolve(updatePartner);
+
+      const result = await partnerService.updateTakeRate(partner.props._id, newTakeRate);
+      expect(result).toStrictEqual(updatePartner);
     });
   });
 });

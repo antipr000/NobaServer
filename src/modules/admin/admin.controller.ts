@@ -165,8 +165,7 @@ export class AdminController {
   ): Promise<PartnerAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
-      throw new ForbiddenException(
-        `Admins with role '${authenticatedUser.props.role}' can't add PartnerAdmins.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add PartnerAdmins.`);
     }
 
     const partnerAdmin: PartnerAdmin =
@@ -204,8 +203,7 @@ export class AdminController {
   ): Promise<PartnerDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
-      throw new ForbiddenException(
-        `Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);
     }
 
     const createdPartner: Partner = await this.partnerService.createPartner(requestBody.name);

@@ -24,8 +24,6 @@ export default class TruliooIntegrator extends IDVIntegrator {
     super(configurations);
     this.apiToken = configService.get<TruliooConfigs>(TRULIOO_CONFIG_KEY).TruliooIDVApiKey;
     this.docVerificationApiToken = configService.get<TruliooConfigs>(TRULIOO_CONFIG_KEY).TruliooDocVApiKey;
-
-    console.log("Trullio configured. Key=" + this.apiToken);
   }
 
   parseRequest(request: IDRequest): TruliooRequest {

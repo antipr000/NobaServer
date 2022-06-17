@@ -1,7 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
 import { PartnerAdminService } from "../partneradmin.service";
 
-
 export const getMockPartnerAdminServiceWithDefaults = () => {
   const mockPartnerAdminService: PartnerAdminService = mock(PartnerAdminService);
 
