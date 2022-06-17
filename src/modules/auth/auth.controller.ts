@@ -49,7 +49,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post("/verifyOtp")
+  @Post("/verifyotp")
   @ApiOperation({ summary: "Send the OTP filled in by the user to Noba Server and get the access token" })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "Noba access token of the user" })
   async verifyOtp(@Body() request: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
