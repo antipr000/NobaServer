@@ -70,7 +70,7 @@ export class AuthController {
     if (!isLoginAllowed) {
       throw new ForbiddenException(
         `User "${request.email}" is not allowed to login as identity "${request.identityType}". ` +
-        "Please contact support team, if you think this is an error.",
+          "Please contact support team, if you think this is an error.",
       );
     }
 
