@@ -1,4 +1,4 @@
-import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
+import { anyString, anything, mock, when } from "ts-mockito";
 import { PartnerService } from "../partner.service";
 
 export const getMockPartnerServiceWithDefaults = () => {
@@ -7,7 +7,6 @@ export const getMockPartnerServiceWithDefaults = () => {
   when(mockPartnerService.createPartner(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerService.getPartner(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerService.updatePartner(anyString(), anything())).thenReject(new Error("Not implemented!"));
-  when(mockPartnerService.updateTakeRate(anyString(), anyNumber())).thenReject(new Error("Not implemented!"));
 
   return mockPartnerService;
 };

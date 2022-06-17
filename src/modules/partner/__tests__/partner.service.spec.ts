@@ -100,9 +100,11 @@ describe("PartnerService", () => {
         takeRate: newTakeRate,
       });
 
-      when(partnerRepo.updateTakeRate(partner.props._id, newTakeRate)).thenResolve(updatePartner);
+      when(partnerRepo.updatePartner(deepEqual(updatePartner))).thenResolve(updatePartner);
 
-      const result = await partnerService.updateTakeRate(partner.props._id, newTakeRate);
+      const result = await partnerService.updatePartner(partner.props._id, {
+        takeRate: newTakeRate,
+      });
       expect(result).toStrictEqual(updatePartner);
     });
   });

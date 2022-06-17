@@ -75,7 +75,6 @@ describe("PartnerController", () => {
       ).thenResolve(partnerAdminToAdd);
 
       const result = await partnerController.addPartnerAdmin(
-        partnerAdminToAdd.props.partnerId,
         {
           email: partnerAdminToAdd.props.email,
         },
@@ -108,7 +107,6 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.addPartnerAdmin(
-          partnerAdminToAdd.props.partnerId,
           {
             email: partnerAdminToAdd.props.email,
           },
@@ -142,7 +140,6 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.addPartnerAdmin(
-          partnerAdminToAdd.props.partnerId,
           {
             email: partnerAdminToAdd.props.email,
           },
@@ -182,19 +179,15 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(basicAccessAdmin.props._id)).thenResolve(basicAccessAdmin);
       when(partnerAdminService.getPartnerAdmin(intermediateAccessAdmin.props._id)).thenResolve(intermediateAccessAdmin);
 
-      const allAccessResult = await partnerController.getPartnerAdmin(partnerId, partnerAdminAllAccessId, {
+      const allAccessResult = await partnerController.getPartnerAdmin(partnerAdminAllAccessId, {
         user: allAccessAdmin,
       });
-      const basicAccessResult = await partnerController.getPartnerAdmin(partnerId, partnerAdminBasicAccessId, {
+      const basicAccessResult = await partnerController.getPartnerAdmin(partnerAdminBasicAccessId, {
         user: basicAccessAdmin,
       });
-      const intermediateAccessResult = await partnerController.getPartnerAdmin(
-        partnerId,
-        partnerAdminIntermediateAccessId,
-        {
-          user: intermediateAccessAdmin,
-        },
-      );
+      const intermediateAccessResult = await partnerController.getPartnerAdmin(partnerAdminIntermediateAccessId, {
+        user: intermediateAccessAdmin,
+      });
 
       expect(allAccessResult).toStrictEqual(partnerAdminMapper.toDTO(allAccessAdmin));
       expect(basicAccessResult).toStrictEqual(partnerAdminMapper.toDTO(basicAccessAdmin));
@@ -218,7 +211,7 @@ describe("PartnerController", () => {
 
       when(partnerAdminService.getPartnerAdmin(partnerAdmin.props._id)).thenResolve(partnerAdmin);
 
-      const result = await partnerController.getPartnerAdmin(partnerId, partnerAdmin.props._id, {
+      const result = await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
         user: requestingPartnerAdmin,
       });
 
@@ -243,7 +236,7 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(partnerAdmin.props._id)).thenResolve(partnerAdmin);
 
       try {
-        await partnerController.getPartnerAdmin(partnerId, partnerAdmin.props._id, {
+        await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
       } catch (e) {
@@ -269,7 +262,7 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(partnerAdmin.props._id)).thenResolve(partnerAdmin);
 
       try {
-        await partnerController.getPartnerAdmin(partnerId, partnerAdmin.props._id, {
+        await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
       } catch (e) {
@@ -301,7 +294,7 @@ describe("PartnerController", () => {
         }),
       ]);
 
-      const result = await partnerController.getAllPartnerAdmins(partnerId, {
+      const result = await partnerController.getAllPartnerAdmins({
         user: requestingPartnerAdmin,
       });
 
@@ -333,7 +326,7 @@ describe("PartnerController", () => {
       ]);
 
       try {
-        await partnerController.getAllPartnerAdmins(partnerId, {
+        await partnerController.getAllPartnerAdmins({
           user: requestingPartnerAdmin,
         });
       } catch (e) {
@@ -366,7 +359,7 @@ describe("PartnerController", () => {
       ]);
 
       try {
-        await partnerController.getAllPartnerAdmins(partnerId, {
+        await partnerController.getAllPartnerAdmins({
           user: requestingPartnerAdmin,
         });
       } catch (e) {
@@ -424,7 +417,7 @@ describe("PartnerController", () => {
         }),
       );
 
-      const result = await partnerController.updateTakeRate(
+      const result = await partnerController.updatePartner(
         partner.props._id,
         {
           takeRate: newTakeRate,
@@ -472,7 +465,7 @@ describe("PartnerController", () => {
       );
 
       try {
-        await partnerController.updateTakeRate(
+        await partnerController.updatePartner(
           partner.props._id,
           {
             takeRate: newTakeRate,
@@ -513,7 +506,7 @@ describe("PartnerController", () => {
         }),
       );
       try {
-        await partnerController.updateTakeRate(
+        await partnerController.updatePartner(
           partner.props._id,
           {
             takeRate: newTakeRate,

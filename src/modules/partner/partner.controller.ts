@@ -6,8 +6,8 @@ import {
   HttpStatus,
   Inject,
   Param,
+  Patch,
   Post,
-  Put,
   Request,
 } from "@nestjs/common";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -19,14 +19,14 @@ import { PartnerAdmin } from "./domain/PartnerAdmin";
 import { AddPartnerAdminRequestDTO } from "./dto/AddPartnerAdminRequestDTO";
 import { PartnerAdminDTO } from "./dto/PartnerAdminDTO";
 import { PartnerDTO } from "./dto/PartnerDTO";
-import { UpdateTakeRateRequestDTO } from "./dto/UpdateTakeRateRequestDTO";
+import { UpdatePartnerRequestDTO } from "./dto/UpdatePartnerRequestDTO";
 import { PartnerAdminMapper } from "./mappers/PartnerAdminMapper";
 import { PartnerMapper } from "./mappers/PartnerMapper";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
 
 @ApiBearerAuth("JWT-auth")
-@Controller("partner/:" + PartnerID)
+@Controller("partners")
 @ApiTags("Partner")
 export class PartnerController {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -41,7 +41,7 @@ export class PartnerController {
     this.partnerAdminMapper = new PartnerAdminMapper();
   }
 
-  @Get("/")
+  @Get("/:" + PartnerID)
   @ApiOperation({ summary: "Get partner details of requesting user" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -56,23 +56,22 @@ export class PartnerController {
     return this.partnerMapper.toDTO(partner);
   }
 
-  @Put("/take_rate")
+  @Patch("/:" + PartnerID)
   @ApiOperation({ summary: "Update take rate for partner" })
   @ApiResponse({ status: HttpStatus.OK, type: PartnerDTO, description: "Returns updated partner details" })
   @ApiBadRequestResponse({ description: "Invalid request" })
-  async updateTakeRate(
+  async updatePartner(
     @Param(PartnerID) partnerID: string,
-    @Body() requestBody: UpdateTakeRateRequestDTO,
+    @Body() requestBody: UpdatePartnerRequestDTO,
     @Request() request,
   ): Promise<PartnerDTO> {
-    // check for permissions
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
-    const partner: Partner = await this.partnerService.updateTakeRate(partnerID, requestBody.takeRate);
+    const partner: Partner = await this.partnerService.updatePartner(partnerID, requestBody);
     return this.partnerMapper.toDTO(partner);
   }
 
-  @Get("/admin/:" + PartnerAdminID)
+  @Get("/admins/:" + PartnerAdminID)
   @ApiOperation({ summary: "Get details for partner admin" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -80,11 +79,7 @@ export class PartnerController {
     description: "Returns details for the requesting partner admin",
   })
   @ApiBadRequestResponse({ description: "Not authorized" })
-  async getPartnerAdmin(
-    @Param(PartnerID) partnerID: string,
-    @Param(PartnerAdminID) partnerAdminID: string,
-    @Request() request,
-  ): Promise<PartnerAdminDTO> {
+  async getPartnerAdmin(@Param(PartnerAdminID) partnerAdminID: string, @Request() request): Promise<PartnerAdminDTO> {
     const requestUser: PartnerAdmin = request.user;
     if (requestUser.props._id !== partnerAdminID && !requestUser.canGetAllAdmins()) throw new ForbiddenException();
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.getPartnerAdmin(partnerAdminID);
@@ -99,26 +94,27 @@ export class PartnerController {
     description: "Returns details for all admins of the partner",
   })
   @ApiBadRequestResponse({ description: "Not authorized" })
-  async getAllPartnerAdmins(@Param(PartnerID) partnerID: string, @Request() request): Promise<PartnerAdminDTO[]> {
+  async getAllPartnerAdmins(@Request() request): Promise<PartnerAdminDTO[]> {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canGetAllAdmins()) throw new ForbiddenException();
-    const partnerAdmins: PartnerAdmin[] = await this.partnerAdminService.getAllPartnerAdmins(partnerID);
+    const partnerAdmins: PartnerAdmin[] = await this.partnerAdminService.getAllPartnerAdmins(
+      requestUser.props.partnerId,
+    );
     return partnerAdmins.map(partnerAdmin => this.partnerAdminMapper.toDTO(partnerAdmin));
   }
 
-  @Post("/admin")
+  @Post("/admins")
   @ApiOperation({ summary: "Add a new partner admin" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
   @ApiBadRequestResponse({ description: "Bad request" })
-  async addPartnerAdmin(
-    @Param(PartnerID) partnerID: string,
-    @Body() requestBody: AddPartnerAdminRequestDTO,
-    @Request() request,
-  ): Promise<PartnerAdminDTO> {
+  async addPartnerAdmin(@Body() requestBody: AddPartnerAdminRequestDTO, @Request() request): Promise<PartnerAdminDTO> {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
 
-    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addPartnerAdmin(partnerID, requestBody.email);
+    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addPartnerAdmin(
+      requestUser.props.partnerId,
+      requestBody.email,
+    );
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 }
