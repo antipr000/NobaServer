@@ -4,7 +4,6 @@ import { Mapper } from "../../../core/infra/Mapper";
 import { CrudOptions } from "src/infra/dynamodb/DDBUtils";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
 import { Injectable } from "@nestjs/common";
-import { OutputNobaAdminDTO } from "../dto/OutputNobaAdminDTO";
 
 export type AdminMinPropertySetForDBLookUp = Pick<AdminProps, "_id">;
 
@@ -19,11 +18,7 @@ export class AdminMapper implements Mapper<Admin> {
   }
 
   public toDTO(nobaAdmin: Admin): NobaAdminDTO {
-    throw new Error("Method not implemented");
-  }
-
-  public toOutputDto(nobaAdmin: Admin): OutputNobaAdminDTO {
-    const dto: OutputNobaAdminDTO = new OutputNobaAdminDTO();
+    const dto: NobaAdminDTO = new NobaAdminDTO();
     dto._id = nobaAdmin.props._id;
     dto.email = nobaAdmin.props.email;
     dto.name = nobaAdmin.props.name;

@@ -12,18 +12,19 @@ import {
   Delete,
   Request,
   ForbiddenException,
+  Patch,
+  NotFoundException,
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AdminId, PartnerID } from "../auth/roles.decorator";
+import { AdminId, PartnerAdminID, PartnerID } from "../auth/roles.decorator";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { TransactionsFilterDTO } from "./dto/TransactionsFilterDTO";
 import { NobaAdminDTO } from "./dto/NobaAdminDTO";
 import { Admin } from "./domain/Admin";
-import { OutputNobaAdminDTO } from "./dto/OutputNobaAdminDTO";
 import { AdminMapper } from "./mappers/AdminMapper";
 import { Public } from "../auth/public.decorator";
 import { UpdateNobaAdminDTO } from "./dto/UpdateNobaAdminDTO";
@@ -39,7 +40,7 @@ import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerMapper } from "../partner/mappers/PartnerMapper";
 
-@Controller("admin")
+@Controller("admins")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Admin")
 export class AdminController {
@@ -85,42 +86,52 @@ export class AdminController {
     return await this.adminService.getAllTransactions(filterQuery.startDate, filterQuery.endDate);
   }
 
-  // TODO: Decide the different URLs for NobaAdmins, Partners & PartnerAdmins.
   @Post("/")
   @ApiOperation({ summary: "Creates a new NobaAdmin with a specified role." })
-  @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The newly created Noba Admin." })
-  async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<OutputNobaAdminDTO> {
+  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The newly created Noba Admin." })
+  async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<NobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddNobaAdmin()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba Admin.`);
     }
 
     const savedAdmin: Admin = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
+    if (savedAdmin === undefined) {
+      throw new ConflictException("User is already registerd as a NobaAdmin");
+    }
 
-    if (savedAdmin === undefined) throw new ConflictException("User is already registerd as a NobaAdmin");
-
-    return this.adminMapper.toOutputDto(savedAdmin);
+    return this.adminMapper.toDTO(savedAdmin);
   }
 
-  @Put(`/:${AdminId}`)
-  @ApiOperation({ summary: "Updates the role of a NobaAdmin." })
-  @ApiResponse({ status: HttpStatus.OK, type: OutputNobaAdminDTO, description: "The updated NobaAdmin." })
+  @Patch(`/:${AdminId}`)
+  @ApiOperation({ summary: "Updates the role/name of a NobaAdmin." })
+  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The updated NobaAdmin." })
   async updateNobaAdmin(
     @Request() request,
     @Param(AdminId) adminId: string,
     @Body() req: UpdateNobaAdminDTO,
-  ): Promise<OutputNobaAdminDTO> {
+  ): Promise<NobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canChangeNobaAdminPrivileges()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update NobaAdmins.`);
     }
 
     if (authenticatedUser.props._id === adminId) {
-      throw new ForbiddenException("You can't update your own privileges.");
+      throw new ForbiddenException("You can't update your own identity.");
     }
 
-    const updatedAdmin: Admin = await this.adminService.changeNobaAdminRole(adminId, req.role);
-    return this.adminMapper.toOutputDto(updatedAdmin);
+    const adminToUpdate: Admin = await this.adminService.getAdminById(adminId);
+    if (adminToUpdate === undefined) {
+      throw new NotFoundException(`Admin with id ${adminId} not found.`);
+    }
+
+    const updatedAdmin: Admin = await this.adminService.updateNobaAdmin(
+      adminId,
+      req.role ?? adminToUpdate.props.role,
+      req.name ?? adminToUpdate.props.name,
+    );
+
+    return this.adminMapper.toDTO(updatedAdmin);
   }
 
   @Delete(`/:${AdminId}`)
@@ -143,12 +154,11 @@ export class AdminController {
     return result;
   }
 
-  @Post(`/:${AdminId}/partners/:${PartnerID}/admins`)
+  @Post(`/partners/:${PartnerID}/admins`)
   @ApiOperation({ summary: "Add a new partner admin" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
   @ApiBadRequestResponse({ description: "Bad request" })
   async addAdminsForPartners(
-    @Param(AdminId) adminId: string,
     @Param(PartnerID) partnerId: string,
     @Body() requestBody: AddPartnerAdminRequestDTO,
     @Request() request,
@@ -158,19 +168,41 @@ export class AdminController {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add PartnerAdmins.`);
     }
 
-    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addPartnerAdmin(partnerId, requestBody.email);
+    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addAdminForPartner(
+      partnerId,
+      requestBody.email,
+      requestBody.name,
+      requestBody.role,
+    );
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
-  @Post(`/:${AdminId}/partners`)
-  @ApiOperation({ summary: "Add a new partner" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner" })
+  @Delete(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
+  @ApiOperation({ summary: "Add a new partner admin" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
   @ApiBadRequestResponse({ description: "Bad request" })
-  async registerPartner(
-    @Param(AdminId) adminId: string,
-    @Body() requestBody: AddPartnerRequestDTO,
+  async deleteAdminsForPartners(
+    @Param(PartnerID) partnerId: string,
+    @Param(PartnerAdminID) partnerAdminId: string,
     @Request() request,
-  ): Promise<PartnerDTO> {
+  ): Promise<PartnerAdminDTO> {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveAdminsFromPartner()) {
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't remove PartnerAdmins.`);
+    }
+
+    const deletedPartnerAdmin: PartnerAdmin = await this.partnerAdminService.deleteAdminForPartner(
+      partnerId,
+      partnerAdminId,
+    );
+    return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
+  }
+
+  @Post(`/partners`)
+  @ApiOperation({ summary: "Add a new partner" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "Add a new partner" })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async registerPartner(@Body() requestBody: AddPartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);

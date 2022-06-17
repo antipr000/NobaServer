@@ -7,7 +7,9 @@ export const getMockAdminServiceWithDefaults = () => {
   when(mockAdminService.getTransactionStatus()).thenReject(new Error("Not implemented!"));
   when(mockAdminService.getAllTransactions(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockAdminService.addNobaAdmin(anything())).thenReject(new Error("Not implemented!"));
-  when(mockAdminService.changeNobaAdminRole(anything(), anything())).thenReject(new Error("Not implemented!"));
+  when(mockAdminService.updateNobaAdmin(anyString(), anyString(), anyString())).thenReject(
+    new Error("Not implemented!"),
+  );
   when(mockAdminService.deleteNobaAdmin(anyString())).thenReject(new Error("Not implemented!"));
   when(mockAdminService.getAdminById(anyString())).thenReject(new Error("Not implemented!"));
 
