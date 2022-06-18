@@ -11,7 +11,7 @@ export class PartnerAdminDTO {
   email: string;
 
   @ApiProperty()
-  partnerId: string;
+  partnerID: string;
 
   @ApiProperty()
   role: string;

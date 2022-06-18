@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException, NotImplementedException } from "@nestjs/common";
-import { PartnerAdmin } from "./domain/PartnerAdmin";
+import { PartnerAdmin, PartnerAdminProps } from "./domain/PartnerAdmin";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IPartnerAdminRepo } from "./repo/PartnerAdminRepo";
@@ -29,16 +29,6 @@ export class PartnerAdminService {
     else throw new NotFoundException("Admin with given email does not exist");
   }
 
-  async addPartnerAdmin(partnerId: string, emailID: string): Promise<PartnerAdmin> {
-    const newPartnerAdmin = PartnerAdmin.createPartnerAdmin({
-      email: emailID,
-      partnerId: partnerId,
-    });
-    const partnerAdmin: PartnerAdmin = await this.partnerAdminRepo.addPartnerAdmin(newPartnerAdmin);
-    return partnerAdmin;
-  }
-
-  // TODO: Deprecate addPartnerAdmin with this method. Add the appropriate tests.
   async addAdminForPartner(partnerId: string, emailId: string, name: string, role: string): Promise<PartnerAdmin> {
     const newPartnerAdmin = PartnerAdmin.createPartnerAdmin({
       email: emailId,
@@ -50,7 +40,6 @@ export class PartnerAdminService {
     return partnerAdmin;
   }
 
-  // Deprecate 'deletePartnerAdmin' with this method. Add the appropriate tests.
   async deleteAdminForPartner(partnerId: string, partnerAdminId: string): Promise<PartnerAdmin> {
     const currentPartnerAdmin: PartnerAdmin = await this.getPartnerAdmin(partnerAdminId);
     if (currentPartnerAdmin.props.partnerId !== partnerId) {
@@ -63,8 +52,22 @@ export class PartnerAdminService {
     return currentPartnerAdmin;
   }
 
-  async deletePartnerAdmin(partnerAdminId: string): Promise<void> {
-    this.partnerAdminRepo.removePartnerAdmin(partnerAdminId);
+  async updateAdminForPartner(
+    partnerId: string,
+    partnerAdminId: string,
+    partnerAdminProps: Partial<PartnerAdminProps>,
+  ): Promise<PartnerAdmin> {
+    const partnerAdminToUpdate: PartnerAdmin = await this.getPartnerAdmin(partnerAdminId);
+    if (partnerAdminToUpdate.props.partnerId !== partnerId) {
+      throw new NotFoundException(
+        `PartnerAdmin with ID '${partnerAdminId}' does not exists in Partner with ID '${partnerId}'`,
+      );
+    }
+    const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+      ...partnerAdminToUpdate.props,
+      ...partnerAdminProps,
+    });
+    return await this.partnerAdminRepo.updatePartnerAdmin(updatedPartnerAdmin);
   }
 
   async getAllPartnerAdmins(partnerId: string): Promise<PartnerAdmin[]> {

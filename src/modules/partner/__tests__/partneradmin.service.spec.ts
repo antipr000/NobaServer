@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, instance, when } from "ts-mockito";
+import { anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { getMockPartnerAdminRepoWithDefaults } from "../mocks/mock.partner.admin.repo";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
@@ -52,7 +52,12 @@ describe("PartnerService", () => {
 
       when(partnerAdminRepo.addPartnerAdmin(anything())).thenResolve(partnerAdmin);
 
-      const result = await partnerAdminService.addPartnerAdmin(partnerAdmin.props._id, partnerAdmin.props.email);
+      const result = await partnerAdminService.addAdminForPartner(
+        partnerAdmin.props._id,
+        partnerAdmin.props.email,
+        partnerAdmin.props.name,
+        partnerAdmin.props.role,
+      );
       expect(result).toStrictEqual(partnerAdmin);
     });
 
@@ -116,6 +121,100 @@ describe("PartnerService", () => {
 
       const result = await partnerAdminService.getAllPartnerAdmins(partnerAdmin.props.partnerId);
       expect(result.length).toBe(2);
+    });
+
+    it("should update partner admin details", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+      const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      when(partnerAdminRepo.updatePartnerAdmin(deepEqual(updatedPartnerAdmin))).thenResolve(updatedPartnerAdmin);
+
+      const result = await partnerAdminService.updateAdminForPartner(
+        partnerAdmin.props.partnerId,
+        partnerAdmin.props._id,
+        {
+          role: updatedPartnerAdmin.props.role,
+        },
+      );
+      expect(result).toStrictEqual(updatedPartnerAdmin);
+    });
+
+    it("should throw 'NotFoundException' when partner admin doesn't belong to partner", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+      const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      when(partnerAdminRepo.updatePartnerAdmin(deepEqual(updatedPartnerAdmin))).thenResolve(updatedPartnerAdmin);
+
+      try {
+        await partnerAdminService.updateAdminForPartner("mock-partner-2", partnerAdmin.props._id, {
+          role: updatedPartnerAdmin.props.role,
+        });
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it("should delete a partner admin", async () => {
+      const partnerAdminID = "mock-partner-admin-1";
+      const partnerID = "mock-partner-1";
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: partnerAdminID,
+        email: "mock@partner.com",
+        partnerId: partnerID,
+        role: "ALL",
+      });
+
+      when(partnerAdminRepo.removePartnerAdmin(partnerAdminID)).thenResolve();
+      when(partnerAdminRepo.getPartnerAdmin(partnerAdminID)).thenResolve(Result.ok(partnerAdmin));
+
+      const result = await partnerAdminService.deleteAdminForPartner(partnerID, partnerAdminID);
+
+      verify(partnerAdminRepo.getPartnerAdmin(partnerAdminID)).called();
+      verify(partnerAdminRepo.removePartnerAdmin(partnerAdminID)).called();
+      expect(result).toStrictEqual(partnerAdmin);
+    });
+
+    it("should throw 'NotFoundException' if partner admin does not belong to partnerID", async () => {
+      const partnerAdminID = "delete-admin-1";
+      const partnerID = "mock-partner-1";
+      const requestingAdminPartnerID = "mock-partner-2";
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: partnerAdminID,
+        email: "mock@partner.com",
+        partnerId: partnerID,
+        role: "ALL",
+      });
+
+      when(partnerAdminRepo.removePartnerAdmin(partnerAdminID)).thenResolve();
+      when(partnerAdminRepo.getPartnerAdmin(partnerAdminID)).thenResolve(Result.ok(partnerAdmin));
+
+      try {
+        await partnerAdminService.deleteAdminForPartner(requestingAdminPartnerID, partnerAdminID);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+        verify(partnerAdminRepo.getPartnerAdmin(partnerAdminID)).called();
+        verify(partnerAdminRepo.removePartnerAdmin(partnerAdminID)).never();
+      }
     });
   });
 });

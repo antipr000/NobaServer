@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   HttpStatus,
@@ -111,10 +112,48 @@ export class PartnerController {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
 
-    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addPartnerAdmin(
+    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addAdminForPartner(
       requestUser.props.partnerId,
       requestBody.email,
+      requestBody.name,
+      requestBody.role,
     );
     return this.partnerAdminMapper.toDTO(partnerAdmin);
+  }
+
+  @Patch("/admins/:" + PartnerAdminID)
+  @ApiOperation({ summary: "Update details of a partner admin" })
+  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Update details of a partner admin" })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async updatePartnerAdmin(
+    @Param(PartnerAdminID) partnerAdminID: string,
+    @Body() requestBody: UpdatePartnerRequestDTO,
+    @Request() request,
+  ): Promise<PartnerAdminDTO> {
+    const requestUser: PartnerAdmin = request.user;
+    if (!requestUser.canUpdatePartnerAdmin()) throw new ForbiddenException();
+    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.updateAdminForPartner(
+      requestUser.props.partnerId,
+      partnerAdminID,
+      requestBody,
+    );
+    return this.partnerAdminMapper.toDTO(partnerAdmin);
+  }
+
+  @Delete("/admins/:" + PartnerAdminID)
+  @ApiOperation({ summary: "Deletes a parter admin" })
+  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Deletes a partner admin" })
+  @ApiBadRequestResponse({ description: "Partner admin not found" })
+  async deletePartnerAdmin(
+    @Param(PartnerAdminID) partnerAdminID: string,
+    @Request() request,
+  ): Promise<PartnerAdminDTO> {
+    const requestUser: PartnerAdmin = request.user;
+    if (!requestUser.canRemovePartnerAdmin()) throw new ForbiddenException();
+    const deletedPartnerAdmin = await this.partnerAdminService.deleteAdminForPartner(
+      requestUser.props.partnerId,
+      partnerAdminID,
+    );
+    return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
   }
 }
