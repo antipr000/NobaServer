@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { instance, when } from "ts-mockito";
+import { deepEqual, instance, when } from "ts-mockito";
 import { PartnerService } from "../partner.service";
 import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
 import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
@@ -407,9 +407,12 @@ describe("PartnerController", () => {
       const newTakeRate = 20;
 
       when(
-        partnerService.updatePartner(partner.props._id, {
-          takeRate: newTakeRate,
-        }),
+        partnerService.updatePartner(
+          partner.props._id,
+          deepEqual({
+            takeRate: newTakeRate,
+          }),
+        ),
       ).thenResolve(
         Partner.createPartner({
           ...partner.props,
