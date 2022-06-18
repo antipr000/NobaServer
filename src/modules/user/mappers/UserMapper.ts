@@ -1,16 +1,8 @@
-import { User, UserProps } from "../domain/User";
+import { User } from "../domain/User";
 import { UserDTO } from "../dto/UserDTO";
-import { CrudOptions } from "../../../infra/dynamodb/DDBUtils";
-import { UserModel } from "../../../infra/dynamodb/UserModel";
 import { Mapper } from "../../../core/infra/Mapper";
 
-export type UserMinPropertySetForDBLookUp = Pick<UserProps, "_id">;
-
 export class UserMapper implements Mapper<User> {
-  public toPersistence(raw: UserMinPropertySetForDBLookUp | User, options: CrudOptions): UserModel {
-    throw new Error("Method not implemented");
-  }
-
   public toDomain(raw: any): User {
     return User.createUser(raw);
   }

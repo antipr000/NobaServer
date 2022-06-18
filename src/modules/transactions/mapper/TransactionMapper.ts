@@ -3,10 +3,6 @@ import { Mapper } from "../../../core/infra/Mapper";
 import { TransactionDTO } from "../dto/TransactionDTO";
 
 export class TransactionMapper implements Mapper<Transaction> {
-  toPersistence(t: any, options: any) {
-    throw new Error("Method not implemented.");
-  }
-
   toDTO(t: Transaction): TransactionDTO {
     const props = t.props;
     return {

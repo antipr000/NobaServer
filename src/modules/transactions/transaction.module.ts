@@ -10,6 +10,8 @@ import { CommonModule } from "../common/common.module";
 import { LimitsService } from "./limits.service";
 import { UserModule } from "../user/user.module";
 import { EthereumWeb3ProviderService, TerraWeb3ProviderService } from "../common/web3providers.service";
+import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
+import { UserService } from "../user/user.service";
 
 @Module({
   imports: [InfraProvidersModule, ConfigModule, CommonModule, UserModule],
@@ -20,7 +22,12 @@ import { EthereumWeb3ProviderService, TerraWeb3ProviderService } from "../common
     ExchangeRateService,
     LimitsService,
     EthereumWeb3ProviderService,
+    UserService,
     TerraWeb3ProviderService,
+    {
+      provide: "TransactionRepo",
+      useClass: MongoDBTransactionRepo,
+    },
   ],
   exports: [TransactionService], //Need to access in PublicController
 })

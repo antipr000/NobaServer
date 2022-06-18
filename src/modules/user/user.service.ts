@@ -25,6 +25,10 @@ export class UserService {
     return this.userMapper.toDTO(res);
   }
 
+  async getUserInternal(id: string): Promise<User> {
+    return await this.userRepo.getUser(id);
+  }
+
   async createUserIfFirstTimeLogin(emailOrPhone: string): Promise<UserDTO> {
     const isEmail = emailOrPhone.includes("@");
     const email = isEmail ? emailOrPhone : null;

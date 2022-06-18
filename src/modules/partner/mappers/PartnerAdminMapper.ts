@@ -3,10 +3,6 @@ import { PartnerAdminDTO } from "../dto/PartnerAdminDTO";
 import { Mapper } from "../../../core/infra/Mapper";
 
 export class PartnerAdminMapper implements Mapper<PartnerAdmin> {
-  toPersistence(t: any, options: any) {
-    throw new Error("Method not implemented.");
-  }
-
   public toDomain(raw: any): PartnerAdmin {
     return PartnerAdmin.createPartnerAdmin(raw);
   }

@@ -7,15 +7,13 @@ import { DBProvider } from "../../infraproviders/DBProvider";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { StripeService } from "../common/stripe.service";
 import { EthereumWeb3ProviderService, TerraWeb3ProviderService } from "../common/web3providers.service";
-import { MongoDBUserRepo } from "../user/repos/MongoDBUserRepo";
-import { IUserRepo } from "../user/repos/UserRepo";
+import { UserService } from "../user/user.service";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
-import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 
 @Injectable()
@@ -23,10 +21,13 @@ export class TransactionService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
+  @Inject("TransactionRepo")
   private readonly transactionsRepo: ITransactionRepo;
-  private readonly transactionsMapper: TransactionMapper;
 
-  private readonly userRepo: IUserRepo;
+  @Inject(UserService)
+  private readonly userService: UserService;
+
+  private readonly transactionsMapper: TransactionMapper;
 
   private readonly stripe: Stripe;
 
@@ -44,9 +45,7 @@ export class TransactionService {
     stripeServie: StripeService,
   ) {
     this.stripe = stripeServie.stripeApi;
-    this.transactionsRepo = new MongoDBTransactionRepo(dbProvider);
     this.transactionsMapper = new TransactionMapper();
-    this.userRepo = new MongoDBUserRepo(dbProvider);
   }
 
   async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {
@@ -85,7 +84,7 @@ export class TransactionService {
       });
     }
 
-    const user = await this.userRepo.getUser(userID);
+    const user = await this.userService.getUserInternal(userID);
 
     const leg1Amount = details.leg1Amount;
     const leg2Amount = details.leg2Amount;
