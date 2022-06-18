@@ -706,7 +706,7 @@ describe("AdminController", () => {
         _id: "PAPAPAPAPA",
         email: newPartnerAdminEmail,
         role: newPartnerAdminRole,
-        partnerId: partnerId,
+        partnerID: partnerId,
         name: newPartnerAdminName,
       });
     });
@@ -755,7 +755,7 @@ describe("AdminController", () => {
         _id: "PAPAPAPAPA",
         email: newPartnerAdminEmail,
         role: newPartnerAdminRole,
-        partnerId: partnerId,
+        partnerID: partnerId,
         name: newPartnerAdminName,
       });
     });
@@ -854,7 +854,7 @@ describe("AdminController", () => {
         _id: partnerAdminId,
         email: partnerAdminEmail,
         role: partnerAdminRole,
-        partnerId: partnerId,
+        partnerID: partnerId,
         name: partnerAdminName,
       });
     });
@@ -892,7 +892,7 @@ describe("AdminController", () => {
         _id: partnerAdminId,
         email: partnerAdminEmail,
         role: partnerAdminRole,
-        partnerId: partnerId,
+        partnerID: partnerId,
         name: partnerAdminName,
       });
     });
