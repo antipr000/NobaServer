@@ -6,6 +6,7 @@ import { AdminService } from "./admin.service";
 import { MongoDBAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
 import { AdminMapper } from "./mappers/AdminMapper";
 import { PartnerModule } from "../partner/partner.module";
+import { DBProvider } from "src/infraproviders/DBProvider";
 
 @Module({
   imports: [ConfigModule, CommonModule, PartnerModule],
@@ -17,7 +18,8 @@ import { PartnerModule } from "../partner/partner.module";
       useClass: MongoDBAdminTransactionRepo,
     },
     AdminMapper,
+    DBProvider,
   ],
   exports: [AdminService],
 })
-export class AdminModule {}
+export class AdminModule { }
