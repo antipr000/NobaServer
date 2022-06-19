@@ -39,6 +39,7 @@ import { PartnerDTO } from "../partner/dto/PartnerDTO";
 import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerMapper } from "../partner/mappers/PartnerMapper";
+import { UpdatePartnerAdminRequestDTO } from "../partner/dto/UpdatePartnerAdminRequestDTO";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")
@@ -63,7 +64,7 @@ export class AdminController {
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() {}
+  constructor() { }
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
@@ -178,7 +179,7 @@ export class AdminController {
   }
 
   @Delete(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
-  @ApiOperation({ summary: "Add a new partner admin" })
+  @ApiOperation({ summary: "Deletes a partner admin" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
   @ApiBadRequestResponse({ description: "Bad request" })
   async deleteAdminsForPartners(
@@ -197,6 +198,30 @@ export class AdminController {
     );
     return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
   }
+
+  @Patch(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
+  @ApiOperation({ summary: "Update details of a partner admin" })
+  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Update details of a partner admin" })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async updateAdminForPartners(
+    @Param(PartnerID) partnerId: string,
+    @Param(PartnerAdminID) partnerAdminID: string,
+    @Body() requestBody: UpdatePartnerAdminRequestDTO,
+    @Request() request,
+  ): Promise<PartnerAdminDTO> {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateAdminsForPartner()) {
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update PartnerAdmins.`);
+    }
+
+    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.updateAdminForPartner(
+      partnerId,
+      partnerAdminID,
+      requestBody,
+    );
+    return this.partnerAdminMapper.toDTO(partnerAdmin);
+  }
+
 
   @Post(`/partners`)
   @ApiOperation({ summary: "Add a new partner" })
