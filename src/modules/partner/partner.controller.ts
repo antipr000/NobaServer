@@ -58,7 +58,7 @@ export class PartnerController {
   }
 
   @Patch("/")
-  @ApiOperation({ summary: "Update take rate for partner" })
+  @ApiOperation({ summary: "Update details of the partner like takeRate" })
   @ApiResponse({ status: HttpStatus.OK, type: PartnerDTO, description: "Returns updated partner details" })
   @ApiBadRequestResponse({ description: "Invalid request" })
   async updatePartner(@Body() requestBody: UpdatePartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
