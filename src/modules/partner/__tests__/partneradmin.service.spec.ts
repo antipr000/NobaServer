@@ -94,6 +94,7 @@ describe("PartnerService", () => {
       when(partnerAdminRepo.getPartnerAdminUsingEmail(failureEmail)).thenResolve(Result.fail("User not found"));
       try {
         await partnerAdminService.getPartnerAdminFromEmail(failureEmail);
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
       }
@@ -169,6 +170,7 @@ describe("PartnerService", () => {
         await partnerAdminService.updateAdminForPartner("mock-partner-2", partnerAdmin.props._id, {
           role: updatedPartnerAdmin.props.role,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
       }
