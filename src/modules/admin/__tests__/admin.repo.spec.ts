@@ -23,14 +23,14 @@ describe("AdminController", () => {
 
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
-     * 
-     * This will be used to configure the testing module and will decouple 
+     *
+     * This will be used to configure the testing module and will decouple
      * the testing module from the actual module.
-     * 
+     *
      * Never hard-code the environment variables "KEY_NAME" in the testing module.
-     * All the keys used in 'appconfigs' are defined in 
+     * All the keys used in 'appconfigs' are defined in
      * `config/ConfigurationUtils` and it should be used for all the testing modules.
-     * 
+     *
      **/
     const appConfigurations = {
       [MONGO_CONFIG_KEY]: {
@@ -48,11 +48,7 @@ describe("AdminController", () => {
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [getWinstonModule(), configModule],
-      providers: [
-        AdminMapper,
-        DBProvider,
-        MongoDBAdminTransactionRepo
-      ],
+      providers: [AdminMapper, DBProvider, MongoDBAdminTransactionRepo],
     }).compile();
 
     adminTransactionRepo = app.get<MongoDBAdminTransactionRepo>(MongoDBAdminTransactionRepo);
@@ -69,7 +65,7 @@ describe("AdminController", () => {
         email: "admin@noba.com",
         name: "Admin",
         role: "BASIC",
-        _id: "AAAAAAAAAA"
+        _id: "AAAAAAAAAA",
       });
 
       const addedAdmin: Admin = await adminTransactionRepo.addNobaAdmin(newAdmin);

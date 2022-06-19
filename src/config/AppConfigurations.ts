@@ -234,7 +234,7 @@ async function configureAllVendorCredentials(configs: Record<string, any>): Prom
     configureTruliooCredentials,
     configureTwilioCredentials,
     configureStripeCredentials,
-    configureMongoCredentials
+    configureMongoCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](configs);

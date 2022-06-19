@@ -22,4 +22,4 @@ import { DBProvider } from "src/infraproviders/DBProvider";
   ],
   exports: [AdminService],
 })
-export class AdminModule { }
+export class AdminModule {}
