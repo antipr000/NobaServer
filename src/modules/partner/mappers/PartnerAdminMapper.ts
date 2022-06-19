@@ -12,7 +12,7 @@ export class PartnerAdminMapper implements Mapper<PartnerAdmin> {
     return {
       _id: p._id,
       name: p.name,
-      partnerId: p.partnerId,
+      partnerID: p.partnerId,
       email: p.email,
       role: p.role,
     };

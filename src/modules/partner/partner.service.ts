@@ -26,11 +26,6 @@ export class PartnerService {
     return partnerResult;
   }
 
-  async updateTakeRate(partnerId: string, takeRate: number): Promise<Partner> {
-    const partner: Partner = await this.partnerRepo.updateTakeRate(partnerId, takeRate);
-    return partner;
-  }
-
   async updatePartner(partnerId: string, partialPartnerProps: Partial<PartnerProps>): Promise<Partner> {
     const partner = await this.getPartner(partnerId);
     const updatedPatner = Partner.createPartner({

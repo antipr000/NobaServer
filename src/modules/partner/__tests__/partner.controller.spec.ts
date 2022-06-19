@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { instance, when } from "ts-mockito";
+import { deepEqual, instance, when } from "ts-mockito";
 import { PartnerService } from "../partner.service";
 import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
 import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
@@ -10,7 +10,7 @@ import { PartnerMapper } from "../mappers/PartnerMapper";
 import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
 import { PartnerController } from "../partner.controller";
 import { PartnerAdmin } from "../domain/PartnerAdmin";
-import { ForbiddenException } from "@nestjs/common";
+import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Partner } from "../domain/Partner";
 
 describe("PartnerController", () => {
@@ -71,13 +71,19 @@ describe("PartnerController", () => {
       };
 
       when(
-        partnerAdminService.addPartnerAdmin(partnerAdminToAdd.props.partnerId, partnerAdminToAdd.props.email),
+        partnerAdminService.addAdminForPartner(
+          partnerAdminToAdd.props.partnerId,
+          partnerAdminToAdd.props.email,
+          partnerAdminToAdd.props.name,
+          partnerAdminToAdd.props.role,
+        ),
       ).thenResolve(partnerAdminToAdd);
 
       const result = await partnerController.addPartnerAdmin(
-        partnerAdminToAdd.props.partnerId,
         {
           email: partnerAdminToAdd.props.email,
+          name: partnerAdminToAdd.props.name,
+          role: partnerAdminToAdd.props.role,
         },
         mockRequest,
       );
@@ -103,17 +109,24 @@ describe("PartnerController", () => {
       };
 
       when(
-        partnerAdminService.addPartnerAdmin(partnerAdminToAdd.props.partnerId, partnerAdminToAdd.props.email),
+        partnerAdminService.addAdminForPartner(
+          partnerAdminToAdd.props.partnerId,
+          partnerAdminToAdd.props.email,
+          partnerAdminToAdd.props.name,
+          partnerAdminToAdd.props.role,
+        ),
       ).thenResolve(partnerAdminToAdd);
 
       try {
         await partnerController.addPartnerAdmin(
-          partnerAdminToAdd.props.partnerId,
           {
             email: partnerAdminToAdd.props.email,
+            name: partnerAdminToAdd.props.name,
+            role: partnerAdminToAdd.props.role,
           },
           mockRequest,
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -137,17 +150,24 @@ describe("PartnerController", () => {
       };
 
       when(
-        partnerAdminService.addPartnerAdmin(partnerAdminToAdd.props.partnerId, partnerAdminToAdd.props.email),
+        partnerAdminService.addAdminForPartner(
+          partnerAdminToAdd.props.partnerId,
+          partnerAdminToAdd.props.email,
+          partnerAdminToAdd.props.name,
+          partnerAdminToAdd.props.role,
+        ),
       ).thenResolve(partnerAdminToAdd);
 
       try {
         await partnerController.addPartnerAdmin(
-          partnerAdminToAdd.props.partnerId,
           {
             email: partnerAdminToAdd.props.email,
+            name: partnerAdminToAdd.props.name,
+            role: partnerAdminToAdd.props.role,
           },
           mockRequest,
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -182,19 +202,15 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(basicAccessAdmin.props._id)).thenResolve(basicAccessAdmin);
       when(partnerAdminService.getPartnerAdmin(intermediateAccessAdmin.props._id)).thenResolve(intermediateAccessAdmin);
 
-      const allAccessResult = await partnerController.getPartnerAdmin(partnerId, partnerAdminAllAccessId, {
+      const allAccessResult = await partnerController.getPartnerAdmin(partnerAdminAllAccessId, {
         user: allAccessAdmin,
       });
-      const basicAccessResult = await partnerController.getPartnerAdmin(partnerId, partnerAdminBasicAccessId, {
+      const basicAccessResult = await partnerController.getPartnerAdmin(partnerAdminBasicAccessId, {
         user: basicAccessAdmin,
       });
-      const intermediateAccessResult = await partnerController.getPartnerAdmin(
-        partnerId,
-        partnerAdminIntermediateAccessId,
-        {
-          user: intermediateAccessAdmin,
-        },
-      );
+      const intermediateAccessResult = await partnerController.getPartnerAdmin(partnerAdminIntermediateAccessId, {
+        user: intermediateAccessAdmin,
+      });
 
       expect(allAccessResult).toStrictEqual(partnerAdminMapper.toDTO(allAccessAdmin));
       expect(basicAccessResult).toStrictEqual(partnerAdminMapper.toDTO(basicAccessAdmin));
@@ -218,7 +234,7 @@ describe("PartnerController", () => {
 
       when(partnerAdminService.getPartnerAdmin(partnerAdmin.props._id)).thenResolve(partnerAdmin);
 
-      const result = await partnerController.getPartnerAdmin(partnerId, partnerAdmin.props._id, {
+      const result = await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
         user: requestingPartnerAdmin,
       });
 
@@ -243,9 +259,10 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(partnerAdmin.props._id)).thenResolve(partnerAdmin);
 
       try {
-        await partnerController.getPartnerAdmin(partnerId, partnerAdmin.props._id, {
+        await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -269,9 +286,10 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(partnerAdmin.props._id)).thenResolve(partnerAdmin);
 
       try {
-        await partnerController.getPartnerAdmin(partnerId, partnerAdmin.props._id, {
+        await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -301,7 +319,7 @@ describe("PartnerController", () => {
         }),
       ]);
 
-      const result = await partnerController.getAllPartnerAdmins(partnerId, {
+      const result = await partnerController.getAllPartnerAdmins({
         user: requestingPartnerAdmin,
       });
 
@@ -333,9 +351,10 @@ describe("PartnerController", () => {
       ]);
 
       try {
-        await partnerController.getAllPartnerAdmins(partnerId, {
+        await partnerController.getAllPartnerAdmins({
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -366,9 +385,10 @@ describe("PartnerController", () => {
       ]);
 
       try {
-        await partnerController.getAllPartnerAdmins(partnerId, {
+        await partnerController.getAllPartnerAdmins({
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -413,15 +433,21 @@ describe("PartnerController", () => {
 
       const newTakeRate = 20;
 
-      when(partnerService.updateTakeRate(partner.props._id, newTakeRate)).thenResolve(
+      when(
+        partnerService.updatePartner(
+          partner.props._id,
+          deepEqual({
+            takeRate: newTakeRate,
+          }),
+        ),
+      ).thenResolve(
         Partner.createPartner({
           ...partner.props,
           takeRate: newTakeRate,
         }),
       );
 
-      const result = await partnerController.updateTakeRate(
-        partner.props._id,
+      const result = await partnerController.updatePartner(
         {
           takeRate: newTakeRate,
         },
@@ -456,7 +482,11 @@ describe("PartnerController", () => {
 
       const newTakeRate = 20;
 
-      when(partnerService.updateTakeRate(partner.props._id, newTakeRate)).thenResolve(
+      when(
+        partnerService.updatePartner(partner.props._id, {
+          takeRate: newTakeRate,
+        }),
+      ).thenResolve(
         Partner.createPartner({
           ...partner.props,
           takeRate: newTakeRate,
@@ -464,8 +494,7 @@ describe("PartnerController", () => {
       );
 
       try {
-        await partnerController.updateTakeRate(
-          partner.props._id,
+        await partnerController.updatePartner(
           {
             takeRate: newTakeRate,
           },
@@ -473,6 +502,7 @@ describe("PartnerController", () => {
             user: requestingPartnerAdmin,
           },
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -494,15 +524,18 @@ describe("PartnerController", () => {
 
       const newTakeRate = 20;
 
-      when(partnerService.updateTakeRate(partner.props._id, newTakeRate)).thenResolve(
+      when(
+        partnerService.updatePartner(partner.props._id, {
+          takeRate: newTakeRate,
+        }),
+      ).thenResolve(
         Partner.createPartner({
           ...partner.props,
           takeRate: newTakeRate,
         }),
       );
       try {
-        await partnerController.updateTakeRate(
-          partner.props._id,
+        await partnerController.updatePartner(
           {
             takeRate: newTakeRate,
           },
@@ -510,6 +543,299 @@ describe("PartnerController", () => {
             user: requestingPartnerAdmin,
           },
         );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("should update partner admin details when requesting admin has ALL access", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "Old Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "New Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "INTERMEDIATE",
+      });
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+
+      when(
+        partnerAdminService.updateAdminForPartner(
+          requestingPartnerAdmin.props.partnerId,
+          partnerAdmin.props._id,
+          deepEqual({
+            name: updatedPartnerAdmin.props.name,
+            role: updatedPartnerAdmin.props.role,
+          }),
+        ),
+      ).thenResolve(updatedPartnerAdmin);
+
+      const result = await partnerController.updatePartnerAdmin(
+        partnerAdmin.props._id,
+        {
+          name: updatedPartnerAdmin.props.name,
+          role: updatedPartnerAdmin.props.role,
+        },
+        {
+          user: requestingPartnerAdmin,
+        },
+      );
+
+      expect(result).toStrictEqual(partnerAdminMapper.toDTO(updatedPartnerAdmin));
+    });
+
+    it("should throw 'NotFoundException' if the partner admin to be updated belongs to different partner", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "Old Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-2",
+        role: "BASIC",
+      });
+
+      const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "New Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-2",
+        role: "INTERMEDIATE",
+      });
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+
+      when(
+        partnerAdminService.updateAdminForPartner(
+          requestingPartnerAdmin.props.partnerId,
+          partnerAdmin.props._id,
+          deepEqual({
+            name: updatedPartnerAdmin.props.name,
+            role: updatedPartnerAdmin.props.role,
+          }),
+        ),
+      ).thenReject(new NotFoundException());
+
+      try {
+        await partnerController.updatePartnerAdmin(
+          partnerAdmin.props._id,
+          {
+            name: updatedPartnerAdmin.props.name,
+            role: updatedPartnerAdmin.props.role,
+          },
+          {
+            user: requestingPartnerAdmin,
+          },
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it("should throw 'ForbiddenException' if requesting user has BASIC access", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "Old Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "New Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "INTERMEDIATE",
+      });
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      when(
+        partnerAdminService.updateAdminForPartner(
+          requestingPartnerAdmin.props.partnerId,
+          partnerAdmin.props._id,
+          deepEqual({
+            name: updatedPartnerAdmin.props.name,
+            role: updatedPartnerAdmin.props.role,
+          }),
+        ),
+      ).thenResolve(updatedPartnerAdmin);
+
+      try {
+        await partnerController.updatePartnerAdmin(
+          partnerAdmin.props._id,
+          {
+            name: updatedPartnerAdmin.props.name,
+            role: updatedPartnerAdmin.props.role,
+          },
+          {
+            user: requestingPartnerAdmin,
+          },
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("should throw 'ForbiddenException' if requesting user has INTERMEDIATE access", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "Old Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "New Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "INTERMEDIATE",
+      });
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "INTERMEDIATE",
+      });
+
+      when(
+        partnerAdminService.updateAdminForPartner(
+          requestingPartnerAdmin.props.partnerId,
+          partnerAdmin.props._id,
+          deepEqual({
+            name: updatedPartnerAdmin.props.name,
+            role: updatedPartnerAdmin.props.role,
+          }),
+        ),
+      ).thenResolve(updatedPartnerAdmin);
+
+      try {
+        await partnerController.updatePartnerAdmin(
+          partnerAdmin.props._id,
+          {
+            name: updatedPartnerAdmin.props.name,
+            role: updatedPartnerAdmin.props.role,
+          },
+          {
+            user: requestingPartnerAdmin,
+          },
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("should delete a partner admin when requesting partner admin has ALL access", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "Old Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+
+      when(
+        partnerAdminService.deleteAdminForPartner(requestingPartnerAdmin.props.partnerId, partnerAdmin.props._id),
+      ).thenResolve(partnerAdmin);
+
+      const result = await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
+        user: requestingPartnerAdmin,
+      });
+
+      expect(result).toStrictEqual(partnerAdminMapper.toDTO(partnerAdmin));
+    });
+
+    it("should throw 'ForbiddenException' requesting partner admin has BASIC access", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "Old Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      when(
+        partnerAdminService.deleteAdminForPartner(requestingPartnerAdmin.props.partnerId, partnerAdmin.props._id),
+      ).thenResolve(partnerAdmin);
+
+      try {
+        await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
+          user: requestingPartnerAdmin,
+        });
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("should throw 'ForbiddenException' when requesting partner admin has INTERMEDIATE access", async () => {
+      const partnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-1",
+        name: "Old Name",
+        email: "mock@partner.com",
+        partnerId: "mock-partner-1",
+        role: "BASIC",
+      });
+
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "INTERMEDIATE",
+      });
+
+      when(
+        partnerAdminService.deleteAdminForPartner(requestingPartnerAdmin.props.partnerId, partnerAdmin.props._id),
+      ).thenResolve(partnerAdmin);
+
+      try {
+        await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
+          user: requestingPartnerAdmin,
+        });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }

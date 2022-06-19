@@ -66,9 +66,6 @@ export default async function loadAppConfigs() {
     extraSecretsFiles.push(join(configsDir, "secrets.yaml"));
   }
 
-  console.log(`Configs directory is ${configsDir} and config file name is ${configFileName}`);
-  console.log(`Other secrets files: ${extraSecretsFiles}`);
-
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
   //merge configs with override files
 
@@ -215,7 +212,6 @@ async function configureAllVendorCredentials(configs: Record<string, any>): Prom
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](configs);
-    // console.log(`After ${i}: `, configs);
   }
   return configs;
 }

@@ -33,25 +33,6 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
     }
   }
 
-  async updateTakeRate(partnerId: string, takeRate: number): Promise<Partner> {
-    try {
-      const result = await this.dbProvider.partnerModel
-        .updateOne(
-          { _id: partnerId },
-          {
-            $set: {
-              takeRate: takeRate,
-            },
-          },
-        )
-        .exec();
-      const partnerProps: PartnerProps = convertDBResponseToJsObject(result);
-      return this.partnerMapper.toDomain(partnerProps);
-    } catch (e) {
-      throw new BadRequestException(e.message);
-    }
-  }
-
   async updatePartner(partner: Partner): Promise<Partner> {
     try {
       const result = await this.dbProvider.partnerModel
