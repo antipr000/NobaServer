@@ -210,6 +210,7 @@ describe("PartnerService", () => {
 
       try {
         await partnerAdminService.deleteAdminForPartner(requestingAdminPartnerID, partnerAdminID);
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
         verify(partnerAdminRepo.getPartnerAdmin(partnerAdminID)).called();

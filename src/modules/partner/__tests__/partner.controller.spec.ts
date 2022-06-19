@@ -126,6 +126,7 @@ describe("PartnerController", () => {
           },
           mockRequest,
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -166,6 +167,7 @@ describe("PartnerController", () => {
           },
           mockRequest,
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -260,6 +262,7 @@ describe("PartnerController", () => {
         await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -286,6 +289,7 @@ describe("PartnerController", () => {
         await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -350,6 +354,7 @@ describe("PartnerController", () => {
         await partnerController.getAllPartnerAdmins({
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -383,6 +388,7 @@ describe("PartnerController", () => {
         await partnerController.getAllPartnerAdmins({
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -498,6 +504,7 @@ describe("PartnerController", () => {
             user: requestingPartnerAdmin,
           },
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -539,6 +546,7 @@ describe("PartnerController", () => {
             user: requestingPartnerAdmin,
           },
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -626,7 +634,7 @@ describe("PartnerController", () => {
             role: updatedPartnerAdmin.props.role,
           }),
         ),
-      ).thenResolve(updatedPartnerAdmin);
+      ).thenReject(new NotFoundException());
 
       try {
         await partnerController.updatePartnerAdmin(
@@ -639,6 +647,7 @@ describe("PartnerController", () => {
             user: requestingPartnerAdmin,
           },
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
       }
@@ -690,6 +699,7 @@ describe("PartnerController", () => {
             user: requestingPartnerAdmin,
           },
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -741,6 +751,7 @@ describe("PartnerController", () => {
             user: requestingPartnerAdmin,
           },
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -797,6 +808,7 @@ describe("PartnerController", () => {
         await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
@@ -826,6 +838,7 @@ describe("PartnerController", () => {
         await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
           user: requestingPartnerAdmin,
         });
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
