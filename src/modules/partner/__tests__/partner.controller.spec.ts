@@ -448,7 +448,6 @@ describe("PartnerController", () => {
       );
 
       const result = await partnerController.updatePartner(
-        partner.props._id,
         {
           takeRate: newTakeRate,
         },
@@ -496,7 +495,6 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.updatePartner(
-          partner.props._id,
           {
             takeRate: newTakeRate,
           },
@@ -538,7 +536,6 @@ describe("PartnerController", () => {
       );
       try {
         await partnerController.updatePartner(
-          partner.props._id,
           {
             takeRate: newTakeRate,
           },

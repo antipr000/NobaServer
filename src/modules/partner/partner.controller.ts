@@ -57,18 +57,14 @@ export class PartnerController {
     return this.partnerMapper.toDTO(partner);
   }
 
-  @Patch("/:" + PartnerID)
+  @Patch("/")
   @ApiOperation({ summary: "Update take rate for partner" })
   @ApiResponse({ status: HttpStatus.OK, type: PartnerDTO, description: "Returns updated partner details" })
   @ApiBadRequestResponse({ description: "Invalid request" })
-  async updatePartner(
-    @Param(PartnerID) partnerID: string,
-    @Body() requestBody: UpdatePartnerRequestDTO,
-    @Request() request,
-  ): Promise<PartnerDTO> {
+  async updatePartner(@Body() requestBody: UpdatePartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
-    const partner: Partner = await this.partnerService.updatePartner(partnerID, requestBody);
+    const partner: Partner = await this.partnerService.updatePartner(requestUser.props.partnerId, requestBody);
     return this.partnerMapper.toDTO(partner);
   }
 
