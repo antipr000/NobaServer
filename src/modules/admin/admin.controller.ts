@@ -8,7 +8,6 @@ import {
   Post,
   Body,
   ConflictException,
-  Put,
   Delete,
   Request,
   ForbiddenException,
@@ -198,7 +197,7 @@ export class AdminController {
     return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
   }
 
-  @Post(`/partners`)
+  @Post("/partners")
   @ApiOperation({ summary: "Add a new partner" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "Add a new partner" })
   @ApiBadRequestResponse({ description: "Bad request" })
