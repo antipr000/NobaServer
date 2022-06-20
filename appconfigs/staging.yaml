@@ -30,3 +30,7 @@ twilio:
   SID: "AC4efa22156849ec40b383a80f45525409"
   authToken: "c34165debbb0a77e3507884e86b88772"
   fromPhoneNumber: "+19894557345"
+
+mongo:
+  awsSecretNameForUri: "TEST_MONGO_URI"
+  uri: "bogus-value"

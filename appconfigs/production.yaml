@@ -30,3 +30,7 @@ twilio:
   SID: "bogus-value"
   authToken: "bogus-value"
   fromPhoneNumber: "+19894557345"
+
+mongo:
+  awsSecretNameForUri: "PROD_MONGO_URI"
+  uri: "bogus-value"
