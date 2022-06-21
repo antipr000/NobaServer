@@ -32,7 +32,7 @@ export abstract class AuthService {
       throw new UnauthorizedException();
     }
     else {
-      this.otpRepo.useOTP(actualOtp.props._id); // Mark used or delete the OTP
+      this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
     }
 
     return this.getUserId(emailOrPhone);
@@ -47,6 +47,16 @@ export abstract class AuthService {
       access_token: this.jwtService.sign(payload),
       user_id: id,
     };
+  }
+
+  async deleteAnyExistingOTP(emailOrPhone: string): Promise<void> {
+    const actualOtp: Otp[] = await this.otpRepo.getAllOTPsForUser(emailOrPhone, this.getIdentityType());
+    actualOtp.forEach(element => {
+      if (element.props._id) {
+        // Delete any unused OTPs for this user
+        this.otpRepo.deleteOTP(element.props._id);
+      }
+    });
   }
 
   async saveOtp(emailOrPhone: string, otp: number): Promise<void> {
@@ -67,12 +77,12 @@ export abstract class AuthService {
     return Math.floor(100000 + Math.random() * 900000);
   }
 
-  async verifyUserExistence(email: string): Promise<boolean> {
-    return this.isUserSignedUp(email);
+  async verifyUserExistence(emailOrPhone: string): Promise<boolean> {
+    return this.isUserSignedUp(emailOrPhone);
   }
 
   protected abstract getIdentityType();
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
   protected abstract getUserId(emailOrPhone: string): Promise<string>;
-  protected abstract isUserSignedUp(email: string): Promise<boolean>;
+  protected abstract isUserSignedUp(emailOrPhone: string): Promise<boolean>;
 }

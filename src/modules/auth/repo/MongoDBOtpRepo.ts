@@ -14,10 +14,16 @@ export class MongoDBOtpRepo implements IOTPRepo {
   async getOTP(emailOrPhone: string, identityType: string): Promise<Otp> {
     const result = await OtpModel.findOne({ emailOrPhone: emailOrPhone, identityType: identityType }).exec();
     if (result === undefined || result === null) {
-      throw new NotFoundException(`"${emailOrPhone}" is not registerd. Please register!`);
+      throw new NotFoundException(`"${emailOrPhone}" is not registered. Please register!`);
     }
     const otpProps: OtpProps = convertDBResponseToJsObject(result);
     return this.otpMapper.toDomain(otpProps);
+  }
+
+  async getAllOTPsForUser(emailOrPhone: string, identityType: string): Promise<Otp[]> {
+    const result = await OtpModel.find({ emailOrPhone: emailOrPhone, identityType: identityType }).exec();
+    const otpProps: OtpProps[] = convertDBResponseToJsObject(result);
+    return otpProps.map(otpResult => this.otpMapper.toDomain(otpResult));
   }
 
   async saveOTP(emailID: string, otp: number, identityType: string): Promise<void> {
@@ -37,9 +43,18 @@ export class MongoDBOtpRepo implements IOTPRepo {
     }
   }
 
-  async useOTP(id: string): Promise<void> {
+  async deleteOTP(id: string): Promise<void> {
     try {
       await OtpModel.deleteOne({_id: id});
+    } catch (e) {
+      // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
+      console.log(e);
+    }
+  }
+
+  async deleteAllExpiredOTPs(): Promise<void> {
+    try {
+      const expiredOTPs = await OtpModel.deleteMany({ expiryTime: {$lt: new Date().getTime()}});
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
       console.log(e);
