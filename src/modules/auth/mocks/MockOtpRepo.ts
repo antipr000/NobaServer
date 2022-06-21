@@ -7,6 +7,7 @@ export const getMockOtpRepoWithDefaults = () => {
 
   when(mockIOtpRepo.getOTP(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockIOtpRepo.saveOTP(anyString(), anyString(), anyString())).thenReject(new Error("Not implemented!"));
+  when(mockIOtpRepo.useOTP(anyString())).thenReject(new Error("Not implemented!"));
 
   return mockIOtpRepo;
 };

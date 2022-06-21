@@ -3,17 +3,20 @@ import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domai
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { allIdentities } from "./IdentityType";
+import { randomUUID } from "crypto";
 
 export interface OtpProps extends VersioningInfo {
   _id: string;
+  emailOrPhone: string;
   otp: number;
-  otpExpiryTime: number;
+  otpExpiryTime?: number;
   identityType: string;
 }
 
 export const otpValidationKeys: KeysRequired<OtpProps> = {
   ...versioningInfoJoiSchemaKeys,
-  _id: Joi.string().required(),
+  _id: Joi.string().default(randomUUID),
+  emailOrPhone: Joi.string().required(),
   otp: Joi.number().required(),
   otpExpiryTime: Joi.number().required(),
   identityType: Joi.string().valid(...allIdentities),
