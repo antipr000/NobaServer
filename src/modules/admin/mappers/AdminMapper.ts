@@ -8,7 +8,13 @@ export type AdminMinPropertySetForDBLookUp = Pick<AdminProps, "_id">;
 @Injectable()
 export class AdminMapper implements Mapper<Admin> {
   public toDomain(raw: any): Admin {
-    return Admin.createAdmin(raw);
+    return Admin.createAdmin({
+      _id: raw._id,
+      name: raw.name,
+      email: raw.email,
+      role: raw.role,
+      version: raw.__v
+    });
   }
 
   public toDTO(nobaAdmin: Admin): NobaAdminDTO {

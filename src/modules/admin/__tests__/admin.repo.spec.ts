@@ -9,17 +9,43 @@ import { DBProvider } from "../../../infraproviders/DBProvider";
 import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { random } from "nanoid";
 import mongoose from "mongoose";
+import { MongoClient, Db, Collection } from "mongodb";
+
+const getAllRecordsInAdminCollection = async (adminCollection: Collection): Promise<Array<Admin>> => {
+  const adminDocumetsCursor = await adminCollection.find({});
+  const allRecords: Admin[] = [];
+
+  while (await adminDocumetsCursor.hasNext()) {
+    const adminDocument = await adminDocumetsCursor.next();
+
+    const currentRecord: Admin = Admin.createAdmin({
+      _id: adminDocument._id.toString(),
+      name: adminDocument.name,
+      email: adminDocument.email,
+      role: adminDocument.role,
+    });
+    currentRecord.props.version = adminDocument.__v;
+
+    allRecords.push(currentRecord);
+  }
+
+  return allRecords;
+};
 
 describe("AdminController", () => {
   jest.setTimeout(20000);
 
   let adminTransactionRepo: IAdminTransactionRepo;
   let mongoServer: MongoMemoryServer;
+  let mongoClient: MongoClient;
+  let adminCollection: Collection;
 
   beforeEach(async () => {
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
-    console.log("MongoMemoryServer running at: ", mongoServer.getUri());
+    const mongoUri = mongoServer.getUri();
+
+    console.log("MongoMemoryServer running at: ", mongoUri);
 
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
@@ -34,7 +60,7 @@ describe("AdminController", () => {
      **/
     const appConfigurations = {
       [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoServer.getUri(),
+        [MONGO_URI]: mongoUri,
       },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${random(8)}.log`,
     };
@@ -52,12 +78,20 @@ describe("AdminController", () => {
     }).compile();
 
     adminTransactionRepo = app.get<MongoDBAdminTransactionRepo>(MongoDBAdminTransactionRepo);
+
+    // Setup a mongodb client for interacting with "admins" collection.
+    mongoClient = new MongoClient(mongoUri);
+    await mongoClient.connect();
+    adminCollection = mongoClient.db('').collection("admins");
   });
 
   afterEach(async () => {
     mongoose.disconnect();
+    mongoClient.close();
     await mongoServer.stop();
   });
+
+
 
   describe("addNobaAdmin", () => {
     it("should insert a NobaAdmin record to the DB", async () => {
@@ -69,7 +103,10 @@ describe("AdminController", () => {
       });
 
       const addedAdmin: Admin = await adminTransactionRepo.addNobaAdmin(newAdmin);
-      console.log(addedAdmin);
+      const allDocumentsInAdmin = await getAllRecordsInAdminCollection(adminCollection);
+
+      expect(allDocumentsInAdmin).toHaveLength(1);
+      expect(addedAdmin).toEqual(allDocumentsInAdmin[0]);
     });
   });
 });
