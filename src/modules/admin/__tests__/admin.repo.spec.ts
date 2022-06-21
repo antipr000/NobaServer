@@ -9,7 +9,7 @@ import { DBProvider } from "../../../infraproviders/DBProvider";
 import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { random } from "nanoid";
 import mongoose from "mongoose";
-import { MongoClient, Db, Collection } from "mongodb";
+import { MongoClient, ObjectId, Collection } from "mongodb";
 
 const getAllRecordsInAdminCollection = async (adminCollection: Collection): Promise<Array<Admin>> => {
   const adminDocumetsCursor = await adminCollection.find({});
@@ -24,8 +24,6 @@ const getAllRecordsInAdminCollection = async (adminCollection: Collection): Prom
       email: adminDocument.email,
       role: adminDocument.role,
     });
-    currentRecord.props.version = adminDocument.__v;
-
     allRecords.push(currentRecord);
   }
 
@@ -107,6 +105,34 @@ describe("AdminController", () => {
 
       expect(allDocumentsInAdmin).toHaveLength(1);
       expect(addedAdmin).toEqual(allDocumentsInAdmin[0]);
+    });
+  });
+
+  describe("getNobaAdminByEmail", () => {
+    it("should return 'undefined' if admind with that email doesn't exists", async () => {
+      const retrievedAdmin: Admin = await adminTransactionRepo.getNobaAdminByEmail("admin@noba.com");
+
+      expect(retrievedAdmin).toBeUndefined();
+    });
+
+    it("should return 'Admin' with the given email", async () => {
+      const admin: Admin = Admin.createAdmin({
+        email: "admin@noba.com",
+        name: "Admin",
+        role: "BASIC",
+        _id: "AAAAAAAAAAAA",
+      });
+
+      await adminCollection.insertOne({
+        _id: admin.props._id as any,
+        name: admin.props.name,
+        email: admin.props.email,
+        role: admin.props.role
+      });
+
+      const retrievedAdmin: Admin = await adminTransactionRepo.getNobaAdminByEmail("admin@noba.com");
+
+      expect(retrievedAdmin).toEqual(admin);
     });
   });
 });

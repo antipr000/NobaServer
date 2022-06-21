@@ -13,7 +13,6 @@ export class AdminMapper implements Mapper<Admin> {
       name: raw.name,
       email: raw.email,
       role: raw.role,
-      version: raw.__v
     });
   }
 
