@@ -940,8 +940,9 @@ describe("AdminController", () => {
           name: "New Admin",
           role: "ALL",
         };
-        await adminController.updateAdminForPartners(
-          partnerId, partnerAdminId, updatePartnerAdminRequest, { user: requestingConsumer });
+        await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
+          user: requestingConsumer,
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -966,8 +967,9 @@ describe("AdminController", () => {
           name: "New Admin",
           role: "ALL",
         };
-        await adminController.updateAdminForPartners(
-          partnerId, partnerAdminId, updatePartnerAdminRequest, { user: requestingPartnerAdmin });
+        await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
+          user: requestingPartnerAdmin,
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -991,8 +993,9 @@ describe("AdminController", () => {
           name: "New Admin",
           role: "ALL",
         };
-        await adminController.updateAdminForPartners(
-          partnerId, partnerAdminId, updatePartnerAdminRequest, { user: requestingNobaAdmin });
+        await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
+          user: requestingNobaAdmin,
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -1020,7 +1023,9 @@ describe("AdminController", () => {
         name: partnerAdminNewName,
         role: partnerAdminNewRole,
       };
-      when(mockPartnerAdminService.updateAdminForPartner(partnerId, partnerAdminId, updatePartnerAdminRequest)).thenResolve(
+      when(
+        mockPartnerAdminService.updateAdminForPartner(partnerId, partnerAdminId, updatePartnerAdminRequest),
+      ).thenResolve(
         PartnerAdmin.createPartnerAdmin({
           _id: partnerAdminId,
           email: partnerAdminEmail,
@@ -1030,9 +1035,14 @@ describe("AdminController", () => {
         }),
       );
 
-      const result = await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
-        user: requestingNobaAdmin,
-      });
+      const result = await adminController.updateAdminForPartners(
+        partnerId,
+        partnerAdminId,
+        updatePartnerAdminRequest,
+        {
+          user: requestingNobaAdmin,
+        },
+      );
 
       expect(result).toEqual({
         _id: partnerAdminId,
@@ -1065,7 +1075,9 @@ describe("AdminController", () => {
         name: partnerAdminNewName,
         role: partnerAdminNewRole,
       };
-      when(mockPartnerAdminService.updateAdminForPartner(partnerId, partnerAdminId, updatePartnerAdminRequest)).thenResolve(
+      when(
+        mockPartnerAdminService.updateAdminForPartner(partnerId, partnerAdminId, updatePartnerAdminRequest),
+      ).thenResolve(
         PartnerAdmin.createPartnerAdmin({
           _id: partnerAdminId,
           email: partnerAdminEmail,
@@ -1076,7 +1088,11 @@ describe("AdminController", () => {
       );
 
       const result = await adminController.updateAdminForPartners(
-        partnerId, partnerAdminId, updatePartnerAdminRequest, { user: requestingNobaAdmin });
+        partnerId,
+        partnerAdminId,
+        updatePartnerAdminRequest,
+        { user: requestingNobaAdmin },
+      );
 
       expect(result).toEqual({
         _id: partnerAdminId,

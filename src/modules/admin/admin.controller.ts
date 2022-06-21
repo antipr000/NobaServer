@@ -63,7 +63,7 @@ export class AdminController {
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() { }
+  constructor() {}
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
@@ -221,8 +221,7 @@ export class AdminController {
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
-
-  @Post('/partners')
+  @Post("/partners")
   @ApiOperation({ summary: "Add a new partner" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "Add a new partner" })
   @ApiBadRequestResponse({ description: "Bad request" })
