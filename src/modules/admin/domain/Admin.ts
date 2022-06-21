@@ -10,6 +10,7 @@ const Permissions = {
   viewPartnersSupportTickets: "VIEW_PARTNER_SUPPORT_TICKETS",
   registerPartner: "REGISTER_A_NEW_PARTNER",
   addAdminsToPartner: "ADD_PARTNER_ADMIN",
+  updateAdminsForPartner: "UPDATE_PARTNER_ADMIN",
   removePartnerAdmin: "REMOVE_PARTNER_ADMIN",
   addNobaAdmin: "ADD_NOBA_ADMIN",
   removeNobaAdmin: "REMOVE_NOBA_ADMIN",
@@ -27,6 +28,7 @@ const AdminRolesWithTheirPrivileges = {
       Permissions.viewPartnersSupportTickets,
       Permissions.registerPartner,
       Permissions.addAdminsToPartner,
+      Permissions.updateAdminsForPartner,
       Permissions.removePartnerAdmin,
     ],
   },
@@ -39,6 +41,7 @@ const AdminRolesWithTheirPrivileges = {
       Permissions.addAdminsToPartner,
       Permissions.removePartnerAdmin,
       Permissions.addNobaAdmin,
+      Permissions.updateAdminsForPartner,
       Permissions.removeNobaAdmin,
       Permissions.changeNobaAdminPrivileges,
     ],
@@ -102,6 +105,10 @@ export class Admin extends AggregateRoot<AdminProps> {
 
   public canAddAdminsToPartner(): boolean {
     return this.hasPermission(Permissions.addAdminsToPartner);
+  }
+
+  public canUpdateAdminsForPartner(): boolean {
+    return this.hasPermission(Permissions.updateAdminsForPartner);
   }
 
   public canRemoveAdminsFromPartner(): boolean {

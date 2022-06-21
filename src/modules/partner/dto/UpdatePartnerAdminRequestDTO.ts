@@ -2,11 +2,11 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 
 export class UpdatePartnerAdminRequestDTO {
   @ApiPropertyOptional()
-  email: string;
+  email?: string;
 
   @ApiPropertyOptional()
-  name: string;
+  name?: string;
 
   @ApiPropertyOptional()
-  role: string;
+  role?: string;
 }
