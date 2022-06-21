@@ -33,12 +33,15 @@ export class AppController {
   @ApiTags("Assets")
   async supportedCryptocurrencies(): Promise<CurrencyDTO[]> {
     // TODO: Pull from database post-MVP
-    return JSON.parse(
-      "[\
-      {'name': 'Ethereum', 'ticker': 'ETH', 'iconPath': 'https://cryptologos.cc/logos/ethereum-eth-logo.png'},\
-      {'name': 'Terra USD', 'ticker': 'LUNA1-USD', 'iconPath': 'https://icodrops.com/wp-content/uploads/2018/08/Terra-Logo.jpg'},\
-      {'name': 'Terra Luna', 'ticker': 'LUNA', 'iconPath': 'https://cryptologos.cc/logos/terra-luna-luna-logo.png?v=022'}]",
-    );
+    return [
+      { name: "Ethereum", ticker: "ETH", iconPath: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
+      {
+        name: "Terra USD",
+        ticker: "LUNA1-USD",
+        iconPath: "https://icodrops.com/wp-content/uploads/2018/08/Terra-Logo.jpg",
+      },
+      { name: "Terra Luna", ticker: "LUNA", iconPath: "https://cryptologos.cc/logos/terra-luna-luna-logo.png?v=022" },
+    ];
 
     //return 'ethereum, terrausd, terra-luna";
   }
@@ -54,8 +57,13 @@ export class AppController {
   @ApiTags("Assets")
   async supportedFiatCurrencies(): Promise<CurrencyDTO[]> {
     // TODO: Pull from database post-MVP
-    return JSON.parse(
-      "[{'name': 'US Dollar', 'ticker': 'USD', 'iconPath': 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/United-states_flag_icon_round.svg/1024px-United-states_flag_icon_round.svg.png'}]",
-    );
+    return [
+      {
+        name: "US Dollar",
+        ticker: "USD",
+        iconPath:
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/United-states_flag_icon_round.svg/1024px-United-states_flag_icon_round.svg.png",
+      },
+    ];
   }
 }
