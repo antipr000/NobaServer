@@ -97,8 +97,7 @@ describe("AdminService", () => {
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_ADMIN_EMAIL,
+        _id: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: nobaAdminIdentityIdentifier,
@@ -120,8 +119,7 @@ describe("AdminService", () => {
       const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_ADMIN_EMAIL,
+        _id: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
         identityType: nobaAdminIdentityIdentifier,
@@ -137,21 +135,19 @@ describe("AdminService", () => {
       }
     });
 
-    it("Should return Admin e-mail address if OTP is correct and not expired", async () => {
+    it("should throw 'UnauthorizedException' if otp is expired", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const ADMIN_ID = "1111111111";
       const CORRECT_OTP = 123456;
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_ADMIN_EMAIL,
+        _id: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: nobaAdminIdentityIdentifier,
       });
       when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
-      when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
       when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL)).thenResolve(
         Admin.createAdmin({

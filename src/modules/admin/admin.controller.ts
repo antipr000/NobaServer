@@ -97,7 +97,7 @@ export class AdminController {
 
     const savedAdmin: Admin = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
     if (savedAdmin === undefined) {
-      throw new ConflictException("User is already registered as a NobaAdmin");
+      throw new ConflictException("User is already registerd as a NobaAdmin");
     }
 
     return this.adminMapper.toDTO(savedAdmin);
