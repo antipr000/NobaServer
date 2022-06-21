@@ -75,7 +75,6 @@ export class AuthController {
     }
 
     const otp = authService.createOtp();
-    await authService.deleteAnyExistingOTP(request.email);
     await authService.saveOtp(request.email, otp);
     return authService.sendOtp(request["email"], otp.toString()); //TODO change parameter to emailOrPhone, front end client also need to be updated
   }
