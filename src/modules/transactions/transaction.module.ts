@@ -1,17 +1,17 @@
 import { Module } from "@nestjs/common";
-import { TransactionController } from "./transaction.controller";
-import { TransactionService } from "./transaction.service";
+import { ConfigModule } from "@nestjs/config";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { ConfigModule } from "@nestjs/config";
+import { CommonModule } from "../common/common.module";
+import { UserModule } from "../user/user.module";
+import { UserService } from "../user/user.service";
 import { ExchangeRateController } from "./exchangerate.controller";
 import { ExchangeRateService } from "./exchangerate.service";
-import { CommonModule } from "../common/common.module";
 import { LimitsService } from "./limits.service";
-import { UserModule } from "../user/user.module";
-import { EthereumWeb3ProviderService, TerraWeb3ProviderService } from "../common/web3providers.service";
 import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
-import { UserService } from "../user/user.service";
+import { TransactionController } from "./transaction.controller";
+import { TransactionService } from "./transaction.service";
+import { ZeroHashService } from "./zerohash.service";
 
 @Module({
   imports: [InfraProvidersModule, ConfigModule, CommonModule, UserModule],
@@ -21,9 +21,8 @@ import { UserService } from "../user/user.service";
     DBProvider,
     ExchangeRateService,
     LimitsService,
-    EthereumWeb3ProviderService,
     UserService,
-    TerraWeb3ProviderService,
+    ZeroHashService,
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,

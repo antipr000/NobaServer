@@ -6,7 +6,6 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { StripeService } from "../common/stripe.service";
-import { EthereumWeb3ProviderService, TerraWeb3ProviderService } from "../common/web3providers.service";
 import { UserService } from "../user/user.service";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
@@ -15,6 +14,7 @@ import { TransactionDTO } from "./dto/TransactionDTO";
 import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
+import { ZeroHashService } from "./zerohash.service";
 
 @Injectable()
 export class TransactionService {
@@ -32,16 +32,15 @@ export class TransactionService {
   private readonly stripe: Stripe;
 
   // This is the id used at coinGecko, so do not change the allowed constants below
-  private readonly allowedFiats: string[] = ["usd"];
-  private readonly allowedCryptoCurrencies: string[] = ["ethereum", "terrausd", "terra-luna"];
+  private readonly allowedFiats: string[] = ["USD"];
+  private readonly allowedCryptoCurrencies: string[] = ["ETH", "terrausd", "terra-luna"];
 
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
   constructor(
     dbProvider: DBProvider,
     private readonly exchangeRateService: ExchangeRateService,
-    private readonly ethereumWeb3ProviderService: EthereumWeb3ProviderService,
-    private readonly terraWeb3ProviderService: TerraWeb3ProviderService,
+    private readonly zeroHashService: ZeroHashService,
     stripeServie: StripeService,
   ) {
     this.stripe = stripeServie.stripeApi;
@@ -101,8 +100,6 @@ export class TransactionService {
 
     const currentPrice = await this.exchangeRateService.priceInFiat(leg2, leg1);
     const bidPrice = (leg1Amount * 1.0) / leg2Amount;
-
-    this.logger.info(`bidPrice: ${bidPrice}, currentPrice: ${currentPrice}`);
 
     if (!this.withinSlippage(bidPrice, currentPrice, this.slippageAllowed)) {
       throw new BadRequestError({
@@ -199,21 +196,17 @@ export class TransactionService {
         },
       };
 
-      if (leg2 == "ethereum") {
-        this.ethereumWeb3ProviderService.transferEther(
-          leg2Amount,
-          details.destinationWalletAdress,
-          web3TransactionHandler,
-        );
-      } else {
-        // if its not ethereum then it is terra ust or luna
-        this.terraWeb3ProviderService.transferTerra(
-          leg2Amount,
-          details.destinationWalletAdress,
-          web3TransactionHandler,
-          leg2,
-        );
-      }
+      // leg1 is fiat, leg2 is crypto
+      this.zeroHashService.transferCryptoToDestinationWallet(
+        user.props.email,
+        leg1,
+        leg2,
+        details.destinationWalletAdress,
+        leg1Amount,
+        leg2Amount,
+        "fiat",
+        web3TransactionHandler,
+      );
     });
 
     return promise;
@@ -225,16 +218,8 @@ export class TransactionService {
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
-    // if curr is ethereum then validate that the destination wallet address is a valid ethereum address
-    if (curr == "ethereum") {
-      return this.ethereumWeb3ProviderService.isValidAddress(destinationWalletAdress);
-    }
-
-    // if curr is terra or luna then validate that the destination wallet address is a valid terra address
-    if (curr == "terrausd" || curr == "terra-luna") {
-      return this.terraWeb3ProviderService.isValidAddress(destinationWalletAdress);
-    }
-
-    return false;
+    // TODO earlier this was hardcoded for each blockchain (i.e. terra and ethereum) but we need to find/explore if there is a generic way to validate addresses here
+    // reqd to do here to fail fast if someone sends a wrong address
+    return true;
   }
 }

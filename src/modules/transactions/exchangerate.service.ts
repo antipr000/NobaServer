@@ -1,17 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import * as CoinGecko from "coingecko-api";
+import { ZeroHashService } from "./zerohash.service";
 
 @Injectable()
 export class ExchangeRateService {
-  private readonly coinGeckoClient = new CoinGecko();
+  private readonly zeroHashService = new ZeroHashService();
 
   async priceInFiat(cryptoCurrency: string, fiatCurrency: string): Promise<number> {
-    //TODO cache result for few ms or so? so that if multiple requests come in for same crypto currency, we don't have to make multiple calls to coinGecko
-    const price_data = await this.coinGeckoClient.simple.price({
-      ids: [cryptoCurrency],
-      vs_currencies: [fiatCurrency],
-    });
-    return price_data.data[cryptoCurrency][fiatCurrency];
+    const zhQuote = await this.zeroHashService.requestQuote(cryptoCurrency, fiatCurrency, 1, "crypto");
+    return zhQuote["message"]["price"];
   }
 
   async processingFee(cryptoCurrency: string, fiatCurrency: string, fiatAmount: number): Promise<number> {
