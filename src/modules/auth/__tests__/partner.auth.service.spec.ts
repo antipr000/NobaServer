@@ -95,7 +95,8 @@ describe("AdminService", () => {
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: EXISTING_PARTNER_ADMIN_EMAIL,
+        _id: "1",
+        emailOrPhone: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: partnerAdminIdentityIdenitfier,
@@ -115,7 +116,8 @@ describe("AdminService", () => {
       const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: EXISTING_PARTNER_ADMIN_EMAIL,
+        _id: "1",
+        emailOrPhone: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
         identityType: partnerAdminIdentityIdenitfier,
@@ -124,6 +126,7 @@ describe("AdminService", () => {
 
       try {
         await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
+        expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(UnauthorizedException);
       }
@@ -141,13 +144,15 @@ describe("AdminService", () => {
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: EXISTING_PARTNER_ADMIN_EMAIL,
+        _id: "1",
+        emailOrPhone: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: partnerAdminIdentityIdenitfier,
       });
       when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
       when(mockPartnerAdminService.getPartnerAdminFromEmail(EXISTING_PARTNER_ADMIN_EMAIL)).thenResolve(partnerAdmin);
+      when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
       const receivedAdminId = await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
       expect(receivedAdminId).toEqual(partnerAdmin.props._id);
