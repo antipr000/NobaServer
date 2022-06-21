@@ -45,7 +45,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   async deleteOTP(id: string): Promise<void> {
     try {
-      await OtpModel.deleteOne({ _id: id });
+      await OtpModel.deleteOne({_id: id});
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
       console.log(e);
@@ -54,7 +54,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   async deleteAllExpiredOTPs(): Promise<void> {
     try {
-      const expiredOTPs = await OtpModel.deleteMany({ expiryTime: { $lt: new Date().getTime() } });
+      const expiredOTPs = await OtpModel.deleteMany({ expiryTime: {$lt: new Date().getTime()}});
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
       console.log(e);

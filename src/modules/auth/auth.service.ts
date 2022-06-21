@@ -30,7 +30,8 @@ export abstract class AuthService {
 
     if (actualOtp.props.otp !== enteredOtp || currentDateTime > actualOtp.props.otpExpiryTime) {
       throw new UnauthorizedException();
-    } else {
+    }
+    else {
       this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
     }
 
