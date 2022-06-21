@@ -137,7 +137,7 @@ describe("AdminService", () => {
       }
     });
 
-    it("should throw 'UnauthorizedException' if otp is expired", async () => {
+    it("Should return Admin e-mail address if OTP is correct and not expired", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const ADMIN_ID = "1111111111";
       const CORRECT_OTP = 123456;
@@ -151,6 +151,7 @@ describe("AdminService", () => {
         identityType: nobaAdminIdentityIdentifier,
       });
       when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
       when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL)).thenResolve(
         Admin.createAdmin({

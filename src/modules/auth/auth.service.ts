@@ -32,9 +32,8 @@ export abstract class AuthService {
       throw new UnauthorizedException();
     } else {
       this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
+      return this.getUserId(emailOrPhone);
     }
-
-    return this.getUserId(emailOrPhone);
   }
 
   async generateAccessToken(id: string): Promise<VerifyOtpResponseDTO> {

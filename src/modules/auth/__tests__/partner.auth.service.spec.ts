@@ -126,6 +126,7 @@ describe("AdminService", () => {
 
       try {
         await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
+        expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(UnauthorizedException);
       }
@@ -151,6 +152,7 @@ describe("AdminService", () => {
       });
       when(mockOtpRepo.getOTP(EXISTING_PARTNER_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
       when(mockPartnerAdminService.getPartnerAdminFromEmail(EXISTING_PARTNER_ADMIN_EMAIL)).thenResolve(partnerAdmin);
+      when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
       const receivedAdminId = await partnerAuthService.validateAndGetUserId(EXISTING_PARTNER_ADMIN_EMAIL, CORRECT_OTP);
       expect(receivedAdminId).toEqual(partnerAdmin.props._id);
