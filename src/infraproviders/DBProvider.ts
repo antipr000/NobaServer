@@ -12,6 +12,10 @@ import { PartnerProps } from "../modules/partner/domain/Partner";
 import { PartnerAdminProps } from "../modules/partner/domain/PartnerAdmin";
 import { PartnerModel } from "../infra/mongodb/models/PartnerModel";
 import { PartnerAdminModel } from "../infra/mongodb/models/PartnerAdminModel";
+import { AdminProps } from "../modules/admin/domain/Admin";
+import { AdminModel } from "../infra/mongodb/models/AdminModel";
+import { MongoConfigs } from "../config/configtypes/MongoConfigs";
+import { MONGO_CONFIG_KEY } from "../config/ConfigurationUtils";
 
 @Injectable()
 export class DBProvider {
@@ -19,11 +23,7 @@ export class DBProvider {
   private readonly logger: Logger;
 
   constructor(private readonly configService: ConfigService) {
-    //todo read configs
-    //todo read configs
-
-    const mongoUri = "mongodb+srv://nobamongo:NobaMongo@cluster0.wjsia.mongodb.net/devdb"; //TODO create configs for this and separate url from creds
-
+    const mongoUri = configService.get<MongoConfigs>(MONGO_CONFIG_KEY).uri;
     Mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
   }
 
@@ -41,5 +41,9 @@ export class DBProvider {
 
   get partnerAdminModel(): Model<PartnerAdminProps> {
     return PartnerAdminModel;
+  }
+
+  get adminModel(): Model<AdminProps> {
+    return AdminModel;
   }
 }

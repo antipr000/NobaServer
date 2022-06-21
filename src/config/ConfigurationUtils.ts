@@ -44,6 +44,10 @@ export const SENDGRID_CONFIG_KEY = "sendgrid";
 export const SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
 export const SENDGRID_API_KEY = "apiKey";
 
+export const MONGO_CONFIG_KEY = "mongo";
+export const MONGO_AWS_SECRET_KEY_FOR_URI_ATTR = "awsSecretNameForUri";
+export const MONGO_URI = "uri";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

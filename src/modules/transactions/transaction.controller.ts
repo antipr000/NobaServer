@@ -126,6 +126,11 @@ export class TransactionController {
       filePath = await CsvService.convertToCsvAndSaveToDisk(transactions);
       response.writeHead(200, {
         "Content-Type": "text/csv",
+        "Content-Disposition": `attachment; filename=${filePath}`,
+        "Content-Length": fs.statSync(filePath).size,
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        Expires: "0",
       });
       fs.createReadStream(filePath)
         .on("finish", () => {

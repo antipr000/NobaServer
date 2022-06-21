@@ -1,4 +1,4 @@
-swagger.json
+swagger*.json
 build/*
 node_modules/*
 .gitHub/*

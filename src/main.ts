@@ -1,7 +1,7 @@
-import { Logger } from "@nestjs/common";
+import { INestApplication, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { DocumentBuilder, OpenAPIObject, SwaggerDocumentOptions, SwaggerModule } from "@nestjs/swagger";
 import { urlencoded, json } from "express";
 import * as helmet from "helmet";
 import * as morgan from "morgan";
@@ -15,6 +15,9 @@ import {
 import { joiToSwagger } from "./joi2Swagger";
 import { AuthenticatedUser } from "./modules/auth/domain/AuthenticatedUser";
 import { writeFileSync } from "fs";
+import { UserModule } from "./modules/user/user.module";
+import { AuthModule } from "./modules/auth/auth.module";
+import { TransactionModule } from "./modules/transactions/transaction.module";
 
 //acutal bootstrapping function
 async function bootstrap() {
@@ -38,9 +41,10 @@ async function bootstrap() {
   app.use(json({ limit: "50mb" }));
   app.use(urlencoded({ extended: true, limit: "50mb" }));
 
-  //Todo we shouldn't be showing swagger-ui in production or put a admin role on this end-point
   //https://docs.nestjs.com/openapi/introduction
-  const config = new DocumentBuilder()
+
+  // Config and doc generation options for PUBLIC-facing APIs
+  const publicConfig = new DocumentBuilder()
     .setTitle("Noba Server")
     .setDescription("Noba Server API " + `(${appEnvType.toUpperCase()})`)
     .setVersion("1.0")
@@ -56,12 +60,55 @@ async function bootstrap() {
     .addServer("http://localhost:8080")
     .build();
 
-  const swaggerDocument = SwaggerModule.createDocument(app, config, {
+  // Any API which we want to expose publicly (to partners) must be explicitly declared here
+  const publicOptions = {
+    include: [AppModule, AuthModule, UserModule, TransactionModule],
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
-  });
+  };
+
+  // Config and doc generation options for all APIs, which includes public & private
+  const privateConfig = new DocumentBuilder()
+    .setTitle("Noba Server")
+    .setDescription("Noba Server API (Internal) " + `(${appEnvType.toUpperCase()})`)
+    .setVersion("1.0")
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+      "JWT-auth",
+    )
+    .addServer("https://api.noba.com/")
+    .addServer("http://localhost:8080")
+    .build();
+
+  const privateOptions = {
+    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+  };
+
+  const swaggerDocumentPublic = generateSwaggerDoc("swagger.json", app, publicConfig, publicOptions);
+  const swaggerDocumentPrivate = generateSwaggerDoc("swagger-internal.json", app, privateConfig, privateOptions);
+
+  // Expose /noba-api for public APIs and /noba-api-internal for all APIs (public & private)
+  SwaggerModule.setup("noba-api", app, swaggerDocumentPublic);
+  SwaggerModule.setup("noba-api-internal", app, swaggerDocumentPrivate);
+
+  const port = 8080;
+  logger.log(`Starting Noba service on port ${port}`, "main.ts");
+  await app.listen(port);
+}
+
+function generateSwaggerDoc(
+  filename: string,
+  app: INestApplication,
+  config: Omit<OpenAPIObject, "paths">,
+  options: SwaggerDocumentOptions,
+) {
+  const swaggerDocument = SwaggerModule.createDocument(app, config, options);
   swaggerDocument.components = joiToSwagger(swaggerDocument.components) as any; //merge swagger-plugin generated components with joi generated components
 
-  writeFileSync("./swagger.json", JSON.stringify(swaggerDocument), { encoding: "utf-8" });
+  writeFileSync("./" + filename, JSON.stringify(swaggerDocument), { encoding: "utf-8" });
   app.useGlobalPipes(
     //we won't accept the keys/fields/attributes in the input if they are not defined in the accepted Type of a controller route
     new NoUnExpectedKeysValidationPipe(
@@ -69,13 +116,7 @@ async function bootstrap() {
       false,
     ),
   );
-
-  //TODO IMPORTANT show swagger ui only in non-production
-  SwaggerModule.setup("swagger-ui", app, swaggerDocument);
-
-  const port = 8080;
-  logger.log(`Starting Noba service on port ${port}`, "main.ts");
-  await app.listen(port);
+  return swaggerDocument;
 }
 
 function getMorgan(winstonLogger) {

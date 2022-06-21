@@ -14,6 +14,9 @@ import {
   AWS_SECRET_ACCESS_KEY_ENV_VARIABLE,
   getEnvironmentName,
   getParameterValue,
+  MONGO_AWS_SECRET_KEY_FOR_URI_ATTR,
+  MONGO_CONFIG_KEY,
+  MONGO_URI,
   resetPropertyFromEnvironment,
   SENDGRID_API_KEY,
   SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
@@ -39,6 +42,7 @@ import { TwilioConfigs } from "./configtypes/TwilioConfigs";
 import { TruliooConfigs } from "./configtypes/TruliooConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";
 import { StripeConfigs } from "./configtypes/StripeConfigs";
+import { MongoConfigs } from "./configtypes/MongoConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.DEV]: "localdevelopment.yaml",
@@ -203,12 +207,31 @@ async function configureSendgridCredentials(configs: Record<string, any>): Promi
   return configs;
 }
 
+async function configureMongoCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+  const mongoConfigs: MongoConfigs = configs[MONGO_CONFIG_KEY];
+
+  if (mongoConfigs === undefined) {
+    const errorMessage =
+      "\n'Mongo' configurations are required. Please configure the MongoDB URI in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${MONGO_CONFIG_KEY}" and populate "${MONGO_AWS_SECRET_KEY_FOR_URI_ATTR}" or "${MONGO_URI}" ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
+
+  configs[MONGO_CONFIG_KEY] = mongoConfigs;
+  return configs;
+}
+
 async function configureAllVendorCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
   const vendorCredentialConfigurators = [
     configureSendgridCredentials,
     configureTruliooCredentials,
     configureTwilioCredentials,
     configureStripeCredentials,
+    configureMongoCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](configs);

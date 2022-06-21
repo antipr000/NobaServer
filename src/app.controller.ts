@@ -4,6 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "./app.service";
 import { Public } from "./modules/auth/public.decorator";
+import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
 
 @Controller()
 export class AppController {
@@ -23,11 +24,46 @@ export class AppController {
 
   @Public()
   @Get("cryptocurrencies")
-  @ApiOperation({ summary: "Returns a list of all cryptocurrencies whose on-ramp we support" })
-  @ApiResponse({ status: HttpStatus.OK, description: "List of all supported cryptocurrencies" })
+  @ApiOperation({ summary: "Returns a list of all cryptocurrencies supported by Noba Onramp" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [CurrencyDTO],
+    description: "List of all supported cryptocurrencies",
+  })
   @ApiTags("Assets")
-  supportedCryptocurrencies(): string {
-    // This is list of all crypto we support for on ramp
-    return "ethereum, terrausd, terra-luna";
+  async supportedCryptocurrencies(): Promise<CurrencyDTO[]> {
+    // TODO: Pull from database post-MVP
+    return [
+      { name: "Ethereum", ticker: "ETH", iconPath: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
+      {
+        name: "Terra USD",
+        ticker: "LUNA1-USD",
+        iconPath: "https://icodrops.com/wp-content/uploads/2018/08/Terra-Logo.jpg",
+      },
+      { name: "Terra Luna", ticker: "LUNA", iconPath: "https://cryptologos.cc/logos/terra-luna-luna-logo.png?v=022" },
+    ];
+
+    //return 'ethereum, terrausd, terra-luna";
+  }
+
+  @Public()
+  @Get("fiatcurrencies")
+  @ApiOperation({ summary: "Returns a list of all fiat currencies supported by Noba Onramp" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [CurrencyDTO],
+    description: "List of all supported fiat currencies",
+  })
+  @ApiTags("Assets")
+  async supportedFiatCurrencies(): Promise<CurrencyDTO[]> {
+    // TODO: Pull from database post-MVP
+    return [
+      {
+        name: "US Dollar",
+        ticker: "USD",
+        iconPath:
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/United-states_flag_icon_round.svg/1024px-United-states_flag_icon_round.svg.png",
+      },
+    ];
   }
 }

@@ -4,12 +4,14 @@ import { TransactionMapper } from "../mapper/TransactionMapper";
 import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { getWeek } from "../../../core/utils/DateUtils";
+import { Injectable } from "@nestjs/common";
 
 type AggregateResultType = {
   _id: number;
   totalSum: number;
 };
 
+@Injectable()
 export class MongoDBTransactionRepo implements ITransactionRepo {
   private readonly transactionMapper = new TransactionMapper();
 
