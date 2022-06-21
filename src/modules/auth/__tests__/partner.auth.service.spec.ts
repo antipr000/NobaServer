@@ -95,8 +95,7 @@ describe("AdminService", () => {
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_PARTNER_ADMIN_EMAIL,
+        _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: partnerAdminIdentityIdenitfier,
@@ -116,8 +115,7 @@ describe("AdminService", () => {
       const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_PARTNER_ADMIN_EMAIL,
+        _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
         identityType: partnerAdminIdentityIdenitfier,
@@ -143,8 +141,7 @@ describe("AdminService", () => {
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: Otp = Otp.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_PARTNER_ADMIN_EMAIL,
+        _id: EXISTING_PARTNER_ADMIN_EMAIL,
         otp: CORRECT_OTP,
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: partnerAdminIdentityIdenitfier,

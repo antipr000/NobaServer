@@ -31,10 +31,6 @@ export abstract class AuthService {
     if (actualOtp.props.otp !== enteredOtp || currentDateTime > actualOtp.props.otpExpiryTime) {
       throw new UnauthorizedException();
     }
-    else {
-      this.otpRepo.useOTP(actualOtp.props._id); // Mark used or delete the OTP
-    }
-
     return this.getUserId(emailOrPhone);
   }
 
