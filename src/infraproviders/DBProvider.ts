@@ -50,7 +50,8 @@ export class DBProvider {
     return PartnerModel;
   }
 
-  get partnerAdminModel(): Model<PartnerAdminProps> {
+  async getPartnerAdminModel(): Promise<Model<PartnerAdminProps>> {
+    await this.connectToDb();
     return PartnerAdminModel;
   }
 
