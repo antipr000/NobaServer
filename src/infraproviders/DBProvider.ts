@@ -25,10 +25,10 @@ export class DBProvider {
   @Inject()
   private readonly configService: ConfigService;
 
-  private isConnectedToDb: boolean = false;
+  private isConnectedToDb = false;
 
   // Doesn't defined in constructor as 'Mongoose.connect' is an async function.
-  // If called in 'constructor', you can't 'await' (constructor can't be async) 
+  // If called in 'constructor', you can't 'await' (constructor can't be async)
   // which will lead to flaky behaviour during the initial phase of the service startup.
   private async connectToDb(): Promise<void> {
     if (this.isConnectedToDb) return;

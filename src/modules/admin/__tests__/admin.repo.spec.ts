@@ -7,9 +7,8 @@ import { Admin } from "../domain/Admin";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
-import { random } from "nanoid";
 import mongoose from "mongoose";
-import { MongoClient, ObjectId, Collection } from "mongodb";
+import { MongoClient, Collection } from "mongodb";
 import { NotFoundException } from "@nestjs/common";
 
 const getAllRecordsInAdminCollection = async (adminCollection: Collection): Promise<Array<Admin>> => {
@@ -81,7 +80,7 @@ describe("AdminController", () => {
     // Setup a mongodb client for interacting with "admins" collection.
     mongoClient = new MongoClient(mongoUri);
     await mongoClient.connect();
-    adminCollection = mongoClient.db('').collection("admins");
+    adminCollection = mongoClient.db("").collection("admins");
   });
 
   afterEach(async () => {
@@ -89,8 +88,6 @@ describe("AdminController", () => {
     await mongoose.disconnect();
     await mongoServer.stop();
   });
-
-
 
   describe("addNobaAdmin", () => {
     it("should insert a NobaAdmin record to the DB", async () => {
@@ -128,7 +125,7 @@ describe("AdminController", () => {
         _id: admin.props._id as any,
         name: admin.props.name,
         email: admin.props.email,
-        role: admin.props.role
+        role: admin.props.role,
       });
 
       const retrievedAdmin: Admin = await adminTransactionRepo.getNobaAdminByEmail("admin@noba.com");
@@ -149,7 +146,7 @@ describe("AdminController", () => {
         _id: admin.props._id as any,
         name: admin.props.name,
         email: admin.props.email,
-        role: admin.props.role
+        role: admin.props.role,
       });
 
       const updatedAdmin: Admin = Admin.createAdmin({

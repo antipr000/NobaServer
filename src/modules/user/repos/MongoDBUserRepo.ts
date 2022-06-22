@@ -10,7 +10,7 @@ import { Injectable } from "@nestjs/common";
 @Injectable()
 export class MongoDBUserRepo implements IUserRepo {
   private readonly userMapper = new UserMapper();
-  constructor(private readonly dbProvider: DBProvider) { }
+  constructor(private readonly dbProvider: DBProvider) {}
 
   async getUser(userID: string): Promise<User> {
     const userModel = await this.dbProvider.getUserModel();

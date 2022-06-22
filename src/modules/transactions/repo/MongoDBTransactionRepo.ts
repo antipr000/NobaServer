@@ -15,7 +15,7 @@ type AggregateResultType = {
 export class MongoDBTransactionRepo implements ITransactionRepo {
   private readonly transactionMapper = new TransactionMapper();
 
-  constructor(private readonly dbProvider: DBProvider) { }
+  constructor(private readonly dbProvider: DBProvider) {}
 
   async getAll(): Promise<Transaction[]> {
     const transactionModel = await this.dbProvider.getTransactionModel();
@@ -40,9 +40,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
   async updateTransaction(transaction: Transaction): Promise<Transaction> {
     const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: any = await transactionModel
-      .findByIdAndUpdate(transaction.props._id, transaction.props)
-      .exec();
+    const result: any = await transactionModel.findByIdAndUpdate(transaction.props._id, transaction.props).exec();
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(transactionProps);
   }
