@@ -15,7 +15,8 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
 
   async getPartner(partnerId: string): Promise<Partner> {
     try {
-      const result: any = await this.dbProvider.partnerModel.findById(partnerId).exec();
+      const partnerModel = await this.dbProvider.getPartnerModel();
+      const result: any = await partnerModel.findById(partnerId).exec();
       const partnerData: PartnerProps = convertDBResponseToJsObject(result);
       return this.partnerMapper.toDomain(partnerData);
     } catch (e) {
@@ -25,7 +26,8 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
 
   async addPartner(partner: Partner): Promise<Partner> {
     try {
-      const result = await this.dbProvider.partnerModel.create(partner.props);
+      const partnerModel = await this.dbProvider.getPartnerModel();
+      const result = await partnerModel.create(partner.props);
       const partnerProps: PartnerProps = convertDBResponseToJsObject(result);
       return this.partnerMapper.toDomain(partnerProps);
     } catch (e) {
@@ -35,7 +37,8 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
 
   async updatePartner(partner: Partner): Promise<Partner> {
     try {
-      const result = await this.dbProvider.partnerModel
+      const partnerModel = await this.dbProvider.getPartnerModel();
+      const result = await partnerModel
         .updateOne(
           { _id: partner.props._id },
           {

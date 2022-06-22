@@ -42,11 +42,13 @@ export class DBProvider {
     return UserModel;
   }
 
-  get transactionModel(): Model<TransactionProps> {
+  async getTransactionModel(): Promise<Model<TransactionProps>> {
+    await this.connectToDb();
     return TransactionModel;
   }
 
-  get partnerModel(): Model<PartnerProps> {
+  async getPartnerModel(): Promise<Model<PartnerProps>> {
+    await this.connectToDb();
     return PartnerModel;
   }
 
