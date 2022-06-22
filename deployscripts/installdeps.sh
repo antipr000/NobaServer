@@ -12,7 +12,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-nvm install 16.15
+nvm install 16
+nvm alias default 16
 npm install -g pm2
 pm2 install pm2-logrotate
 
@@ -23,4 +24,3 @@ sudo apt-get update
 sudo apt-get install python -y
 
 export APP_DIR="/home/ubuntu/NobaServer"
-rm -rf $APP_DIR/*
