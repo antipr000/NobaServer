@@ -138,6 +138,32 @@ describe("AdminService", () => {
       });
     });
 
+    it("should not allow any OTP to be used more than once", async () => {
+      const consumerEmail = "consumer@noba.com";
+      const identityType: string = consumerIdentityIdentifier;
+      const otp = 123456;
+
+      when(mockConsumerAuthService.createOtp()).thenReturn(otp);
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+
+      await authController.loginUser({
+        email: consumerEmail,
+        identityType: identityType,
+      });
+
+      try {
+        // Second attempt should throw an error
+        await authController.loginUser({
+          email: consumerEmail,
+          identityType: identityType,
+        });
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
     it("should use 'PartnerAuthService' if 'identityType' is 'PARTNER_ADMIN'", async () => {
       const partnerAdminEmail = "partner.admin@noba.com";
       const identityType: string = partnerAdminIdentityIdenitfier;
