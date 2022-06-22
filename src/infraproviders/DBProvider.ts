@@ -38,7 +38,8 @@ export class DBProvider {
     this.isConnectedToDb = true;
   }
 
-  get userModel(): Model<UserProps> {
+  async getUserModel(): Promise<Model<UserProps>> {
+    await this.connectToDb();
     return UserModel;
   }
 

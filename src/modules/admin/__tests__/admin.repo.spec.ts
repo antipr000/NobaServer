@@ -61,7 +61,7 @@ describe("AdminController", () => {
       [MONGO_CONFIG_KEY]: {
         [MONGO_URI]: mongoUri,
       },
-      [SERVER_LOG_FILE_PATH]: `/tmp/test-${random(8)}.log`,
+      [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
 
     const configModule = ConfigModule.forRoot({
