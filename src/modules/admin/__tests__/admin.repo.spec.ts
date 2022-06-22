@@ -10,6 +10,7 @@ import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../conf
 import { random } from "nanoid";
 import mongoose from "mongoose";
 import { MongoClient, ObjectId, Collection } from "mongodb";
+import { NotFoundException } from "@nestjs/common";
 
 const getAllRecordsInAdminCollection = async (adminCollection: Collection): Promise<Array<Admin>> => {
   const adminDocumetsCursor = await adminCollection.find({});
@@ -84,8 +85,8 @@ describe("AdminController", () => {
   });
 
   afterEach(async () => {
-    mongoose.disconnect();
-    mongoClient.close();
+    await mongoClient.close();
+    await mongoose.disconnect();
     await mongoServer.stop();
   });
 
@@ -133,6 +134,49 @@ describe("AdminController", () => {
       const retrievedAdmin: Admin = await adminTransactionRepo.getNobaAdminByEmail("admin@noba.com");
 
       expect(retrievedAdmin).toEqual(admin);
+    });
+  });
+
+  describe("updateNobaAdmin", () => {
+    it("should update the 'Admin' with the given email", async () => {
+      const admin: Admin = Admin.createAdmin({
+        email: "admin@noba.com",
+        name: "Admin",
+        role: "BASIC",
+        _id: "AAAAAAAAAAAA",
+      });
+      await adminCollection.insertOne({
+        _id: admin.props._id as any,
+        name: admin.props.name,
+        email: admin.props.email,
+        role: admin.props.role
+      });
+
+      const updatedAdmin: Admin = Admin.createAdmin({
+        email: "admin@noba.com",
+        name: "Admin New Name",
+        role: "INTERMEDIATE",
+        _id: "AAAAAAAAAAAA",
+      });
+      const retrievedAdmin: Admin = await adminTransactionRepo.updateNobaAdmin(updatedAdmin);
+
+      expect(retrievedAdmin).toEqual(updatedAdmin);
+    });
+
+    it("should throw 'NotFoundException' if the 'Admin' with given email not found", async () => {
+      const admin: Admin = Admin.createAdmin({
+        email: "admin@noba.com",
+        name: "Admin",
+        role: "BASIC",
+        _id: "AAAAAAAAAAAA",
+      });
+
+      try {
+        await adminTransactionRepo.updateNobaAdmin(admin);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(NotFoundException);
+      }
     });
   });
 });
