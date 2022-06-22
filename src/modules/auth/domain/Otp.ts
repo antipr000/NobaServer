@@ -15,7 +15,7 @@ export interface OtpProps extends VersioningInfo {
 
 export const otpValidationKeys: KeysRequired<OtpProps> = {
   ...versioningInfoJoiSchemaKeys,
-  _id: Joi.string().default(randomUUID),
+  _id: Joi.string().default(() => {randomUUID}),
   emailOrPhone: Joi.string().required(),
   otp: Joi.number().required(),
   otpExpiryTime: Joi.number().required(),
