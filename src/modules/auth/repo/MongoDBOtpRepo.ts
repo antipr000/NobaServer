@@ -42,7 +42,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
       await OtpModel.create(otpInstance.props);
     } catch (e) {
       // Already exists. We should update now
-      OtpModel.findByIdAndUpdate(emailID, otpProps);
+      await OtpModel.findByIdAndUpdate(emailID, otpInstance.props);
     }
   }
 
