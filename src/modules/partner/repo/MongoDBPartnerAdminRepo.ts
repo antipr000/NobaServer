@@ -17,7 +17,8 @@ export class MongoDBPartnerAdminRepo implements IPartnerAdminRepo {
 
   async getPartnerAdmin(partnerAdminId: string): Promise<Result<PartnerAdmin>> {
     try {
-      const result: any = await this.dbProvider.partnerAdminModel.findById(partnerAdminId).exec();
+      const partnerAdminModel = await this.dbProvider.getPartnerAdminModel();
+      const result: any = await partnerAdminModel.findById(partnerAdminId).exec();
       const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
       return Result.ok(this.partnerAdminMapper.toDomain(partnerAdminProps));
     } catch (e) {
@@ -27,7 +28,8 @@ export class MongoDBPartnerAdminRepo implements IPartnerAdminRepo {
 
   async getPartnerAdminUsingEmail(emailID: string): Promise<Result<PartnerAdmin>> {
     try {
-      const result: any = await this.dbProvider.partnerAdminModel.findOne({ email: emailID }).exec();
+      const partnerAdminModel = await this.dbProvider.getPartnerAdminModel();
+      const result: any = await partnerAdminModel.findOne({ email: emailID }).exec();
       const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
       return Result.ok(this.partnerAdminMapper.toDomain(partnerAdminProps));
     } catch (e) {
@@ -40,7 +42,8 @@ export class MongoDBPartnerAdminRepo implements IPartnerAdminRepo {
     if (getResult.isSuccess) throw new BadRequestException("Admin with given email already exists");
     else {
       try {
-        const result: any = await this.dbProvider.partnerAdminModel.create(partnerAdmin.props);
+        const partnerAdminModel = await this.dbProvider.getPartnerAdminModel();
+        const result: any = await partnerAdminModel.create(partnerAdmin.props);
         const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
         return this.partnerAdminMapper.toDomain(partnerAdminProps);
       } catch (e) {
@@ -48,14 +51,18 @@ export class MongoDBPartnerAdminRepo implements IPartnerAdminRepo {
       }
     }
   }
+
   async getAllAdminsForPartner(partnerId: string): Promise<PartnerAdmin[]> {
-    const result: any = await this.dbProvider.partnerAdminModel.find({ partnerId: partnerId }).exec();
+    const partnerAdminModel = await this.dbProvider.getPartnerAdminModel();
+    const result: any = await partnerAdminModel.find({ partnerId: partnerId }).exec();
     const partnerAdmins: PartnerAdmin[] = convertDBResponseToJsObject(result);
     return partnerAdmins.map(partnerAdmin => this.partnerAdminMapper.toDomain(partnerAdmin));
   }
+
   async removePartnerAdmin(partnerAdminId: string): Promise<void> {
     try {
-      await this.dbProvider.partnerModel.findByIdAndDelete(partnerAdminId).exec();
+      const partnerAdminModel = await this.dbProvider.getPartnerAdminModel();
+      await partnerAdminModel.findByIdAndDelete(partnerAdminId).exec();
     } catch (e) {
       throw new NotFoundException(e.message);
     }
@@ -63,7 +70,8 @@ export class MongoDBPartnerAdminRepo implements IPartnerAdminRepo {
 
   async updatePartnerAdmin(partnerAdmin: PartnerAdmin): Promise<PartnerAdmin> {
     try {
-      await this.dbProvider.partnerAdminModel
+      const partnerAdminModel = await this.dbProvider.getPartnerAdminModel();
+      const result = await partnerAdminModel
         .updateOne(
           { _id: partnerAdmin.props._id },
           {

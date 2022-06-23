@@ -18,39 +18,43 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   constructor(private readonly dbProvider: DBProvider) {}
 
   async getAll(): Promise<Transaction[]> {
-    const result: any = await this.dbProvider.transactionModel.find().exec();
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.find().exec();
     const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
     return transactionPropsList.map(transactionResult => this.transactionMapper.toDomain(transactionResult));
   }
 
   async getTransaction(transactionId: string): Promise<Transaction> {
-    const result: any = await this.dbProvider.transactionModel.findById(transactionId).exec();
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.findById(transactionId).exec();
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(transactionProps);
   }
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
-    const result: any = await this.dbProvider.transactionModel.create(transaction.props);
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.create(transaction.props);
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(transactionProps);
   }
 
   async updateTransaction(transaction: Transaction): Promise<Transaction> {
-    const result: any = await this.dbProvider.transactionModel
-      .findByIdAndUpdate(transaction.props._id, transaction.props)
-      .exec();
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.findByIdAndUpdate(transaction.props._id, transaction.props).exec();
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(transactionProps);
   }
 
   async getUserTransactions(userId: string): Promise<Transaction[]> {
-    const result: any = await this.dbProvider.transactionModel.find({ userId: userId }).exec();
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.find({ userId: userId }).exec();
     const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
     return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
   }
 
   async getTotalUserTransactionAmount(userId: string): Promise<number> {
-    const result: AggregateResultType[] = await this.dbProvider.transactionModel
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: AggregateResultType[] = await transactionModel
       .aggregate([
         {
           $match: {
@@ -74,7 +78,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async getMonthlyUserTransactionAmount(userId: string): Promise<number> {
     const month: number = new Date().getUTCMonth() + 1;
     const year: number = new Date().getUTCFullYear();
-    const result: AggregateResultType[] = await this.dbProvider.transactionModel
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: AggregateResultType[] = await transactionModel
       .aggregate([
         {
           $addFields: {
@@ -114,7 +120,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async getWeeklyUserTransactionAmount(userId: string): Promise<number> {
     const week: number = getWeek(new Date());
     const year: number = new Date().getUTCFullYear();
-    const result: AggregateResultType[] = await this.dbProvider.transactionModel
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: AggregateResultType[] = await transactionModel
       .aggregate([
         {
           $addFields: {
@@ -154,7 +162,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async getDailyUserTransactionAmount(userId: string): Promise<number> {
     const day: number = new Date().getUTCDate();
     const year: number = new Date().getUTCFullYear();
-    const result: AggregateResultType[] = await this.dbProvider.transactionModel
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: AggregateResultType[] = await transactionModel
       .aggregate([
         {
           $addFields: {
@@ -192,7 +202,8 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   }
 
   async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
-    const result: any = await this.dbProvider.transactionModel
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel
       .find({
         userId: userId,
         transactionTimestamp: {

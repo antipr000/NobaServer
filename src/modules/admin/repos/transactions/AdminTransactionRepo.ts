@@ -2,7 +2,7 @@ import { TransactionStatsDTO } from "../../dto/TransactionStats";
 import { TransactionModel } from "../../../../infra/mongodb/models/TransactionModel";
 import { Transaction, TransactionProps } from "../../../../modules/transactions/domain/Transaction";
 import { convertDBResponseToJsObject } from "../../../../../src/infra/mongodb/MongoDBUtils";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { Admin, AdminProps } from "../../domain/Admin";
 import { AdminMapper } from "../../mappers/AdminMapper";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
@@ -66,14 +66,15 @@ export class MongoDBAdminTransactionRepo implements IAdminTransactionRepo {
   }
 
   async addNobaAdmin(nobaAdmin: Admin): Promise<Admin> {
-    const result = await this.dbProvider.adminModel.create(nobaAdmin.props);
+    const adminModel = await this.dbProvider.getAdminModel();
+    const result = await adminModel.create(nobaAdmin.props);
     const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
     return this.adminMapper.toDomain(nobaAdminProps);
   }
 
   async getNobaAdminByEmail(email: string): Promise<Admin> {
-    console.log("Find by email: ", email);
-    const result: any = await this.dbProvider.adminModel.find({
+    const adminModel = await this.dbProvider.getAdminModel();
+    const result: any = await adminModel.find({
       email: email,
     });
     const nobaAdminProps: AdminProps[] = convertDBResponseToJsObject(result);
@@ -83,25 +84,31 @@ export class MongoDBAdminTransactionRepo implements IAdminTransactionRepo {
   }
 
   async updateNobaAdmin(updatedNobaAdmin: Admin): Promise<Admin> {
-    const result = await this.dbProvider.adminModel.findByIdAndUpdate(
+    const adminModel = await this.dbProvider.getAdminModel();
+    const result = await adminModel.findByIdAndUpdate(
       updatedNobaAdmin.props._id,
       { $set: updatedNobaAdmin.props },
       { new: true },
     );
-    const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
+    if (result === null) {
+      throw new NotFoundException(`Admin with '${updatedNobaAdmin.props._id}' was not found.`);
+    }
 
+    const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
     return this.adminMapper.toDomain(nobaAdminProps);
   }
 
   async deleteNobaAdmin(id: string): Promise<number> {
-    const result = await this.dbProvider.adminModel.deleteOne({ _id: id });
+    const adminModel = await this.dbProvider.getAdminModel();
+    const result = await adminModel.deleteOne({ _id: id });
     if (result.acknowledged === false) throw Error("Internal error!");
 
     return result.deletedCount;
   }
 
   async getNobaAdminById(id: string): Promise<Admin> {
-    const result = await this.dbProvider.adminModel.findById(id);
+    const adminModel = await this.dbProvider.getAdminModel();
+    const result = await adminModel.findById(id);
     const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
     return this.adminMapper.toDomain(nobaAdminProps);
   }

@@ -13,7 +13,8 @@ export class MongoDBUserRepo implements IUserRepo {
   constructor(private readonly dbProvider: DBProvider) {}
 
   async getUser(userID: string): Promise<User> {
-    const result: any = await this.dbProvider.userModel.findById(userID).exec();
+    const userModel = await this.dbProvider.getUserModel();
+    const result: any = await userModel.findById(userID).exec();
     const userData: UserProps = convertDBResponseToJsObject(result);
     return this.userMapper.toDomain(userData);
   }
@@ -23,7 +24,8 @@ export class MongoDBUserRepo implements IUserRepo {
   }
 
   async updateUser(user: User): Promise<User> {
-    const result = await this.dbProvider.userModel
+    const userModel = await this.dbProvider.getUserModel();
+    const result = await userModel
       .findByIdAndUpdate(
         user.props._id,
         {
@@ -40,7 +42,8 @@ export class MongoDBUserRepo implements IUserRepo {
 
   async getUserIfExists(email: string): Promise<Result<User>> {
     try {
-      const result = await this.dbProvider.userModel.findOne({ email: email }).exec();
+      const userModel = await this.dbProvider.getUserModel();
+      const result = await userModel.findOne({ email: email }).exec();
       if (result) {
         const user: UserProps = convertDBResponseToJsObject(result);
         return Result.ok(this.userMapper.toDomain(user));
@@ -58,7 +61,8 @@ export class MongoDBUserRepo implements IUserRepo {
 
   async getUserByPhone(phone: string): Promise<Result<User>> {
     try {
-      const result = await this.dbProvider.userModel.findOne({ phone: phone }).exec();
+      const userModel = await this.dbProvider.getUserModel();
+      const result = await userModel.findOne({ phone: phone }).exec();
       if (result) {
         const user: UserProps = convertDBResponseToJsObject(result);
         return Result.ok(this.userMapper.toDomain(user));
@@ -79,7 +83,8 @@ export class MongoDBUserRepo implements IUserRepo {
     if (await this.exists(user.props.email)) {
       throw Error("User with given email already exists");
     } else {
-      const result = await this.dbProvider.userModel.create(user.props);
+      const userModel = await this.dbProvider.getUserModel();
+      const result = await userModel.create(user.props);
       const userProps: UserProps = convertDBResponseToJsObject(result);
       return this.userMapper.toDomain(userProps);
     }
