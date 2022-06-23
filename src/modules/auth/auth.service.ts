@@ -31,7 +31,7 @@ export abstract class AuthService {
     if (actualOtp.props.otp !== enteredOtp || currentDateTime > actualOtp.props.otpExpiryTime) {
       throw new UnauthorizedException();
     } else {
-      this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
+      await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
       return this.getUserId(emailOrPhone);
     }
   }
@@ -48,13 +48,7 @@ export abstract class AuthService {
   }
 
   async deleteAnyExistingOTP(emailOrPhone: string): Promise<void> {
-    const actualOtp: Otp[] = await this.otpRepo.getAllOTPsForUser(emailOrPhone, this.getIdentityType());
-    actualOtp.forEach(element => {
-      if (element.props._id) {
-        // Delete any unused OTPs for this user
-        this.otpRepo.deleteOTP(element.props._id);
-      }
-    });
+    await this.otpRepo.deleteAllOTPsForUser(emailOrPhone, this.getIdentityType());
   }
 
   async saveOtp(emailOrPhone: string, otp: number): Promise<void> {
@@ -77,6 +71,10 @@ export abstract class AuthService {
 
   async verifyUserExistence(emailOrPhone: string): Promise<boolean> {
     return this.isUserSignedUp(emailOrPhone);
+  }
+
+  async deleteAllExpiredOTPs(): Promise<void> {
+    return this.otpRepo.deleteAllExpiredOTPs();
   }
 
   protected abstract getIdentityType();

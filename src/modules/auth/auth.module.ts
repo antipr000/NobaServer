@@ -15,6 +15,7 @@ import { AdminAuthService } from "./admin.auth.service";
 import { AdminModule } from "../admin/admin.module";
 import { PartnerModule } from "../partner/partner.module";
 import { PartnerAuthService } from "./partner.auth.service";
+import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PartnerAuthService } from "./partner.auth.service";
     UserAuthService,
     AdminAuthService,
     PartnerAuthService,
+    DeleteExpiredOTPs,
   ],
   controllers: [AuthController],
 })
