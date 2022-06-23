@@ -35,7 +35,7 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
 
   async updatePartner(partner: Partner): Promise<Partner> {
     try {
-      const result = await this.dbProvider.partnerModel
+      await this.dbProvider.partnerModel
         .updateOne(
           { _id: partner.props._id },
           {
@@ -43,8 +43,7 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
           },
         )
         .exec();
-      const partnerProps: PartnerProps = convertDBResponseToJsObject(result);
-      return this.partnerMapper.toDomain(partnerProps);
+      return await this.getPartner(partner.props._id);
     } catch (e) {
       throw new BadRequestException(e.message);
     }
