@@ -24,7 +24,7 @@ import { VerifyOtpResponseDTO } from "../modules/auth/dto/VerifyOtpReponse";
 import { generateRandomNumber } from "../core/utils/Utils";
 
 describe("Partner and Partner Admin end to end tests", () => {
-  jest.setTimeout(5000000);
+  jest.setTimeout(60000);
   const OLD_ENV = process.env;
 
   let app: INestApplication;
@@ -130,10 +130,13 @@ describe("Partner and Partner Admin end to end tests", () => {
     await partnerAdminModel.findByIdAndDelete(partnerAdminWithAllAccess.props._id).exec();
     await partnerAdminModel.findByIdAndDelete(partnerAdminWithBasicAccess.props._id).exec();
     await partnerAdminModel.findByIdAndDelete(partnerAdminWithIntermediateAccess.props._id).exec();
-    await (await dbProvider.getPartnerAdminModel()).findByIdAndDelete(partner.props._id);
+
+    const partnerModel = await dbProvider.getPartnerModel();
+    await partnerModel.findByIdAndDelete(partner.props._id).exec();
+
     console.log("Removed all data from database");
-    Mongoose.connection.close();
-    app.close();
+    await Mongoose.connection.close();
+    await app.close();
     done();
   });
 
