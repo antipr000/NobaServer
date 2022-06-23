@@ -22,44 +22,28 @@ export class DBProvider {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  @Inject()
-  private readonly configService: ConfigService;
-
-  private isConnectedToDb = false;
-
-  // Doesn't defined in constructor as 'Mongoose.connect' is an async function.
-  // If called in 'constructor', you can't 'await' (constructor can't be async)
-  // which will lead to flaky behaviour during the initial phase of the service startup.
-  private async connectToDb(): Promise<void> {
-    if (this.isConnectedToDb) return;
-
-    const mongoUri = this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY).uri;
-    await Mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
-    this.isConnectedToDb = true;
+  constructor(private readonly configService: ConfigService) {
+    const mongoUri = configService.get<MongoConfigs>(MONGO_CONFIG_KEY).uri;
+    Mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
   }
 
-  async getUserModel(): Promise<Model<UserProps>> {
-    await this.connectToDb();
+  get userModel(): Model<UserProps> {
     return UserModel;
   }
 
-  async getTransactionModel(): Promise<Model<TransactionProps>> {
-    await this.connectToDb();
+  get transactionModel(): Model<TransactionProps> {
     return TransactionModel;
   }
 
-  async getPartnerModel(): Promise<Model<PartnerProps>> {
-    await this.connectToDb();
+  get partnerModel(): Model<PartnerProps> {
     return PartnerModel;
   }
 
-  async getPartnerAdminModel(): Promise<Model<PartnerAdminProps>> {
-    await this.connectToDb();
+  get partnerAdminModel(): Model<PartnerAdminProps> {
     return PartnerAdminModel;
   }
 
-  async getAdminModel(): Promise<Model<AdminProps>> {
-    await this.connectToDb();
+  get adminModel(): Model<AdminProps> {
     return AdminModel;
   }
 }
