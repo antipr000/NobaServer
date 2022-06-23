@@ -17,8 +17,8 @@ export class PartnerDTO {
   name: string;
 
   @ApiPropertyOptional()
-  verificationData: KybStatusInfoDTO;
+  verificationData?: KybStatusInfoDTO;
 
   @ApiPropertyOptional()
-  takeRate: number;
+  takeRate?: number;
 }

@@ -25,3 +25,7 @@ export function delay(delayTimeInMilliseconds: number): Promise<void> {
     setTimeout(resolve, delayTimeInMilliseconds);
   });
 }
+
+export function generateRandomNumber(): number {
+  return Math.floor(100000 + Math.random() * 900000);
+}

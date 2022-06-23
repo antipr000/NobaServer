@@ -79,8 +79,7 @@ export class MongoDBPartnerAdminRepo implements IPartnerAdminRepo {
           },
         )
         .exec();
-      const partnerAdminProps: PartnerAdminProps = convertDBResponseToJsObject(result);
-      return this.partnerAdminMapper.toDomain(partnerAdminProps);
+      return (await this.getPartnerAdmin(partnerAdmin.props._id)).getValue();
     } catch (e) {
       throw new BadRequestException(e.message);
     }

@@ -46,8 +46,7 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
           },
         )
         .exec();
-      const partnerProps: PartnerProps = convertDBResponseToJsObject(result);
-      return this.partnerMapper.toDomain(partnerProps);
+      return await this.getPartner(partner.props._id);
     } catch (e) {
       throw new BadRequestException(e.message);
     }
