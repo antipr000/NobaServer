@@ -57,7 +57,6 @@ async function bootstrap() {
       "JWT-auth",
     )
     .addServer("https://api.noba.com/")
-    .addServer("http://localhost:8080")
     .build();
 
   // Any API which we want to expose publicly (to partners) must be explicitly declared here
@@ -79,8 +78,7 @@ async function bootstrap() {
       },
       "JWT-auth",
     )
-    .addServer("https://api.noba.com/")
-    .addServer("http://localhost:8080")
+    .addServer("/")
     .build();
 
   const privateOptions = {

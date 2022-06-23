@@ -1,3 +1,4 @@
+import { Inject, Logger } from "@nestjs/common";
 import { IOTPRepo } from "./OTPRepo";
 import { Otp, OtpProps } from "../domain/Otp";
 import { OtpModel } from "../../../infra/mongodb/models/OtpModel";
@@ -6,9 +7,13 @@ import { otpConstants } from "../constants";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { convertDBResponseToJsObject } from "../../../../src/infra/mongodb/MongoDBUtils";
 import { randomUUID } from "crypto";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 @Injectable()
 export class MongoDBOtpRepo implements IOTPRepo {
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
+
   private readonly otpMapper: OtpMapper = new OtpMapper();
 
   async getOTP(emailOrPhone: string, identityType: string): Promise<Otp> {
@@ -39,13 +44,22 @@ export class MongoDBOtpRepo implements IOTPRepo {
       await OtpModel.create(otpProps);
     } catch (e) {
       // Already exists. We should update now
-      await OtpModel.findByIdAndUpdate(emailID, otpProps);
+      OtpModel.findByIdAndUpdate(emailID, otpProps);
     }
   }
 
   async deleteOTP(id: string): Promise<void> {
     try {
-      await OtpModel.deleteOne({ _id: id });
+      OtpModel.deleteOne({ _id: id });
+    } catch (e) {
+      // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
+      console.log(e);
+    }
+  }
+
+  async deleteAllOTPsForUser(emailOrPhone: string, identityType: string): Promise<void> {
+    try {
+      OtpModel.deleteMany({ emailOrPhone: emailOrPhone, identityType: identityType }).exec();
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
       console.log(e);
@@ -54,7 +68,9 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   async deleteAllExpiredOTPs(): Promise<void> {
     try {
-      const expiredOTPs = await OtpModel.deleteMany({ expiryTime: { $lt: new Date().getTime() } });
+      const date = new Date().getTime();
+      const result = await OtpModel.deleteMany({ otpExpiryTime: { $lt: date } }).exec();
+      this.logger.debug(`Deleted ${result.deletedCount} OTPs with expiration timestamp < ${date}`);
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
       console.log(e);
