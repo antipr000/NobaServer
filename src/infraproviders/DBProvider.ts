@@ -16,6 +16,8 @@ import { AdminProps } from "../modules/admin/domain/Admin";
 import { AdminModel } from "../infra/mongodb/models/AdminModel";
 import { MongoConfigs } from "../config/configtypes/MongoConfigs";
 import { MONGO_CONFIG_KEY } from "../config/ConfigurationUtils";
+import { OtpModel } from "../infra/mongodb/models/OtpModel";
+import { OtpProps } from "../modules/auth/domain/Otp";
 
 @Injectable()
 export class DBProvider {
@@ -36,6 +38,16 @@ export class DBProvider {
     const mongoUri = this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY).uri;
     await Mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
     this.isConnectedToDb = true;
+  }
+
+  // // Remove this as soon as all the repositories are using Models through 'DBProvider'.
+  // constructor() {
+  //   this.connectToDb();
+  // }
+
+  async getOtpModel(): Promise<Model<OtpProps>> {
+    await this.connectToDb();
+    return OtpModel;
   }
 
   async getUserModel(): Promise<Model<UserProps>> {
