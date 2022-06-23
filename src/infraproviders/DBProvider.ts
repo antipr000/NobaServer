@@ -27,23 +27,23 @@ export class DBProvider {
     Mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
   }
 
-  get userModel(): Model<UserProps> {
+  getUserModel(): Model<UserProps> {
     return UserModel;
   }
 
-  get transactionModel(): Model<TransactionProps> {
+  getTransactionModel(): Model<TransactionProps> {
     return TransactionModel;
   }
 
-  get partnerModel(): Model<PartnerProps> {
+  getPartnerModel(): Model<PartnerProps> {
     return PartnerModel;
   }
 
-  get partnerAdminModel(): Model<PartnerAdminProps> {
+  getPartnerAdminModel(): Model<PartnerAdminProps> {
     return PartnerAdminModel;
   }
 
-  get adminModel(): Model<AdminProps> {
+  getAdminModel(): Model<AdminProps> {
     return AdminModel;
   }
 }
