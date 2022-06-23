@@ -157,7 +157,9 @@ describe("AdminController", () => {
       });
       const retrievedAdmin: Admin = await adminTransactionRepo.updateNobaAdmin(updatedAdmin);
 
-      expect(retrievedAdmin).toEqual(updatedAdmin);
+      const allDocumentsInAdmin = await getAllRecordsInAdminCollection(adminCollection);
+      expect(allDocumentsInAdmin).toHaveLength(1);
+      expect(retrievedAdmin).toEqual(allDocumentsInAdmin[0]);
     });
 
     it("should throw 'NotFoundException' if the 'Admin' with given email not found", async () => {
