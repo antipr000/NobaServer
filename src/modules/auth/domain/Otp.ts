@@ -1,9 +1,8 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { allIdentities } from "./IdentityType";
-import { randomUUID } from "crypto";
 
 export interface OtpProps extends VersioningInfo {
   _id: string;
@@ -15,7 +14,7 @@ export interface OtpProps extends VersioningInfo {
 
 export const otpValidationKeys: KeysRequired<OtpProps> = {
   ...versioningInfoJoiSchemaKeys,
-  _id: Joi.string().default(randomUUID()),
+  _id: Joi.string().required(),
   emailOrPhone: Joi.string().required(),
   otp: Joi.number().required(),
   otpExpiryTime: Joi.number().required(),
@@ -29,7 +28,8 @@ export class Otp extends AggregateRoot<OtpProps> {
     super(otpProps);
   }
 
-  public static createOtp(otpProps: OtpProps): Otp {
+  public static createOtp(otpProps: Partial<OtpProps>): Otp {
+    if (!otpProps._id) otpProps._id = Entity.getNewID();
     return new Otp(Joi.attempt(otpProps, otpJoiSchema));
   }
 }

@@ -148,7 +148,7 @@ describe("Partner and Partner Admin end to end tests", () => {
     // Find otp from db
     const getOtpResponse = Otp.createOtp(
       await OtpModel.findOne({
-        _id: partnerAdminWithAllAccess.props.email,
+        emailOrPhone: partnerAdminWithAllAccess.props.email,
         identityType: "PARTNER_ADMIN",
       }).exec(),
     );

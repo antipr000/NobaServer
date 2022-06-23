@@ -5,7 +5,6 @@ import { OtpMapper } from "../mapper/OtpMapper";
 import { otpConstants } from "../constants";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { convertDBResponseToJsObject } from "../../../../src/infra/mongodb/MongoDBUtils";
-import { randomUUID } from "crypto";
 
 @Injectable()
 export class MongoDBOtpRepo implements IOTPRepo {
@@ -28,18 +27,17 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   async saveOTP(emailID: string, otp: number, identityType: string): Promise<void> {
     const expiryTime = new Date(new Date().getTime() + otpConstants.EXPIRY_TIME_IN_MINUTES * 60000);
-    const otpProps: OtpProps = {
-      _id: randomUUID(),
+    const otpInstance = Otp.createOtp({
       emailOrPhone: emailID,
       otp: otp,
       otpExpiryTime: expiryTime.getTime(),
       identityType: identityType,
-    };
+    });
     try {
-      await OtpModel.create(otpProps);
+      await OtpModel.create(otpInstance.props);
     } catch (e) {
       // Already exists. We should update now
-      await OtpModel.findByIdAndUpdate(emailID, otpProps);
+      await OtpModel.findByIdAndUpdate(emailID, otpInstance.props);
     }
   }
 
