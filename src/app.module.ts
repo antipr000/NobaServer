@@ -1,4 +1,4 @@
-import { Module, NestModule } from "@nestjs/common";
+import { CacheModule, Module, NestModule } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { MiddlewareConsumer } from "@nestjs/common";
@@ -18,6 +18,7 @@ import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 
 @Module({
   imports: [
+    CacheModule.register(),
     getAppConfigModule(),
     getWinstonModule(),
     InfraProvidersModule,
