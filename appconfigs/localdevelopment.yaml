@@ -36,5 +36,5 @@ twilio:
   fromPhoneNumber: "+19894557345"
 
 mongo:
-  awsSecretNameForUri: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  uri: "mongodb+srv://nobamongo:NobaMongo@cluster0.wjsia.mongodb.net/devdb"
+  awsSecretNameForUri: "TEST_MONGO_URI" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  uri: ""
