@@ -8,4 +8,4 @@ async function main() {
   await app.listen(port);
 }
 
-main()
+main();

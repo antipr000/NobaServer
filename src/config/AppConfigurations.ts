@@ -62,35 +62,35 @@ export default async function loadAppConfigs() {
 
   /**
    * "CONFIG_DIR" environment variable denotes the 'path to the YAML configuration file'.
-   * 
+   *
    * If "CONFIG_DIR" environment variable is not set,
    *    Assumption is that the code is getting executed from the COMPILED 'dist/' filder.
-   * 
+   *
    *    Hence, '__dirname' will resolve to 'dist/' folder and as 'appconfigs/' directory
-   *    is present in the same folder as 'main.js' in the 'dist/' folder as per the 
-   *    configuration of the 'assets' rule in 'nest-cli.json' file. 
-   * 
+   *    is present in the same folder as 'main.js' in the 'dist/' folder as per the
+   *    configuration of the 'assets' rule in 'nest-cli.json' file.
+   *
    */
   const configsDir = process.env["CONFIGS_DIR"] ?? join(__dirname, "appconfigs");
 
   const mainPropertyFile = join(configsDir, configFileName);
 
   /**
-   * There can be extra properties that you might not want to put in the root configuration files. 
-   * 
+   * There can be extra properties that you might not want to put in the root configuration files.
+   *
    * One reason for doing so can be that you don't want to push those changes in the source control
-   * directory. 
-   * For example, 
+   * directory.
+   * For example,
    *    all the VENDOR CREDENTIALS stored in the YAML files (staging.yaml or production.yaml)
-   *    are actually a reference to AWS SECRETS MANAGER so that you can avoid pushing them to  
-   *    your source control repository. 
+   *    are actually a reference to AWS SECRETS MANAGER so that you can avoid pushing them to
+   *    your source control repository.
    * BUT where will you store AWS CLIENT_ID & CLIENT_SECRET to actually connect to AWS SECRETS MANAGER?
-   * You can't hardcode them as it'll anyways leak all the SECRETS in SECRETS MANAGER. 
-   * 
-   * So, you have to configure them separately in environment variables. But setting these 
+   * You can't hardcode them as it'll anyways leak all the SECRETS in SECRETS MANAGER.
+   *
+   * So, you have to configure them separately in environment variables. But setting these
    *    ENV variables everytime you do a new terminal will slow down & to be fast you'll store
-   *    these credentials somewhere where it is very handy WHCIH INCREASES RISK. 
-   * 
+   *    these credentials somewhere where it is very handy WHCIH INCREASES RISK.
+   *
    * For avoiding this, we have "secrets.yaml" which is already added in '.gitignore' and you can
    *    configure any such secret credential in "secrets.yaml" and it will be applied during app startup.
    */
@@ -151,7 +151,10 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
   return configs;
 }
 
-async function configureAllVendorCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureAllVendorCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
   const vendorCredentialConfigurators = [
     configureSendgridCredentials,
     configureTruliooCredentials,
@@ -165,7 +168,10 @@ async function configureAllVendorCredentials(environment: AppEnvironment, config
   return configs;
 }
 
-async function configureStripeCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureStripeCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
   const stripeConfigs: StripeConfigs = configs[STRIPE_CONFIG_KEY];
 
   if (stripeConfigs === undefined) {
@@ -183,7 +189,10 @@ async function configureStripeCredentials(environment: AppEnvironment, configs: 
   return configs;
 }
 
-async function configureTwilioCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureTwilioCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
   const twilioConfigs: TwilioConfigs = configs[TWILIO_CONFIG_KEY];
 
   if (twilioConfigs === undefined) {
@@ -204,7 +213,10 @@ async function configureTwilioCredentials(environment: AppEnvironment, configs: 
   return configs;
 }
 
-async function configureTruliooCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureTruliooCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
   const truliooConfigs: TruliooConfigs = configs[TRULIOO_CONFIG_KEY];
 
   if (truliooConfigs === undefined) {
@@ -230,7 +242,10 @@ async function configureTruliooCredentials(environment: AppEnvironment, configs:
   return configs;
 }
 
-async function configureSendgridCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureSendgridCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
   const sendgridConfigs: SendGridConfigs = configs[SENDGRID_CONFIG_KEY];
 
   if (sendgridConfigs === undefined) {
@@ -248,13 +263,17 @@ async function configureSendgridCredentials(environment: AppEnvironment, configs
   return configs;
 }
 
-async function configureMongoCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureMongoCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
   let mongoConfigs: MongoConfigs = configs[MONGO_CONFIG_KEY];
 
   if (environment === AppEnvironment.E2E_TEST) {
     if (!isPropertyPresentInEnvironmentVariables(MONGO_URI_ENV_KEY)) {
-      const errorMessage =
-        `\n'Mongo' configurations are required. Please configure '${MONGO_URI_ENV_KEY}' in environment varaible. current is ${JSON.stringify(process.env)}`;
+      const errorMessage = `\n'Mongo' configurations are required. Please configure '${MONGO_URI_ENV_KEY}' in environment varaible. current is ${JSON.stringify(
+        process.env,
+      )}`;
 
       throw Error(errorMessage);
     }

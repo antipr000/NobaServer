@@ -101,7 +101,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   SwaggerModule.setup("noba-api-internal", app, swaggerDocumentPrivate);
 
   return app;
-}
+};
 
 function generateSwaggerDoc(
   filename: string,
