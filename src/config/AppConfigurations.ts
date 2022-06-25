@@ -14,9 +14,12 @@ import {
   AWS_SECRET_ACCESS_KEY_ENV_VARIABLE,
   getEnvironmentName,
   getParameterValue,
+  getPropertyFromEvironment,
+  isPropertyPresentInEnvironmentVariables,
   MONGO_AWS_SECRET_KEY_FOR_URI_ATTR,
   MONGO_CONFIG_KEY,
   MONGO_URI,
+  MONGO_URI_ENV_KEY,
   resetPropertyFromEnvironment,
   SENDGRID_API_KEY,
   SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
@@ -48,6 +51,7 @@ const envNameToPropertyFileNameMap = {
   [AppEnvironment.DEV]: "localdevelopment.yaml",
   [AppEnvironment.PROD]: "production.yaml",
   [AppEnvironment.STAGING]: "staging.yaml",
+  [AppEnvironment.E2E_TEST]: "e2e_test.yaml",
 } as const;
 
 export default async function loadAppConfigs() {
@@ -56,26 +60,49 @@ export default async function loadAppConfigs() {
   const environment: AppEnvironment = getEnvironmentName();
   const configFileName = envNameToPropertyFileNameMap[environment];
 
-  // if custom path not given then look for the configs in the dist folder, __dirname will resolve to dist folder as this file will in main.js generated javascript file
-  // and we putting configs directory in dist folder see nest-cli.json file
+  /**
+   * "CONFIG_DIR" environment variable denotes the 'path to the YAML configuration file'.
+   * 
+   * If "CONFIG_DIR" environment variable is not set,
+   *    Assumption is that the code is getting executed from the COMPILED 'dist/' filder.
+   * 
+   *    Hence, '__dirname' will resolve to 'dist/' folder and as 'appconfigs/' directory
+   *    is present in the same folder as 'main.js' in the 'dist/' folder as per the 
+   *    configuration of the 'assets' rule in 'nest-cli.json' file. 
+   * 
+   */
   const configsDir = process.env["CONFIGS_DIR"] ?? join(__dirname, "appconfigs");
 
-  // //comma separated list of absolute paths to override config files which can be used to override configs from main property file, file coming in the last overrides previous files
-  // const overrideFilesPaths = process.env["CONFIGS_OVERRIDE_FILES"]?.split(",") ?? [];
-
   const mainPropertyFile = join(configsDir, configFileName);
-  const extraSecretsFiles = [];
 
+  /**
+   * There can be extra properties that you might not want to put in the root configuration files. 
+   * 
+   * One reason for doing so can be that you don't want to push those changes in the source control
+   * directory. 
+   * For example, 
+   *    all the VENDOR CREDENTIALS stored in the YAML files (staging.yaml or production.yaml)
+   *    are actually a reference to AWS SECRETS MANAGER so that you can avoid pushing them to  
+   *    your source control repository. 
+   * BUT where will you store AWS CLIENT_ID & CLIENT_SECRET to actually connect to AWS SECRETS MANAGER?
+   * You can't hardcode them as it'll anyways leak all the SECRETS in SECRETS MANAGER. 
+   * 
+   * So, you have to configure them separately in environment variables. But setting these 
+   *    ENV variables everytime you do a new terminal will slow down & to be fast you'll store
+   *    these credentials somewhere where it is very handy WHCIH INCREASES RISK. 
+   * 
+   * For avoiding this, we have "secrets.yaml" which is already added in '.gitignore' and you can
+   *    configure any such secret credential in "secrets.yaml" and it will be applied during app startup.
+   */
+  const extraSecretsFiles = [];
   if (fs.existsSync(join(configsDir, "secrets.yaml"))) {
     extraSecretsFiles.push(join(configsDir, "secrets.yaml"));
   }
 
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
-  //merge configs with override files
 
-  //TODO if needed merge configs here with environment variable configs (some variables may be coming from secrets manager)
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
-  const finalConfigs = await configureAllVendorCredentials(updatedAwsConfigs);
+  const finalConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
 
   //validate configs
   return Joi.attempt(finalConfigs, appConfigsJoiValidationSchema);
@@ -124,7 +151,21 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
   return configs;
 }
 
-async function configureStripeCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureAllVendorCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+  const vendorCredentialConfigurators = [
+    configureSendgridCredentials,
+    configureTruliooCredentials,
+    configureTwilioCredentials,
+    configureStripeCredentials,
+    configureMongoCredentials,
+  ];
+  for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
+    configs = await vendorCredentialConfigurators[i](environment, configs);
+  }
+  return configs;
+}
+
+async function configureStripeCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
   const stripeConfigs: StripeConfigs = configs[STRIPE_CONFIG_KEY];
 
   if (stripeConfigs === undefined) {
@@ -142,7 +183,7 @@ async function configureStripeCredentials(configs: Record<string, any>): Promise
   return configs;
 }
 
-async function configureTwilioCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureTwilioCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
   const twilioConfigs: TwilioConfigs = configs[TWILIO_CONFIG_KEY];
 
   if (twilioConfigs === undefined) {
@@ -163,7 +204,7 @@ async function configureTwilioCredentials(configs: Record<string, any>): Promise
   return configs;
 }
 
-async function configureTruliooCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureTruliooCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
   const truliooConfigs: TruliooConfigs = configs[TRULIOO_CONFIG_KEY];
 
   if (truliooConfigs === undefined) {
@@ -189,7 +230,7 @@ async function configureTruliooCredentials(configs: Record<string, any>): Promis
   return configs;
 }
 
-async function configureSendgridCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
+async function configureSendgridCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
   const sendgridConfigs: SendGridConfigs = configs[SENDGRID_CONFIG_KEY];
 
   if (sendgridConfigs === undefined) {
@@ -207,8 +248,21 @@ async function configureSendgridCredentials(configs: Record<string, any>): Promi
   return configs;
 }
 
-async function configureMongoCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
-  const mongoConfigs: MongoConfigs = configs[MONGO_CONFIG_KEY];
+async function configureMongoCredentials(environment: AppEnvironment, configs: Record<string, any>): Promise<Record<string, any>> {
+  let mongoConfigs: MongoConfigs = configs[MONGO_CONFIG_KEY];
+
+  if (environment === AppEnvironment.E2E_TEST) {
+    if (!isPropertyPresentInEnvironmentVariables(MONGO_URI_ENV_KEY)) {
+      const errorMessage =
+        `\n'Mongo' configurations are required. Please configure '${MONGO_URI_ENV_KEY}' in environment varaible. current is ${JSON.stringify(process.env)}`;
+
+      throw Error(errorMessage);
+    }
+
+    mongoConfigs = {} as MongoConfigs;
+    mongoConfigs.uri = getPropertyFromEvironment(MONGO_URI_ENV_KEY);
+    mongoConfigs.awsSecretNameForUri = undefined;
+  }
 
   if (mongoConfigs === undefined) {
     const errorMessage =
@@ -222,19 +276,5 @@ async function configureMongoCredentials(configs: Record<string, any>): Promise<
   mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
 
   configs[MONGO_CONFIG_KEY] = mongoConfigs;
-  return configs;
-}
-
-async function configureAllVendorCredentials(configs: Record<string, any>): Promise<Record<string, any>> {
-  const vendorCredentialConfigurators = [
-    configureSendgridCredentials,
-    configureTruliooCredentials,
-    configureTwilioCredentials,
-    configureStripeCredentials,
-    configureMongoCredentials,
-  ];
-  for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
-    configs = await vendorCredentialConfigurators[i](configs);
-  }
   return configs;
 }
