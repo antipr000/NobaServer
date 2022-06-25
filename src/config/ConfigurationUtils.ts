@@ -5,6 +5,7 @@ export enum AppEnvironment {
   DEV = "development",
   PROD = "production",
   STAGING = "staging",
+  E2E_TEST = "e2e_test",
 }
 
 export const NODE_ENV_CONFIG_KEY = "NODE_ENV";
@@ -47,6 +48,7 @@ export const SENDGRID_API_KEY = "apiKey";
 export const MONGO_CONFIG_KEY = "mongo";
 export const MONGO_AWS_SECRET_KEY_FOR_URI_ATTR = "awsSecretNameForUri";
 export const MONGO_URI = "uri";
+export const MONGO_URI_ENV_KEY = "MONGO_URI";
 
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),

@@ -1,13 +1,20 @@
 import { ConfigModule } from "@nestjs/config";
 import loadAppConfigs from "../../config/AppConfigurations";
 
-export async function getAppConfigModule() {
-  //https://docs.nestjs.com/techniques/configuration
-  const appConfigurations = await loadAppConfigs();
+// https://docs.nestjs.com/techniques/configuration
 
+export async function getAppConfigModule() {
   return ConfigModule.forRoot({
-    ignoreEnvFile: true, //we don't use .env, .env.local etc. in this project and we rely that props should either come from yaml files or env variables
-    load: [() => appConfigurations], //load configurations from yaml files
-    isGlobal: true, //marking as global so won't have to import in each module separately
+    /**
+     * ".env", ".env.local" is not used in this project.
+     * All th configurations comes from YAML files or ENV variables.
+     */
+    ignoreEnvFile: true,
+
+    // load configurations from yaml files
+    load: [async () => loadAppConfigs()],
+
+    // Marking as global avoid to import the Configs in each module separately
+    isGlobal: true,
   });
 }

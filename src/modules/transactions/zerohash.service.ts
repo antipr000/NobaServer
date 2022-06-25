@@ -3,7 +3,7 @@
 
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { BadRequestError } from "src/core/exception/CommonAppException";
+import { BadRequestError } from "../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { Web3TransactionHandler } from "../common/domain/Types";
 
