@@ -12,7 +12,7 @@ describe("Authentication", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let baseUrl: string;
-  let app: INestApplication
+  let app: INestApplication;
 
   beforeEach(async () => {
     // Spin up an in-memory mongodb server
@@ -23,7 +23,7 @@ describe("Authentication", () => {
     const environmentVaraibles = {
       MONGO_URI: mongoUri,
       CONFIGS_DIR: join(__dirname, "../appconfigs"),
-    }
+    };
     app = await bootstrap(environmentVaraibles);
     const port = 9000 + Math.floor(Math.random() * 100);
     await app.listen(port);
@@ -50,18 +50,18 @@ describe("Authentication", () => {
       const consumerEmail = "test+consumer@noba.com";
 
       const loginRequest = {
-        "email": consumerEmail,
-        "identityType": "CONSUMER"
+        email: consumerEmail,
+        identityType: "CONSUMER",
       };
       const loginResponse = await axios.post("/login", loginRequest);
       expect(loginResponse.status).toBe(201);
 
       const verifyOtpRequest = {
-        "emailOrPhone": consumerEmail,
-        "otp": await fetchOtpFromDb(mongoUri, consumerEmail, 'CONSUMER'),
-        "identityType": "CONSUMER"
+        emailOrPhone: consumerEmail,
+        otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
+        identityType: "CONSUMER",
       };
-      const verifyOtpResponse = await axios.post('verifyotp', verifyOtpRequest);
+      const verifyOtpResponse = await axios.post("verifyotp", verifyOtpRequest);
       const accessToken = verifyOtpResponse.data.access_token;
       const userId = verifyOtpResponse.data.user_id;
 
@@ -70,7 +70,7 @@ describe("Authentication", () => {
       expect(userId).toBeDefined();
 
       const currentUserResponse = await axios.get("/currentUser", {
-        headers: { "Authorization": `Bearer ${accessToken}` }
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
       expect(currentUserResponse.status).toBe(200);
       expect(currentUserResponse.data.email).toBe(consumerEmail);
