@@ -2,12 +2,13 @@ import * as winston from "winston";
 import { utilities as nestWinstonModuleUtilities, WinstonModule } from "nest-winston";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { SERVER_LOG_FILE_PATH } from "../../config/ConfigurationUtils";
+import { CustomConfigService } from "./AppConfigModule";
 
 export function getWinstonModule() {
   return WinstonModule.forRootAsync({
     imports: [ConfigModule],
-    inject: [ConfigService],
-    useFactory: async (configService: ConfigService) => {
+    inject: [CustomConfigService],
+    useFactory: async (configService: CustomConfigService) => {
       const logFilePath = configService.get<string>(SERVER_LOG_FILE_PATH);
 
       const winstonFormat = winston.format.combine(

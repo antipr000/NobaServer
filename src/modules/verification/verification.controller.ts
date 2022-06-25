@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Request } from 
 import { ConfigService } from "@nestjs/config";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { Status } from "../../externalclients/idvproviders/definitions";
 import IDVIntegrator from "../../externalclients/idvproviders/IDVIntegrator";
@@ -30,7 +31,7 @@ export class VerificationController {
   constructor(
     private readonly verificationService: VerificationService,
     private readonly userService: UserService,
-    private readonly configService: ConfigService,
+    private readonly configService: CustomConfigService,
   ) {
     this.idvProvider = new TruliooIntegrator(configService);
   }

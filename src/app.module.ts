@@ -5,7 +5,7 @@ import { MiddlewareConsumer } from "@nestjs/common";
 import { AuthModule } from "./modules/auth/auth.module";
 import { APP_GUARD } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
-import { getAppConfigModule } from "./core/utils/AppConfigModule";
+import { CustomConfigModule, DynamicCustomConfigModule, getAppConfigModule } from "./core/utils/AppConfigModule";
 import { getWinstonModule } from "./core/utils/WinstonModule";
 import { InfraProvidersModule } from "./infraproviders/infra.module";
 import { UserModule } from "./modules/user/user.module";
@@ -18,7 +18,9 @@ import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 
 @Module({
   imports: [
-    getAppConfigModule(),
+    CustomConfigModule,
+    // getAppConfigModule(),
+    // DynamicCustomConfigModule.registerAsync(),
     getWinstonModule(),
     InfraProvidersModule,
     CommonModule,
@@ -39,8 +41,4 @@ import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
     },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    //
-  }
-}
+export class AppModule { }

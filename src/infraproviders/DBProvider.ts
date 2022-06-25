@@ -18,6 +18,7 @@ import { MongoConfigs } from "../config/configtypes/MongoConfigs";
 import { MONGO_CONFIG_KEY } from "../config/ConfigurationUtils";
 import { OtpModel } from "../infra/mongodb/models/OtpModel";
 import { OtpProps } from "../modules/auth/domain/Otp";
+import { CustomConfigService } from "../core/utils/AppConfigModule";
 
 @Injectable()
 export class DBProvider {
@@ -25,7 +26,7 @@ export class DBProvider {
   private readonly logger: Logger;
 
   @Inject()
-  private readonly configService: ConfigService;
+  private readonly configService: CustomConfigService;
 
   private isConnectedToDb = false;
 

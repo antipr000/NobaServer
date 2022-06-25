@@ -13,6 +13,7 @@ import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { DocumentTypes, Status } from "../../externalclients/idvproviders/definitions";
 import { VerificationStatusDTO } from "./dto/VerificationStatusDTO";
 import { VerificationStatusType } from "../user/domain/Types";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 @Injectable()
 export class VerificationService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -20,7 +21,7 @@ export class VerificationService {
 
   private readonly idvProvider: IDVIntegrator;
 
-  constructor(private userService: UserService, private readonly configService: ConfigService) {
+  constructor(private userService: UserService, private readonly configService: CustomConfigService) {
     this.idvProvider = new TruliooIntegrator(configService);
   }
 

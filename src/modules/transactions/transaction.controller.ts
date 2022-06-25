@@ -23,6 +23,7 @@ import * as fs from "fs";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -34,9 +35,9 @@ export class TransactionController {
 
   constructor(
     private readonly transactionService: TransactionService,
-    private readonly configService: ConfigService,
+    private readonly configService: CustomConfigService,
     private readonly limitsService: LimitsService,
-  ) {}
+  ) { }
 
   @Get("/status/:transactionId")
   @ApiOperation({ summary: "Get transaction details for a given transactionID" })
