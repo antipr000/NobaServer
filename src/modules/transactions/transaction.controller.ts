@@ -37,7 +37,7 @@ export class TransactionController {
     private readonly transactionService: TransactionService,
     private readonly configService: CustomConfigService,
     private readonly limitsService: LimitsService,
-  ) { }
+  ) {}
 
   @Get("/status/:transactionId")
   @ApiOperation({ summary: "Get transaction details for a given transactionID" })

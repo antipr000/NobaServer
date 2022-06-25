@@ -6,9 +6,9 @@ import loadAppConfigs from "../../config/AppConfigurations";
 
 export async function getAppConfigModule() {
   const configModuleOptions = async (): Promise<ConfigModuleOptions> => {
-    console.log('Loading all the configs .... configModuleOptions is executed ...');
+    console.log("Loading all the configs .... configModuleOptions is executed ...");
     const configs = await loadAppConfigs();
-    console.log('LOADED all the configs .... configModuleOptions is executed ...');
+    console.log("LOADED all the configs .... configModuleOptions is executed ...");
     return {
       /**
        * ".env", ".env.local" is not used in this project.
@@ -21,25 +21,24 @@ export async function getAppConfigModule() {
 
       // Marking as global avoid to import the Configs in each module separately
       isGlobal: true,
-    }
+    };
   };
 
   return ConfigModule.forRoot(await configModuleOptions());
 }
 
-
 export class CustomConfigService extends ConfigService {
   constructor(configs) {
-    super(configs)
+    super(configs);
   }
 }
 
 const getConfigService = async () => {
-  console.log('Loading all the configs ...');
+  console.log("Loading all the configs ...");
   const configs = await loadAppConfigs();
-  console.log('LOADED all the configs!');
+  console.log("LOADED all the configs!");
   return new CustomConfigService(configs);
-}
+};
 
 @Global()
 @Module({
@@ -47,13 +46,12 @@ const getConfigService = async () => {
   providers: [
     {
       provide: CustomConfigService,
-      useFactory: getConfigService
-    }
+      useFactory: getConfigService,
+    },
   ],
-  exports: [CustomConfigService]
+  exports: [CustomConfigService],
 })
-export class CustomConfigModule { }
-
+export class CustomConfigModule {}
 
 @Module({})
 export class DynamicCustomConfigModule {
@@ -63,11 +61,11 @@ export class DynamicCustomConfigModule {
       providers: [
         {
           provide: CustomConfigService,
-          useFactory: getConfigService
-        }
+          useFactory: getConfigService,
+        },
       ],
       exports: [CustomConfigService],
-      global: true
+      global: true,
     };
   }
 }
