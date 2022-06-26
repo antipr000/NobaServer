@@ -36,23 +36,23 @@ export function getWinstonModule() {
 
 /**
  * A 'WinstonModule' used for logging only to Console.
- * This module is supposed to be used in unit-tests. 
- * 
+ * This module is supposed to be used in unit-tests.
+ *
  * The original 'WinstonModule' can be much richer & might have
- * functionality which a test wouldn't want. A simple example could 
- * be - In real production setup, you may want your `WinstonModule` 
- * to write your logs to some external systems as well 
- * (eg - a file, CloudWatch, etc). 
- * But a test wouldn't need all these log transfers because - 
- *   - It will require your tests to know the production secrets 
+ * functionality which a test wouldn't want. A simple example could
+ * be - In real production setup, you may want your `WinstonModule`
+ * to write your logs to some external systems as well
+ * (eg - a file, CloudWatch, etc).
+ * But a test wouldn't need all these log transfers because -
+ *   - It will require your tests to know the production secrets
  *      like AWS Secrets for transferring logs to CloudWatch.
  *   - Tests would be connecting to external dependencies & hence can be flaky.
  *      For example:
  *        -  If AWS secrets are configured correctly in local env
- *           but in github actions, these secrets have improper values. 
+ *           but in github actions, these secrets have improper values.
  *        - If the external dependencies is down, the tests would fail.
  *   - Runtime of the tests will increase as it is connecting to external
- *      dependencies. 
+ *      dependencies.
  */
 export function getTestWinstonModule() {
   return WinstonModule.forRoot({
