@@ -28,8 +28,8 @@ describe("UserService", () => {
       imports: [
         TestConfigModule.registerAsync({
           [STRIPE_CONFIG_KEY]: {
-            [STRIPE_SECRET_KEY]: "Dummy Stripe Secret"
-          }
+            [STRIPE_SECRET_KEY]: "Dummy Stripe Secret",
+          },
         }),
         getTestWinstonModule(),
       ],

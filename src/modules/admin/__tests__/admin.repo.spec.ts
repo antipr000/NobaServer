@@ -66,10 +66,7 @@ describe("AdminController", () => {
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestConfigModule.registerAsync(appConfigurations),
-        getTestWinstonModule()
-      ],
+      imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
       providers: [AdminMapper, DBProvider, MongoDBAdminTransactionRepo],
     }).compile();
 

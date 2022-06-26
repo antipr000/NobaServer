@@ -36,8 +36,6 @@ export function getWinstonModule() {
 
 export function getTestWinstonModule() {
   return WinstonModule.forRoot({
-    transports: [
-      new winston.transports.Console()
-    ]
-  })
+    transports: [new winston.transports.Console()],
+  });
 }

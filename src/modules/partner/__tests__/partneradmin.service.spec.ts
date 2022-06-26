@@ -29,16 +29,9 @@ describe("PartnerService", () => {
     };
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestConfigModule.registerAsync({}),
-        getTestWinstonModule(),
-      ],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
-      providers: [
-        PartnerAdminRepoProvider,
-        PartnerAdminService,
-        UserServiceMockProvider
-      ],
+      providers: [PartnerAdminRepoProvider, PartnerAdminService, UserServiceMockProvider],
     }).compile();
 
     partnerAdminService = app.get<PartnerAdminService>(PartnerAdminService);

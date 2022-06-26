@@ -21,10 +21,7 @@ describe("PartnerService", () => {
       useFactory: () => instance(partnerRepo),
     };
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestConfigModule.registerAsync({}),
-        getTestWinstonModule()
-      ],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
       providers: [PartnerRepoProvider, PartnerService],
     }).compile();

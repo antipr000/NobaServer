@@ -20,17 +20,14 @@ describe("AdminService", () => {
     mockAdminTransactionRepo = getMockAdminTransactionRepoWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestConfigModule.registerAsync({}),
-        getTestWinstonModule(),
-      ],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       providers: [
         AdminService,
         {
           provide: "AdminTransactionRepo",
           useFactory: () => instance(mockAdminTransactionRepo),
         },
-        AdminMapper
+        AdminMapper,
       ],
     }).compile();
 

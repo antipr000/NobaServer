@@ -47,10 +47,7 @@ describe("AdminController", () => {
     mockPartnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestConfigModule.registerAsync({}),
-        getTestWinstonModule()
-      ],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [AdminController],
       providers: [
         {
