@@ -4,12 +4,13 @@ import { AdminMapper } from "../mappers/AdminMapper";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { IAdminTransactionRepo, MongoDBAdminTransactionRepo } from "../repos/transactions/AdminTransactionRepo";
 import { Admin } from "../domain/Admin";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import mongoose from "mongoose";
 import { MongoClient, Collection } from "mongodb";
 import { NotFoundException } from "@nestjs/common";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 
 const getAllRecordsInAdminCollection = async (adminCollection: Collection): Promise<Array<Admin>> => {
   const adminDocumetsCursor = await adminCollection.find({});
@@ -62,16 +63,13 @@ describe("AdminController", () => {
       },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
-
-    const configModule = ConfigModule.forRoot({
-      ignoreEnvFile: true, // don't use .env, .env.local etc.
-      load: [() => appConfigurations], // load configurations from the given objects
-      isGlobal: true, //marking as global so won't have to import in each module separately
-    });
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), configModule],
+      imports: [
+        TestConfigModule.registerAsync(appConfigurations),
+        getTestWinstonModule()
+      ],
       providers: [AdminMapper, DBProvider, MongoDBAdminTransactionRepo],
     }).compile();
 

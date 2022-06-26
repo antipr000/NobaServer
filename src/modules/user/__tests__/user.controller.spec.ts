@@ -4,8 +4,8 @@ import { UserController } from "../user.controller";
 import { UserService } from "../user.service";
 import { mockedUserService } from "../mocks/userservicemock";
 import { userID, userDTO } from "../../../core/tests/constants";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
+import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
 
 describe("UserController", () => {
   let userController: UserController;
@@ -15,17 +15,16 @@ describe("UserController", () => {
   const OLD_ENV = process.env;
 
   beforeEach(async () => {
-    process.env = {
-      ...OLD_ENV,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
     const UserServiceProvider = {
       provide: UserService,
       useFactory: () => instance(mockedUserService),
     };
+
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule()],
+      imports: [
+        TestConfigModule.registerAsync({}),
+        getTestWinstonModule(),
+      ],
       controllers: [UserController],
       providers: [UserServiceProvider],
     }).compile();

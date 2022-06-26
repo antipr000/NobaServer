@@ -1,7 +1,7 @@
 import { JwtModule } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
-import { getWinstonModule } from "../../../../src/core/utils/WinstonModule";
+import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule, getWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { AdminService } from "../../../../src/modules/admin/admin.service";
 import { getMockAdminServiceWithDefaults } from "../../../../src/modules/admin/mocks/MockAdminService";
 import { EmailService } from "../../../../src/modules/common/email.service";
@@ -36,16 +36,10 @@ describe("AdminService", () => {
     mockEmailService = getMockEmailServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
 
-    process.env = {
-      ...process.env,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
-
     const app: TestingModule = await Test.createTestingModule({
       imports: [
-        getWinstonModule(),
-        getAppConfigModule(),
+        TestConfigModule.registerAsync({}),
+        getTestWinstonModule(),
         JwtModule.register({
           secret: testJwtSecret,
           signOptions: { expiresIn: "604800s" } /* 1 week */,

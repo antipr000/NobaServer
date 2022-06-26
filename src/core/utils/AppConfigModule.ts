@@ -51,7 +51,7 @@ const getConfigService = async () => {
   ],
   exports: [CustomConfigService],
 })
-export class CustomConfigModule {}
+export class CustomConfigModule { }
 
 @Module({})
 export class DynamicCustomConfigModule {
@@ -62,6 +62,23 @@ export class DynamicCustomConfigModule {
         {
           provide: CustomConfigService,
           useFactory: getConfigService,
+        },
+      ],
+      exports: [CustomConfigService],
+      global: true,
+    };
+  }
+}
+
+@Module({})
+export class TestConfigModule {
+  static async registerAsync(envVariables: Record<string, any>): Promise<DynamicModule> {
+    return {
+      module: TestConfigModule,
+      providers: [
+        {
+          provide: CustomConfigService,
+          useFactory: () => new CustomConfigService(envVariables),
         },
       ],
       exports: [CustomConfigService],
