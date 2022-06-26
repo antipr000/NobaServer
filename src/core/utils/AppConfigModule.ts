@@ -51,7 +51,7 @@ const getConfigService = async () => {
   ],
   exports: [CustomConfigService],
 })
-export class CustomConfigModule {}
+export class CustomConfigModule { }
 
 @Module({})
 export class DynamicCustomConfigModule {
