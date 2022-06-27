@@ -10,7 +10,6 @@ import {
   Response,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import {
   ApiBadGatewayResponse,
   ApiBadRequestResponse,
@@ -22,7 +21,7 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
-import { Roles, UserID } from "../auth/roles.decorator";
+import { Roles } from "../auth/roles.decorator";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionService } from "./transaction.service";
@@ -137,8 +136,8 @@ export class TransactionController {
     description: "A CSV or PDF file containing details of all the transactions made by the user.",
   })
   async downloadTransactions(
-    @Param(UserID) userID: string,
     @Query() downloadParames: DownloadTransactionsDTO,
+    @AuthUser() authUser: User,
     @Response() response,
   ) {
     const fromDateInUTC = new Date(downloadParames.startDate).toUTCString();
@@ -146,7 +145,7 @@ export class TransactionController {
 
     let filePath = "";
     const transactions: TransactionDTO[] = await this.transactionService.getTransactionsInInterval(
-      userID,
+      authUser.props._id,
       new Date(fromDateInUTC),
       new Date(toDateInUTC),
     );
