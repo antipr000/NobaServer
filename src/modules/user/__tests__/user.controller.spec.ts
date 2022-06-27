@@ -4,8 +4,8 @@ import { UserController } from "../user.controller";
 import { UserService } from "../user.service";
 import { mockedUserService } from "../mocks/userservicemock";
 import { userID, userDTO } from "../../../core/tests/constants";
-import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 
 describe("UserController", () => {
   let userController: UserController;

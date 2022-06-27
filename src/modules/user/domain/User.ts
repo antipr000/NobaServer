@@ -3,9 +3,8 @@ import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domai
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { Entity } from "../../../core/domain/Entity";
-import { DOB } from "../../../externalclients/idvproviders/definitions";
 import { Address } from "./Address";
-import { VerificationStatusType } from "./Types";
+import { ConsumerVerificationStatus, DocumentVerificationStatus } from "./VerificationStatus";
 
 export interface UserProps extends VersioningInfo {
   _id: string;
@@ -15,25 +14,20 @@ export interface UserProps extends VersioningInfo {
   checkoutCustomerID?: string;
   phone?: string;
   isAdmin?: boolean;
-  verificationStatus?: string;
-  documentVerified?: boolean;
+  idVerificationStatus?: string;
+  documentVerificationStatus?: string;
   documentVerificationTransactionId?: string;
   idVerificationTimestamp?: number;
   documentVerificationTimestamp?: number;
-  dateOfBirth?: DOB;
+  dateOfBirth?: string;
   address?: Address;
 }
-// TODO: Schema should have required keys, object should be optional
-const dobValidationJoiKeys: KeysRequired<DOB> = {
-  date: Joi.number().optional(),
-  month: Joi.number().optional(),
-  year: Joi.number().optional(),
-};
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
-  streetName: Joi.string().optional(),
+  streetLine1: Joi.string().optional(),
+  streetLine2: Joi.string().optional(),
   city: Joi.string().optional(),
-  state: Joi.string().optional(),
+  regionCode: Joi.string().optional(),
   countryCode: Joi.string().optional(),
   postalCode: Joi.string().optional(),
 };
@@ -54,12 +48,12 @@ export const userJoiValidationKeys: KeysRequired<UserProps> = {
     .allow(null)
     .meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
   isAdmin: Joi.boolean().default(false),
-  verificationStatus: Joi.string().default(VerificationStatusType.NOT_STARTED),
-  documentVerified: Joi.boolean().default(false),
+  idVerificationStatus: Joi.string().default(ConsumerVerificationStatus.NEW),
+  documentVerificationStatus: Joi.string().default(DocumentVerificationStatus.NOT_SUBMITTED),
   documentVerificationTransactionId: Joi.string().optional(),
   idVerificationTimestamp: Joi.number().optional(),
   documentVerificationTimestamp: Joi.number().optional(),
-  dateOfBirth: Joi.object().keys(dobValidationJoiKeys).optional(),
+  dateOfBirth: Joi.string().optional(),
   address: Joi.object().keys(addressValidationJoiKeys).optional(),
 };
 

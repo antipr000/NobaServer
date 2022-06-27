@@ -38,6 +38,12 @@ import {
   TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR,
   TWILIO_CONFIG_KEY,
   TWILIO_SID,
+  SARDINE_CONFIG_KEY,
+  SARDINE_AWS_SECRET_KEY_FOR_SARDINE_CLIENT_ID_ATTR,
+  SARDINE_CLIENT_ID,
+  SARDINE_AWS_SECRET_KEY_FOR_SARDINE_SECRET_KEY_ATTR,
+  SARDINE_SECRET_KEY,
+  SARDINE_URI,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -46,6 +52,7 @@ import { TruliooConfigs } from "./configtypes/TruliooConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";
 import { StripeConfigs } from "./configtypes/StripeConfigs";
 import { MongoConfigs } from "./configtypes/MongoConfigs";
+import { SardineConfigs } from "./configtypes/SardineConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.DEV]: "localdevelopment.yaml",
@@ -161,6 +168,7 @@ async function configureAllVendorCredentials(
     configureTwilioCredentials,
     configureStripeCredentials,
     configureMongoCredentials,
+    configureSardineCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -239,6 +247,37 @@ async function configureTruliooCredentials(
   );
 
   configs[TRULIOO_CONFIG_KEY] = truliooConfigs;
+  return configs;
+}
+
+async function configureSardineCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const sardineConfigs: SardineConfigs = configs[SARDINE_CONFIG_KEY];
+
+  if (sardineConfigs === undefined) {
+    const errorMessage =
+      "\n'Sardine' configurations are required. Please configure the Sardine credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${SARDINE_CONFIG_KEY}" and populate ("${SARDINE_AWS_SECRET_KEY_FOR_SARDINE_CLIENT_ID_ATTR}" or "${SARDINE_CLIENT_ID}") AND ` +
+      `("${SARDINE_AWS_SECRET_KEY_FOR_SARDINE_SECRET_KEY_ATTR}" or "${SARDINE_SECRET_KEY}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  sardineConfigs.clientID = await getParameterValue(
+    sardineConfigs.awsSecretNameForSardineClientID,
+    sardineConfigs.clientID,
+  );
+  sardineConfigs.secretKey = await getParameterValue(
+    sardineConfigs.awsSecretNameForSardineSecretKey,
+    sardineConfigs.secretKey,
+  );
+
+  sardineConfigs.sardineBaseUri = getPropertyFromEvironment(SARDINE_URI);
+
+  configs[SARDINE_CONFIG_KEY] = sardineConfigs;
   return configs;
 }
 

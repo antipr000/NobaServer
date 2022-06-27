@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
 import {} from "aws-sdk";
 import { CsvService } from "./csv.service";
 import { EmailService } from "./email.service";

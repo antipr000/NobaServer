@@ -8,7 +8,7 @@ import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
 import { parse } from "csv";
 import { createReadStream } from "fs";
 import * as path from "path";
-import { Cache, CachingConfig } from "cache-manager";
+import { Cache } from "cache-manager";
 
 @Controller()
 export class AppController {

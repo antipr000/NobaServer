@@ -1,7 +1,7 @@
 import { JwtModule } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
-import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { getTestWinstonModule, getWinstonModule } from "../../../../src/core/utils/WinstonModule";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { AdminService } from "../../../../src/modules/admin/admin.service";
 import { getMockAdminServiceWithDefaults } from "../../../../src/modules/admin/mocks/MockAdminService";
 import { EmailService } from "../../../../src/modules/common/email.service";

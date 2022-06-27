@@ -1,7 +1,7 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { anything, capture, instance, when } from "ts-mockito";
-import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { AdminService } from "../admin.service";
 import { Admin } from "../domain/Admin";
 import { AdminController } from "../admin.controller";

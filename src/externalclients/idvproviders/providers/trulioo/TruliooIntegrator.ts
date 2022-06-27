@@ -1,5 +1,4 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { ConfigService } from "@nestjs/config";
 import { Consent, DocumentRequest, IDRequest, IDResponse, Status, Subdivision } from "../../definitions";
 import { NationalIDTypes } from "../../definitions/NationalID";
 import {

@@ -13,8 +13,8 @@ import { getMockSmsServiceWithDefaults } from "../modules/common/mocks/mock.sms.
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "../modules/auth/jwt-auth.guard";
 import { DBProvider } from "../infraproviders/DBProvider";
-import { CustomConfigModule, getAppConfigModule, TestConfigModule } from "../core/utils/AppConfigModule";
-import { getTestWinstonModule, getWinstonModule } from "../core/utils/WinstonModule";
+import { CustomConfigModule } from "../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../core/utils/WinstonModule";
 import { INestApplication } from "@nestjs/common";
 import { PartnerAdmin } from "../modules/partner/domain/PartnerAdmin";
 import { Partner } from "../modules/partner/domain/Partner";
