@@ -36,9 +36,9 @@ export class NoUnExpectedKeysValidationPipe implements PipeTransform<any> {
       const classType = argumentMetaData.metatype.name;
       if (!this.classTypeToPropertiesMap[classType]) {
         console.warn(
-          "Didn't find any type definition for api argument type:" +
+          "Didn't find any type definition for api argument type: '" +
             classType +
-            "for controller function arguments we expect some types as we don't want to accepty 'any' object as that may cause serious security issues if the services are not validating the full object before processing. Remove any type from controller function argument! and have well defined type!",
+            "'. For controller function arguments we expect types as we don't want to accepty 'any' object, which may cause serious security issues if the services are not validating the full object before processing. Remove 'any' type from controller function argument and use well-defined type instead.",
         );
         return apiRequestArgument; //return original as this is unknown type and its a mistake from our developers
       } else {
