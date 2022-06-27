@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Twilio } from "twilio";
 import { TwilioConfigs } from "../../config/configtypes/TwilioConfigs";
 import { TWILIO_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -9,7 +10,7 @@ export class SMSService {
   private readonly twilioClient;
   private readonly twilioConfigs: TwilioConfigs;
 
-  constructor(configService: ConfigService) {
+  constructor(configService: CustomConfigService) {
     this.twilioConfigs = configService.get<TwilioConfigs>(TWILIO_CONFIG_KEY);
     this.twilioClient = new Twilio(this.twilioConfigs.SID, this.twilioConfigs.authToken);
     // console.log("print twilio configs", this.twilioConfigs);

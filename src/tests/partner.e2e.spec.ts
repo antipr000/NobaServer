@@ -12,8 +12,8 @@ import { getMockSmsServiceWithDefaults } from "../modules/common/mocks/mock.sms.
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "../modules/auth/jwt-auth.guard";
 import { DBProvider } from "../infraproviders/DBProvider";
-import { getAppConfigModule } from "../core/utils/AppConfigModule";
-import { getWinstonModule } from "../core/utils/WinstonModule";
+import { CustomConfigModule, getAppConfigModule, TestConfigModule } from "../core/utils/AppConfigModule";
+import { getTestWinstonModule, getWinstonModule } from "../core/utils/WinstonModule";
 import { INestApplication } from "@nestjs/common";
 import { PartnerAdmin } from "../modules/partner/domain/PartnerAdmin";
 import { Partner } from "../modules/partner/domain/Partner";
@@ -63,6 +63,7 @@ describe("Partner and Partner Admin end to end tests", () => {
     takeRate: 20,
   });
 
+  // TODO: Evaluate whether 'CustomConfigModule' is required or can be replaced with 'TestConfigModule'
   beforeEach(async done => {
     process.env = {
       ...OLD_ENV,
@@ -79,8 +80,8 @@ describe("Partner and Partner Admin end to end tests", () => {
         PartnerModule,
         AuthModule,
         UserModule,
-        getWinstonModule(),
-        getAppConfigModule(),
+        CustomConfigModule,
+        getTestWinstonModule(),
         JwtModule.register({
           secret: testJwtSecret,
           signOptions: { expiresIn: "604800s" } /* 1 week */,

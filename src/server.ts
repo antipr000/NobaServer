@@ -18,6 +18,7 @@ import { writeFileSync } from "fs";
 import { UserModule } from "./modules/user/user.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
+import { CustomConfigService } from "./core/utils/AppConfigModule";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
@@ -27,12 +28,12 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     const environmentKey = environmentKeys[i];
     process.env[environmentKey] = environmentVariables[environmentKey];
   }
-
+  console.log("Going to load 'AppModule' ...");
   const app = await NestFactory.create(AppModule);
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
-  const configService = app.get(ConfigService);
+  const configService = app.get(CustomConfigService);
 
   const apiPrefix = configService.get<string>("apiPrefix");
   const appEnvType = configService.get<string>("envType");

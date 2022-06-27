@@ -4,38 +4,41 @@ import { UserController } from "../user.controller";
 import { UserService } from "../user.service";
 import { mockedUserRepo } from "../mocks/userrepomock";
 import { userID, userDTO, userEmail } from "../../../core/tests/constants";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IUserRepo } from "../repos/UserRepo";
-import { CommonModule } from "../../common/common.module";
 import { StripeService } from "../../common/stripe.service";
 import { User } from "../domain/User";
+import { STRIPE_CONFIG_KEY, STRIPE_SECRET_KEY } from "../../../config/ConfigurationUtils";
 
 describe("UserService", () => {
   let userService: UserService;
   let userRepo: IUserRepo;
 
   jest.setTimeout(30000);
-  const OLD_ENV = process.env;
 
   beforeEach(async () => {
-    process.env = {
-      ...OLD_ENV,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
     const UserRepoProvider = {
-      provide: IUserRepo,
+      provide: "IUserRepo",
       useFactory: () => instance(mockedUserRepo),
     };
+
+    // TODO: Add mock for 'StripeService'
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule(), CommonModule],
+      imports: [
+        TestConfigModule.registerAsync({
+          [STRIPE_CONFIG_KEY]: {
+            [STRIPE_SECRET_KEY]: "Dummy Stripe Secret",
+          },
+        }),
+        getTestWinstonModule(),
+      ],
       controllers: [UserController],
       providers: [UserRepoProvider, UserService, StripeService],
     }).compile();
 
     userService = app.get<UserService>(UserService);
-    userRepo = app.get<IUserRepo>(IUserRepo);
+    userRepo = app.get<IUserRepo>("IUserRepo");
   });
 
   describe("user service tests", () => {

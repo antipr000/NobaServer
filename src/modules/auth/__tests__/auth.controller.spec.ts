@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
+import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, instance, when } from "ts-mockito";
 import { AdminAuthService } from "../admin.auth.service";
 import { UserAuthService } from "../user.auth.service";
@@ -31,14 +31,8 @@ describe("AdminService", () => {
     mockConsumerAuthService = getMockUserAuthServiceWithDefaults();
     mockPartnerAuthService = getMockPartnerAuthServiceWithDefaults();
 
-    process.env = {
-      ...process.env,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
-
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule()],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [AuthController],
       providers: [
         {

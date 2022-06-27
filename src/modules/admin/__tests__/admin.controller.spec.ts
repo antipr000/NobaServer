@@ -1,7 +1,7 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { anything, capture, instance, when } from "ts-mockito";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
+import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { AdminService } from "../admin.service";
 import { Admin } from "../domain/Admin";
 import { AdminController } from "../admin.controller";
@@ -47,7 +47,7 @@ describe("AdminController", () => {
     mockPartnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule()],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [AdminController],
       providers: [
         {

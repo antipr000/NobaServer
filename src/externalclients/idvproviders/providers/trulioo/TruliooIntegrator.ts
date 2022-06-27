@@ -14,13 +14,14 @@ import IDVIntegrator from "../../IDVIntegrator";
 import { Injectable } from "@nestjs/common";
 import { TruliooConfigs } from "../../../../config/configtypes/TruliooConfigs";
 import { TRULIOO_CONFIG_KEY } from "../../../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../../../core/utils/AppConfigModule";
 
 @Injectable()
 export default class TruliooIntegrator extends IDVIntegrator {
   apiToken: string;
   docVerificationApiToken: string;
 
-  constructor(configService: ConfigService) {
+  constructor(configService: CustomConfigService) {
     super(configurations);
     this.apiToken = configService.get<TruliooConfigs>(TRULIOO_CONFIG_KEY).TruliooIDVApiKey;
     this.docVerificationApiToken = configService.get<TruliooConfigs>(TRULIOO_CONFIG_KEY).TruliooDocVApiKey;

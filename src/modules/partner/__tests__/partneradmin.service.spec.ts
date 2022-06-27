@@ -1,8 +1,8 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { getMockPartnerAdminRepoWithDefaults } from "../mocks/mock.partner.admin.repo";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
+import { CustomConfigService, getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { CommonModule } from "../../common/common.module";
 import { PartnerAdminService } from "../partneradmin.service";
 import { mockedUserService } from "../../../modules/user/mocks/userservicemock";
@@ -19,11 +19,6 @@ describe("PartnerService", () => {
   const OLD_ENV = process.env;
 
   beforeEach(async () => {
-    process.env = {
-      ...OLD_ENV,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
     const PartnerAdminRepoProvider = {
       provide: "PartnerAdminRepo",
       useFactory: () => instance(partnerAdminRepo),
@@ -32,8 +27,9 @@ describe("PartnerService", () => {
       provide: UserService,
       useFactory: () => instance(mockedUserService),
     };
+
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule(), CommonModule],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
       providers: [PartnerAdminRepoProvider, PartnerAdminService, UserServiceMockProvider],
     }).compile();

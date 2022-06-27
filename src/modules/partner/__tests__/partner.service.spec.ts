@@ -2,8 +2,8 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { anything, instance, when, deepEqual } from "ts-mockito";
 import { PartnerService } from "../partner.service";
 import { getMockPartnerRepoWithDefaults } from "../mocks/mock.partner.repo";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
+import { getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { CommonModule } from "../../common/common.module";
 import { Partner } from "../domain/Partner";
 
@@ -16,17 +16,12 @@ describe("PartnerService", () => {
   const OLD_ENV = process.env;
 
   beforeEach(async () => {
-    process.env = {
-      ...OLD_ENV,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
     const PartnerRepoProvider = {
       provide: "PartnerRepo",
       useFactory: () => instance(partnerRepo),
     };
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule(), CommonModule],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
       providers: [PartnerRepoProvider, PartnerService],
     }).compile();

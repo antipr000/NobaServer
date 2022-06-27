@@ -1,12 +1,12 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { anything, capture, instance, when } from "ts-mockito";
 import { AdminService } from "../admin.service";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
+import { CustomConfigService, getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IAdminTransactionRepo } from "../repos/transactions/AdminTransactionRepo";
 import { CommonModule } from "../../common/common.module";
 import { Admin } from "../domain/Admin";
 import { AdminMapper } from "../mappers/AdminMapper";
-import { getWinstonModule } from "../../../../src/core/utils/WinstonModule";
+import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { getMockAdminTransactionRepoWithDefaults } from "../mocks/MockAdminTransactionRepo";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 
@@ -19,14 +19,8 @@ describe("AdminService", () => {
   beforeEach(async () => {
     mockAdminTransactionRepo = getMockAdminTransactionRepoWithDefaults();
 
-    process.env = {
-      ...process.env,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
-
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule(), CommonModule],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       providers: [
         AdminService,
         {

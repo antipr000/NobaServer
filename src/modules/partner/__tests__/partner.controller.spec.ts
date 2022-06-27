@@ -3,8 +3,8 @@ import { deepEqual, instance, when } from "ts-mockito";
 import { PartnerService } from "../partner.service";
 import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
 import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
-import { getWinstonModule } from "../../../core/utils/WinstonModule";
-import { getAppConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { PartnerAdminService } from "../partneradmin.service";
 import { PartnerMapper } from "../mappers/PartnerMapper";
 import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
@@ -24,12 +24,6 @@ describe("PartnerController", () => {
   const OLD_ENV = process.env;
 
   beforeEach(async () => {
-    process.env = {
-      ...OLD_ENV,
-      NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
-    };
-
     partnerService = getMockPartnerServiceWithDefaults();
     partnerAdminService = getMockPartnerAdminServiceWithDefaults();
 
@@ -44,7 +38,7 @@ describe("PartnerController", () => {
     };
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [getWinstonModule(), getAppConfigModule()],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [PartnerController],
       providers: [PartnerServiceProvider, PartnerAdminServiceProvider],
     }).compile();
