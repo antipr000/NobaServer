@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { UserModule } from "../modules/user/user.module";
 import { JwtModule } from "@nestjs/jwt";
 import * as request from "supertest";
+import { join } from "path";
 import { AuthModule } from "../modules/auth/auth.module";
 import { PartnerModule } from "../modules/partner/partner.module";
 import { EmailService } from "../modules/common/email.service";
@@ -68,8 +69,9 @@ describe("Partner and Partner Admin end to end tests", () => {
     process.env = {
       ...OLD_ENV,
       NODE_ENV: "development",
-      CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
+      CONFIGS_DIR: join(__dirname, "../../appconfigs"),
     };
+
     mockEmailService = getMockEmailServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
 
