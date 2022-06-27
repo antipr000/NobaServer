@@ -86,6 +86,6 @@ export class AuthController {
   @ApiOperation({ summary: "Get the Noba user for the authorized/logged-in user" })
   @ApiResponse({ status: HttpStatus.OK, description: "Noba user object of logged in user" })
   async testAuth(@Request() request): Promise<any> {
-    return request.user;
+    return request.user.props;
   }
 }

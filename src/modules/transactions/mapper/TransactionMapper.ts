@@ -7,15 +7,18 @@ export class TransactionMapper implements Mapper<Transaction> {
     const props = t.props;
     return {
       _id: props._id,
+      userID: props.userId,
       status: props.transactionStatus,
       leg1: props.leg1,
       leg2: props.leg2,
+      type: props.type,
+      baseAmount: props.leg1Amount,
       leg1Amount: props.leg1Amount,
       leg2Amount: props.leg2Amount,
-      paymentMethodId: props.paymentMethodId,
-      fiatTransactionId: props.stripePaymentIntentId,
-      cryptoTransactionId: props.cryptoTransactionId,
-      destinationWalletAdress: props.destinationWalletAddress,
+      paymentMethodID: props.paymentMethodId,
+      fiatTransactionID: props.stripePaymentIntentId,
+      cryptoTransactionID: props.cryptoTransactionId,
+      destinationWalletAddress: props.destinationWalletAddress,
       transactionTimestamp: props.transactionTimestamp,
     };
   }

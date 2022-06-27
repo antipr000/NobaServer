@@ -74,7 +74,7 @@ export class TransactionService {
   async transact(userID: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
     const leg1: string = details.leg1;
     const leg2: string = details.leg2;
-    const destinationWalletAdress: string = details.destinationWalletAdress;
+    const destinationWalletAdress: string = details.destinationWalletAddress;
 
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(leg2, destinationWalletAdress)) {
@@ -109,7 +109,7 @@ export class TransactionService {
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: userID,
-      paymentMethodId: details.paymentMethodId,
+      paymentMethodId: details.paymentMethodID,
       leg1Amount: details.leg1Amount,
       leg2Amount: details.leg2Amount,
       leg1: leg1,
@@ -131,7 +131,7 @@ export class TransactionService {
       amount: Math.ceil(leg1Amount * 100), //in cents
       currency: "usd", //TODO make this generic
       customer: user.props.stripeCustomerID,
-      payment_method: details.paymentMethodId,
+      payment_method: details.paymentMethodID,
       confirmation_method: "automatic",
       confirm: true,
     };
@@ -201,7 +201,7 @@ export class TransactionService {
         user.props.email,
         leg1,
         leg2,
-        details.destinationWalletAdress,
+        details.destinationWalletAddress,
         leg1Amount,
         leg2Amount,
         "fiat",

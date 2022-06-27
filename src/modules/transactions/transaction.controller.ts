@@ -1,4 +1,15 @@
-import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Query, Request, Response } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+  Query,
+  Response,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {
   ApiBadGatewayResponse,
@@ -25,9 +36,13 @@ import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
+import { AuthUser } from "../auth/auth.decorator";
+import { User } from "../user/domain/User";
+import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
+
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
-@Controller("user/:" + UserID + "/transactions")
+@Controller("/transactions")
 @ApiTags("Transactions")
 export class TransactionController {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -39,7 +54,26 @@ export class TransactionController {
     private readonly limitsService: LimitsService,
   ) {}
 
-  @Get("/status/:transactionId")
+  @Get("/check")
+  @ApiOperation({
+    summary:
+      "Checks if a transaction with given input is possible for a user or not i.e. if they have reached some limit or if id verification is required.",
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: CheckTransactionDTO })
+  async checkIfTransactionPossible(
+    @Query() checkTransactionQuery: CheckTransactionQueryDTO,
+    @AuthUser() authUser: User,
+  ): Promise<CheckTransactionDTO> {
+    console.log("check if can make transaction");
+    console.log("AUth user", authUser);
+    const tAmount = checkTransactionQuery.transactionAmount;
+    const status: TransactionAllowedStatus = await this.limitsService.canMakeTransaction(authUser.props, tAmount);
+    return {
+      status: status,
+    };
+  }
+
+  @Get("/:transactionID")
   @ApiOperation({ summary: "Get transaction details for a given transactionID" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -47,24 +81,14 @@ export class TransactionController {
     description: "Transaction details for the given transactionId",
   })
   async getTransactionStatus(
-    @Param(UserID) userID: string,
-    @Param("transactionId") transactionId: string,
+    @Param("transactionID") transactionID: string,
+    @AuthUser() authUser: User,
   ): Promise<TransactionDTO> {
-    return this.transactionService.getTransactionStatus(transactionId); //TODO check that transactionId belongs to this user?
-  }
-
-  @Get("/check/:transactionAmount")
-  @ApiResponse({ status: HttpStatus.OK, type: CheckTransactionDTO })
-  async checkIfTransactionPossible(
-    @Param(UserID) userID: string,
-    @Param("transactionAmount") transactionAmount: string,
-    @Request() request,
-  ): Promise<CheckTransactionDTO> {
-    const tAmount = parseInt(transactionAmount);
-    const status: TransactionAllowedStatus = await this.limitsService.canMakeTransaction(request.user, tAmount);
-    return {
-      status: status,
-    };
+    const dto = await this.transactionService.getTransactionStatus(transactionID); //TODO check that transactionId belongs to this user?
+    if (dto.userID !== authUser.props._id) {
+      throw new UnauthorizedException("Not authorized to view this transaction");
+    }
+    return dto;
   }
 
   //We should create buy sell api differently otherwise lot of if else logic in core logic. basically different api for on-ramp and off-ramp
@@ -77,10 +101,10 @@ export class TransactionController {
   })
   @ApiBadGatewayResponse({ description: "Bad gateway. Something went wrong." })
   @ApiBadRequestResponse({ description: "Bad request. Invalid input." })
-  async transact(@Param(UserID) userID: string, @Body() orderDetails: CreateTransactionDTO): Promise<TransactionDTO> {
-    console.log("raw transaction input", orderDetails); //TODO better logging
+  async transact(@Body() orderDetails: CreateTransactionDTO, @AuthUser() user: User): Promise<TransactionDTO> {
+    this.logger.info(`uid ${user.props._id}, transact input:`, orderDetails);
 
-    return this.transactionService.transact(userID, orderDetails);
+    return this.transactionService.transact(user.props._id, orderDetails);
   }
 
   //TODO take filter options, pagitination token etc?
@@ -92,13 +116,17 @@ export class TransactionController {
     description: "List of all transactions that happened through Noba for given userID",
   })
   async getTransactions(
-    @Param(UserID) userID: string,
     @Query() transactionFilters: TransactionFilterDTO,
+    @AuthUser() authUser: User,
   ): Promise<TransactionDTO[]> {
     const fromDateInUTC = new Date(transactionFilters.startDate).toUTCString();
     const toDateInUTC = new Date(transactionFilters.endDate).toUTCString();
 
-    return this.transactionService.getTransactionsInInterval(userID, new Date(fromDateInUTC), new Date(toDateInUTC));
+    return this.transactionService.getTransactionsInInterval(
+      authUser.props._id,
+      new Date(fromDateInUTC),
+      new Date(toDateInUTC),
+    );
   }
 
   @Get("/download")

@@ -2,13 +2,11 @@ import { Body, Controller, Delete, Get, HttpStatus, Inject, Param, Post } from "
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { Role } from "../auth/role.enum";
-import { PaymentMethodId, Roles, UserID } from "../auth/roles.decorator";
+import { PaymentMethodId, UserID } from "../auth/roles.decorator";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { PaymentMethodDTO } from "./dto/PaymentMethodDTO";
 import { StripePaymentMethodsService } from "./paymentmethods.service";
 
-@Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("paymentmethods/:" + UserID)
 @ApiTags("Payment Methods")
@@ -48,7 +46,6 @@ export class PaymentMethodsController {
 }
 
 // Write as a separate controller as this doesn't need userID
-@Roles(Role.User)
 @ApiBearerAuth()
 @ApiTags("Payment Methods")
 @Controller("paymentmethods/:" + PaymentMethodId)

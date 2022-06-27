@@ -2,12 +2,13 @@ import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
-import { TransactionStatus } from "./Types";
+import { TransactionStatus, TransactionType } from "./Types";
 
 export interface TransactionProps extends VersioningInfo {
   _id: string;
   userId: string;
   paymentMethodId: string;
+  type: TransactionType;
   stripePaymentIntentId?: string;
   sourceWalletAddress?: string;
   destinationWalletAddress?: string;
@@ -28,6 +29,9 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
     .required()
     .meta({ _mongoose: { index: true } }),
   paymentMethodId: Joi.string().required(),
+  type: Joi.string()
+    .valid(...Object.values(TransactionType))
+    .default(TransactionType.ONRAMP),
   transactionStatus: Joi.string()
     .valid(...Object.values(TransactionStatus))
     .required(),
@@ -51,7 +55,6 @@ export class Transaction extends AggregateRoot<TransactionProps> {
   }
 
   public static createTransaction(transactionProps: Partial<TransactionProps>): Transaction {
-    //set email verified to true when user authenticates via third party and not purely via email
     transactionProps._id = transactionProps._id ?? "transaction_" + Entity.getNewID();
     transactionProps.transactionTimestamp = transactionProps.transactionTimestamp ?? new Date();
     return new Transaction(Joi.attempt(transactionProps, transactionJoiSchema));

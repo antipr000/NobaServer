@@ -3,9 +3,7 @@ import { PassportStrategy } from "@nestjs/passport";
 import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { jwtConstants } from "./constants";
 import { UserService } from "../user/user.service";
-import { UserProps } from "../user/domain/User";
-import { Admin } from "../admin/domain/Admin";
-import { PartnerAdmin } from "../partner/domain/PartnerAdmin";
+
 import {
   allIdentities,
   consumerIdentityIdentifier,
@@ -14,6 +12,7 @@ import {
 } from "./domain/IdentityType";
 import { AdminService } from "../admin/admin.service";
 import { PartnerAdminService } from "../partner/partneradmin.service";
+import { AuthenticatedUser } from "./domain/AuthenticatedUser";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -34,16 +33,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // TODO: Move all the payload related logic to a single file.
   // TODO: Modify 'UserProps' to 'User'.
-  async validate(payload: any): Promise<UserProps | Admin | PartnerAdmin> {
+  async validate(payload: any): Promise<AuthenticatedUser> {
     return this.getIdentityDomain(payload.id, payload.identityType);
   }
 
-  private async getIdentityDomain(id: string, identityType: string): Promise<Admin | UserProps | PartnerAdmin> {
+  private async getIdentityDomain(id: string, identityType: string): Promise<AuthenticatedUser> {
     console.log(id, identityType);
 
     switch (identityType) {
       case consumerIdentityIdentifier:
-        return (await this.userService.findUserById(id)).props;
+        return await this.userService.findUserById(id);
       case nobaAdminIdentityIdentifier:
         return this.adminService.getAdminById(id);
       case partnerAdminIdentityIdenitfier:
