@@ -1,23 +1,15 @@
 import { ApiProperty } from "@nestjs/swagger";
-
-export class DownloadTransactionsDTO {
-  @ApiProperty({
-    description: "Format: YYYY-MM-DD, example: 2010-04-27",
-  })
-  startDate: string;
-
-  @ApiProperty({
-    description: "Format: YYYY-MM-DD, example: 2010-04-27",
-  })
-  endDate: string;
-
-  @ApiProperty({
-    description: "Format in which you want the transactions report. Current 'CSV' is supported.",
-  })
-  reportFormat: DownloadFormat;
-}
+import { TransactionFilterDTO } from "./TransactionFilterDTO";
 
 export enum DownloadFormat {
-  CSV = 1,
-  PDF = 2,
+  CSV = "csv",
+  PDF = "pdf",
+}
+
+export class DownloadTransactionsDTO extends TransactionFilterDTO {
+  @ApiProperty({
+    description: "Format in which you want the transactions report. Current 'CSV' is supported.",
+    enum: Object.values(DownloadFormat),
+  })
+  reportFormat: DownloadFormat;
 }

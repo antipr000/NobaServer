@@ -99,7 +99,7 @@ export class VerificationController {
     this.verificationService.performDocumentVerification(
       documentFrontImageb64,
       documentBackImageb64,
-      request.user,
+      request.user.props,
       requestData["countryCode"],
       requestData["documentType"],
     );
@@ -113,7 +113,7 @@ export class VerificationController {
   @ApiResponse({ status: HttpStatus.OK, type: VerificationStatusDTO, description: "Get KYC status of the given user" })
   @ApiBadRequestResponse({ description: "Invalid request parameters!" })
   async getDocumentVerificationStatus(@Param(UserID) id: string, @Request() request): Promise<VerificationStatusDTO> {
-    return this.verificationService.getDocumentVerificationStatus(request.user);
+    return this.verificationService.getDocumentVerificationStatus(request.user.props);
   }
 
   @Get(`/:${UserID}` + "/doc/result")
@@ -125,6 +125,6 @@ export class VerificationController {
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters!" })
   async getDocumentVerificationResult(@Param(UserID) id: string, @Request() request): Promise<VerificationResultDTO> {
-    return this.verificationService.getDocumentVerificationResult(request.user);
+    return this.verificationService.getDocumentVerificationResult(request.user.props);
   }
 }

@@ -26,10 +26,10 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
   handleRequest<TUser = UserProps>(err, user: UserProps, info, context: ExecutionContext, status): TUser {
     // TODO: Query on path params and throw error if userId in path doesn't match user._id
-    const userIdInPath: string | undefined = context.switchToHttp().getRequest().params.userID;
-    if (userIdInPath && userIdInPath !== user._id) {
-      throw new ForbiddenException();
-    }
+    // const userIdInPath: string | undefined = context.switchToHttp().getRequest().params.userID;
+    // if (userIdInPath && userIdInPath !== user._id) {
+    //   throw new ForbiddenException();
+    // }
     const isAdmin = this.reflector.getAllAndOverride<boolean>(IS_ADMIN_KEY, [context.getHandler(), context.getClass()]);
 
     if (isAdmin && !user.isAdmin) throw new ForbiddenException();

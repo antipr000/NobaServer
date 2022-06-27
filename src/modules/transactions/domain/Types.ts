@@ -1,3 +1,9 @@
+export enum TransactionType {
+  ONRAMP = "onramp",
+  OFFRAMP = "offramp",
+  SWAP = "swap",
+}
+
 export enum TransactionStatus {
   INITIATED = "INITIATED",
 

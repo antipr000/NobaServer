@@ -13,7 +13,6 @@ import {
   NoUnExpectedKeysValidationPipe,
 } from "./core/utils/NoUnexpectedKeysValidationPipe";
 import { joiToSwagger } from "./joi2Swagger";
-import { AuthenticatedUser } from "./modules/auth/domain/AuthenticatedUser";
 import { writeFileSync } from "fs";
 import { UserModule } from "./modules/user/user.module";
 import { AuthModule } from "./modules/auth/auth.module";
@@ -134,7 +133,7 @@ function getMorgan(winstonLogger) {
   };
 
   return morgan((tokens, req, res) => {
-    const userID = ((req as any).user as AuthenticatedUser)?.uid;
+    const userID = ((req as any).user as any)?.props._id;
 
     return [
       userID ?? "noauth",
