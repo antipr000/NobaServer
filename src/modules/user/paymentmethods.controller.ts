@@ -9,7 +9,7 @@ import { StripePaymentMethodsService } from "./paymentmethods.service";
 
 @ApiBearerAuth("JWT-auth")
 @Controller("users/paymentmethods/")
-@ApiTags("Payment Methods")
+@ApiTags("User")
 export class PaymentMethodsController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
@@ -45,7 +45,7 @@ export class PaymentMethodsController {
 
 // Write as a separate controller as this doesn't need userID
 @ApiBearerAuth()
-@ApiTags("Payment Methods")
+@ApiTags("User")
 @Controller("users/paymentmethods/:" + PaymentMethodID)
 export class DetachPaymentMethodController {
   @Inject(WINSTON_MODULE_PROVIDER)
