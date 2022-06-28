@@ -1,15 +1,15 @@
-import { Body, Controller, Delete, Get, HttpStatus, Inject, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpStatus, Inject, Param, Post, Request } from "@nestjs/common";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { PaymentMethodId, UserID } from "../auth/roles.decorator";
+import { PaymentMethodID } from "../auth/roles.decorator";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { PaymentMethodDTO } from "./dto/PaymentMethodDTO";
 import { StripePaymentMethodsService } from "./paymentmethods.service";
 
 @ApiBearerAuth("JWT-auth")
-@Controller("paymentmethods/:" + UserID)
-@ApiTags("Payment Methods")
+@Controller("users/paymentmethods/")
+@ApiTags("User")
 export class PaymentMethodsController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
@@ -24,7 +24,8 @@ export class PaymentMethodsController {
     description: "List of all payment methods for the given user ID",
   })
   @ApiBadRequestResponse({ description: "Invalid payment method ID / request parameters" })
-  async getUserPaymentMethods(@Param(UserID) userID: string): Promise<PaymentMethodDTO[]> {
+  async getUserPaymentMethods(@Request() request): Promise<PaymentMethodDTO[]> {
+    const userID: string = request.user.props._id;
     return this.paymentMethodService.getPaymentMethods(userID);
   }
 
@@ -36,19 +37,16 @@ export class PaymentMethodsController {
     description: "Add a payment method for the desired user",
   })
   @ApiBadRequestResponse({ description: "Invalid payment method ID / request parameters" })
-  async addPaymentMethod(
-    @Param(UserID) userID: string,
-    @Body() methodDetails: AddPaymentMethodDTO,
-  ): Promise<PaymentMethodDTO> {
-    console.log("validations passed and method Details is ", methodDetails);
+  async addPaymentMethod(@Request() request, @Body() methodDetails: AddPaymentMethodDTO): Promise<PaymentMethodDTO> {
+    const userID: string = request.user.props._id;
     return this.paymentMethodService.addPaymentMethod(userID, methodDetails);
   }
 }
 
 // Write as a separate controller as this doesn't need userID
 @ApiBearerAuth()
-@ApiTags("Payment Methods")
-@Controller("paymentmethods/:" + PaymentMethodId)
+@ApiTags("User")
+@Controller("users/paymentmethods/:" + PaymentMethodID)
 export class DetachPaymentMethodController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
@@ -59,9 +57,9 @@ export class DetachPaymentMethodController {
   @ApiOperation({ summary: "Remove a payment method from a user" })
   @ApiResponse({ status: HttpStatus.OK, type: String, description: "Remove a previously added payment method" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async removePaymentMethod(@Param(PaymentMethodId) paymentMethodId: string): Promise<string> {
-    await this.paymentMethodService.removePaymentMethod(paymentMethodId);
-    return "Payment method removed";
+  async removePaymentMethod(@Param(PaymentMethodID) paymentMethodID: string): Promise<string> {
+    await this.paymentMethodService.removePaymentMethod(paymentMethodID);
+    return "Payment method with ID " + paymentMethodID + " removed";
   }
 
   // TODO add a endpoint to delete all payment methods for a user

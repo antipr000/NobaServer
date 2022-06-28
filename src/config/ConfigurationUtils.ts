@@ -50,6 +50,13 @@ export const MONGO_AWS_SECRET_KEY_FOR_URI_ATTR = "awsSecretNameForUri";
 export const MONGO_URI = "uri";
 export const MONGO_URI_ENV_KEY = "MONGO_URI";
 
+export const SARDINE_CONFIG_KEY = "sardine";
+export const SARDINE_AWS_SECRET_KEY_FOR_SARDINE_CLIENT_ID_ATTR = "awsSecretNameForSardineClientID";
+export const SARDINE_AWS_SECRET_KEY_FOR_SARDINE_SECRET_KEY_ATTR = "awsSecretNameForSardineSecretKey";
+export const SARDINE_CLIENT_ID = "clientID";
+export const SARDINE_SECRET_KEY = "secretKey";
+export const SARDINE_URI = "sardineBaseUri";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

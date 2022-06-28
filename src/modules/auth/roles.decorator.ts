@@ -10,7 +10,7 @@ export const UserID = "userID"; //user id
 export const AdminId = "adminID";
 export const PartnerID = "partnerID";
 export const PartnerAdminID = "partnerAdminID";
-export const PaymentMethodId = "paymentMethodId"; //payment method id
+export const PaymentMethodID = "paymentMethodID"; //payment method id
 
 export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
 export const OneOfRoles = (...roles: Role[]) => SetMetadata(ONE_OF_ROLES_KEY, roles);

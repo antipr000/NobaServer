@@ -1,5 +1,4 @@
 import { Injectable, Inject } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Model } from "mongoose";
@@ -19,6 +18,8 @@ import { MONGO_CONFIG_KEY } from "../config/ConfigurationUtils";
 import { OtpModel } from "../infra/mongodb/models/OtpModel";
 import { OtpProps } from "../modules/auth/domain/Otp";
 import { CustomConfigService } from "../core/utils/AppConfigModule";
+import { VerificationDataProps } from "../modules/verification/domain/VerificationData";
+import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataModel";
 
 @Injectable()
 export class DBProvider {
@@ -74,5 +75,10 @@ export class DBProvider {
   async getAdminModel(): Promise<Model<AdminProps>> {
     await this.connectToDb();
     return AdminModel;
+  }
+
+  async getVerificationDataModel(): Promise<Model<VerificationDataProps>> {
+    await this.connectToDb();
+    return VerificationDataModel;
   }
 }

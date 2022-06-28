@@ -1,11 +1,10 @@
-import { CacheModule, Module, NestModule } from "@nestjs/common";
+import { CacheModule, Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { MiddlewareConsumer } from "@nestjs/common";
 import { AuthModule } from "./modules/auth/auth.module";
 import { APP_GUARD } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
-import { CustomConfigModule, DynamicCustomConfigModule, getAppConfigModule } from "./core/utils/AppConfigModule";
+import { CustomConfigModule } from "./core/utils/AppConfigModule";
 import { getWinstonModule } from "./core/utils/WinstonModule";
 import { InfraProvidersModule } from "./infraproviders/infra.module";
 import { UserModule } from "./modules/user/user.module";

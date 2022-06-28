@@ -2,18 +2,19 @@ import { UserDTO } from "../../modules/user/dto/UserDTO";
 import { PartnerProps } from "../../modules/partner/domain/Partner";
 import { PartnerAdminProps } from "../../modules/partner/domain/PartnerAdmin";
 import { VerificationStatusType } from "../../modules/user/domain/Types";
+import { DocumentVerificationStatus } from "../../modules/user/domain/VerificationStatus";
 export const userEmail = "John.Doe@noba.com";
 export const userID = "test-user-01";
 export const userDTO: UserDTO = {
   _id: userID,
   email: userEmail,
   name: "John Doe",
-  verificationStatus: VerificationStatusType.NOT_STARTED,
-  documentVerified: false,
   address: undefined,
   dateOfBirth: undefined,
   phone: undefined,
   version: undefined,
+  idVerificationStatus: VerificationStatusType.NOT_STARTED,
+  documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
 };
 
 export const mockPartner: PartnerProps = {

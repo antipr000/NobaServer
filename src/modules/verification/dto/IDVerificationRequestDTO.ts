@@ -1,45 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { NationalID, DOB, IDRequest } from "../../../externalclients/idvproviders/definitions";
-import { NationalIDTypes } from "../../../externalclients/idvproviders/definitions/NationalID";
+import { NationalIDTypes } from "../domain/NationalIDTypes";
+export class AddressDTO {
+  @ApiProperty()
+  streetLine1: string;
 
-class NationalIDDTO implements NationalID {
+  @ApiPropertyOptional()
+  streetLine2?: string;
+
+  @ApiProperty()
+  countryCode: string;
+
+  @ApiProperty()
+  city: string;
+
+  @ApiProperty({ description: "state code in ISO 3166-2" })
+  regionCode: string;
+
+  @ApiProperty()
+  postalCode: string;
+}
+
+export class NationalIDDTO {
   @ApiProperty({ enum: NationalIDTypes })
   type: NationalIDTypes;
 
   @ApiProperty()
   number: string;
-
-  @ApiPropertyOptional()
-  mrz1?: string;
-
-  @ApiPropertyOptional()
-  mrz2?: string;
-
-  @ApiPropertyOptional()
-  dayOfExpiry?: number;
-
-  @ApiPropertyOptional()
-  monthOfExpiry?: number;
-
-  @ApiPropertyOptional()
-  yearOfExpiry?: number;
-
-  @ApiPropertyOptional()
-  state?: string;
 }
 
-class DOBDTO implements DOB {
-  @ApiProperty()
-  date: number;
-
-  @ApiProperty()
-  month: number;
-
-  @ApiProperty()
-  year: number;
-}
-
-export class IDVerificationRequestDTO implements IDRequest {
+export class IDVerificationRequestDTO {
   @ApiProperty()
   firstName: string;
 
@@ -47,23 +36,14 @@ export class IDVerificationRequestDTO implements IDRequest {
   lastName: string;
 
   @ApiProperty()
-  dateOfBirth: DOBDTO;
+  address: AddressDTO;
 
   @ApiProperty()
-  streetName: string;
+  phoneNumber: string;
 
-  @ApiProperty()
-  city: string;
+  @ApiProperty({ description: "Date of birth in format YYYY-MM-DD" })
+  dateOfBirth: string;
 
-  @ApiProperty()
-  state: string;
-
-  @ApiProperty()
-  countryCode: string;
-
-  @ApiProperty()
-  postalCode: string;
-
-  @ApiProperty()
-  nationalID: NationalIDDTO;
+  @ApiPropertyOptional()
+  nationalID?: NationalIDDTO;
 }

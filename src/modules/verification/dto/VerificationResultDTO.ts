@@ -1,7 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Status } from "../../../externalclients/idvproviders/definitions";
+
+export enum VerificationResultStatus {
+  APPROVED = "Approved",
+  NOT_APPROVED = "NotApproved",
+  PENDING = "Pending",
+}
 
 export class VerificationResultDTO {
-  @ApiProperty({ enum: Status })
-  status: Status;
+  @ApiProperty({ enum: VerificationResultStatus })
+  status: VerificationResultStatus;
 }

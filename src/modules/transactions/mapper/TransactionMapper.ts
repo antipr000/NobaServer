@@ -1,5 +1,5 @@
-import { Transaction } from "../domain/Transaction";
 import { Mapper } from "../../../core/infra/Mapper";
+import { Transaction } from "../domain/Transaction";
 import { TransactionDTO } from "../dto/TransactionDTO";
 
 export class TransactionMapper implements Mapper<Transaction> {
@@ -15,7 +15,7 @@ export class TransactionMapper implements Mapper<Transaction> {
       baseAmount: props.leg1Amount,
       leg1Amount: props.leg1Amount,
       leg2Amount: props.leg2Amount,
-      paymentMethodID: props.paymentMethodId,
+      paymentMethodID: props.paymentMethodID,
       fiatTransactionID: props.stripePaymentIntentId,
       cryptoTransactionID: props.cryptoTransactionId,
       destinationWalletAddress: props.destinationWalletAddress,

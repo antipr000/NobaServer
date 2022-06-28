@@ -1,9 +1,8 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { getMockPartnerAdminRepoWithDefaults } from "../mocks/mock.partner.admin.repo";
-import { getTestWinstonModule, getWinstonModule } from "../../../core/utils/WinstonModule";
-import { CustomConfigService, getAppConfigModule, TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { CommonModule } from "../../common/common.module";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { PartnerAdminService } from "../partneradmin.service";
 import { mockedUserService } from "../../../modules/user/mocks/userservicemock";
 import { UserService } from "../../../modules/user/user.service";

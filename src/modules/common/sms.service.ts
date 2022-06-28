@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Twilio } from "twilio";
 import { TwilioConfigs } from "../../config/configtypes/TwilioConfigs";

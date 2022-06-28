@@ -1,8 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { DOB } from "src/externalclients/idvproviders/definitions";
 import { Address } from "../domain/Address";
 import { UserProps } from "../domain/User";
-import { VerificationStatusType } from "../domain/Types";
+import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../domain/VerificationStatus";
 
 export class UserDTO implements Partial<UserProps> {
   @ApiProperty()
@@ -29,14 +28,14 @@ export class UserDTO implements Partial<UserProps> {
   @ApiPropertyOptional()
   isEmailVerified?: boolean;
 
-  @ApiPropertyOptional({ enum: Object.values(VerificationStatusType) })
-  verificationStatus?: string;
+  @ApiPropertyOptional({ enum: ConsumerVerificationStatus })
+  idVerificationStatus?: string;
+
+  @ApiPropertyOptional({ enum: DocumentVerificationStatus })
+  documentVerificationStatus?: string;
 
   @ApiPropertyOptional()
-  documentVerified?: boolean;
-
-  @ApiPropertyOptional()
-  dateOfBirth?: DOB;
+  dateOfBirth?: string;
 
   @ApiPropertyOptional()
   address?: Address;

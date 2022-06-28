@@ -8,7 +8,7 @@ import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
 import { parse } from "csv";
 import { createReadStream } from "fs";
 import * as path from "path";
-import { Cache, CachingConfig } from "cache-manager";
+import { Cache } from "cache-manager";
 
 @Controller()
 export class AppController {
@@ -29,7 +29,12 @@ export class AppController {
         // Include only records for which ZH provides liquidity services (Liquidity=Yes)
         // Exclude XRP
         if (liq === "Yes" && symbol !== "XRP") {
-          results.push({ name: `${name}`, ticker: `${symbol}`, iconPath: "" });
+          // TODO: Move this path to config
+          results.push({
+            name: `${name}`,
+            ticker: `${symbol}`,
+            iconPath: `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`,
+          });
         }
       })
       .on("end", () => {

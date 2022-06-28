@@ -1,22 +1,39 @@
-import { Body, Controller, Get, HttpStatus, Inject, Param, Post, Request } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Param,
+  Post,
+  Query,
+  Request,
+  UploadedFiles,
+  UseInterceptors,
+} from "@nestjs/common";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBody,
+} from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
-import { Status } from "../../externalclients/idvproviders/definitions";
-import IDVIntegrator from "../../externalclients/idvproviders/IDVIntegrator";
-import TruliooIntegrator from "../../externalclients/idvproviders/providers/trulioo/TruliooIntegrator";
 import { Role } from "../auth/role.enum";
-import { Roles, UserID } from "../auth/roles.decorator";
-import { UserService } from "../user/user.service";
+import { Roles } from "../auth/roles.decorator";
 import { ConsentDTO } from "./dto/ConsentDTO";
-import { DocVerificationRequestDTO } from "./dto/DocVerificationRequestDTO";
+import { DocumentsFileUploadRequestDTO, DocVerificationRequestDTO } from "./dto/DocVerificationRequestDTO";
 import { IDVerificationRequestDTO } from "./dto/IDVerificationRequestDTO";
 import { SubdivisionDTO } from "./dto/SubdivisionDTO";
 import { VerificationResultDTO } from "./dto/VerificationResultDTO";
-import { VerificationStatusDTO } from "./dto/VerificationStatusDTO";
 import { VerificationService } from "./verification.service";
+import { Public } from "../auth/public.decorator";
+import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
+import { User } from "../user/domain/User";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -26,14 +43,10 @@ export class VerificationController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  idvProvider: IDVIntegrator;
+  private readonly verificationResponseMapper: VerificationResponseMapper;
 
-  constructor(
-    private readonly verificationService: VerificationService,
-    private readonly userService: UserService,
-    private readonly configService: CustomConfigService,
-  ) {
-    this.idvProvider = new TruliooIntegrator(configService);
+  constructor(private readonly verificationService: VerificationService) {
+    this.verificationResponseMapper = new VerificationResponseMapper();
   }
 
   @Get("/")
@@ -71,60 +84,104 @@ export class VerificationController {
     return this.verificationService.getSubdivisions(countryCode);
   }
 
-  @Post(`/:${UserID}` + "/id")
-  @ApiOperation({ summary: "Get verification result" })
+  @Public()
+  @Post("/session")
+  @ApiOperation({ summary: "Create a new session for verification" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: String, description: "Get new session token" })
+  @ApiBadRequestResponse({ description: "Invalid request" })
+  async createSession(): Promise<string> {
+    const verificationData = await this.verificationService.createSession();
+    return verificationData.props._id;
+  }
+
+  @Post("/consumerinfo")
+  @ApiOperation({
+    summary: "Verify consumer provided information like name, date of birth, address and ssn(for US consumers)",
+  })
   @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Get verification result" })
   @ApiBadRequestResponse({ description: "Invalid request parameters!" })
   async verifyUser(
-    @Param(UserID) id: string,
+    @Query("sessionKey") sessionKey: string,
     @Body() requestBody: IDVerificationRequestDTO,
     @Request() request,
   ): Promise<VerificationResultDTO> {
-    return this.verificationService.performIdentityVerification(request.user, requestBody);
+    const user: User = request.user;
+    const result = await this.verificationService.verifyConsumerInformation(user.props._id, sessionKey, {
+      ...requestBody,
+      userID: user.props._id,
+      email: user.props.email,
+    });
+    return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }
 
-  //TODO: Setting data type of request to DocVerificationRequestDTO throws error. Figure out why
-  // TODO: Figure out type for files
-  @Post(`/:${UserID}` + "/doc")
-  @ApiOperation({ summary: "Get verification result" })
-  @ApiResponse({ status: HttpStatus.ACCEPTED, type: VerificationResultDTO, description: "Get verification result" })
-  @ApiBadRequestResponse({ description: "Invalid request parameters!" })
-  async verifyDocument(
-    @Param(UserID) id: string,
-    @Body() requestData: DocVerificationRequestDTO,
-    @Request() request,
-  ): Promise<VerificationResultDTO> {
-    const documentFrontImageb64 = requestData.documentFrontImage;
-    const documentBackImageb64 = requestData.documentBackImage;
-    this.verificationService.performDocumentVerification(
-      documentFrontImageb64,
-      documentBackImageb64,
-      request.user.props,
-      requestData["countryCode"],
-      requestData["documentType"],
-    );
-    return {
-      status: Status.PENDING,
-    };
-  }
-
-  @Get(`/:${UserID}` + "/doc/status")
-  @ApiOperation({ summary: "Get KYC status of the given user" })
-  @ApiResponse({ status: HttpStatus.OK, type: VerificationStatusDTO, description: "Get KYC status of the given user" })
-  @ApiBadRequestResponse({ description: "Invalid request parameters!" })
-  async getDocumentVerificationStatus(@Param(UserID) id: string, @Request() request): Promise<VerificationStatusDTO> {
-    return this.verificationService.getDocumentVerificationStatus(request.user.props);
-  }
-
-  @Get(`/:${UserID}` + "/doc/result")
-  @ApiOperation({ summary: "Get KYC result of the given user" })
+  @Post("/document")
+  @ApiConsumes("multipart/form-data")
+  @ApiOperation({ summary: "Verify consumer uploaded id documents like national id, passport etc" })
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.ACCEPTED,
     type: VerificationResultDTO,
-    description: "TODO Ask soham from usability perspective how is this any different than /status",
+    description: "Get id for submitted verification documents",
+  })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        documentType: {
+          type: "string",
+          description: "Supported values: passport, national_identity_card, driver_license, other, unknown",
+        },
+        frontImage: {
+          type: "string",
+          format: "binary",
+        },
+        backImage: {
+          type: "string",
+          format: "binary",
+        },
+        photoImage: {
+          type: "string",
+          format: "binary",
+        },
+      },
+    },
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters!" })
-  async getDocumentVerificationResult(@Param(UserID) id: string, @Request() request): Promise<VerificationResultDTO> {
-    return this.verificationService.getDocumentVerificationResult(request.user.props);
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "frontImage", maxCount: 1 },
+      { name: "backImage", maxCount: 1 },
+      { name: "photoImage", maxCount: 1 },
+    ]),
+  )
+  async verifyDocument(
+    @Query("sessionKey") sessionKey: string,
+    @UploadedFiles() files: DocumentsFileUploadRequestDTO,
+    @Body() requestData: DocVerificationRequestDTO,
+    @Request() request,
+  ): Promise<string> {
+    const user: User = request.user;
+    const result = await this.verificationService.verifyDocument(user.props._id, sessionKey, {
+      userID: user.props._id,
+      documentType: requestData.documentType,
+      documentFrontImage: files.frontImage[0],
+      documentBackImage: files.backImage?.length > 0 ? files.backImage[0] : undefined,
+      photoImage: files.photoImage?.length > 0 ? files.photoImage[0] : undefined,
+    });
+
+    return result;
+  }
+
+  @Get("/document/result/:id")
+  @ApiOperation({ summary: "Get result for a submitted document verification" })
+  @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Get verification result" })
+  @ApiBadRequestResponse({ description: "Invalid id" })
+  async getDocumentVerificationResult(
+    @Param("id") id: string,
+    @Query("sessionKey") sessionKey: string,
+    @Request() request,
+  ): Promise<VerificationResultDTO> {
+    const user: User = request.user;
+    const result = await this.verificationService.getDocumentVerificationResult(user.props._id, sessionKey, id);
+    return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 }

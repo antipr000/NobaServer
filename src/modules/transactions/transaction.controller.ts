@@ -10,7 +10,6 @@ import {
   Response,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import {
   ApiBadGatewayResponse,
   ApiBadRequestResponse,
@@ -19,26 +18,26 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import * as fs from "fs";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { Role } from "../auth/role.enum";
-import { Roles, UserID } from "../auth/roles.decorator";
-import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
-import { TransactionDTO } from "./dto/TransactionDTO";
-import { TransactionService } from "./transaction.service";
-import { LimitsService } from "./limits.service";
-import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
-import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
-import { CsvService } from "../common/csv.service";
-import * as fs from "fs";
 import { BadRequestError } from "../../core/exception/CommonAppException";
-import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
-import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { Role } from "../auth/role.enum";
+import { Roles } from "../auth/roles.decorator";
+import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
+import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
+import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
+import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 
 import { AuthUser } from "../auth/auth.decorator";
+import { CsvService } from "../common/csv.service";
 import { User } from "../user/domain/User";
+import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
+import { TransactionDTO } from "./dto/TransactionDTO";
+import { LimitsService } from "./limits.service";
+import { TransactionService } from "./transaction.service";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -137,8 +136,8 @@ export class TransactionController {
     description: "A CSV or PDF file containing details of all the transactions made by the user.",
   })
   async downloadTransactions(
-    @Param(UserID) userID: string,
     @Query() downloadParames: DownloadTransactionsDTO,
+    @AuthUser() authUser: User,
     @Response() response,
   ) {
     const fromDateInUTC = new Date(downloadParames.startDate).toUTCString();
@@ -146,7 +145,7 @@ export class TransactionController {
 
     let filePath = "";
     const transactions: TransactionDTO[] = await this.transactionService.getTransactionsInInterval(
-      userID,
+      authUser.props._id,
       new Date(fromDateInUTC),
       new Date(toDateInUTC),
     );

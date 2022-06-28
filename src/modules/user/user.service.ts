@@ -7,7 +7,6 @@ import { UserMapper } from "./mappers/UserMapper";
 import { StripeService } from "../common/stripe.service";
 import { Result } from "src/core/logic/Result";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
-import { VerificationStatusType } from "../../modules/user/domain/Types";
 import { IUserRepo } from "./repos/UserRepo";
 
 @Injectable()
@@ -68,10 +67,7 @@ export class UserService {
   }
 
   getVerificationStatus(user: UserProps): UserVerificationStatus {
-    if (user.verificationStatus === VerificationStatusType.VERIFIED && user.documentVerified)
-      return UserVerificationStatus.VERIFIED;
-    else if (user.verificationStatus === VerificationStatusType.VERIFIED)
-      return UserVerificationStatus.PARTIALLY_VERIFIED;
-    return UserVerificationStatus.NOT_VERIFIED;
+    // TODO: Write logic for verification status based on current modifications of users verification data
+    throw new Error("Method not implemented");
   }
 }

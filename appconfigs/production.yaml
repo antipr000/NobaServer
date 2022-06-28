@@ -34,3 +34,10 @@ twilio:
 mongo:
   awsSecretNameForUri: "PROD_MONGO_URI"
   uri: "bogus-value"
+
+sardine:
+  awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSardineSecretKey: ""
+  clientID: "bogus-value"
+  secretKey: "bogus-value"
+  sardineBaseUri: "https://api.dev.sardine.ai"

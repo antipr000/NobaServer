@@ -59,7 +59,7 @@ export class StripePaymentMethodsService {
         number: paymentMethod.cardNumber,
         exp_month: paymentMethod.cardExpiryMonth,
         exp_year: paymentMethod.cardExpiryYear,
-        cvc: paymentMethod.cardCVC,
+        cvc: paymentMethod.cardCVV,
       },
     };
 
@@ -125,7 +125,7 @@ export class CheckoutPaymentMethodsService {
       number: paymentMethod.cardNumber,
       expiry_month: paymentMethod.cardExpiryMonth,
       expiry_year: paymentMethod.cardExpiryYear,
-      cvc: paymentMethod.cardCVC,
+      cvv: paymentMethod.cardCVV,
     });
 
     // Now create instrument

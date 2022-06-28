@@ -20,4 +20,4 @@
 
 # Consistency
 
-- The abbreviation for `identifier` is always `Id`, not `ID`. If at the start of a varible name, it should be `id`. (e.g. `userId`, `transactionId`, `idAndUsername`)
+- The abbreviation for `identifier` is always `ID`, not `Id`. If at the start of a varible name, it should be `id`. (e.g. `userID`, `transactionID`, `idAndUsername`)
