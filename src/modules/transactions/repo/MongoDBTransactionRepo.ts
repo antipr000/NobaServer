@@ -76,6 +76,8 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   }
 
   async getMonthlyUserTransactionAmount(userId: string): Promise<number> {
+    return 0;
+    /*
     const month: number = new Date().getUTCMonth() + 1;
     const year: number = new Date().getUTCFullYear();
 
@@ -115,9 +117,12 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       .exec();
     if (result.length === 0) return 0;
     return result[0].totalSum;
+    */
   }
 
   async getWeeklyUserTransactionAmount(userId: string): Promise<number> {
+    return 0;
+    /*
     const week: number = getWeek(new Date());
     const year: number = new Date().getUTCFullYear();
 
@@ -157,9 +162,12 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       .exec();
     if (result.length === 0) return 0;
     return result[0].totalSum;
+    */
   }
 
   async getDailyUserTransactionAmount(userId: string): Promise<number> {
+    return 0;
+    /*
     const day: number = new Date().getUTCDate();
     const year: number = new Date().getUTCFullYear();
 
@@ -199,6 +207,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       .exec();
     if (result.length === 0) return 0;
     return result[0].totalSum;
+    */
   }
 
   async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
