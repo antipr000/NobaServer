@@ -34,34 +34,34 @@ describe("Partner and Partner Admin end to end tests", () => {
   let dbProvider: DBProvider;
   const testJwtSecret = "TEST_SECRET";
 
+  const partner = Partner.createPartner({
+    _id: `test-partner-${generateRandomNumber()}`,
+    name: "Mock Partner",
+    takeRate: 20,
+  });
+
   const partnerAdminWithAllAccess = PartnerAdmin.createPartnerAdmin({
-    _id: "partner-admin-all-access",
+    _id: `partner-admin-all-access-${generateRandomNumber()}`,
     name: "Admin with ALL access",
     role: "ALL",
-    partnerId: "test-partner-1",
-    email: "allaccess@noba.com",
+    partnerId: partner.props._id,
+    email: `allaccess${generateRandomNumber()}@noba.com`,
   });
 
   const partnerAdminWithBasicAccess = PartnerAdmin.createPartnerAdmin({
-    _id: "partner-admin-basic-access",
+    _id: `partner-admin-basic-access-${generateRandomNumber()}`,
     name: "Admin with BASIC access",
     role: "BASIC",
-    partnerId: "test-partner-1",
-    email: "basicaccess@noba.com",
+    partnerId: partner.props._id,
+    email: `basicaccess${generateRandomNumber()}@noba.com`,
   });
 
   const partnerAdminWithIntermediateAccess = PartnerAdmin.createPartnerAdmin({
-    _id: "partner-admin-intermediate-access",
+    _id: `partner-admin-intermediate-access-${generateRandomNumber()}`,
     name: "Admin with INTERMEDIATE access",
     role: "INTERMEDIATE",
-    partnerId: "test-partner-1",
-    email: "intermediateaccess@noba.com",
-  });
-
-  const partner = Partner.createPartner({
-    _id: "test-partner-1",
-    name: "Mock Partner",
-    takeRate: 20,
+    partnerId: partner.props._id,
+    email: `intermediateaccess${generateRandomNumber()}@noba.com`,
   });
 
   // TODO: Evaluate whether 'CustomConfigModule' is required or can be replaced with 'TestConfigModule'
