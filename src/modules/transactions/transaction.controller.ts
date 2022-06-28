@@ -91,7 +91,7 @@ export class TransactionController {
   }
 
   //We should create buy sell api differently otherwise lot of if else logic in core logic. basically different api for on-ramp and off-ramp
-  @Post("/trasact")
+  @Post("/")
   @ApiOperation({ summary: "Place a transaction with Noba" })
   @ApiResponse({
     status: HttpStatus.OK,
