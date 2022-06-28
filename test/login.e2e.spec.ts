@@ -21,6 +21,7 @@ describe("Authentication", () => {
     console.log("MongoMemoryServer running at: ", mongoUri);
 
     const environmentVaraibles = {
+      NODE_ENV: "e2e_test",
       MONGO_URI: mongoUri,
       CONFIGS_DIR: join(__dirname, "../appconfigs"),
     };

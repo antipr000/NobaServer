@@ -13,12 +13,12 @@
     "start:debug": "nest start --debug  --webpack --webpackPath webpack.config.js --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
+    "test": "jest && yarn test:e2e",
     "createtables:dev": "npx ts-node src\\infra\\dynamodb\\scripts\\createddbtables.ts",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "NODE_ENV=e2e_test jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
     "ddb-admin": "cross-env DYNAMO_ENDPOINT=http://localhost:4566 dynamodb-admin"
   },
   "dependencies": {

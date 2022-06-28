@@ -5,8 +5,8 @@ import { ConfigModule } from "@nestjs/config";
 import { UserModule } from "../user/user.module";
 import { Sardine } from "./integrations/Sardine";
 import { MongoDBVerificationDataRepo } from "./repos/MongoDBVerificationDataRepo";
-import { InfraProvidersModule } from "src/infraproviders/infra.module";
-import { DBProvider } from "src/infraproviders/DBProvider";
+import { InfraProvidersModule } from "../../infraproviders/infra.module";
+import { DBProvider } from "../../infraproviders/DBProvider";
 
 @Module({
   imports: [ConfigModule, UserModule, InfraProvidersModule],
