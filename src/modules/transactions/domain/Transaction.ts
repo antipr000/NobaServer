@@ -38,7 +38,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   leg2: Joi.string().required(),
   type: Joi.string()
     .valid(...Object.values(TransactionType))
-    .required(),
+    .default(TransactionType.ONRAMP),
   diagnosis: Joi.string().optional(),
   sourceWalletAddress: Joi.string().optional(),
   destinationWalletAddress: Joi.string().optional(),
