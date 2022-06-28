@@ -73,7 +73,7 @@ describe("Authentication", () => {
       const currentUserResponse = await axios.get("/currentUser", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      expect(currentUserResponse.status).toBe(200);
+      expect(currentUserResponse.status).toBe(201);
       expect(currentUserResponse.data.email).toBe(consumerEmail);
       expect(currentUserResponse.data._id).toBe(userId);
     });
