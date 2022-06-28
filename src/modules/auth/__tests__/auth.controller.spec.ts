@@ -1,12 +1,9 @@
+import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { anyString, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anyString, instance, when } from "ts-mockito";
 import { AdminAuthService } from "../admin.auth.service";
-import { UserAuthService } from "../user.auth.service";
-import { getMockAdminAuthServiceWithDefaults } from "../mocks/mock.admin.auth.service";
-import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.service";
-import { getMockPartnerAuthServiceWithDefaults } from "../mocks/mock.partner.auth.service";
 import { AuthController } from "../auth.controller";
 import {
   consumerIdentityIdentifier,
@@ -14,8 +11,11 @@ import {
   partnerAdminIdentityIdenitfier,
 } from "../domain/IdentityType";
 import { VerifyOtpResponseDTO } from "../dto/VerifyOtpReponse";
+import { getMockAdminAuthServiceWithDefaults } from "../mocks/mock.admin.auth.service";
+import { getMockPartnerAuthServiceWithDefaults } from "../mocks/mock.partner.auth.service";
+import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.service";
 import { PartnerAuthService } from "../partner.auth.service";
-import { ForbiddenException } from "@nestjs/common";
+import { UserAuthService } from "../user.auth.service";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -204,7 +204,6 @@ describe("AdminService", () => {
         });
         expect(true).toBe(false);
       } catch (err) {
-        console.log(err);
         expect(err).toBeInstanceOf(ForbiddenException);
       }
     });

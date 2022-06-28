@@ -1,22 +1,22 @@
 import { INestApplication, Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, OpenAPIObject, SwaggerDocumentOptions, SwaggerModule } from "@nestjs/swagger";
-import { urlencoded, json } from "express";
+import { json, urlencoded } from "express";
+import { writeFileSync } from "fs";
 import * as helmet from "helmet";
 import * as morgan from "morgan";
 import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./core/exception/ExceptionsFilter";
+import { CustomConfigService } from "./core/utils/AppConfigModule";
 import {
   createClassTypeToPropertiesMapFromSwaggerSchemas,
   NoUnExpectedKeysValidationPipe,
 } from "./core/utils/NoUnexpectedKeysValidationPipe";
 import { joiToSwagger } from "./joi2Swagger";
-import { writeFileSync } from "fs";
-import { UserModule } from "./modules/user/user.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
-import { CustomConfigService } from "./core/utils/AppConfigModule";
+import { UserModule } from "./modules/user/user.module";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.

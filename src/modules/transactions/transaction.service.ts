@@ -109,7 +109,7 @@ export class TransactionService {
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: userID,
-      paymentMethodId: details.paymentMethodID,
+      paymentMethodID: details.paymentMethodID,
       leg1Amount: details.leg1Amount,
       leg2Amount: details.leg2Amount,
       leg1: leg1,

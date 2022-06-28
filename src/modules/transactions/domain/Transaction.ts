@@ -1,14 +1,13 @@
+import * as Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
-import * as Joi from "joi";
 import { TransactionStatus, TransactionType } from "./Types";
 
 export interface TransactionProps extends VersioningInfo {
   _id: string;
   userId: string;
-  paymentMethodId: string;
-  type: TransactionType;
+  paymentMethodID: string;
   stripePaymentIntentId?: string;
   sourceWalletAddress?: string;
   destinationWalletAddress?: string;
@@ -16,6 +15,7 @@ export interface TransactionProps extends VersioningInfo {
   leg2Amount: number;
   leg1: string;
   leg2: string;
+  type: TransactionType;
   diagnosis?: string;
   cryptoTransactionId?: string;
   transactionStatus: TransactionStatus;
@@ -28,10 +28,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   userId: Joi.string()
     .required()
     .meta({ _mongoose: { index: true } }),
-  paymentMethodId: Joi.string().required(),
-  type: Joi.string()
-    .valid(...Object.values(TransactionType))
-    .default(TransactionType.ONRAMP),
+  paymentMethodID: Joi.string().required(),
   transactionStatus: Joi.string()
     .valid(...Object.values(TransactionStatus))
     .required(),
@@ -39,6 +36,9 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   leg2Amount: Joi.number().required(),
   leg1: Joi.string().required(),
   leg2: Joi.string().required(),
+  type: Joi.string()
+    .valid(...Object.values(TransactionType))
+    .required(),
   diagnosis: Joi.string().optional(),
   sourceWalletAddress: Joi.string().optional(),
   destinationWalletAddress: Joi.string().optional(),

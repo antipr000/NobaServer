@@ -6,7 +6,7 @@ export function convertStripePaymentMethodToPaymentMethodDTO(
   stripePaymentMethod: Stripe.PaymentMethod,
 ): PaymentMethodDTO {
   return {
-    paymentMethodId: stripePaymentMethod.id,
+    paymentMethodID: stripePaymentMethod.id,
     paymentMethodType: PaymentMethodType.CARD,
     cardNumber: stripePaymentMethod.card?.last4,
   };
@@ -16,7 +16,7 @@ export function convertStripePaymentMethodToPaymentMethodDTO(
 // after that merge this method with the one for Stripe
 export function convertCheckoutPaymentMethodToPaymentMethodDTO(checkoutPaymentMethod): PaymentMethodDTO {
   return {
-    paymentMethodId: checkoutPaymentMethod.id,
+    paymentMethodID: checkoutPaymentMethod.id,
     paymentMethodType: PaymentMethodType.CARD,
     cardNumber: checkoutPaymentMethod.card?.last4,
   };

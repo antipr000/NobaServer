@@ -3,7 +3,7 @@ import { PaymentMethodType } from "../domain/Types";
 
 export class PaymentMethodDTO {
   @ApiProperty()
-  paymentMethodId: string;
+  paymentMethodID: string;
 
   @ApiProperty({ enum: Object.values(PaymentMethodType) })
   paymentMethodType: string;
@@ -13,7 +13,7 @@ export class PaymentMethodDTO {
   cardNumber?: string;
 
   @ApiPropertyOptional()
-  billingAdress?: string;
+  billingAddress?: string;
 
   @ApiPropertyOptional()
   cardHolderName?: string;
