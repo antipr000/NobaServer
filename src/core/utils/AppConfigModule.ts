@@ -83,25 +83,8 @@ const getConfigService = async () => {
   ],
   exports: [CustomConfigService],
 })
-export class CustomConfigModule {}
+export class CustomConfigModule { }
 
-// TODO: Remove once everything is working in Noba Staging.
-@Module({})
-export class DynamicCustomConfigModule {
-  static async registerAsync(): Promise<DynamicModule> {
-    return {
-      module: DynamicCustomConfigModule,
-      providers: [
-        {
-          provide: CustomConfigService,
-          useFactory: getConfigService,
-        },
-      ],
-      exports: [CustomConfigService],
-      global: true,
-    };
-  }
-}
 
 /**
  * This module is testing counterpart of `CustomConfigModule`.
