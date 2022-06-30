@@ -1,5 +1,5 @@
 import { KmsKeyringNode, buildClient, CommitmentPolicy } from "@aws-crypto/client-node";
-import { getEnvironmentName, getPropertyFromEnvironment } from "src/config/ConfigurationUtils";
+import { getEnvironmentName, getPropertyFromEnvironment } from "../../config/ConfigurationUtils";
 
 const { encrypt, decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT);
 const ENCRYPT_PREFIX = "[enc]";

@@ -15,6 +15,7 @@ export const userDTO: UserDTO = {
   version: undefined,
   idVerificationStatus: VerificationStatusType.NOT_STARTED,
   documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+  socialSecurityNumber: undefined,
 };
 
 export const mockPartner: PartnerProps = {
