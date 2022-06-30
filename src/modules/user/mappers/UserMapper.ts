@@ -19,6 +19,7 @@ export class UserMapper implements Mapper<User> {
       documentVerificationStatus: p.documentVerificationStatus,
       dateOfBirth: p.dateOfBirth,
       address: p.address,
+      socialSecurityNumber: p.socialSecurityNumber,
     };
   }
 }

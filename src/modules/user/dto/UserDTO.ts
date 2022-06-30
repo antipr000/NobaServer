@@ -39,4 +39,7 @@ export class UserDTO implements Partial<UserProps> {
 
   @ApiPropertyOptional()
   address?: Address;
+
+  @ApiPropertyOptional()
+  socialSecurityNumber?: string;
 }
