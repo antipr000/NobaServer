@@ -15,6 +15,7 @@ import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
+import { WAValidator } from "multicoin-address-validator";
 
 @Injectable()
 export class TransactionService {
@@ -218,8 +219,7 @@ export class TransactionService {
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
-    // TODO earlier this was hardcoded for each blockchain (i.e. terra and ethereum) but we need to find/explore if there is a generic way to validate addresses here
-    // reqd to do here to fail fast if someone sends a wrong address
-    return true;
+    // Will throw an error if the currency is unknown to the tool. We should catch this in the caller and ultimately display a warning to the user that the address could not be validated.
+    return WAValidator.validate(destinationWalletAdress, curr);
   }
 }

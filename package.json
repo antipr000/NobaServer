@@ -61,6 +61,7 @@
     "mongoose": "^6.2.8",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "multicoin-address-validator": "^0.5.10",
     "nanoid": "^3.1.23",
     "nest-router": "^1.0.9",
     "nest-winston": "^1.5.0",
