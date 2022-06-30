@@ -49,7 +49,7 @@ export const userJoiValidationKeys: KeysRequired<UserProps> = {
     .allow(null)
     .meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
   isAdmin: Joi.boolean().default(false),
-  idVerificationStatus: Joi.string().default(ConsumerVerificationStatus.NEW),
+  idVerificationStatus: Joi.string().default(ConsumerVerificationStatus.PENDING_NEW),
   documentVerificationStatus: Joi.string().default(DocumentVerificationStatus.NOT_SUBMITTED),
   documentVerificationTransactionId: Joi.string().optional(),
   idVerificationTimestamp: Joi.number().optional(),
