@@ -5,7 +5,12 @@ import { AdminProps, adminJoiSchema } from "../../../modules/admin/domain/Admin"
 
 const joigoose = Joigoose(Mongoose, null, {});
 
-const mongooseAdminSchema = new Schema(joigoose.convert(adminJoiSchema));
+const mongooseAdminSchema = new Schema(joigoose.convert(adminJoiSchema), {
+  timestamps: {
+    createdAt: "createdTimestamp",
+    updatedAt: "updatedTimestamp",
+  },
+});
 
 export const TRANSACTION_MODEL_NAME = "admin";
 

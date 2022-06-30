@@ -7,7 +7,12 @@ import { partnerSchema, PartnerProps } from "../../../modules/partner/domain/Par
 
 const joigoose = Joigoose(Mongoose, null, {});
 
-const mongoosePartnerSchema = new Schema(joigoose.convert(partnerSchema));
+const mongoosePartnerSchema = new Schema(joigoose.convert(partnerSchema), {
+  timestamps: {
+    createdAt: "createdTimestamp",
+    updatedAt: "updatedTimestamp",
+  },
+});
 
 export const PARTNER_MODEL_NAME = "Partner";
 
