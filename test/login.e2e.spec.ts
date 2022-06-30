@@ -69,13 +69,6 @@ describe("Authentication", () => {
       expect(verifyOtpResponse.status).toBe(201);
       expect(accessToken).toBeDefined();
       expect(userId).toBeDefined();
-
-      const currentUserResponse = await axios.get("/currentUser", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      expect(currentUserResponse.status).toBe(200);
-      expect(currentUserResponse.data.email).toBe(consumerEmail);
-      expect(currentUserResponse.data._id).toBe(userId);
     });
   });
 });

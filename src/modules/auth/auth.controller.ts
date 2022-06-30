@@ -79,13 +79,4 @@ export class AuthController {
     await authService.saveOtp(request.email, otp);
     return authService.sendOtp(request["email"], otp.toString()); //TODO change parameter to emailOrPhone, front end client also need to be updated
   }
-
-  // TODO: Fix the type 'any' by introducing 'identityType' in the returned `request.user`.
-  @ApiBearerAuth("JWT-auth")
-  @Get("/currentUser")
-  @ApiOperation({ summary: "Get the Noba user for the authorized/logged-in user" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Noba user object of logged in user" })
-  async testAuth(@Request() request): Promise<any> {
-    return request.user.props;
-  }
 }
