@@ -65,7 +65,7 @@ export const appConfigsJoiValidationSchema = Joi.object({
 }).options({ allowUnknown: true });
 
 export function getEnvironmentName(): AppEnvironment {
-  const envType: any = getPropertyFromEvironment(NODE_ENV_CONFIG_KEY);
+  const envType: any = getPropertyFromEnvironment(NODE_ENV_CONFIG_KEY);
   if (!envType) throw new Error("Expect NODE_ENV environment variable to be present in the environment");
   if (!Object.values(AppEnvironment).includes(envType)) {
     throw new Error("NODE_ENV should be one of " + Object.values(AppEnvironment).join(","));
@@ -73,12 +73,12 @@ export function getEnvironmentName(): AppEnvironment {
   return envType as AppEnvironment;
 }
 
-export function getPropertyFromEvironment(key: string) {
+export function getPropertyFromEnvironment(key: string) {
   return process.env[key];
 }
 
 export function isPropertyPresentInEnvironmentVariables(key: string): boolean {
-  const value = getPropertyFromEvironment(key);
+  const value = getPropertyFromEnvironment(key);
   if (value === "" || value === undefined || value === null) return false;
   return true;
 }

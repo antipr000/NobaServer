@@ -3,7 +3,6 @@ import { Transaction, TransactionProps } from "../domain/Transaction";
 import { TransactionMapper } from "../mapper/TransactionMapper";
 import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
-import { getWeek } from "../../../core/utils/DateUtils";
 import { Injectable } from "@nestjs/common";
 
 type AggregateResultType = {

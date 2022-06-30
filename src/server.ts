@@ -35,9 +35,9 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
 
   const apiPrefix = configService.get<string>("apiPrefix");
   const appEnvType = configService.get<string>("envType");
-  winstonLogger.info("Setting API prefix to " + apiPrefix + ", app enviornment is " + appEnvType);
+  winstonLogger.info("Setting API prefix to " + apiPrefix + ", app environment is " + appEnvType);
 
-  app.enableCors(); //allowing all origins for now but in future we can dynamically set allowed origins based on the enviornment (localhost:3000, noba.com etc)
+  app.enableCors(); //allowing all origins for now but in future we can dynamically set allowed origins based on the environment (localhost:3000, noba.com etc)
   // app.use(csurf()); we don't need csurf as we take auth-token from header and not cookies --> https://security.stackexchange.com/questions/166724/should-i-use-csrf-protection-on-rest-api-endpoints?newreg=98a29ea4aaa8448785ffc3ab53b3c475
   app.use(helmet());
   app.useLogger(logger);

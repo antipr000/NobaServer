@@ -22,6 +22,7 @@
     "ddb-admin": "cross-env DYNAMO_ENDPOINT=http://localhost:4566 dynamodb-admin"
   },
   "dependencies": {
+    "@aws-crypto/client-node": "^3.1.1",
     "@aws/dynamodb-data-mapper": "0.7.3",
     "@nestjs/common": "^7.6.18",
     "@nestjs/config": "^1.0.2",

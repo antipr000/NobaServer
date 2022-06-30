@@ -5,6 +5,7 @@ import { UserMapper } from "../mappers/UserMapper";
 import { IUserRepo } from "./UserRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Injectable } from "@nestjs/common";
+import { KMSUtil } from "../../../core/utils/KMSUtil";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
@@ -25,6 +26,12 @@ export class MongoDBUserRepo implements IUserRepo {
 
   async updateUser(user: User): Promise<User> {
     const userModel = await this.dbProvider.getUserModel();
+
+    // Encrypt SSN
+    user.props.socialSecurityNumber = await new KMSUtil("ssn-encryption-key").encryptString(
+      user.props.socialSecurityNumber,
+    );
+
     const result = await userModel
       .findByIdAndUpdate(
         user.props._id,
@@ -36,6 +43,7 @@ export class MongoDBUserRepo implements IUserRepo {
         },
       )
       .exec();
+
     const userProps: UserProps = convertDBResponseToJsObject(result);
     return this.userMapper.toDomain(userProps);
   }
@@ -83,8 +91,14 @@ export class MongoDBUserRepo implements IUserRepo {
     if (await this.exists(user.props.email)) {
       throw Error("User with given email already exists");
     } else {
+      // Encrypt SSN
+      user.props.socialSecurityNumber = await new KMSUtil("ssn-encryption-key").encryptString(
+        user.props.socialSecurityNumber,
+      );
+
       const userModel = await this.dbProvider.getUserModel();
       const result = await userModel.create(user.props);
+
       const userProps: UserProps = convertDBResponseToJsObject(result);
       return this.userMapper.toDomain(userProps);
     }

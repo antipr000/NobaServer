@@ -14,7 +14,7 @@ import {
   AWS_SECRET_ACCESS_KEY_ENV_VARIABLE,
   getEnvironmentName,
   getParameterValue,
-  getPropertyFromEvironment,
+  getPropertyFromEnvironment,
   isPropertyPresentInEnvironmentVariables,
   MONGO_AWS_SECRET_KEY_FOR_URI_ATTR,
   MONGO_CONFIG_KEY,
@@ -65,6 +65,7 @@ export default async function loadAppConfigs() {
   // *** Application configurations loading logic here ***
 
   const environment: AppEnvironment = getEnvironmentName();
+  console.log(`Environment: ${environment}`);
   const configFileName = envNameToPropertyFileNameMap[environment];
 
   /**
@@ -154,6 +155,13 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
 
   setEnvironmentProperty(AWS_DEFAULT_REGION_ENV_VARIABLE, awsDefaultRegion);
   setEnvironmentProperty(AWS_REGION_ENV_VARIABLE, awsRegion);
+
+  // Set all KMS keys in config
+  const kms: Record<string, any> = configs["awskms"];
+
+  for (const key in kms) {
+    setEnvironmentProperty(key, kms[key]);
+  }
 
   return configs;
 }
@@ -275,7 +283,7 @@ async function configureSardineCredentials(
     sardineConfigs.secretKey,
   );
 
-  sardineConfigs.sardineBaseUri = getPropertyFromEvironment(SARDINE_URI);
+  sardineConfigs.sardineBaseUri = getPropertyFromEnvironment(SARDINE_URI);
 
   configs[SARDINE_CONFIG_KEY] = sardineConfigs;
   return configs;
@@ -318,7 +326,7 @@ async function configureMongoCredentials(
     }
 
     mongoConfigs = {} as MongoConfigs;
-    mongoConfigs.uri = getPropertyFromEvironment(MONGO_URI_ENV_KEY);
+    mongoConfigs.uri = getPropertyFromEnvironment(MONGO_URI_ENV_KEY);
     mongoConfigs.awsSecretNameForUri = undefined;
   }
 

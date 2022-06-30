@@ -21,6 +21,7 @@ export interface UserProps extends VersioningInfo {
   documentVerificationTimestamp?: number;
   dateOfBirth?: string;
   address?: Address;
+  socialSecurityNumber?: string;
 }
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
@@ -55,6 +56,7 @@ export const userJoiValidationKeys: KeysRequired<UserProps> = {
   documentVerificationTimestamp: Joi.number().optional(),
   dateOfBirth: Joi.string().optional(),
   address: Joi.object().keys(addressValidationJoiKeys).optional(),
+  socialSecurityNumber: Joi.string().optional(),
 };
 
 export const userJoiSchema = Joi.object(userJoiValidationKeys).options({ allowUnknown: true, stripUnknown: false });
@@ -70,7 +72,6 @@ export class User extends AggregateRoot<UserProps> {
 
     if (!userProps.phone && !userProps.email) throw new Error("User must have either phone or email");
 
-    const user = new User(Joi.attempt(userProps, userJoiSchema));
-    return user;
+    return new User(Joi.attempt(userProps, userJoiSchema));
   }
 }
