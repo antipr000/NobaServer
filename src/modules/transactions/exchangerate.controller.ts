@@ -29,7 +29,11 @@ export class ExchangeRateController {
   @Public()
   @Get("/processingfee/:fiatCurrencyCode")
   @ApiOperation({ summary: "Get the processing fee for a crypto fiat conversion" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Processing fee for given crypto fiat conversion", type: ProcessingFeeDTO })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Processing fee for given crypto fiat conversion",
+    type: ProcessingFeeDTO,
+  })
   async processingFee(
     @Param("fiatCurrencyCode") fiatCurrencyCode: string,
     @Query("fiatAmount") fiatAmount: number,

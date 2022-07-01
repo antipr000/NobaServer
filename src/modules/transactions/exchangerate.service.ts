@@ -16,6 +16,6 @@ export class ExchangeRateService {
      * Hardcoding this to 5% of amount
      * TODO: Add proper conversion here
      */
-    return {processingPercentFee: 0.05, transactionPercentFee: 0.1};
+    return { processingPercentFee: 0.05, transactionPercentFee: 0.1 };
   }
 }
