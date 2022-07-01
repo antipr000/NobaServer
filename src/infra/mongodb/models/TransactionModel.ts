@@ -5,7 +5,12 @@ import { TransactionProps, transactionJoiSchema } from "../../../modules/transac
 
 const joigoose = Joigoose(Mongoose, null, {});
 
-const mongooseTransactionSchema = new Schema(joigoose.convert(transactionJoiSchema));
+const mongooseTransactionSchema = new Schema(joigoose.convert(transactionJoiSchema), {
+  timestamps: {
+    createdAt: "createdTimestamp",
+    updatedAt: "updatedTimestamp",
+  },
+});
 
 export const TRANSACTION_MODEL_NAME = "transaction";
 

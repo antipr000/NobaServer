@@ -6,11 +6,11 @@ export const fetchOtpFromDb = async (mongoUri: string, email: string, identityTy
   await mongoClient.connect();
 
   const otpCollection = mongoClient.db("").collection("otps");
-  const otpDocumetsCursor = await otpCollection.find({});
+  const otpDocumentsCursor = await otpCollection.find({});
   let otp = undefined;
 
-  while (await otpDocumetsCursor.hasNext()) {
-    const otpDocument = await otpDocumetsCursor.next();
+  while (await otpDocumentsCursor.hasNext()) {
+    const otpDocument = await otpDocumentsCursor.next();
 
     if ((otpDocument.emailOrPhone ?? "") === email && (otpDocument.identityType ?? "") === identityType) {
       otp = otpDocument.otp;

@@ -10,7 +10,12 @@ import {
 
 const joigoose = Joigoose(Mongoose, null, {});
 
-const mongooseVerificationDataSchema = new Schema(joigoose.convert(verificationDataJoiSchema));
+const mongooseVerificationDataSchema = new Schema(joigoose.convert(verificationDataJoiSchema), {
+  timestamps: {
+    createdAt: "createdTimestamp",
+    updatedAt: "updatedTimestamp",
+  },
+});
 
 export const VERIFICATION_DATA_MODEL_NAME = "VerificationData";
 

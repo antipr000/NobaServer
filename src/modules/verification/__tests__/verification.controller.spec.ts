@@ -100,7 +100,7 @@ describe("VerificationController", () => {
     when(
       verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
     ).thenResolve({
-      status: ConsumerVerificationStatus.APPROVED,
+      status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
     });
 
     const result = await verificationController.verifyUser(
@@ -145,7 +145,7 @@ describe("VerificationController", () => {
     when(
       verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
     ).thenResolve({
-      status: ConsumerVerificationStatus.REJECTED,
+      status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
     });
 
     const result = await verificationController.verifyUser(
@@ -190,7 +190,7 @@ describe("VerificationController", () => {
     when(
       verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
     ).thenResolve({
-      status: ConsumerVerificationStatus.FLAGGED,
+      status: ConsumerVerificationStatus.PENDING_FLAGGED_KYC,
     });
 
     const result = await verificationController.verifyUser(

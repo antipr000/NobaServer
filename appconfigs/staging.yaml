@@ -9,6 +9,13 @@ logFilePath: "/home/ubuntu/noba_server.log"
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
 
+# AWS KMS Encryption key references
+# kmsGeneratorKeyID is global to all keys
+# Each key followed by _keyID uses a prefix which is our alias to that key. This must match between KMS and our application.
+awskms:
+  kmsGeneratorKeyID: "arn:aws:kms:us-east-1:210194402305:alias/master-key"
+  ssn-encryption-key_keyID: "arn:aws:kms:us-east-1:210194402305:key/39d511f4-c1ff-4d21-b6d5-c3347f0b671c"
+
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
   awsSecretNameForApiKey: "TEST_SENDGRID_SECRET" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

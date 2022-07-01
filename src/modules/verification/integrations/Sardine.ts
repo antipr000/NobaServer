@@ -69,15 +69,15 @@ export class Sardine implements IDVProvider {
       const { data } = await axios.post(this.BASE_URI + "/v1/customers", sardineRequest, this.getAxiosConfig());
       if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
         return {
-          status: ConsumerVerificationStatus.REJECTED,
+          status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
         };
       } else if (data.level === SardineRiskLevels.MEDIUM) {
         return {
-          status: ConsumerVerificationStatus.FLAGGED,
+          status: ConsumerVerificationStatus.PENDING_FLAGGED_KYC,
         };
       } else {
         return {
-          status: ConsumerVerificationStatus.APPROVED,
+          status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
         };
       }
     } catch (e) {

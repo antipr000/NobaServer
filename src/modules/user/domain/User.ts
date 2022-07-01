@@ -21,6 +21,7 @@ export interface UserProps extends VersioningInfo {
   documentVerificationTimestamp?: number;
   dateOfBirth?: string;
   address?: Address;
+  socialSecurityNumber?: string;
 }
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
@@ -48,13 +49,14 @@ export const userJoiValidationKeys: KeysRequired<UserProps> = {
     .allow(null)
     .meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
   isAdmin: Joi.boolean().default(false),
-  idVerificationStatus: Joi.string().default(ConsumerVerificationStatus.NEW),
+  idVerificationStatus: Joi.string().default(ConsumerVerificationStatus.PENDING_NEW),
   documentVerificationStatus: Joi.string().default(DocumentVerificationStatus.NOT_SUBMITTED),
   documentVerificationTransactionId: Joi.string().optional(),
   idVerificationTimestamp: Joi.number().optional(),
   documentVerificationTimestamp: Joi.number().optional(),
   dateOfBirth: Joi.string().optional(),
   address: Joi.object().keys(addressValidationJoiKeys).optional(),
+  socialSecurityNumber: Joi.string().optional(),
 };
 
 export const userJoiSchema = Joi.object(userJoiValidationKeys).options({ allowUnknown: true, stripUnknown: false });
@@ -70,7 +72,6 @@ export class User extends AggregateRoot<UserProps> {
 
     if (!userProps.phone && !userProps.email) throw new Error("User must have either phone or email");
 
-    const user = new User(Joi.attempt(userProps, userJoiSchema));
-    return user;
+    return new User(Joi.attempt(userProps, userJoiSchema));
   }
 }

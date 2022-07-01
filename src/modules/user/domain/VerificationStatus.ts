@@ -1,10 +1,14 @@
 export enum ConsumerVerificationStatus {
-  NEW = "New",
-  PENDING = "Pending",
-  KYC_APPROVED = "KycApproved",
+  PENDING_NEW = "Pending-New",
+  PENDING_KYC_SUBMITTED = "Pending-KYCSubmitted",
+  PENDING_KYC_APPROVED = "Pending-KYCApproved",
+  PENDING_FLAGGED_KYC = "Pending-Flagged-KYC",
+  PENDING_FLAGGED_FRAUD = "Pending-Flagged-Fraud",
+  PENDING_FLAGGED_WALLET = "Pending-Flagged-Wallet",
   APPROVED = "Approved",
-  FLAGGED = "Flagged",
-  REJECTED = "Rejected",
+  NOT_APPROVED_REJECTED_KYC = "NotApproved-Rejected-KYC",
+  NOT_APPROVED_REJECTED_FRAUD = "NotApproved-Rejected-Fraud",
+  NOT_APPROVED_REJECTED_WALLET = "NotApproved-Rejected-Wallet",
 }
 
 export enum DocumentVerificationStatus {

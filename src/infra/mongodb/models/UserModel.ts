@@ -7,7 +7,12 @@ import { userJoiSchema, UserProps } from "../../../modules/user/domain/User";
 
 const joigoose = Joigoose(Mongoose, null, {});
 
-const mongooseUserSchema = new Schema(joigoose.convert(userJoiSchema));
+const mongooseUserSchema = new Schema(joigoose.convert(userJoiSchema), {
+  timestamps: {
+    createdAt: "createdTimestamp",
+    updatedAt: "updatedTimestamp",
+  },
+});
 
 export const USER_MODEL_NAME = "User";
 

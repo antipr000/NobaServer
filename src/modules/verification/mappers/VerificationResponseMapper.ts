@@ -7,11 +7,11 @@ import { VerificationResultDTO, VerificationResultStatus } from "../dto/Verifica
 
 export class VerificationResponseMapper {
   toConsumerInformationResultDTO(t: ConsumerVerificationResult): VerificationResultDTO {
-    if (t.status === ConsumerVerificationStatus.APPROVED) {
+    if (t.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED) {
       return {
         status: VerificationResultStatus.APPROVED,
       };
-    } else if (t.status === ConsumerVerificationStatus.REJECTED) {
+    } else if (t.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
       return {
         status: VerificationResultStatus.NOT_APPROVED,
       };

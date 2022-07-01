@@ -13,7 +13,12 @@ type UserProps = {
   name: string;
 };
 
-const mongooseUserSchema = new Schema(joigoose.convert(userJoiSchema));
+const mongooseUserSchema = new Schema(joigoose.convert(userJoiSchema), {
+  timestamps: {
+    createdAt: "createdTimestamp",
+    updatedAt: "updatedTimestamp",
+  },
+});
 
 const mongoUri = "mongodb+srv://nobamongo:NobaMongo@cluster0.wjsia.mongodb.net/devdb";
 

@@ -5,7 +5,12 @@ import { OtpProps, otpJoiSchema } from "../../../modules/auth/domain/Otp";
 
 const joigoose = Joigoose(Mongoose, null, {});
 
-const mongooseOtpSchema = new Schema(joigoose.convert(otpJoiSchema));
+const mongooseOtpSchema = new Schema(joigoose.convert(otpJoiSchema), {
+  timestamps: {
+    createdAt: "createdTimestamp",
+    updatedAt: "updatedTimestamp",
+  },
+});
 
 export const OTP_MODEL_NAME = "otp";
 

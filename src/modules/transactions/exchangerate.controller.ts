@@ -4,10 +4,10 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Public } from "../auth/public.decorator";
 import { ExchangeRateService } from "./exchangerate.service";
+import { ProcessingFeeDTO } from "./dto/ProcessingFeeDTO";
 
 //TODO fetch exchange rates on client side? or at least add rate limitation from single ip to prevent mis-use of price api provider on our behalf??
 @Controller("exchangerates")
-@ApiBearerAuth("JWT-auth")
 @ApiTags("Assets")
 export class ExchangeRateController {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -26,14 +26,19 @@ export class ExchangeRateController {
     return this.exchangeRateService.priceInFiat(cryptoCurrencyCode, fiatCurrencyCode);
   }
 
+  @Public()
   @Get("/processingfee/:fiatCurrencyCode")
   @ApiOperation({ summary: "Get the processing fee for a crypto fiat conversion" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Processing fee for given crypto fiat conversion" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Processing fee for given crypto fiat conversion",
+    type: ProcessingFeeDTO,
+  })
   async processingFee(
     @Param("fiatCurrencyCode") fiatCurrencyCode: string,
     @Query("fiatAmount") fiatAmount: number,
     @Query("cryptoCurrencyCode") cryptoCurrencyCode: string,
-  ): Promise<number> {
+  ): Promise<ProcessingFeeDTO> {
     return this.exchangeRateService.processingFee(cryptoCurrencyCode, fiatCurrencyCode, fiatAmount);
   }
 }
