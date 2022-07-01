@@ -103,7 +103,7 @@ export class ZeroHashService {
     // TODO: This is a dummy userData
     const userData = {
       first_name: user.name.substring(0, user.name.indexOf(" ")), // TODO: Break out to first/last
-      last_name: user.name.substring(user.name.indexOf(" ")+1), // TODO: Break out to first/last
+      last_name: user.name.substring(user.name.indexOf(" ") + 1), // TODO: Break out to first/last
       email: user.email,
       address_one: user.address.streetLine1,
       address_two: user.address.streetLine2,

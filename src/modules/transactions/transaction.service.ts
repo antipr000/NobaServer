@@ -47,7 +47,7 @@ export class TransactionService {
     dbProvider: DBProvider,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly zeroHashService: ZeroHashService,
-    stripeService: StripeService
+    stripeService: StripeService,
   ) {
     this.stripe = stripeService.stripeApi;
     this.transactionsMapper = new TransactionMapper();
@@ -94,11 +94,12 @@ export class TransactionService {
     const leg1Amount = details.leg1Amount;
     const leg2Amount = details.leg2Amount;
 
-    if (this.allowedCryptoCurrencies.length == 0) { // TODO: unsafe code. We should only do this once; waiting for Ankit's refactor and we can re-evaluate.
-      const currencies = await this.cacheManager.get("cryptocurrencies") as CurrencyDTO[];
-      currencies.forEach((curr) => {
-        this.allowedCryptoCurrencies.push(curr.ticker)
-      })
+    if (this.allowedCryptoCurrencies.length == 0) {
+      // TODO: unsafe code. We should only do this once; waiting for Ankit's refactor and we can re-evaluate.
+      const currencies = (await this.cacheManager.get("cryptocurrencies")) as CurrencyDTO[];
+      currencies.forEach(curr => {
+        this.allowedCryptoCurrencies.push(curr.ticker);
+      });
     }
 
     //this.cacheManager.
