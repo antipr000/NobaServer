@@ -83,8 +83,7 @@ const getConfigService = async () => {
   ],
   exports: [CustomConfigService],
 })
-export class CustomConfigModule { }
-
+export class CustomConfigModule {}
 
 /**
  * This module is testing counterpart of `CustomConfigModule`.

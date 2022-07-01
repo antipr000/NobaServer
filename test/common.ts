@@ -23,3 +23,19 @@ export const fetchOtpFromDb = async (mongoUri: string, email: string, identityTy
   if (otp === undefined) throw Error(`No login with email '${email}' & identityType '${identityType}'.`);
   return otp;
 };
+
+export const insertAdmin = async (mongoUri: string, email: string, id: string, role: string): Promise<boolean> => {
+  // Setup a mongodb client for interacting with "admins" collection.
+  const mongoClient = new MongoClient(mongoUri);
+  await mongoClient.connect();
+
+  const adminCollection = mongoClient.db("").collection("admins");
+  await adminCollection.insertOne({
+    _id: id as any,
+    email: email,
+    role: role,
+  });
+
+  await mongoClient.close();
+  return true;
+};

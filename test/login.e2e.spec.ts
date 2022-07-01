@@ -1,38 +1,47 @@
+/**
+ * Setup the required environment variables for
+ *   - API Client
+ *   - Test Configs for different Vendors
+ *
+ * This is required to be the very first line in
+ * the test files (even before other imports) as
+ * API Client requires certain environment variables
+ * to be set before any of it's class is even
+ * imported.
+ */
+import { setUp } from "./setup";
+setUp();
+
 import { INestApplication } from "@nestjs/common";
-import axios from "axios";
+import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import { join } from "path";
 import { bootstrap } from "../src/server";
 import { fetchOtpFromDb } from "./common";
+import { ResponseStatus } from "./api_client/core/request";
 
 describe("Authentication", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
-  let baseUrl: string;
   let app: INestApplication;
 
   beforeEach(async () => {
+    const port = process.env.PORT;
+
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
     console.log("MongoMemoryServer running at: ", mongoUri);
 
     const environmentVaraibles = {
-      NODE_ENV: "e2e_test",
       MONGO_URI: mongoUri,
-      CONFIGS_DIR: join(__dirname, "../appconfigs"),
     };
     app = await bootstrap(environmentVaraibles);
-    const port = 9000 + Math.floor(Math.random() * 100);
     await app.listen(port);
 
     console.log(`Server started on port '${port} ...'`);
-
-    baseUrl = `http://localhost:${port}/v1/auth`;
-    axios.defaults.baseURL = baseUrl;
   });
 
   afterEach(async () => {
@@ -41,41 +50,40 @@ describe("Authentication", () => {
     await mongoServer.stop();
   });
 
-  describe("SuccessScenarios", () => {
+  describe("CONSUMER", () => {
     /**
      * - Calls '/login' with 'CONSUMER' identityType.
      * - Calls '/verifyotp' by fetching the OTP from the database itself.
      * - Calls '/currentUser' and verify that the returned '_id' & 'email' matches.
      */
-    it("Login as 'CONSUMER' is successful", async () => {
+    it("signup as 'CONSUMER' is successful", async () => {
       const consumerEmail = "test+consumer@noba.com";
 
-      const loginRequest = {
+      const loginResponse = await AuthenticationService.loginUser({
         email: consumerEmail,
         identityType: "CONSUMER",
-      };
-      const loginResponse = await axios.post("/login", loginRequest);
-      expect(loginResponse.status).toBe(201);
+      });
+      expect(loginResponse.__status).toBe(201);
 
-      const verifyOtpRequest = {
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
         emailOrPhone: consumerEmail,
         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
         identityType: "CONSUMER",
-      };
-      const verifyOtpResponse = await axios.post("verifyotp", verifyOtpRequest);
-      const accessToken = verifyOtpResponse.data.access_token;
-      const userId = verifyOtpResponse.data.user_id;
+      })) as VerifyOtpResponseDTO & ResponseStatus;
 
-      expect(verifyOtpResponse.status).toBe(201);
+      const accessToken = verifyOtpResponse.access_token;
+      const userId = verifyOtpResponse.user_id;
+
+      expect(verifyOtpResponse.__status).toBe(201);
       expect(accessToken).toBeDefined();
       expect(userId).toBeDefined();
 
-      const currentUserResponse = await axios.get("/currentUser", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      expect(currentUserResponse.status).toBe(200);
-      expect(currentUserResponse.data.email).toBe(consumerEmail);
-      expect(currentUserResponse.data._id).toBe(userId);
+      process.env.ACCESS_TOKEN = accessToken;
+      const currentUserResponse = await AuthenticationService.testAuth();
+
+      expect(currentUserResponse.__status).toBe(200);
+      expect(currentUserResponse.email).toBe(consumerEmail);
+      expect(currentUserResponse._id).toBe(userId);
     });
   });
 });

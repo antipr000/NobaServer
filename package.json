@@ -19,7 +19,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "ddb-admin": "cross-env DYNAMO_ENDPOINT=http://localhost:4566 dynamodb-admin"
+    "ddb-admin": "cross-env DYNAMO_ENDPOINT=http://localhost:4566 dynamodb-admin",
+    "gen-test-api-client": "bash ./test/api_client/client.generator.sh"
   },
   "dependencies": {
     "@aws/dynamodb-data-mapper": "0.7.3",
@@ -35,6 +36,7 @@
     "@sendgrid/mail": "^7.6.2",
     "@terra-money/terra.js": "^3.0.9",
     "@types/cache-manager": "^3.4.2",
+    "@types/node-fetch": "^2.6.2",
     "aws-sdk": "^2.948.0",
     "axios": "^0.21.4",
     "cache-manager": "^3.6.3",
@@ -63,6 +65,7 @@
     "nanoid": "^3.1.23",
     "nest-router": "^1.0.9",
     "nest-winston": "^1.5.0",
+    "openapi-typescript-codegen": "^0.23.0",
     "passport": "^0.5.2",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
