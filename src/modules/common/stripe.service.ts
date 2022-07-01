@@ -9,7 +9,6 @@ export class StripeService {
   private readonly stripe: Stripe;
 
   constructor(private configService: CustomConfigService) {
-    console.log(this.configService);
     const stripeSecretKey = this.configService.get<StripeConfigs>(STRIPE_CONFIG_KEY).secretKey;
     this.stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2020-08-27",

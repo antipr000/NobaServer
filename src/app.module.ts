@@ -18,8 +18,6 @@ import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 @Module({
   imports: [
     CustomConfigModule,
-    // getAppConfigModule(),
-    // DynamicCustomConfigModule.registerAsync(),
     CacheModule.register(),
     getWinstonModule(),
     InfraProvidersModule,
