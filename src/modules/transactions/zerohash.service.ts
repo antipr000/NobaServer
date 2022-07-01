@@ -6,6 +6,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { Web3TransactionHandler } from "../common/domain/Types";
+import { UserProps } from "../user/domain/User";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise");
@@ -98,24 +99,24 @@ export class ZeroHashService {
     return accounts;
   }
 
-  async createParticipant(email) {
+  async createParticipant(user: UserProps) {
     // TODO: This is a dummy userData
     const userData = {
-      first_name: "Bob",
-      last_name: "Builder",
-      email: email,
-      address_one: "1 Main St.",
-      address_two: "Suite 1000",
-      city: "Chicago",
-      state: "IL",
-      zip: "12345",
-      country: "United States",
-      date_of_birth: "1985-09-02",
-      id_number_type: "ssn",
-      id_number: "123456789",
-      signed_timestamp: 1603378501286,
+      first_name: user.name.substring(0, user.name.indexOf(" ")), // TODO: Break out to first/last
+      last_name: user.name.substring(user.name.indexOf(" ")+1), // TODO: Break out to first/last
+      email: user.email,
+      address_one: user.address.streetLine1,
+      address_two: user.address.streetLine2,
+      city: user.address.city,
+      state: user.address.regionCode,
+      zip: user.address.postalCode,
+      country: user.address.countryCode,
+      date_of_birth: user.dateOfBirth, // ZH format and our format are both YYYY-MM-DD
+      id_number_type: "ssn", // TODO: Support other types outside US
+      id_number: user.socialSecurityNumber, // TODO: Support other types outside US
+      signed_timestamp: 1603378501286, // TODO: What's the correct value to use here?
       metadata: {},
-      risk_rating: "low",
+      risk_rating: "low", // TODO: Update to user.riskRating after user refactoring
     };
 
     let participant;
@@ -251,7 +252,7 @@ export class ZeroHashService {
   }
 
   async transferCryptoToDestinationWallet(
-    email: string,
+    user: UserProps,
     quoted_currency: string,
     underlying: string,
     destination_wallet: string,
@@ -277,7 +278,7 @@ export class ZeroHashService {
     }
 
     // Check if the user is already registered with ZeroHash
-    const participant = await this.getParticipant(email);
+    const participant = await this.getParticipant(user.email);
     let participant_code;
 
     // If the user is not registered, register them
@@ -285,9 +286,9 @@ export class ZeroHashService {
       // TODO: Use fake user data for now
       // TODO: Discuss how are we going to get userData (from Sardine?) like id type, id number etc?
       // Perhaps we should store in our DB too?
-      const new_participant = await this.createParticipant(email);
+      const new_participant = await this.createParticipant(user);
       if (new_participant == null) {
-        console.log("Failed to create participant for email:" + email);
+        console.log("Failed to create participant for email:" + user.email);
         throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
       }
       participant_code = new_participant["message"]["participant_code"];
@@ -334,7 +335,7 @@ export class ZeroHashService {
       trade_quantity: String(amount / trade_price),
       product_type: "spot",
       trade_type: "regular",
-      trade_reporter: email,
+      trade_reporter: user.email,
       platform_code: "6MWNG6",
       client_trade_id: "client_trade_id", // TODO: Check what exactly is client trade id and how is it used
       physical_delivery: true,

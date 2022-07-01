@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import Stripe from "stripe";
 import { Logger } from "winston";
@@ -6,6 +6,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { StripeService } from "../common/stripe.service";
+import { CurrencyDTO } from "../common/dto/CurrencyDTO";
 import { UserService } from "../user/user.service";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
@@ -16,6 +17,7 @@ import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
 import { validate } from "multicoin-address-validator";
+import { Cache } from "cache-manager";
 
 @Injectable()
 export class TransactionService {
@@ -30,11 +32,14 @@ export class TransactionService {
 
   private readonly transactionsMapper: TransactionMapper;
 
+  @Inject(CACHE_MANAGER)
+  private cacheManager: Cache;
+
   private readonly stripe: Stripe;
 
   // This is the id used at coinGecko, so do not change the allowed constants below
   private readonly allowedFiats: string[] = ["USD"];
-  private readonly allowedCryptoCurrencies: string[] = ["ETH", "terrausd", "terra-luna"];
+  private allowedCryptoCurrencies = new Array<string>(); // = ["ETH", "terrausd", "terra-luna"];
 
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
@@ -42,9 +47,9 @@ export class TransactionService {
     dbProvider: DBProvider,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly zeroHashService: ZeroHashService,
-    stripeServie: StripeService,
+    stripeService: StripeService
   ) {
-    this.stripe = stripeServie.stripeApi;
+    this.stripe = stripeService.stripeApi;
     this.transactionsMapper = new TransactionMapper();
   }
 
@@ -89,6 +94,14 @@ export class TransactionService {
     const leg1Amount = details.leg1Amount;
     const leg2Amount = details.leg2Amount;
 
+    if (this.allowedCryptoCurrencies.length == 0) { // TODO: unsafe code. We should only do this once; waiting for Ankit's refactor and we can re-evaluate.
+      const currencies = await this.cacheManager.get("cryptocurrencies") as CurrencyDTO[];
+      currencies.forEach((curr) => {
+        this.allowedCryptoCurrencies.push(curr.ticker)
+      })
+    }
+
+    //this.cacheManager.
     if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
       throw new BadRequestError({
         messageForClient:
@@ -116,6 +129,7 @@ export class TransactionService {
       leg1: leg1,
       leg2: leg2,
       transactionStatus: TransactionStatus.INITIATED,
+      destinationWalletAddress: details.destinationWalletAddress,
     });
 
     this.transactionsRepo.createTransaction(newTransaction);
@@ -199,7 +213,7 @@ export class TransactionService {
 
       // leg1 is fiat, leg2 is crypto
       this.zeroHashService.transferCryptoToDestinationWallet(
-        user.props.email,
+        user.props,
         leg1,
         leg2,
         details.destinationWalletAddress,

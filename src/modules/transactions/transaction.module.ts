@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, CacheModule } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
@@ -14,7 +14,7 @@ import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, CommonModule, UserModule],
+  imports: [InfraProvidersModule, ConfigModule, CommonModule, UserModule, CacheModule.register()],
   controllers: [TransactionController, ExchangeRateController],
   providers: [
     TransactionService,
