@@ -15,7 +15,7 @@ import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
-import { WAValidator } from "multicoin-address-validator";
+import { validate } from "multicoin-address-validator";
 
 @Injectable()
 export class TransactionService {
@@ -220,6 +220,6 @@ export class TransactionService {
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
     // Will throw an error if the currency is unknown to the tool. We should catch this in the caller and ultimately display a warning to the user that the address could not be validated.
-    return WAValidator.validate(destinationWalletAdress, curr);
+    return validate(destinationWalletAdress, curr);
   }
 }
