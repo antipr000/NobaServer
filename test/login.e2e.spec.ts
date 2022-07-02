@@ -134,6 +134,29 @@ describe("Authentication", () => {
       expect(adminWithSamePartnerAdminEmailLogin.__status).toBe(403);
     });
 
+    it("shouldn't be successful if PartnerAdmin with same email just generates an OTP", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com"
+
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPAPA", "BASIC", "PPPPPPPPPP")
+      ).toBe(true);
+
+      const partnerAdminLogin = await AuthenticationService.loginUser({
+        email: partnerAdminEmail,
+        identityType: "PARTNER_ADMIN"
+      });
+      expect(partnerAdminLogin.__status).toBe(201);
+
+      const nobaAdminVerifyOtpResponse = await AuthenticationService.verifyOtp({
+        emailOrPhone: partnerAdminEmail,
+        identityType: "NOBA_ADMIN",
+        otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN")
+      }) as VerifyOtpResponseDTO & ResponseStatus;
+
+      // TODO: Fix the 'verifyOtp' to return 403 instead of 404. 
+      expect(nobaAdminVerifyOtpResponse.__status).toBe(404);
+    });
+
     it("should be successful for registered NobaAdmin", async () => {
       const nobaAdminEmail = "test.noba.admin@noba.com";
 
@@ -147,8 +170,17 @@ describe("Authentication", () => {
       }) as any & ResponseStatus;
 
       expect(loginResponse.__status).toBe(201);
+
+      const verifyOtpResponse = await AuthenticationService.verifyOtp({
+        emailOrPhone: nobaAdminEmail,
+        identityType: "NOBA_ADMIN",
+        otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN")
+      }) as VerifyOtpResponseDTO & ResponseStatus;
+
+      // TODO: Modify 'verifyOtp' to return 200.
+      expect(verifyOtpResponse.__status).toBe(201);
     });
-  })
+  });
 
   // describe("NOBA_ADMIN", () => {
   //   it("signup as 'NOBA_ADMIN' is Forbidden", async () => {
