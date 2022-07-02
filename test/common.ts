@@ -24,7 +24,7 @@ export const fetchOtpFromDb = async (mongoUri: string, email: string, identityTy
   return otp;
 };
 
-export const insertAdmin = async (mongoUri: string, email: string, id: string, role: string): Promise<boolean> => {
+export const insertNobaAdmin = async (mongoUri: string, email: string, id: string, role: string): Promise<boolean> => {
   // Setup a mongodb client for interacting with "admins" collection.
   const mongoClient = new MongoClient(mongoUri);
   await mongoClient.connect();
@@ -39,3 +39,31 @@ export const insertAdmin = async (mongoUri: string, email: string, id: string, r
   await mongoClient.close();
   return true;
 };
+
+export const insertPartnerAdmin =
+  async (
+    mongoUri: string,
+    email: string,
+    id: string,
+    role: string,
+    partnerId: string
+  ): Promise<boolean> => {
+    // Setup a mongodb client for interacting with "admins" collection.
+    const mongoClient = new MongoClient(mongoUri);
+    await mongoClient.connect();
+
+    const partnerAdminCollection = mongoClient.db("").collection("partneradmins");
+    await partnerAdminCollection.insertOne({
+      _id: id as any,
+      email: email,
+      role: role,
+      partnerId: partnerId
+    });
+
+    await mongoClient.close();
+    return true;
+  };
+
+export const setAccessTokenForTheNextRequests = (accessToken) => {
+  process.env.ACCESS_TOKEN = accessToken;
+}

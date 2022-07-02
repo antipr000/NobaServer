@@ -13,11 +13,11 @@ import { setUp } from "./setup";
 setUp();
 
 import { INestApplication } from "@nestjs/common";
-import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
+import { AuthenticationService, UserDTO, UserService, VerifyOtpResponseDTO } from "./api_client";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
-import { fetchOtpFromDb } from "./common";
+import { fetchOtpFromDb, insertNobaAdmin, insertPartnerAdmin, setAccessTokenForTheNextRequests } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 
 describe("Authentication", () => {
@@ -50,8 +50,8 @@ describe("Authentication", () => {
     await mongoServer.stop();
   });
 
-  describe("CONSUMER", () => {
-    it("signup as 'CONSUMER' is successful", async () => {
+  describe("SignUp or Login as CONSUMER", () => {
+    it("should be successful", async () => {
       const consumerEmail = "test+consumer@noba.com";
 
       const loginResponse = await AuthenticationService.loginUser({
@@ -72,6 +72,13 @@ describe("Authentication", () => {
       expect(verifyOtpResponse.__status).toBe(201);
       expect(accessToken).toBeDefined();
       expect(userId).toBeDefined();
+
+      setAccessTokenForTheNextRequests(accessToken);
+      const loggedInConsumer = await UserService.getUser() as UserDTO & ResponseStatus;
+
+      expect(loggedInConsumer.__status).toBe(200);
+      expect(loggedInConsumer._id).toBe(userId);
+      expect(loggedInConsumer.email).toBe(consumerEmail);
     });
 
     it("signup with invalid 'identityType' throws 400 error", async () => {
@@ -84,6 +91,64 @@ describe("Authentication", () => {
       expect(loginResponse.__status).toBe(400);
     });
   });
+
+  describe("NobaAdmin login", () => {
+    it("shouldn't be successful for an unregistered NobaAdmin", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com";
+
+      const loginResponse = await AuthenticationService.loginUser({
+        email: nobaAdminEmail,
+        identityType: "NOBA_ADMIN"
+      }) as any & ResponseStatus;
+
+      expect(loginResponse.__status).toBe(403);
+    });
+
+    it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
+      const consumerEmail = "consumer@noba.com";
+
+      const consumerLoginResponse = await AuthenticationService.loginUser({
+        email: consumerEmail,
+        identityType: "CONSUMER"
+      });
+      expect(consumerLoginResponse.__status).toBe(201);
+
+      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser({
+        email: consumerEmail,
+        identityType: "NOBA_ADMIN"
+      });
+      expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
+    });
+
+    it("shouldn't be successful for a SignedUp PartnerAdmin with same email", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com"
+
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPAPA", "BASIC", "PPPPPPPPPP")
+      ).toBe(true);
+
+      const adminWithSamePartnerAdminEmailLogin = await AuthenticationService.loginUser({
+        email: partnerAdminEmail,
+        identityType: "NOBA_ADMIN"
+      });
+      expect(adminWithSamePartnerAdminEmailLogin.__status).toBe(403);
+    });
+
+    it("should be successful for registered NobaAdmin", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com";
+
+      expect(
+        await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")
+      ).toBe(true);
+
+      const loginResponse = await AuthenticationService.loginUser({
+        email: nobaAdminEmail,
+        identityType: "NOBA_ADMIN"
+      }) as any & ResponseStatus;
+
+      expect(loginResponse.__status).toBe(201);
+    });
+  })
 
   // describe("NOBA_ADMIN", () => {
   //   it("signup as 'NOBA_ADMIN' is Forbidden", async () => {
