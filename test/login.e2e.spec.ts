@@ -2,11 +2,11 @@
  * Setup the required environment variables for
  *   - API Client
  *   - Test Configs for different Vendors
- *
- * This is required to be the very first line in
- * the test files (even before other imports) as
+ * 
+ * This is required to be the very first line in 
+ * the test files (even before other imports) as 
  * API Client requires certain environment variables
- * to be set before any of it's class is even
+ * to be set before any of it's class is even 
  * imported.
  */
 import { setUp } from "./setup";
@@ -51,25 +51,20 @@ describe("Authentication", () => {
   });
 
   describe("CONSUMER", () => {
-    /**
-     * - Calls '/login' with 'CONSUMER' identityType.
-     * - Calls '/verifyotp' by fetching the OTP from the database itself.
-     * - Calls '/currentUser' and verify that the returned '_id' & 'email' matches.
-     */
     it("signup as 'CONSUMER' is successful", async () => {
       const consumerEmail = "test+consumer@noba.com";
 
       const loginResponse = await AuthenticationService.loginUser({
         email: consumerEmail,
-        identityType: "CONSUMER",
+        identityType: "CONSUMER"
       });
       expect(loginResponse.__status).toBe(201);
 
-      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+      const verifyOtpResponse = await AuthenticationService.verifyOtp({
         emailOrPhone: consumerEmail,
         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
         identityType: "CONSUMER",
-      })) as VerifyOtpResponseDTO & ResponseStatus;
+      }) as VerifyOtpResponseDTO & ResponseStatus;
 
       const accessToken = verifyOtpResponse.access_token;
       const userId = verifyOtpResponse.user_id;
@@ -77,13 +72,48 @@ describe("Authentication", () => {
       expect(verifyOtpResponse.__status).toBe(201);
       expect(accessToken).toBeDefined();
       expect(userId).toBeDefined();
+    });
 
-      // process.env.ACCESS_TOKEN = accessToken;
-      // const currentUserResponse = await AuthenticationService.testAuth();
+    it("signup with invalid 'identityType' throws 400 error", async () => {
+      const consumerEmail = "test+consumer@noba.com";
 
-      // expect(currentUserResponse.__status).toBe(200);
-      // expect(currentUserResponse.email).toBe(consumerEmail);
-      // expect(currentUserResponse._id).toBe(userId);
+      const loginResponse = await AuthenticationService.loginUser({
+        email: consumerEmail,
+        identityType: "CONSUMR" as any
+      });
+      expect(loginResponse.__status).toBe(400);
     });
   });
+
+  // describe("NOBA_ADMIN", () => {
+  //   it("signup as 'NOBA_ADMIN' is Forbidden", async () => {
+  //     const adminEmail = "test+admin@noba.com";
+
+  //     const loginRequest = {
+  //       email: adminEmail,
+  //       identityType: "NOBA_ADMIN",
+  //     };
+  //     try {
+  //       await axios.post("/login", loginRequest);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err.response.status).toBe(403);
+  //     }
+  //   });
+
+  //   it("login as 'NOBA_ADMIN' fails even if a 'CONSUMER' with same email exist", async () => {
+  //     const adminEmail = "test+admin.consumer@noba.com";
+
+  //     const loginRequest = {
+  //       email: adminEmail,
+  //       identityType: "NOBA_ADMIN",
+  //     };
+  //     try {
+  //       await axios.post("/login", loginRequest);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err.response.status).toBe(403);
+  //     }
+  //   });
+  // });
 });

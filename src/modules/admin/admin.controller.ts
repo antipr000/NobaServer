@@ -63,7 +63,7 @@ export class AdminController {
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() {}
+  constructor() { }
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
@@ -101,6 +101,18 @@ export class AdminController {
     }
 
     return this.adminMapper.toDTO(savedAdmin);
+  }
+
+  @Get("/")
+  @ApiOperation({ summary: "Get the details of the logged in NobaAdmin." })
+  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The logged in Noba Admin." })
+  async getNobaAdmin(@Request() request): Promise<NobaAdminDTO> {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException(`This endpoint is only for Noba Admins.`);
+    }
+
+    return this.adminMapper.toDTO(authenticatedUser);
   }
 
   @Patch(`/:${AdminId}`)

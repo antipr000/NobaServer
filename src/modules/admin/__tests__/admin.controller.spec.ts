@@ -210,6 +210,54 @@ describe("AdminController", () => {
     });
   });
 
+  describe("getNobaAdmin", () => {
+    it("Logged-in Consumer shouldn't be able to call GET /admins", async () => {
+      const authenticatedConsumer: User = User.createUser({
+        _id: "XXXXXXXXXX",
+        email: "consumer@noba.com",
+      });
+
+      try {
+        await adminController.getNobaAdmin({ user: authenticatedConsumer });
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("Logged-in PartnerAdmins shouldn't be able to call GET /admins", async () => {
+      const authenticatedParterAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "XXXXXXXXXX",
+        email: "partner.admin@noba.com",
+        role: "ALL",
+        partnerId: "PPPPPPPPPP",
+      });
+
+      try {
+        await adminController.getNobaAdmin({ user: authenticatedParterAdmin });
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("Logged-in NobaAdmins should successfully get the details of NobaAdmin", async () => {
+      const adminId = "XXXXXXXXXX";
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: "BASIC",
+      });
+
+      const queriedNobaAdmin = await adminController.getNobaAdmin({ user: authenticatedNobaAdmin });
+
+      expect(queriedNobaAdmin._id).toBe(authenticatedNobaAdmin.props._id);
+      expect(queriedNobaAdmin.email).toBe(authenticatedNobaAdmin.props.email);
+      expect(queriedNobaAdmin.name).toBe(authenticatedNobaAdmin.props.name);
+      expect(queriedNobaAdmin.role).toBe(authenticatedNobaAdmin.props.role);
+    });
+  })
+
   describe("updateNobaAdminPrivileges", () => {
     it("Consumer shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
