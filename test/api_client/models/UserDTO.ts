@@ -11,7 +11,17 @@ export type UserDTO = {
   email: string;
   phone?: string;
   isEmailVerified?: boolean;
-  idVerificationStatus?: "New" | "Pending" | "KycApproved" | "Approved" | "Flagged" | "Rejected";
+  idVerificationStatus?:
+    | "Pending-New"
+    | "Pending-KYCSubmitted"
+    | "Pending-KYCApproved"
+    | "Pending-Flagged-KYC"
+    | "Pending-Flagged-Fraud"
+    | "Pending-Flagged-Wallet"
+    | "Approved"
+    | "NotApproved-Rejected-KYC"
+    | "NotApproved-Rejected-Fraud"
+    | "NotApproved-Rejected-Wallet";
   documentVerificationStatus?:
     | "NotSubmitted"
     | "NotRequired"
@@ -21,4 +31,5 @@ export type UserDTO = {
     | "LivePhotoVerified";
   dateOfBirth?: string;
   address?: any;
+  socialSecurityNumber?: string;
 };

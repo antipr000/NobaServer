@@ -18,7 +18,7 @@ export class UserService {
   public static getUser(): CancelablePromise<UserDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/users/",
+      url: "/v1/users",
       errors: {
         400: `Invalid request parameters`,
       },
@@ -33,7 +33,7 @@ export class UserService {
   public static updateUser(): CancelablePromise<UserDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/v1/users/",
+      url: "/v1/users",
       errors: {
         400: `Invalid request parameters`,
       },

@@ -19,6 +19,7 @@ export type { NobaAdminDTO } from "./models/NobaAdminDTO";
 export type { PartnerAdminDTO } from "./models/PartnerAdminDTO";
 export type { PartnerDTO } from "./models/PartnerDTO";
 export type { PaymentMethodDTO } from "./models/PaymentMethodDTO";
+export type { ProcessingFeeDTO } from "./models/ProcessingFeeDTO";
 export type { SubdivisionDTO } from "./models/SubdivisionDTO";
 export type { TransactionDTO } from "./models/TransactionDTO";
 export type { TransactionStatsDTO } from "./models/TransactionStatsDTO";

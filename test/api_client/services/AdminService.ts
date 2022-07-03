@@ -75,6 +75,18 @@ export class AdminService {
   }
 
   /**
+   * Get the details of the logged in NobaAdmin.
+   * @returns NobaAdminDTO The logged in Noba Admin.
+   * @throws ApiError
+   */
+  public static getNobaAdmin(): CancelablePromise<NobaAdminDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins",
+    });
+  }
+
+  /**
    * Updates the role/name of a NobaAdmin.
    * @param adminId
    * @param requestBody

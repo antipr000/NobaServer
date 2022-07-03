@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CurrencyDTO } from "../models/CurrencyDTO";
+import type { ProcessingFeeDTO } from "../models/ProcessingFeeDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -57,14 +58,14 @@ export class AssetsService {
    * @param fiatCurrencyCode
    * @param fiatAmount
    * @param cryptoCurrencyCode
-   * @returns any Processing fee for given crypto fiat conversion
+   * @returns ProcessingFeeDTO Processing fee for given crypto fiat conversion
    * @throws ApiError
    */
   public static processingFee(
     fiatCurrencyCode: string,
     fiatAmount: number,
     cryptoCurrencyCode: string,
-  ): CancelablePromise<any> {
+  ): CancelablePromise<ProcessingFeeDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/exchangerates/processingfee/{fiatCurrencyCode}",
