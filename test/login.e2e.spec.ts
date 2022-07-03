@@ -182,6 +182,96 @@ describe("Authentication", () => {
     });
   });
 
+  describe("PartnerAdmin login", () => {
+    it("shouldn't be successful for an unregistered PartnerAdmin", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com";
+
+      const loginResponse = await AuthenticationService.loginUser({
+        email: partnerAdminEmail,
+        identityType: "PARTNER_ADMIN"
+      }) as any & ResponseStatus;
+
+      expect(loginResponse.__status).toBe(403);
+    });
+
+    it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
+      const consumerEmail = "consumer@noba.com";
+
+      const consumerLoginResponse = await AuthenticationService.loginUser({
+        email: consumerEmail,
+        identityType: "CONSUMER"
+      });
+      expect(consumerLoginResponse.__status).toBe(201);
+
+      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser({
+        email: consumerEmail,
+        identityType: "PARTNER_ADMIN"
+      });
+      expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
+    });
+
+    it("shouldn't be successful for a SignedUp NobaAdmin with same email", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com"
+
+      expect(
+        await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")
+      ).toBe(true);
+
+      const adminWithSameNobaAdminEmailLogin = await AuthenticationService.loginUser({
+        email: nobaAdminEmail,
+        identityType: "PARTNER_ADMIN"
+      });
+      expect(adminWithSameNobaAdminEmailLogin.__status).toBe(403);
+    });
+
+    it("shouldn't be successful if NobaAdmin with same email just generates an OTP", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com"
+
+      expect(
+        await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")
+      ).toBe(true);
+
+      const nobaAdminLogin = await AuthenticationService.loginUser({
+        email: nobaAdminEmail,
+        identityType: "NOBA_ADMIN"
+      });
+      expect(nobaAdminLogin.__status).toBe(201);
+
+      const partnerAdminVerifyOtpResponse = await AuthenticationService.verifyOtp({
+        emailOrPhone: nobaAdminEmail,
+        identityType: "PARTNER_ADMIN",
+        otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN")
+      }) as VerifyOtpResponseDTO & ResponseStatus;
+
+      // TODO: Fix the 'verifyOtp' to return 403 instead of 404. 
+      expect(partnerAdminVerifyOtpResponse.__status).toBe(404);
+    });
+
+    it("should be successful for registered PartnerAdmin", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com";
+
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")
+      ).toBe(true);
+
+      const loginResponse = await AuthenticationService.loginUser({
+        email: partnerAdminEmail,
+        identityType: "PARTNER_ADMIN"
+      }) as any & ResponseStatus;
+
+      expect(loginResponse.__status).toBe(201);
+
+      const verifyOtpResponse = await AuthenticationService.verifyOtp({
+        emailOrPhone: partnerAdminEmail,
+        identityType: "PARTNER_ADMIN",
+        otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN")
+      }) as VerifyOtpResponseDTO & ResponseStatus;
+
+      // TODO: Modify 'verifyOtp' to return 200.
+      expect(verifyOtpResponse.__status).toBe(201);
+    });
+  });
+
   // describe("NOBA_ADMIN", () => {
   //   it("signup as 'NOBA_ADMIN' is Forbidden", async () => {
   //     const adminEmail = "test+admin@noba.com";
