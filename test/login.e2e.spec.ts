@@ -182,6 +182,7 @@ describe("Authentication", () => {
     });
   });
 
+  // TODO: Decide if same user can be associated with multiple partners & add proper tests.
   describe("PartnerAdmin login", () => {
     it("shouldn't be successful for an unregistered PartnerAdmin", async () => {
       const partnerAdminEmail = "test.partner.admin@noba.com";
@@ -271,36 +272,4 @@ describe("Authentication", () => {
       expect(verifyOtpResponse.__status).toBe(201);
     });
   });
-
-  // describe("NOBA_ADMIN", () => {
-  //   it("signup as 'NOBA_ADMIN' is Forbidden", async () => {
-  //     const adminEmail = "test+admin@noba.com";
-
-  //     const loginRequest = {
-  //       email: adminEmail,
-  //       identityType: "NOBA_ADMIN",
-  //     };
-  //     try {
-  //       await axios.post("/login", loginRequest);
-  //       expect(true).toBe(false);
-  //     } catch (err) {
-  //       expect(err.response.status).toBe(403);
-  //     }
-  //   });
-
-  //   it("login as 'NOBA_ADMIN' fails even if a 'CONSUMER' with same email exist", async () => {
-  //     const adminEmail = "test+admin.consumer@noba.com";
-
-  //     const loginRequest = {
-  //       email: adminEmail,
-  //       identityType: "NOBA_ADMIN",
-  //     };
-  //     try {
-  //       await axios.post("/login", loginRequest);
-  //       expect(true).toBe(false);
-  //     } catch (err) {
-  //       expect(err.response.status).toBe(403);
-  //     }
-  //   });
-  // });
 });
