@@ -63,7 +63,7 @@ export class AdminController {
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() { }
+  constructor() {}
 
   // TODO: Add proper AuthN & AuthZ
   @Public()

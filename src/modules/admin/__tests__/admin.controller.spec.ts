@@ -256,7 +256,7 @@ describe("AdminController", () => {
       expect(queriedNobaAdmin.name).toBe(authenticatedNobaAdmin.props.name);
       expect(queriedNobaAdmin.role).toBe(authenticatedNobaAdmin.props.role);
     });
-  })
+  });
 
   describe("updateNobaAdminPrivileges", () => {
     it("Consumer shouldn't be able to update the role of the an admin", async () => {
