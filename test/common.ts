@@ -37,6 +37,7 @@ export const insertNobaAdmin = async (mongoUri: string, email: string, id: strin
     _id: id as any,
     email: email,
     role: role,
+    name: "Test"
   });
 
   await mongoClient.close();
