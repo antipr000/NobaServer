@@ -19,7 +19,13 @@ import { bootstrap } from "../src/server";
 import { ResponseStatus } from "./api_client/core/request";
 import { AdminService, AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { NobaAdminDTO } from "src/modules/admin/dto/NobaAdminDTO";
-import { fetchOtpFromDb, insertNobaAdmin, insertPartnerAdmin, loginAndGetResponse, setAccessTokenForTheNextRequests } from "./common";
+import {
+  fetchOtpFromDb,
+  insertNobaAdmin,
+  insertPartnerAdmin,
+  loginAndGetResponse,
+  setAccessTokenForTheNextRequests,
+} from "./common";
 
 describe("Noba Admin", () => {
   jest.setTimeout(20000);
@@ -139,8 +145,8 @@ describe("Noba Admin", () => {
         _id: "AAAAAAAAAA",
         email: "test.noba.admin@noba.com",
         name: "Test Admin",
-        role: "BASIC"
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: "BASIC",
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
     });
@@ -156,8 +162,8 @@ describe("Noba Admin", () => {
         _id: "AAAAAAAAAA",
         email: "test.noba.admin@noba.com",
         name: "Test Admin",
-        role: "BASIC"
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: "BASIC",
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
     });
@@ -174,8 +180,8 @@ describe("Noba Admin", () => {
         _id: "AAAAAAAAAA",
         email: "test.noba.admin.2@noba.com",
         name: "Test Admin 2",
-        role: "BASIC"
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: "BASIC",
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
     });
@@ -192,8 +198,8 @@ describe("Noba Admin", () => {
         _id: "AAAAAAAAAA",
         email: "test.noba.admin.2@noba.com",
         name: "Test Admin 2",
-        role: "BASIC"
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: "BASIC",
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
     });
@@ -214,8 +220,8 @@ describe("Noba Admin", () => {
         _id: "A2A2A2A2A2A2",
         email: newNobaAdminEmail,
         name: newNobaAdminName,
-        role: newNobaAdminRole
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: newNobaAdminRole,
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(201);
       expect(createNobaAdminResponse._id).toBeDefined();
@@ -243,8 +249,8 @@ describe("Noba Admin", () => {
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(nobaAdminId, {
         name: "Updated Test Admin",
-        role: "ADMIN"
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: "ADMIN",
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -260,8 +266,8 @@ describe("Noba Admin", () => {
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(nobaAdminId, {
         name: "Updated Test Admin",
-        role: "ADMIN"
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: "ADMIN",
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -276,16 +282,20 @@ describe("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(true);
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      expect(
+        await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole),
+      ).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
+        true,
+      );
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(toUpdateNobaAdminId, {
         name: "Updated Test Admin",
-        role: toUpdateNobaAdminUpdatedRole
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: toUpdateNobaAdminUpdatedRole,
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -300,16 +310,20 @@ describe("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(true);
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      expect(
+        await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole),
+      ).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
+        true,
+      );
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(toUpdateNobaAdminId, {
         name: "Updated Test Admin",
-        role: toUpdateNobaAdminUpdatedRole
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: toUpdateNobaAdminUpdatedRole,
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -319,14 +333,16 @@ describe("Noba Admin", () => {
       const loggedInNobaAdminId = "AAAAAAAAAAA";
       const loggedInNobaAdminRole = "ADMIN";
 
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
+        true,
+      );
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(loggedInNobaAdminId, {
         name: "Updated Test Admin",
-      } as any)) as (NobaAdminDTO & ResponseStatus);
+      } as any)) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -341,15 +357,17 @@ describe("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
+        true,
+      );
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(toUpdateNobaAdminId, {
         name: "Updated Test Admin",
-        role: toUpdateNobaAdminUpdatedRole
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: toUpdateNobaAdminUpdatedRole,
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(404);
     });
@@ -365,15 +383,19 @@ describe("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(true);
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      expect(
+        await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole),
+      ).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
+        true,
+      );
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(toUpdateNobaAdminId, {
         role: toUpdateNobaAdminUpdatedRole,
-      } as any)) as (NobaAdminDTO & ResponseStatus);
+      } as any)) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(200);
       expect(updateNobaAdminResponse._id).toBe(toUpdateNobaAdminId);
@@ -393,15 +415,19 @@ describe("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(true);
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      expect(
+        await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole),
+      ).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
+        true,
+      );
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(toUpdateNobaAdminId, {
         name: toUpdateNobaAdminUpdatedName,
-      } as any)) as (NobaAdminDTO & ResponseStatus);
+      } as any)) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(200);
       expect(updateNobaAdminResponse._id).toBe(toUpdateNobaAdminId);
@@ -421,16 +447,20 @@ describe("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(true);
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      expect(
+        await insertNobaAdmin(mongoUri, toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole),
+      ).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
+        true,
+      );
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(toUpdateNobaAdminId, {
         name: toUpdateNobaAdminUpdatedName,
-        role: toUpdateNobaAdminUpdatedRole
-      })) as (NobaAdminDTO & ResponseStatus);
+        role: toUpdateNobaAdminUpdatedRole,
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(200);
       expect(updateNobaAdminResponse._id).toBe(toUpdateNobaAdminId);
@@ -441,32 +471,18 @@ describe("Noba Admin", () => {
   });
 
   describe("DELETE /admins/{id}", () => {
-    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
+    it("shouldn't allow requests with PartnerAdmin credentials", async () => {});
 
-    });
+    it("shouldn't allow requests with Consumer credentials", async () => {});
 
-    it("shouldn't allow requests with Consumer credentials", async () => {
+    it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {});
 
-    });
+    it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {});
 
-    it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
+    it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {});
 
-    });
+    it("should delete NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {});
 
-    it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
-
-    });
-
-    it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {
-
-    });
-
-    it("should delete NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
-
-    });
-
-    it("shouldn't allow requests to delete the currently logged-in NobaAdmin itself", async () => {
-
-    });
+    it("shouldn't allow requests to delete the currently logged-in NobaAdmin itself", async () => {});
   });
 });

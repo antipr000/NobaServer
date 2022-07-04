@@ -37,7 +37,7 @@ export const insertNobaAdmin = async (mongoUri: string, email: string, id: strin
     _id: id as any,
     email: email,
     role: role,
-    name: "Test"
+    name: "Test",
   });
 
   await mongoClient.close();
@@ -71,20 +71,19 @@ export const setAccessTokenForTheNextRequests = accessToken => {
   process.env.ACCESS_TOKEN = accessToken;
 };
 
-export const loginAndGetResponse =
-  async (
-    mongoUri: string,
-    email: string,
-    identityType: string
-  ): Promise<VerifyOtpResponseDTO & ResponseStatus> => {
-    await AuthenticationService.loginUser({
-      email: email,
-      identityType: identityType as any,
-    });
+export const loginAndGetResponse = async (
+  mongoUri: string,
+  email: string,
+  identityType: string,
+): Promise<VerifyOtpResponseDTO & ResponseStatus> => {
+  await AuthenticationService.loginUser({
+    email: email,
+    identityType: identityType as any,
+  });
 
-    return (await AuthenticationService.verifyOtp({
-      emailOrPhone: email,
-      identityType: identityType as any,
-      otp: await fetchOtpFromDb(mongoUri, email, identityType),
-    })) as (VerifyOtpResponseDTO & ResponseStatus);
-  };
+  return (await AuthenticationService.verifyOtp({
+    emailOrPhone: email,
+    identityType: identityType as any,
+    otp: await fetchOtpFromDb(mongoUri, email, identityType),
+  })) as VerifyOtpResponseDTO & ResponseStatus;
+};
