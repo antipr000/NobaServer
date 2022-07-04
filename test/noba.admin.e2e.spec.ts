@@ -125,4 +125,26 @@ describe("Noba Admin", () => {
       expect(getNobaAdminResponse.role).toBe(nobaAdminRole);
     });
   });
+
+  describe("POST /admins", () => {
+    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
+
+    });
+
+    it("shouldn't allow requests with Consumer credentials", async () => {
+
+    });
+
+    it("shouldn't allow requests from NobaAdmin with BASIC role", async () => {
+
+    });
+
+    it("shouldn't allow requests from NobaAdmin with INTERMEDIATE role", async () => {
+
+    });
+
+    it("should create NobaAdmin if request is from NobaAdmin with ADMIN role", async () => {
+
+    });
+  });
 });

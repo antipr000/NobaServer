@@ -1,4 +1,7 @@
 import { MongoClient } from "mongodb";
+import { VerifyOtpResponseDTO } from "src/modules/auth/dto/VerifyOtpReponse";
+import { AuthenticationService } from "./api_client";
+import { ResponseStatus } from "./api_client/core/request";
 
 export const fetchOtpFromDb = async (mongoUri: string, email: string, identityType: string): Promise<number> => {
   // Setup a mongodb client for interacting with "admins" collection.
@@ -66,3 +69,21 @@ export const insertPartnerAdmin = async (
 export const setAccessTokenForTheNextRequests = accessToken => {
   process.env.ACCESS_TOKEN = accessToken;
 };
+
+export const loginAndGetResponse =
+  async (
+    mongoUri: string,
+    email: string,
+    identityType: string
+  ): Promise<VerifyOtpResponseDTO & ResponseStatus> => {
+    await AuthenticationService.loginUser({
+      email: email,
+      identityType: identityType as any,
+    });
+
+    return (await AuthenticationService.verifyOtp({
+      emailOrPhone: email,
+      identityType: identityType as any,
+      otp: await fetchOtpFromDb(mongoUri, email, identityType),
+    })) as (VerifyOtpResponseDTO & ResponseStatus);
+  };
