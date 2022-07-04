@@ -7,7 +7,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { CustomConfigModule } from "./core/utils/AppConfigModule";
 import { getWinstonModule } from "./core/utils/WinstonModule";
 import { InfraProvidersModule } from "./infraproviders/infra.module";
-import { UserModule } from "./modules/user/user.module";
+import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
 import { VerificationModule } from "./modules/verification/verification.module";
 import { CommonModule } from "./modules/common/common.module";
@@ -23,7 +23,7 @@ import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
     InfraProvidersModule,
     CommonModule,
     AuthModule,
-    UserModule,
+    ConsumerModule,
     VerificationModule,
     TransactionModule,
     AdminModule,

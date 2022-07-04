@@ -45,7 +45,7 @@ export class AuthController {
   async verifyOtp(@Body() request: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
     const authService: AuthService = this.getAuthService(request.identityType);
 
-    const userId: string = await authService.validateAndGetUserId(request.emailOrPhone, request.otp);
+    const userId: string = await authService.validateAndGetUserId(request.emailOrPhone, request.otp, request.partnerID);
     return authService.generateAccessToken(userId);
   }
 
@@ -66,7 +66,7 @@ export class AuthController {
 
     const otp = authService.createOtp();
     await authService.deleteAnyExistingOTP(request.email);
-    await authService.saveOtp(request.email, otp);
+    await authService.saveOtp(request.email, otp, request.partnerID);
     return authService.sendOtp(request["email"], otp.toString()); //TODO change parameter to emailOrPhone, front end client also need to be updated
   }
 }

@@ -16,7 +16,7 @@ import {
 import { joiToSwagger } from "./joi2Swagger";
 import { AuthModule } from "./modules/auth/auth.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
-import { UserModule } from "./modules/user/user.module";
+import { ConsumerModule } from "./modules/consumer/consumer.module";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
@@ -68,7 +68,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
 
   // Any API which we want to expose publicly (to partners) must be explicitly declared here
   const publicOptions = {
-    include: [AppModule, AuthModule, UserModule, TransactionModule],
+    include: [AppModule, AuthModule, ConsumerModule, TransactionModule],
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
 

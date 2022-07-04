@@ -6,14 +6,15 @@ import { IVerificationDataRepo } from "../repos/IVerificationDataRepo";
 import { IDVProvider } from "../integrations/IDVProvider";
 import { getMockVerificationRepoWithDefaults } from "../mocks/mock.verification.repo";
 import { getMockIdvProviderIntegrationWithDefaults } from "../mocks/mock.idvprovider.integration";
-import { UserService } from "../../../modules/user/user.service";
-import { mockedUserService } from "../../../modules/user/mocks/userservicemock";
+import { ConsumerService } from "../../consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
   let verificationRepo: IVerificationDataRepo;
+  let consumerService: ConsumerService;
   let idvProvider: IDVProvider;
 
   jest.setTimeout(30000);
@@ -30,6 +31,7 @@ describe("VerificationService", () => {
 
     verificationRepo = getMockVerificationRepoWithDefaults();
     idvProvider = getMockIdvProviderIntegrationWithDefaults();
+    consumerService = getMockConsumerServiceWithDefaults();
 
     const verificationDataRepoProvider = {
       provide: "VerificationDataRepo",
@@ -42,8 +44,8 @@ describe("VerificationService", () => {
     };
 
     const userServiceProvider = {
-      provide: UserService,
-      useFactory: () => instance(mockedUserService),
+      provide: ConsumerService,
+      useFactory: () => instance(consumerService),
     };
 
     const app: TestingModule = await Test.createTestingModule({

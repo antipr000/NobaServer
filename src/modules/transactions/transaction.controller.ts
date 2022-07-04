@@ -32,7 +32,7 @@ import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 
 import { AuthUser } from "../auth/auth.decorator";
 import { CsvService } from "../common/csv.service";
-import { User } from "../user/domain/User";
+import { Consumer } from "../consumer/domain/Consumer";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
@@ -61,12 +61,12 @@ export class TransactionController {
   @ApiResponse({ status: HttpStatus.OK, type: CheckTransactionDTO })
   async checkIfTransactionPossible(
     @Query() checkTransactionQuery: CheckTransactionQueryDTO,
-    @AuthUser() authUser: User,
+    @AuthUser() authUser: Consumer,
   ): Promise<CheckTransactionDTO> {
     console.log("check if can make transaction");
     console.log("AUth user", authUser);
     const tAmount = checkTransactionQuery.transactionAmount;
-    const status: TransactionAllowedStatus = await this.limitsService.canMakeTransaction(authUser.props, tAmount);
+    const status: TransactionAllowedStatus = await this.limitsService.canMakeTransaction(authUser, tAmount);
     return {
       status: status,
     };
@@ -81,7 +81,7 @@ export class TransactionController {
   })
   async getTransactionStatus(
     @Param("transactionID") transactionID: string,
-    @AuthUser() authUser: User,
+    @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO> {
     const dto = await this.transactionService.getTransactionStatus(transactionID); //TODO check that transactionId belongs to this user?
     if (dto.userID !== authUser.props._id) {
@@ -100,7 +100,7 @@ export class TransactionController {
   })
   @ApiBadGatewayResponse({ description: "Bad gateway. Something went wrong." })
   @ApiBadRequestResponse({ description: "Bad request. Invalid input." })
-  async transact(@Body() orderDetails: CreateTransactionDTO, @AuthUser() user: User): Promise<TransactionDTO> {
+  async transact(@Body() orderDetails: CreateTransactionDTO, @AuthUser() user: Consumer): Promise<TransactionDTO> {
     this.logger.info(`uid ${user.props._id}, transact input:`, orderDetails);
 
     return this.transactionService.transact(user.props._id, orderDetails);
@@ -116,7 +116,7 @@ export class TransactionController {
   })
   async getTransactions(
     @Query() transactionFilters: TransactionFilterDTO,
-    @AuthUser() authUser: User,
+    @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO[]> {
     const fromDateInUTC = new Date(transactionFilters.startDate).toUTCString();
     const toDateInUTC = new Date(transactionFilters.endDate).toUTCString();
@@ -137,7 +137,7 @@ export class TransactionController {
   })
   async downloadTransactions(
     @Query() downloadParames: DownloadTransactionsDTO,
-    @AuthUser() authUser: User,
+    @AuthUser() authUser: Consumer,
     @Response() response,
   ) {
     const fromDateInUTC = new Date(downloadParames.startDate).toUTCString();

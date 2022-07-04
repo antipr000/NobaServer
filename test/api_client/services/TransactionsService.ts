@@ -59,7 +59,7 @@ export class TransactionsService {
   public static transact(requestBody: CreateTransactionDTO): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/v1/transactions/trasact",
+      url: "/v1/transactions",
       body: requestBody,
       mediaType: "application/json",
       errors: {

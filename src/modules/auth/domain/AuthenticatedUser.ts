@@ -1,5 +1,5 @@
 import { Admin } from "../../admin/domain/Admin";
 import { PartnerAdmin } from "../../partner/domain/PartnerAdmin";
-import { User } from "../../user/domain/User";
+import { Consumer } from "../../consumer/domain/Consumer";
 
-export type AuthenticatedUser = Admin | User | PartnerAdmin;
+export type AuthenticatedUser = Admin | Consumer | PartnerAdmin;

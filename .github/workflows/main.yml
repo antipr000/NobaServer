@@ -84,31 +84,31 @@ jobs:
 
           echo ::set-output name=deploymentGroup::$deploymentGroup
 
-      - name: Create Artifacts Directory
-        if: steps.check-tag.outputs.release == 'true'
-        run: |
-          mkdir artifacts
-          mkdir uploads
-          cp build_info.yml ./artifacts/build_info.yml
-          cp appspec.yml ./artifacts/appspec.yml
-          cp -R ./deployscripts/ artifacts 
-          cp -R ./dist/ artifacts/
-          cp -R ./node_modules/ artifacts
-          cp -R ./cloudwatch_agents/ artifacts
-          ls -ltr artifacts
+      # - name: Create Artifacts Directory
+      #   if: steps.check-tag.outputs.release == 'true'
+      #   run: |
+      #     mkdir artifacts
+      #     mkdir uploads
+      #     cp build_info.yml ./artifacts/build_info.yml
+      #     cp appspec.yml ./artifacts/appspec.yml
+      #     cp -R ./deployscripts/ artifacts 
+      #     cp -R ./dist/ artifacts/
+      #     cp -R ./node_modules/ artifacts
+      #     cp -R ./cloudwatch_agents/ artifacts
+      #     ls -ltr artifacts
 
-      - name: AWS CodeDeploy
-        uses: sourcetoad/aws-codedeploy-action@v1
-        if: steps.check-tag.outputs.release == 'true'
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-east-1
-          codedeploy_name: NobaServer
-          codedeploy_group: ${{ steps.check-tag.outputs.deploymentGroup }}
-          codedeploy_register_only: false
-          s3_bucket: github-code-artifacts
-          s3_folder: server
-          # excluded_files: '.git/* .env storage/framework/cache/* node_modules/*'
-          max_polling_iterations: 60
-          directory: ./artifacts
+      # - name: AWS CodeDeploy
+      #   uses: sourcetoad/aws-codedeploy-action@v1
+      #   if: steps.check-tag.outputs.release == 'true'
+      #   with:
+      #     aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws_region: us-east-1
+      #     codedeploy_name: NobaServer
+      #     codedeploy_group: ${{ steps.check-tag.outputs.deploymentGroup }}
+      #     codedeploy_register_only: false
+      #     s3_bucket: github-code-artifacts
+      #     s3_folder: server
+      #     # excluded_files: '.git/* .env storage/framework/cache/* node_modules/*'
+      #     max_polling_iterations: 60
+      #     directory: ./artifacts

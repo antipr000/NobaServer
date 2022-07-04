@@ -4,8 +4,8 @@ import { getMockPartnerAdminRepoWithDefaults } from "../mocks/mock.partner.admin
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { PartnerAdminService } from "../partneradmin.service";
-import { mockedUserService } from "../../../modules/user/mocks/userservicemock";
-import { UserService } from "../../../modules/user/user.service";
+import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
+import { ConsumerService } from "../../consumer/consumer.service";
 import { NotFoundException } from "@nestjs/common";
 import { PartnerAdmin } from "../domain/PartnerAdmin";
 import { Result } from "../../../core/logic/Result";
@@ -13,6 +13,7 @@ import { Result } from "../../../core/logic/Result";
 describe("PartnerService", () => {
   let partnerAdminService: PartnerAdminService;
   const partnerAdminRepo = getMockPartnerAdminRepoWithDefaults();
+  const consumerService: ConsumerService = getMockConsumerServiceWithDefaults();
 
   jest.setTimeout(20000);
   const OLD_ENV = process.env;
@@ -23,8 +24,8 @@ describe("PartnerService", () => {
       useFactory: () => instance(partnerAdminRepo),
     };
     const UserServiceMockProvider = {
-      provide: UserService,
-      useFactory: () => instance(mockedUserService),
+      provide: ConsumerService,
+      useFactory: () => instance(consumerService),
     };
 
     const app: TestingModule = await Test.createTestingModule({

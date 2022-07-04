@@ -3,17 +3,17 @@
 import { Schema, model, Model } from "mongoose";
 import * as Mongoose from "mongoose";
 import * as Joigoose from "joigoose";
-import { userJoiSchema, UserProps } from "../../../modules/user/domain/User";
+import { consumerJoiSchema, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 
 const joigoose = Joigoose(Mongoose, null, {});
 
-const mongooseUserSchema = new Schema(joigoose.convert(userJoiSchema), {
+const mongooseConsumerSchema = new Schema(joigoose.convert(consumerJoiSchema), {
   timestamps: {
     createdAt: "createdTimestamp",
     updatedAt: "updatedTimestamp",
   },
 });
 
-export const USER_MODEL_NAME = "User";
+export const CONSUMER_MODEL_NAME = "Consumer";
 
-export const UserModel: Model<UserProps> = model<UserProps>(USER_MODEL_NAME, mongooseUserSchema);
+export const UserModel: Model<ConsumerProps> = model<ConsumerProps>(CONSUMER_MODEL_NAME, mongooseConsumerSchema);

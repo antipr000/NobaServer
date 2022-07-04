@@ -39,16 +39,4 @@ export class AuthenticationService {
       mediaType: "application/json",
     });
   }
-
-  /**
-   * Get the Noba user for the authorized/logged-in user
-   * @returns any Noba user object of logged in user
-   * @throws ApiError
-   */
-  public static testAuth(): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/auth/currentUser",
-    });
-  }
 }

@@ -1,9 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import {
-  ConsumerVerificationStatus,
-  DocumentVerificationStatus,
-} from "../../../modules/user/domain/VerificationStatus";
+import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";

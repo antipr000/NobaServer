@@ -33,7 +33,7 @@ import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { VerificationService } from "./verification.service";
 import { Public } from "../auth/public.decorator";
 import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
-import { User } from "../user/domain/User";
+import { Consumer } from "../consumer/domain/Consumer";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -100,16 +100,16 @@ export class VerificationController {
   })
   @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Get verification result" })
   @ApiBadRequestResponse({ description: "Invalid request parameters!" })
-  async verifyUser(
+  async verifyConsumer(
     @Query("sessionKey") sessionKey: string,
     @Body() requestBody: IDVerificationRequestDTO,
     @Request() request,
   ): Promise<VerificationResultDTO> {
-    const user: User = request.user;
-    const result = await this.verificationService.verifyConsumerInformation(user.props._id, sessionKey, {
+    const consumer: Consumer = request.user;
+    const result = await this.verificationService.verifyConsumerInformation(consumer.props._id, sessionKey, {
       ...requestBody,
-      userID: user.props._id,
-      email: user.props.email,
+      userID: consumer.props._id,
+      email: consumer.props.email,
     });
     return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }
@@ -159,9 +159,9 @@ export class VerificationController {
     @Body() requestData: DocVerificationRequestDTO,
     @Request() request,
   ): Promise<string> {
-    const user: User = request.user;
-    const result = await this.verificationService.verifyDocument(user.props._id, sessionKey, {
-      userID: user.props._id,
+    const consumer: Consumer = request.user;
+    const result = await this.verificationService.verifyDocument(consumer.props._id, sessionKey, {
+      userID: consumer.props._id,
       documentType: requestData.documentType,
       documentFrontImage: files.frontImage[0],
       documentBackImage: files.backImage?.length > 0 ? files.backImage[0] : undefined,
@@ -180,8 +180,8 @@ export class VerificationController {
     @Query("sessionKey") sessionKey: string,
     @Request() request,
   ): Promise<VerificationResultDTO> {
-    const user: User = request.user;
-    const result = await this.verificationService.getDocumentVerificationResult(user.props._id, sessionKey, id);
+    const consumer: Consumer = request.user;
+    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, sessionKey, id);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 }

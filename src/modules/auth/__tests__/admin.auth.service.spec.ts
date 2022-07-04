@@ -74,10 +74,10 @@ describe("AdminService", () => {
     it("should throw 'NotFoundException' if user with given email doesn't exist", async () => {
       const NON_EXISTING_ADMIN_EMAIL = "abcd@noba.com";
 
-      when(mockOtpRepo.getOTP(NON_EXISTING_ADMIN_EMAIL, identityType)).thenReject(new NotFoundException());
+      when(mockOtpRepo.getOTP(NON_EXISTING_ADMIN_EMAIL, identityType, undefined)).thenReject(new NotFoundException());
 
       try {
-        await adminAuthService.validateAndGetUserId(NON_EXISTING_ADMIN_EMAIL, 123456);
+        await adminAuthService.validateAndGetUserId(NON_EXISTING_ADMIN_EMAIL, 123456, undefined);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -97,10 +97,10 @@ describe("AdminService", () => {
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: nobaAdminIdentityIdentifier,
       });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType, undefined)).thenResolve(otpDomain);
 
       try {
-        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, 1234567);
+        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, 1234567, undefined);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -120,10 +120,10 @@ describe("AdminService", () => {
         otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
         identityType: nobaAdminIdentityIdentifier,
       });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType, undefined)).thenResolve(otpDomain);
 
       try {
-        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP);
+        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP, undefined);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -144,7 +144,7 @@ describe("AdminService", () => {
         otpExpiryTime: TOMORROW_EXPIRY.getTime(),
         identityType: nobaAdminIdentityIdentifier,
       });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
+      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType, undefined)).thenResolve(otpDomain);
       when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
       when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL)).thenResolve(
@@ -156,7 +156,7 @@ describe("AdminService", () => {
         }),
       );
 
-      const receivedAdminId = await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP);
+      const receivedAdminId = await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP, undefined);
       expect(receivedAdminId).toEqual(ADMIN_ID);
     });
   });

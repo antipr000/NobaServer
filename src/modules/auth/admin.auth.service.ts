@@ -15,7 +15,8 @@ export class AdminAuthService extends AuthService {
     return this.identityType;
   }
 
-  protected async getUserId(emailOrPhone: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected async getUserId(emailOrPhone: string, _?: string): Promise<string> {
     const admin: Admin = await this.adminService.getAdminByEmail(emailOrPhone);
     return admin.props._id;
   }

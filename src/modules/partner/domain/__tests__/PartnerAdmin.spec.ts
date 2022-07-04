@@ -1,9 +1,25 @@
-import {
-  mockPartnerAdminWithAllAccess,
-  mockPartnerAdminWithBasicAccess,
-  mockPartnerAdminWithIntermediateAccess,
-} from "../../../../core/tests/constants";
-import { PartnerAdmin } from "../PartnerAdmin";
+import { PartnerAdmin, PartnerAdminProps } from "../PartnerAdmin";
+
+const mockPartnerAdminWithAllAccess: PartnerAdminProps = {
+  _id: "mock-partner-admin-1",
+  email: "allaccess@noba.com",
+  partnerId: "partner-1",
+  role: "ALL",
+};
+
+const mockPartnerAdminWithBasicAccess: PartnerAdminProps = {
+  _id: "mock-partner-admin-2",
+  email: "basicaccess@noba.com",
+  partnerId: "partner-1",
+  role: "BASIC",
+};
+
+const mockPartnerAdminWithIntermediateAccess: PartnerAdminProps = {
+  _id: "mock-partner-admin-3",
+  email: "intermediateaccess@noba.com",
+  partnerId: "partner-1",
+  role: "INTERMEDIATE",
+};
 
 describe("PartnerAdmin tests", () => {
   it("should have all access when partner admin role type is ALL", () => {

@@ -1,9 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { UserService } from "../user/user.service";
-import { UserVerificationStatus } from "../user/domain/UserVerificationStatus";
-import { UserProps } from "../user/domain/User";
+import { ConsumerService } from "../consumer/consumer.service";
+import { UserVerificationStatus } from "../consumer/domain/UserVerificationStatus";
+import { Consumer } from "../consumer/domain/Consumer";
 import {
   TransactionLimitBuyOnly,
   DailyLimitBuyOnly,
@@ -24,7 +24,7 @@ export class LimitsService {
   private readonly transactionsRepo: ITransactionRepo;
   private readonly transactionsMapper: TransactionMapper;
 
-  constructor(dbProvider: DBProvider, private userService: UserService) {
+  constructor(dbProvider: DBProvider, private userService: ConsumerService) {
     this.transactionsRepo = new MongoDBTransactionRepo(dbProvider);
     this.transactionsMapper = new TransactionMapper();
     return this;
@@ -58,13 +58,21 @@ export class LimitsService {
     }
   }
 
-  async canMakeTransaction(user: UserProps, transactionAmount: number): Promise<TransactionAllowedStatus> {
-    const userVerificationStatus: UserVerificationStatus = this.userService.getVerificationStatus(user);
+  async canMakeTransaction(consumer: Consumer, transactionAmount: number): Promise<TransactionAllowedStatus> {
+    const userVerificationStatus: UserVerificationStatus = this.userService.getVerificationStatus(consumer);
 
-    const dailyTransactionAmount: number = await this.transactionsRepo.getDailyUserTransactionAmount(user._id);
-    const weeklyTransactionAmount: number = await this.transactionsRepo.getWeeklyUserTransactionAmount(user._id);
-    const monthlyTransactionAmount: number = await this.transactionsRepo.getMonthlyUserTransactionAmount(user._id);
-    const totalTransactionAmount: number = await this.transactionsRepo.getTotalUserTransactionAmount(user._id);
+    const dailyTransactionAmount: number = await this.transactionsRepo.getDailyUserTransactionAmount(
+      consumer.props._id,
+    );
+    const weeklyTransactionAmount: number = await this.transactionsRepo.getWeeklyUserTransactionAmount(
+      consumer.props._id,
+    );
+    const monthlyTransactionAmount: number = await this.transactionsRepo.getMonthlyUserTransactionAmount(
+      consumer.props._id,
+    );
+    const totalTransactionAmount: number = await this.transactionsRepo.getTotalUserTransactionAmount(
+      consumer.props._id,
+    );
 
     const limits = this.getLimits(userVerificationStatus);
     console.log(limits);

@@ -3,11 +3,12 @@
 /* eslint-disable */
 
 export type AddPaymentMethodDTO = {
-  paymentMethodType: "Card";
-  cardNumber?: string;
-  cardExpiryMonth?: number;
-  cardExpiryYear?: number;
-  cardCVV?: string;
-  billingAddress?: string;
-  cardHolderName?: string;
+  cardName?: string;
+  cardType: string;
+  first6Digits: number;
+  last4Digits: number;
+  expiryMonth: number;
+  expiryYear: number;
+  cvv: string;
+  imageUri?: string;
 };

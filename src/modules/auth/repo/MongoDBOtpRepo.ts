@@ -6,6 +6,7 @@ import { Inject, Injectable, NotFoundException, Logger } from "@nestjs/common";
 import { convertDBResponseToJsObject } from "../../../../src/infra/mongodb/MongoDBUtils";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { consumerIdentityIdentifier } from "../domain/IdentityType";
 
 @Injectable()
 export class MongoDBOtpRepo implements IOTPRepo {
@@ -17,9 +18,17 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   private readonly otpMapper: OtpMapper = new OtpMapper();
 
-  async getOTP(emailOrPhone: string, identityType: string): Promise<Otp> {
+  async getOTP(emailOrPhone: string, identityType: string, partnerID?: string): Promise<Otp> {
     const otpModel = await this.dbProvider.getOtpModel();
-    const result = await otpModel.findOne({ emailOrPhone: emailOrPhone, identityType: identityType }).exec();
+    const queryParams = {
+      emailOrPhone: emailOrPhone,
+      identityType: identityType,
+    };
+
+    if (identityType === consumerIdentityIdentifier) {
+      queryParams["partnerID"] = partnerID;
+    }
+    const result = await otpModel.findOne(queryParams).exec();
     if (result === undefined || result === null) {
       throw new NotFoundException(`"${emailOrPhone}" is not registered. Please register!`);
     }
@@ -34,14 +43,25 @@ export class MongoDBOtpRepo implements IOTPRepo {
     return otpProps.map(otpResult => this.otpMapper.toDomain(otpResult));
   }
 
-  async saveOTP(emailID: string, otp: number, identityType: string): Promise<void> {
+  async saveOTP(emailID: string, otp: number, identityType: string, partnerID?: string): Promise<void> {
     const expiryTime = new Date(new Date().getTime() + otpConstants.EXPIRY_TIME_IN_MINUTES * 60000);
-    const otpInstance = Otp.createOtp({
-      emailOrPhone: emailID,
-      otp: otp,
-      otpExpiryTime: expiryTime.getTime(),
-      identityType: identityType,
-    });
+    let otpInstance;
+    if (identityType === consumerIdentityIdentifier) {
+      otpInstance = Otp.createOtp({
+        emailOrPhone: emailID,
+        otp: otp,
+        otpExpiryTime: expiryTime.getTime(),
+        identityType: identityType,
+        partnerID: partnerID,
+      });
+    } else {
+      otpInstance = Otp.createOtp({
+        emailOrPhone: emailID,
+        otp: otp,
+        otpExpiryTime: expiryTime.getTime(),
+        identityType: identityType,
+      });
+    }
 
     const otpModel = await this.dbProvider.getOtpModel();
     try {

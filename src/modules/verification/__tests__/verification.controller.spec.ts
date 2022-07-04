@@ -5,8 +5,8 @@ import { VerificationService } from "../verification.service";
 import { getMockVerificationServiceWithDefaults } from "../mocks/mock.verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
-import { ConsumerVerificationStatus } from "../../../modules/user/domain/VerificationStatus";
-import { User, UserProps } from "../../../modules/user/domain/User";
+import { ConsumerVerificationStatus } from "../../consumer/domain/VerificationStatus";
+import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 
@@ -92,9 +92,14 @@ describe("VerificationController", () => {
       email: "test@noba.com",
     };
 
-    const user: UserProps = {
+    const consumer: ConsumerProps = {
       _id: "testuser-1234",
       email: "test@noba.com",
+      partners: [
+        {
+          partnerID: "partner-1",
+        },
+      ],
     };
 
     when(
@@ -103,7 +108,7 @@ describe("VerificationController", () => {
       status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
     });
 
-    const result = await verificationController.verifyUser(
+    const result = await verificationController.verifyConsumer(
       "test-session",
       {
         firstName: consumerInfo.firstName,
@@ -113,7 +118,7 @@ describe("VerificationController", () => {
         dateOfBirth: consumerInfo.dateOfBirth,
       },
       {
-        user: User.createUser(user),
+        user: Consumer.createConsumer(consumer),
       },
     );
 
@@ -137,9 +142,14 @@ describe("VerificationController", () => {
       email: "fake@noba.com",
     };
 
-    const user: UserProps = {
+    const consumer: ConsumerProps = {
       _id: "testuser-1234",
       email: "fake@noba.com",
+      partners: [
+        {
+          partnerID: "partner-1",
+        },
+      ],
     };
 
     when(
@@ -148,7 +158,7 @@ describe("VerificationController", () => {
       status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
     });
 
-    const result = await verificationController.verifyUser(
+    const result = await verificationController.verifyConsumer(
       "test-session",
       {
         firstName: consumerInfo.firstName,
@@ -158,7 +168,7 @@ describe("VerificationController", () => {
         dateOfBirth: consumerInfo.dateOfBirth,
       },
       {
-        user: User.createUser(user),
+        user: Consumer.createConsumer(consumer),
       },
     );
 
@@ -182,9 +192,14 @@ describe("VerificationController", () => {
       email: "shadyemail@noba.com",
     };
 
-    const user: UserProps = {
+    const consumer: ConsumerProps = {
       _id: "testuser-1234",
       email: "shadyemail@noba.com",
+      partners: [
+        {
+          partnerID: "partner-1",
+        },
+      ],
     };
 
     when(
@@ -193,7 +208,7 @@ describe("VerificationController", () => {
       status: ConsumerVerificationStatus.PENDING_FLAGGED_KYC,
     });
 
-    const result = await verificationController.verifyUser(
+    const result = await verificationController.verifyConsumer(
       "test-session",
       {
         firstName: consumerInfo.firstName,
@@ -203,7 +218,7 @@ describe("VerificationController", () => {
         dateOfBirth: consumerInfo.dateOfBirth,
       },
       {
-        user: User.createUser(user),
+        user: Consumer.createConsumer(consumer),
       },
     );
 

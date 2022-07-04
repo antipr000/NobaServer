@@ -2,7 +2,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { PassportStrategy } from "@nestjs/passport";
 import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { jwtConstants } from "./constants";
-import { UserService } from "../user/user.service";
+import { ConsumerService } from "../consumer/consumer.service";
 
 import {
   allIdentities,
@@ -17,7 +17,7 @@ import { AuthenticatedUser } from "./domain/AuthenticatedUser";
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   @Inject()
-  private userService: UserService;
+  private consumerService: ConsumerService;
   @Inject()
   private adminService: AdminService;
   @Inject()
@@ -42,7 +42,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     switch (identityType) {
       case consumerIdentityIdentifier:
-        return await this.userService.findUserById(id);
+        return await this.consumerService.findConsumerById(id);
       case nobaAdminIdentityIdentifier:
         return this.adminService.getAdminById(id);
       case partnerAdminIdentityIdenitfier:
