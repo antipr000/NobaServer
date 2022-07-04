@@ -1,12 +1,13 @@
 import { CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
+import { Cache } from "cache-manager";
+import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import Stripe from "stripe";
 import { Logger } from "winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { Web3TransactionHandler } from "../common/domain/Types";
-import { StripeService } from "../common/stripe.service";
 import { CurrencyDTO } from "../common/dto/CurrencyDTO";
+import { CheckoutPaymentMethodsService } from "../user/paymentmethods.service";
 import { UserService } from "../user/user.service";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
@@ -16,8 +17,6 @@ import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
-import { validate } from "multicoin-address-validator";
-import { Cache } from "cache-manager";
 
 @Injectable()
 export class TransactionService {
@@ -35,8 +34,6 @@ export class TransactionService {
   @Inject(CACHE_MANAGER)
   private cacheManager: Cache;
 
-  private readonly stripe: Stripe;
-
   // This is the id used at coinGecko, so do not change the allowed constants below
   private readonly allowedFiats: string[] = ["USD"];
   private allowedCryptoCurrencies = new Array<string>(); // = ["ETH", "terrausd", "terra-luna"];
@@ -47,9 +44,8 @@ export class TransactionService {
     dbProvider: DBProvider,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly zeroHashService: ZeroHashService,
-    stripeService: StripeService,
+    private readonly checkoutPaymentMethodService: CheckoutPaymentMethodsService,
   ) {
-    this.stripe = stripeService.stripeApi;
     this.transactionsMapper = new TransactionMapper();
   }
 
@@ -141,23 +137,11 @@ export class TransactionService {
     //**** starting fiat transaction ***/
 
     // todo refactor this piece when we have the routing flow in place
-    // create a method in paymentmethods.service.ts instead for Stripe and checkout
-    const params: Stripe.PaymentIntentCreateParams = {
-      // if we want to charge 20 USD we can use amount: 2000 USD here. Here it is a multiple of 100. So to charge 32.45 USD we can use amount: 3245
-      amount: Math.ceil(leg1Amount * 100), //in cents
-      currency: "usd", //TODO make this generic
-      customer: user.props.stripeCustomerID,
-      payment_method: details.paymentMethodID,
-      confirmation_method: "automatic",
-      confirm: true,
-    };
-
-    const paymentIntent = await this.stripe.paymentIntents.create(params);
-
+    const payment = await this.checkoutPaymentMethodService.requestPayment(details.paymentMethodID, leg1Amount, leg1);
     let updatedTransaction = Transaction.createTransaction({
       ...newTransaction.props,
       transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING,
-      stripePaymentIntentId: paymentIntent.id,
+      checkoutPaymentID: payment["id"],
     });
 
     this.transactionsRepo.updateTransaction(updatedTransaction);
@@ -168,13 +152,9 @@ export class TransactionService {
     updatedTransaction = Transaction.createTransaction({
       ...updatedTransaction.props,
       transactionStatus: TransactionStatus.FIAT_INCOMING_CONFIRMED,
-      stripePaymentIntentId: paymentIntent.id,
+      checkoutPaymentID: payment["id"],
     });
     this.transactionsRepo.updateTransaction(updatedTransaction);
-
-    this.logger.info(
-      `Transaction ${newTransaction.props._id} is waiting for payment confirmation, payment intent id: ${paymentIntent.id}, status: ${paymentIntent.status}`,
-    );
 
     //*** assuming that fiat transfer completed*/
 

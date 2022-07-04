@@ -1,12 +1,12 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { User, UserProps } from "./domain/User";
-import { UserDTO } from "./dto/UserDTO";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Logger } from "winston";
-import { UserMapper } from "./mappers/UserMapper";
-import { StripeService } from "../common/stripe.service";
 import { Result } from "src/core/logic/Result";
+import { Logger } from "winston";
+import { StripeService } from "../common/stripe.service";
+import { User, UserProps } from "./domain/User";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
+import { UserDTO } from "./dto/UserDTO";
+import { UserMapper } from "./mappers/UserMapper";
 import { IUserRepo } from "./repos/UserRepo";
 
 @Injectable()
@@ -38,9 +38,12 @@ export class UserService {
       //user doesn't exist already
       //first create stripe customer
       this.logger.info(`Creating user for first time for ${emailOrPhone}`);
-      const stripeCustomer = await this.stripeService.stripeApi.customers.create({ email: email, phone: phone });
-      const stripeCustomerID = stripeCustomer.id;
-      const newUser = User.createUser({ email: email, phone: phone, stripeCustomerID });
+      // TODO: Below is bad, when we create a new user we onboard it on stripe right now, but we might have multiple payment providers in future
+      // So register a new user at the time of adding payment method instead
+      // Never the less we might not even require to store customer IDs for these provider at our side!
+      // const stripeCustomer = await this.stripeService.stripeApi.customers.create({ email: email, phone: phone });
+      // const stripeCustomerID = stripeCustomer.id;
+      const newUser = User.createUser({ email: email, phone: phone });
       await this.userRepo.createUser(newUser);
       return this.userMapper.toDTO(newUser);
     }

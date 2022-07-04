@@ -1,8 +1,9 @@
-import { Module, CacheModule } from "@nestjs/common";
+import { CacheModule, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { CommonModule } from "../common/common.module";
+import { CheckoutPaymentMethodsService } from "../user/paymentmethods.service";
 import { UserModule } from "../user/user.module";
 import { UserService } from "../user/user.service";
 import { ExchangeRateController } from "./exchangerate.controller";
@@ -23,6 +24,7 @@ import { ZeroHashService } from "./zerohash.service";
     LimitsService,
     UserService,
     ZeroHashService,
+    CheckoutPaymentMethodsService,
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
