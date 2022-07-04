@@ -1,15 +1,5 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  ForbiddenException,
-  Get,
-  HttpStatus,
-  Inject,
-  Post,
-  Request,
-} from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { BadRequestException, Body, Controller, ForbiddenException, HttpStatus, Inject, Post } from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AdminAuthService } from "./admin.auth.service";
 import { AuthService } from "./auth.service";
 import {

@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import { PaymentMethodID } from "../auth/roles.decorator";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { PaymentMethodDTO } from "./dto/PaymentMethodDTO";
-import { StripePaymentMethodsService } from "./paymentmethods.service";
+import { CheckoutPaymentMethodsService, StripePaymentMethodsService } from "./paymentmethods.service";
 
 @ApiBearerAuth("JWT-auth")
 @Controller("users/paymentmethods/")
@@ -14,7 +14,7 @@ export class PaymentMethodsController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  constructor(private readonly paymentMethodService: StripePaymentMethodsService) {}
+  constructor(private readonly paymentMethodService: CheckoutPaymentMethodsService) {}
 
   @Get()
   @ApiOperation({ summary: "Get all payment methods for a user" })

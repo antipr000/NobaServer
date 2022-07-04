@@ -30,11 +30,11 @@ export class AppController {
         // Exclude XRP
         if (liq === "Yes" && symbol !== "XRP") {
           // TODO: Move this path to config
-          results.push({
-            name: `${name}`,
-            ticker: `${symbol}`,
-            iconPath: `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`,
-          });
+          const curr = new CurrencyDTO();
+          curr.name = `${name}`;
+          curr.ticker = `${symbol}`;
+          curr.iconPath = `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`;
+          results.push(curr);
         }
       })
       .on("end", () => {
