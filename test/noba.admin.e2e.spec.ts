@@ -135,15 +135,83 @@ describe("Noba Admin", () => {
 
     });
 
-    it("shouldn't allow requests from NobaAdmin with BASIC role", async () => {
+    it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
 
     });
 
-    it("shouldn't allow requests from NobaAdmin with INTERMEDIATE role", async () => {
+    it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
 
     });
 
-    it("should create NobaAdmin if request is from NobaAdmin with ADMIN role", async () => {
+    it("should create NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
+
+    });
+  });
+
+  describe("PATCH /admins/{id}", () => {
+    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
+
+    });
+
+    it("shouldn't allow requests with Consumer credentials", async () => {
+
+    });
+
+    it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
+
+    });
+
+    it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
+
+    });
+
+    it("shouldn't allow requests to update the currently logged-in NobaAdmin itself", async () => {
+
+    });
+
+    it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {
+
+    });
+
+    it("should update 'role' of NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
+
+    });
+
+    it("should update 'name' of NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
+
+    });
+
+    it("should update both 'name' & 'role' of NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
+
+    });
+  });
+
+  describe("DELETE /admins/{id}", () => {
+    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
+
+    });
+
+    it("shouldn't allow requests with Consumer credentials", async () => {
+
+    });
+
+    it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
+
+    });
+
+    it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
+
+    });
+
+    it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {
+
+    });
+
+    it("should delete NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
+
+    });
+
+    it("shouldn't allow requests to delete the currently logged-in NobaAdmin itself", async () => {
 
     });
   });
