@@ -103,6 +103,18 @@ export class AdminController {
     return this.adminMapper.toDTO(savedAdmin);
   }
 
+  @Get("/")
+  @ApiOperation({ summary: "Get the details of the logged in NobaAdmin." })
+  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The logged in Noba Admin." })
+  async getNobaAdmin(@Request() request): Promise<NobaAdminDTO> {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException(`This endpoint is only for Noba Admins.`);
+    }
+
+    return this.adminMapper.toDTO(authenticatedUser);
+  }
+
   @Patch(`/:${AdminId}`)
   @ApiOperation({ summary: "Updates the role/name of a NobaAdmin." })
   @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The updated NobaAdmin." })
