@@ -19,7 +19,7 @@ import { bootstrap } from "../src/server";
 import { ResponseStatus } from "./api_client/core/request";
 import { AdminService, AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { NobaAdminDTO } from "src/modules/admin/dto/NobaAdminDTO";
-import { fetchOtpFromDb, insertNobaAdmin, insertPartnerAdmin, setAccessTokenForTheNextRequests } from "./common";
+import { fetchOtpFromDb, insertNobaAdmin, insertPartnerAdmin, loginAndGetResponse, setAccessTokenForTheNextRequests } from "./common";
 
 describe("Noba Admin", () => {
   jest.setTimeout(20000);
@@ -128,23 +128,104 @@ describe("Noba Admin", () => {
 
   describe("POST /admins", () => {
     it("shouldn't allow requests with PartnerAdmin credentials", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com";
 
+      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      const partnerLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
+      setAccessTokenForTheNextRequests(partnerLoginResponse.access_token);
+
+      // TODO(#189): Remove '_id' from the input DTO.
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        _id: "AAAAAAAAAA",
+        email: "test.noba.admin@noba.com",
+        name: "Test Admin",
+        role: "BASIC"
+      })) as (NobaAdminDTO & ResponseStatus);
+
+      expect(createNobaAdminResponse.__status).toBe(403);
     });
 
     it("shouldn't allow requests with Consumer credentials", async () => {
+      const consumerEmail = "test.user@noba.com";
 
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      // TODO(#189): Remove '_id' from the input DTO.
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        _id: "AAAAAAAAAA",
+        email: "test.noba.admin@noba.com",
+        name: "Test Admin",
+        role: "BASIC"
+      })) as (NobaAdminDTO & ResponseStatus);
+
+      expect(createNobaAdminResponse.__status).toBe(403);
     });
 
     it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com";
 
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAAA", "BASIC")).toBe(true);
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      // TODO(#189): Remove '_id' from the input DTO.
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        _id: "AAAAAAAAAA",
+        email: "test.noba.admin.2@noba.com",
+        name: "Test Admin 2",
+        role: "BASIC"
+      })) as (NobaAdminDTO & ResponseStatus);
+
+      expect(createNobaAdminResponse.__status).toBe(403);
     });
 
     it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com";
 
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAAA", "INTERMEDIATE")).toBe(true);
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      // TODO(#189): Remove '_id' from the input DTO.
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        _id: "AAAAAAAAAA",
+        email: "test.noba.admin.2@noba.com",
+        name: "Test Admin 2",
+        role: "BASIC"
+      })) as (NobaAdminDTO & ResponseStatus);
+
+      expect(createNobaAdminResponse.__status).toBe(403);
     });
 
     it("should create NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com";
 
+      const newNobaAdminEmail = "test.noba.admin.2@noba.com";
+      const newNobaAdminName = "Test Admin 2";
+      const newNobaAdminRole = "BASIC";
+
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAAA", "ADMIN")).toBe(true);
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      // TODO(#189): Remove '_id' from the input DTO.
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        _id: "A2A2A2A2A2A2",
+        email: newNobaAdminEmail,
+        name: newNobaAdminName,
+        role: newNobaAdminRole
+      })) as (NobaAdminDTO & ResponseStatus);
+
+      expect(createNobaAdminResponse.__status).toBe(201);
+      expect(createNobaAdminResponse._id).toBeDefined();
+      expect(createNobaAdminResponse.email).toBe(newNobaAdminEmail);
+      expect(createNobaAdminResponse.name).toBe(newNobaAdminName);
+      expect(createNobaAdminResponse.role).toBe(newNobaAdminRole);
+
+      // LOGIN as newly created NobaAdmin should be successful.
+      const newNobaAdminLoginResponse = await loginAndGetResponse(mongoUri, newNobaAdminEmail, "NOBA_ADMIN");
+      expect(newNobaAdminLoginResponse.__status).toBe(201);
     });
   });
 
