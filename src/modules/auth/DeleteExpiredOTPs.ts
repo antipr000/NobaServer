@@ -10,8 +10,8 @@ export class DeleteExpiredOTPs {
   @Inject("OTPRepo")
   private readonly otpRepo: IOTPRepo;
 
-  // Run every 4 hours
-  @Cron("* * */4 * * *", {
+  // Run every 4 hours on the hour
+  @Cron("0 0 */4 * * *", {
     name: "DeleteExpiredOTPs",
   })
   run() {
