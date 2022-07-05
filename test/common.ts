@@ -1,6 +1,5 @@
 import { MongoClient } from "mongodb";
-import { VerifyOtpResponseDTO } from "src/modules/auth/dto/VerifyOtpReponse";
-import { AuthenticationService } from "./api_client";
+import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
 
 export const fetchOtpFromDb = async (mongoUri: string, email: string, identityType: string): Promise<number> => {
@@ -79,11 +78,13 @@ export const loginAndGetResponse = async (
   await AuthenticationService.loginUser({
     email: email,
     identityType: identityType as any,
+    partnerID: "dummy-partner", // TODO(#194): Fix the tests once the strategy is finalised.
   });
 
   return (await AuthenticationService.verifyOtp({
     emailOrPhone: email,
     identityType: identityType as any,
     otp: await fetchOtpFromDb(mongoUri, email, identityType),
+    partnerID: "dummy-partner", // TODO(#194): Fix the tests once the strategy is finalised.
   })) as VerifyOtpResponseDTO & ResponseStatus;
 };

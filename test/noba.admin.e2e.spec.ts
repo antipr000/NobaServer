@@ -17,7 +17,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
 import { ResponseStatus } from "./api_client/core/request";
-import { AdminService, AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
+import { AdminService, AuthenticationService, DeleteNobaAdminDTO, VerifyOtpResponseDTO } from "./api_client";
 import { NobaAdminDTO } from "src/modules/admin/dto/NobaAdminDTO";
 import {
   fetchOtpFromDb,
@@ -69,19 +69,10 @@ describe("Noba Admin", () => {
 
       expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
 
-      await AuthenticationService.loginUser({
-        email: partnerAdminEmail,
-        identityType: "PARTNER_ADMIN",
-      });
-      const verifyOtpResponse = await AuthenticationService.verifyOtp({
-        emailOrPhone: partnerAdminEmail,
-        identityType: "PARTNER_ADMIN",
-        otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN"),
-      });
+      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
+      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
-      setAccessTokenForTheNextRequests(verifyOtpResponse.access_token);
       const getNobaAdminResponse = (await AdminService.getNobaAdmin()) as NobaAdminDTO & ResponseStatus;
-
       expect(getNobaAdminResponse.__status).toBe(403);
     });
 
@@ -98,9 +89,10 @@ describe("Noba Admin", () => {
         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
       });
 
-      setAccessTokenForTheNextRequests(verifyOtpResponse.access_token);
-      const getNobaAdminResponse = (await AdminService.getNobaAdmin()) as NobaAdminDTO & ResponseStatus;
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
+      const getNobaAdminResponse = (await AdminService.getNobaAdmin()) as NobaAdminDTO & ResponseStatus;
       expect(getNobaAdminResponse.__status).toBe(403);
     });
 
@@ -112,17 +104,9 @@ describe("Noba Admin", () => {
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
       expect(await insertNobaAdmin(mongoUri, "another.admin@noba.com", "ID2ID2ID2ID2", nobaAdminRole)).toBe(true);
 
-      await AuthenticationService.loginUser({
-        email: nobaAdminEmail,
-        identityType: "NOBA_ADMIN",
-      });
-      const verifyOtpResponse = await AuthenticationService.verifyOtp({
-        emailOrPhone: nobaAdminEmail,
-        identityType: "NOBA_ADMIN",
-        otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
-      });
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
-      setAccessTokenForTheNextRequests(verifyOtpResponse.access_token);
       const getNobaAdminResponse = (await AdminService.getNobaAdmin()) as NobaAdminDTO & ResponseStatus;
 
       expect(getNobaAdminResponse.__status).toBe(200);
@@ -262,6 +246,7 @@ describe("Noba Admin", () => {
       const nobaAdminId = "A2A2A2A2A2A2";
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      console.log(consumerLoginResponse);
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
       const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(nobaAdminId, {
@@ -471,18 +456,118 @@ describe("Noba Admin", () => {
   });
 
   describe("DELETE /admins/{id}", () => {
-    it("shouldn't allow requests with PartnerAdmin credentials", async () => {});
+    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com";
+      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
 
-    it("shouldn't allow requests with Consumer credentials", async () => {});
+      const nobaAdminEmail = "test.noba.admin.2@noba.com";
+      const nobaAdminId = "A2A2A2A2A2A2";
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
 
-    it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {});
+      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
+      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
-    it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {});
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(nobaAdminId)) as DeleteNobaAdminDTO &
+        ResponseStatus;
 
-    it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {});
+      expect(deleteNobaAdminResponse.__status).toBe(403);
+    });
 
-    it("should delete NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {});
+    it("shouldn't allow requests with Consumer credentials", async () => {
+      const consumerEmail = "test.consumer@noba.com";
 
-    it("shouldn't allow requests to delete the currently logged-in NobaAdmin itself", async () => {});
+      const nobaAdminEmail = "test.noba.admin.2@noba.com";
+      const nobaAdminId = "A2A2A2A2A2A2";
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
+
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(nobaAdminId)) as DeleteNobaAdminDTO &
+        ResponseStatus;
+
+      expect(deleteNobaAdminResponse.__status).toBe(403);
+    });
+
+    it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
+      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
+
+      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
+      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+      expect(await insertNobaAdmin(mongoUri, toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(toDeleteNobaAdminId)) as DeleteNobaAdminDTO &
+        ResponseStatus;
+
+      expect(deleteNobaAdminResponse.__status).toBe(403);
+    });
+
+    it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
+      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "INTERMEDIATE")).toBe(true);
+
+      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
+      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+      expect(await insertNobaAdmin(mongoUri, toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(toDeleteNobaAdminId)) as DeleteNobaAdminDTO &
+        ResponseStatus;
+
+      expect(deleteNobaAdminResponse.__status).toBe(403);
+    });
+
+    it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {
+      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "ADMIN")).toBe(true);
+
+      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
+      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(toDeleteNobaAdminId)) as DeleteNobaAdminDTO &
+        ResponseStatus;
+
+      expect(deleteNobaAdminResponse.__status).toBe(404);
+    });
+
+    it("should delete NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
+      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "ADMIN")).toBe(true);
+
+      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
+      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+      expect(await insertNobaAdmin(mongoUri, toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(toDeleteNobaAdminId)) as DeleteNobaAdminDTO &
+        ResponseStatus;
+
+      expect(deleteNobaAdminResponse.__status).toBe(200);
+    });
+
+    it("shouldn't allow requests to delete the currently logged-in NobaAdmin itself", async () => {
+      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
+      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, "ADMIN")).toBe(true);
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(loggedInNobaAdminId)) as DeleteNobaAdminDTO &
+        ResponseStatus;
+
+      expect(deleteNobaAdminResponse.__status).toBe(403);
+    });
   });
 });
