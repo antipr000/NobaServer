@@ -32,7 +32,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   // TODO: Move all the payload related logic to a single file.
-  // TODO: Modify 'UserProps' to 'User'.
   async validate(payload: any): Promise<AuthenticatedUser> {
     return this.getIdentityDomain(payload.id, payload.identityType);
   }

@@ -308,6 +308,9 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): C
         try {
           catchErrorCodes(options, result);
         } catch (err) {
+          if (err.status === 500) {
+            console.log(err);
+          }
           resolve({
             ...err.body,
             __status: err.status,

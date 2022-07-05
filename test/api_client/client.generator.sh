@@ -5,3 +5,4 @@ echo "Processing api.json using openapi CLI tool..."
 npx openapi-typescript-codegen --input ./swagger-internal.json --output ./test/api_client/ --useUnionTypes --exportCore false -c axios   
 
 echo "... finished generating OpenAPI specs from Noba Server."
+npx prettier --write .
