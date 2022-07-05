@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { UserModule } from "../modules/user/user.module";
+import { ConsumerModule } from "../modules/consumer/consumer.module";
 import { JwtModule } from "@nestjs/jwt";
 import * as request from "supertest";
 import { join } from "path";
@@ -81,7 +81,7 @@ describe("Partner and Partner Admin end to end tests", () => {
       imports: [
         PartnerModule,
         AuthModule,
-        UserModule,
+        ConsumerModule,
         CustomConfigModule,
         getTestWinstonModule(),
         JwtModule.register({

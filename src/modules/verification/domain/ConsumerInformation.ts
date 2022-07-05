@@ -1,4 +1,4 @@
-import { Address } from "../../../modules/user/domain/Address";
+import { Address } from "../../consumer/domain/Address";
 import { NationalIDTypes } from "./NationalIDTypes";
 
 export type NationalID = {

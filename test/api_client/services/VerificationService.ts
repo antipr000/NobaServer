@@ -98,7 +98,7 @@ export class VerificationService {
    * @returns VerificationResultDTO Get verification result
    * @throws ApiError
    */
-  public static verifyUser(
+  public static verifyConsumer(
     sessionKey: string,
     requestBody: IDVerificationRequestDTO,
   ): CancelablePromise<VerificationResultDTO> {

@@ -1,23 +1,43 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Address } from "../domain/Address";
-import { UserProps } from "../domain/User";
 import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../domain/VerificationStatus";
 
-export class UserDTO implements Partial<UserProps> {
+export class PaymentMethodsDTO {
+  @ApiPropertyOptional()
+  cardName?: string;
+
+  @ApiPropertyOptional()
+  cardType?: string;
+
+  @ApiPropertyOptional()
+  imageUri?: string;
+
+  @ApiProperty()
+  paymentToken: string;
+}
+
+export class CryptoWalletsDTO {
+  @ApiProperty()
+  address: string;
+
+  @ApiProperty()
+  chainType: string;
+
+  @ApiProperty()
+  isEVMCompatible: boolean;
+
+  @ApiProperty()
+  status: string;
+}
+export class ConsumerDTO {
   @ApiProperty()
   _id: string;
 
-  @ApiProperty()
-  version?: number;
-
-  @ApiProperty()
-  createdAt?: string;
-
-  @ApiProperty()
-  updatedAt?: string;
+  @ApiPropertyOptional()
+  firstName?: string;
 
   @ApiPropertyOptional()
-  name?: string;
+  lastName?: string;
 
   @ApiProperty()
   email: string;
@@ -25,11 +45,8 @@ export class UserDTO implements Partial<UserProps> {
   @ApiPropertyOptional()
   phone?: string;
 
-  @ApiPropertyOptional()
-  isEmailVerified?: boolean;
-
   @ApiPropertyOptional({ enum: ConsumerVerificationStatus })
-  idVerificationStatus?: string;
+  kycVerificationStatus?: string;
 
   @ApiPropertyOptional({ enum: DocumentVerificationStatus })
   documentVerificationStatus?: string;
@@ -41,5 +58,8 @@ export class UserDTO implements Partial<UserProps> {
   address?: Address;
 
   @ApiPropertyOptional()
-  socialSecurityNumber?: string;
+  paymentMethods?: PaymentMethodsDTO[];
+
+  @ApiPropertyOptional()
+  cryptoWallets?: CryptoWalletsDTO[];
 }

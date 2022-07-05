@@ -1,7 +1,4 @@
-import {
-  ConsumerVerificationStatus,
-  DocumentVerificationStatus,
-} from "../../../modules/user/domain/VerificationStatus";
+import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { VerificationResultDTO, VerificationResultStatus } from "../dto/VerificationResultDTO";
 

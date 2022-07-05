@@ -15,7 +15,8 @@ export class PartnerAuthService extends AuthService {
     return this.identityType;
   }
 
-  protected async getUserId(emailOrPhone: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected async getUserId(emailOrPhone: string, _?: string): Promise<string> {
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.getPartnerAdminFromEmail(emailOrPhone);
     return partnerAdmin.props._id;
   }

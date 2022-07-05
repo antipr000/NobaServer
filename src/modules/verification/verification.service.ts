@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { UserService } from "../user/user.service";
+import { ConsumerService } from "../consumer/consumer.service";
 import TruliooIntegrator from "../../externalclients/idvproviders/providers/trulioo/TruliooIntegrator";
 import { ConsentDTO } from "./dto/ConsentDTO";
 import { SubdivisionDTO } from "./dto/SubdivisionDTO";
@@ -9,9 +9,9 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { IDVProvider } from "./integrations/IDVProvider";
 import { ConsumerInformation } from "./domain/ConsumerInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "./domain/VerificationResult";
-import { User, UserProps } from "../user/domain/User";
+import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { DocumentInformation } from "./domain/DocumentInformation";
-import { DocumentVerificationStatus } from "../user/domain/VerificationStatus";
+import { DocumentVerificationStatus } from "../consumer/domain/VerificationStatus";
 import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
@@ -29,7 +29,7 @@ export class VerificationService {
 
   private truliooProvider: TruliooIntegrator;
 
-  constructor(private userService: UserService, private readonly configService: CustomConfigService) {
+  constructor(private consumerService: ConsumerService, private readonly configService: CustomConfigService) {
     this.truliooProvider = new TruliooIntegrator(configService);
   }
 
@@ -46,7 +46,7 @@ export class VerificationService {
   }
 
   async verifyConsumerInformation(
-    userID: string,
+    consumerID: string,
     sessionKey: string,
     consumerInformation: ConsumerInformation,
   ): Promise<ConsumerVerificationResult> {
@@ -54,42 +54,59 @@ export class VerificationService {
       sessionKey,
       consumerInformation,
     );
-    const user: User = await this.userService.findUserById(userID);
-    const newUserData: UserProps = {
-      ...user.props,
-      idVerificationStatus: result.status,
+    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const newConsumerData: ConsumerProps = {
+      ...consumer.props,
       address: consumerInformation.address,
-      name: consumerInformation.firstName + " " + consumerInformation.lastName,
+      firstName: consumerInformation.firstName,
+      lastName: consumerInformation.lastName,
       dateOfBirth: consumerInformation.dateOfBirth,
       phone: consumerInformation.phoneNumber,
+      verificationData: {
+        ...consumer.props.verificationData,
+        kycVerificationStatus: result.status,
+        idVerificationTimestamp: new Date().getTime(),
+      },
     };
-    await this.userService.updateUser(newUserData);
+    await this.consumerService.updateConsumer(newConsumerData);
     return result;
   }
 
-  async verifyDocument(userID: string, sessionKey: string, documentInformation: DocumentInformation): Promise<string> {
+  async verifyDocument(
+    consumerID: string,
+    sessionKey: string,
+    documentInformation: DocumentInformation,
+  ): Promise<string> {
     const id = await this.idvProvider.verifyDocument(sessionKey, documentInformation);
-    const user: User = await this.userService.findUserById(userID);
-    const newUserData: UserProps = {
-      ...user.props,
-      documentVerificationStatus: DocumentVerificationStatus.PENDING,
+    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const newConsumerData: ConsumerProps = {
+      ...consumer.props,
+      verificationData: {
+        ...consumer.props.verificationData,
+        documentVerificationStatus: DocumentVerificationStatus.PENDING,
+        documentVerificationTimestamp: new Date().getTime(),
+        documentVerificationTransactionID: id,
+      },
     };
-    await this.userService.updateUser(newUserData);
+    await this.consumerService.updateConsumer(newConsumerData);
     return id;
   }
 
   async getDocumentVerificationResult(
-    userID: string,
+    consumerID: string,
     sessionKey: string,
     verificationID: string,
   ): Promise<DocumentVerificationResult> {
-    const result = await this.idvProvider.getDocumentVerificationResult(sessionKey, verificationID, userID);
-    const user: User = await this.userService.findUserById(userID);
-    const newUserData: UserProps = {
-      ...user.props,
-      documentVerificationStatus: result.status,
+    const result = await this.idvProvider.getDocumentVerificationResult(sessionKey, verificationID, consumerID);
+    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const newConsumerData: ConsumerProps = {
+      ...consumer.props,
+      verificationData: {
+        ...consumer.props.verificationData,
+        documentVerificationStatus: result.status,
+      },
     };
-    await this.userService.updateUser(newUserData);
+    await this.consumerService.updateConsumer(newConsumerData);
     return result;
   }
 

@@ -2,7 +2,7 @@ import { Injectable, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Model } from "mongoose";
-import { UserProps } from "../modules/user/domain/User";
+import { ConsumerProps } from "../modules/consumer/domain/Consumer";
 import { UserModel } from "../infra/mongodb/models/UserModel";
 import * as Mongoose from "mongoose";
 import { TransactionProps } from "../modules/transactions/domain/Transaction";
@@ -52,7 +52,7 @@ export class DBProvider {
     return OtpModel;
   }
 
-  async getUserModel(): Promise<Model<UserProps>> {
+  async getUserModel(): Promise<Model<ConsumerProps>> {
     await this.connectToDb();
     return UserModel;
   }

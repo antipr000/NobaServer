@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { UserModule } from "../user/user.module";
+import { ConsumerModule } from "../consumer/consumer.module";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./jwt.strategy";
@@ -19,7 +19,7 @@ import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 
 @Module({
   imports: [
-    UserModule,
+    ConsumerModule,
     AdminModule,
     PartnerModule,
     PassportModule,

@@ -13,9 +13,11 @@ import { setUp } from "./setup";
 setUp();
 
 import { INestApplication } from "@nestjs/common";
-import { AuthenticationService, UserDTO, UserService, VerifyOtpResponseDTO } from "./api_client";
+import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
+import { ConsumerService } from "./api_client/services/ConsumerService";
+import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
 import { bootstrap } from "../src/server";
 import { fetchOtpFromDb, insertNobaAdmin, insertPartnerAdmin, setAccessTokenForTheNextRequests } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
@@ -57,6 +59,7 @@ describe("Authentication", () => {
       const loginResponse = await AuthenticationService.loginUser({
         email: consumerEmail,
         identityType: "CONSUMER",
+        partnerID: "partner-1",
       });
       expect(loginResponse.__status).toBe(201);
 
@@ -64,7 +67,9 @@ describe("Authentication", () => {
         emailOrPhone: consumerEmail,
         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
         identityType: "CONSUMER",
+        partnerID: "partner-1",
       })) as VerifyOtpResponseDTO & ResponseStatus;
+      console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.access_token;
       const userId = verifyOtpResponse.user_id;
@@ -74,7 +79,7 @@ describe("Authentication", () => {
       expect(userId).toBeDefined();
 
       setAccessTokenForTheNextRequests(accessToken);
-      const loggedInConsumer = (await UserService.getUser()) as UserDTO & ResponseStatus;
+      const loggedInConsumer = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
 
       expect(loggedInConsumer.__status).toBe(200);
       expect(loggedInConsumer._id).toBe(userId);

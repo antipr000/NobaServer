@@ -10,6 +10,7 @@ export interface OtpProps extends VersioningInfo {
   otp: number;
   otpExpiryTime?: number;
   identityType: string;
+  partnerID?: string;
 }
 
 export const otpValidationKeys: KeysRequired<OtpProps> = {
@@ -19,6 +20,7 @@ export const otpValidationKeys: KeysRequired<OtpProps> = {
   otp: Joi.number().required(),
   otpExpiryTime: Joi.number().required(),
   identityType: Joi.string().valid(...allIdentities),
+  partnerID: Joi.string().optional(),
 };
 
 export const otpJoiSchema = Joi.object(otpValidationKeys).options({ allowUnknown: true });

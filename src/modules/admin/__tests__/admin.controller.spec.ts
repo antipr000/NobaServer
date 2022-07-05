@@ -12,7 +12,7 @@ import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
 import { UpdateNobaAdminDTO } from "../dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
 import { PartnerAdmin } from "../../../../src/modules/partner/domain/PartnerAdmin";
-import { User } from "../../../../src/modules/user/domain/User";
+import { Consumer } from "../../consumer/domain/Consumer";
 import { PartnerAdminService } from "../../../../src/modules/partner/partneradmin.service";
 import { getMockPartnerAdminServiceWithDefaults } from "../../../../src/modules/partner/mocks/mock.partner.admin.service";
 import { AddPartnerAdminRequestDTO } from "../../../../src/modules/partner/dto/AddPartnerAdminRequestDTO";
@@ -21,7 +21,7 @@ import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.part
 import { AddPartnerRequestDTO } from "../dto/AddPartnerRequestDTO";
 import { Partner } from "../../partner/domain/Partner";
 import { PartnerDTO } from "../../partner/dto/PartnerDTO";
-import { UpdatePartnerAdminRequestDTO } from "src/modules/partner/dto/UpdatePartnerAdminRequestDTO";
+import { UpdatePartnerAdminRequestDTO } from "../../../modules/partner/dto/UpdatePartnerAdminRequestDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -76,9 +76,14 @@ describe("AdminController", () => {
         role: "BASIC",
         name: "Admin",
       };
-      const authenticatedConsumer: User = User.createUser({
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
 
       try {
@@ -212,9 +217,14 @@ describe("AdminController", () => {
 
   describe("getNobaAdmin", () => {
     it("Logged-in Consumer shouldn't be able to call GET /admins", async () => {
-      const authenticatedConsumer: User = User.createUser({
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
         _id: "XXXXXXXXXX",
         email: "consumer@noba.com",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
 
       try {
@@ -262,9 +272,14 @@ describe("AdminController", () => {
     it("Consumer shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
       const UPDATED_ROLE = "INTERMEDIATE";
-      const authenticatedConsumer: User = User.createUser({
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
 
       try {
@@ -517,9 +532,14 @@ describe("AdminController", () => {
 
   describe("deleteNobaAdmin", () => {
     it("Consumers shouldn't be able to delete any NobaAdmin", async () => {
-      const authenticatedConsumer: User = User.createUser({
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
       try {
         await adminController.deleteNobaAdmin({ user: authenticatedConsumer }, "id");
@@ -638,10 +658,16 @@ describe("AdminController", () => {
       const partnerId = "PPPPPPPPPP";
       const newPartnerAdminEmail = "partner.admin@noba.com";
 
-      const requestingConsumer = User.createUser({
+      const requestingConsumer = Consumer.createConsumer({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A",
+        firstName: "Consumer A",
+        lastName: "Last Name",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
@@ -816,10 +842,14 @@ describe("AdminController", () => {
       const partnerId = "PPPPPPPPPP";
       const partnerAdminId = "partner.admin@noba.com";
 
-      const requestingConsumer = User.createUser({
+      const requestingConsumer = Consumer.createConsumer({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
 
       try {
@@ -977,10 +1007,14 @@ describe("AdminController", () => {
       const partnerId = "PPPPPPPPPP";
       const partnerAdminId = "partner.admin@noba.com";
 
-      const requestingConsumer = User.createUser({
+      const requestingConsumer = Consumer.createConsumer({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
 
       try {
@@ -1181,10 +1215,14 @@ describe("AdminController", () => {
       const consumerId = "CCCCCCCCCC";
       const newPartnerName = "Noba Partner";
 
-      const requestingConsumer = User.createUser({
+      const requestingConsumer = Consumer.createConsumer({
         _id: consumerId,
         email: "consumer@noba.com",
-        name: "Consumer A",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
       });
 
       try {

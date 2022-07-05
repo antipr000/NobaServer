@@ -1,23 +1,23 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { UserDTO } from "../user/dto/UserDTO";
-import { UserService } from "../user/user.service";
+import { ConsumerService } from "../consumer/consumer.service";
 import { AuthService } from "./auth.service";
 import { consumerIdentityIdentifier } from "./domain/IdentityType";
+import { Consumer } from "../consumer/domain/Consumer";
 
 @Injectable()
 export class UserAuthService extends AuthService {
   private readonly identityType: string = consumerIdentityIdentifier;
 
   @Inject()
-  private readonly userService: UserService;
+  private readonly consumerService: ConsumerService;
 
   protected getIdentityType(): string {
     return this.identityType;
   }
 
-  protected async getUserId(emailOrPhone: string): Promise<string> {
-    const userDto: UserDTO = await this.userService.createUserIfFirstTimeLogin(emailOrPhone);
-    return userDto._id;
+  protected async getUserId(emailOrPhone: string, partnerID: string): Promise<string> {
+    const consumer: Consumer = await this.consumerService.createConsumerIfFirstTimeLogin(emailOrPhone, partnerID);
+    return consumer.props._id;
   }
 
   protected async isUserSignedUp(email: string): Promise<boolean> {

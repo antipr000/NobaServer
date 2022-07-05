@@ -7,8 +7,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { CurrencyDTO } from "../common/dto/CurrencyDTO";
-import { CheckoutPaymentMethodsService } from "../user/paymentmethods.service";
-import { UserService } from "../user/user.service";
+import { ConsumerService } from "../consumer/consumer.service";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -17,7 +16,6 @@ import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
-
 @Injectable()
 export class TransactionService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -26,8 +24,8 @@ export class TransactionService {
   @Inject("TransactionRepo")
   private readonly transactionsRepo: ITransactionRepo;
 
-  @Inject(UserService)
-  private readonly userService: UserService;
+  @Inject(ConsumerService)
+  private readonly consumerService: ConsumerService;
 
   private readonly transactionsMapper: TransactionMapper;
 
@@ -44,7 +42,6 @@ export class TransactionService {
     dbProvider: DBProvider,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly zeroHashService: ZeroHashService,
-    private readonly checkoutPaymentMethodService: CheckoutPaymentMethodsService,
   ) {
     this.transactionsMapper = new TransactionMapper();
   }
@@ -85,7 +82,7 @@ export class TransactionService {
       });
     }
 
-    const user = await this.userService.getUserInternal(userID);
+    const user = await this.consumerService.getConsumer(userID);
 
     const leg1Amount = details.leg1Amount;
     const leg2Amount = details.leg2Amount;
@@ -137,7 +134,7 @@ export class TransactionService {
     //**** starting fiat transaction ***/
 
     // todo refactor this piece when we have the routing flow in place
-    const payment = await this.checkoutPaymentMethodService.requestPayment(details.paymentMethodID, leg1Amount, leg1);
+    const payment = await this.consumerService.requestCheckoutPayment(details.paymentMethodID, leg1Amount, leg1);
     let updatedTransaction = Transaction.createTransaction({
       ...newTransaction.props,
       transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING,

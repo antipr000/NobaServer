@@ -64,7 +64,7 @@ describe("AdminService", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
+      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, undefined)).thenResolve(adminId);
       when(mockAdminAuthService.generateAccessToken(adminId)).thenResolve(generateAccessTokenResponse);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp({
@@ -86,13 +86,14 @@ describe("AdminService", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp)).thenResolve(consumerId);
+      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, "partner-1")).thenResolve(consumerId);
       when(mockConsumerAuthService.generateAccessToken(consumerId)).thenResolve(generateAccessTokenResponse);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp({
         emailOrPhone: consumerEmail,
         identityType: identityType,
         otp: otp,
+        partnerID: "partner-1",
       });
 
       expect(result).toEqual(generateAccessTokenResponse);
@@ -106,7 +107,7 @@ describe("AdminService", () => {
       const otp = 123456;
 
       when(mockAdminAuthService.createOtp()).thenReturn(otp);
-      when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
+      when(mockAdminAuthService.saveOtp(adminEmail, otp, undefined)).thenResolve();
       when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
 
@@ -122,13 +123,14 @@ describe("AdminService", () => {
       const otp = 123456;
 
       when(mockConsumerAuthService.createOtp()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser({
         email: consumerEmail,
         identityType: identityType,
+        partnerID: "partner-1",
       });
     });
 
@@ -138,13 +140,14 @@ describe("AdminService", () => {
       const otp = 123456;
 
       when(mockConsumerAuthService.createOtp()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser({
         email: consumerEmail,
         identityType: identityType,
+        partnerID: "partner-1",
       });
 
       try {
@@ -152,6 +155,7 @@ describe("AdminService", () => {
         await authController.loginUser({
           email: consumerEmail,
           identityType: identityType,
+          partnerID: "partner-1",
         });
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -164,7 +168,7 @@ describe("AdminService", () => {
       const otp = 123456;
 
       when(mockPartnerAuthService.createOtp()).thenReturn(otp);
-      when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp)).thenResolve();
+      when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp, undefined)).thenResolve();
       when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString())).thenResolve();
       when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 

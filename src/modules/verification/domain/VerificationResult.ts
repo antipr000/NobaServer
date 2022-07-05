@@ -1,7 +1,4 @@
-import {
-  ConsumerVerificationStatus,
-  DocumentVerificationStatus,
-} from "../../../modules/user/domain/VerificationStatus";
+import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
 
 export type ConsumerVerificationResult = {
   status: ConsumerVerificationStatus;
