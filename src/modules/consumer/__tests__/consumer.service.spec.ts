@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, instance, when } from "ts-mockito";
+import { instance } from "ts-mockito";
 import { ConsumerService } from "../consumer.service";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
@@ -7,7 +7,6 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { StripeService } from "../../common/stripe.service";
 import { STRIPE_CONFIG_KEY, STRIPE_SECRET_KEY } from "../../../config/ConfigurationUtils";
-import { Result } from "../../../core/logic/Result";
 import { Consumer } from "../domain/Consumer";
 import { getMockStripeServiceWithDefaults } from "../../common/mocks/mock.stripe.service";
 import { PaymentProviders } from "../domain/PaymentProviderDetails";
@@ -73,9 +72,6 @@ describe("ConsumerService", () => {
           },
         ],
       });
-
-      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("Not found"));
-      when(consumerRepo.createConsumer(anything())).thenResolve();
     });
   });
 });

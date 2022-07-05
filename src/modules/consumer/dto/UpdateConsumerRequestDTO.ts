@@ -7,7 +7,7 @@ export class UpdateConsumerRequestDTO implements Partial<ConsumerProps> {
   firstName?: string;
 
   @ApiPropertyOptional()
-  lastName: string;
+  lastName?: string;
 
   @ApiPropertyOptional()
   address?: Address;

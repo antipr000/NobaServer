@@ -8,10 +8,7 @@ export class AddPaymentMethodDTO {
   cardType: string;
 
   @ApiProperty()
-  first6Digits: number;
-
-  @ApiProperty()
-  last4Digits: number;
+  cardNumber: string;
 
   @ApiProperty()
   expiryMonth: number;

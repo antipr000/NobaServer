@@ -47,17 +47,6 @@ export class ConsumerService {
       const stripeCustomer = await this.stripeService.stripeApi.customers.create({ email: email, phone: phone });
       const stripeCustomerID = stripeCustomer.id;
 
-      // create checkout customer
-      // it is okay to create PSP customer here as there would not be a lot of PSPs
-      /*
-      // Commenting out checkout code as it is not working
-      const checkoutCustomer = await this.checkoutApi.customers.create({
-        email: email,
-      });
-
-      const checkoutCustomerID = checkoutCustomer["id"];
-      */
-
       const newConsumer = Consumer.createConsumer({
         email,
         phone,
@@ -66,10 +55,6 @@ export class ConsumerService {
             providerCustomerID: stripeCustomerID,
             providerID: PaymentProviders.STRIPE,
           },
-          /*{
-            providerCustomerID: checkoutCustomerID,
-            providerID: PaymentProviders.CHECKOUT,
-          },*/
         ],
         partners: [
           {
@@ -122,7 +107,7 @@ export class ConsumerService {
     const params: Stripe.PaymentMethodCreateParams = {
       type: "card",
       card: {
-        number: `${paymentMethod.first6Digits}${paymentMethod.last4Digits}`,
+        number: paymentMethod.cardNumber,
         exp_month: paymentMethod.expiryMonth,
         exp_year: paymentMethod.expiryYear,
         cvc: paymentMethod.cvv,
@@ -137,8 +122,8 @@ export class ConsumerService {
     const newPaymentMethod: PaymentMethods = {
       cardName: paymentMethod.cardName,
       cardType: "card",
-      first6Digits: paymentMethod.first6Digits,
-      last4Digits: paymentMethod.last4Digits,
+      first6Digits: parseInt(paymentMethod.cardNumber.substring(0, 6)),
+      last4Digits: parseInt(paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4)),
       imageUri: paymentMethod.imageUri,
       paymentToken: stripePaymentMethod.id,
       paymentProviderID: PaymentProviders.STRIPE,
@@ -153,15 +138,45 @@ export class ConsumerService {
 
   async addCheckoutPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
     // TODO Populate checkout customer id in create user
-    const checkoutCustomerID = consumer.props.paymentProviderAccounts.filter(
+    const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
       paymentProviderAccount => paymentProviderAccount.providerID === PaymentProviders.CHECKOUT,
-    )[0].providerCustomerID;
+    );
+
+    let checkoutCustomerID;
+
+    let hasCustomerIDSaved = true;
+
+    if (checkoutCustomerData.length === 0) {
+      // new customer. Create customer id
+      hasCustomerIDSaved = false;
+      try {
+        const checkoutCustomer = await this.checkoutApi.customers.create({
+          email: consumer.props.email,
+          metadata: {
+            coupon_code: "NY2018",
+            partner_id: 123989,
+          },
+        });
+
+        checkoutCustomerID = checkoutCustomer["id"];
+      } catch (e) {
+        if (e.body["error_codes"].filter(errorCode => errorCode === "customer_email_already_exists").length > 0) {
+          // existing customer
+          const checkoutCustomer = await this.checkoutApi.customers.get(consumer.props.email);
+          checkoutCustomerID = checkoutCustomer["id"];
+        } else {
+          throw new BadRequestException("Failed to create checkout customer");
+        }
+      }
+    } else {
+      checkoutCustomerID = checkoutCustomerData[0].providerCustomerID;
+    }
 
     // To add payment method, we first need to tokenize the card
     // Token is only valid for 15 mins
     const token = await this.checkoutApi.tokens.request({
       type: "card",
-      number: `${paymentMethod.first6Digits}${paymentMethod.last4Digits}`,
+      number: paymentMethod.cardNumber,
       expiry_month: paymentMethod.expiryMonth,
       expiry_year: paymentMethod.expiryYear,
       cvv: paymentMethod.cvv,
@@ -179,17 +194,31 @@ export class ConsumerService {
     const newPaymentMethod: PaymentMethods = {
       cardName: paymentMethod.cardName,
       cardType: "card",
-      first6Digits: paymentMethod.first6Digits,
-      last4Digits: paymentMethod.last4Digits,
+      first6Digits: parseInt(paymentMethod.cardNumber.substring(0, 6)),
+      last4Digits: parseInt(paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4)),
       imageUri: paymentMethod.imageUri,
       paymentProviderID: PaymentProviders.CHECKOUT,
       paymentToken: instrument["id"], // TODO: Check if this is the valid way to populate id
     };
-
-    const updatedConsumerProps: ConsumerProps = {
-      ...consumer.props,
-      paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
-    };
+    let updatedConsumerProps: ConsumerProps = consumer.props;
+    if (hasCustomerIDSaved) {
+      updatedConsumerProps = {
+        ...consumer.props,
+        paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+      };
+    } else {
+      updatedConsumerProps = {
+        ...consumer.props,
+        paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+        paymentProviderAccounts: [
+          ...consumer.props.paymentProviderAccounts,
+          {
+            providerID: PaymentProviders.CHECKOUT,
+            providerCustomerID: checkoutCustomerID,
+          },
+        ],
+      };
+    }
 
     return await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
   }
