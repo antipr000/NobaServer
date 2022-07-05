@@ -114,8 +114,7 @@ describe("ConsumerController", () => {
       const paymentMethodRequest: AddPaymentMethodDTO = {
         cardName: "Fake Card",
         cardType: "Master Card",
-        first6Digits: 123456,
-        last4Digits: 7890,
+        cardNumber: "12345678901234",
         expiryMonth: 2,
         expiryYear: 2023,
         cvv: "765",
@@ -134,7 +133,7 @@ describe("ConsumerController", () => {
         email: "mock@noba.com",
       });
 
-      when(consumerService.addStripePaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
+      when(consumerService.addCheckoutPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
           paymentMethods: [
@@ -143,8 +142,8 @@ describe("ConsumerController", () => {
               paymentToken: "faketoken1234",
               cardName: paymentMethodRequest.cardName,
               cardType: paymentMethodRequest.cardType,
-              first6Digits: paymentMethodRequest.first6Digits,
-              last4Digits: paymentMethodRequest.last4Digits,
+              first6Digits: 123456,
+              last4Digits: 1234,
               imageUri: "testimage",
             },
           ],
