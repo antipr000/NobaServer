@@ -194,7 +194,7 @@ export class ConsumerService {
 
       const newPaymentMethod: PaymentMethods = {
         cardName: paymentMethod.cardName,
-        cardType: "card",
+        cardType: instrument["scheme"],
         first6Digits: parseInt(paymentMethod.cardNumber.substring(0, 6)),
         last4Digits: parseInt(paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4)),
         imageUri: paymentMethod.imageUri,
