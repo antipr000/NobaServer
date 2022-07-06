@@ -113,7 +113,6 @@ describe("ConsumerController", () => {
     it("should add a payment method", async () => {
       const paymentMethodRequest: AddPaymentMethodDTO = {
         cardName: "Fake Card",
-        cardType: "Master Card",
         cardNumber: "12345678901234",
         expiryMonth: 2,
         expiryYear: 2023,
@@ -141,7 +140,7 @@ describe("ConsumerController", () => {
               paymentProviderID: PaymentProviders.STRIPE,
               paymentToken: "faketoken1234",
               cardName: paymentMethodRequest.cardName,
-              cardType: paymentMethodRequest.cardType,
+              cardType: "VISA",
               first6Digits: 123456,
               last4Digits: 1234,
               imageUri: "testimage",
