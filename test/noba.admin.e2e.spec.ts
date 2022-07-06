@@ -20,6 +20,7 @@ import { ResponseStatus } from "./api_client/core/request";
 import { AdminService, AuthenticationService, DeleteNobaAdminDTO, VerifyOtpResponseDTO } from "./api_client";
 import { NobaAdminDTO } from "src/modules/admin/dto/NobaAdminDTO";
 import {
+  clearAccessTokenForNextRequests,
   fetchOtpFromDb,
   insertNobaAdmin,
   insertPartnerAdmin,
@@ -52,6 +53,7 @@ describe("Noba Admin", () => {
   });
 
   afterEach(async () => {
+    clearAccessTokenForNextRequests();
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
@@ -78,16 +80,6 @@ describe("Noba Admin", () => {
 
     it("Should return 403 if requested with Consumer credentials with same EMAIL", async () => {
       const consumerEmail = "test.consumer@noba.com";
-
-      await AuthenticationService.loginUser({
-        email: consumerEmail,
-        identityType: "CONSUMER",
-      });
-      const verifyOtpResponse = await AuthenticationService.verifyOtp({
-        emailOrPhone: consumerEmail,
-        identityType: "CONSUMER",
-        otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
-      });
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);

@@ -19,7 +19,13 @@ import mongoose from "mongoose";
 import { ConsumerService } from "./api_client/services/ConsumerService";
 import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
 import { bootstrap } from "../src/server";
-import { fetchOtpFromDb, insertNobaAdmin, insertPartnerAdmin, setAccessTokenForTheNextRequests } from "./common";
+import {
+  clearAccessTokenForNextRequests,
+  fetchOtpFromDb,
+  insertNobaAdmin,
+  insertPartnerAdmin,
+  setAccessTokenForTheNextRequests,
+} from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 
 describe("Authentication", () => {
@@ -47,6 +53,7 @@ describe("Authentication", () => {
   });
 
   afterEach(async () => {
+    clearAccessTokenForNextRequests();
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();

@@ -70,6 +70,10 @@ export const setAccessTokenForTheNextRequests = accessToken => {
   process.env.ACCESS_TOKEN = accessToken;
 };
 
+export const clearAccessTokenForNextRequests = () => {
+  delete process.env.ACCESS_TOKEN;
+};
+
 export const loginAndGetResponse = async (
   mongoUri: string,
   email: string,
