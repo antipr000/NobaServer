@@ -52,7 +52,7 @@ const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
 
 const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethods> = {
   cardName: Joi.string().optional().default(""),
-  cardType: Joi.string().required(),
+  cardType: Joi.string().optional(),
   first6Digits: Joi.number().optional(),
   last4Digits: Joi.number().optional(),
   imageUri: Joi.string().optional(),

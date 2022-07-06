@@ -14,6 +14,12 @@ export class PaymentMethodsDTO {
 
   @ApiProperty()
   paymentToken: string;
+
+  @ApiProperty()
+  first6Digits: number;
+
+  @ApiProperty()
+  last4Digits: number;
 }
 
 export class CryptoWalletsDTO {
