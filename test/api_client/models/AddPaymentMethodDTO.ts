@@ -5,8 +5,7 @@
 export type AddPaymentMethodDTO = {
   cardName?: string;
   cardType: string;
-  first6Digits: number;
-  last4Digits: number;
+  cardNumber: string;
   expiryMonth: number;
   expiryYear: number;
   cvv: string;

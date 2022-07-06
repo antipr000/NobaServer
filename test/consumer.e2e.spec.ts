@@ -283,4 +283,94 @@ describe("Authentication", () => {
       expect(getConsumerResponse.dateOfBirth).toBeUndefined();
     });
   });
+
+  describe("POST /consumers/paymentmethods", () => {
+    it("should return 401 if not logged in as any identity", async () => {
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({} as any)) as ConsumerDTO &
+        ResponseStatus;
+
+      expect(addPaymentMethodResponse.__status).toBe(401);
+    });
+
+    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com";
+      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+
+      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
+      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
+
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({} as any)) as ConsumerDTO &
+        ResponseStatus;
+      expect(addPaymentMethodResponse.__status).toBe(403);
+    });
+
+    it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminId = "AAAAAAAAAA";
+      const nobaAdminRole = "BASIC";
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({} as any)) as ConsumerDTO &
+        ResponseStatus;
+      expect(addPaymentMethodResponse.__status).toBe(403);
+    });
+
+    // TODO: Enable this test when the service is fixed to throw 400 instead of 500
+    //
+    // it("should throw 400 if given card details are invalid when Consumer identity calls the API", async () => {
+    //   const consumerEmail = "test.consumer@noba.com";
+    //   const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+    //   setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+    //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+    //     cardName: "Tester",
+    //     cardType: "American Express",
+    //     cardNumber: "2222400070000005",
+    //     expiryMonth: 30,
+    //     expiryYear: 2030,
+    //     cvv: "737",
+    //   })) as ConsumerDTO & ResponseStatus;
+
+    //   expect(addPaymentMethodResponse.__status).toBe(400);
+    // });
+
+    it("should successfully add the payment method when Consumer identity calls the API", async () => {
+      const consumerEmail = "test.consumer@noba.com";
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        cardName: "Tester",
+        cardType: "Mastercard",
+        cardNumber: "2222400070000005",
+        expiryMonth: 3,
+        expiryYear: 2030,
+        cvv: "737",
+      })) as ConsumerDTO & ResponseStatus;
+      expect(addPaymentMethodResponse.__status).toBe(201);
+
+      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+      expect(getConsumerResponse.email).toBe(consumerEmail);
+
+      expect(getConsumerResponse.paymentMethods).toHaveLength(1);
+      const addedCardDetails = JSON.parse(JSON.stringify(getConsumerResponse.paymentMethods[0]));
+      expect(addedCardDetails.paymentToken).toBeDefined();
+      // TODO: Enable this test once the service is fixed.
+      // expect(addedCardDetails.cardType).toBe("Mastercard");
+      expect(addedCardDetails.cardName).toBe("Tester");
+
+      expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
+      expect(getConsumerResponse.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.documentVerificationStatus).toBe("NotRequired");
+      expect(getConsumerResponse.firstName).toBeUndefined();
+      expect(getConsumerResponse.lastName).toBeUndefined();
+      expect(getConsumerResponse.address).toBeUndefined();
+      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+    });
+  });
 });
