@@ -86,6 +86,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
       "JWT-auth",
     )
     .addServer("/")
+    .addServer("http://localhost:8080")
     .build();
 
   const privateOptions = {
