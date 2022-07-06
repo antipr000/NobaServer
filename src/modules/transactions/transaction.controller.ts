@@ -100,10 +100,14 @@ export class TransactionController {
   })
   @ApiBadGatewayResponse({ description: "Bad gateway. Something went wrong." })
   @ApiBadRequestResponse({ description: "Bad request. Invalid input." })
-  async transact(@Body() orderDetails: CreateTransactionDTO, @AuthUser() user: Consumer): Promise<TransactionDTO> {
+  async transact(
+    @Query("sessionKey") sessionKey: string,
+    @Body() orderDetails: CreateTransactionDTO,
+    @AuthUser() user: Consumer,
+  ): Promise<TransactionDTO> {
     this.logger.info(`uid ${user.props._id}, transact input:`, orderDetails);
 
-    return this.transactionService.transact(user.props._id, orderDetails);
+    return this.transactionService.transact(user.props._id, sessionKey, orderDetails);
   }
 
   //TODO take filter options, pagitination token etc?

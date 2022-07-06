@@ -70,7 +70,7 @@ export class TransactionService {
 
   //TODO add proper logs without leaking sensitive information
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
-  async transact(userID: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
+  async transact(userID: string, sessionKey: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
     const leg1: string = details.leg1;
     const leg2: string = details.leg2;
     const destinationWalletAdress: string = details.destinationWalletAddress;

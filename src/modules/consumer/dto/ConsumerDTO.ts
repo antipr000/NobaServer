@@ -35,6 +35,22 @@ export class CryptoWalletsDTO {
   @ApiProperty()
   status: string;
 }
+
+export class KycVerificationDTO {
+  @ApiPropertyOptional({ enum: ConsumerVerificationStatus })
+  kycVerificationStatus?: string;
+
+  @ApiPropertyOptional()
+  updatedAt?: number;
+}
+
+export class DocumentVerificationDTO {
+  @ApiPropertyOptional({ enum: DocumentVerificationStatus })
+  documentVerificationStatus?: string;
+
+  @ApiPropertyOptional()
+  updatedAt?: number;
+}
 export class ConsumerDTO {
   @ApiProperty()
   _id: string;
@@ -48,14 +64,14 @@ export class ConsumerDTO {
   @ApiProperty()
   email: string;
 
+  @ApiProperty()
+  kycVerificationData: KycVerificationDTO;
+
+  @ApiProperty()
+  documentVerificationData: DocumentVerificationDTO;
+
   @ApiPropertyOptional()
   phone?: string;
-
-  @ApiPropertyOptional({ enum: ConsumerVerificationStatus })
-  kycVerificationStatus?: string;
-
-  @ApiPropertyOptional({ enum: DocumentVerificationStatus })
-  documentVerificationStatus?: string;
 
   @ApiPropertyOptional()
   dateOfBirth?: string;
