@@ -25,6 +25,8 @@ export class ConsumerMapper implements Mapper<Consumer> {
       cardType: paymentMethod.cardType,
       imageUri: paymentMethod.imageUri,
       paymentToken: paymentMethod.paymentToken,
+      first6Digits: paymentMethod.first6Digits,
+      last4Digits: paymentMethod.last4Digits,
     };
   }
 

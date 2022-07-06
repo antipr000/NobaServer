@@ -4,7 +4,7 @@ export class AddPaymentMethodDTO {
   @ApiPropertyOptional()
   cardName?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   cardType: string;
 
   @ApiProperty()
