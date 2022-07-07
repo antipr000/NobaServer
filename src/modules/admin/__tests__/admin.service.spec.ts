@@ -8,6 +8,7 @@ import { AdminMapper } from "../mappers/AdminMapper";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { getMockAdminTransactionRepoWithDefaults } from "../mocks/MockAdminTransactionRepo";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID } from "../../../config/ConfigurationUtils";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -19,7 +20,14 @@ describe("AdminService", () => {
     mockAdminTransactionRepo = getMockAdminTransactionRepoWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
+      imports: [
+        TestConfigModule.registerAsync({
+          [NOBA_CONFIG_KEY]: {
+            [NOBA_PARTNER_ID]: "temp"
+          }
+        }),
+        getTestWinstonModule()
+      ],
       providers: [
         AdminService,
         {
