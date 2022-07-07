@@ -109,7 +109,7 @@ export class AdminController {
   async getNobaAdmin(@Request() request): Promise<NobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin)) {
-      throw new ForbiddenException(`This endpoint is only for Noba Admins.`);
+      throw new ForbiddenException("This endpoint is only for Noba Admins.");
     }
 
     return this.adminMapper.toDTO(authenticatedUser);

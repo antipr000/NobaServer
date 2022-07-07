@@ -57,6 +57,9 @@ export const SARDINE_CLIENT_ID = "clientID";
 export const SARDINE_SECRET_KEY = "secretKey";
 export const SARDINE_URI = "sardineBaseUri";
 
+export const NOBA_CONFIG_KEY = "noba";
+export const NOBA_PARTNER_ID = "partnerID";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

@@ -1,4 +1,4 @@
-import { Inject, Logger, UnauthorizedException } from "@nestjs/common";
+import { Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IOTPRepo } from "./repo/OTPRepo";
@@ -6,7 +6,11 @@ import { Otp } from "./domain/Otp";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { EmailService } from "../common/email.service";
 import { SMSService } from "../common/sms.service";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
+@Injectable()
 export abstract class AuthService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
@@ -23,8 +27,18 @@ export abstract class AuthService {
   @Inject()
   private readonly jwtService: JwtService;
 
+  readonly nobaPartnerID: string;
+
+  constructor(private readonly configService: CustomConfigService) {
+    this.nobaPartnerID = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).partnerID;
+  }
+
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
   async validateAndGetUserId(emailOrPhone: string, enteredOtp: number, partnerID?: string): Promise<string> {
+    if (!partnerID || partnerID.length == 0) {
+      partnerID = this.nobaPartnerID;
+    }
+
     const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType(), partnerID);
     const currentDateTime: number = new Date().getTime();
 
@@ -52,6 +66,10 @@ export abstract class AuthService {
   }
 
   async saveOtp(emailOrPhone: string, otp: number, partnerID?: string): Promise<void> {
+    if (!partnerID || partnerID.length == 0) {
+      partnerID = this.nobaPartnerID;
+    }
+
     await this.otpRepo.saveOTP(emailOrPhone, otp, this.getIdentityType(), partnerID);
   }
 

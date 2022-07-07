@@ -48,3 +48,6 @@ sardine:
   clientID: "bogus-value"
   secretKey: "bogus-value"
   sardineBaseUri: "https://api.dev.sardine.ai"
+
+noba:
+  partnerID: "d4KZqfVKwSHWueOJhmgN-"

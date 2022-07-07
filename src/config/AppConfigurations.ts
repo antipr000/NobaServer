@@ -44,6 +44,8 @@ import {
   SARDINE_AWS_SECRET_KEY_FOR_SARDINE_SECRET_KEY_ATTR,
   SARDINE_SECRET_KEY,
   SARDINE_URI,
+  NOBA_CONFIG_KEY,
+  NOBA_PARTNER_ID,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -53,6 +55,7 @@ import { SendGridConfigs } from "./configtypes/SendGridConfigs";
 import { StripeConfigs } from "./configtypes/StripeConfigs";
 import { MongoConfigs } from "./configtypes/MongoConfigs";
 import { SardineConfigs } from "./configtypes/SardineConfigs";
+import { NobaConfigs } from "./configtypes/NobaConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.DEV]: "localdevelopment.yaml",
@@ -97,7 +100,7 @@ export default async function loadAppConfigs() {
    *
    * So, you have to configure them separately in environment variables. But setting these
    *    ENV variables everytime you do a new terminal will slow down & to be fast you'll store
-   *    these credentials somewhere where it is very handy WHCIH INCREASES RISK.
+   *    these credentials somewhere where it is very handy WHICH INCREASES RISK.
    *
    * For avoiding this, we have "secrets.yaml" which is already added in '.gitignore' and you can
    *    configure any such secret credential in "secrets.yaml" and it will be applied during app startup.
@@ -108,9 +111,9 @@ export default async function loadAppConfigs() {
   }
 
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
-
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
-  const finalConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
+  const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
+  const finalConfigs = configureNobaParameters(environment, vendorConfigs);
 
   //validate configs
   return Joi.attempt(finalConfigs, appConfigsJoiValidationSchema);
@@ -342,5 +345,20 @@ async function configureMongoCredentials(
   mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
 
   configs[MONGO_CONFIG_KEY] = mongoConfigs;
+  return configs;
+}
+
+function configureNobaParameters(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
+  const nobaConfigs: NobaConfigs = configs[NOBA_CONFIG_KEY];
+
+  if (nobaConfigs === undefined) {
+    const errorMessage =
+      "\n'Noba' configurations are required. Please configure the Noba environment variables in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${NOBA_PARTNER_ID}".\n`;
+
+    throw Error(errorMessage);
+  }
+
+  configs[NOBA_CONFIG_KEY] = nobaConfigs;
   return configs;
 }
