@@ -7,9 +7,16 @@ import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { IDVProvider } from "./IDVProvider";
-import { SardineCustomerRequest, SardineDocumentProcessingStatus, SardineRiskLevels } from "./SardineTypeDefinitions";
+import {
+  PaymentMethodTypes,
+  SardineCustomerRequest,
+  SardineDocumentProcessingStatus,
+  SardineRiskLevels,
+} from "./SardineTypeDefinitions";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import * as FormData from "form-data";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { TransactionInformation } from "../domain/TransactionInformation";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -35,8 +42,9 @@ export class Sardine implements IDVProvider {
     sessionKey: string,
     consumerInfo: ConsumerInformation,
   ): Promise<ConsumerVerificationResult> {
+    const flowType = consumerInfo.address.countryCode.toLocaleLowerCase() === "us" ? "kyc-us" : "kyc-non-us";
     const sardineRequest: SardineCustomerRequest = {
-      flow: "kyc-ssn",
+      flow: flowType,
       sessionKey: sessionKey,
       customer: {
         id: consumerInfo.userID,
@@ -51,11 +59,10 @@ export class Sardine implements IDVProvider {
           postalCode: consumerInfo.address.postalCode,
           countryCode: consumerInfo.address.countryCode,
         },
-        phone: consumerInfo.phoneNumber,
-        isPhoneVerified: false,
         emailAddress: consumerInfo.email,
         isEmailVerified: true,
       },
+      checkpoints: ["customer", "aml"],
     };
 
     if (consumerInfo.nationalID) {
@@ -142,6 +149,74 @@ export class Sardine implements IDVProvider {
     } catch (e) {
       console.log(e);
       throw new NotFoundException();
+    }
+  }
+
+  async transactionVerification(
+    sessionKey: string,
+    consumer: Consumer,
+    transactionInformation: TransactionInformation,
+  ): Promise<ConsumerVerificationResult> {
+    const sanctionsCheckSardineRequest: SardineCustomerRequest = {
+      flow: "payment-submission",
+      sessionKey: sessionKey,
+      customer: {
+        id: consumer.props._id,
+      },
+      transaction: {
+        id: transactionInformation.transactionID,
+        status: "accepted",
+        createdAtMillis: new Date().getTime(),
+        amount: transactionInformation.amount,
+        currencyCode: transactionInformation.currencyCode,
+        actionType: "buy",
+        paymentMethod: {
+          type: PaymentMethodTypes.CARD,
+          card: {
+            first6: `${transactionInformation.first6DigitsOfCard}`,
+            last4: `${transactionInformation.last4DigitsOfCard}`,
+            hash: transactionInformation.cardID,
+          },
+        },
+        recipient: {
+          emailAddress: consumer.props.email,
+          isKycVerified:
+            consumer.props.verificationData.kycVerificationStatus === ConsumerVerificationStatus.APPROVED ||
+            consumer.props.verificationData.kycVerificationStatus === ConsumerVerificationStatus.PENDING_KYC_APPROVED,
+          paymentMethod: {
+            type: PaymentMethodTypes.CRYPTO,
+            crypto: {
+              currencyCode: transactionInformation.cryptoCurrencyCode,
+              address: transactionInformation.walletAddress,
+            },
+          },
+        },
+      },
+      checkpoints: ["aml", "payment"],
+    };
+
+    try {
+      const { data } = await axios.post(
+        this.BASE_URI + "/v1/customers",
+        sanctionsCheckSardineRequest,
+        this.getAxiosConfig(),
+      );
+      // TODO: Identify how to differentiate between RejectedFraud and RejectedWallet
+      if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
+        return {
+          status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_FRAUD,
+        };
+      } else if (data.level === SardineRiskLevels.MEDIUM) {
+        return {
+          status: ConsumerVerificationStatus.PENDING_FLAGGED_FRAUD,
+        };
+      } else {
+        return {
+          status: ConsumerVerificationStatus.APPROVED,
+        };
+      }
+    } catch (e) {
+      throw new BadRequestException(e.message);
     }
   }
 }

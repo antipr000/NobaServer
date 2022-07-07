@@ -15,6 +15,7 @@ import { DocumentVerificationStatus } from "../consumer/domain/VerificationStatu
 import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
+import { TransactionInformation } from "./domain/TransactionInformation";
 
 @Injectable()
 export class VerificationService {
@@ -107,6 +108,26 @@ export class VerificationService {
       },
     };
     await this.consumerService.updateConsumer(newConsumerData);
+    return result;
+  }
+
+  async transactionVerification(
+    sessionKey: string,
+    consumer: Consumer,
+    transactionInformation: TransactionInformation,
+  ): Promise<ConsumerVerificationResult> {
+    const result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionInformation);
+
+    const newConsumerData: ConsumerProps = {
+      ...consumer.props,
+      verificationData: {
+        ...consumer.props.verificationData,
+        kycVerificationStatus: result.status,
+      },
+    };
+
+    await this.consumerService.updateConsumer(newConsumerData);
+
     return result;
   }
 

@@ -4,6 +4,7 @@ import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { CommonModule } from "../common/common.module";
 import { ConsumerModule } from "../consumer/consumer.module";
+import { VerificationModule } from "../verification/verification.module";
 import { ExchangeRateController } from "./exchangerate.controller";
 import { ExchangeRateService } from "./exchangerate.service";
 import { LimitsService } from "./limits.service";
@@ -13,7 +14,14 @@ import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, CommonModule, ConsumerModule, CacheModule.register()],
+  imports: [
+    InfraProvidersModule,
+    ConfigModule,
+    CommonModule,
+    ConsumerModule,
+    VerificationModule,
+    CacheModule.register(),
+  ],
   controllers: [TransactionController, ExchangeRateController],
   providers: [
     TransactionService,

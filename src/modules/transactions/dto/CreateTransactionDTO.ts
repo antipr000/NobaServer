@@ -3,7 +3,7 @@ import { TransactionType } from "../domain/Types";
 
 export class CreateTransactionDTO {
   @ApiProperty()
-  paymentMethodID: string;
+  paymentToken: string;
 
   @ApiProperty({ enum: Object.values(TransactionType) })
   type: TransactionType;

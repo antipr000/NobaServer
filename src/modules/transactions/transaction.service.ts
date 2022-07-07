@@ -1,4 +1,4 @@
-import { CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
 import { Cache } from "cache-manager";
 import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -8,6 +8,10 @@ import { DBProvider } from "../../infraproviders/DBProvider";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { CurrencyDTO } from "../common/dto/CurrencyDTO";
 import { ConsumerService } from "../consumer/consumer.service";
+import { PaymentMethods } from "../consumer/domain/PaymentMethods";
+import { ConsumerVerificationStatus } from "../consumer/domain/VerificationStatus";
+import { TransactionInformation } from "../verification/domain/TransactionInformation";
+import { VerificationService } from "../verification/verification.service";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -26,6 +30,9 @@ export class TransactionService {
 
   @Inject(ConsumerService)
   private readonly consumerService: ConsumerService;
+
+  @Inject(VerificationService)
+  private readonly verificationService: VerificationService;
 
   private readonly transactionsMapper: TransactionMapper;
 
@@ -117,7 +124,7 @@ export class TransactionService {
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: userID,
-      paymentMethodID: details.paymentMethodID,
+      paymentMethodID: details.paymentToken,
       leg1Amount: details.leg1Amount,
       leg2Amount: details.leg2Amount,
       leg1: leg1,
@@ -128,13 +135,44 @@ export class TransactionService {
 
     this.transactionsRepo.createTransaction(newTransaction);
 
+    const paymentMethodList: PaymentMethods[] = user.props.paymentMethods.filter(
+      paymentMethod => paymentMethod.paymentToken === details.paymentToken,
+    );
+
+    if (paymentMethodList.length === 0) {
+      throw new BadRequestException("Payment Token is invalid!");
+    }
+
+    const paymentMethod = paymentMethodList[0];
+
+    // Check Sardine for AML
+    const sardineTransactionInformation: TransactionInformation = {
+      transactionID: newTransaction.props._id,
+      amount: newTransaction.props.leg1Amount,
+      currencyCode: newTransaction.props.leg1,
+      first6DigitsOfCard: paymentMethod.first6Digits,
+      last4DigitsOfCard: paymentMethod.last4Digits,
+      cardID: paymentMethod.paymentToken,
+      cryptoCurrencyCode: newTransaction.props.leg2,
+      walletAddress: newTransaction.props.destinationWalletAddress,
+    };
+    const result = await this.verificationService.transactionVerification(
+      sessionKey,
+      user,
+      sardineTransactionInformation,
+    );
+
+    if (result.status !== ConsumerVerificationStatus.APPROVED) {
+      throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
+    }
+
     //TODO we shouldn't be processing the below steps synchronously as there may be some partial failures
     //We should have some sort of transaction queues to process all the scenarios incrementally
 
     //**** starting fiat transaction ***/
 
     // todo refactor this piece when we have the routing flow in place
-    const payment = await this.consumerService.requestCheckoutPayment(details.paymentMethodID, leg1Amount, leg1);
+    const payment = await this.consumerService.requestCheckoutPayment(details.paymentToken, leg1Amount, leg1);
     let updatedTransaction = Transaction.createTransaction({
       ...newTransaction.props,
       transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING,
