@@ -62,7 +62,7 @@ export class Sardine implements IDVProvider {
         emailAddress: consumerInfo.email,
         isEmailVerified: true,
       },
-      checkpoints: ["customer", "aml"],
+      checkpoints: ["customer"],
     };
 
     if (consumerInfo.nationalID) {
