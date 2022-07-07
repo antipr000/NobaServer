@@ -52,3 +52,6 @@ sardine:
   clientID: "26c92075-4b15-4d3a-a037-6251661a5474"
   secretKey: "63a5801e-3004-42ec-896f-bd11820f5f1c"
   sardineBaseUri: "https://api.dev.sardine.ai"
+
+noba:
+  partnerID: "d4KZqfVKwSHWueOJhmgN-"

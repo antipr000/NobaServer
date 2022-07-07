@@ -13,7 +13,7 @@
     "start:debug": "nest start --debug  --webpack --webpackPath webpack.config.js --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest && yarn test:e2e",
+    "test": "jest --verbose && yarn test:e2e",
     "createtables:dev": "npx ts-node src\\infra\\dynamodb\\scripts\\createddbtables.ts",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

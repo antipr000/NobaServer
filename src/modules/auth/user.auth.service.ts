@@ -16,6 +16,9 @@ export class UserAuthService extends AuthService {
   }
 
   protected async getUserId(emailOrPhone: string, partnerID: string): Promise<string> {
+    if (!partnerID || partnerID.length == 0) {
+      partnerID = this.nobaPartnerID;
+    }
     const consumer: Consumer = await this.consumerService.createConsumerIfFirstTimeLogin(emailOrPhone, partnerID);
     return consumer.props._id;
   }
