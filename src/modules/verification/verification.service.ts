@@ -46,6 +46,10 @@ export class VerificationService {
     return await this.truliooProvider.getCountrySubdivisions(countryCode);
   }
 
+  private needsDocumentVerification(countryCode: string): boolean {
+    return countryCode.toLocaleLowerCase() !== "us";
+  }
+
   async verifyConsumerInformation(
     consumerID: string,
     sessionKey: string,
@@ -67,6 +71,9 @@ export class VerificationService {
         ...consumer.props.verificationData,
         kycVerificationStatus: result.status,
         idVerificationTimestamp: new Date().getTime(),
+        documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
+          ? DocumentVerificationStatus.NOT_SUBMITTED
+          : DocumentVerificationStatus.NOT_REQUIRED,
       },
     };
     await this.consumerService.updateConsumer(newConsumerData);
