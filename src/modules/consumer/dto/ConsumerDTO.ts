@@ -63,9 +63,9 @@ export class ConsumerDTO {
   @ApiPropertyOptional()
   address?: Address;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: [PaymentMethodsDTO] })
   paymentMethods?: PaymentMethodsDTO[];
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: [CryptoWalletsDTO] })
   cryptoWallets?: CryptoWalletsDTO[];
 }

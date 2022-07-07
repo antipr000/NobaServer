@@ -2,6 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { CryptoWalletsDTO } from "./CryptoWalletsDTO";
+import type { PaymentMethodsDTO } from "./PaymentMethodsDTO";
+
 export type ConsumerDTO = {
   _id: string;
   firstName?: string;
@@ -28,6 +31,6 @@ export type ConsumerDTO = {
     | "LivePhotoVerified";
   dateOfBirth?: string;
   address?: any;
-  paymentMethods?: Array<string>;
-  cryptoWallets?: Array<string>;
+  paymentMethods?: Array<PaymentMethodsDTO>;
+  cryptoWallets?: Array<CryptoWalletsDTO>;
 };
