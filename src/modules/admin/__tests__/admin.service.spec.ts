@@ -20,14 +20,7 @@ describe("AdminService", () => {
     mockAdminTransactionRepo = getMockAdminTransactionRepoWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestConfigModule.registerAsync({
-          [NOBA_CONFIG_KEY]: {
-            [NOBA_PARTNER_ID]: "temp"
-          }
-        }),
-        getTestWinstonModule()
-      ],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       providers: [
         AdminService,
         {

@@ -30,9 +30,6 @@ export abstract class AuthService {
   readonly nobaPartnerID: string;
 
   constructor(private readonly configService: CustomConfigService) {
-    //this.nobaPartnerID = "d4KZqfVKwSHWueOJhmgN-";
-
-    // TODO: Figure out how to make this work in tests
     this.nobaPartnerID = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).partnerID;
   }
 

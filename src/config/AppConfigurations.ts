@@ -351,15 +351,13 @@ async function configureMongoCredentials(
 function configureNobaParameters(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
   const nobaConfigs: NobaConfigs = configs[NOBA_CONFIG_KEY];
 
-  // if (environment === AppEnvironment.E2E_TEST) {
-  //   if (!isPropertyPresentInEnvironmentVariables(NOBA_PARTNER_ID)) {
-  //     const errorMessage = `\n'Noba' configurations are required. Please configure '${NOBA_PARTNER_ID}' in environment varaible. current is ${JSON.stringify(
-  //       process.env,
-  //     )}`;
+  if (nobaConfigs === undefined) {
+    const errorMessage =
+      "\n'Noba' configurations are required. Please configure the Noba environment variables in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${NOBA_PARTNER_ID}".\n`;
 
-  //     throw Error(errorMessage);
-  //   }
-  // }
+    throw Error(errorMessage);
+  }
 
   configs[NOBA_CONFIG_KEY] = nobaConfigs;
   return configs;
