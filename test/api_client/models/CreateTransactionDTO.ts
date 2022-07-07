@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type CreateTransactionDTO = {
-  paymentMethodID: string;
+  paymentToken: string;
   type: "onramp" | "offramp" | "swap";
   leg1: string;
   leg2: string;

@@ -3,6 +3,8 @@
 /* eslint-disable */
 
 import type { CryptoWalletsDTO } from "./CryptoWalletsDTO";
+import type { DocumentVerificationDTO } from "./DocumentVerificationDTO";
+import type { KycVerificationDTO } from "./KycVerificationDTO";
 import type { PaymentMethodsDTO } from "./PaymentMethodsDTO";
 
 export type ConsumerDTO = {
@@ -10,25 +12,9 @@ export type ConsumerDTO = {
   firstName?: string;
   lastName?: string;
   email: string;
+  kycVerificationData: KycVerificationDTO;
+  documentVerificationData: DocumentVerificationDTO;
   phone?: string;
-  kycVerificationStatus?:
-    | "Pending-New"
-    | "Pending-KYCSubmitted"
-    | "Pending-KYCApproved"
-    | "Pending-Flagged-KYC"
-    | "Pending-Flagged-Fraud"
-    | "Pending-Flagged-Wallet"
-    | "Approved"
-    | "NotApproved-Rejected-KYC"
-    | "NotApproved-Rejected-Fraud"
-    | "NotApproved-Rejected-Wallet";
-  documentVerificationStatus?:
-    | "NotSubmitted"
-    | "NotRequired"
-    | "Pending"
-    | "Verified"
-    | "Rejected"
-    | "LivePhotoVerified";
   dateOfBirth?: string;
   address?: any;
   paymentMethods?: Array<PaymentMethodsDTO>;

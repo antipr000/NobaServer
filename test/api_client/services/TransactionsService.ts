@@ -52,14 +52,18 @@ export class TransactionsService {
 
   /**
    * Place a transaction with Noba
+   * @param sessionKey
    * @param requestBody
    * @returns TransactionDTO Returns transaction id if transaction is placed successfully
    * @throws ApiError
    */
-  public static transact(requestBody: CreateTransactionDTO): CancelablePromise<TransactionDTO> {
+  public static transact(sessionKey: string, requestBody: CreateTransactionDTO): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/transactions",
+      query: {
+        sessionKey: sessionKey,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
