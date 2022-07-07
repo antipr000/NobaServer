@@ -344,7 +344,6 @@ describe("Authentication", () => {
 
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
         cardName: "Tester",
-        cardType: "Mastercard",
         cardNumber: "2222400070000005",
         expiryMonth: 3,
         expiryYear: 2030,
@@ -358,7 +357,7 @@ describe("Authentication", () => {
       expect(getConsumerResponse.email).toBe(consumerEmail);
 
       expect(getConsumerResponse.paymentMethods).toHaveLength(1);
-      const addedCardDetails = JSON.parse(JSON.stringify(getConsumerResponse.paymentMethods[0]));
+      const addedCardDetails = getConsumerResponse.paymentMethods[0];
       expect(addedCardDetails.paymentToken).toBeDefined();
       // TODO: Enable this test once the service is fixed.
       // expect(addedCardDetails.cardType).toBe("Mastercard");
