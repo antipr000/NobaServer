@@ -3,7 +3,12 @@ import { Transaction, TransactionProps } from "../domain/Transaction";
 import { TransactionMapper } from "../mapper/TransactionMapper";
 import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
+import { TransactionStatus } from "../domain/Types";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
+
+const subDays = require("date-fns/subDays");
 
 type AggregateResultType = {
   _id: number;
@@ -12,6 +17,9 @@ type AggregateResultType = {
 
 @Injectable()
 export class MongoDBTransactionRepo implements ITransactionRepo {
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
+
   private readonly transactionMapper = new TransactionMapper();
 
   constructor(private readonly dbProvider: DBProvider) {}
@@ -51,6 +59,34 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
   }
 
+  private async getPeriodicUserTransactionAmount(userId: string, days: number): Promise<number> {
+    const dateToCheck = subDays(new Date(), days);
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: AggregateResultType[] = await transactionModel
+      .aggregate([
+        {
+          $match: {
+            userId: userId,
+            transactionStatus: TransactionStatus.COMPLETED, // TODO: What about other in-flight statuses?
+            transactionTimestamp: {
+              $gt: dateToCheck,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: 1,
+            totalSum: { $sum: "$leg1Amount" },
+          },
+        },
+      ])
+      .exec();
+    if (result.length === 0) return 0;
+
+    console.log(`Returning transactions totalling ${result[0].totalSum} since ${dateToCheck}`);
+    return result[0].totalSum;
+  }
+
   async getTotalUserTransactionAmount(userId: string): Promise<number> {
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result: AggregateResultType[] = await transactionModel
@@ -75,138 +111,15 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   }
 
   async getMonthlyUserTransactionAmount(userId: string): Promise<number> {
-    return 0;
-    /*
-    const month: number = new Date().getUTCMonth() + 1;
-    const year: number = new Date().getUTCFullYear();
-
-    const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: AggregateResultType[] = await transactionModel
-      .aggregate([
-        {
-          $addFields: {
-            month: {
-              $month: {
-                $toDate: "$transactionTimestamp",
-              },
-            },
-            year: {
-              $year: {
-                $toDate: "$transactionTimestamp",
-              },
-            },
-          },
-        },
-        {
-          $match: {
-            userId: userId,
-            month: month,
-            year: year,
-          },
-        },
-        {
-          $group: {
-            _id: 1,
-            totalSum: {
-              $sum: "$leg1Amount",
-            },
-          },
-        },
-      ])
-      .exec();
-    if (result.length === 0) return 0;
-    return result[0].totalSum;
-    */
+    return this.getPeriodicUserTransactionAmount(userId, 30);
   }
 
   async getWeeklyUserTransactionAmount(userId: string): Promise<number> {
-    return 0;
-    /*
-    const week: number = getWeek(new Date());
-    const year: number = new Date().getUTCFullYear();
-
-    const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: AggregateResultType[] = await transactionModel
-      .aggregate([
-        {
-          $addFields: {
-            week: {
-              $week: {
-                $toDate: "$transactionTimestamp",
-              },
-            },
-            year: {
-              $year: {
-                $toDate: "$transactionTimestamp",
-              },
-            },
-          },
-        },
-        {
-          $match: {
-            userId: userId,
-            week: week,
-            year: year,
-          },
-        },
-        {
-          $group: {
-            _id: 1,
-            totalSum: {
-              $sum: "$leg1Amount",
-            },
-          },
-        },
-      ])
-      .exec();
-    if (result.length === 0) return 0;
-    return result[0].totalSum;
-    */
+    return this.getPeriodicUserTransactionAmount(userId, 7);
   }
 
   async getDailyUserTransactionAmount(userId: string): Promise<number> {
-    return 0;
-    /*
-    const day: number = new Date().getUTCDate();
-    const year: number = new Date().getUTCFullYear();
-
-    const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: AggregateResultType[] = await transactionModel
-      .aggregate([
-        {
-          $addFields: {
-            day: {
-              $dayOfMonth: {
-                $toDate: "$transactionTimestamp",
-              },
-            },
-            year: {
-              $year: {
-                $toDate: "$transactionTimestamp",
-              },
-            },
-          },
-        },
-        {
-          $match: {
-            userId: userId,
-            day: day,
-            year: year,
-          },
-        },
-        {
-          $group: {
-            _id: 1,
-            totalSum: {
-              $sum: "$leg1Amount",
-            },
-          },
-        },
-      ])
-      .exec();
-    if (result.length === 0) return 0;
-    return result[0].totalSum;
-    */
+    return this.getPeriodicUserTransactionAmount(userId, 1);
   }
 
   async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
