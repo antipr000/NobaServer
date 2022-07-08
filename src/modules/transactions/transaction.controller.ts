@@ -66,8 +66,6 @@ export class TransactionController {
     @Query() checkTransactionQuery: CheckTransactionQueryDTO,
     @AuthUser() authUser: Consumer,
   ): Promise<CheckTransactionDTO> {
-    console.log("check if can make transaction");
-    console.log("AUth user", authUser);
     const tAmount = checkTransactionQuery.transactionAmount;
     const status: TransactionAllowedStatus = await this.limitsService.canMakeTransaction(authUser, tAmount);
     return {
