@@ -38,8 +38,8 @@ export class IDVerificationRequestDTO {
   @ApiProperty()
   address: AddressDTO;
 
-  @ApiProperty()
-  phoneNumber: string;
+  @ApiPropertyOptional()
+  phoneNumber?: string;
 
   @ApiProperty({ description: "Date of birth in format YYYY-MM-DD" })
   dateOfBirth: string;

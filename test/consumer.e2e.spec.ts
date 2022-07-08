@@ -210,18 +210,16 @@ describe("Authentication", () => {
       expect(getConsumerResponse.address).toBeUndefined();
     });
 
-    // TODO: Enable it once validation is added to the service layer.
-    //
-    // it("should fail with 400 for invalid 'dateOfBirth'", async () => {
-    //   const consumerEmail = "test.consumer@noba.com";
-    //   const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
-    //   setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+    it("should fail with 400 for invalid 'dateOfBirth'", async () => {
+      const consumerEmail = "test.consumer@noba.com";
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-    //   const updateConsumerResponse = (await ConsumerService.updateConsumer({
-    //     dateOfBirth: "1980-02-30"
-    //   })) as ConsumerDTO & ResponseStatus;
-    //   expect(updateConsumerResponse.__status).toBe(400);
-    // });
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        dateOfBirth: "1980-02-30",
+      })) as ConsumerDTO & ResponseStatus;
+      expect(updateConsumerResponse.__status).toBe(400);
+    });
 
     it("should updates multiple-fields at once if Consumer identity calls this API", async () => {
       const consumerEmail = "test.consumer@noba.com";
@@ -370,6 +368,28 @@ describe("Authentication", () => {
       expect(getConsumerResponse.lastName).toBeUndefined();
       expect(getConsumerResponse.address).toBeUndefined();
       expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+    });
+
+    it("should allow addition of payment method when cardName is not provided", async () => {
+      const consumerEmail = "test.consumer@noba.com";
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        cardNumber: "2222400070000005",
+        expiryMonth: 3,
+        expiryYear: 2030,
+        cvv: "737",
+      })) as ConsumerDTO & ResponseStatus;
+      expect(addPaymentMethodResponse.__status).toBe(201);
+
+      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+
+      expect(getConsumerResponse.paymentMethods).toHaveLength(1);
+      const addedCardDetails = getConsumerResponse.paymentMethods[0];
+      expect(addedCardDetails.paymentToken).toBeDefined();
     });
   });
 });

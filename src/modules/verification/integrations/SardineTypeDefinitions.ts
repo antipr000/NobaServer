@@ -2,9 +2,10 @@ export type Address = {
   street1?: string;
   street2?: string;
   city: string;
-  regionCode: string;
+  regionCode?: string;
   postalCode: string;
   countryCode: string;
+  region?: string; // region is used for document verification input data
 };
 
 export type Customer = {
@@ -63,6 +64,14 @@ export type SardineCustomerRequest = {
   customer: Customer;
   transaction?: Transaction;
   checkpoints: string[];
+};
+
+export type SardineDocumentVerificationInputData = {
+  dateOfBirth?: string;
+  issuingCountry: string;
+  firstName: string;
+  lastName?: string;
+  address?: Address;
 };
 
 export enum SardineRiskLevels {

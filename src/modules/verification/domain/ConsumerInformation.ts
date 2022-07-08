@@ -11,7 +11,7 @@ export type ConsumerInformation = {
   firstName: string;
   lastName: string;
   address: Address;
-  phoneNumber: string;
+  phoneNumber?: string;
   dateOfBirth: string;
   nationalID?: NationalID;
   email: string;
