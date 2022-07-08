@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../consumer/consumer.service";
@@ -16,6 +16,7 @@ import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
 import { TransactionInformation } from "./domain/TransactionInformation";
+import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 
 @Injectable()
 export class VerificationService {
@@ -46,15 +47,14 @@ export class VerificationService {
     return await this.truliooProvider.getCountrySubdivisions(countryCode);
   }
 
-  private needsDocumentVerification(countryCode: string): boolean {
-    return countryCode.toLocaleLowerCase() !== "us";
-  }
-
   async verifyConsumerInformation(
     consumerID: string,
     sessionKey: string,
     consumerInformation: ConsumerInformation,
   ): Promise<ConsumerVerificationResult> {
+    if (consumerInformation.dateOfBirth && !isValidDateOfBirth(consumerInformation.dateOfBirth)) {
+      throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
+    }
     const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
       sessionKey,
       consumerInformation,
@@ -85,8 +85,8 @@ export class VerificationService {
     sessionKey: string,
     documentInformation: DocumentInformation,
   ): Promise<string> {
-    const id = await this.idvProvider.verifyDocument(sessionKey, documentInformation);
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const id = await this.idvProvider.verifyDocument(sessionKey, documentInformation, consumer);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
       verificationData: {
@@ -142,5 +142,9 @@ export class VerificationService {
     const sessionKey = Entity.getNewID();
     const verificationData = VerificationData.createVerificationData({ _id: sessionKey });
     return await this.verificationDataRepo.saveVerificationData(verificationData);
+  }
+
+  private needsDocumentVerification(countryCode: string): boolean {
+    return countryCode.toLocaleLowerCase() !== "us";
   }
 }

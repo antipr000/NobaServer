@@ -10,6 +10,8 @@ import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
 import { PaymentMethods } from "./PaymentMethods";
 import { CryptoWallets } from "./CryptoWallets";
+import { BadRequestException } from "@nestjs/common";
+import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 
 export interface ConsumerProps extends VersioningInfo {
   _id: string;
@@ -51,7 +53,7 @@ const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
 };
 
 const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethods> = {
-  cardName: Joi.string().optional().default(""),
+  cardName: Joi.string().optional(),
   cardType: Joi.string().optional(),
   first6Digits: Joi.number().optional(),
   last4Digits: Joi.number().optional(),
@@ -120,6 +122,12 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     if (!consumerProps._id) consumerProps._id = Entity.getNewID();
 
     if (!consumerProps.phone && !consumerProps.email) throw new Error("User must have either phone or email");
+
+    if (consumerProps.dateOfBirth) {
+      if (!isValidDateOfBirth(consumerProps.dateOfBirth)) {
+        throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
+      }
+    }
 
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));
   }

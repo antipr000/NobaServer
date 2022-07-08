@@ -11,6 +11,7 @@ import {
   PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDocumentProcessingStatus,
+  SardineDocumentVerificationInputData,
   SardineRiskLevels,
 } from "./SardineTypeDefinitions";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
@@ -22,9 +23,7 @@ import { TransactionInformation } from "../domain/TransactionInformation";
 export class Sardine implements IDVProvider {
   BASE_URI: string;
   constructor(private readonly configService: CustomConfigService) {
-    // this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
-    // TODO: Figure out why its undefined when reading from config service and remove hardcoding
-    this.BASE_URI = "https://api.dev.sardine.ai";
+    this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
   }
 
   private getAxiosConfig(): AxiosRequestConfig {
@@ -68,8 +67,13 @@ export class Sardine implements IDVProvider {
     if (consumerInfo.nationalID) {
       sardineRequest.customer.taxId = consumerInfo.nationalID.number;
     }
+
+    if (consumerInfo.phoneNumber) {
+      sardineRequest.customer.phone = consumerInfo.phoneNumber;
+      sardineRequest.customer.isPhoneVerified = false;
+    }
+
     try {
-      console.log(this.BASE_URI);
       const { data } = await axios.post(this.BASE_URI + "/v1/customers", sardineRequest, this.getAxiosConfig());
       if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
         return {
@@ -88,7 +92,7 @@ export class Sardine implements IDVProvider {
       throw new BadRequestException(e.message);
     }
   }
-  async verifyDocument(sessionKey: string, documentInfo: DocumentInformation): Promise<string> {
+  async verifyDocument(sessionKey: string, documentInfo: DocumentInformation, consumer: Consumer): Promise<string> {
     const formData = new FormData();
     formData.append("sessionKey", sessionKey);
     formData.append("customerId", documentInfo.userID);
@@ -99,6 +103,23 @@ export class Sardine implements IDVProvider {
     if (documentInfo.photoImage) {
       formData.append("photoImage", documentInfo.photoImage.buffer);
     }
+
+    const inputData: SardineDocumentVerificationInputData = {
+      dateOfBirth: consumer.props.dateOfBirth,
+      issuingCountry: consumer.props.address.countryCode,
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      address: {
+        street1: consumer.props.address.streetLine1,
+        street2: consumer.props.address.streetLine2,
+        city: consumer.props.address.city,
+        postalCode: consumer.props.address.postalCode,
+        countryCode: consumer.props.address.countryCode,
+        region: consumer.props.address.regionCode,
+      },
+    };
+
+    formData.append("inputData", inputData);
 
     const config = this.getAxiosConfig();
     config.headers = {

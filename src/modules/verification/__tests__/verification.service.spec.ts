@@ -10,6 +10,8 @@ import { ConsumerService } from "../../consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { ConsumerInformation } from "../domain/ConsumerInformation";
+import { BadRequestException } from "@nestjs/common";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -76,5 +78,89 @@ describe("VerificationService", () => {
       const result = await verificationService.createSession();
       expect(result.props._id).toBe("test-session");
     });
+  });
+
+  it("should throw error for invalid dateOfBirth format in verifyConsumerInformation", async () => {
+    const testConsumerInformation: ConsumerInformation = {
+      userID: "test-consumer-01",
+      firstName: "Test",
+      lastName: "Consumer",
+      address: {
+        streetLine1: "Test street",
+        countryCode: "US",
+        city: "Sunnyvale",
+        regionCode: "CA",
+        postalCode: "123456",
+      },
+      dateOfBirth: "2020-2-1",
+      email: "consumer@noba.com",
+    };
+
+    try {
+      await verificationService.verifyConsumerInformation(
+        testConsumerInformation.userID,
+        "session-1234",
+        testConsumerInformation,
+      );
+      expect(true).toBe(false);
+    } catch (e) {
+      expect(e).toBeInstanceOf(BadRequestException);
+    }
+  });
+
+  it("should throw error for invalid dateOfBirth value in verifyConsumerInformation", async () => {
+    const testConsumerInformation: ConsumerInformation = {
+      userID: "test-consumer-01",
+      firstName: "Test",
+      lastName: "Consumer",
+      address: {
+        streetLine1: "Test street",
+        countryCode: "US",
+        city: "Sunnyvale",
+        regionCode: "CA",
+        postalCode: "123456",
+      },
+      dateOfBirth: "ABCD1234",
+      email: "consumer@noba.com",
+    };
+
+    try {
+      await verificationService.verifyConsumerInformation(
+        testConsumerInformation.userID,
+        "session-1234",
+        testConsumerInformation,
+      );
+      expect(true).toBe(false);
+    } catch (e) {
+      expect(e).toBeInstanceOf(BadRequestException);
+    }
+  });
+
+  it("should throw error for valid dateOfBirth format but invalid date in verifyConsumerInformation", async () => {
+    const testConsumerInformation: ConsumerInformation = {
+      userID: "test-consumer-01",
+      firstName: "Test",
+      lastName: "Consumer",
+      address: {
+        streetLine1: "Test street",
+        countryCode: "US",
+        city: "Sunnyvale",
+        regionCode: "CA",
+        postalCode: "123456",
+      },
+      dateOfBirth: "2020-02-30",
+      email: "consumer@noba.com",
+    };
+
+    try {
+      await verificationService.verifyConsumerInformation(
+        testConsumerInformation.userID,
+        "session-1234",
+        testConsumerInformation,
+      );
+      expect(true).toBe(false);
+    } catch (e) {
+      expect(e).toBeInstanceOf(BadRequestException);
+    }
   });
 });

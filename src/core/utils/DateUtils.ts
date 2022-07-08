@@ -73,3 +73,36 @@ export function getWeek(date: Date, dowOffset = 0) {
     return Math.floor((daynum + day - 1) / 7);
   }
 }
+
+/**
+ * Utility function to check if a dateOfBirth is valid or not. Checks both for the date formatting and date validity
+ * Valid date format for our case is YYYY-MM-DD
+ */
+export function isValidDateOfBirth(dateString: string): boolean {
+  if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(dateString)) {
+    return false;
+  }
+
+  if (isNaN(new Date(dateString).getTime())) return false;
+
+  const [year, month, day] = dateString.split("-").map(dateParts => parseInt(dateParts));
+
+  // Do not allow year to be less than 1000
+  if (year < 1000 || year > new Date().getFullYear()) return false;
+
+  if (month > 12) return false;
+
+  // Leap year check
+  const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
+    daysInMonth[2] = 29;
+  }
+
+  if (day > daysInMonth[month]) return false;
+
+  // Date of birth cannot be a future date
+  if (new Date(dateString).getTime() > new Date().getTime()) return false;
+
+  return true;
+}

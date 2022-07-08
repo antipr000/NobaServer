@@ -43,7 +43,6 @@ import {
   SARDINE_CLIENT_ID,
   SARDINE_AWS_SECRET_KEY_FOR_SARDINE_SECRET_KEY_ATTR,
   SARDINE_SECRET_KEY,
-  SARDINE_URI,
   NOBA_CONFIG_KEY,
   NOBA_PARTNER_ID,
 } from "./ConfigurationUtils";
@@ -286,7 +285,7 @@ async function configureSardineCredentials(
     sardineConfigs.secretKey,
   );
 
-  sardineConfigs.sardineBaseUri = getPropertyFromEnvironment(SARDINE_URI);
+  sardineConfigs.sardineBaseUri = await getParameterValue(undefined, sardineConfigs.sardineBaseUri);
 
   configs[SARDINE_CONFIG_KEY] = sardineConfigs;
   return configs;
