@@ -110,7 +110,7 @@ export class ZeroHashService {
       city: consumer.address.city,
       state: consumer.address.regionCode,
       zip: consumer.address.postalCode,
-      country: consumer.address.countryCode,
+      country: "United States", // Remove hardcoded value and use countryCode to determine name
       date_of_birth: consumer.dateOfBirth, // ZH format and our format are both YYYY-MM-DD
       id_number_type: "ssn", // TODO: Support other types outside US
       id_number: consumer.socialSecurityNumber, // TODO: Support other types outside US
@@ -118,7 +118,7 @@ export class ZeroHashService {
       metadata: {},
       risk_rating: consumer.riskRating, // TODO: Update to user.riskRating after user refactoring
     };
-
+    console.log(consumerData);
     let participant;
     try {
       participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
