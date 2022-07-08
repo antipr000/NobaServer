@@ -46,6 +46,15 @@ import {
   SARDINE_URI,
   NOBA_CONFIG_KEY,
   NOBA_PARTNER_ID,
+  ZEROHASH_CONFIG_KEY,
+  ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
+  ZEROHASH_API_KEY,
+  ZEROHASH_API_SECRET,
+  ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR,
+  ZEROHASH_PASS_PHRASE,
+  ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR,
+  ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR,
+  ZEROHASH_HOST,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -56,6 +65,7 @@ import { StripeConfigs } from "./configtypes/StripeConfigs";
 import { MongoConfigs } from "./configtypes/MongoConfigs";
 import { SardineConfigs } from "./configtypes/SardineConfigs";
 import { NobaConfigs } from "./configtypes/NobaConfigs";
+import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.DEV]: "localdevelopment.yaml",
@@ -180,6 +190,7 @@ async function configureAllVendorCredentials(
     configureStripeCredentials,
     configureMongoCredentials,
     configureSardineCredentials,
+    configureZerohashCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -360,5 +371,41 @@ function configureNobaParameters(environment: AppEnvironment, configs: Record<st
   }
 
   configs[NOBA_CONFIG_KEY] = nobaConfigs;
+  return configs;
+}
+
+async function configureZerohashCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const zerohashConfigs: ZerohashConfigs = configs[ZEROHASH_CONFIG_KEY];
+
+  if (zerohashConfigs === undefined) {
+    const errorMessage =
+      "\n'Zerohash' configurations are required. Please configure the Zerohash credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${ZEROHASH_CONFIG_KEY}" and populate ` +
+      `("${ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR}" or "${ZEROHASH_API_KEY}"), ` +
+      `("${ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR}" or "${ZEROHASH_HOST}"), ` +
+      `("${ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR}" or "${ZEROHASH_API_SECRET}") AND ` +
+      `("${ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR}" or "${ZEROHASH_PASS_PHRASE}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  zerohashConfigs.apiKey = await getParameterValue(zerohashConfigs.awsSecretNameforApiKey, zerohashConfigs.apiKey);
+  zerohashConfigs.apiSecret = await getParameterValue(
+    zerohashConfigs.awsSecretNameForApiSecret,
+    zerohashConfigs.apiSecret,
+  );
+
+  zerohashConfigs.passPhrase = await getParameterValue(
+    zerohashConfigs.awsSecretNameForPassPhrase,
+    zerohashConfigs.passPhrase,
+  );
+
+  zerohashConfigs.host = await getParameterValue(zerohashConfigs.awsSecretNameForHost, zerohashConfigs.host);
+
+  configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
   return configs;
 }

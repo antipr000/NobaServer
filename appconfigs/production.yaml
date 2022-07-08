@@ -51,3 +51,13 @@ sardine:
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"
+
+zerohash:
+  awsSecretNameforApiKey: "PROD_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForApiSecret: "PROD_ZEROHASH_API_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForPassPhrase: "PROD_ZEROHASH_PASS_PHRASE" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForHost: "PROD_ZEROHASH_HOST"
+  apiKey: ""
+  apiSecret: ""
+  passPhrase: ""
+  host: ""
