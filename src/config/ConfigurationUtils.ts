@@ -60,6 +60,16 @@ export const SARDINE_URI = "sardineBaseUri";
 export const NOBA_CONFIG_KEY = "noba";
 export const NOBA_PARTNER_ID = "partnerID";
 
+export const ZEROHASH_CONFIG_KEY = "zerohash";
+export const ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameforApiKey";
+export const ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR = "awsSecretNameForApiSecret";
+export const ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR = "awsSecretNameForPassPhrase";
+export const ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR = "awsSecretNameForHost";
+export const ZEROHASH_API_KEY = "apiKey";
+export const ZEROHASH_API_SECRET = "apiSecret";
+export const ZEROHASH_PASS_PHRASE = "passPhrase";
+export const ZEROHASH_HOST = "host";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),
