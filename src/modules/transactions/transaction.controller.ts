@@ -38,7 +38,6 @@ import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
-import { ZeroHashService } from "./zerohash.service";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -52,7 +51,6 @@ export class TransactionController {
     private readonly transactionService: TransactionService,
     private readonly configService: CustomConfigService,
     private readonly limitsService: LimitsService,
-    private readonly zerohashService: ZeroHashService,
   ) {}
 
   @Get("/check")

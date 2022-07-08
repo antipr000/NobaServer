@@ -1,4 +1,4 @@
-import { DynamicModule, Global, Injectable, Module } from "@nestjs/common";
+import { DynamicModule, Global, Module } from "@nestjs/common";
 import { ConfigModule, ConfigModuleOptions, ConfigService } from "@nestjs/config";
 import loadAppConfigs from "../../config/AppConfigurations";
 
@@ -31,7 +31,6 @@ export async function getAppConfigModule() {
   return ConfigModule.forRoot(await configModuleOptions());
 }
 
-@Injectable()
 export class CustomConfigService extends ConfigService {
   constructor(configs) {
     super(configs);

@@ -7,9 +7,6 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
-import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise");
@@ -19,8 +16,18 @@ export class ZeroHashService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  @Inject()
-  private readonly configService: CustomConfigService;
+  private readonly host: string;
+
+  // TODO: Get the following from AWS Secrets instead of hardcoding here
+  private readonly apiKey = "uCeknMhWLfW4CBLQ6uT39k";
+  private readonly apiSecret = "4jtj1kUm64LKiXE7i7DjpLqb2le/yJmLhcQlHzsSno8=";
+  private readonly passphrase = "noba_zerohash_sandbox";
+
+  // Test and prod endpoints for zerohash
+  private readonly environments = {
+    prod: "api.zerohash.com",
+    test: "api.cert.zerohash.com",
+  };
 
   // ID Types
   private readonly id_options = [
@@ -36,8 +43,9 @@ export class ZeroHashService {
     "non_us_other",
   ];
 
-  public getConfigs(): ZerohashConfigs {
-    return this.configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
+  constructor() {
+    // TODO: Make the decision to get this dynamic instead of hardcoding
+    this.host = this.environments.test;
   }
 
   // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
@@ -46,17 +54,17 @@ export class ZeroHashService {
     // CREATE SIGNATURE
     const timestamp = Math.round(Date.now() / 1000);
     const payload = timestamp + method + route + JSON.stringify(body);
-    const decodedSecret = Buffer.from(this.getConfigs().apiSecret, "base64");
+    const decodedSecret = Buffer.from(this.apiSecret, "base64");
     const hmac = crypto_ts.createHmac("sha256", decodedSecret);
     // Don't forget to base 64 encode your digest
     const signedPayload = hmac.update(payload).digest("base64");
 
     // SET HEADERS
     const headers = {
-      "X-SCX-API-KEY": this.getConfigs().apiKey,
+      "X-SCX-API-KEY": this.apiKey,
       "X-SCX-SIGNED": signedPayload,
       "X-SCX-TIMESTAMP": timestamp,
-      "X-SCX-PASSPHRASE": this.getConfigs().passPhrase,
+      "X-SCX-PASSPHRASE": this.passphrase,
     };
 
     const derivedMethod = {
@@ -72,7 +80,7 @@ export class ZeroHashService {
       json: true,
     };
 
-    const response = request[derivedMethod](`https://${this.getConfigs().host}${route}`, options);
+    const response = request[derivedMethod](`https://${this.host}${route}`, options);
     return response;
   }
 
