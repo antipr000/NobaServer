@@ -122,7 +122,8 @@ export class ZeroHashService {
     let participant;
     try {
       participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
-    } catch {
+    } catch (e) {
+      console.log(e);
       participant = null;
     }
     return participant;
