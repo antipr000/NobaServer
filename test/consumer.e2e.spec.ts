@@ -27,7 +27,7 @@ import {
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 
-describe("Authentication", () => {
+describe("Consumers", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;
