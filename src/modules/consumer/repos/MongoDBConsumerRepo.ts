@@ -12,7 +12,7 @@ import { CONSUMER_KMS_KEY_ALIAS, KmsService } from "../../../modules/common/kms.
 export class MongoDBConsumerRepo implements IConsumerRepo {
   private readonly consumerMapper = new ConsumerMapper();
 
-  constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) { }
+  constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) {}
 
   private async encryptString(text: string): Promise<string> {
     return this.kmsService.encryptString(text, CONSUMER_KMS_KEY_ALIAS);
