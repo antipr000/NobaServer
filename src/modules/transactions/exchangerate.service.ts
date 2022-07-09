@@ -4,7 +4,7 @@ import { ProcessingFeeDTO } from "./dto/ProcessingFeeDTO";
 
 @Injectable()
 export class ExchangeRateService {
-  private readonly zeroHashService = new ZeroHashService();
+  constructor(private readonly zeroHashService: ZeroHashService) {}
 
   async priceInFiat(cryptoCurrency: string, fiatCurrency: string): Promise<number> {
     const zhQuote = await this.zeroHashService.requestQuote(cryptoCurrency, fiatCurrency, 1, "crypto");
