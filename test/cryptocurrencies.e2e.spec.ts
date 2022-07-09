@@ -74,13 +74,26 @@ describe("CryptoCurrencies", () => {
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
-    it("should return 41 currencies list", async () => {
+    // TODO: Uncomment once API returns a JSON instead of array.
+    //
+    // it("should return 41 currencies list", async () => {
+    //   const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+    //   expect(getCryptoCurrencyResponse.__status).toBe(200);
 
-    });
+    //   const allTickers = getCryptoCurrencyResponse.map(value => value.ticker);
+    //   expect(allTickers).toEqual(supportedCurrenciesTicker);
+    // });
 
-    it("returned 41 currencies list should have proper iconPath", async () => {
+    // TODO: Uncomment once API returns a JSON instead of array.
+    //
+    // it("returned 41 currencies list should have proper iconPath", async () => {
+    //   const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+    //   expect(getCryptoCurrencyResponse.__status).toBe(200);
 
-    });
+    //   const receivedIconPaths = getCryptoCurrencyResponse.map(value => value.iconPath);
+    //   const expectedIconPaths = supportedCurrenciesTicker.map(value => `${currencyIconBasePath}/${value}.svg`);
+    //   expect(receivedIconPaths).toEqual(expectedIconPaths);
+    // });
   });
 
   describe("GET /fiatcurrencies", () => {
