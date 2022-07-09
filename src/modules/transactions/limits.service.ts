@@ -22,16 +22,17 @@ import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 export class LimitsService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject("TransactionRepo")
   private readonly transactionsRepo: ITransactionRepo;
   private readonly transactionsMapper: TransactionMapper;
 
-  constructor(dbProvider: DBProvider, private userService: ConsumerService) {
-    this.transactionsRepo = new MongoDBTransactionRepo(dbProvider);
+  constructor(private userService: ConsumerService) {
     this.transactionsMapper = new TransactionMapper();
     return this;
   }
 
-  private getLimits(userVerificationStatus: UserVerificationStatus) {
+  getLimits(userVerificationStatus: UserVerificationStatus) {
     if (userVerificationStatus === UserVerificationStatus.NOT_VERIFIED) {
       return {
         dailyLimit: DailyLimitBuyOnly.no_kyc_max_amount_limit,
