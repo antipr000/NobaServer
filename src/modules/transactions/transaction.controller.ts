@@ -54,7 +54,7 @@ export class TransactionController {
     private readonly limitsService: LimitsService,
     private readonly zerohashService: ZeroHashService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   @Get("/check")
   @ApiOperation({
