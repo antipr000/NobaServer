@@ -23,10 +23,9 @@ import { ResponseStatus } from "./api_client/core/request";
 import { AssetsService, CurrencyDTO } from "./api_client";
 
 const supportedCurrenciesTicker = [
-  "AAVE", "ALGO", "AVAX", "AXS", "BAT", "BUSD", "BCH", "BTC", "ADA", "LINK", "COMP", "DAI", "MANA",
+  "ZRX", "AAVE", "ALGO", "AVAX", "AXS", "BAT", "BUSD", "BCH", "BTC", "ADA", "LINK", "COMP", "DAI", "MANA",
   "DOGE", "EGLD", "ENJ", "EOS", "ETC", "ETH", "FTM", "GRT", "HBAR", "KNC", "LTC", "MKR", "OMG", "PAXG",
-  "DOT", "MATIC", "SAND", "SHIB", "SOL", "TUSD", "UNI", "USDC:ETH", "USDP", "USDT", "XTZ", "WBTC", "XLM",
-  "ZRX"
+  "DOT", "MATIC", "SAND", "SHIB", "SOL", "TUSD", "UNI", "USDC.ETH", "USDP", "USDT", "XTZ", "WBTC", "XLM"
 ];
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 
@@ -74,35 +73,49 @@ describe("CryptoCurrencies", () => {
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
-    // TODO: Uncomment once API returns a JSON instead of array.
-    //
-    // it("should return 41 currencies list", async () => {
-    //   const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
-    //   expect(getCryptoCurrencyResponse.__status).toBe(200);
+    it("should return 41 currencies list", async () => {
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+      expect(getCryptoCurrencyResponse.__status).toBe(200);
 
-    //   const allTickers = getCryptoCurrencyResponse.map(value => value.ticker);
-    //   expect(allTickers).toEqual(supportedCurrenciesTicker);
-    // });
+      const allTickers = [];
+      Object.keys(getCryptoCurrencyResponse).forEach(key => {
+        if (key === '__status') return;
+        allTickers.push(getCryptoCurrencyResponse[key].ticker);
+      });
 
-    // TODO: Uncomment once API returns a JSON instead of array.
-    //
-    // it("returned 41 currencies list should have proper iconPath", async () => {
-    //   const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
-    //   expect(getCryptoCurrencyResponse.__status).toBe(200);
+      expect(allTickers.sort()).toEqual(supportedCurrenciesTicker.sort());
+    });
 
-    //   const receivedIconPaths = getCryptoCurrencyResponse.map(value => value.iconPath);
-    //   const expectedIconPaths = supportedCurrenciesTicker.map(value => `${currencyIconBasePath}/${value}.svg`);
-    //   expect(receivedIconPaths).toEqual(expectedIconPaths);
-    // });
+    it("returned 41 currencies list should have proper iconPath", async () => {
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+      expect(getCryptoCurrencyResponse.__status).toBe(200);
+
+      const receivedIconPaths = [];
+      Object.keys(getCryptoCurrencyResponse).forEach(key => {
+        if (key === '__status') return;
+        receivedIconPaths.push(getCryptoCurrencyResponse[key].iconPath);
+      });
+
+      const expectedIconPaths =
+        supportedCurrenciesTicker.map(value => `${currencyIconBasePath}/${value.toLowerCase()}.svg`);
+      expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
+    });
   });
 
   describe("GET /fiatcurrencies", () => {
     it("should work even if no credentials is passed", async () => {
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
 
+      expect(getFiatCurrencyResponse.__status).toBe(200);
     });
 
     it("should work even if credentials are passed", async () => {
+      const consumerEmail = "test.consumer@noba.com";
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
+      expect(getFiatCurrencyResponse.__status).toBe(200);
     });
 
     it("should return only 'US' currency", async () => {
