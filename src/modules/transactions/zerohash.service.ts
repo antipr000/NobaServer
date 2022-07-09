@@ -16,11 +16,7 @@ const request = require("request-promise");
 
 @Injectable()
 export class ZeroHashService {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
-  @Inject()
-  private readonly configService: CustomConfigService;
+  private readonly configs: ZerohashConfigs;
 
   // ID Types
   private readonly id_options = [
@@ -36,8 +32,8 @@ export class ZeroHashService {
     "non_us_other",
   ];
 
-  public getConfigs(): ZerohashConfigs {
-    return this.configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
+  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+    this.configs = configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
   }
 
   // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
@@ -46,17 +42,17 @@ export class ZeroHashService {
     // CREATE SIGNATURE
     const timestamp = Math.round(Date.now() / 1000);
     const payload = timestamp + method + route + JSON.stringify(body);
-    const decodedSecret = Buffer.from(this.getConfigs().apiSecret, "base64");
+    const decodedSecret = Buffer.from(this.configs.apiSecret, "base64");
     const hmac = crypto_ts.createHmac("sha256", decodedSecret);
     // Don't forget to base 64 encode your digest
     const signedPayload = hmac.update(payload).digest("base64");
 
     // SET HEADERS
     const headers = {
-      "X-SCX-API-KEY": this.getConfigs().apiKey,
+      "X-SCX-API-KEY": this.configs.apiKey,
       "X-SCX-SIGNED": signedPayload,
       "X-SCX-TIMESTAMP": timestamp,
-      "X-SCX-PASSPHRASE": this.getConfigs().passPhrase,
+      "X-SCX-PASSPHRASE": this.configs.passPhrase,
     };
 
     const derivedMethod = {
@@ -72,7 +68,7 @@ export class ZeroHashService {
       json: true,
     };
 
-    const response = request[derivedMethod](`https://${this.getConfigs().host}${route}`, options);
+    const response = request[derivedMethod](`https://${this.configs.host}${route}`, options);
     return response;
   }
 

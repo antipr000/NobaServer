@@ -22,18 +22,6 @@ import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
 @Injectable()
 export class TransactionService {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
-  @Inject("TransactionRepo")
-  private readonly transactionsRepo: ITransactionRepo;
-
-  @Inject(ConsumerService)
-  private readonly consumerService: ConsumerService;
-
-  @Inject(VerificationService)
-  private readonly verificationService: VerificationService;
-
   private readonly transactionsMapper: TransactionMapper;
 
   @Inject(CACHE_MANAGER)
@@ -46,9 +34,12 @@ export class TransactionService {
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
   constructor(
-    dbProvider: DBProvider,
-    private readonly exchangeRateService: ExchangeRateService,
     private readonly zeroHashService: ZeroHashService,
+    private readonly verificationService: VerificationService,
+    private readonly exchangeRateService: ExchangeRateService,
+    private readonly consumerService: ConsumerService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
   ) {
     this.transactionsMapper = new TransactionMapper();
   }

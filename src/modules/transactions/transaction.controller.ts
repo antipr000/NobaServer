@@ -45,14 +45,15 @@ import { ZeroHashService } from "./zerohash.service";
 @Controller("/transactions")
 @ApiTags("Transactions")
 export class TransactionController {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
+  // @Inject(WINSTON_MODULE_PROVIDER)
+  // private readonly logger: Logger;
 
   constructor(
     private readonly transactionService: TransactionService,
     private readonly configService: CustomConfigService,
     private readonly limitsService: LimitsService,
     private readonly zerohashService: ZeroHashService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
   @Get("/check")

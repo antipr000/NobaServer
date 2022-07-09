@@ -1,5 +1,4 @@
 import { CacheModule, Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { CommonModule } from "../common/common.module";
@@ -14,14 +13,7 @@ import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 
 @Module({
-  imports: [
-    InfraProvidersModule,
-    ConfigModule,
-    CommonModule,
-    ConsumerModule,
-    VerificationModule,
-    CacheModule.register(),
-  ],
+  imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule, CacheModule.register()],
   controllers: [TransactionController, ExchangeRateController],
   providers: [
     TransactionService,

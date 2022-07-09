@@ -47,29 +47,29 @@ const getConfigService = async () => {
 
 /**
  * Nest `ConfigModule` is currently asynchronous i.e. whatever is written
- *    in the function would be executed as soon as it is encountered
- *    (not when the APP loads app.module.ts).
+ * in the function would be executed as soon as it is encountered
+ * (not when the APP loads app.module.ts).
  *
  * But not all the configs are synchronously available. For example -
- *    Configs which needs to be fetched from AWS_SECRETS_MANAGER which
- *    is a n/w call & hence asynchronous.
+ * Configs which needs to be fetched from AWS_SECRETS_MANAGER which
+ * is a n/w call & hence asynchronous.
  * So, to load all these configs, you need to load all the configs
- *    dynamically. Not when the module provider function is executed rather,
- *    when the 'APP' will load the corresponding module (here app.module.ts).
+ * dynamically. Not when the module provider function is executed rather,
+ * when the 'APP' will load the corresponding module (here app.module.ts).
  *
  * As `ConfigModule` currently doesn't have `forRootAsync` version,
- *    this default `ConfigModule` can't be used to load the `ConfigService`.
+ * this default `ConfigModule` can't be used to load the `ConfigService`.
  * Hence, a new module is required, which will load the configuration
- *    & initialise the `ConfigService` asynchronously. Hence `CustomConfigModule`.
+ * & initialise the `ConfigService` asynchronously. Hence `CustomConfigModule`.
  *
  * Why `CustomConfigModule` provides & exports `CustomConfigService`
  * instead of raw `ConfigService`?
  *
  * As mentioned above, `ConfigService` is loaded internally by nest using `ConfigModule`.
  * Hence, the different services where `ConfigService` is required to be imported,
- *    `ConfigModule` was imported.
+ * `ConfigModule` was imported.
  * But now if `CustomConfigModule` provides `ConfigService`, different modules
- *    are not able to figure out that the `ConfigService` is imported by `CustomConfigModule`.
+ * are not able to figure out that the `ConfigService` is imported by `CustomConfigModule`.
  *
  * Hence, CustomConfigService which is simply extending `ConfigService`.
  */
