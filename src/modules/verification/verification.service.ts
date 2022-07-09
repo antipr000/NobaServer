@@ -75,6 +75,7 @@ export class VerificationService {
           ? DocumentVerificationStatus.NOT_SUBMITTED
           : DocumentVerificationStatus.NOT_REQUIRED,
       },
+      socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
     };
     await this.consumerService.updateConsumer(newConsumerData);
     return result;
