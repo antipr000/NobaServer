@@ -3,14 +3,20 @@ import { ConsumerController } from "./consumer.controller";
 import { ConsumerService } from "./consumer.service";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { ConfigModule } from "@nestjs/config";
 import { CommonModule } from "../common/common.module";
-import { ConsumerRepoModule, ConsumerRepoProvider } from "./repos/ConsumerRepoModule";
+import { MongoDBConsumerRepo } from "./repos/MongoDBConsumerRepo";
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, CommonModule, ConsumerRepoModule],
+  imports: [InfraProvidersModule, CommonModule],
   controllers: [ConsumerController],
-  providers: [ConsumerService, DBProvider, ConsumerRepoProvider],
-  exports: [ConsumerService, ConsumerRepoProvider], //Need to access in PublicController
+  providers: [
+    ConsumerService,
+    DBProvider,
+    {
+      provide: "ConsumerRepo",
+      useClass: MongoDBConsumerRepo,
+    },
+  ],
+  exports: [ConsumerService],
 })
 export class ConsumerModule {}

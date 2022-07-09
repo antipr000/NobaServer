@@ -13,6 +13,12 @@ awsDefaultRegion: "us-east-1"
 awsAccessKeyId: "test"
 awsSecretAccessKey: "test"
 
+kms:
+  context:
+    stage: "development"
+    purpose: "Noba Onramp app"
+    origin: "us-east-1"
+
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys
 # Each key followed by _keyID uses a prefix which is our alias to that key. This must match between KMS and our application.
