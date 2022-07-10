@@ -9,6 +9,12 @@ logFilePath: "/home/ubuntu/noba_server.log"
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
 
+kms:
+  context:
+    stage: "development"
+    purpose: "Noba Onramp app"
+    origin: "us-east-1"
+
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys
 # Each key followed by _keyID uses a prefix which is our alias to that key. This must match between KMS and our application.
@@ -53,3 +59,13 @@ sardine:
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"
+
+zerohash:
+  awsSecretNameforApiKey: "TEST_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForApiSecret: "TEST_ZEROHASH_API_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForPassPhrase: "TEST_ZEROHASH_PASS_PHRASE" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForHost: "TEST_ZEROHASH_HOST"
+  apiKey: ""
+  apiSecret: ""
+  passPhrase: ""
+  host: ""

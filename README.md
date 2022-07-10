@@ -14,12 +14,36 @@ Noba server side code.
 - Install [Format Code Action](https://marketplace.visualstudio.com/items?itemName=rohit-gohri.format-code-action) extension
 - Install [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extension
 
-### Deployment Instructions
+### Deployment/Release Instructions
+
+#### Production Environment (api.noba.com/v1/health)
+
+- To create production release (deployment) create a tag with syntax like v0.0.1 (see previous release to find new version), deployment logs are available [here]().
+
+#### Staging Environment (api-staging.noba.com/v1/health)
 
 - We have github actions setup that will automatically deploy changes in staging instance when pushed into master.
-- To create production release (deployment) create a tag with syntax like v0.0.1 (see previous release to find new version), deployment logs are available [here]().
+
+#### AWS Development Environment (api-dev.noba.com/v1/health)
+
+- run ./aws-dev-deploy command in your local repository to deploy current branch to development environment. Make sure you commit your local changes in local branch first. This command basically pushes current branch to 'dev' tag and from there github action deploys to AWS 'Dev' Deployment group.
+- Sometimes multiple developers may be trying to test their changes in AWS Dev environment so you may not see your changes deployed as they may be overridden by other developers so coordination is needed sometimes
+- you can directly create 'dev' tag from your branch in github ui to deploy to aws deployment environment
+
+##### Notes
+
 - Check Github Actions to find the progress of build and deployment progress [here](https://github.com/nobapay/NobaServer/actions)
-- You can find documentation about our deployment process [here]().
+- You can find documentation about our deployment process [here](TODO add notion documentation).
+
+### Server Runtime Deployment Highlevel Overview
+
+- Github actions create artifacts and upload to S3 and creates a AWS CodeDeploy deployment for a DeploymentGroup based on the type of deployment dev/staging/production see ./github/workflows/main.yml
+- Server is run on a group of EC2s and the enpoints are exposed to public through API Gateway
+- We have 3 stages in API Gateway for NobaServer
+  - dev : (api-dev.noba.com/v1/health)
+  - staging: (api-staging.noba.com/v1/health)
+  - production: (api.noba.com/v1/health)
+- mapping of api gateway and noba domain is doen through generating Certificates in AWS Certificate Manager and verifying them in Google Domains and then finally mapping the verified domain with a API Gateway Staging in 'Custom Domains' section and then adding one more entry in Google Domain DNS section for cloudfront url CNAME (2 DNS record for each API Gateway mapping)
 
 ### Things to keep in mind
 
