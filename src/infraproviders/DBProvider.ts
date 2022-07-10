@@ -37,8 +37,12 @@ export class DBProvider {
   private async connectToDb(): Promise<void> {
     if (this.isConnectedToDb) return;
 
-    const mongoUri = this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY).uri;
-    await Mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
+    const mongoConfigs: MongoConfigs = await this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY);
+    const mongoUri = mongoConfigs.uri;
+    await Mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 2000,
+      ...(mongoConfigs.sslEnabled && { sslCA: mongoConfigs.sslCAPath }),
+    });
     this.isConnectedToDb = true;
   }
 

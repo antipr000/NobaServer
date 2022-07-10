@@ -105,6 +105,8 @@ project.fragment.lock.json
 artifacts/
 **/Properties/launchSettings.json
 
+rds-combined-ca-bundle.pem
+
 *_i.c
 *_p.c
 *_i.h

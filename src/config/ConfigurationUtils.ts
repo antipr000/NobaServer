@@ -2,6 +2,7 @@ import * as Joi from "joi";
 import { SecretProvider } from "./SecretProvider";
 
 export enum AppEnvironment {
+  AWSDEV = "awsdev",
   DEV = "development",
   PROD = "production",
   STAGING = "staging",

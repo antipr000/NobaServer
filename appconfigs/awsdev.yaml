@@ -1,4 +1,4 @@
-envType: "staging"
+envType: "awsdev"
 
 # ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE,
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
@@ -8,12 +8,6 @@ logFilePath: "/home/ubuntu/noba_server.log"
 
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
-
-kms:
-  context:
-    stage: "development"
-    purpose: "Noba Onramp app"
-    origin: "us-east-1"
 
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys
@@ -45,7 +39,7 @@ twilio:
   fromPhoneNumber: "+19894557345"
 
 mongo:
-  awsSecretNameForUri: "STAGING_DOCUMENT_DB_URI" # change to staging uri
+  awsSecretNameForUri: "DEV_DOCUMENT_DB_URI" # change to staging uri
   uri: "bogus-value"
   sslEnabled: true # swith to true when the uri is pointed to document db
   sslCAPath: rds-combined-ca-bundle.pem # bootstrapped in deploy scripts
@@ -59,13 +53,3 @@ sardine:
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"
-
-zerohash:
-  awsSecretNameforApiKey: "TEST_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForApiSecret: "TEST_ZEROHASH_API_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForPassPhrase: "TEST_ZEROHASH_PASS_PHRASE" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForHost: "TEST_ZEROHASH_HOST"
-  apiKey: ""
-  apiSecret: ""
-  passPhrase: ""
-  host: ""

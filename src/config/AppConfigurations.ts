@@ -73,6 +73,7 @@ import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 import { KmsConfigs } from "./configtypes/KmsConfigs";
 
 const envNameToPropertyFileNameMap = {
+  [AppEnvironment.AWSDEV]: "awsdev.yaml",
   [AppEnvironment.DEV]: "localdevelopment.yaml",
   [AppEnvironment.PROD]: "production.yaml",
   [AppEnvironment.STAGING]: "staging.yaml",
