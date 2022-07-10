@@ -119,11 +119,33 @@ describe("CryptoCurrencies", () => {
     });
 
     it("should return only 'US' currency", async () => {
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
+      expect(getFiatCurrencyResponse.__status).toBe(200);
 
+      const allTickers = [];
+      Object.keys(getFiatCurrencyResponse).forEach(key => {
+        if (key === '__status') return;
+        allTickers.push(getFiatCurrencyResponse[key].ticker);
+      });
+
+      expect(allTickers.sort()).toEqual(["USD"].sort());
     });
 
     it("returned currencies list should have proper iconPath", async () => {
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
+      expect(getFiatCurrencyResponse.__status).toBe(200);
 
+      const receivedIconPaths = [];
+      Object.keys(getFiatCurrencyResponse).forEach(key => {
+        if (key === '__status') return;
+        receivedIconPaths.push(getFiatCurrencyResponse[key].iconPath);
+      });
+
+      const expectedIconPaths = [
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/United-states_flag_icon_round.svg/1024px-United-states_flag_icon_round.svg.png"
+      ];
+
+      expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
     });
   });
 
