@@ -30,7 +30,7 @@ describe("AdminAuthService", () => {
 
   const testJwtSecret = "TEST_SECRET";
   const identityType: string = nobaAdminIdentityIdentifier;
-  const nobaPartnerID: string = "TEST_PARTNER_ID";
+  const nobaPartnerID = "TEST_PARTNER_ID";
 
   // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
   /**

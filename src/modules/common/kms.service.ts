@@ -1,4 +1,4 @@
-import { KmsKeyringNode, buildClient, CommitmentPolicy, EncryptionContext } from "@aws-crypto/client-node";
+import { KmsKeyringNode, buildClient, CommitmentPolicy } from "@aws-crypto/client-node";
 import { Injectable } from "@nestjs/common";
 import { getPropertyFromEnvironment, KMS_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomKmsEncryptionContext, KmsConfigs } from "../../config/configtypes/KmsConfigs";
@@ -6,7 +6,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 const { encrypt, decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT);
 
-export const ENCRYPT_PREFIX: string = "[enc]";
+export const ENCRYPT_PREFIX = "[enc]";
 
 // TODO(#219): Move this to config files.
 export const CONSUMER_KMS_KEY_ALIAS = "ssn-encryption-key";

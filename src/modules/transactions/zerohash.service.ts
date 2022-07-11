@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
 
-import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { Logger } from "winston";
@@ -12,7 +12,7 @@ import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
 
 const crypto_ts = require("crypto");
-const request = require("request-promise");
+const request = require("request-promise"); // This library is deprecated. We need to switch to Axios.
 
 @Injectable()
 export class ZeroHashService {
@@ -68,7 +68,17 @@ export class ZeroHashService {
       json: true,
     };
 
-    const response = request[derivedMethod](`https://${this.configs.host}${route}`, options);
+    const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
+      if (err.statusCode == 403) {
+        // Generally means we are not using a whitelisted IP to ZH
+        throw new ServiceUnavailableException(err, "Unable to connect to ZeroHash; confirm whitelisted IP.");
+      } else if (err.statusCode == 400) {
+        throw new BadRequestException(err);
+      } else {
+        this.logger.error("Error in ZeroHash Request: " + err.statusCode);
+        throw err;
+      }
+    });
     return response;
   }
 
@@ -88,7 +98,6 @@ export class ZeroHashService {
   }
 
   async createParticipant(consumer: ConsumerProps) {
-    // TODO: This is a dummy userData
     const consumerData = {
       first_name: consumer.firstName,
       last_name: consumer.lastName,
@@ -102,16 +111,15 @@ export class ZeroHashService {
       date_of_birth: consumer.dateOfBirth, // ZH format and our format are both YYYY-MM-DD
       id_number_type: "ssn", // TODO: Support other types outside US
       id_number: consumer.socialSecurityNumber, // TODO: Support other types outside US
-      signed_timestamp: 1603378501286, // TODO: What's the correct value to use here?
+      signed_timestamp: 1603378501286, // TODO: Should be the timestamp the user accepted the T&C
       metadata: {},
-      risk_rating: consumer.riskRating, // TODO: Update to user.riskRating after user refactoring
+      risk_rating: consumer.riskRating,
     };
-    console.log(consumerData);
+
     let participant;
     try {
       participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
-    } catch (e) {
-      console.log(e);
+    } catch {
       participant = null;
     }
     return participant;
@@ -145,7 +153,10 @@ export class ZeroHashService {
     let quote;
     try {
       quote = this.makeRequest(route, "GET", {});
-    } catch {
+    } catch (err) {
+      if (err.statusCode == 400) {
+        throw new BadRequestException(err);
+      }
       quote = null;
     }
     return quote;
