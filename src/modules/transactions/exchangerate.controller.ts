@@ -13,12 +13,15 @@ export class ExchangeRateController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  constructor(private readonly exchangeRateService: ExchangeRateService) {}
+  constructor(private readonly exchangeRateService: ExchangeRateService) { }
 
   @Public()
   @Get("/priceinfiat/:fiatCurrencyCode")
   @ApiOperation({ summary: "Get price of a crypto (leg1) in fiat (leg 2)" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Fiat price (leg 2) for the desired crypto currency (leg1)" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Fiat price (leg 2) for the desired crypto currency (leg1)",
+  })
   async priceInFiat(
     @Param("fiatCurrencyCode") fiatCurrencyCode: string,
     @Query("cryptoCurrencyCode") cryptoCurrencyCode: string,

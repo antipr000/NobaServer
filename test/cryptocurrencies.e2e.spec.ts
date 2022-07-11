@@ -16,16 +16,52 @@ import { INestApplication } from "@nestjs/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
-import {
-  clearAccessTokenForNextRequests, loginAndGetResponse, setAccessTokenForTheNextRequests,
-} from "./common";
+import { clearAccessTokenForNextRequests, loginAndGetResponse, setAccessTokenForTheNextRequests } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 import { AssetsService, CurrencyDTO } from "./api_client";
 
 const supportedCurrenciesTicker = [
-  "ZRX", "AAVE", "ALGO", "AVAX", "AXS", "BAT", "BUSD", "BCH", "BTC", "ADA", "LINK", "COMP", "DAI", "MANA",
-  "DOGE", "EGLD", "ENJ", "EOS", "ETC", "ETH", "FTM", "GRT", "HBAR", "KNC", "LTC", "MKR", "OMG", "PAXG",
-  "DOT", "MATIC", "SAND", "SHIB", "SOL", "TUSD", "UNI", "USDC.ETH", "USDP", "USDT", "XTZ", "WBTC", "XLM"
+  "ZRX",
+  "AAVE",
+  "ALGO",
+  "AVAX",
+  "AXS",
+  "BAT",
+  "BUSD",
+  "BCH",
+  "BTC",
+  "ADA",
+  "LINK",
+  "COMP",
+  "DAI",
+  "MANA",
+  "DOGE",
+  "EGLD",
+  "ENJ",
+  "EOS",
+  "ETC",
+  "ETH",
+  "FTM",
+  "GRT",
+  "HBAR",
+  "KNC",
+  "LTC",
+  "MKR",
+  "OMG",
+  "PAXG",
+  "DOT",
+  "MATIC",
+  "SAND",
+  "SHIB",
+  "SOL",
+  "TUSD",
+  "UNI",
+  "USDC.ETH",
+  "USDP",
+  "USDT",
+  "XTZ",
+  "WBTC",
+  "XLM",
 ];
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 
@@ -59,7 +95,8 @@ describe("CryptoCurrencies", () => {
 
   describe("GET /cryptocurrencies", () => {
     it("should work even if no credentials is passed", async () => {
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
+        ResponseStatus;
 
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
@@ -69,17 +106,19 @@ describe("CryptoCurrencies", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
+        ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
     it("should return 41 currencies list", async () => {
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
+        ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
 
       const allTickers = [];
       Object.keys(getCryptoCurrencyResponse).forEach(key => {
-        if (key === '__status') return;
+        if (key === "__status") return;
         allTickers.push(getCryptoCurrencyResponse[key].ticker);
       });
 
@@ -87,17 +126,19 @@ describe("CryptoCurrencies", () => {
     });
 
     it("returned 41 currencies list should have proper iconPath", async () => {
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
+        ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
 
       const receivedIconPaths = [];
       Object.keys(getCryptoCurrencyResponse).forEach(key => {
-        if (key === '__status') return;
+        if (key === "__status") return;
         receivedIconPaths.push(getCryptoCurrencyResponse[key].iconPath);
       });
 
-      const expectedIconPaths =
-        supportedCurrenciesTicker.map(value => `${currencyIconBasePath}/${value.toLowerCase()}.svg`);
+      const expectedIconPaths = supportedCurrenciesTicker.map(
+        value => `${currencyIconBasePath}/${value.toLowerCase()}.svg`,
+      );
       expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
     });
   });
@@ -124,7 +165,7 @@ describe("CryptoCurrencies", () => {
 
       const allTickers = [];
       Object.keys(getFiatCurrencyResponse).forEach(key => {
-        if (key === '__status') return;
+        if (key === "__status") return;
         allTickers.push(getFiatCurrencyResponse[key].ticker);
       });
 
@@ -137,12 +178,12 @@ describe("CryptoCurrencies", () => {
 
       const receivedIconPaths = [];
       Object.keys(getFiatCurrencyResponse).forEach(key => {
-        if (key === '__status') return;
+        if (key === "__status") return;
         receivedIconPaths.push(getFiatCurrencyResponse[key].iconPath);
       });
 
       const expectedIconPaths = [
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/United-states_flag_icon_round.svg/1024px-United-states_flag_icon_round.svg.png"
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/United-states_flag_icon_round.svg/1024px-United-states_flag_icon_round.svg.png",
       ];
 
       expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
@@ -150,63 +191,47 @@ describe("CryptoCurrencies", () => {
   });
 
   describe("GET /exchangerates/priceinfiat/{fiatCurrencyCode}", () => {
-    it("should work even if no credentials is passed", async () => {
+    // it("should work even if no credentials is passed", async () => {
+    //   const getExchangeRatesResponse = await AssetsService.priceInFiat("USD", "ETH");
+    //   expect(getExchangeRatesResponse).toBe({});
 
-    });
+    //   expect(getExchangeRatesResponse.__status).toBe(200);
+    // });
 
-    it("should work even if credentials are passed", async () => {
+    // it("should work even if credentials are passed", async () => {
+    //   const consumerEmail = "test.consumer@noba.com";
+    //   const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+    //   setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-    });
+    //   const getExchangeRatesResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] &
+    //     ResponseStatus;
+    //   expect(getExchangeRatesResponse.__status).toBe(200);
+    // });
 
-    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {
+    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => { });
 
-    });
+    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => { });
 
-    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => {
+    it("should throw 400 if both 'fiatCurrencyCode' & 'cryptoCurrencyCode' is incorrect", async () => { });
 
-    });
-
-    it("should throw 400 if both 'fiatCurrencyCode' & 'cryptoCurrencyCode' is incorrect", async () => {
-
-    });
-
-    it("should return the price successfully", async () => {
-
-    });
+    it("should return the price successfully", async () => { });
   });
 
   describe("GET /exchangerates/processingfee/{fiatCurrencyCode}", () => {
-    it("should work even if no credentials is passed", async () => {
+    it("should work even if no credentials is passed", async () => { });
 
-    });
+    it("should work even if credentials are passed", async () => { });
 
-    it("should work even if credentials are passed", async () => {
+    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => { });
 
-    });
+    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => { });
 
-    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {
+    it("should throw 400 if 'fiatAmount' is zero(0)", async () => { });
 
-    });
+    it("should throw 400 if 'fiatAmount' is negative number", async () => { });
 
-    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => {
+    it("should throw 400 if 'fiatAmount' is alphanumeric", async () => { });
 
-    });
-
-    it("should throw 400 if 'fiatAmount' is zero(0)", async () => {
-
-    });
-
-    it("should throw 400 if 'fiatAmount' is negative number", async () => {
-
-    });
-
-
-    it("should throw 400 if 'fiatAmount' is alphanumeric", async () => {
-
-    });
-
-    it("should return the fees successfully", async () => {
-
-    });
+    it("should return the fees successfully", async () => { });
   });
 });
