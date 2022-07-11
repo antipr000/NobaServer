@@ -26,7 +26,6 @@ export interface ConsumerProps extends VersioningInfo {
   nationalID?: string;
   nationalIDType?: string;
   riskRating?: string;
-  userStatus?: string;
   partners?: PartnerDetails[];
   paymentProviderAccounts?: PaymentProviderDetails[];
   verificationData?: VerificationData;
@@ -99,7 +98,6 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   nationalID: Joi.string().optional(),
   nationalIDType: Joi.string().optional(),
   riskRating: Joi.string().optional(),
-  userStatus: Joi.string().default(ConsumerVerificationStatus.PENDING_NEW),
   partners: Joi.array().items(partnerValidationJoiKeys).required(),
   paymentProviderAccounts: Joi.array().items(paymentProviderValidationJoiKeys).optional(),
   verificationData: Joi.object().keys(verificationDataValidationJoiKeys).optional(),
