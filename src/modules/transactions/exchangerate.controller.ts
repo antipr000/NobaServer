@@ -13,7 +13,7 @@ export class ExchangeRateController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  constructor(private readonly exchangeRateService: ExchangeRateService) { }
+  constructor(private readonly exchangeRateService: ExchangeRateService) {}
 
   @Public()
   @Get("/priceinfiat/:fiatCurrencyCode")
