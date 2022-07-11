@@ -20,6 +20,7 @@ import { OtpProps } from "../modules/auth/domain/Otp";
 import { CustomConfigService } from "../core/utils/AppConfigModule";
 import { VerificationDataProps } from "../modules/verification/domain/VerificationData";
 import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataModel";
+import * as path from "path";
 
 @Injectable()
 export class DBProvider {
@@ -37,8 +38,12 @@ export class DBProvider {
   private async connectToDb(): Promise<void> {
     if (this.isConnectedToDb) return;
 
-    const mongoUri = this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY).uri;
-    await Mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 2000 });
+    const mongoConfigs: MongoConfigs = await this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY);
+    const mongoUri = mongoConfigs.uri;
+    await Mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 2000,
+      ...(mongoConfigs.sslEnabled && { sslCA: path.join(__dirname, "../", mongoConfigs.sslCAPath) }), // we bootstrap sslCafile in root project directory in code deploy and this file will eventually end up in /dist/main.js
+    });
     this.isConnectedToDb = true;
   }
 

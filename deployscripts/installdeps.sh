@@ -24,3 +24,7 @@ sudo apt-get update
 sudo apt-get install python -y
 
 export APP_DIR="/home/ubuntu/NobaServer"
+
+cd $APP_DIR
+# required to be in the app directory for document db ssl connection
+wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem

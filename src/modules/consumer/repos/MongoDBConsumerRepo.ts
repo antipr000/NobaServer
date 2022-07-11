@@ -5,21 +5,30 @@ import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Injectable } from "@nestjs/common";
-import { KMSUtil } from "../../../core/utils/KMSUtil";
+import { CONSUMER_KMS_KEY_ALIAS, KmsService } from "../../../modules/common/kms.service";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
 export class MongoDBConsumerRepo implements IConsumerRepo {
   private readonly consumerMapper = new ConsumerMapper();
-  constructor(private readonly dbProvider: DBProvider) {}
+
+  constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) {}
+
+  private async encryptString(text: string): Promise<string> {
+    return this.kmsService.encryptString(text, CONSUMER_KMS_KEY_ALIAS);
+  }
+
+  private async decryptString(text: string): Promise<string> {
+    return this.kmsService.decryptString(text, CONSUMER_KMS_KEY_ALIAS);
+  }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
     const userModel = await this.dbProvider.getUserModel();
     const result: any = await userModel.findById(consumerID).exec();
+
     const consumerData: ConsumerProps = convertDBResponseToJsObject(result);
-    consumerData.socialSecurityNumber = await new KMSUtil("ssn-encryption-key").decryptString(
-      consumerData.socialSecurityNumber,
-    );
+    consumerData.socialSecurityNumber = await this.decryptString(consumerData.socialSecurityNumber);
+
     return this.consumerMapper.toDomain(consumerData);
   }
 
@@ -27,9 +36,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     const userModel = await this.dbProvider.getUserModel();
 
     // Encrypt SSN
-    consumer.props.socialSecurityNumber = await new KMSUtil("ssn-encryption-key").encryptString(
-      consumer.props.socialSecurityNumber,
-    );
+    consumer.props.socialSecurityNumber = await this.encryptString(consumer.props.socialSecurityNumber);
 
     const result = await userModel
       .findByIdAndUpdate(
@@ -44,9 +51,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       .exec();
 
     const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-    consumerProps.socialSecurityNumber = await new KMSUtil("ssn-encryption-key").decryptString(
-      consumerProps.socialSecurityNumber,
-    );
+    consumerProps.socialSecurityNumber = await this.decryptString(consumerProps.socialSecurityNumber);
     return this.consumerMapper.toDomain(consumerProps);
   }
 
@@ -56,9 +61,8 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       const result = await userModel.findOne({ email: email }).exec();
       if (result) {
         const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-        consumerProps.socialSecurityNumber = await new KMSUtil("ssn-encryption-key").decryptString(
-          consumerProps.socialSecurityNumber,
-        );
+        consumerProps.socialSecurityNumber = await this.decryptString(consumerProps.socialSecurityNumber);
+
         return Result.ok(this.consumerMapper.toDomain(consumerProps));
       } else {
         return Result.fail("Couldn't find consumer in the db");
@@ -97,9 +101,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       throw Error("Consumer with given email already exists");
     } else {
       // Encrypt SSN
-      consumer.props.socialSecurityNumber = await new KMSUtil("ssn-encryption-key").encryptString(
-        consumer.props.socialSecurityNumber,
-      );
+      consumer.props.socialSecurityNumber = await this.encryptString(consumer.props.socialSecurityNumber);
 
       const userModel = await this.dbProvider.getUserModel();
       const result = await userModel.create(consumer.props);

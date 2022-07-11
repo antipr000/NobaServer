@@ -13,6 +13,12 @@ awsDefaultRegion: "us-east-1"
 awsAccessKeyId: "test"
 awsSecretAccessKey: "test"
 
+kms:
+  context:
+    stage: "development"
+    purpose: "Noba Onramp app"
+    origin: "us-east-1"
+
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys
 # Each key followed by _keyID uses a prefix which is our alias to that key. This must match between KMS and our application.
@@ -45,6 +51,7 @@ twilio:
 mongo:
   awsSecretNameForUri: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   uri: "mongodb+srv://nobamongo:NobaMongo@cluster0.wjsia.mongodb.net/devdb"
+  sslEnabled: false
 
 sardine:
   awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

@@ -8,6 +8,7 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+      - "dev"
     branches: [master, dev]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -65,19 +66,23 @@ jobs:
           ls -l
           echo [SUCCESS] yarn build succeeded.
 
-      - name: Check If Release Tag and Decide deployment type
+      - name: Check If should deploy and Decide deployment type
         id: check-tag
         run: |
           #TODO setup release and staging builds
-          echo ::set-output name=release::false
+          echo ::set-output name=deploy::false
           if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ ${GITHUB_REF:-noref} =~ master ]] || [[ ${GITHUB_REF:-noref} =~ dev ]]; then
-              echo ::set-output name=release::true
+              echo ::set-output name=deploy::true
           fi
 
           #figure out AWS code deployment Group
-          export deploymentGroup=Staging
+          export deploymentGroup=Dev
           if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               export deploymentGroup=Production
+          elif [[ ${GITHUB_REF:-noref} =~ master ]]; then
+              export deploymentGroup=Staging
+          elif [[ ${GITHUB_REF:-noref} =~ dev ]]; then
+              export deploymentGroup=Dev
           fi
 
           echo "*** Will deploy to $deploymentGroup ***"
@@ -85,7 +90,7 @@ jobs:
           echo ::set-output name=deploymentGroup::$deploymentGroup
 
       - name: Create Artifacts Directory
-        if: steps.check-tag.outputs.release == 'true'
+        if: steps.check-tag.outputs.deploy == 'true'
         run: |
           mkdir artifacts
           mkdir uploads
@@ -99,7 +104,7 @@ jobs:
 
       - name: AWS CodeDeploy
         uses: sourcetoad/aws-codedeploy-action@v1
-        if: steps.check-tag.outputs.release == 'true'
+        if: steps.check-tag.outputs.deploy == 'true'
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

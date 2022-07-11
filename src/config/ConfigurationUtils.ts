@@ -2,6 +2,7 @@ import * as Joi from "joi";
 import { SecretProvider } from "./SecretProvider";
 
 export enum AppEnvironment {
+  AWSDEV = "awsdev",
   DEV = "development",
   PROD = "production",
   STAGING = "staging",
@@ -70,6 +71,12 @@ export const ZEROHASH_API_SECRET = "apiSecret";
 export const ZEROHASH_PASS_PHRASE = "passPhrase";
 export const ZEROHASH_HOST = "host";
 
+export const KMS_CONFIG_CONTEXT_KEY = "context";
+export const KMS_CONFIG_KEY = "kms";
+export const KMS_CONTEXT_STAGE = "stage";
+export const KMS_CONTEXT_PURPOSE = "purpose";
+export const KMS_CONTEXT_ORIGIN = "origin";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),
@@ -105,6 +112,11 @@ export function setEnvironmentProperty(key: string, value: string): void {
 }
 
 export async function getParameterValue(awsSecretKey: string, customValue: string): Promise<string> {
-  if (awsSecretKey === undefined || awsSecretKey === "") return customValue;
+  if (awsSecretKey === undefined || awsSecretKey === "") {
+    if (customValue === undefined || customValue === "") {
+      throw Error(`Neither ${awsSecretKey} nor ${customValue} is set.`);
+    }
+    return customValue;
+  }
   return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
 }

@@ -15,10 +15,10 @@ then
 
 else
     echo "Skipping the configuration of CloudWatch Log Agent as \"$DEPLOYMENT_GROUP_NAME\" DEPLOYMENT_GROUP is not configured."
-    export NODE_ENV=development
+    export NODE_ENV=awsdev
 fi
 
-echo "Starting NobaServer ..."
+echo "Starting NobaServer, environment ${NODE_ENV}..."
 
 export RUN_EMAIL_CRON=false #TODO setup a better config model
 

@@ -38,14 +38,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   private async getIdentityDomain(id: string, identityType: string): Promise<AuthenticatedUser> {
     console.log(id, identityType);
-
     switch (identityType) {
       case consumerIdentityIdentifier:
-        return await this.consumerService.findConsumerById(id);
+        try {
+          return await this.consumerService.findConsumerById(id);
+        } catch (e) {
+          throw new UnauthorizedException("Token is invalid!");
+        }
       case nobaAdminIdentityIdentifier:
-        return this.adminService.getAdminById(id);
+        try {
+          return this.adminService.getAdminById(id);
+        } catch (e) {
+          throw new UnauthorizedException("Token is invalid!");
+        }
       case partnerAdminIdentityIdenitfier:
-        return this.partnerAdminService.getPartnerAdmin(id);
+        try {
+          return this.partnerAdminService.getPartnerAdmin(id);
+        } catch (e) {
+          throw new UnauthorizedException("Token is invalid!");
+        }
       default:
         throw new UnauthorizedException(`IdentityType should be one of "${allIdentities}"`);
     }

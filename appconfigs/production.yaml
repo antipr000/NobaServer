@@ -9,6 +9,12 @@ logFilePath: "/home/ubuntu/noba_server.log"
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
 
+kms:
+  context:
+    stage: "production"
+    purpose: "Noba Onramp app"
+    origin: "us-east-1"
+
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys
 # Each key followed by _keyID uses a prefix which is our alias to that key. This must match between KMS and our application.
@@ -39,8 +45,10 @@ twilio:
   fromPhoneNumber: "+19894557345"
 
 mongo:
-  awsSecretNameForUri: "PROD_MONGO_URI"
+  awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"
   uri: "bogus-value"
+  sslEnabled: true
+  sslCAPath: rds-combined-ca-bundle.pem #bootstrapped in deploy scripts
 
 sardine:
   awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

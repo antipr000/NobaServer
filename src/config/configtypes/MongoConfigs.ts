@@ -3,4 +3,6 @@ import { MONGO_AWS_SECRET_KEY_FOR_URI_ATTR, MONGO_URI } from "../ConfigurationUt
 export interface MongoConfigs {
   [MONGO_URI]: string;
   [MONGO_AWS_SECRET_KEY_FOR_URI_ATTR]: string;
+  sslEnabled: boolean;
+  sslCAPath: string;
 }

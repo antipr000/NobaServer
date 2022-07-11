@@ -54,6 +54,11 @@ import {
   ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR,
   ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR,
   ZEROHASH_HOST,
+  KMS_CONFIG_KEY,
+  KMS_CONFIG_CONTEXT_KEY,
+  KMS_CONTEXT_STAGE,
+  KMS_CONTEXT_ORIGIN,
+  KMS_CONTEXT_PURPOSE,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -65,8 +70,10 @@ import { MongoConfigs } from "./configtypes/MongoConfigs";
 import { SardineConfigs } from "./configtypes/SardineConfigs";
 import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
+import { KmsConfigs } from "./configtypes/KmsConfigs";
 
 const envNameToPropertyFileNameMap = {
+  [AppEnvironment.AWSDEV]: "awsdev.yaml",
   [AppEnvironment.DEV]: "localdevelopment.yaml",
   [AppEnvironment.PROD]: "production.yaml",
   [AppEnvironment.STAGING]: "staging.yaml",
@@ -190,6 +197,7 @@ async function configureAllVendorCredentials(
     configureMongoCredentials,
     configureSardineCredentials,
     configureZerohashCredentials,
+    configureAwsKmsCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -406,5 +414,30 @@ async function configureZerohashCredentials(
   zerohashConfigs.host = await getParameterValue(zerohashConfigs.awsSecretNameForHost, zerohashConfigs.host);
 
   configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
+  return configs;
+}
+
+async function configureAwsKmsCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const kmsConfigs: KmsConfigs = configs[KMS_CONFIG_KEY];
+
+  if (kmsConfigs === undefined || kmsConfigs.context === undefined) {
+    const errorMessage =
+      "\n'KMS' configurations are required. Please configure the KMS credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${KMS_CONFIG_KEY}" and populate ` +
+      `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_STAGE}", ` +
+      `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_ORIGIN}", AND ` +
+      `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_PURPOSE}".`;
+
+    throw Error(errorMessage);
+  }
+
+  kmsConfigs.context.origin = await getParameterValue(undefined, kmsConfigs.context.origin);
+  kmsConfigs.context.purpose = await getParameterValue(undefined, kmsConfigs.context.purpose);
+  kmsConfigs.context.stage = await getParameterValue(undefined, kmsConfigs.context.stage);
+
+  configs[KMS_CONFIG_KEY] = kmsConfigs;
   return configs;
 }
