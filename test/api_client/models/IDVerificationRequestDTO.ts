@@ -9,7 +9,7 @@ export type IDVerificationRequestDTO = {
   firstName: string;
   lastName: string;
   address: AddressDTO;
-  phoneNumber: string;
+  phoneNumber?: string;
   /**
    * Date of birth in format YYYY-MM-DD
    */
