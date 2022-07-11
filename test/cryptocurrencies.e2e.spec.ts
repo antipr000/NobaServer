@@ -182,9 +182,7 @@ describe("CryptoCurrencies", () => {
         receivedIconPaths.push(getFiatCurrencyResponse[key].iconPath);
       });
 
-      const expectedIconPaths = [
-        "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat/usd.svg",
-      ];
+      const expectedIconPaths = ["https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat/usd.svg"];
 
       expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
     });
@@ -208,30 +206,30 @@ describe("CryptoCurrencies", () => {
     //   expect(getExchangeRatesResponse.__status).toBe(200);
     // });
 
-    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => { });
+    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {});
 
-    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => { });
+    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => {});
 
-    it("should throw 400 if both 'fiatCurrencyCode' & 'cryptoCurrencyCode' is incorrect", async () => { });
+    it("should throw 400 if both 'fiatCurrencyCode' & 'cryptoCurrencyCode' is incorrect", async () => {});
 
-    it("should return the price successfully", async () => { });
+    it("should return the price successfully", async () => {});
   });
 
   describe("GET /exchangerates/processingfee/{fiatCurrencyCode}", () => {
-    it("should work even if no credentials is passed", async () => { });
+    it("should work even if no credentials is passed", async () => {});
 
-    it("should work even if credentials are passed", async () => { });
+    it("should work even if credentials are passed", async () => {});
 
-    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => { });
+    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {});
 
-    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => { });
+    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => {});
 
-    it("should throw 400 if 'fiatAmount' is zero(0)", async () => { });
+    it("should throw 400 if 'fiatAmount' is zero(0)", async () => {});
 
-    it("should throw 400 if 'fiatAmount' is negative number", async () => { });
+    it("should throw 400 if 'fiatAmount' is negative number", async () => {});
 
-    it("should throw 400 if 'fiatAmount' is alphanumeric", async () => { });
+    it("should throw 400 if 'fiatAmount' is alphanumeric", async () => {});
 
-    it("should return the fees successfully", async () => { });
+    it("should return the fees successfully", async () => {});
   });
 });
