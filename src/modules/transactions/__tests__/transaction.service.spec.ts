@@ -50,7 +50,7 @@ describe("TransactionService", () => {
     ],
   });
 
-  it("Should fail if below the minimum", async () => {
+  it("Should not be below the minimum", async () => {
     when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(0);
     /* This doesn't work for some reason - I get "TypeError: this.methodToStub is not a function"
     when(limitsService.getLimits(anything())).thenReturn(
@@ -69,10 +69,24 @@ describe("TransactionService", () => {
     expect(result).toBe(TransactionAllowedStatus.TRANSACTION_TOO_SMALL);
   });
 
-  it("Should fail if above the maximum", async () => {
+  it("Should not be above the maximum", async () => {
     when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(0);
 
     const result: TransactionAllowedStatus = await limitsService.canMakeTransaction(consumer, 501);
     expect(result).toBe(TransactionAllowedStatus.TRANSACTION_TOO_LARGE);
+  });
+
+  it("Should not exceed the monthly maximum", async () => {
+    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(2000);
+
+    const result: TransactionAllowedStatus = await limitsService.canMakeTransaction(consumer, 50);
+    expect(result).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
+  });
+
+  it("Is within range so should be allowed", async () => {
+    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(1000);
+
+    const result: TransactionAllowedStatus = await limitsService.canMakeTransaction(consumer, 200);
+    expect(result).toBe(TransactionAllowedStatus.ALLOWED);
   });
 });
