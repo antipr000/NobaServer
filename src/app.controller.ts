@@ -84,8 +84,7 @@ export class AppController {
       {
         name: "US Dollar",
         ticker: "USD",
-        iconPath:
-          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/United-states_flag_icon_round.svg/1024px-United-states_flag_icon_round.svg.png",
+        iconPath: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat/usd.svg",
       },
     ];
   }
