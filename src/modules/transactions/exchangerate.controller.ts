@@ -1,5 +1,11 @@
 import { Controller, Get, HttpStatus, Inject, Param, Query } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiServiceUnavailableResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Public } from "../auth/public.decorator";
@@ -22,6 +28,8 @@ export class ExchangeRateController {
     status: HttpStatus.OK,
     description: "Fiat price (leg 2) for the desired crypto currency (leg1)",
   })
+  @ApiBadRequestResponse({ description: "Invalid currency code (fiat or crypto)" })
+  @ApiServiceUnavailableResponse({ description: "Unable to connect to underlying service provider" })
   async priceInFiat(
     @Param("fiatCurrencyCode") fiatCurrencyCode: string,
     @Query("cryptoCurrencyCode") cryptoCurrencyCode: string,
@@ -37,6 +45,8 @@ export class ExchangeRateController {
     description: "Processing fee for given crypto fiat conversion",
     type: ProcessingFeeDTO,
   })
+  @ApiBadRequestResponse({ description: "Invalid currency code (fiat or crypto)" })
+  @ApiServiceUnavailableResponse({ description: "Unable to connect to underlying service provider" })
   async processingFee(
     @Param("fiatCurrencyCode") fiatCurrencyCode: string,
     @Query("fiatAmount") fiatAmount: number,

@@ -8,7 +8,6 @@ import { AdminMapper } from "../mappers/AdminMapper";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { getMockAdminTransactionRepoWithDefaults } from "../mocks/MockAdminTransactionRepo";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
-import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID } from "../../../config/ConfigurationUtils";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
