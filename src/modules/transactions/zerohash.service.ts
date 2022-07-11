@@ -12,7 +12,7 @@ import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
 
 const crypto_ts = require("crypto");
-const request = require("request-promise"); // This library is deprecated. We need to switch to Axios.
+const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
 
 @Injectable()
 export class ZeroHashService {
