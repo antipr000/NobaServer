@@ -7,9 +7,10 @@ import { Sardine } from "./integrations/Sardine";
 import { MongoDBVerificationDataRepo } from "./repos/MongoDBVerificationDataRepo";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
+import { CommonModule } from "../common/common.module";
 
 @Module({
-  imports: [ConfigModule, ConsumerModule, InfraProvidersModule],
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule],
   controllers: [VerificationController],
   providers: [
     VerificationService,

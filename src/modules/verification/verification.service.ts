@@ -17,6 +17,7 @@ import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
 import { TransactionInformation } from "./domain/TransactionInformation";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
+import { EmailService } from "../common/email.service";
 
 @Injectable()
 export class VerificationService {
@@ -28,6 +29,9 @@ export class VerificationService {
 
   @Inject("VerificationDataRepo")
   private readonly verificationDataRepo: IVerificationDataRepo;
+
+  @Inject()
+  private readonly emailService: EmailService;
 
   private truliooProvider: TruliooIntegrator;
 
