@@ -71,7 +71,8 @@ export class ZeroHashService {
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
-        throw new ServiceUnavailableException(err, "Unable to connect to ZeroHash; confirm whitelisted IP.");
+        this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
+        throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
       } else if (err.statusCode == 400) {
         throw new BadRequestException(err);
       } else {

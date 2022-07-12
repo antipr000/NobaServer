@@ -11,6 +11,7 @@ import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
+import { AppService } from "../../app.service";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule, CacheModule.register()],
@@ -21,6 +22,7 @@ import { ZeroHashService } from "./zerohash.service";
     ExchangeRateService,
     LimitsService,
     ZeroHashService,
+    AppService,
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
