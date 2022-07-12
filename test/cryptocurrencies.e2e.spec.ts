@@ -18,7 +18,7 @@ import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
 import { clearAccessTokenForNextRequests, loginAndGetResponse, setAccessTokenForTheNextRequests } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
-import { AssetsService, CurrencyDTO } from "./api_client";
+import { AssetsService, CurrencyDTO, ProcessingFeeDTO } from "./api_client";
 
 const supportedCurrenciesTicker = [
   "ZRX",
@@ -94,7 +94,7 @@ describe("CryptoCurrencies", () => {
   });
 
   describe("GET /cryptocurrencies", () => {
-    it("should work even if no credentials is passed", async () => {
+    it("should work even if no credentials are passed", async () => {
       const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
         ResponseStatus;
 
@@ -144,7 +144,7 @@ describe("CryptoCurrencies", () => {
   });
 
   describe("GET /fiatcurrencies", () => {
-    it("should work even if no credentials is passed", async () => {
+    it("should work even if no credentials are passed", async () => {
       const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
 
       expect(getFiatCurrencyResponse.__status).toBe(200);
@@ -189,60 +189,71 @@ describe("CryptoCurrencies", () => {
   });
 
   describe("GET /exchangerates/priceinfiat/{fiatCurrencyCode}", () => {
+    // TODO(236): Uncomment the following two tests when we can test in a ZH-enabled environment
+
     /*
-      Tested these locally but commenting until we have a e2e env that can test ZH connectivity.
-    */
-    it("should work even if no credentials is passed", async () => {
-      // const getExchangeRatesResponse = await AssetsService.priceInFiat("USD", "ETH");
-      // expect(getExchangeRatesResponse.__status).toBe(200);
-      // I don't think we could ever satisfy this as it's too hard to predict. Good enough to check the 200 response code.
-      // expect(getExchangeRatesResponse).toBe({});
-    });
+     it("should work even if no credentials are passed", async () => {
+       const response = await AssetsService.priceInFiat("USD", "ETH");
+       expect(response.__status).toBe(200);
+     });
 
     it("should work even if credentials are passed", async () => {
-      // const consumerEmail = "test.consumer@noba.com";
-      // const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
-      // setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
-      // const getExchangeRatesResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] &
-      //   ResponseStatus;
-      // expect(getExchangeRatesResponse.__status).toBe(200);
+      const consumerEmail = "test.consumer@noba.com";
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+      const response = (await AssetsService.priceInFiat("USD", "ETH")) as CurrencyDTO[] & ResponseStatus;
+      expect(response.__status).toBe(200);
     });
+    */
 
     it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {
-      // const getExchangeRatesResponse = await AssetsService.priceInFiat("ABC", "ETH");
-      // expect(getExchangeRatesResponse.__status).toBe(400);
+      const response = await AssetsService.priceInFiat("ABC", "ETH");
+      expect(response.__status).toBe(400);
     });
 
     it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => {
-      // const getExchangeRatesResponse = await AssetsService.priceInFiat("USD", "ABC");
-      // expect(getExchangeRatesResponse.__status).toBe(400);
+      const response = await AssetsService.priceInFiat("USD", "ABC");
+      expect(response.__status).toBe(400);
     });
 
     it("should throw 400 if both 'fiatCurrencyCode' & 'cryptoCurrencyCode' is incorrect", async () => {
-      // const getExchangeRatesResponse = await AssetsService.priceInFiat("ABC", "ABC");
-      // expect(getExchangeRatesResponse.__status).toBe(400);
+      const response = await AssetsService.priceInFiat("ABC", "ABC");
+      expect(response.__status).toBe(400);
     });
   });
 
   describe("GET /exchangerates/processingfee/{fiatCurrencyCode}", () => {
-    it("should work even if no credentials is passed", async () => {
-      // @subham - this returns a ProcessingFeeDTO promise. How can we get the HTTP status code from that? I see priceInFiat returns 'any', which I'd think we we'll want to change.
-      //const getProcessingFeeResponse = await AssetsService.processingFee("USD", 100, "ETH");
-      //expect(getProcessingFeeResponse.__status).toBe(200);
+    it("should work even if no credentials are passed", async () => {
+      const response = (await AssetsService.processingFee("USD", 100, "ETH")) as ProcessingFeeDTO & ResponseStatus;
+      expect(response.__status).toBe(200);
     });
 
-    it("should work even if credentials are passed", async () => {});
+    it("should work even if credentials are passed", async () => {
+      const consumerEmail = "test.consumer@noba.com";
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+      const response = (await AssetsService.processingFee("USD", 100, "ETH")) as ProcessingFeeDTO & ResponseStatus;
+      expect(response.__status).toBe(200);
+    });
 
-    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {});
+    it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {
+      const response = (await AssetsService.processingFee("ABC", 100, "ETH")) as ProcessingFeeDTO & ResponseStatus;
+      expect(response.__status).toBe(400);
+    });
 
-    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => {});
+    it("should throw 400 if 'cryptoCurrencyCode' is incorrect", async () => {
+      const response = (await AssetsService.processingFee("USD", 100, "ABC")) as ProcessingFeeDTO & ResponseStatus;
+      expect(response.__status).toBe(400);
+    });
 
-    it("should throw 400 if 'fiatAmount' is zero(0)", async () => {});
+    it("should throw 400 if 'fiatAmount' is zero(0)", async () => {
+      const response = (await AssetsService.processingFee("USD", 0, "ETH")) as ProcessingFeeDTO & ResponseStatus;
+      expect(response.__status).toBe(400);
+    });
 
-    it("should throw 400 if 'fiatAmount' is negative number", async () => {});
-
-    it("should throw 400 if 'fiatAmount' is alphanumeric", async () => {});
-
-    it("should return the fees successfully", async () => {});
+    it("should throw 400 if 'fiatAmount' is negative number", async () => {
+      const response = (await AssetsService.processingFee("USD", -5, "ETH")) as ProcessingFeeDTO & ResponseStatus;
+      expect(response.__status).toBe(400);
+    });
   });
 });
