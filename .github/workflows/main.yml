@@ -29,12 +29,12 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.0
         with:
-          node-version: 14.x
+          node-version: 16.x
 
       - name: Setup Yarn
         uses: mskelton/setup-yarn@v1.0.1
         with:
-          node-version: 14.x
+          node-version: 16.x
 
       # Runs a single command using the runners shell
       - name: Install all packages

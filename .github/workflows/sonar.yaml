@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master # or the name of your main branch
-      
+
   workflow_dispatch:
 
 jobs:
@@ -17,12 +17,12 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.0
         with:
-          node-version: 14.x
+          node-version: 16.x
 
       - name: Setup Yarn
         uses: mskelton/setup-yarn@v1.0.1
         with:
-          node-version: 14.x
+          node-version: 16.x
 
       - name: Install dependencies
         run: yarn install
