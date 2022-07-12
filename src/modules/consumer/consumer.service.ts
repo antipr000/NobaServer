@@ -122,8 +122,8 @@ export class ConsumerService {
     const newPaymentMethod: PaymentMethods = {
       cardName: paymentMethod.cardName,
       cardType: "card",
-      first6Digits: parseInt(paymentMethod.cardNumber.substring(0, 6)),
-      last4Digits: parseInt(paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4)),
+      first6Digits: paymentMethod.cardNumber.substring(0, 6),
+      last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 5),
       imageUri: paymentMethod.imageUri,
       paymentToken: stripePaymentMethod.id,
       paymentProviderID: PaymentProviders.STRIPE,
@@ -195,8 +195,8 @@ export class ConsumerService {
       const newPaymentMethod: PaymentMethods = {
         cardName: paymentMethod.cardName,
         cardType: instrument["scheme"],
-        first6Digits: parseInt(paymentMethod.cardNumber.substring(0, 6)),
-        last4Digits: parseInt(paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4)),
+        first6Digits: paymentMethod.cardNumber.substring(0, 6),
+        last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
         imageUri: paymentMethod.imageUri,
         paymentProviderID: PaymentProviders.CHECKOUT,
         paymentToken: instrument["id"], // TODO: Check if this is the valid way to populate id

@@ -1,8 +1,8 @@
 export type PaymentMethods = {
   cardName?: string;
   cardType?: string;
-  first6Digits: number;
-  last4Digits: number;
+  first6Digits: string;
+  last4Digits: string;
   imageUri: string;
   paymentToken: string;
   paymentProviderID: string;

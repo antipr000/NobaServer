@@ -7,6 +7,6 @@ export type PaymentMethodsDTO = {
   cardType?: string;
   imageUri?: string;
   paymentToken: string;
-  first6Digits: number;
-  last4Digits: number;
+  first6Digits: string;
+  last4Digits: string;
 };

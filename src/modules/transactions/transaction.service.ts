@@ -4,7 +4,6 @@ import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { CurrencyDTO } from "../common/dto/CurrencyDTO";
 import { ConsumerService } from "../consumer/consumer.service";

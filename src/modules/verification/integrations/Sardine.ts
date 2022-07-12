@@ -194,8 +194,8 @@ export class Sardine implements IDVProvider {
         paymentMethod: {
           type: PaymentMethodTypes.CARD,
           card: {
-            first6: `${transactionInformation.first6DigitsOfCard}`,
-            last4: `${transactionInformation.last4DigitsOfCard}`,
+            first6: transactionInformation.first6DigitsOfCard,
+            last4: transactionInformation.last4DigitsOfCard,
             hash: transactionInformation.cardID,
           },
         },
