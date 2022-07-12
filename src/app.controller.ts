@@ -66,7 +66,7 @@ export class AppController {
   @ApiTags("Assets")
   async supportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
     // TODO: Pull from database post-MVP
-    return await this.cacheManager.get("cryptocurrencies");
+    return await this.appService.getSupportedCryptocurrencies();
   }
 
   @Public()
@@ -80,12 +80,6 @@ export class AppController {
   @ApiTags("Assets")
   async supportedFiatCurrencies(): Promise<CurrencyDTO[]> {
     // TODO: Pull from database post-MVP
-    return [
-      {
-        name: "US Dollar",
-        ticker: "USD",
-        iconPath: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat/usd.svg",
-      },
-    ];
+    return await this.appService.getSupportedFiatCurrencies();
   }
 }
