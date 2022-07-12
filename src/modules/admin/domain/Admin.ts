@@ -15,6 +15,7 @@ const Permissions = {
   addNobaAdmin: "ADD_NOBA_ADMIN",
   removeNobaAdmin: "REMOVE_NOBA_ADMIN",
   changeNobaAdminPrivileges: "CHANGE_NOBA_ADMIN_PRIVILEGES",
+  updateConsumerData: "UPDATE_CONSUMER_DATA",
 };
 
 const AdminRolesWithTheirPrivileges = {
@@ -44,6 +45,7 @@ const AdminRolesWithTheirPrivileges = {
       Permissions.updateAdminsForPartner,
       Permissions.removeNobaAdmin,
       Permissions.changeNobaAdminPrivileges,
+      Permissions.updateConsumerData,
     ],
   },
 };
@@ -125,6 +127,10 @@ export class Admin extends AggregateRoot<AdminProps> {
 
   public canChangeNobaAdminPrivileges(): boolean {
     return this.hasPermission(Permissions.changeNobaAdminPrivileges);
+  }
+
+  public canUpdateConsumerData(): boolean {
+    return this.hasPermission(Permissions.updateConsumerData);
   }
 
   private hasPermission(requiredPermission: string): boolean {

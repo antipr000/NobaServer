@@ -6,6 +6,7 @@ export type { AddPartnerAdminRequestDTO } from "./models/AddPartnerAdminRequestD
 export type { AddPartnerRequestDTO } from "./models/AddPartnerRequestDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
+export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
 export type { CheckTransactionDTO } from "./models/CheckTransactionDTO";
 export type { ConsentDTO } from "./models/ConsentDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
@@ -31,6 +32,7 @@ export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";
 export type { UpdatePartnerAdminRequestDTO } from "./models/UpdatePartnerAdminRequestDTO";
 export type { UpdatePartnerRequestDTO } from "./models/UpdatePartnerRequestDTO";
+export type { VerificationDataDTO } from "./models/VerificationDataDTO";
 export type { VerificationResultDTO } from "./models/VerificationResultDTO";
 export type { VerifyOtpRequestDTO } from "./models/VerifyOtpRequestDTO";
 export type { VerifyOtpResponseDTO } from "./models/VerifyOtpResponseDTO";

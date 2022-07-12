@@ -7,9 +7,10 @@ import { MongoDBAdminTransactionRepo } from "./repos/transactions/AdminTransacti
 import { AdminMapper } from "./mappers/AdminMapper";
 import { PartnerModule } from "../partner/partner.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
+import { ConsumerModule } from "../consumer/consumer.module";
 
 @Module({
-  imports: [ConfigModule, CommonModule, PartnerModule],
+  imports: [ConfigModule, CommonModule, PartnerModule, ConsumerModule],
   controllers: [AdminController],
   providers: [
     AdminService,

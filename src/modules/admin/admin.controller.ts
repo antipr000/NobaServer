@@ -39,6 +39,10 @@ import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerMapper } from "../partner/mappers/PartnerMapper";
 import { UpdatePartnerAdminRequestDTO } from "../partner/dto/UpdatePartnerAdminRequestDTO";
+import { ConsumerDTO } from "../consumer/dto/ConsumerDTO";
+import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestDTO";
+import { ConsumerService } from "../consumer/consumer.service";
+import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")
@@ -59,8 +63,12 @@ export class AdminController {
   @Inject()
   private readonly partnerService: PartnerService;
 
+  @Inject()
+  private readonly consumerService: ConsumerService;
+
   private readonly partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
+  private readonly consumerMapper: ConsumerMapper = new ConsumerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
@@ -245,5 +253,32 @@ export class AdminController {
 
     const createdPartner: Partner = await this.partnerService.createPartner(requestBody.name);
     return this.partnerMapper.toDTO(createdPartner);
+  }
+
+  @Patch("/consumers/:consumerID")
+  @ApiOperation({ summary: "Update a consumer" })
+  @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Update a consumer" })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async updateConsumer(
+    @Param("consumerID") consumerID: string,
+    @Body() requestBody: AdminUpdateConsumerRequestDTO,
+    @Request() request,
+  ) {
+    const authenticatedUser: Admin = request.user;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateConsumerData()) {
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update a Consumer.`);
+    }
+
+    const consumerData = await this.consumerService.getConsumer(consumerID);
+    const updatedConsumerData = await this.consumerService.updateConsumer({
+      ...consumerData.props,
+      ...requestBody,
+      verificationData: {
+        ...consumerData.props.verificationData,
+        ...requestBody.verificationData,
+      },
+    });
+
+    return this.consumerMapper.toDTO(updatedConsumerData);
   }
 }

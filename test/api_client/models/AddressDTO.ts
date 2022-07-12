@@ -7,9 +7,6 @@ export type AddressDTO = {
   streetLine2?: string;
   countryCode: string;
   city: string;
-  /**
-   * state code in ISO 3166-2
-   */
   regionCode: string;
   postalCode: string;
 };

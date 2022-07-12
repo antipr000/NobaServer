@@ -81,8 +81,13 @@ export class ConsumerService {
   }
 
   async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
-    const consumer = Consumer.createConsumer(consumerProps);
-    const updatedConsumer = await this.consumerRepo.updateConsumer(consumer);
+    const consumer = await this.getConsumer(consumerProps._id);
+    const updatedConsumer = await this.consumerRepo.updateConsumer(
+      Consumer.createConsumer({
+        ...consumer.props,
+        ...consumerProps,
+      }),
+    );
     return updatedConsumer;
   }
 

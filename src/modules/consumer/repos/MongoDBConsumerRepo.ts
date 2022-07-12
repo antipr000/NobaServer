@@ -4,7 +4,7 @@ import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CONSUMER_KMS_KEY_ALIAS, KmsService } from "../../../modules/common/kms.service";
 
 //TODO figure out a way to create indices using joi schema and joigoose
@@ -25,6 +25,10 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
   async getConsumer(consumerID: string): Promise<Consumer> {
     const userModel = await this.dbProvider.getUserModel();
     const result: any = await userModel.findById(consumerID).exec();
+
+    if (!result) {
+      throw new NotFoundException(`Consumer with id ${consumerID} not found`);
+    }
 
     const consumerData: ConsumerProps = convertDBResponseToJsObject(result);
     consumerData.socialSecurityNumber = await this.decryptString(consumerData.socialSecurityNumber);

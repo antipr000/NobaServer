@@ -3,6 +3,8 @@
 /* eslint-disable */
 import type { AddPartnerAdminRequestDTO } from "../models/AddPartnerAdminRequestDTO";
 import type { AddPartnerRequestDTO } from "../models/AddPartnerRequestDTO";
+import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
+import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
 import type { PartnerAdminDTO } from "../models/PartnerAdminDTO";
@@ -205,6 +207,31 @@ export class AdminService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/admins/partners",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Bad request`,
+      },
+    });
+  }
+
+  /**
+   * Update a consumer
+   * @param consumerId
+   * @param requestBody
+   * @returns ConsumerDTO Update a consumer
+   * @throws ApiError
+   */
+  public static updateConsumer(
+    consumerId: string,
+    requestBody: AdminUpdateConsumerRequestDTO,
+  ): CancelablePromise<ConsumerDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/admins/consumers/{consumerID}",
+      path: {
+        consumerID: consumerId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

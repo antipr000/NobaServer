@@ -8,7 +8,7 @@ export type VerificationData = {
   verificationProvider: VerificationProviders;
   kycVerificationStatus: ConsumerVerificationStatus;
   documentVerificationStatus: DocumentVerificationStatus;
-  documentVerificationTransactionID: string;
+  documentVerificationTransactionID?: string;
   idVerificationTimestamp?: number;
   documentVerificationTimestamp?: number;
 };

@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { AdminService } from "../admin.service";
@@ -12,7 +12,7 @@ import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
 import { UpdateNobaAdminDTO } from "../dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
 import { PartnerAdmin } from "../../../../src/modules/partner/domain/PartnerAdmin";
-import { Consumer } from "../../consumer/domain/Consumer";
+import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { PartnerAdminService } from "../../../../src/modules/partner/partneradmin.service";
 import { getMockPartnerAdminServiceWithDefaults } from "../../../../src/modules/partner/mocks/mock.partner.admin.service";
 import { AddPartnerAdminRequestDTO } from "../../../../src/modules/partner/dto/AddPartnerAdminRequestDTO";
@@ -22,6 +22,13 @@ import { AddPartnerRequestDTO } from "../dto/AddPartnerRequestDTO";
 import { Partner } from "../../partner/domain/Partner";
 import { PartnerDTO } from "../../partner/dto/PartnerDTO";
 import { UpdatePartnerAdminRequestDTO } from "../../../modules/partner/dto/UpdatePartnerAdminRequestDTO";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
+import {
+  ConsumerVerificationStatus,
+  DocumentVerificationStatus,
+} from "../../../modules/consumer/domain/VerificationStatus";
+import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -34,6 +41,7 @@ describe("AdminController", () => {
   let mockAdminService: AdminService;
   let mockPartnerAdminService: PartnerAdminService;
   let mockPartnerService: PartnerService;
+  let mockConsumerService: ConsumerService;
 
   beforeEach(async () => {
     process.env = {
@@ -45,6 +53,7 @@ describe("AdminController", () => {
     mockAdminService = getMockAdminServiceWithDefaults();
     mockPartnerAdminService = getMockPartnerAdminServiceWithDefaults();
     mockPartnerService = getMockPartnerServiceWithDefaults();
+    mockConsumerService = getMockConsumerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -61,6 +70,10 @@ describe("AdminController", () => {
         {
           provide: PartnerService,
           useFactory: () => instance(mockPartnerService),
+        },
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(mockConsumerService),
         },
         AdminMapper,
       ],
@@ -1344,6 +1357,79 @@ describe("AdminController", () => {
         _id: createdPartnerId,
         name: newPartnerName,
       });
+    });
+
+    it("NobaAdmin with 'Admin' role should be able to update consumer details", async () => {
+      const adminId = "AAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: "ADMIN",
+      });
+
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-1234",
+        email: "consumer@noba.com",
+        verificationData: {
+          kycVerificationStatus: ConsumerVerificationStatus.PENDING_FLAGGED_KYC,
+          documentVerificationStatus: DocumentVerificationStatus.PENDING,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [],
+        cryptoWallets: [],
+      };
+
+      const updatedConsumerProps: ConsumerProps = {
+        _id: "test-consumer-1234",
+        email: "consumer@noba.com",
+        verificationData: {
+          kycVerificationStatus: ConsumerVerificationStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.VERIFIED,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [],
+        cryptoWallets: [],
+      };
+
+      when(mockConsumerService.getConsumer(consumerProps._id)).thenResolve(Consumer.createConsumer(consumerProps));
+
+      when(mockConsumerService.updateConsumer(deepEqual(updatedConsumerProps))).thenResolve(
+        Consumer.createConsumer(updatedConsumerProps),
+      );
+
+      const result = await adminController.updateConsumer(
+        consumerProps._id,
+        {
+          verificationData: {
+            kycVerificationStatus: ConsumerVerificationStatus.APPROVED,
+            documentVerificationStatus: DocumentVerificationStatus.VERIFIED,
+          },
+        },
+        {
+          user: requestingNobaAdmin,
+        },
+      );
+
+      expect(result._id).toBe(consumerProps._id);
+      expect(result.kycVerificationData.kycVerificationStatus).toBe(
+        updatedConsumerProps.verificationData.kycVerificationStatus,
+      );
+      expect(result.documentVerificationData.documentVerificationStatus).toBe(
+        updatedConsumerProps.verificationData.documentVerificationStatus,
+      );
     });
   });
 });
