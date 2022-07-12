@@ -223,7 +223,9 @@ describe("CryptoCurrencies", () => {
   });
 
   describe("GET /exchangerates/processingfee/{fiatCurrencyCode}", () => {
-    it("should work even if no credentials are passed", async () => {
+    // TODO(236): Uncomment the following two tests when we can test in a ZH-enabled environment
+
+    /*it("should work even if no credentials are passed", async () => {
       const response = (await AssetsService.processingFee("USD", 100, "ETH")) as ProcessingFeeDTO & ResponseStatus;
       expect(response.__status).toBe(200);
     });
@@ -234,7 +236,7 @@ describe("CryptoCurrencies", () => {
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
       const response = (await AssetsService.processingFee("USD", 100, "ETH")) as ProcessingFeeDTO & ResponseStatus;
       expect(response.__status).toBe(200);
-    });
+    });*/
 
     it("should throw 400 if 'fiatCurrencyCode' is incorrect", async () => {
       const response = (await AssetsService.processingFee("ABC", 100, "ETH")) as ProcessingFeeDTO & ResponseStatus;
