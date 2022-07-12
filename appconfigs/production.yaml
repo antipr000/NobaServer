@@ -51,11 +51,11 @@ mongo:
   sslCAPath: rds-combined-ca-bundle.pem #bootstrapped in deploy scripts
 
 sardine:
-  awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForSardineSecretKey: ""
+  awsSecretNameForSardineClientID: "PROD_SARDINE_CLIENT_ID" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSardineSecretKey: "PROD_SARDINE_SECRET"
   clientID: "bogus-value"
   secretKey: "bogus-value"
-  sardineBaseUri: "https://api.dev.sardine.ai"
+  sardineBaseUri: "https://api.sardine.ai"
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"
