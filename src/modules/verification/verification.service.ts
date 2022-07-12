@@ -11,7 +11,7 @@ import { ConsumerInformation } from "./domain/ConsumerInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "./domain/VerificationResult";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { DocumentInformation } from "./domain/DocumentInformation";
-import { DocumentVerificationStatus } from "../consumer/domain/VerificationStatus";
+import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../consumer/domain/VerificationStatus";
 import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
@@ -81,7 +81,27 @@ export class VerificationService {
       },
       socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
     };
-    await this.consumerService.updateConsumer(newConsumerData);
+    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+
+    if (result.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED) {
+      await this.emailService.sendKycApprovedEmail(
+        updatedConsumer.props.firstName,
+        updatedConsumer.props.lastName,
+        updatedConsumer.props.email,
+      );
+    } else if (result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
+      await this.emailService.sendKycDenied(
+        updatedConsumer.props.firstName,
+        updatedConsumer.props.lastName,
+        updatedConsumer.props.email,
+      );
+    } else {
+      await this.emailService.sendKycPendingOrFlagged(
+        updatedConsumer.props.firstName,
+        updatedConsumer.props.lastName,
+        updatedConsumer.props.email,
+      );
+    }
     return result;
   }
 
@@ -101,7 +121,12 @@ export class VerificationService {
         documentVerificationTransactionID: id,
       },
     };
-    await this.consumerService.updateConsumer(newConsumerData);
+    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+    await this.emailService.sendKycPendingOrFlagged(
+      updatedConsumer.props.firstName,
+      updatedConsumer.props.lastName,
+      updatedConsumer.props.email,
+    );
     return id;
   }
 
@@ -119,7 +144,25 @@ export class VerificationService {
         documentVerificationStatus: result.status,
       },
     };
-    await this.consumerService.updateConsumer(newConsumerData);
+    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+
+    if (
+      result.status === DocumentVerificationStatus.VERIFIED ||
+      result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
+    ) {
+      await this.emailService.sendKycApprovedEmail(
+        updatedConsumer.props.firstName,
+        updatedConsumer.props.lastName,
+        updatedConsumer.props.email,
+      );
+    } else if (result.status === DocumentVerificationStatus.REJECTED) {
+      await this.emailService.sendKycDenied(
+        updatedConsumer.props.firstName,
+        updatedConsumer.props.lastName,
+        updatedConsumer.props.email,
+      );
+    }
+
     return result;
   }
 

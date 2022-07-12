@@ -12,12 +12,15 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { BadRequestException } from "@nestjs/common";
+import { EmailService } from "../../../modules/common/email.service";
+import { getMockEmailServiceWithDefaults } from "../../../modules/common/mocks/mock.email.service";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
   let verificationRepo: IVerificationDataRepo;
   let consumerService: ConsumerService;
   let idvProvider: IDVProvider;
+  let emailService: EmailService;
 
   jest.setTimeout(30000);
   const OLD_ENV = process.env;
@@ -34,6 +37,7 @@ describe("VerificationService", () => {
     verificationRepo = getMockVerificationRepoWithDefaults();
     idvProvider = getMockIdvProviderIntegrationWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    emailService = getMockEmailServiceWithDefaults();
 
     const verificationDataRepoProvider = {
       provide: "VerificationDataRepo",
@@ -50,6 +54,11 @@ describe("VerificationService", () => {
       useFactory: () => instance(consumerService),
     };
 
+    const emailServiceProvider = {
+      provide: EmailService,
+      useFactory: () => instance(emailService),
+    };
+
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
@@ -61,7 +70,13 @@ describe("VerificationService", () => {
         getTestWinstonModule(),
       ],
       controllers: [],
-      providers: [verificationDataRepoProvider, idvIntegratorProvider, VerificationService, userServiceProvider],
+      providers: [
+        verificationDataRepoProvider,
+        idvIntegratorProvider,
+        VerificationService,
+        userServiceProvider,
+        emailServiceProvider,
+      ],
     }).compile();
 
     verificationService = app.get<VerificationService>(VerificationService);

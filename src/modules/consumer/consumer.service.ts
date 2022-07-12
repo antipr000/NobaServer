@@ -12,6 +12,7 @@ import Stripe from "stripe";
 import { PaymentMethods } from "./domain/PaymentMethods";
 import Checkout from "checkout-sdk-node";
 import { CheckoutService } from "../common/checkout.service";
+import { EmailService } from "../common/email.service";
 
 @Injectable()
 export class ConsumerService {
@@ -20,6 +21,9 @@ export class ConsumerService {
 
   @Inject("ConsumerRepo")
   private readonly consumerRepo: IConsumerRepo;
+
+  @Inject()
+  private readonly emailService: EmailService;
 
   private readonly stripeApi: Stripe;
   private readonly checkoutApi: Checkout;
@@ -225,8 +229,24 @@ export class ConsumerService {
           ],
         };
       }
-      return await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
+
+      const result = this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
+      await this.emailService.sendCardAddedEmail(
+        consumer.props.firstName,
+        consumer.props.lastName,
+        consumer.props.email,
+        newPaymentMethod.cardType,
+        newPaymentMethod.last4Digits,
+      );
+      return result;
     } catch (e) {
+      await this.emailService.sendCardAdditionFailedEmail(
+        consumer.props.firstName,
+        consumer.props.lastName,
+        consumer.props.email,
+        /* cardNetwork = */ "",
+        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 5),
+      );
       throw new BadRequestException("Card details are not valid");
     }
   }
@@ -278,7 +298,16 @@ export class ConsumerService {
       paymentMethods: filteredPaymentMethods,
     };
 
-    return await this.updateConsumer(updatedConsumer);
+    const result = await this.updateConsumer(updatedConsumer);
+
+    await this.emailService.sendCardDeletedEmail(
+      consumer.props.firstName,
+      consumer.props.lastName,
+      consumer.props.email,
+      paymentMethod[0].cardType,
+      paymentMethod[0].last4Digits,
+    );
+    return result;
   }
 
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {

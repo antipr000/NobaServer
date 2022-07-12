@@ -11,17 +11,21 @@ import { Consumer } from "../domain/Consumer";
 import { getMockStripeServiceWithDefaults } from "../../common/mocks/mock.stripe.service";
 import { PaymentProviders } from "../domain/PaymentProviderDetails";
 import { CheckoutService } from "../../../modules/common/checkout.service";
+import { EmailService } from "../../../modules/common/email.service";
+import { getMockEmailServiceWithDefaults } from "../../../modules/common/mocks/mock.email.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
   let consumerRepo: IConsumerRepo;
   let stripeService: StripeService;
+  let emailService: EmailService;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
     stripeService = getMockStripeServiceWithDefaults();
+    emailService = getMockEmailServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -45,6 +49,10 @@ describe("ConsumerService", () => {
         {
           provide: StripeService,
           useFactory: () => instance(stripeService),
+        },
+        {
+          provide: EmailService,
+          useFactory: () => instance(emailService),
         },
         CheckoutService,
       ],
