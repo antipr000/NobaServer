@@ -75,10 +75,8 @@ export class ZeroHashService {
       json: true,
     };
 
-    this.logger.info(
-      `Sending request [${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(
-        body,
-      )}\nHeaders: ${JSON.stringify(headers)}`,
+    this.logger.debug(
+      `Sending request [${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`,
     );
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
       if (err.statusCode == 403) {
@@ -92,7 +90,7 @@ export class ZeroHashService {
         throw err;
       }
     });
-    this.logger.info(`Received response: ${JSON.stringify(response)}`);
+    this.logger.debug(`Received response: ${JSON.stringify(response)}`);
     return response;
   }
 
@@ -131,7 +129,7 @@ export class ZeroHashService {
 
   async getParticipant(email) {
     let participant = await this.makeRequest(`/participants/${email}`, "GET", {});
-    this.logger.info("Returning participant: " + participant);
+    this.logger.debug("Returning participant: " + participant);
     return participant;
   }
 
@@ -237,11 +235,11 @@ export class ZeroHashService {
         throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
       }
       participant_code = new_participant["message"]["participant_code"];
-      this.logger.info("Created new participant: " + participant_code);
+      this.logger.debug("Created new participant: " + participant_code);
       // participant_code = new_participant.participant_code;
     } else {
       participant_code = participant["message"]["participant_code"];
-      this.logger.info("Existing participant: " + participant_code);
+      this.logger.debug("Existing participant: " + participant_code);
     }
 
     const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, amount_type);
