@@ -1102,9 +1102,6 @@ describe("AdminController", () => {
       const partnerId = "PPPPPPPPPP";
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
-      const partnerAdminName = "Partner Admin A";
-      const partnerAdminRole = "ALL";
-
       const partnerAdminNewName = "New Partner Admin";
       const partnerAdminNewRole = "BASIC";
 
@@ -1154,9 +1151,6 @@ describe("AdminController", () => {
       const partnerId = "PPPPPPPPPP";
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
-      const partnerAdminName = "Partner Admin A";
-      const partnerAdminRole = "ALL";
-
       const partnerAdminNewName = "New Partner Admin";
       const partnerAdminNewRole = "BASIC";
 

@@ -107,7 +107,7 @@ describe("AdminService", () => {
       const otp = 123456;
 
       when(mockAdminAuthService.createOtp()).thenReturn(otp);
-      when(mockAdminAuthService.saveOtp(adminEmail, otp, undefined)).thenResolve();
+      when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
       when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
 
@@ -168,7 +168,7 @@ describe("AdminService", () => {
       const otp = 123456;
 
       when(mockPartnerAuthService.createOtp()).thenReturn(otp);
-      when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp, undefined)).thenResolve();
+      when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp)).thenResolve();
       when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString())).thenResolve();
       when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 

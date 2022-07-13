@@ -65,8 +65,8 @@ export class AppController {
   })
   @ApiTags("Assets")
   async supportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
-    // TODO: Pull from database post-MVP
-    return await this.appService.getSupportedCryptocurrencies();
+    // TODO(#235): Pull from database post-MVP
+    return this.appService.getSupportedCryptocurrencies();
   }
 
   @Public()
@@ -79,7 +79,7 @@ export class AppController {
   })
   @ApiTags("Assets")
   async supportedFiatCurrencies(): Promise<CurrencyDTO[]> {
-    // TODO: Pull from database post-MVP
-    return await this.appService.getSupportedFiatCurrencies();
+    // TODO(#235): Pull from database post-MVP
+    return this.appService.getSupportedFiatCurrencies();
   }
 }

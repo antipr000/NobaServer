@@ -25,9 +25,9 @@ export class CsvService {
         if (err) {
           reject(err);
         }
-        fs.writeFile(fileName, output, err => {
-          if (err) {
-            reject(err);
+        fs.writeFile(fileName, output, err2 => {
+          if (err2) {
+            reject(err2);
           }
           resolve(fileName);
         });

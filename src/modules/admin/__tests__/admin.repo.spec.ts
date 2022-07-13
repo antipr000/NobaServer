@@ -12,11 +12,11 @@ import { NotFoundException } from "@nestjs/common";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 
 const getAllRecordsInAdminCollection = async (adminCollection: Collection): Promise<Array<Admin>> => {
-  const adminDocumetsCursor = await adminCollection.find({});
+  const adminDocumentsCursor = adminCollection.find({});
   const allRecords: Admin[] = [];
 
-  while (await adminDocumetsCursor.hasNext()) {
-    const adminDocument = await adminDocumetsCursor.next();
+  while (await adminDocumentsCursor.hasNext()) {
+    const adminDocument = await adminDocumentsCursor.next();
 
     const currentRecord: Admin = Admin.createAdmin({
       _id: adminDocument._id.toString(),

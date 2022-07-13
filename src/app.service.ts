@@ -8,7 +8,7 @@ export class AppService {
 
   async getSupportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
     // TODO(#235): Pull from database post-MVP
-    return await this.cacheManager.get("cryptocurrencies");
+    return this.cacheManager.get("cryptocurrencies");
   }
 
   async getSupportedFiatCurrencies(): Promise<CurrencyDTO[]> {

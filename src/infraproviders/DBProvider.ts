@@ -38,7 +38,7 @@ export class DBProvider {
   private async connectToDb(): Promise<void> {
     if (this.isConnectedToDb) return;
 
-    const mongoConfigs: MongoConfigs = await this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY);
+    const mongoConfigs: MongoConfigs = this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY);
     const mongoUri = mongoConfigs.uri;
     await Mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 2000,

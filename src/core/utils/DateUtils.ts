@@ -79,7 +79,7 @@ export function getWeek(date: Date, dowOffset = 0) {
  * Valid date format for our case is YYYY-MM-DD
  */
 export function isValidDateOfBirth(dateString: string): boolean {
-  if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(dateString)) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][\d]|3[01])$/.test(dateString)) {
     return false;
   }
 

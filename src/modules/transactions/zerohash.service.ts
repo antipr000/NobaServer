@@ -68,6 +68,7 @@ export class ZeroHashService {
       json: true,
     };
 
+    this.logger.info(`Sending request [${derivedMethod} ${this.configs.host}${route}]: ${JSON.stringify(body)}`);
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
@@ -80,6 +81,7 @@ export class ZeroHashService {
         throw err;
       }
     });
+    this.logger.info(`Received response: ${JSON.stringify(response)}`);
     return response;
   }
 
@@ -131,14 +133,17 @@ export class ZeroHashService {
     try {
       participant = await this.makeRequest(`/participants/${email}`, "GET", {});
     } catch {
+      console.log("Participant is null");
       participant = null;
     }
     //  {"participant_code":"IQ8THH","email":"mm2@email.com"}
+
+    console.log("Returning participant: " + participant);
     return participant;
   }
 
   async getAllParticipants() {
-    const participants = this.makeRequest("/participants", "GET", {});
+    const participants = await this.makeRequest("/participants", "GET", {});
     return participants;
   }
 
@@ -153,7 +158,7 @@ export class ZeroHashService {
 
     let quote;
     try {
-      quote = this.makeRequest(route, "GET", {});
+      quote = await this.makeRequest(route, "GET", {});
     } catch (err) {
       if (err.statusCode == 400) {
         throw new BadRequestException(err);
@@ -167,7 +172,7 @@ export class ZeroHashService {
   async executeQuote(quote_id) {
     let executed_trade;
     try {
-      executed_trade = this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
+      executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
     } catch {
       executed_trade = null;
     }
@@ -178,7 +183,7 @@ export class ZeroHashService {
   async transferAssets(sender_participant, sender_group, receiver_participant, receiver_group, asset, amount) {
     let transfer;
     try {
-      transfer = this.makeRequest("/transfers", "POST", {
+      transfer = await this.makeRequest("/transfers", "POST", {
         from_participant_code: sender_participant,
         from_account_group: sender_group,
         to_participant_code: receiver_participant,
@@ -196,7 +201,7 @@ export class ZeroHashService {
   async requestTrade(tradeData) {
     let trade_request;
     try {
-      trade_request = this.makeRequest("/trades", "POST", tradeData);
+      trade_request = await this.makeRequest("/trades", "POST", tradeData);
     } catch {
       trade_request = null;
     }
@@ -208,7 +213,7 @@ export class ZeroHashService {
   async getTrade(trade_id) {
     let trade_data;
     try {
-      trade_data = this.makeRequest(`/trades/${trade_id}`, "GET", {});
+      trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
     } catch {
       trade_data = null;
     }
@@ -218,7 +223,7 @@ export class ZeroHashService {
   async requestWithdrawal(digital_address, participant_code, amount, asset, account_group) {
     let withdrawal_request;
     try {
-      withdrawal_request = this.makeRequest("/withdrawals/requests", "POST", {
+      withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
         address: digital_address,
         participant_code: participant_code,
         amount: amount,
@@ -235,7 +240,7 @@ export class ZeroHashService {
   async getWithdrawal(withdrawal_id) {
     let withdrawal;
     try {
-      withdrawal = this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
+      withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
     } catch {
       withdrawal = null;
     }
@@ -290,9 +295,11 @@ export class ZeroHashService {
         throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
       }
       participant_code = new_participant["message"]["participant_code"];
+      console.log("Created new participant: " + participant_code);
       // participant_code = new_participant.participant_code;
     } else {
       participant_code = participant["message"]["participant_code"];
+      console.log("Existing participant: " + participant_code);
     }
 
     const quote = await this.requestQuote(underlying, quoted_currency, amount, amount_type);

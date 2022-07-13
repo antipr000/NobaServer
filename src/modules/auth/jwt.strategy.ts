@@ -47,13 +47,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         }
       case nobaAdminIdentityIdentifier:
         try {
-          return this.adminService.getAdminById(id);
+          return await this.adminService.getAdminById(id);
         } catch (e) {
           throw new UnauthorizedException("Token is invalid!");
         }
       case partnerAdminIdentityIdenitfier:
         try {
-          return this.partnerAdminService.getPartnerAdmin(id);
+          return await this.partnerAdminService.getPartnerAdmin(id);
         } catch (e) {
           throw new UnauthorizedException("Token is invalid!");
         }

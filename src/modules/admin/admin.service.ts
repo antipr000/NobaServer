@@ -23,7 +23,7 @@ export class AdminService {
   }
 
   async getTransactionStatus(): Promise<TransactionStatsDTO> {
-    return await this.adminTransactionRepo.getTransactionStats();
+    return this.adminTransactionRepo.getTransactionStats();
   }
 
   async getAllTransactions(startDate: string, endDate: string): Promise<TransactionDTO[]> {

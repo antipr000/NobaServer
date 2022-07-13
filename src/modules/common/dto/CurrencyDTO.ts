@@ -3,10 +3,10 @@ import { CurrencyType } from "../domain/Types";
 
 export class CurrencyDTO {
   @ApiProperty()
-  _id?: string; // TODO: Will be populated when currencies are stored in the database
+  _id?: string; // TODO(#235): Will be populated when currencies are stored in the database
 
   @ApiProperty({ enum: Object.values(CurrencyType) })
-  type?: string; // TODO: Will be populated when currencies are stored in the database
+  type?: string; // TODO(#235): Will be populated when currencies are stored in the database
 
   @ApiProperty()
   name: string;

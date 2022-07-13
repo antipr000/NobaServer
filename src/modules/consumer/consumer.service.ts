@@ -35,7 +35,7 @@ export class ConsumerService {
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
-    return await this.consumerRepo.getConsumer(consumerID);
+    return this.consumerRepo.getConsumer(consumerID);
   }
 
   async createConsumerIfFirstTimeLogin(emailOrPhone: string, partnerID: string): Promise<Consumer> {
@@ -66,7 +66,7 @@ export class ConsumerService {
           },
         ],
       });
-      return await this.consumerRepo.createConsumer(newConsumer);
+      return this.consumerRepo.createConsumer(newConsumer);
     } else if (
       consumerResult.getValue().props.partners.filter(partner => partner.partnerID === partnerID).length === 0
     ) {
@@ -104,7 +104,7 @@ export class ConsumerService {
   }
 
   async findConsumerById(consumerId: string): Promise<Consumer> {
-    return await this.consumerRepo.getConsumer(consumerId);
+    return this.consumerRepo.getConsumer(consumerId);
   }
 
   async addStripePaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
@@ -142,7 +142,7 @@ export class ConsumerService {
       ...consumer.props,
       paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
     };
-    return await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerData));
+    return this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerData));
   }
 
   async addCheckoutPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
@@ -210,7 +210,8 @@ export class ConsumerService {
         paymentProviderID: PaymentProviders.CHECKOUT,
         paymentToken: instrument["id"], // TODO: Check if this is the valid way to populate id
       };
-      let updatedConsumerProps: ConsumerProps = consumer.props;
+
+      let updatedConsumerProps: ConsumerProps;
       if (hasCustomerIDSaved) {
         updatedConsumerProps = {
           ...consumer.props,

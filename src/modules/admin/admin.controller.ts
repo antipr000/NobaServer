@@ -79,7 +79,7 @@ export class AdminController {
   @ApiOperation({ summary: "Get all transaction metrics for a given partner." })
   @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: "Get transaction statistics" })
   async getTransactionMetrics(@Param(AdminId) adminId: string): Promise<TransactionStatsDTO> {
-    return await this.adminService.getTransactionStatus();
+    return this.adminService.getTransactionStatus();
   }
 
   // TODO: Add proper AuthN & AuthZ
@@ -91,7 +91,7 @@ export class AdminController {
     @Param(AdminId) adminId: string,
     @Query() filterQuery: TransactionsFilterDTO,
   ): Promise<TransactionDTO[]> {
-    return await this.adminService.getAllTransactions(filterQuery.startDate, filterQuery.endDate);
+    return this.adminService.getAllTransactions(filterQuery.startDate, filterQuery.endDate);
   }
 
   @Post("/")
