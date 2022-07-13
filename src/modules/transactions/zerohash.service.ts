@@ -10,6 +10,7 @@ import { ConsumerProps } from "../consumer/domain/Consumer";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
+import { AppService } from "../../app.service";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -17,6 +18,7 @@ const request = require("request-promise"); // TODO(#125) This library is deprec
 @Injectable()
 export class ZeroHashService {
   private readonly configs: ZerohashConfigs;
+  private readonly appService: AppService;
 
   // ID Types
   private readonly id_options = [
@@ -32,8 +34,13 @@ export class ZeroHashService {
     "non_us_other",
   ];
 
-  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+  constructor(
+    configService: CustomConfigService,
+    appService: AppService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) {
     this.configs = configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
+    this.appService = appService;
   }
 
   // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
@@ -68,7 +75,11 @@ export class ZeroHashService {
       json: true,
     };
 
-    this.logger.info(`Sending request [${derivedMethod} ${this.configs.host}${route}]: ${JSON.stringify(body)}`);
+    this.logger.info(
+      `Sending request [${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(
+        body,
+      )}\nHeaders: ${JSON.stringify(headers)}`,
+    );
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
@@ -247,62 +258,49 @@ export class ZeroHashService {
     return withdrawal;
   }
 
-  async getSupportedUnderlying() {
-    // TODO: See if there is a dynamic way of getting these using ZeroHash APIs
-    return ["ETH"];
-  }
-
-  async getSupportedQuotedCurrency() {
-    // Return crypto assets supported by ZHLS
-    return ["USD"];
-  }
-
   async transferCryptoToDestinationWallet(
     consumer: ConsumerProps,
     quoted_currency: string,
-    underlying: string,
+    cryptocurrency: string,
     destination_wallet: string,
     amount: number,
     cryptoAmount: number,
     amount_type: string,
     web3TransactionHandler: Web3TransactionHandler,
   ) {
-    // Underlying is the asset for the quote eg. BTC
-    // quoted_currencty is the fiat for the quote eg. USD
-
-    // Ensure that the underlying and quoted_currency are supported by ZHLS
-    const supportedUnderlyings = await this.getSupportedUnderlying();
-    const supportedQuotedCurrency = await this.getSupportedQuotedCurrency();
-    if (!supportedUnderlyings.includes(underlying)) {
+    // Ensure that the cryptocurrency and quoted_currency are supported by ZHLS
+    const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
+    const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
+    if (supportedCryptocurrencies.filter(curr => curr.ticker === cryptocurrency).length == 0) {
       throw new BadRequestError({
-        messageForClient:
-          "Unsupported crypto code: " + underlying + ". We only support: " + supportedUnderlyings.join(", "),
+        messageForClient: `Unsupported cryptocurrency: ${cryptocurrency}`,
       });
     }
-    if (!supportedQuotedCurrency.includes(quoted_currency)) {
+
+    if (supportedFiatCurrencies.filter(curr => curr.ticker === quoted_currency).length == 0) {
       throw new Error(`${quoted_currency} is not supported by ZHLS`);
     }
 
     // Check if the user is already registered with ZeroHash
     const participant = await this.getParticipant(consumer.email);
-    let participant_code;
+    let participant_code: string;
 
     // If the user is not registered, register them
     if (participant == null) {
       const new_participant = await this.createParticipant(consumer);
       if (new_participant == null) {
-        console.log("Failed to create participant for email:" + consumer.email);
+        this.logger.error("Failed to create participant for email:" + consumer.email);
         throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
       }
       participant_code = new_participant["message"]["participant_code"];
-      console.log("Created new participant: " + participant_code);
+      this.logger.info("Created new participant: " + participant_code);
       // participant_code = new_participant.participant_code;
     } else {
       participant_code = participant["message"]["participant_code"];
-      console.log("Existing participant: " + participant_code);
+      this.logger.info("Existing participant: " + participant_code);
     }
 
-    const quote = await this.requestQuote(underlying, quoted_currency, amount, amount_type);
+    const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, amount_type);
     if (quote == null) {
       throw new BadRequestError({
         messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
@@ -324,7 +322,7 @@ export class ZeroHashService {
       "00SCXM",
       "6MWNG6",
       "6MWNG6",
-      underlying,
+      cryptocurrency,
       amount_received,
     );
     if (assetTransfer == null) {
@@ -335,7 +333,7 @@ export class ZeroHashService {
 
     //Set trade data for next function
     const tradeData = {
-      symbol: underlying + "/" + quoted_currency,
+      symbol: cryptocurrency + "/" + quoted_currency,
       trade_price: trade_price,
       trade_quantity: String(amount / trade_price),
       product_type: "spot",
@@ -349,7 +347,7 @@ export class ZeroHashService {
       parties: [
         {
           participant_code: participant_code,
-          asset: underlying,
+          asset: cryptocurrency,
           amount: String(amount),
           side: "buy",
           settling: true,
@@ -382,7 +380,7 @@ export class ZeroHashService {
           destination_wallet,
           participant_code,
           amount_received,
-          underlying,
+          cryptocurrency,
           "6MWNG6",
         );
 
