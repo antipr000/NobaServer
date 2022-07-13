@@ -1,6 +1,16 @@
 import { KeysRequired } from "../../../modules/common/domain/Types";
 // TODO: Move configurations to database for better control
 
+export interface UserLimits {
+  dailyLimit: number;
+  monthlyLimit: number;
+  weeklyLimit: number;
+  transactionLimit: number;
+  totalLimit: number;
+  minTransaction: number;
+  maxTransaction: number;
+}
+
 export interface Limit {
   max_amount_limit: number; // Maximum limit over a window
   max_usage_limit: number; // Maximum limit on frequency over a window

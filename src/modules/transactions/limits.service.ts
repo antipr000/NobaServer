@@ -11,6 +11,7 @@ import {
   MonthlyLimitBuyOnly,
   LifetimeLimitBuyOnly,
   TransactionLimit,
+  UserLimits,
 } from "./domain/Limits";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { ITransactionRepo } from "./repo/TransactionRepo";
@@ -32,7 +33,7 @@ export class LimitsService {
     return this;
   }
 
-  getLimits(userVerificationStatus: UserVerificationStatus) {
+  getLimits(userVerificationStatus: UserVerificationStatus): UserLimits {
     if (userVerificationStatus === UserVerificationStatus.NOT_VERIFIED) {
       return {
         dailyLimit: DailyLimitBuyOnly.no_kyc_max_amount_limit,
@@ -71,8 +72,15 @@ export class LimitsService {
     // const userVerificationStatus: UserVerificationStatus = this.userService.getVerificationStatus(consumer);
 
     const limits = this.getLimits(UserVerificationStatus.VERIFIED);
-    console.log(limits);
 
+    return this.checkTransactionLimits(consumer, transactionAmount, limits);
+  }
+
+  async checkTransactionLimits(
+    consumer: Consumer,
+    transactionAmount: number,
+    limits: UserLimits,
+  ): Promise<TransactionAllowedStatus> {
     // Check single transaction limit
     if (transactionAmount < limits.minTransaction) {
       return TransactionAllowedStatus.TRANSACTION_TOO_SMALL;
