@@ -97,12 +97,7 @@ export class ZeroHashService {
   }
 
   async getPrice(underlying, quoted_currency) {
-    let price;
-    try {
-      price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET", {});
-    } catch {
-      price = null;
-    }
+    let price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET", {});
     return price;
   }
 
@@ -130,26 +125,13 @@ export class ZeroHashService {
       risk_rating: consumer.riskRating,
     };
 
-    let participant;
-    try {
-      participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
-    } catch {
-      participant = null;
-    }
+    let participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
     return participant;
   }
 
   async getParticipant(email) {
-    let participant;
-    try {
-      participant = await this.makeRequest(`/participants/${email}`, "GET", {});
-    } catch {
-      console.log("Participant is null");
-      participant = null;
-    }
-    //  {"participant_code":"IQ8THH","email":"mm2@email.com"}
-
-    console.log("Returning participant: " + participant);
+    let participant = await this.makeRequest(`/participants/${email}`, "GET", {});
+    this.logger.info("Returning participant: " + participant);
     return participant;
   }
 
@@ -167,94 +149,56 @@ export class ZeroHashService {
       route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&quantity=${amount}`;
     }
 
-    let quote;
-    try {
-      quote = await this.makeRequest(route, "GET", {});
-    } catch (err) {
-      if (err.statusCode == 400) {
-        throw new BadRequestException(err);
-      }
-      quote = null;
-    }
+    let quote = await this.makeRequest(route, "GET", {});
     return quote;
   }
 
   // Execute a liquidity quote
   async executeQuote(quote_id) {
-    let executed_trade;
-    try {
-      executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
-    } catch {
-      executed_trade = null;
-    }
+    let executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
     return executed_trade;
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
   async transferAssets(sender_participant, sender_group, receiver_participant, receiver_group, asset, amount) {
-    let transfer;
-    try {
-      transfer = await this.makeRequest("/transfers", "POST", {
-        from_participant_code: sender_participant,
-        from_account_group: sender_group,
-        to_participant_code: receiver_participant,
-        to_account_group: receiver_group,
-        asset: asset,
-        amount: amount,
-      });
-    } catch {
-      transfer = null;
-    }
+    let transfer = await this.makeRequest("/transfers", "POST", {
+      from_participant_code: sender_participant,
+      from_account_group: sender_group,
+      to_participant_code: receiver_participant,
+      to_account_group: receiver_group,
+      asset: asset,
+      amount: amount,
+    });
+
     return transfer;
   }
 
   // Trade the crypto from Noba to Custom
   async requestTrade(tradeData) {
-    let trade_request;
-    try {
-      trade_request = await this.makeRequest("/trades", "POST", tradeData);
-    } catch {
-      trade_request = null;
-    }
+    let trade_request = await this.makeRequest("/trades", "POST", tradeData);
     return trade_request;
   }
 
   // Get trade and check status
   // Initiate a withdrawal if trade_status is terminated
   async getTrade(trade_id) {
-    let trade_data;
-    try {
-      trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
-    } catch {
-      trade_data = null;
-    }
+    let trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
     return trade_data;
   }
 
   async requestWithdrawal(digital_address, participant_code, amount, asset, account_group) {
-    let withdrawal_request;
-    try {
-      withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
-        address: digital_address,
-        participant_code: participant_code,
-        amount: amount,
-        asset: asset,
-        account_group: account_group,
-      });
-    } catch {
-      withdrawal_request = null;
-    }
-
+    let withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
+      address: digital_address,
+      participant_code: participant_code,
+      amount: amount,
+      asset: asset,
+      account_group: account_group,
+    });
     return withdrawal_request;
   }
 
   async getWithdrawal(withdrawal_id) {
-    let withdrawal;
-    try {
-      withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
-    } catch {
-      withdrawal = null;
-    }
+    let withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
     return withdrawal;
   }
 
