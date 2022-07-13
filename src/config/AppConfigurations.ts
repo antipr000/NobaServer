@@ -244,7 +244,6 @@ async function configureTwilioCredentials(
 
   twilioConfigs.SID = await getParameterValue(twilioConfigs.awsSecretNameForSID, twilioConfigs.SID);
   twilioConfigs.authToken = await getParameterValue(twilioConfigs.awsSecretNameForAuthToken, twilioConfigs.authToken);
-  twilioConfigs.fromPhoneNumber = twilioConfigs.fromPhoneNumber;
 
   configs[TWILIO_CONFIG_KEY] = twilioConfigs;
   return configs;
