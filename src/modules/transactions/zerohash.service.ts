@@ -10,6 +10,7 @@ import { ConsumerProps } from "../consumer/domain/Consumer";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
+import { AppService } from "../../app.service";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -17,6 +18,7 @@ const request = require("request-promise"); // TODO(#125) This library is deprec
 @Injectable()
 export class ZeroHashService {
   private readonly configs: ZerohashConfigs;
+  private readonly appService: AppService;
 
   // ID Types
   private readonly id_options = [
@@ -32,8 +34,13 @@ export class ZeroHashService {
     "non_us_other",
   ];
 
-  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+  constructor(
+    configService: CustomConfigService,
+    appService: AppService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) {
     this.configs = configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
+    this.appService = appService;
   }
 
   // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
@@ -68,7 +75,9 @@ export class ZeroHashService {
       json: true,
     };
 
-    this.logger.info(`Sending request [${derivedMethod} ${this.configs.host}${route}]: ${JSON.stringify(body)}`);
+    this.logger.debug(
+      `Sending request [${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`,
+    );
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
@@ -81,17 +90,12 @@ export class ZeroHashService {
         throw err;
       }
     });
-    this.logger.info(`Received response: ${JSON.stringify(response)}`);
+    this.logger.debug(`Received response: ${JSON.stringify(response)}`);
     return response;
   }
 
   async getPrice(underlying, quoted_currency) {
-    let price;
-    try {
-      price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET", {});
-    } catch {
-      price = null;
-    }
+    let price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET", {});
     return price;
   }
 
@@ -119,26 +123,13 @@ export class ZeroHashService {
       risk_rating: consumer.riskRating,
     };
 
-    let participant;
-    try {
-      participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
-    } catch {
-      participant = null;
-    }
+    let participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
     return participant;
   }
 
   async getParticipant(email) {
-    let participant;
-    try {
-      participant = await this.makeRequest(`/participants/${email}`, "GET", {});
-    } catch {
-      console.log("Participant is null");
-      participant = null;
-    }
-    //  {"participant_code":"IQ8THH","email":"mm2@email.com"}
-
-    console.log("Returning participant: " + participant);
+    let participant = await this.makeRequest(`/participants/${email}`, "GET", {});
+    this.logger.debug("Returning participant: " + participant);
     return participant;
   }
 
@@ -156,153 +147,102 @@ export class ZeroHashService {
       route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&quantity=${amount}`;
     }
 
-    let quote;
-    try {
-      quote = await this.makeRequest(route, "GET", {});
-    } catch (err) {
-      if (err.statusCode == 400) {
-        throw new BadRequestException(err);
-      }
-      quote = null;
-    }
+    let quote = await this.makeRequest(route, "GET", {});
     return quote;
   }
 
   // Execute a liquidity quote
   async executeQuote(quote_id) {
-    let executed_trade;
-    try {
-      executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
-    } catch {
-      executed_trade = null;
-    }
+    let executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
     return executed_trade;
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
   async transferAssets(sender_participant, sender_group, receiver_participant, receiver_group, asset, amount) {
-    let transfer;
-    try {
-      transfer = await this.makeRequest("/transfers", "POST", {
-        from_participant_code: sender_participant,
-        from_account_group: sender_group,
-        to_participant_code: receiver_participant,
-        to_account_group: receiver_group,
-        asset: asset,
-        amount: amount,
-      });
-    } catch {
-      transfer = null;
-    }
+    let transfer = await this.makeRequest("/transfers", "POST", {
+      from_participant_code: sender_participant,
+      from_account_group: sender_group,
+      to_participant_code: receiver_participant,
+      to_account_group: receiver_group,
+      asset: asset,
+      amount: amount,
+    });
+
     return transfer;
   }
 
   // Trade the crypto from Noba to Custom
   async requestTrade(tradeData) {
-    let trade_request;
-    try {
-      trade_request = await this.makeRequest("/trades", "POST", tradeData);
-    } catch {
-      trade_request = null;
-    }
+    let trade_request = await this.makeRequest("/trades", "POST", tradeData);
     return trade_request;
   }
 
   // Get trade and check status
   // Initiate a withdrawal if trade_status is terminated
   async getTrade(trade_id) {
-    let trade_data;
-    try {
-      trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
-    } catch {
-      trade_data = null;
-    }
+    let trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
     return trade_data;
   }
 
   async requestWithdrawal(digital_address, participant_code, amount, asset, account_group) {
-    let withdrawal_request;
-    try {
-      withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
-        address: digital_address,
-        participant_code: participant_code,
-        amount: amount,
-        asset: asset,
-        account_group: account_group,
-      });
-    } catch {
-      withdrawal_request = null;
-    }
-
+    let withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
+      address: digital_address,
+      participant_code: participant_code,
+      amount: amount,
+      asset: asset,
+      account_group: account_group,
+    });
     return withdrawal_request;
   }
 
   async getWithdrawal(withdrawal_id) {
-    let withdrawal;
-    try {
-      withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
-    } catch {
-      withdrawal = null;
-    }
+    let withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
     return withdrawal;
-  }
-
-  async getSupportedUnderlying() {
-    // TODO: See if there is a dynamic way of getting these using ZeroHash APIs
-    return ["ETH"];
-  }
-
-  async getSupportedQuotedCurrency() {
-    // Return crypto assets supported by ZHLS
-    return ["USD"];
   }
 
   async transferCryptoToDestinationWallet(
     consumer: ConsumerProps,
     quoted_currency: string,
-    underlying: string,
+    cryptocurrency: string,
     destination_wallet: string,
     amount: number,
     cryptoAmount: number,
     amount_type: string,
     web3TransactionHandler: Web3TransactionHandler,
   ) {
-    // Underlying is the asset for the quote eg. BTC
-    // quoted_currencty is the fiat for the quote eg. USD
-
-    // Ensure that the underlying and quoted_currency are supported by ZHLS
-    const supportedUnderlyings = await this.getSupportedUnderlying();
-    const supportedQuotedCurrency = await this.getSupportedQuotedCurrency();
-    if (!supportedUnderlyings.includes(underlying)) {
+    // Ensure that the cryptocurrency and quoted_currency are supported by ZHLS
+    const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
+    const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
+    if (supportedCryptocurrencies.filter(curr => curr.ticker === cryptocurrency).length == 0) {
       throw new BadRequestError({
-        messageForClient:
-          "Unsupported crypto code: " + underlying + ". We only support: " + supportedUnderlyings.join(", "),
+        messageForClient: `Unsupported cryptocurrency: ${cryptocurrency}`,
       });
     }
-    if (!supportedQuotedCurrency.includes(quoted_currency)) {
+
+    if (supportedFiatCurrencies.filter(curr => curr.ticker === quoted_currency).length == 0) {
       throw new Error(`${quoted_currency} is not supported by ZHLS`);
     }
 
     // Check if the user is already registered with ZeroHash
     const participant = await this.getParticipant(consumer.email);
-    let participant_code;
+    let participant_code: string;
 
     // If the user is not registered, register them
     if (participant == null) {
       const new_participant = await this.createParticipant(consumer);
       if (new_participant == null) {
-        console.log("Failed to create participant for email:" + consumer.email);
+        this.logger.error("Failed to create participant for email:" + consumer.email);
         throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
       }
       participant_code = new_participant["message"]["participant_code"];
-      console.log("Created new participant: " + participant_code);
+      this.logger.debug("Created new participant: " + participant_code);
       // participant_code = new_participant.participant_code;
     } else {
       participant_code = participant["message"]["participant_code"];
-      console.log("Existing participant: " + participant_code);
+      this.logger.debug("Existing participant: " + participant_code);
     }
 
-    const quote = await this.requestQuote(underlying, quoted_currency, amount, amount_type);
+    const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, amount_type);
     if (quote == null) {
       throw new BadRequestError({
         messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
@@ -324,7 +264,7 @@ export class ZeroHashService {
       "00SCXM",
       "6MWNG6",
       "6MWNG6",
-      underlying,
+      cryptocurrency,
       amount_received,
     );
     if (assetTransfer == null) {
@@ -335,7 +275,7 @@ export class ZeroHashService {
 
     //Set trade data for next function
     const tradeData = {
-      symbol: underlying + "/" + quoted_currency,
+      symbol: cryptocurrency + "/" + quoted_currency,
       trade_price: trade_price,
       trade_quantity: String(amount / trade_price),
       product_type: "spot",
@@ -349,7 +289,7 @@ export class ZeroHashService {
       parties: [
         {
           participant_code: participant_code,
-          asset: underlying,
+          asset: cryptocurrency,
           amount: String(amount),
           side: "buy",
           settling: true,
@@ -382,7 +322,7 @@ export class ZeroHashService {
           destination_wallet,
           participant_code,
           amount_received,
-          underlying,
+          cryptocurrency,
           "6MWNG6",
         );
 

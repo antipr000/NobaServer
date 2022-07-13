@@ -1,11 +1,10 @@
-import { BadRequestException, CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
-import { Cache } from "cache-manager";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";
+import { CurrencyService } from "../common/currency.service";
 import { Web3TransactionHandler } from "../common/domain/Types";
-import { CurrencyDTO } from "../common/dto/CurrencyDTO";
 import { ConsumerService } from "../consumer/consumer.service";
 import { PaymentMethods } from "../consumer/domain/PaymentMethods";
 import { ConsumerVerificationStatus } from "../consumer/domain/VerificationStatus";
@@ -19,12 +18,10 @@ import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
+
 @Injectable()
 export class TransactionService {
   private readonly transactionsMapper: TransactionMapper;
-
-  @Inject(CACHE_MANAGER)
-  private cacheManager: Cache;
 
   // This is the id used at coinGecko, so do not change the allowed constants below
   private readonly allowedFiats: string[] = ["USD"];
@@ -33,6 +30,7 @@ export class TransactionService {
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
   constructor(
+    private readonly currencyService: CurrencyService,
     private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
     private readonly exchangeRateService: ExchangeRateService,
@@ -86,7 +84,7 @@ export class TransactionService {
 
     if (this.allowedCryptoCurrencies.length == 0) {
       // TODO: unsafe code. We should only do this once; waiting for Ankit's refactor and we can re-evaluate.
-      const currencies = (await this.cacheManager.get("cryptocurrencies")) as CurrencyDTO[];
+      const currencies = await this.currencyService.getSupportedCryptocurrencies();
       currencies.forEach(curr => {
         this.allowedCryptoCurrencies.push(curr.ticker);
       });

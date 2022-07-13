@@ -1,24 +1,18 @@
-import { CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { CurrencyService } from "./modules/common/currency.service";
 import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
-import { Cache } from "cache-manager";
 
 @Injectable()
 export class AppService {
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(private readonly currencyService: CurrencyService) {}
 
   async getSupportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
     // TODO(#235): Pull from database post-MVP
-    return this.cacheManager.get("cryptocurrencies");
+    return this.currencyService.getSupportedCryptocurrencies();
   }
 
   async getSupportedFiatCurrencies(): Promise<CurrencyDTO[]> {
     // TODO(#235): Pull from database post-MVP
-    return [
-      {
-        name: "US Dollar",
-        ticker: "USD",
-        iconPath: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat/usd.svg",
-      },
-    ];
+    return this.currencyService.getSupportedFiatCurrencies();
   }
 }
