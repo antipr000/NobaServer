@@ -11,6 +11,7 @@ import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.co
 import { ConsumerService } from "../../consumer/consumer.service";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { UserLimits } from "../domain/Limits";
+import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
 
 describe("TransactionService", () => {
   let transactionRepo: ITransactionRepo;
@@ -62,26 +63,52 @@ describe("TransactionService", () => {
   };
 
   it("Should not be below the minimum", async () => {
-    const result: TransactionAllowedStatus = await limitsService.checkTransactionLimits(consumer, 49, limits);
-    expect(result).toBe(TransactionAllowedStatus.TRANSACTION_TOO_SMALL);
+    const result: CheckTransactionDTO = await limitsService.checkTransactionLimits(consumer, 49, limits);
+    expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_SMALL);
+    expect(result.rangeMin).toBe(50);
+    expect(result.rangeMax).toBe(500);
   });
 
   it("Should not be above the maximum", async () => {
-    const result: TransactionAllowedStatus = await limitsService.checkTransactionLimits(consumer, 501, limits);
-    expect(result).toBe(TransactionAllowedStatus.TRANSACTION_TOO_LARGE);
+    const result: CheckTransactionDTO = await limitsService.checkTransactionLimits(consumer, 501, limits);
+    expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_LARGE);
+    expect(result.rangeMin).toBe(50);
+    expect(result.rangeMax).toBe(500);
   });
 
-  it("Should not exceed the monthly maximum", async () => {
+  it("Should not exceed the exact monthly maximum", async () => {
     when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(2000);
 
-    const result: TransactionAllowedStatus = await limitsService.checkTransactionLimits(consumer, 50, limits);
-    expect(result).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
+    const result: CheckTransactionDTO = await limitsService.checkTransactionLimits(consumer, 50, limits);
+    expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
+    expect(result.rangeMin).toBe(50);
+    expect(result.rangeMax).toBe(0);
+  });
+
+  it("Should not exceed the monthly maximum even when some is left", async () => {
+    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(1985);
+
+    const result: CheckTransactionDTO = await limitsService.checkTransactionLimits(consumer, 50, limits);
+    expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
+    expect(result.rangeMin).toBe(50);
+    expect(result.rangeMax).toBe(15);
+  });
+
+  it("Should not exceed the monthly maximum if maximum is negative", async () => {
+    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(2015);
+
+    const result: CheckTransactionDTO = await limitsService.checkTransactionLimits(consumer, 50, limits);
+    expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
+    expect(result.rangeMin).toBe(50);
+    expect(result.rangeMax).toBe(0);
   });
 
   it("Is within range so should be allowed", async () => {
     when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(1000);
 
-    const result: TransactionAllowedStatus = await limitsService.checkTransactionLimits(consumer, 200, limits);
-    expect(result).toBe(TransactionAllowedStatus.ALLOWED);
+    const result: CheckTransactionDTO = await limitsService.checkTransactionLimits(consumer, 200, limits);
+    expect(result.status).toBe(TransactionAllowedStatus.ALLOWED);
+    expect(result.rangeMin).toBe(50);
+    expect(result.rangeMax).toBe(500);
   });
 });
