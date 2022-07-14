@@ -150,7 +150,6 @@ export class LimitsService {
     };
   }
 
-  /* Should ONLY be called within the class or externally by tests only; can't make private due to visibility restrictions */
   async getConsumerLimits(consumer: Consumer, limits?: UserLimits): Promise<ConsumerLimitsDTO> {
     if (limits == undefined) {
       limits = await this.getLimitsForConsumer(consumer);
