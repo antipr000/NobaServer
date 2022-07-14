@@ -23,7 +23,7 @@ export class ExchangeRateController {
 
   @Public()
   @Get("/priceinfiat/:fiatCurrencyCode")
-  @ApiOperation({ summary: "Get price of a crypto (leg1) in fiat (leg 2)" })
+  @ApiOperation({ summary: "Gets price of a crypto (leg1) in fiat (leg 2)" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Fiat price (leg 2) for the desired crypto currency (leg1)",
@@ -39,7 +39,7 @@ export class ExchangeRateController {
 
   @Public()
   @Get("/processingfee/:fiatCurrencyCode")
-  @ApiOperation({ summary: "Get the processing fee for a crypto fiat conversion" })
+  @ApiOperation({ summary: "Gets the processing fee for a crypto fiat conversion" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Processing fee for given crypto fiat conversion",

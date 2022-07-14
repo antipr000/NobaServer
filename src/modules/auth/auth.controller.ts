@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, ForbiddenException, HttpStatus, Inject, Post } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from "@nestjs/swagger";
 import { AdminAuthService } from "./admin.auth.service";
 import { AuthService } from "./auth.service";
 import {
@@ -40,8 +40,9 @@ export class AuthController {
 
   @Public()
   @Post("/verifyotp")
-  @ApiOperation({ summary: "Send the OTP filled in by the user to Noba Server and get the access token" })
-  @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "Noba access token of the user" })
+  @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
+  @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "API access token" })
+  @ApiUnauthorizedResponse({ description: "Invalid OTP" })
   async verifyOtp(@Body() request: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
     const authService: AuthService = this.getAuthService(request.identityType);
 
@@ -50,8 +51,9 @@ export class AuthController {
   }
 
   @Public()
-  @ApiOperation({ summary: "Sends otp to the email/phone provided" })
+  @ApiOperation({ summary: "Logs user in and sends one-time passcode (OTP) to the provided email address" })
   @ApiResponse({ status: HttpStatus.OK, description: "Email successfully sent" })
+  @ApiForbiddenResponse({ description: "Account does not exist" })
   @Post("/login")
   async loginUser(@Body() request: LoginRequestDTO) {
     const authService: AuthService = this.getAuthService(request.identityType);

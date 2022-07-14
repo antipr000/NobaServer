@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ConsentDTO } from "../models/ConsentDTO";
+import type { DeviceVerificationResponseDTO } from "../models/DeviceVerificationResponseDTO";
 import type { IDVerificationRequestDTO } from "../models/IDVerificationRequestDTO";
 import type { SubdivisionDTO } from "../models/SubdivisionDTO";
 import type { VerificationResultDTO } from "../models/VerificationResultDTO";
@@ -12,8 +13,8 @@ import { request as __request } from "../core/request";
 
 export class VerificationService {
   /**
-   * Check if verification service is up
-   * @returns any Health check for verification service
+   * Checks if verification service is up
+   * @returns any Service is up
    * @throws ApiError
    */
   public static getVerificationStatus(): CancelablePromise<any> {
@@ -24,8 +25,8 @@ export class VerificationService {
   }
 
   /**
-   * Get list of country codes that Noba supports
-   * @returns any Get country codes for supported countries
+   * Gets the list of all supported country codes
+   * @returns any List of supported country codes
    * @throws ApiError
    */
   public static getCountryCodes(): CancelablePromise<any> {
@@ -33,15 +34,15 @@ export class VerificationService {
       method: "GET",
       url: "/v1/verify/countryCodes",
       errors: {
-        400: `Invalid request parameters!`,
+        400: `Invalid request parameters`,
       },
     });
   }
 
   /**
-   * Get all consents for a given country code
+   * Gets all consents for a given country code
    * @param countryCode
-   * @returns ConsentDTO Get all consents
+   * @returns ConsentDTO Consents
    * @throws ApiError
    */
   public static getConsents(countryCode: string): CancelablePromise<Array<ConsentDTO>> {
@@ -52,15 +53,15 @@ export class VerificationService {
         countryCode: countryCode,
       },
       errors: {
-        400: `Invalid request parameters!`,
+        400: `Invalid request parameters`,
       },
     });
   }
 
   /**
-   * Get subdivision for the given country code
+   * Gets subdivisions for a given country code
    * @param countryCode
-   * @returns SubdivisionDTO Get subdivision for the given country code
+   * @returns SubdivisionDTO Country subdivisions
    * @throws ApiError
    */
   public static getSubdivisions(countryCode: string): CancelablePromise<Array<SubdivisionDTO>> {
@@ -71,14 +72,14 @@ export class VerificationService {
         countryCode: countryCode,
       },
       errors: {
-        400: `Invalid request parameters!`,
+        400: `Invalid request parameters`,
       },
     });
   }
 
   /**
-   * Create a new session for verification
-   * @returns string Get new session token
+   * Creates a new session for verification
+   * @returns string New session token
    * @throws ApiError
    */
   public static createSession(): CancelablePromise<string> {
@@ -92,10 +93,10 @@ export class VerificationService {
   }
 
   /**
-   * Verify consumer provided information like name, date of birth, address and ssn(for US consumers)
+   * Verifies consumer-provided information
    * @param sessionKey
    * @param requestBody
-   * @returns VerificationResultDTO Get verification result
+   * @returns VerificationResultDTO Verification result
    * @throws ApiError
    */
   public static verifyConsumer(
@@ -111,16 +112,16 @@ export class VerificationService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Invalid request parameters!`,
+        400: `Invalid request parameters`,
       },
     });
   }
 
   /**
-   * Verify consumer uploaded id documents like national id, passport etc
+   * Verifies consumer uploaded identification documents
    * @param sessionKey
    * @param formData
-   * @returns VerificationResultDTO Get id for submitted verification documents
+   * @returns VerificationResultDTO Document upload result
    * @throws ApiError
    */
   public static verifyDocument(
@@ -144,16 +145,16 @@ export class VerificationService {
       formData: formData,
       mediaType: "multipart/form-data",
       errors: {
-        400: `Invalid request parameters!`,
+        400: `Invalid request parameters`,
       },
     });
   }
 
   /**
-   * Get result for a submitted document verification
+   * Gets result for a previously-submitted document verification
    * @param id
    * @param sessionKey
-   * @returns VerificationResultDTO Get verification result
+   * @returns VerificationResultDTO Document verification result
    * @throws ApiError
    */
   public static getDocumentVerificationResult(
@@ -170,7 +171,27 @@ export class VerificationService {
         sessionKey: sessionKey,
       },
       errors: {
-        400: `Invalid id`,
+        400: `Invalid request parameters`,
+        404: `Document verification request not found`,
+      },
+    });
+  }
+
+  /**
+   * Gets device verification result
+   * @param sessionKey
+   * @returns DeviceVerificationResponseDTO Device verification result
+   * @throws ApiError
+   */
+  public static getDeviceVerificationResult(sessionKey: string): CancelablePromise<DeviceVerificationResponseDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/verify/device/result",
+      path: {
+        sessionKey: sessionKey,
+      },
+      errors: {
+        400: `Invalid request parameters`,
       },
     });
   }

@@ -11,7 +11,14 @@ import {
   Post,
   Request,
 } from "@nestjs/common";
-import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
@@ -38,12 +45,13 @@ export class ConsumerController {
   }
 
   @Get("/")
-  @ApiOperation({ summary: "Get noba consumer details of currently logged in consumer" })
+  @ApiOperation({ summary: "Gets details of logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: ConsumerDTO,
-    description: "Returns consumer details of the currently logged in consumer",
+    description: "Details of logged-in consumer",
   })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getConsumer(@Request() request): Promise<ConsumerDTO> {
     const consumer = request.user;
@@ -57,12 +65,13 @@ export class ConsumerController {
   }
 
   @Patch("/")
-  @ApiOperation({ summary: "Update consumer details for currently logged in consumer" })
+  @ApiOperation({ summary: "Updates details of logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: ConsumerDTO,
-    description: "Update consumer details on the Noba server for currrenly logged in consumer",
+    description: "Updated consumer record",
   })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updateConsumer(@Request() request, @Body() requestBody: UpdateConsumerRequestDTO): Promise<ConsumerDTO> {
     const consumer = request.user;
@@ -79,12 +88,13 @@ export class ConsumerController {
   }
 
   @Post("/paymentmethods")
-  @ApiOperation({ summary: "Attach a payment method to a consumer" })
+  @ApiOperation({ summary: "Adds a payment method for the logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.CREATED,
     type: ConsumerDTO,
-    description: "Add a payment method for the logged in user",
+    description: "Updated consumer record",
   })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
   async addPaymentMethod(@Body() requestBody: AddPaymentMethodDTO, @Request() request): Promise<ConsumerDTO> {
     const consumer = request.user;
@@ -97,13 +107,14 @@ export class ConsumerController {
   }
 
   @Delete("/paymentmethods/:paymentToken")
-  @ApiOperation({ summary: "Delete a payment method for the logged in consumer" })
+  @ApiOperation({ summary: "Deletes a payment method for the logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: ConsumerDTO,
-    description: "Delete a payment method for the logged in user",
+    description: "Deleted consumer record",
   })
-  @ApiBadRequestResponse({ description: "Not found error" })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid payment method details" })
   async deletePaymentMethod(@Param("paymentToken") paymentToken: string, @Request() request): Promise<ConsumerDTO> {
     const consumer = request.user;
     if (!(consumer instanceof Consumer)) {
@@ -116,10 +127,10 @@ export class ConsumerController {
 
   /* Example of how we can decrypt the SSN. This should only be available to the compliance team.
   @Get("/ssn")
-  @ApiOperation({ summary: "Get SSN of currently logged in consumer" })
+  @ApiOperation({ summary: "Gets SSN of currently logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: "Get SSN of currently logged in consumer",
+    description: "Get SSN of currently logged-in consumer",
   })
   async getConsumerSSN(@Request() request): Promise<string> {
     const consumerID: string = request.consumer.props._id;

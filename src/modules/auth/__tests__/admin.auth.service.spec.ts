@@ -153,7 +153,7 @@ describe("AdminAuthService", () => {
       }
     });
 
-    it("Should return Admin e-mail address if OTP is correct and not expired", async () => {
+    it("Should return Admin email address if OTP is correct and not expired", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const ADMIN_ID = "1111111111";
       const CORRECT_OTP = 123456;

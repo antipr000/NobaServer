@@ -11,7 +11,7 @@ import { request as __request } from "../core/request";
 
 export class TransactionsService {
   /**
-   * Checks if a transaction with given input is possible for a user or not i.e. if they have reached some limit or if id verification is required.
+   * Checks if the transaction parameters are valid
    * @param type
    * @param transactionAmount
    * @param baseCurrency
@@ -35,9 +35,9 @@ export class TransactionsService {
   }
 
   /**
-   * Get transaction details for a given transactionID
+   * Gets details of a transaction
    * @param transactionId
-   * @returns TransactionDTO Transaction details for the given transactionId
+   * @returns TransactionDTO Details of a transaction
    * @throws ApiError
    */
   public static getTransactionStatus(transactionId: string): CancelablePromise<TransactionDTO> {
@@ -47,14 +47,17 @@ export class TransactionsService {
       path: {
         transactionID: transactionId,
       },
+      errors: {
+        404: `Transaction does not exist`,
+      },
     });
   }
 
   /**
-   * Place a transaction with Noba
+   * Submits a new transaction
    * @param sessionKey
    * @param requestBody
-   * @returns TransactionDTO Returns transaction id if transaction is placed successfully
+   * @returns TransactionDTO Transaction details
    * @throws ApiError
    */
   public static transact(sessionKey: string, requestBody: CreateTransactionDTO): CancelablePromise<TransactionDTO> {
@@ -67,17 +70,16 @@ export class TransactionsService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Bad request. Invalid input.`,
-        502: `Bad gateway. Something went wrong.`,
+        400: `Invalid request parameters`,
       },
     });
   }
 
   /**
-   * Get all transactions for a particular user
+   * Gets all transactions for the logged-in consumer
    * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
    * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
-   * @returns TransactionDTO List of all transactions that happened through Noba for given userID
+   * @returns TransactionDTO List of all transactions
    * @throws ApiError
    */
   public static getTransactions(startDate: string, endDate: string): CancelablePromise<Array<TransactionDTO>> {
@@ -92,11 +94,11 @@ export class TransactionsService {
   }
 
   /**
-   * Download all the transactions of a particular user.
+   * Downloads all the transactions of a particular consumer
    * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
    * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
    * @param reportFormat Format in which you want the transactions report. Current 'CSV' is supported.
-   * @returns TransactionDTO A CSV or PDF file containing details of all the transactions made by the user.
+   * @returns TransactionDTO A CSV or PDF file containing details of all the transactions made by the consumer
    * @throws ApiError
    */
   public static downloadTransactions(

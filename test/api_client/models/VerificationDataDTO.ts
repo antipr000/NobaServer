@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type VerificationDataDTO = {
-  verificationProvider?: string;
+  verificationProvider?: any;
   kycVerificationStatus?:
     | "Pending-New"
     | "Pending-KYCSubmitted"

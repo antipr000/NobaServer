@@ -11,9 +11,9 @@ import { request as __request } from "../core/request";
 
 export class AuthenticationService {
   /**
-   * Send the OTP filled in by the user to Noba Server and get the access token
+   * Submits the one-time passcode (OTP) to retreive an API access token
    * @param requestBody
-   * @returns VerifyOtpResponseDTO Noba access token of the user
+   * @returns VerifyOtpResponseDTO API access token
    * @throws ApiError
    */
   public static verifyOtp(requestBody: VerifyOtpRequestDTO): CancelablePromise<VerifyOtpResponseDTO> {
@@ -22,11 +22,14 @@ export class AuthenticationService {
       url: "/v1/auth/verifyotp",
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        401: `Invalid OTP`,
+      },
     });
   }
 
   /**
-   * Sends otp to the email/phone provided
+   * Logs user in and sends one-time passcode (OTP) to the provided email address
    * @param requestBody
    * @returns any Email successfully sent
    * @throws ApiError
@@ -37,6 +40,9 @@ export class AuthenticationService {
       url: "/v1/auth/login",
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        403: `Account does not exist`,
+      },
     });
   }
 }

@@ -12,8 +12,8 @@ import { request as __request } from "../core/request";
 
 export class ConsumerService {
   /**
-   * Get noba consumer details of currently logged in consumer
-   * @returns ConsumerDTO Returns consumer details of the currently logged in consumer
+   * Gets details of logged-in consumer
+   * @returns ConsumerDTO Details of logged-in consumer
    * @throws ApiError
    */
   public static getConsumer(): CancelablePromise<ConsumerDTO> {
@@ -22,14 +22,15 @@ export class ConsumerService {
       url: "/v1/consumers",
       errors: {
         400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
       },
     });
   }
 
   /**
-   * Update consumer details for currently logged in consumer
+   * Updates details of logged-in consumer
    * @param requestBody
-   * @returns ConsumerDTO Update consumer details on the Noba server for currrenly logged in consumer
+   * @returns ConsumerDTO Updated consumer record
    * @throws ApiError
    */
   public static updateConsumer(requestBody: UpdateConsumerRequestDTO): CancelablePromise<ConsumerDTO> {
@@ -40,14 +41,15 @@ export class ConsumerService {
       mediaType: "application/json",
       errors: {
         400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
       },
     });
   }
 
   /**
-   * Attach a payment method to a consumer
+   * Adds a payment method for the logged-in consumer
    * @param requestBody
-   * @returns ConsumerDTO Add a payment method for the logged in user
+   * @returns ConsumerDTO Updated consumer record
    * @throws ApiError
    */
   public static addPaymentMethod(requestBody: AddPaymentMethodDTO): CancelablePromise<ConsumerDTO> {
@@ -58,14 +60,15 @@ export class ConsumerService {
       mediaType: "application/json",
       errors: {
         400: `Invalid payment method details`,
+        403: `Logged-in user is not a Consumer`,
       },
     });
   }
 
   /**
-   * Delete a payment method for the logged in consumer
+   * Deletes a payment method for the logged-in consumer
    * @param paymentToken
-   * @returns ConsumerDTO Delete a payment method for the logged in user
+   * @returns ConsumerDTO Deleted consumer record
    * @throws ApiError
    */
   public static deletePaymentMethod(paymentToken: string): CancelablePromise<ConsumerDTO> {
@@ -76,14 +79,15 @@ export class ConsumerService {
         paymentToken: paymentToken,
       },
       errors: {
-        400: `Not found error`,
+        400: `Invalid payment method details`,
+        403: `Logged-in user is not a Consumer`,
       },
     });
   }
 
   /**
-   * Get transaction limit details for logged in consumer
-   * @returns ConsumerLimitsDTO Returns consumer limit details of the currently logged in consumer
+   * Gets transaction limit details for logged-in consumer
+   * @returns ConsumerLimitsDTO Consumer limit details
    * @throws ApiError
    */
   public static getConsumerLimits(): CancelablePromise<ConsumerLimitsDTO> {

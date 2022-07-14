@@ -20,15 +20,15 @@ import { request as __request } from "../core/request";
 
 export class AdminService {
   /**
-   * Get all transaction metrics for a given partner.
+   * Gets all transaction metrics for a given partner
    * @param adminId
-   * @returns TransactionStatsDTO Get transaction statistics
+   * @returns TransactionStatsDTO Transaction statistics
    * @throws ApiError
    */
   public static getTransactionMetrics(adminId: string): CancelablePromise<TransactionStatsDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/admins/{adminID}/transaction_metrics",
+      url: "/v1/admins/{adminID}/transactionmetrics",
       path: {
         adminID: adminId,
       },
@@ -36,11 +36,11 @@ export class AdminService {
   }
 
   /**
-   * Get all transactions filtered by the specified date range
+   * Gets all transactions filtered by the specified date range
    * @param adminId
    * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
    * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
-   * @returns TransactionDTO
+   * @returns TransactionDTO All transactions within the specified date range
    * @throws ApiError
    */
   public static getAllTransactions(
@@ -62,9 +62,9 @@ export class AdminService {
   }
 
   /**
-   * Creates a new NobaAdmin with a specified role.
+   * Creates a new Noba admin with the specified role
    * @param requestBody
-   * @returns NobaAdminDTO The newly created Noba Admin.
+   * @returns NobaAdminDTO The newly created Noba admin
    * @throws ApiError
    */
   public static createNobaAdmin(requestBody: NobaAdminDTO): CancelablePromise<NobaAdminDTO> {
@@ -73,23 +73,30 @@ export class AdminService {
       url: "/v1/admins",
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        403: `User forbidden from adding new Noba admin`,
+        409: `User is already a Noba admin`,
+      },
     });
   }
 
   /**
-   * Get the details of the logged in NobaAdmin.
-   * @returns NobaAdminDTO The logged in Noba Admin.
+   * Gets the details of the logged in Noba admin
+   * @returns NobaAdminDTO The logged in Noba admin
    * @throws ApiError
    */
   public static getNobaAdmin(): CancelablePromise<NobaAdminDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/admins",
+      errors: {
+        403: `User forbidden from retrieving details of the Noba admin`,
+      },
     });
   }
 
   /**
-   * Updates the role/name of a NobaAdmin.
+   * Updates the details of a Noba admin
    * @param adminId
    * @param requestBody
    * @returns NobaAdminDTO The updated NobaAdmin.
@@ -104,13 +111,17 @@ export class AdminService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        403: `User forbidden from updating Noba admin or attempt to update one's own record`,
+        404: `Noba admin not found`,
+      },
     });
   }
 
   /**
-   * Deletes the NobaAdmin with a given ID
+   * Deletes a Noba admin
    * @param adminId
-   * @returns DeleteNobaAdminDTO The ID of the deleted NobaAdmin.
+   * @returns DeleteNobaAdminDTO The ID of the Noba admin to delete
    * @throws ApiError
    */
   public static deleteNobaAdmin(adminId: string): CancelablePromise<DeleteNobaAdminDTO> {
@@ -120,14 +131,18 @@ export class AdminService {
       path: {
         adminID: adminId,
       },
+      errors: {
+        403: `User forbidden from deleting Noba admin or attempt to delete one's own record`,
+        404: `Noba admin not found`,
+      },
     });
   }
 
   /**
-   * Add a new partner admin
+   * Adds a new partner admin
    * @param partnerId
    * @param requestBody
-   * @returns PartnerAdminDTO Add a new partner admin
+   * @returns PartnerAdminDTO Adds a new partner admin
    * @throws ApiError
    */
   public static addAdminsForPartners(
@@ -143,7 +158,9 @@ export class AdminService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Bad request`,
+        400: `Invalid parameter(s)`,
+        403: `User forbidden from adding a new partner admin`,
+        404: `Partner admin not found`,
       },
     });
   }
@@ -164,7 +181,9 @@ export class AdminService {
         partnerAdminID: partnerAdminId,
       },
       errors: {
-        400: `Bad request`,
+        400: `Invalid parameter(s)`,
+        403: `User forbidden from deleting a partner admin`,
+        404: `Partner admin not found`,
       },
     });
   }
@@ -192,15 +211,17 @@ export class AdminService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Bad request`,
+        400: `Invalid parameter(s)`,
+        403: `User forbidden from updating a partner admin`,
+        404: `Partner admin not found`,
       },
     });
   }
 
   /**
-   * Add a new partner
+   * Adds a new partner
    * @param requestBody
-   * @returns PartnerDTO Add a new partner
+   * @returns PartnerDTO New partner record
    * @throws ApiError
    */
   public static registerPartner(requestBody: AddPartnerRequestDTO): CancelablePromise<PartnerDTO> {
@@ -210,16 +231,17 @@ export class AdminService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Bad request`,
+        400: `Invalid parameter(s)`,
+        403: `User forbidden from adding a new partner`,
       },
     });
   }
 
   /**
-   * Update a consumer
+   * Updates a consumer
    * @param consumerId
    * @param requestBody
-   * @returns ConsumerDTO Update a consumer
+   * @returns ConsumerDTO Updated consumer record
    * @throws ApiError
    */
   public static updateConsumer(
@@ -235,7 +257,8 @@ export class AdminService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Bad request`,
+        400: `Invalid parameter(s)`,
+        403: `User forbidden from updating consumer record`,
       },
     });
   }

@@ -12,9 +12,9 @@ import { request as __request } from "../core/request";
 
 export class PartnerService {
   /**
-   * Get partner details of requesting user
+   * Gets details of a partner
    * @param partnerId
-   * @returns PartnerDTO Returns the partner details of currently logged in partner admin
+   * @returns PartnerDTO Details of partner
    * @throws ApiError
    */
   public static getPartner(partnerId: string): CancelablePromise<PartnerDTO> {
@@ -25,15 +25,16 @@ export class PartnerService {
         partnerID: partnerId,
       },
       errors: {
-        400: `User does not have permission`,
+        400: `Invalid request parameters`,
+        403: `User lacks permission to retrieve partner details`,
       },
     });
   }
 
   /**
-   * Update details of the partner like takeRate
+   * Updates details of a partner
    * @param requestBody
-   * @returns PartnerDTO Returns updated partner details
+   * @returns PartnerDTO Partner details
    * @throws ApiError
    */
   public static updatePartner(requestBody: UpdatePartnerRequestDTO): CancelablePromise<PartnerDTO> {
@@ -43,15 +44,16 @@ export class PartnerService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Invalid request`,
+        400: `Invalid request parameters`,
+        403: `User lacks permission to update partner details`,
       },
     });
   }
 
   /**
-   * Get details for partner admin
+   * Gets details of a partner admin
    * @param partnerAdminId
-   * @returns PartnerAdminDTO Returns details for the requesting partner admin
+   * @returns PartnerAdminDTO Details of partner admin
    * @throws ApiError
    */
   public static getPartnerAdmin(partnerAdminId: string): CancelablePromise<PartnerAdminDTO> {
@@ -62,16 +64,17 @@ export class PartnerService {
         partnerAdminID: partnerAdminId,
       },
       errors: {
-        400: `Not authorized`,
+        400: `Invalid request parameters`,
+        403: `User lacks permission to retrieve partner admin`,
       },
     });
   }
 
   /**
-   * Update details of a partner admin
+   * Updates details of a partner admin
    * @param partnerAdminId
    * @param requestBody
-   * @returns PartnerAdminDTO Update details of a partner admin
+   * @returns PartnerAdminDTO Details of updated partner admin
    * @throws ApiError
    */
   public static updatePartnerAdmin(
@@ -87,7 +90,8 @@ export class PartnerService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Bad request`,
+        400: `Invalid request parameters`,
+        403: `User lacks permission to update partner admin`,
       },
     });
   }
@@ -95,7 +99,7 @@ export class PartnerService {
   /**
    * Deletes a parter admin
    * @param partnerAdminId
-   * @returns PartnerAdminDTO Deletes a partner admin
+   * @returns PartnerAdminDTO Deleted partner admin record
    * @throws ApiError
    */
   public static deletePartnerAdmin(partnerAdminId: string): CancelablePromise<PartnerAdminDTO> {
@@ -106,14 +110,15 @@ export class PartnerService {
         partnerAdminID: partnerAdminId,
       },
       errors: {
-        400: `Partner admin not found`,
+        400: `Invalid request parameters`,
+        403: `User lacks permission to delete partner admin`,
       },
     });
   }
 
   /**
-   * Get all admins for the partner
-   * @returns PartnerAdminDTO Returns details for all admins of the partner
+   * Gets all admins for the partner
+   * @returns PartnerAdminDTO All admins of the partner
    * @throws ApiError
    */
   public static getAllPartnerAdmins(): CancelablePromise<Array<PartnerAdminDTO>> {
@@ -121,15 +126,16 @@ export class PartnerService {
       method: "GET",
       url: "/v1/partners/admins",
       errors: {
-        400: `Not authorized`,
+        400: `Invalid request parameters`,
+        403: `User lacks permission to retrieve partner admin list`,
       },
     });
   }
 
   /**
-   * Add a new partner admin
+   * Adds a new partner admin
    * @param requestBody
-   * @returns PartnerAdminDTO Add a new partner admin
+   * @returns PartnerAdminDTO New partner admin record
    * @throws ApiError
    */
   public static addPartnerAdmin(requestBody: AddPartnerAdminRequestDTO): CancelablePromise<PartnerAdminDTO> {
@@ -139,7 +145,8 @@ export class PartnerService {
       body: requestBody,
       mediaType: "application/json",
       errors: {
-        400: `Bad request`,
+        400: `Invalid request parameters`,
+        403: `User lacks permission to add a new partner admin`,
       },
     });
   }

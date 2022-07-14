@@ -15,8 +15,8 @@ export class AppController {
 
   @Public()
   @Get("health")
-  @ApiOperation({ summary: "Checks if the service is up and running" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Status OK" })
+  @ApiOperation({ summary: "Checks if the Noba service is up and running" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Health status of the Noba service" })
   @ApiTags("Health Check")
   appHealth(): string {
     return "We're up and running. How are you?"; //Todo implement advance health check like here like db connectivity etc.?

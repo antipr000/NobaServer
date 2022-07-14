@@ -18,7 +18,16 @@ import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AdminId, PartnerAdminID, PartnerID } from "../auth/roles.decorator";
-import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { TransactionsFilterDTO } from "./dto/TransactionsFilterDTO";
@@ -75,9 +84,9 @@ export class AdminController {
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
-  @Get(`/:${AdminId}/transaction_metrics`)
-  @ApiOperation({ summary: "Get all transaction metrics for a given partner." })
-  @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: "Get transaction statistics" })
+  @Get(`/:${AdminId}/transactionmetrics`)
+  @ApiOperation({ summary: "Gets all transaction metrics for a given partner" })
+  @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: "Transaction statistics" })
   async getTransactionMetrics(@Param(AdminId) adminId: string): Promise<TransactionStatsDTO> {
     return this.adminService.getTransactionStatus();
   }
@@ -85,8 +94,12 @@ export class AdminController {
   // TODO: Add proper AuthN & AuthZ
   @Public()
   @Get(`/:${AdminId}/transactions`)
-  @ApiOperation({ summary: "Get all transactions filtered by the specified date range" })
-  @ApiResponse({ status: HttpStatus.OK, type: [TransactionDTO] })
+  @ApiOperation({ summary: "Gets all transactions filtered by the specified date range" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [TransactionDTO],
+    description: "All transactions within the specified date range",
+  })
   async getAllTransactions(
     @Param(AdminId) adminId: string,
     @Query() filterQuery: TransactionsFilterDTO,
@@ -95,12 +108,14 @@ export class AdminController {
   }
 
   @Post("/")
-  @ApiOperation({ summary: "Creates a new NobaAdmin with a specified role." })
-  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The newly created Noba Admin." })
+  @ApiOperation({ summary: "Creates a new Noba admin with the specified role" })
+  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The newly created Noba admin" })
+  @ApiForbiddenResponse({ description: "User forbidden from adding new Noba admin" })
+  @ApiConflictResponse({ description: "User is already a Noba admin" })
   async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<NobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddNobaAdmin()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba Admin.`);
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba admin.`);
     }
 
     const savedAdmin: Admin = await this.adminService.addNobaAdmin(this.adminMapper.toDomain(nobaAdmin));
@@ -112,20 +127,25 @@ export class AdminController {
   }
 
   @Get("/")
-  @ApiOperation({ summary: "Get the details of the logged in NobaAdmin." })
-  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The logged in Noba Admin." })
+  @ApiOperation({ summary: "Gets the details of the logged in Noba admin" })
+  @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The logged in Noba admin" })
+  @ApiForbiddenResponse({ description: "User forbidden from retrieving details of the Noba admin" })
   async getNobaAdmin(@Request() request): Promise<NobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin)) {
-      throw new ForbiddenException("This endpoint is only for Noba Admins.");
+      throw new ForbiddenException("This endpoint is only for Noba admins.");
     }
 
     return this.adminMapper.toDTO(authenticatedUser);
   }
 
   @Patch(`/:${AdminId}`)
-  @ApiOperation({ summary: "Updates the role/name of a NobaAdmin." })
+  @ApiOperation({ summary: "Updates the details of a Noba admin" })
   @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The updated NobaAdmin." })
+  @ApiForbiddenResponse({
+    description: "User forbidden from updating Noba admin or attempt to update one's own record",
+  })
+  @ApiNotFoundResponse({ description: "Noba admin not found" })
   async updateNobaAdmin(
     @Request() request,
     @Param(AdminId) adminId: string,
@@ -155,8 +175,12 @@ export class AdminController {
   }
 
   @Delete(`/:${AdminId}`)
-  @ApiOperation({ summary: "Deletes the NobaAdmin with a given ID" })
-  @ApiResponse({ status: HttpStatus.OK, type: DeleteNobaAdminDTO, description: "The ID of the deleted NobaAdmin." })
+  @ApiOperation({ summary: "Deletes a Noba admin" })
+  @ApiResponse({ status: HttpStatus.OK, type: DeleteNobaAdminDTO, description: "The ID of the Noba admin to delete" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from deleting Noba admin or attempt to delete one's own record",
+  })
+  @ApiNotFoundResponse({ description: "Noba admin not found" })
   async deleteNobaAdmin(@Request() request, @Param(AdminId) adminId: string): Promise<DeleteNobaAdminDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveNobaAdmin()) {
@@ -175,9 +199,13 @@ export class AdminController {
   }
 
   @Post(`/partners/:${PartnerID}/admins`)
-  @ApiOperation({ summary: "Add a new partner admin" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiOperation({ summary: "Adds a new partner admin" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Adds a new partner admin" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from adding a new partner admin",
+  })
+  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
+  @ApiNotFoundResponse({ description: "Partner admin not found" })
   async addAdminsForPartners(
     @Param(PartnerID) partnerId: string,
     @Body() requestBody: AddPartnerAdminRequestDTO,
@@ -199,8 +227,12 @@ export class AdminController {
 
   @Delete(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
   @ApiOperation({ summary: "Deletes a partner admin" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Add a new partner admin" })
+  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from deleting a partner admin",
+  })
+  @ApiNotFoundResponse({ description: "Partner admin not found" })
   async deleteAdminsForPartners(
     @Param(PartnerID) partnerId: string,
     @Param(PartnerAdminID) partnerAdminId: string,
@@ -221,7 +253,11 @@ export class AdminController {
   @Patch(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
   @ApiOperation({ summary: "Update details of a partner admin" })
   @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Update details of a partner admin" })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from updating a partner admin",
+  })
+  @ApiNotFoundResponse({ description: "Partner admin not found" })
   async updateAdminForPartners(
     @Param(PartnerID) partnerId: string,
     @Param(PartnerAdminID) partnerAdminID: string,
@@ -242,9 +278,12 @@ export class AdminController {
   }
 
   @Post("/partners")
-  @ApiOperation({ summary: "Add a new partner" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "Add a new partner" })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiOperation({ summary: "Adds a new partner" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "New partner record" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from adding a new partner",
+  })
+  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
   async registerPartner(@Body() requestBody: AddPartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
     const authenticatedUser: Admin = request.user;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
@@ -256,9 +295,12 @@ export class AdminController {
   }
 
   @Patch("/consumers/:consumerID")
-  @ApiOperation({ summary: "Update a consumer" })
-  @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Update a consumer" })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiOperation({ summary: "Updates a consumer" })
+  @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Updated consumer record" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from updating consumer record",
+  })
+  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
   async updateConsumer(
     @Param("consumerID") consumerID: string,
     @Body() requestBody: AdminUpdateConsumerRequestDTO,

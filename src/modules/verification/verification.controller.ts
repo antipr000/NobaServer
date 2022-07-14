@@ -14,6 +14,7 @@ import {
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import {
   ApiBadRequestResponse,
+  ApiNotFoundResponse,
   ApiBearerAuth,
   ApiConsumes,
   ApiOperation,
@@ -51,44 +52,44 @@ export class VerificationController {
   }
 
   @Get("/")
-  @ApiOperation({ summary: "Check if verification service is up" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Health check for verification service" })
+  @ApiOperation({ summary: "Checks if verification service is up" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Service is up" })
   async getVerificationStatus(): Promise<string> {
-    return "Hello Noba user. Verification seems to work fine!";
+    return "Verification API is functioning"; // TODO: Should ping Sardine
   }
 
   @Get("/countryCodes")
-  @ApiOperation({ summary: "Get list of country codes that Noba supports" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Get country codes for supported countries" })
-  @ApiBadRequestResponse({ description: "Invalid request parameters!" })
+  @ApiOperation({ summary: "Gets the list of all supported country codes" })
+  @ApiResponse({ status: HttpStatus.OK, description: "List of supported country codes" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getCountryCodes(): Promise<Array<string>> {
     return this.verificationService.getCountryCodes();
   }
 
   @Get("/consents/:countryCode")
-  @ApiOperation({ summary: "Get all consents for a given country code" })
-  @ApiResponse({ status: HttpStatus.OK, type: [ConsentDTO], description: "Get all consents" })
-  @ApiBadRequestResponse({ description: "Invalid request parameters!" })
+  @ApiOperation({ summary: "Gets all consents for a given country code" })
+  @ApiResponse({ status: HttpStatus.OK, type: [ConsentDTO], description: "Consents" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getConsents(@Param("countryCode") countryCode: string): Promise<Array<ConsentDTO>> {
     return this.verificationService.getConsents(countryCode);
   }
 
   @Get("/subdivisions/:countryCode")
-  @ApiOperation({ summary: "Get subdivision for the given country code" })
+  @ApiOperation({ summary: "Gets subdivisions for a given country code" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: [SubdivisionDTO],
-    description: "Get subdivision for the given country code",
+    description: "Country subdivisions",
   })
-  @ApiBadRequestResponse({ description: "Invalid request parameters!" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getSubdivisions(@Param("countryCode") countryCode: string): Promise<Array<SubdivisionDTO>> {
     return this.verificationService.getSubdivisions(countryCode);
   }
 
   @Public()
   @Post("/session")
-  @ApiOperation({ summary: "Create a new session for verification" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: String, description: "Get new session token" })
+  @ApiOperation({ summary: "Creates a new session for verification" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: String, description: "New session token" })
   @ApiBadRequestResponse({ description: "Invalid request" })
   async createSession(): Promise<string> {
     const verificationData = await this.verificationService.createSession();
@@ -97,10 +98,10 @@ export class VerificationController {
 
   @Post("/consumerinfo")
   @ApiOperation({
-    summary: "Verify consumer provided information like name, date of birth, address and ssn(for US consumers)",
+    summary: "Verifies consumer-provided information",
   })
-  @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Get verification result" })
-  @ApiBadRequestResponse({ description: "Invalid request parameters!" })
+  @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Verification result" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async verifyConsumer(
     @Query("sessionKey") sessionKey: string,
     @Body() requestBody: IDVerificationRequestDTO,
@@ -117,11 +118,11 @@ export class VerificationController {
 
   @Post("/document")
   @ApiConsumes("multipart/form-data")
-  @ApiOperation({ summary: "Verify consumer uploaded id documents like national id, passport etc" })
+  @ApiOperation({ summary: "Verifies consumer uploaded identification documents" })
   @ApiResponse({
     status: HttpStatus.ACCEPTED,
     type: VerificationResultDTO,
-    description: "Get id for submitted verification documents",
+    description: "Document upload result",
   })
   @ApiBody({
     schema: {
@@ -146,7 +147,7 @@ export class VerificationController {
       },
     },
   })
-  @ApiBadRequestResponse({ description: "Invalid request parameters!" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: "frontImage", maxCount: 1 },
@@ -173,9 +174,10 @@ export class VerificationController {
   }
 
   @Get("/document/result/:id")
-  @ApiOperation({ summary: "Get result for a submitted document verification" })
-  @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Get verification result" })
-  @ApiBadRequestResponse({ description: "Invalid id" })
+  @ApiOperation({ summary: "Gets result for a previously-submitted document verification" })
+  @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Document verification result" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  @ApiNotFoundResponse({ description: "Document verification request not found" })
   async getDocumentVerificationResult(
     @Param("id") id: string,
     @Query("sessionKey") sessionKey: string,
@@ -187,13 +189,13 @@ export class VerificationController {
   }
 
   @Get("/device/result")
-  @ApiOperation({ summary: "Get device verification result" })
+  @ApiOperation({ summary: "Gets device verification result" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: DeviceVerificationResponseDTO,
-    description: "Get device verification result",
+    description: "Device verification result",
   })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getDeviceVerificationResult(@Param("sessionKey") sessionKey: string): Promise<DeviceVerificationResponseDTO> {
     return await this.verificationService.getDeviceVerificationResult(sessionKey);
   }

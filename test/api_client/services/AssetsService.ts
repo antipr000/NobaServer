@@ -34,7 +34,7 @@ export class AssetsService {
   }
 
   /**
-   * Get price of a crypto (leg1) in fiat (leg 2)
+   * Gets price of a crypto (leg1) in fiat (leg 2)
    * @param fiatCurrencyCode
    * @param cryptoCurrencyCode
    * @returns any Fiat price (leg 2) for the desired crypto currency (leg1)
@@ -58,7 +58,7 @@ export class AssetsService {
   }
 
   /**
-   * Get the processing fee for a crypto fiat conversion
+   * Gets the processing fee for a crypto fiat conversion
    * @param fiatCurrencyCode
    * @param fiatAmount
    * @param cryptoCurrencyCode

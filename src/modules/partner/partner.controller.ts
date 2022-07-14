@@ -11,7 +11,14 @@ import {
   Post,
   Request,
 } from "@nestjs/common";
-import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
@@ -43,13 +50,14 @@ export class PartnerController {
   }
 
   @Get("/:" + PartnerID)
-  @ApiOperation({ summary: "Get partner details of requesting user" })
+  @ApiOperation({ summary: "Gets details of a partner" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: PartnerDTO,
-    description: "Returns the partner details of currently logged in partner admin",
+    description: "Details of partner",
   })
-  @ApiBadRequestResponse({ description: "User does not have permission" })
+  @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner details" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getPartner(@Param(PartnerID) partnerID: string, @Request() request): Promise<PartnerDTO> {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canGetPartnerDetails()) throw new ForbiddenException();
@@ -58,9 +66,10 @@ export class PartnerController {
   }
 
   @Patch("/")
-  @ApiOperation({ summary: "Update details of the partner like takeRate" })
-  @ApiResponse({ status: HttpStatus.OK, type: PartnerDTO, description: "Returns updated partner details" })
-  @ApiBadRequestResponse({ description: "Invalid request" })
+  @ApiOperation({ summary: "Updates details of a partner" })
+  @ApiResponse({ status: HttpStatus.OK, type: PartnerDTO, description: "Partner details" })
+  @ApiForbiddenResponse({ description: "User lacks permission to update partner details" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updatePartner(@Body() requestBody: UpdatePartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
@@ -69,13 +78,14 @@ export class PartnerController {
   }
 
   @Get("/admins/:" + PartnerAdminID)
-  @ApiOperation({ summary: "Get details for partner admin" })
+  @ApiOperation({ summary: "Gets details of a partner admin" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: PartnerAdminDTO,
-    description: "Returns details for the requesting partner admin",
+    description: "Details of partner admin",
   })
-  @ApiBadRequestResponse({ description: "Not authorized" })
+  @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getPartnerAdmin(@Param(PartnerAdminID) partnerAdminID: string, @Request() request): Promise<PartnerAdminDTO> {
     const requestUser: PartnerAdmin = request.user;
     if (requestUser.props._id !== partnerAdminID && !requestUser.canGetAllAdmins()) throw new ForbiddenException();
@@ -84,13 +94,14 @@ export class PartnerController {
   }
 
   @Get("/admins")
-  @ApiOperation({ summary: "Get all admins for the partner" })
+  @ApiOperation({ summary: "Gets all admins for the partner" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: [PartnerAdminDTO],
-    description: "Returns details for all admins of the partner",
+    description: "All admins of the partner",
   })
-  @ApiBadRequestResponse({ description: "Not authorized" })
+  @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin list" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllPartnerAdmins(@Request() request): Promise<PartnerAdminDTO[]> {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canGetAllAdmins()) throw new ForbiddenException();
@@ -101,9 +112,10 @@ export class PartnerController {
   }
 
   @Post("/admins")
-  @ApiOperation({ summary: "Add a new partner admin" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Add a new partner admin" })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiOperation({ summary: "Adds a new partner admin" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "New partner admin record" })
+  @ApiForbiddenResponse({ description: "User lacks permission to add a new partner admin" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async addPartnerAdmin(@Body() requestBody: AddPartnerAdminRequestDTO, @Request() request): Promise<PartnerAdminDTO> {
     const requestUser: PartnerAdmin = request.user;
     if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
@@ -118,9 +130,10 @@ export class PartnerController {
   }
 
   @Patch("/admins/:" + PartnerAdminID)
-  @ApiOperation({ summary: "Update details of a partner admin" })
-  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Update details of a partner admin" })
-  @ApiBadRequestResponse({ description: "Bad request" })
+  @ApiOperation({ summary: "Updates details of a partner admin" })
+  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Details of updated partner admin" })
+  @ApiForbiddenResponse({ description: "User lacks permission to update partner admin" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updatePartnerAdmin(
     @Param(PartnerAdminID) partnerAdminID: string,
     @Body() requestBody: UpdatePartnerRequestDTO,
@@ -138,8 +151,9 @@ export class PartnerController {
 
   @Delete("/admins/:" + PartnerAdminID)
   @ApiOperation({ summary: "Deletes a parter admin" })
-  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Deletes a partner admin" })
-  @ApiBadRequestResponse({ description: "Partner admin not found" })
+  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Deleted partner admin record" })
+  @ApiForbiddenResponse({ description: "User lacks permission to delete partner admin" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async deletePartnerAdmin(
     @Param(PartnerAdminID) partnerAdminID: string,
     @Request() request,

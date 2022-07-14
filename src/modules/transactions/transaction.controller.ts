@@ -11,14 +11,17 @@ import {
   Request,
   UnauthorizedException,
   ForbiddenException,
+  NotFoundException,
 } from "@nestjs/common";
 import {
   ApiBadGatewayResponse,
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import * as fs from "fs";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -61,8 +64,7 @@ export class TransactionController {
   @Get("/transactions/check")
   @ApiTags("Transactions")
   @ApiOperation({
-    summary:
-      "Checks if a transaction with given input is possible for a user or not i.e. if they have reached some limit or if id verification is required.",
+    summary: "Checks if the transaction parameters are valid",
   })
   @ApiResponse({ status: HttpStatus.OK, type: CheckTransactionDTO })
   async checkIfTransactionPossible(
@@ -80,19 +82,21 @@ export class TransactionController {
 
   @Get("/transactions/:transactionID")
   @ApiTags("Transactions")
-  @ApiOperation({ summary: "Get transaction details for a given transactionID" })
+  @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: TransactionDTO,
-    description: "Transaction details for the given transactionId",
+    description: "Details of a transaction",
   })
+  @ApiNotFoundResponse({ description: "Transaction does not exist" })
   async getTransactionStatus(
     @Param("transactionID") transactionID: string,
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO> {
-    const dto = await this.transactionService.getTransactionStatus(transactionID); //TODO check that transactionId belongs to this user?
+    const dto = await this.transactionService.getTransactionStatus(transactionID);
     if (dto.userID !== authUser.props._id) {
-      throw new UnauthorizedException("Not authorized to view this transaction");
+      // We can't return forbidden, as that would tell the user there IS a transaction - they just can't see it. So "pretend" it's not found.
+      throw new NotFoundException("Transaction does not exist");
     }
     return dto;
   }
@@ -100,14 +104,13 @@ export class TransactionController {
   //We should create buy sell api differently otherwise lot of if else logic in core logic. basically different api for on-ramp and off-ramp
   @Post("/transactions/")
   @ApiTags("Transactions")
-  @ApiOperation({ summary: "Place a transaction with Noba" })
+  @ApiOperation({ summary: "Submits a new transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: TransactionDTO,
-    description: "Returns transaction id if transaction is placed successfully",
+    description: "Transaction details",
   })
-  @ApiBadGatewayResponse({ description: "Bad gateway. Something went wrong." })
-  @ApiBadRequestResponse({ description: "Bad request. Invalid input." })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async transact(
     @Query("sessionKey") sessionKey: string,
     @Body() orderDetails: CreateTransactionDTO,
@@ -121,11 +124,11 @@ export class TransactionController {
   //TODO take filter options, pagination token etc?
   @Get("/transactions/")
   @ApiTags("Transactions")
-  @ApiOperation({ summary: "Get all transactions for a particular user" })
+  @ApiOperation({ summary: "Gets all transactions for the logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: [TransactionDTO],
-    description: "List of all transactions that happened through Noba for given userID",
+    description: "List of all transactions",
   })
   async getTransactions(
     @Query() transactionFilters: TransactionFilterDTO,
@@ -143,11 +146,11 @@ export class TransactionController {
 
   @Get("/consumers/limits/")
   @ApiTags("Consumer")
-  @ApiOperation({ summary: "Get transaction limit details for logged in consumer" })
+  @ApiOperation({ summary: "Gets transaction limit details for logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: ConsumerLimitsDTO,
-    description: "Returns consumer limit details of the currently logged in consumer",
+    description: "Consumer limit details",
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getConsumerLimits(@AuthUser() authUser: Consumer): Promise<ConsumerLimitsDTO> {
@@ -156,11 +159,11 @@ export class TransactionController {
 
   @Get("/transactions/download")
   @ApiTags("Transactions")
-  @ApiOperation({ summary: "Download all the transactions of a particular user." })
+  @ApiOperation({ summary: "Downloads all the transactions of a particular consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: [TransactionDTO],
-    description: "A CSV or PDF file containing details of all the transactions made by the user.",
+    description: "A CSV or PDF file containing details of all the transactions made by the consumer",
   })
   async downloadTransactions(
     @Query() downloadParames: DownloadTransactionsDTO,

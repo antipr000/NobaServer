@@ -72,7 +72,7 @@ export class TransactionService {
 
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(leg2, destinationWalletAdress)) {
-      throw new BadRequestError({
+      throw new BadRequestException({
         messageForClient: "Invalid destination wallet address " + destinationWalletAdress + " for " + leg2,
       });
     }
@@ -92,7 +92,7 @@ export class TransactionService {
 
     //this.cacheManager.
     if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
-      throw new BadRequestError({
+      throw new BadRequestException({
         messageForClient:
           "Supported leg1 (i.e fiat) are " +
           this.allowedFiats.join(", ") +
@@ -105,7 +105,7 @@ export class TransactionService {
     const bidPrice = (leg1Amount * 1.0) / leg2Amount;
 
     if (!this.withinSlippage(bidPrice, currentPrice, this.slippageAllowed)) {
-      throw new BadRequestError({
+      throw new BadRequestException({
         messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}`,
       });
     }

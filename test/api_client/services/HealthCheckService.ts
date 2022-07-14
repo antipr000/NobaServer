@@ -7,8 +7,8 @@ import { request as __request } from "../core/request";
 
 export class HealthCheckService {
   /**
-   * Checks if the service is up and running
-   * @returns any Status OK
+   * Checks if the Noba service is up and running
+   * @returns any Health status of the Noba service
    * @throws ApiError
    */
   public static appHealth(): CancelablePromise<any> {
