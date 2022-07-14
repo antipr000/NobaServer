@@ -18,6 +18,7 @@ import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
 import { TransactionInformation } from "./domain/TransactionInformation";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { EmailService } from "../common/email.service";
+import { SardineDeviceInformationResponse } from "./integrations/SardineTypeDefinitions";
 
 @Injectable()
 export class VerificationService {
@@ -184,6 +185,10 @@ export class VerificationService {
     await this.consumerService.updateConsumer(newConsumerData);
 
     return result;
+  }
+
+  async getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse> {
+    return await this.idvProvider.getDeviceVerificationResult(sessionKey);
   }
 
   async createSession(): Promise<VerificationData> {

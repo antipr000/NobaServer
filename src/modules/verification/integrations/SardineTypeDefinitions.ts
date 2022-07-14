@@ -74,6 +74,65 @@ export type SardineDocumentVerificationInputData = {
   address?: Address;
 };
 
+export type DeviceAttributes = {
+  Browser: string[];
+  Model: string[];
+  OS: string[];
+};
+
+export type Signals = {
+  key: string;
+  value: string;
+};
+
+export type BehaviorBiometricsFields = {
+  name?: string;
+  numCopyPasteEvents?: number;
+  numClipboardEvents?: number;
+  numAutoFillEvents?: number;
+  numExpertKeyEvents?: number;
+  hesitationPercentage?: number;
+  isLTM?: boolean;
+  timeSpendInMsEvents?: number[];
+};
+
+export type DeviceBehaviorBiometrics = {
+  numDistractionEvents?: number;
+  fields: BehaviorBiometricsFields[];
+};
+
+export type DeviceIpLocation = {
+  city?: string;
+  region?: string;
+  country?: string;
+  latitude?: string;
+  longitude?: string;
+};
+
+export type DeviceGpsLocation = {
+  city?: string;
+  region?: string;
+  country?: string;
+  latitude?: string;
+  longitude?: string;
+  mockLevel?: string;
+};
+
+export type SardineDeviceInformationResponse = {
+  id: string;
+  level: SardineRiskLevels;
+  attributes?: DeviceAttributes;
+  signals?: Signals[];
+  sessionKey: string;
+  fingerprint?: string;
+  fingerprintConfidenceScore?: number;
+  behaviorBiometricRiskLevel?: string;
+  deviceReputation?: string;
+  behaviorBiometrics?: DeviceBehaviorBiometrics;
+  ipLocation?: DeviceIpLocation;
+  gpsLocation?: DeviceGpsLocation;
+};
+
 export enum SardineRiskLevels {
   VERY_HIGH = "very_high",
   HIGH = "high",

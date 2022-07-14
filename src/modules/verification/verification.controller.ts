@@ -34,6 +34,7 @@ import { VerificationService } from "./verification.service";
 import { Public } from "../auth/public.decorator";
 import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
 import { Consumer } from "../consumer/domain/Consumer";
+import { DeviceVerificationResponseDTO } from "./dto/DeviceVerificationResponseDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -183,5 +184,17 @@ export class VerificationController {
     const consumer: Consumer = request.user;
     const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, sessionKey, id);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
+  }
+
+  @Get("/device/result")
+  @ApiOperation({ summary: "Get device verification result" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: DeviceVerificationResponseDTO,
+    description: "Get device verification result",
+  })
+  @ApiBadRequestResponse({ description: "Bad request" })
+  async getDeviceVerificationResult(@Param("sessionKey") sessionKey: string): Promise<DeviceVerificationResponseDTO> {
+    return await this.verificationService.getDeviceVerificationResult(sessionKey);
   }
 }
