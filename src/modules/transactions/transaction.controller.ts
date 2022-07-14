@@ -67,10 +67,12 @@ export class TransactionController {
     @AuthUser() authUser: Consumer,
   ): Promise<CheckTransactionDTO> {
     const tAmount = checkTransactionQuery.transactionAmount;
-    const status: TransactionAllowedStatus = await this.limitsService.canMakeTransaction(authUser, tAmount);
-    return {
-      status: status,
-    };
+    const checkTransactionResponse: CheckTransactionDTO = await this.limitsService.canMakeTransaction(
+      authUser,
+      tAmount,
+    );
+
+    return checkTransactionResponse;
   }
 
   @Get("/:transactionID")

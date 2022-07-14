@@ -13,11 +13,10 @@ import {
   TransactionLimit,
   UserLimits,
 } from "./domain/Limits";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { TransactionMapper } from "./mapper/TransactionMapper";
-import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
+import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 
 @Injectable()
 export class LimitsService {
@@ -67,7 +66,7 @@ export class LimitsService {
     }
   }
 
-  async canMakeTransaction(consumer: Consumer, transactionAmount: number): Promise<TransactionAllowedStatus> {
+  async canMakeTransaction(consumer: Consumer, transactionAmount: number): Promise<CheckTransactionDTO> {
     /* At this point unverified users cannot perform transactions, so leaving this commented */
     // const userVerificationStatus: UserVerificationStatus = this.userService.getVerificationStatus(consumer);
 
@@ -80,14 +79,22 @@ export class LimitsService {
     consumer: Consumer,
     transactionAmount: number,
     limits: UserLimits,
-  ): Promise<TransactionAllowedStatus> {
+  ): Promise<CheckTransactionDTO> {
     // Check single transaction limit
     if (transactionAmount < limits.minTransaction) {
-      return TransactionAllowedStatus.TRANSACTION_TOO_SMALL;
+      return {
+        status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
+        rangeMin: limits.minTransaction,
+        rangeMax: limits.maxTransaction,
+      };
     }
 
     if (transactionAmount > limits.maxTransaction) {
-      return TransactionAllowedStatus.TRANSACTION_TOO_LARGE;
+      return {
+        status: TransactionAllowedStatus.TRANSACTION_TOO_LARGE,
+        rangeMin: limits.minTransaction,
+        rangeMax: limits.maxTransaction,
+      };
     }
 
     /* Removed checks for daily, weekly, and total for now. It's easy enough to bring them back if we need them.
@@ -99,8 +106,44 @@ export class LimitsService {
 
     // For some reason without casting the operands to a Number, this ends up doing string concat
     const total: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
-    if (total > limits.monthlyLimit) return TransactionAllowedStatus.MONTHLY_LIMIT_REACHED;
+    if (total > limits.monthlyLimit) {
+      // Spent + new amount exceeds monthly limit
+      let maxRemaining = limits.monthlyLimit - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      let minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+      if (maxRemaining < 0) {
+        // This would mean we've over-spent monthly limit, which should never happen
+        maxRemaining = 0;
+      }
 
-    return TransactionAllowedStatus.ALLOWED;
+      /*
+        Note that minRemaining will always be the minimum transaction limit but you can have a maximum of < the minimum.
+        This is because you can never, ever submit a transaction lower than the min transaction amount but you may have
+        spent up to within some amount < [min transaction] in the time period.
+        
+        Example:
+        Min transaction amount: $50
+        Max transaction amount: $200
+        Monthly limit: $2000
+        
+        Scenario: somebody has already spent $1965 of their $2000 monthly limit
+        API Would return: {rangeMin: 50, rangeMax: 35, status: TransactionAllowedStatus.MONTHLY_LIMIT_REACHED}
+
+        Callers should not display a message which indicates "min of 50 and max of 35" as that would be confusing. In
+        this case the caller would simply know that the monthly transaction limit is reached and the user cannot
+        submit any more transactions (even though they haven't hit $2000 yet).
+      */
+
+      return {
+        status: TransactionAllowedStatus.MONTHLY_LIMIT_REACHED,
+        rangeMin: minRemaining,
+        rangeMax: maxRemaining,
+      };
+    }
+
+    return {
+      status: TransactionAllowedStatus.ALLOWED,
+      rangeMin: limits.minTransaction,
+      rangeMax: limits.maxTransaction,
+    };
   }
 }
