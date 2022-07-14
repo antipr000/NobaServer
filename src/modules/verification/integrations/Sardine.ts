@@ -10,6 +10,7 @@ import { IDVProvider } from "./IDVProvider";
 import {
   PaymentMethodTypes,
   SardineCustomerRequest,
+  SardineDeviceInformationResponse,
   SardineDocumentProcessingStatus,
   SardineDocumentVerificationInputData,
   SardineRiskLevels,
@@ -236,6 +237,24 @@ export class Sardine implements IDVProvider {
           status: ConsumerVerificationStatus.APPROVED,
         };
       }
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+  }
+
+  async getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse> {
+    try {
+      const payload = {
+        sessionKey: sessionKey,
+        checkpoints: ["device"],
+      };
+
+      const { data }: { data: SardineDeviceInformationResponse } = await axios.post(
+        this.BASE_URI + "/v2/devices",
+        payload,
+        this.getAxiosConfig(),
+      );
+      return data;
     } catch (e) {
       throw new BadRequestException(e.message);
     }
