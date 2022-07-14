@@ -3,9 +3,18 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "assets": [
-      { "include": "../appconfigs/*.yaml", "outDir": "./dist/appconfigs" },
-      { "include": "../src/config/*.csv", "outDir": "./dist" },
-      { "include": "../src/data/*", "outDir": "./dist/src/" }
+      {
+        "include": "../appconfigs/*.*",
+        "outDir": "./dist/appconfigs"
+      },
+      {
+        "include": "../src/config/*.csv",
+        "outDir": "./dist"
+      },
+      {
+        "include": "../src/data/*",
+        "outDir": "./dist/src/"
+      }
     ]
   },
   "plugins": [

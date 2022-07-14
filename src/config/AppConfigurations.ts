@@ -59,6 +59,8 @@ import {
   KMS_CONTEXT_STAGE,
   KMS_CONTEXT_ORIGIN,
   KMS_CONTEXT_PURPOSE,
+  SUPPORTED_CRYPTO_TOKENS_FILE_NAME,
+  SUPPORTED_CRYPTO_TOKENS_FILE_PATH,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -127,6 +129,8 @@ export default async function loadAppConfigs() {
   }
 
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
+  configs[SUPPORTED_CRYPTO_TOKENS_FILE_PATH] = join(configsDir, configs[SUPPORTED_CRYPTO_TOKENS_FILE_NAME]);
+
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
   const finalConfigs = configureNobaParameters(environment, vendorConfigs);

@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { parse } from "csv";
 import { createReadStream } from "fs";
 import * as path from "path";
+import { SUPPORTED_CRYPTO_TOKENS_FILE_PATH } from "../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyDTO } from "../../modules/common/dto/CurrencyDTO";
 
 @Injectable()
@@ -9,12 +11,17 @@ export class CurrencyService {
   private currencies: Array<CurrencyDTO>;
   private isCurrenciesLoaded: boolean;
 
+  constructor(private readonly configService: CustomConfigService) {
+    this.isCurrenciesLoaded = false;
+    this.currencies = [];
+  }
+
   private async loadCurrenciesFromFile(): Promise<Array<CurrencyDTO>> {
     return new Promise((resolve, reject) => {
       const results = new Array<CurrencyDTO>();
       const parser = parse({ delimiter: ",", columns: true });
 
-      createReadStream(path.resolve(__dirname, "../../config/supported_tokens.csv"))
+      createReadStream(path.resolve(this.configService.get(SUPPORTED_CRYPTO_TOKENS_FILE_PATH)))
         .pipe(parser)
         .on("data", data => {
           const name = `${data["Name"]}`.trim();

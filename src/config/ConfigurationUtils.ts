@@ -2,11 +2,11 @@ import * as Joi from "joi";
 import { SecretProvider } from "./SecretProvider";
 
 export enum AppEnvironment {
-  AWSDEV = "awsdev",
   DEV = "development",
   PROD = "production",
   STAGING = "staging",
   E2E_TEST = "e2e_test",
+  AWSDEV = "AWSDEV",
 }
 
 export const NODE_ENV_CONFIG_KEY = "NODE_ENV";
@@ -15,6 +15,10 @@ export const SES_CONFIG_KEY = "ses";
 export const S3_CONFIG_KEY = "s3";
 
 export const SERVER_LOG_FILE_PATH = "logFilePath";
+
+// It is assumed that the every dependent files are present in 'appconfigs/' folder itself.
+export const SUPPORTED_CRYPTO_TOKENS_FILE_NAME = "supportedCryptoFileName";
+export const SUPPORTED_CRYPTO_TOKENS_FILE_PATH = "SUPPORTED_CRYPTO_TOKENS_FILE_PATH";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
 export const AWS_SECRET_ACCESS_KEY_ATTR = "awsSecretAccessKey";

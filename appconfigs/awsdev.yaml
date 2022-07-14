@@ -69,3 +69,5 @@ zerohash:
   apiSecret: ""
   passPhrase: ""
   host: ""
+
+supportedCryptoFileName: "supported_tokens.csv"
