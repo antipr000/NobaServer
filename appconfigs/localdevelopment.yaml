@@ -72,3 +72,5 @@ zerohash:
   apiSecret: "4jtj1kUm64LKiXE7i7DjpLqb2le/yJmLhcQlHzsSno8="
   passPhrase: "noba_zerohash_sandbox"
   host: "api.cert.zerohash.com"
+
+supportedCryptoFileName: "supported_tokens.csv"
