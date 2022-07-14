@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
+import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -76,6 +77,21 @@ export class ConsumerService {
       },
       errors: {
         400: `Not found error`,
+      },
+    });
+  }
+
+  /**
+   * Get transaction limit details for logged in consumer
+   * @returns ConsumerLimitsDTO Returns consumer limit details of the currently logged in consumer
+   * @throws ApiError
+   */
+  public static getConsumerLimits(): CancelablePromise<ConsumerLimitsDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/limits",
+      errors: {
+        400: `Invalid request parameters`,
       },
     });
   }

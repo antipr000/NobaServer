@@ -16,6 +16,7 @@ import {
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
+import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 
 @Injectable()
@@ -66,20 +67,22 @@ export class LimitsService {
     }
   }
 
-  async canMakeTransaction(consumer: Consumer, transactionAmount: number): Promise<CheckTransactionDTO> {
+  async getLimitsForConsumer(consumer: Consumer): Promise<UserLimits> {
     /* At this point unverified users cannot perform transactions, so leaving this commented */
-    // const userVerificationStatus: UserVerificationStatus = this.userService.getVerificationStatus(consumer);
+    //const userVerificationStatus: UserVerificationStatus = this.userService.getVerificationStatus(consumer);
 
-    const limits = this.getLimits(UserVerificationStatus.VERIFIED);
-
-    return this.checkTransactionLimits(consumer, transactionAmount, limits);
+    return this.getLimits(UserVerificationStatus.VERIFIED);
   }
 
-  async checkTransactionLimits(
+  async canMakeTransaction(
     consumer: Consumer,
     transactionAmount: number,
-    limits: UserLimits,
+    limits?: UserLimits,
   ): Promise<CheckTransactionDTO> {
+    if (limits == undefined) {
+      limits = await this.getLimitsForConsumer(consumer);
+    }
+
     // Check single transaction limit
     if (transactionAmount < limits.minTransaction) {
       return {
@@ -145,5 +148,24 @@ export class LimitsService {
       rangeMin: limits.minTransaction,
       rangeMax: limits.maxTransaction,
     };
+  }
+
+  /* Should ONLY be called within the class or externally by tests only; can't make private due to visibility restrictions */
+  async getConsumerLimits(consumer: Consumer, limits?: UserLimits): Promise<ConsumerLimitsDTO> {
+    if (limits == undefined) {
+      limits = await this.getLimitsForConsumer(consumer);
+    }
+
+    const monthlyTransactionAmount: number = await this.transactionsRepo.getMonthlyUserTransactionAmount(
+      consumer.props._id,
+    );
+
+    const limitsDTO: ConsumerLimitsDTO = {
+      minTransaction: limits.minTransaction,
+      maxTransaction: limits.maxTransaction,
+      monthly: { max: limits.monthlyLimit, used: monthlyTransactionAmount, period: 30 },
+    };
+
+    return limitsDTO;
   }
 }

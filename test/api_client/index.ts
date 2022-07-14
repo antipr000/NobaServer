@@ -10,6 +10,7 @@ export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumer
 export type { CheckTransactionDTO } from "./models/CheckTransactionDTO";
 export type { ConsentDTO } from "./models/ConsentDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
+export type { ConsumerLimitsDTO } from "./models/ConsumerLimitsDTO";
 export type { CreateTransactionDTO } from "./models/CreateTransactionDTO";
 export type { CryptoWalletsDTO } from "./models/CryptoWalletsDTO";
 export type { CurrencyDTO } from "./models/CurrencyDTO";
@@ -24,6 +25,7 @@ export type { NobaAdminDTO } from "./models/NobaAdminDTO";
 export type { PartnerAdminDTO } from "./models/PartnerAdminDTO";
 export type { PartnerDTO } from "./models/PartnerDTO";
 export type { PaymentMethodsDTO } from "./models/PaymentMethodsDTO";
+export type { PeriodLimit } from "./models/PeriodLimit";
 export type { ProcessingFeeDTO } from "./models/ProcessingFeeDTO";
 export type { SubdivisionDTO } from "./models/SubdivisionDTO";
 export type { TransactionDTO } from "./models/TransactionDTO";

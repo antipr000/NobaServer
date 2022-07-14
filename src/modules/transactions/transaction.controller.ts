@@ -8,7 +8,9 @@ import {
   Post,
   Query,
   Response,
+  Request,
   UnauthorizedException,
+  ForbiddenException,
 } from "@nestjs/common";
 import {
   ApiBadGatewayResponse,
@@ -39,11 +41,11 @@ import { TransactionDTO } from "./dto/TransactionDTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
+import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
-@Controller("/transactions")
-@ApiTags("Transactions")
+@Controller()
 export class TransactionController {
   // @Inject(WINSTON_MODULE_PROVIDER)
   // private readonly logger: Logger;
@@ -56,7 +58,8 @@ export class TransactionController {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Get("/check")
+  @Get("/transactions/check")
+  @ApiTags("Transactions")
   @ApiOperation({
     summary:
       "Checks if a transaction with given input is possible for a user or not i.e. if they have reached some limit or if id verification is required.",
@@ -75,7 +78,8 @@ export class TransactionController {
     return checkTransactionResponse;
   }
 
-  @Get("/:transactionID")
+  @Get("/transactions/:transactionID")
+  @ApiTags("Transactions")
   @ApiOperation({ summary: "Get transaction details for a given transactionID" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -94,7 +98,8 @@ export class TransactionController {
   }
 
   //We should create buy sell api differently otherwise lot of if else logic in core logic. basically different api for on-ramp and off-ramp
-  @Post("/")
+  @Post("/transactions/")
+  @ApiTags("Transactions")
   @ApiOperation({ summary: "Place a transaction with Noba" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -113,8 +118,9 @@ export class TransactionController {
     return this.transactionService.transact(user.props._id, sessionKey, orderDetails);
   }
 
-  //TODO take filter options, pagitination token etc?
-  @Get("/")
+  //TODO take filter options, pagination token etc?
+  @Get("/transactions/")
+  @ApiTags("Transactions")
   @ApiOperation({ summary: "Get all transactions for a particular user" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -135,7 +141,21 @@ export class TransactionController {
     );
   }
 
-  @Get("/download")
+  @Get("/consumers/limits/")
+  @ApiTags("Consumer")
+  @ApiOperation({ summary: "Get transaction limit details for logged in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerLimitsDTO,
+    description: "Returns consumer limit details of the currently logged in consumer",
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getConsumerLimits(@AuthUser() authUser: Consumer): Promise<ConsumerLimitsDTO> {
+    return this.limitsService.getConsumerLimits(authUser);
+  }
+
+  @Get("/transactions/download")
+  @ApiTags("Transactions")
   @ApiOperation({ summary: "Download all the transactions of a particular user." })
   @ApiResponse({
     status: HttpStatus.OK,

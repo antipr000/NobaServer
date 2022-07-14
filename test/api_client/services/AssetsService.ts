@@ -50,6 +50,10 @@ export class AssetsService {
       query: {
         cryptoCurrencyCode: cryptoCurrencyCode,
       },
+      errors: {
+        400: `Invalid currency code (fiat or crypto)`,
+        503: `Unable to connect to underlying service provider`,
+      },
     });
   }
 
@@ -75,6 +79,10 @@ export class AssetsService {
       query: {
         fiatAmount: fiatAmount,
         cryptoCurrencyCode: cryptoCurrencyCode,
+      },
+      errors: {
+        400: `Invalid currency code (fiat or crypto)`,
+        503: `Unable to connect to underlying service provider`,
       },
     });
   }
