@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   Headers,
   ForbiddenException,
+  HttpCode,
 } from "@nestjs/common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import {
@@ -209,6 +210,7 @@ export class VerificationController {
 
   @Public()
   @Post("/webhook/document/result")
+  @HttpCode(200)
   async postDocumentVerificationResult(
     @Headers() headers,
     @Body() requestBody: DocumentVerificationWebhookRequest,
@@ -226,6 +228,7 @@ export class VerificationController {
 
   @Public()
   @Post("/webhook/case/notification")
+  @HttpCode(200)
   async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
     const sardineSignature = headers["x-sardine-signature"];
     const hmac = crypto.createHmac("sha256", "");
