@@ -196,7 +196,7 @@ export class VerificationController {
     description: "Device verification result",
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getDeviceVerificationResult(@Param("sessionKey") sessionKey: string): Promise<DeviceVerificationResponseDTO> {
+  async getDeviceVerificationResult(@Query("sessionKey") sessionKey: string): Promise<DeviceVerificationResponseDTO> {
     return await this.verificationService.getDeviceVerificationResult(sessionKey);
   }
 }
