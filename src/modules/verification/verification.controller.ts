@@ -234,6 +234,7 @@ export class VerificationController {
     if (sardineSignature !== hexString) {
       throw new ForbiddenException("Signature does not match");
     }
+    // TODO: Figure out what needs to be done here
     this.logger.info("Sardine notification: " + requestBody);
     return "Successfully received";
   }
