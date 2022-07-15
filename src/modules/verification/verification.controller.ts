@@ -10,6 +10,8 @@ import {
   Request,
   UploadedFiles,
   UseInterceptors,
+  Headers,
+  ForbiddenException,
 } from "@nestjs/common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import {
@@ -36,6 +38,11 @@ import { Public } from "../auth/public.decorator";
 import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
 import { Consumer } from "../consumer/domain/Consumer";
 import { DeviceVerificationResponseDTO } from "./dto/DeviceVerificationResponseDTO";
+import {
+  CaseNotificationWebhookRequest,
+  DocumentVerificationWebhookRequest,
+} from "./integrations/SardineTypeDefinitions";
+import crypto from "crypto";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -198,5 +205,36 @@ export class VerificationController {
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getDeviceVerificationResult(@Query("sessionKey") sessionKey: string): Promise<DeviceVerificationResponseDTO> {
     return await this.verificationService.getDeviceVerificationResult(sessionKey);
+  }
+
+  @Public()
+  @Post("/webhook/document/result")
+  async postDocumentVerificationResult(
+    @Headers() headers,
+    @Body() requestBody: DocumentVerificationWebhookRequest,
+  ): Promise<VerificationResultDTO> {
+    const sardineSignature = headers["x-sardine-signature"];
+    const hmac = crypto.createHmac("sha256", "");
+    const data = hmac.update(JSON.stringify(requestBody));
+    const hexString = data.digest("hex");
+    if (sardineSignature !== hexString) {
+      throw new ForbiddenException("Signature does not match");
+    }
+    const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
+    return this.verificationResponseMapper.toDocumentResultDTO(result);
+  }
+
+  @Public()
+  @Post("/webhook/case/notification")
+  async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
+    const sardineSignature = headers["x-sardine-signature"];
+    const hmac = crypto.createHmac("sha256", "");
+    const data = hmac.update(JSON.stringify(requestBody));
+    const hexString = data.digest("hex");
+    if (sardineSignature !== hexString) {
+      throw new ForbiddenException("Signature does not match");
+    }
+    this.logger.info("Sardine notification: " + requestBody);
+    return "Successfully received";
   }
 }

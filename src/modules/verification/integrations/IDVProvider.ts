@@ -3,7 +3,7 @@ import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
-import { SardineDeviceInformationResponse } from "./SardineTypeDefinitions";
+import { DocumentVerificationWebhookRequest, SardineDeviceInformationResponse } from "./SardineTypeDefinitions";
 
 export interface IDVProvider {
   verifyConsumerInformation(sessionKey: string, consumerInfo: ConsumerInformation): Promise<ConsumerVerificationResult>;
@@ -19,4 +19,6 @@ export interface IDVProvider {
   ): Promise<ConsumerVerificationResult>;
 
   getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse>;
+
+  processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult;
 }
