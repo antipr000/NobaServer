@@ -41,7 +41,7 @@ export class KycVerificationDTO {
   kycVerificationStatus?: string;
 
   @ApiPropertyOptional()
-  updatedAt?: number;
+  updatedTimestamp?: number;
 }
 
 export class DocumentVerificationDTO {
@@ -49,7 +49,7 @@ export class DocumentVerificationDTO {
   documentVerificationStatus?: string;
 
   @ApiPropertyOptional()
-  updatedAt?: number;
+  updatedTimestamp?: number;
 }
 export class ConsumerDTO {
   @ApiProperty()

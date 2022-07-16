@@ -10,5 +10,5 @@ export type DocumentVerificationDTO = {
     | "Verified"
     | "Rejected"
     | "LivePhotoVerified";
-  updatedAt?: number;
+  updatedTimestamp?: number;
 };
