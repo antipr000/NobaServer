@@ -66,7 +66,9 @@ export class ConsumerService {
           },
         ],
       });
-      return this.consumerRepo.createConsumer(newConsumer);
+      const result = await this.consumerRepo.createConsumer(newConsumer);
+      await this.emailService.sendWelcomeMessage(emailOrPhone, result.props.firstName, result.props.lastName);
+      return result;
     } else if (
       consumerResult.getValue().props.partners.filter(partner => partner.partnerID === partnerID).length === 0
     ) {

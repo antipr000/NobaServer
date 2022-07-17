@@ -27,8 +27,22 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
+  public async sendWelcomeMessage(email: string, firstName?: string, lastName?: string) {
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
+    const msg = {
+      to: email,
+      from: "Noba Pay <auth@noba.com>",
+      templateId: "d-0c8d633f6de545c6a562ac8e6d53917d",
+      dynamicTemplateData: {
+        username: fullName ?? "",
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
   public async sendKycApprovedEmail(firstName: string, lastName: string, email: string) {
-    const fullName = firstName + " " + lastName;
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
 
     const msg = {
       to: email,
@@ -43,7 +57,7 @@ export class EmailService {
   }
 
   public async sendKycDenied(firstName: string, lastName: string, email: string) {
-    const fullName = firstName + " " + lastName;
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
 
     const msg = {
       to: email,
@@ -59,7 +73,7 @@ export class EmailService {
   }
 
   public async sendKycPendingOrFlagged(firstName: string, lastName: string, email: string) {
-    const fullName = firstName + " " + lastName;
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
     const minutesFromNow = 10; // TODO: Remove hardcoded minutes
     const futureDate = new Date(new Date().getTime() + minutesFromNow * 60000).toUTCString();
 
@@ -83,7 +97,7 @@ export class EmailService {
     cardNetwork: string,
     last4Digits: string,
   ) {
-    const fullName = firstName + " " + lastName;
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
 
     const msg = {
       to: email,
@@ -107,7 +121,7 @@ export class EmailService {
     cardNetwork: string,
     last4Digits: string,
   ) {
-    const fullName = firstName + " " + lastName;
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
 
     const msg = {
       to: email,
@@ -131,7 +145,7 @@ export class EmailService {
     cardNetwork: string,
     last4Digits: string,
   ) {
-    const fullName = firstName + " " + lastName;
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
 
     const msg = {
       to: email,
