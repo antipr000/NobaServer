@@ -31,8 +31,6 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     }
 
     const consumerData: ConsumerProps = convertDBResponseToJsObject(result);
-    consumerData.socialSecurityNumber = await this.decryptString(consumerData.socialSecurityNumber);
-
     return this.consumerMapper.toDomain(consumerData);
   }
 
