@@ -13,11 +13,16 @@ awsDefaultRegion: "us-east-1"
 awsAccessKeyId: "test"
 awsSecretAccessKey: "test"
 
+# TODO(#279): Refactor all the secrets once e2e_test env shifts to ec2.
 kms:
   context:
     stage: "e2e_test"
     purpose: "Noba Onramp app"
     origin: "us-east-1"
+  awsSecretNameForGeneratorKeyArn: "TEST_GENERATOR_KEY_ARN"
+  generatorKeyArn: "bogus-value"
+  awsSecretNameForFollowUpKeyArn: "TEST_FOLLOW_UP_KEY_1_ARN"
+  followUpKeyArn: "bogus-value"
 
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys

@@ -1,4 +1,8 @@
 import {
+  AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN,
+  AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN,
+  FOLLOW_UP_KEY_KMS_ARN,
+  GENERATOR_KEY_KMS_ARN,
   KMS_CONFIG_CONTEXT_KEY,
   KMS_CONTEXT_ORIGIN,
   KMS_CONTEXT_PURPOSE,
@@ -7,6 +11,10 @@ import {
 
 export interface KmsConfigs {
   [KMS_CONFIG_CONTEXT_KEY]: CustomKmsEncryptionContext;
+  [GENERATOR_KEY_KMS_ARN]: string;
+  [AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN]: string;
+  [FOLLOW_UP_KEY_KMS_ARN]: string;
+  [AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN]: string;
 }
 
 export interface CustomKmsEncryptionContext {

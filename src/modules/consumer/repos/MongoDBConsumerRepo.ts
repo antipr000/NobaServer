@@ -5,21 +5,21 @@ import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CONSUMER_KMS_KEY_ALIAS, KmsService } from "../../../modules/common/kms.service";
+import { KmsService } from "../../../modules/common/kms.service";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
 export class MongoDBConsumerRepo implements IConsumerRepo {
   private readonly consumerMapper = new ConsumerMapper();
 
-  constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) {}
+  constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) { }
 
   private async encryptString(text: string): Promise<string> {
-    return this.kmsService.encryptString(text, CONSUMER_KMS_KEY_ALIAS);
+    return this.kmsService.encryptString(text);
   }
 
   private async decryptString(text: string): Promise<string> {
-    return this.kmsService.decryptString(text, CONSUMER_KMS_KEY_ALIAS);
+    return this.kmsService.decryptString(text);
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {

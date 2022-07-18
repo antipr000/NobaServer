@@ -1,15 +1,12 @@
 import { KmsKeyringNode, buildClient, CommitmentPolicy } from "@aws-crypto/client-node";
 import { Injectable } from "@nestjs/common";
-import { getPropertyFromEnvironment, KMS_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { KMS_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomKmsEncryptionContext, KmsConfigs } from "../../config/configtypes/KmsConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 const { encrypt, decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT);
 
 export const ENCRYPT_PREFIX = "[enc]";
-
-// TODO(#219): Move this to config files.
-export const CONSUMER_KMS_KEY_ALIAS = "ssn-encryption-key";
 
 // References:
 //  - https://www.npmjs.com/package/@aws-crypto/client-node
@@ -18,25 +15,30 @@ export const CONSUMER_KMS_KEY_ALIAS = "ssn-encryption-key";
 @Injectable()
 export class KmsService {
   private readonly encryptionContext: CustomKmsEncryptionContext;
+  private readonly generatorKeyKmsArn: string;
+  private readonly followUpKeysKmsArns: Array<string>;
 
   constructor(configService: CustomConfigService) {
-    this.encryptionContext = configService.get<KmsConfigs>(KMS_CONFIG_KEY).context;
+    const kmsConfigs: KmsConfigs = configService.get<KmsConfigs>(KMS_CONFIG_KEY);
+    this.encryptionContext = kmsConfigs.context;
+    this.generatorKeyKmsArn = kmsConfigs.generatorKeyArn;
+    this.followUpKeysKmsArns = [kmsConfigs.followUpKeyArn];
   }
 
-  private generateKeyRing(keyAlias: string): KmsKeyringNode {
-    // TODO(#220): Move this to appconfigs/.
-    const generatorKeyId = getPropertyFromEnvironment("kmsGeneratorKeyID");
-    const keyIds = [getPropertyFromEnvironment(keyAlias + "_keyID")];
-    return new KmsKeyringNode({ generatorKeyId, keyIds });
+  private generateKeyRing(): KmsKeyringNode {
+    return new KmsKeyringNode({
+      generatorKeyId: this.generatorKeyKmsArn,
+      keyIds: this.followUpKeysKmsArns
+    });
   }
 
-  async encryptString(plainText: string, keyAlias: string): Promise<string> {
+  async encryptString(plainText: string): Promise<string> {
     // If text is blank or already encrypted, just return text
     if (!plainText || plainText.length === 0 || plainText.startsWith(ENCRYPT_PREFIX)) {
       return plainText;
     }
 
-    const { result } = await encrypt(this.generateKeyRing(keyAlias), plainText, {
+    const { result } = await encrypt(this.generateKeyRing(), plainText, {
       encryptionContext: this.encryptionContext as any,
     });
 
@@ -44,7 +46,7 @@ export class KmsService {
     return ENCRYPT_PREFIX + result.toString("base64");
   }
 
-  async decryptString(encryptedText: string, keyAlias: string): Promise<string> {
+  async decryptString(encryptedText: string): Promise<string> {
     // Ensure we don't decrypt an empty value or one which isn't in fact encrypted
     if (!encryptedText || encryptedText.length === 0 || !encryptedText.startsWith(ENCRYPT_PREFIX)) {
       return encryptedText;
@@ -53,7 +55,7 @@ export class KmsService {
     const encryptedPart = encryptedText.substring(ENCRYPT_PREFIX.length);
 
     const { plaintext, messageHeader } = await decrypt(
-      this.generateKeyRing(keyAlias),
+      this.generateKeyRing(),
       Buffer.from(encryptedPart, "base64"),
     );
     const { encryptionContext } = messageHeader;

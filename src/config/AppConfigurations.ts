@@ -61,6 +61,10 @@ import {
   KMS_CONTEXT_PURPOSE,
   SUPPORTED_CRYPTO_TOKENS_FILE_NAME,
   SUPPORTED_CRYPTO_TOKENS_FILE_PATH,
+  GENERATOR_KEY_KMS_ARN,
+  AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN,
+  FOLLOW_UP_KEY_KMS_ARN,
+  AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -431,8 +435,10 @@ async function configureAwsKmsCredentials(
       "\n'KMS' configurations are required. Please configure the KMS credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${KMS_CONFIG_KEY}" and populate ` +
       `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_STAGE}", ` +
-      `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_ORIGIN}", AND ` +
-      `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_PURPOSE}".`;
+      `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_ORIGIN}", ` +
+      `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_PURPOSE}", ` +
+      `("${GENERATOR_KEY_KMS_ARN}" or "${AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN}"), AND ` +
+      `("${FOLLOW_UP_KEY_KMS_ARN}" or "${AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN}").`;
 
     throw Error(errorMessage);
   }
@@ -440,6 +446,8 @@ async function configureAwsKmsCredentials(
   kmsConfigs.context.origin = await getParameterValue(undefined, kmsConfigs.context.origin);
   kmsConfigs.context.purpose = await getParameterValue(undefined, kmsConfigs.context.purpose);
   kmsConfigs.context.stage = await getParameterValue(undefined, kmsConfigs.context.stage);
+  kmsConfigs.generatorKeyArn = await getParameterValue(kmsConfigs.awsSecretNameForGeneratorKeyArn, kmsConfigs.generatorKeyArn);
+  kmsConfigs.followUpKeyArn = await getParameterValue(kmsConfigs.awsSecretNameForFollowUpKeyArn, kmsConfigs.followUpKeyArn);
 
   configs[KMS_CONFIG_KEY] = kmsConfigs;
   return configs;

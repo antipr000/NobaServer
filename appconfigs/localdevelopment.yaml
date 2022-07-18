@@ -18,13 +18,10 @@ kms:
     stage: "development"
     purpose: "Noba Onramp app"
     origin: "us-east-1"
-
-# AWS KMS Encryption key references
-# kmsGeneratorKeyID is global to all keys
-# Each key followed by _keyID uses a prefix which is our alias to that key. This must match between KMS and our application.
-awskms:
-  kmsGeneratorKeyID: "arn:aws:kms:us-east-1:210194402305:alias/master-key"
-  ssn-encryption-key_keyID: "arn:aws:kms:us-east-1:210194402305:key/39d511f4-c1ff-4d21-b6d5-c3347f0b671c"
+  awsSecretNameForGeneratorKeyArn: "TEST_GENERATOR_KEY_ARN"
+  generatorKeyArn: "bogus-value"
+  awsSecretNameForFollowUpKeyArn: "TEST_FOLLOW_UP_KEY_1_ARN"
+  followUpKeyArn: "bogus-value"
 
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
