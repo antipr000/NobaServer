@@ -18,10 +18,6 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     return this.kmsService.encryptString(text);
   }
 
-  private async decryptString(text: string): Promise<string> {
-    return this.kmsService.decryptString(text);
-  }
-
   async getConsumer(consumerID: string): Promise<Consumer> {
     const userModel = await this.dbProvider.getUserModel();
     const result: any = await userModel.findById(consumerID).exec();
@@ -53,7 +49,6 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       .exec();
 
     const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-    consumerProps.socialSecurityNumber = await this.decryptString(consumerProps.socialSecurityNumber);
     return this.consumerMapper.toDomain(consumerProps);
   }
 
@@ -63,8 +58,6 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       const result = await userModel.findOne({ email: email }).exec();
       if (result) {
         const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-        consumerProps.socialSecurityNumber = await this.decryptString(consumerProps.socialSecurityNumber);
-
         return Result.ok(this.consumerMapper.toDomain(consumerProps));
       } else {
         return Result.fail("Couldn't find consumer in the db");
