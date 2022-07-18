@@ -41,7 +41,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  public async sendKycDenied(firstName: string, lastName: string, email: string) {
+  public async sendKycDeniedEmail(firstName: string, lastName: string, email: string) {
     const fullName = firstName + " " + lastName;
 
     const msg = {
@@ -57,7 +57,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  public async sendKycPendingOrFlagged(firstName: string, lastName: string, email: string) {
+  public async sendKycPendingOrFlaggedEmail(firstName: string, lastName: string, email: string) {
     const fullName = firstName + " " + lastName;
     const minutesFromNow = 10; // TODO: Remove hardcoded minutes
     const futureDate = new Date(new Date().getTime() + minutesFromNow * 60000).toUTCString();

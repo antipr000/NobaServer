@@ -264,7 +264,6 @@ export class Sardine implements IDVProvider {
   processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult {
     const { data } = resultData;
     const riskLevel: SardineRiskLevels = data.documentVerificationResult.verification.riskLevel;
-    // TODO: Ask on what should be the proper mapping
     if (riskLevel === SardineRiskLevels.VERY_HIGH || riskLevel === SardineRiskLevels.HIGH) {
       return {
         status: DocumentVerificationStatus.REJECTED,

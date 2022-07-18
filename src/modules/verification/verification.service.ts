@@ -94,13 +94,13 @@ export class VerificationService {
         updatedConsumer.props.email,
       );
     } else if (result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
-      await this.emailService.sendKycDenied(
+      await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
       );
     } else {
-      await this.emailService.sendKycPendingOrFlagged(
+      await this.emailService.sendKycPendingOrFlaggedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
@@ -126,7 +126,7 @@ export class VerificationService {
       },
     };
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
-    await this.emailService.sendKycPendingOrFlagged(
+    await this.emailService.sendKycPendingOrFlaggedEmail(
       updatedConsumer.props.firstName,
       updatedConsumer.props.lastName,
       updatedConsumer.props.email,
@@ -160,7 +160,7 @@ export class VerificationService {
         updatedConsumer.props.email,
       );
     } else if (result.status === DocumentVerificationStatus.REJECTED) {
-      await this.emailService.sendKycDenied(
+      await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
@@ -198,7 +198,7 @@ export class VerificationService {
         updatedConsumer.props.email,
       );
     } else if (result.status === DocumentVerificationStatus.REJECTED) {
-      await this.emailService.sendKycDenied(
+      await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
