@@ -173,7 +173,7 @@ export class EmailService {
 
     const msg = {
       to: email,
-      from: "Noba Pay <auth@noba.com>",
+      from: SENDER_EMAIL,
       templateId: "d-b0e06a32f6674552979243a2542409b4",
       dynamicTemplateData: {
         username: fullName ?? "",
