@@ -18,7 +18,10 @@ import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
 import { TransactionInformation } from "./domain/TransactionInformation";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { EmailService } from "../common/email.service";
-import { SardineDeviceInformationResponse } from "./integrations/SardineTypeDefinitions";
+import {
+  DocumentVerificationWebhookRequest,
+  SardineDeviceInformationResponse,
+} from "./integrations/SardineTypeDefinitions";
 
 @Injectable()
 export class VerificationService {
@@ -91,13 +94,13 @@ export class VerificationService {
         updatedConsumer.props.email,
       );
     } else if (result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
-      await this.emailService.sendKycDenied(
+      await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
       );
     } else {
-      await this.emailService.sendKycPendingOrFlagged(
+      await this.emailService.sendKycPendingOrFlaggedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
@@ -123,7 +126,7 @@ export class VerificationService {
       },
     };
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
-    await this.emailService.sendKycPendingOrFlagged(
+    await this.emailService.sendKycPendingOrFlaggedEmail(
       updatedConsumer.props.firstName,
       updatedConsumer.props.lastName,
       updatedConsumer.props.email,
@@ -157,13 +160,50 @@ export class VerificationService {
         updatedConsumer.props.email,
       );
     } else if (result.status === DocumentVerificationStatus.REJECTED) {
-      await this.emailService.sendKycDenied(
+      await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
       );
     }
 
+    return result;
+  }
+
+  async processDocumentVerificationWebhookResult(
+    documentVerificationResult: DocumentVerificationWebhookRequest,
+  ): Promise<DocumentVerificationResult> {
+    const consumerID = documentVerificationResult.data.case.customerID;
+    const result: DocumentVerificationResult =
+      this.idvProvider.processDocumentVerificationWebhookResult(documentVerificationResult);
+
+    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const newConsumerData: ConsumerProps = {
+      ...consumer.props,
+      riskRating: result.riskRating,
+      verificationData: {
+        ...consumer.props.verificationData,
+        documentVerificationStatus: result.status,
+      },
+    };
+    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+
+    if (
+      result.status === DocumentVerificationStatus.VERIFIED ||
+      result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
+    ) {
+      await this.emailService.sendKycApprovedEmail(
+        updatedConsumer.props.firstName,
+        updatedConsumer.props.lastName,
+        updatedConsumer.props.email,
+      );
+    } else if (result.status === DocumentVerificationStatus.REJECTED) {
+      await this.emailService.sendKycDeniedEmail(
+        updatedConsumer.props.firstName,
+        updatedConsumer.props.lastName,
+        updatedConsumer.props.email,
+      );
+    }
     return result;
   }
 

@@ -12,7 +12,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 export class MongoDBConsumerRepo implements IConsumerRepo {
   private readonly consumerMapper = new ConsumerMapper();
 
-  constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) { }
+  constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) {}
 
   private async encryptString(text: string): Promise<string> {
     return this.kmsService.encryptString(text);

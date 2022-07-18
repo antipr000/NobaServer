@@ -6,4 +6,5 @@ export type ConsumerVerificationResult = {
 
 export type DocumentVerificationResult = {
   status: DocumentVerificationStatus;
+  riskRating?: string;
 };

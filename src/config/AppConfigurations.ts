@@ -446,8 +446,14 @@ async function configureAwsKmsCredentials(
   kmsConfigs.context.origin = await getParameterValue(undefined, kmsConfigs.context.origin);
   kmsConfigs.context.purpose = await getParameterValue(undefined, kmsConfigs.context.purpose);
   kmsConfigs.context.stage = await getParameterValue(undefined, kmsConfigs.context.stage);
-  kmsConfigs.generatorKeyArn = await getParameterValue(kmsConfigs.awsSecretNameForGeneratorKeyArn, kmsConfigs.generatorKeyArn);
-  kmsConfigs.followUpKeyArn = await getParameterValue(kmsConfigs.awsSecretNameForFollowUpKeyArn, kmsConfigs.followUpKeyArn);
+  kmsConfigs.generatorKeyArn = await getParameterValue(
+    kmsConfigs.awsSecretNameForGeneratorKeyArn,
+    kmsConfigs.generatorKeyArn,
+  );
+  kmsConfigs.followUpKeyArn = await getParameterValue(
+    kmsConfigs.awsSecretNameForFollowUpKeyArn,
+    kmsConfigs.followUpKeyArn,
+  );
 
   configs[KMS_CONFIG_KEY] = kmsConfigs;
   return configs;

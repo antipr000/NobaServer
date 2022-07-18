@@ -8,6 +8,7 @@ import { DocumentInformation } from "../domain/DocumentInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { IDVProvider } from "./IDVProvider";
 import {
+  DocumentVerificationWebhookRequest,
   PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDeviceInformationResponse,
@@ -249,6 +250,22 @@ export class Sardine implements IDVProvider {
       return data;
     } catch (e) {
       throw new BadRequestException(e.message);
+    }
+  }
+
+  processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult {
+    const { data } = resultData;
+    const riskLevel: SardineRiskLevels = data.documentVerificationResult.verification.riskLevel;
+    if (riskLevel === SardineRiskLevels.VERY_HIGH || riskLevel === SardineRiskLevels.HIGH) {
+      return {
+        status: DocumentVerificationStatus.REJECTED,
+        riskRating: riskLevel,
+      };
+    } else if (riskLevel === SardineRiskLevels.MEDIUM || riskLevel === SardineRiskLevels.LOW) {
+      return {
+        status: DocumentVerificationStatus.VERIFIED,
+        riskRating: riskLevel,
+      };
     }
   }
 }

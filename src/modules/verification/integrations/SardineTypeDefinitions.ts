@@ -133,6 +133,67 @@ export type SardineDeviceInformationResponse = {
   gpsLocation?: DeviceGpsLocation;
 };
 
+export type DocumentVerificationWebhookRequest = {
+  id: string;
+  type: string;
+  timestamp: string;
+  data: {
+    action: {
+      source: string;
+    };
+    case: {
+      sessionKey: string;
+      customerID: string;
+    };
+    documentVerificationResult: {
+      verificationId: string;
+      status: string;
+      documentData: {
+        type: string;
+        number: string;
+        dateOfBirth: string;
+        dateOfIssue: string;
+        dateOfExpiry: string;
+        issuingCountry: string;
+        firstName: string;
+        middleName: string;
+        lastName: string;
+        gender: string;
+        address: string;
+      };
+      verification: {
+        riskLevel: SardineRiskLevels;
+        forgeryLevel: SardineRiskLevels;
+        documentMatchLevel: SardineRiskLevels;
+        imageQualityLevel: string;
+        faceMatchLevel: string;
+        reasonCodes: string[];
+      };
+      errorCodes: string[];
+    };
+  };
+};
+
+export type CaseNotificationWebhookRequest = {
+  id: string;
+  type: string;
+  timestamp: string;
+  data: {
+    action: {
+      source: string;
+      user_email: string;
+      value: string;
+    };
+    case: {
+      sessionKey: string;
+      customerID: string;
+      status: string;
+      checkpoint: string;
+      transactionID: string;
+    };
+  };
+};
+
 export enum SardineRiskLevels {
   VERY_HIGH = "very_high",
   HIGH = "high",

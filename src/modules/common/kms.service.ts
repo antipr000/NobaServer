@@ -28,7 +28,7 @@ export class KmsService {
   private generateKeyRing(): KmsKeyringNode {
     return new KmsKeyringNode({
       generatorKeyId: this.generatorKeyKmsArn,
-      keyIds: this.followUpKeysKmsArns
+      keyIds: this.followUpKeysKmsArns,
     });
   }
 
@@ -54,10 +54,7 @@ export class KmsService {
 
     const encryptedPart = encryptedText.substring(ENCRYPT_PREFIX.length);
 
-    const { plaintext, messageHeader } = await decrypt(
-      this.generateKeyRing(),
-      Buffer.from(encryptedPart, "base64"),
-    );
+    const { plaintext, messageHeader } = await decrypt(this.generateKeyRing(), Buffer.from(encryptedPart, "base64"));
     const { encryptionContext } = messageHeader;
 
     Object.entries(this.encryptionContext).forEach(([key, value]) => {
