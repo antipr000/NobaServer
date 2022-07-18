@@ -164,6 +164,7 @@ export class TransactionService {
         user.props.email,
         {
           transactionID: newTransaction.props._id,
+          createdDate: new Date().toDateString(),
           paymentMethod: paymentMethod.cardType,
           last4Digits: paymentMethod.last4Digits,
           currencyCode: newTransaction.props.leg1,

@@ -1,5 +1,6 @@
 export type TransactionEmailParameters = {
   transactionID: string;
+  createdDate: string;
   paymentMethod: string;
   last4Digits: string;
   currencyCode: string;

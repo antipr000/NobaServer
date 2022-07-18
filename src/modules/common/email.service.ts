@@ -180,7 +180,7 @@ export class EmailService {
         transaction_id: transactionEmailParameters.transactionID,
         payment_method: transactionEmailParameters.paymentMethod,
         last_4_digits_of_card: transactionEmailParameters.last4Digits,
-        order_date: new Date().toDateString(),
+        order_date: transactionEmailParameters.createdDate,
         currency_code: transactionEmailParameters.currencyCode,
         subtotal: transactionEmailParameters.subtotalPrice,
         processing_fees: transactionEmailParameters.processingFee,
