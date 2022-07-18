@@ -3,6 +3,7 @@ import { SendGridConfigs } from "../../config/configtypes/SendGridConfigs";
 import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import * as sgMail from "@sendgrid/mail";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { TransactionEmailParameters } from "./domain/TransactionEmailParameters";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -156,6 +157,39 @@ export class EmailService {
         card_network: cardNetwork,
         last_4_digits_of_card: last4Digits,
         support_url: SUPPORT_URL,
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendTransactionInitiatedEmail(
+    firstName: string,
+    lastName: string,
+    email: string,
+    transactionEmailParameters: TransactionEmailParameters,
+  ) {
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
+
+    const msg = {
+      to: email,
+      from: "Noba Pay <auth@noba.com>",
+      templateId: "d-b0e06a32f6674552979243a2542409b4",
+      dynamicTemplateData: {
+        username: fullName ?? "",
+        transaction_id: transactionEmailParameters.transactionID,
+        payment_method: transactionEmailParameters.paymentMethod,
+        last_4_digits_of_card: transactionEmailParameters.last4Digits,
+        order_date: new Date().toDateString(),
+        currency_code: transactionEmailParameters.currencyCode,
+        subtotal: transactionEmailParameters.subtotalPrice,
+        processing_fees: transactionEmailParameters.processingFee,
+        network_fees: transactionEmailParameters.networkFee,
+        total: transactionEmailParameters.totalPrice,
+        crypto_currency_code: transactionEmailParameters.cryptoCurrency,
+        crypto_currency: transactionEmailParameters.cryptoAmount,
+        expected_crypto: transactionEmailParameters.cryptoAmount,
+        fiat_amount: transactionEmailParameters.totalPrice,
       },
     };
 

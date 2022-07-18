@@ -2,7 +2,6 @@ import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CurrencyService } from "../common/currency.service";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerService } from "../consumer/consumer.service";
@@ -18,6 +17,7 @@ import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
+import { EmailService } from "../common/email.service";
 
 @Injectable()
 export class TransactionService {
@@ -37,6 +37,7 @@ export class TransactionService {
     private readonly consumerService: ConsumerService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
+    @Inject(EmailService) private readonly emailService: EmailService,
   ) {
     this.transactionsMapper = new TransactionMapper();
   }
@@ -152,6 +153,30 @@ export class TransactionService {
 
     if (result.status !== ConsumerVerificationStatus.APPROVED) {
       throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
+    }
+
+    try {
+      // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
+      // try catch block
+      await this.emailService.sendTransactionInitiatedEmail(
+        user.props.firstName,
+        user.props.lastName,
+        user.props.email,
+        {
+          transactionID: newTransaction.props._id,
+          paymentMethod: paymentMethod.cardType,
+          last4Digits: paymentMethod.last4Digits,
+          currencyCode: newTransaction.props.leg1,
+          subtotalPrice: newTransaction.props.leg1Amount,
+          processingFee: 0, // TODO: Update processing fee
+          networkFee: 0, // TODO: Update network fee
+          totalPrice: newTransaction.props.leg1Amount,
+          cryptoAmount: newTransaction.props.leg2Amount,
+          cryptoCurrency: newTransaction.props.leg2,
+        },
+      );
+    } catch (e) {
+      this.logger.error("Failed to send email at transaction initiation. " + e);
     }
 
     //TODO we shouldn't be processing the below steps synchronously as there may be some partial failures
