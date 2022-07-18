@@ -32,7 +32,7 @@ export class EmailService {
     const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
     const msg = {
       to: email,
-      from: "Noba Pay <auth@noba.com>",
+      from: SENDER_EMAIL,
       templateId: "d-0c8d633f6de545c6a562ac8e6d53917d",
       dynamicTemplateData: {
         username: fullName ?? "",
