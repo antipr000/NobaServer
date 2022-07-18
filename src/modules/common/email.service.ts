@@ -4,7 +4,7 @@ import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import * as sgMail from "@sendgrid/mail";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
-const SUPPORT_URL = "noba.com/support"; //TODO: Fix this
+const SUPPORT_URL = "help.noba.com";
 @Injectable()
 export class EmailService {
   constructor(configService: CustomConfigService) {
