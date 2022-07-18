@@ -132,7 +132,7 @@ export class ConsumerService {
       cardName: paymentMethod.cardName,
       cardType: "card",
       first6Digits: paymentMethod.cardNumber.substring(0, 6),
-      last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 5),
+      last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       imageUri: paymentMethod.imageUri,
       paymentToken: stripePaymentMethod.id,
       paymentProviderID: PaymentProviders.STRIPE,
