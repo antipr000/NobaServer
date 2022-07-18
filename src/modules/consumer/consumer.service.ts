@@ -246,7 +246,7 @@ export class ConsumerService {
         consumer.props.lastName,
         consumer.props.email,
         /* cardNetwork = */ "",
-        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 5),
+        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       );
       throw new BadRequestException("Card details are not valid");
     }
