@@ -66,7 +66,9 @@ export class ConsumerService {
           },
         ],
       });
-      return this.consumerRepo.createConsumer(newConsumer);
+      const result = await this.consumerRepo.createConsumer(newConsumer);
+      await this.emailService.sendWelcomeMessage(emailOrPhone, result.props.firstName, result.props.lastName);
+      return result;
     } else if (
       consumerResult.getValue().props.partners.filter(partner => partner.partnerID === partnerID).length === 0
     ) {
@@ -132,7 +134,7 @@ export class ConsumerService {
       cardName: paymentMethod.cardName,
       cardType: "card",
       first6Digits: paymentMethod.cardNumber.substring(0, 6),
-      last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 5),
+      last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       imageUri: paymentMethod.imageUri,
       paymentToken: stripePaymentMethod.id,
       paymentProviderID: PaymentProviders.STRIPE,
@@ -231,7 +233,7 @@ export class ConsumerService {
         };
       }
 
-      const result = this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
+      const result = await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
@@ -246,7 +248,7 @@ export class ConsumerService {
         consumer.props.lastName,
         consumer.props.email,
         /* cardNetwork = */ "",
-        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 5),
+        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       );
       throw new BadRequestException("Card details are not valid");
     }

@@ -118,7 +118,7 @@ export class ZeroHashService {
       date_of_birth: consumer.dateOfBirth, // ZH format and our format are both YYYY-MM-DD
       id_number_type: "ssn", // TODO: Support other types outside US
       id_number: consumer.socialSecurityNumber, // TODO: Support other types outside US
-      signed_timestamp: 1603378501286, // TODO: Should be the timestamp the user accepted the T&C
+      signed_timestamp: Date.now(),
       metadata: {},
       risk_rating: consumer.riskRating,
     };

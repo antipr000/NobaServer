@@ -81,10 +81,6 @@ export class Sardine implements IDVProvider {
         return {
           status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
         };
-      } else if (data.level === SardineRiskLevels.MEDIUM) {
-        return {
-          status: ConsumerVerificationStatus.PENDING_FLAGGED_KYC,
-        };
       } else {
         return {
           status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
@@ -228,10 +224,6 @@ export class Sardine implements IDVProvider {
       if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
         return {
           status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_FRAUD,
-        };
-      } else if (data.level === SardineRiskLevels.MEDIUM) {
-        return {
-          status: ConsumerVerificationStatus.PENDING_FLAGGED_FRAUD,
         };
       } else {
         return {

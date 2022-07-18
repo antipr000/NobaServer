@@ -14,5 +14,5 @@ export type KycVerificationDTO = {
     | "NotApproved-Rejected-KYC"
     | "NotApproved-Rejected-Fraud"
     | "NotApproved-Rejected-Wallet";
-  updatedAt?: number;
+  updatedTimestamp?: number;
 };

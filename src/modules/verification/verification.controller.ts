@@ -196,6 +196,7 @@ export class VerificationController {
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 
+  @Public()
   @Get("/device/result")
   @ApiOperation({ summary: "Gets device verification result" })
   @ApiResponse({

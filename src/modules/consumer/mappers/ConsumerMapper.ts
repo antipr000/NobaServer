@@ -42,13 +42,13 @@ export class ConsumerMapper implements Mapper<Consumer> {
         kycVerificationStatus: p.verificationData
           ? p.verificationData.kycVerificationStatus
           : ConsumerVerificationStatus.PENDING_NEW,
-        updatedAt: p.verificationData ? p.verificationData.idVerificationTimestamp : 0,
+        updatedTimestamp: p.verificationData ? p.verificationData.idVerificationTimestamp : 0,
       },
       documentVerificationData: {
         documentVerificationStatus: p.verificationData
           ? p.verificationData.documentVerificationStatus
           : DocumentVerificationStatus.NOT_REQUIRED,
-        updatedAt: p.verificationData ? p.verificationData.documentVerificationTimestamp : 0,
+        updatedTimestamp: p.verificationData ? p.verificationData.documentVerificationTimestamp : 0,
       },
       dateOfBirth: p.dateOfBirth,
       address: p.address,

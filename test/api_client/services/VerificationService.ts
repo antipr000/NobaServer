@@ -187,7 +187,7 @@ export class VerificationService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/verify/device/result",
-      path: {
+      query: {
         sessionKey: sessionKey,
       },
       errors: {
