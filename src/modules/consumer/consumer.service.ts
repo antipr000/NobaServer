@@ -231,7 +231,7 @@ export class ConsumerService {
         };
       }
 
-      const result = this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
+      const result = await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
