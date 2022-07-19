@@ -19,6 +19,7 @@ import { TransactionInformation } from "./domain/TransactionInformation";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { EmailService } from "../common/email.service";
 import {
+  CaseNotificationWebhookRequest,
   DocumentVerificationWebhookRequest,
   SardineDeviceInformationResponse,
 } from "./integrations/SardineTypeDefinitions";
@@ -107,6 +108,40 @@ export class VerificationService {
       );
     }
     return result;
+  }
+
+  async processKycVerificationWebhookRequest(requestBody: CaseNotificationWebhookRequest) {
+    const consumerID = requestBody.data.case.customerID;
+    const result: ConsumerVerificationResult = this.idvProvider.processKycVerificationWebhookResult(requestBody);
+    if (
+      result.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED ||
+      result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC
+    ) {
+      const consumer = await this.consumerService.getConsumer(consumerID);
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        verificationData: {
+          ...consumer.props.verificationData,
+          kycVerificationStatus: result.status,
+        },
+      };
+
+      await this.consumerService.updateConsumer(newConsumerData);
+
+      if (result.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED) {
+        await this.emailService.sendKycApprovedEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.email,
+        );
+      } else if (result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
+        await this.emailService.sendKycDeniedEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.email,
+        );
+      }
+    }
   }
 
   async verifyDocument(

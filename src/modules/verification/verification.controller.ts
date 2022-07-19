@@ -216,6 +216,7 @@ export class VerificationController {
     @Headers() headers,
     @Body() requestBody: DocumentVerificationWebhookRequest,
   ): Promise<VerificationResultDTO> {
+    this.logger.debug("Sardine document verification webhook: " + requestBody);
     const sardineSignature = headers["x-sardine-signature"];
     const hmac = crypto.createHmac("sha256", "");
     const data = hmac.update(JSON.stringify(requestBody));
@@ -238,8 +239,9 @@ export class VerificationController {
     if (sardineSignature !== hexString) {
       throw new ForbiddenException("Signature does not match");
     }
-    // TODO: Figure out what needs to be done here
-    this.logger.info("Sardine notification: " + requestBody);
+    // Logging this for initial debugging in staging and prod
+    this.logger.debug("Sardine notification: " + requestBody);
+    this.verificationService.processKycVerificationWebhookRequest(requestBody);
     return "Successfully received";
   }
 }

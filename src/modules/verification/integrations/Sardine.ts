@@ -8,6 +8,9 @@ import { DocumentInformation } from "../domain/DocumentInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { IDVProvider } from "./IDVProvider";
 import {
+  CaseAction,
+  CaseNotificationWebhookRequest,
+  CaseStatus,
   DocumentVerificationWebhookRequest,
   PaymentMethodTypes,
   SardineCustomerRequest,
@@ -267,5 +270,23 @@ export class Sardine implements IDVProvider {
         riskRating: riskLevel,
       };
     }
+  }
+
+  processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult {
+    const { data } = resultData;
+    if (data.case.status === CaseStatus.RESOLVED) {
+      if (data.action.value === CaseAction.APPROVE) {
+        return {
+          status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
+        };
+      } else if (data.action.value === CaseAction.DECLINE) {
+        return {
+          status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
+        };
+      }
+    }
+    return {
+      status: ConsumerVerificationStatus.PENDING_KYC_SUBMITTED,
+    };
   }
 }
