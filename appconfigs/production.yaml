@@ -14,10 +14,11 @@ kms:
     stage: "production"
     purpose: "Noba Onramp app"
     origin: "us-east-1"
-  awsSecretNameForGeneratorKeyArn: "PROD_GENERATOR_KEY_ARN"
-  generatorKeyArn: "bogus-value"
-  awsSecretNameForFollowUpKeyArn: "PROD_FOLLOW_UP_KEY_1_ARN"
-  followUpKeyArn: "bogus-value"
+  ssn:
+    awsSecretNameForGeneratorKeyArn: "PROD_SSN_GENERATOR_KEY_ARN"
+    generatorKeyArn: "bogus-value"
+    awsSecretNameForFollowUpKeyArn: "PROD_SSN_FOLLOW_UP_KEY_1_ARN"
+    followUpKeyArn: "bogus-value"
 
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys

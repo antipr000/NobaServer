@@ -7,18 +7,27 @@ import {
   KMS_CONTEXT_ORIGIN,
   KMS_CONTEXT_PURPOSE,
   KMS_CONTEXT_STAGE,
+  KMS_SSN_CONFIG_KEY,
 } from "../ConfigurationUtils";
 
 export interface KmsConfigs {
   [KMS_CONFIG_CONTEXT_KEY]: CustomKmsEncryptionContext;
-  [GENERATOR_KEY_KMS_ARN]: string;
-  [AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN]: string;
-  [FOLLOW_UP_KEY_KMS_ARN]: string;
-  [AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN]: string;
+  [KMS_SSN_CONFIG_KEY]: KmsSingleKeyConfigs;
 }
 
 export interface CustomKmsEncryptionContext {
   [KMS_CONTEXT_STAGE]: string;
   [KMS_CONTEXT_PURPOSE]: string;
   [KMS_CONTEXT_ORIGIN]: string;
+}
+
+export interface KmsSingleKeyConfigs {
+  [GENERATOR_KEY_KMS_ARN]: string;
+  [AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN]: string;
+  [FOLLOW_UP_KEY_KMS_ARN]: string;
+  [AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN]: string;
+}
+
+export enum KmsKeyType {
+  SSN,
 }

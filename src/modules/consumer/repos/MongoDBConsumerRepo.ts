@@ -6,6 +6,7 @@ import { IConsumerRepo } from "./ConsumerRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { KmsService } from "../../../modules/common/kms.service";
+import { KmsKeyType } from "src/config/configtypes/KmsConfigs";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
@@ -15,7 +16,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
   constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) {}
 
   private async encryptString(text: string): Promise<string> {
-    return this.kmsService.encryptString(text);
+    return this.kmsService.encryptString(text, KmsKeyType.SSN);
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {

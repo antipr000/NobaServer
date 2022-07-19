@@ -430,15 +430,15 @@ async function configureAwsKmsCredentials(
 ): Promise<Record<string, any>> {
   const kmsConfigs: KmsConfigs = configs[KMS_CONFIG_KEY];
 
-  if (kmsConfigs === undefined || kmsConfigs.context === undefined) {
+  if (kmsConfigs === undefined || kmsConfigs.context === undefined || kmsConfigs.ssn === undefined) {
     const errorMessage =
       "\n'KMS' configurations are required. Please configure the KMS credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${KMS_CONFIG_KEY}" and populate ` +
       `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_STAGE}", ` +
       `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_ORIGIN}", ` +
       `"${KMS_CONFIG_CONTEXT_KEY}.${KMS_CONTEXT_PURPOSE}", ` +
-      `("${GENERATOR_KEY_KMS_ARN}" or "${AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN}"), AND ` +
-      `("${FOLLOW_UP_KEY_KMS_ARN}" or "${AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN}").`;
+      `("${KMS_CONFIG_CONTEXT_KEY}.${GENERATOR_KEY_KMS_ARN}" or "${KMS_CONFIG_CONTEXT_KEY}.${AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN}"), AND ` +
+      `("${KMS_CONFIG_CONTEXT_KEY}.${FOLLOW_UP_KEY_KMS_ARN}" or "${KMS_CONFIG_CONTEXT_KEY}.${AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN}").`;
 
     throw Error(errorMessage);
   }
@@ -446,13 +446,13 @@ async function configureAwsKmsCredentials(
   kmsConfigs.context.origin = await getParameterValue(undefined, kmsConfigs.context.origin);
   kmsConfigs.context.purpose = await getParameterValue(undefined, kmsConfigs.context.purpose);
   kmsConfigs.context.stage = await getParameterValue(undefined, kmsConfigs.context.stage);
-  kmsConfigs.generatorKeyArn = await getParameterValue(
-    kmsConfigs.awsSecretNameForGeneratorKeyArn,
-    kmsConfigs.generatorKeyArn,
+  kmsConfigs.ssn.generatorKeyArn = await getParameterValue(
+    kmsConfigs.ssn.awsSecretNameForGeneratorKeyArn,
+    kmsConfigs.ssn.generatorKeyArn,
   );
-  kmsConfigs.followUpKeyArn = await getParameterValue(
-    kmsConfigs.awsSecretNameForFollowUpKeyArn,
-    kmsConfigs.followUpKeyArn,
+  kmsConfigs.ssn.followUpKeyArn = await getParameterValue(
+    kmsConfigs.ssn.awsSecretNameForFollowUpKeyArn,
+    kmsConfigs.ssn.followUpKeyArn,
   );
 
   configs[KMS_CONFIG_KEY] = kmsConfigs;
