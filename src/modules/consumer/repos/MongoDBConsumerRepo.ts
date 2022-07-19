@@ -6,7 +6,7 @@ import { IConsumerRepo } from "./ConsumerRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { KmsService } from "../../../modules/common/kms.service";
-import { KmsKeyType } from "src/config/configtypes/KmsConfigs";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
