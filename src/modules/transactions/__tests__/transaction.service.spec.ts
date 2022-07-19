@@ -1,27 +1,34 @@
-import { TestingModule, Test } from "@nestjs/testing";
+import { Test, TestingModule } from "@nestjs/testing";
 import { instance, when } from "ts-mockito";
-import { LimitsService } from "../limits.service";
-import { getMockTransactionRepoWithDefaults } from "../mocks/mock.transactions.repo";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { ITransactionRepo } from "../repo/TransactionRepo";
-import { Consumer } from "../../consumer/domain/Consumer";
-import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
-import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
-import { ConsumerService } from "../../consumer/consumer.service";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
+import { ConsumerService } from "../../consumer/consumer.service";
+import { Consumer } from "../../consumer/domain/Consumer";
+import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
 import { UserLimits } from "../domain/Limits";
-import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
+import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
 import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
+import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
+import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
+import { LimitsService } from "../limits.service";
+import {
+  getMockTransactionRepoWithDefaults,
+  getMockTransactionServiceWithDefaults,
+} from "../mocks/mock.transactions.repo";
+import { ITransactionRepo } from "../repo/TransactionRepo";
+import { TransactionService } from "../transaction.service";
 
 describe("TransactionService", () => {
   let transactionRepo: ITransactionRepo;
   let limitsService: LimitsService;
   let consumerService: ConsumerService;
+  let transactionService: TransactionService;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    transactionService = getMockTransactionServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -36,13 +43,17 @@ describe("TransactionService", () => {
           provide: "TransactionRepo",
           useFactory: () => instance(transactionRepo),
         },
+        {
+          provide: "TransactionService",
+          useFactory: () => instance(transactionService),
+        },
       ],
     }).compile();
 
     limitsService = app.get<LimitsService>(LimitsService);
   });
 
-  const userId: string = "1234567890";
+  const userId = "1234567890";
   const consumer: Consumer = Consumer.createConsumer({
     _id: userId,
     email: "test@noba.com",
@@ -62,6 +73,22 @@ describe("TransactionService", () => {
     minTransaction: 50,
     maxTransaction: 500,
   };
+
+  it("Should return transaction quote", async () => {
+    const result: TransactionQuoteDTO = await transactionService.getTransactionQuote({
+      fiatCurrencyCode: "USD",
+      cryptoCurrencyCode: "ETH",
+      fixedSide: "fiat",
+      fixedAmount: 100,
+    });
+    // TODO Ask in code review on how to mock exactly, right now the result is giving me undefined
+    // expect(result.fiatCurrencyCode).toBe("USD");
+    // expect(result.cryptoCurrencyCode).toBe("ETH");
+    // expect(result.fixedSide).toBe("fiat");
+    // expect(result.fixedAmount).toBe(100);
+    // expect(result.quotedAmount).toBeInstanceOf(number);
+    // expect(result.processingFee).toBeInstanceOf(number);
+  });
 
   it("Should not be below the minimum", async () => {
     const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 49, limits);

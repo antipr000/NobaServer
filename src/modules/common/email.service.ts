@@ -174,7 +174,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-b0e06a32f6674552979243a2542409b4",
+      templateId: "d-7e413692c9f8497c80d5b5e2a5218171",
       dynamicTemplateData: {
         username: fullName ?? "",
         transaction_id: transactionEmailParameters.transactionID,

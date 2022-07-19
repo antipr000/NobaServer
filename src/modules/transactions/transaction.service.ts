@@ -13,6 +13,8 @@ import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
+import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
+import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
 import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
@@ -40,6 +42,41 @@ export class TransactionService {
     @Inject(EmailService) private readonly emailService: EmailService,
   ) {
     this.transactionsMapper = new TransactionMapper();
+  }
+
+  async getTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
+    const nobaSpread = 0.02; // Noba charges a two percent spread on all transactions
+    const priceInFiatForSingleCryptoUnitWithoutSpread = await this.exchangeRateService.priceInFiat(
+      transactionQuoteQuery.cryptoCurrencyCode,
+      transactionQuoteQuery.fiatCurrencyCode,
+    );
+    const priceInFiatForSingleCryptoUnitWithSpread = priceInFiatForSingleCryptoUnitWithoutSpread * (1 + nobaSpread);
+    const estimatedNetworkFeeFromZeroHash = await this.zeroHashService.estimateNetworkFee(
+      transactionQuoteQuery.cryptoCurrencyCode,
+      transactionQuoteQuery.fiatCurrencyCode,
+    );
+    const estimatedNetworkFeeInCrypto = estimatedNetworkFeeFromZeroHash["message"]["network_fee_quantity"];
+
+    let processingFeeInFiat: number, quotedAmount: number;
+    if (transactionQuoteQuery.fixedSide == "fiat") {
+      quotedAmount = transactionQuoteQuery.fixedAmount / priceInFiatForSingleCryptoUnitWithSpread;
+      // TODO As of now processing fee is always in USD
+      processingFeeInFiat = transactionQuoteQuery.fixedAmount * 0.029 + 0.3;
+    } else {
+      quotedAmount = transactionQuoteQuery.fixedAmount * priceInFiatForSingleCryptoUnitWithSpread;
+      processingFeeInFiat = quotedAmount * 0.029 + 0.3;
+    }
+    const transactionQuote: TransactionQuoteDTO = {
+      fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
+      cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
+      fixedSide: transactionQuoteQuery.fixedSide,
+      fixedAmount: transactionQuoteQuery.fixedAmount,
+      quotedAmount: quotedAmount,
+      processingFee: processingFeeInFiat,
+      networkFee: estimatedNetworkFeeInCrypto,
+    };
+
+    return transactionQuote;
   }
 
   async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {
