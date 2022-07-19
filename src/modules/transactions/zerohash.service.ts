@@ -1,16 +1,17 @@
+/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
 
 import { BadRequestException, Inject, Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { BadRequestError } from "../../core/exception/CommonAppException";
 import { Logger } from "winston";
+import { AppService } from "../../app.service";
+import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
+import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { BadRequestError } from "../../core/exception/CommonAppException";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
-import { AppService } from "../../app.service";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -153,13 +154,13 @@ export class ZeroHashService {
 
   // Execute a liquidity quote
   async executeQuote(quote_id) {
-    let executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
+    const executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
     return executed_trade;
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
   async transferAssets(sender_participant, sender_group, receiver_participant, receiver_group, asset, amount) {
-    let transfer = await this.makeRequest("/transfers", "POST", {
+    const transfer = await this.makeRequest("/transfers", "POST", {
       from_participant_code: sender_participant,
       from_account_group: sender_group,
       to_participant_code: receiver_participant,
@@ -173,19 +174,19 @@ export class ZeroHashService {
 
   // Trade the crypto from Noba to Custom
   async requestTrade(tradeData) {
-    let trade_request = await this.makeRequest("/trades", "POST", tradeData);
+    const trade_request = await this.makeRequest("/trades", "POST", tradeData);
     return trade_request;
   }
 
   // Get trade and check status
   // Initiate a withdrawal if trade_status is terminated
   async getTrade(trade_id) {
-    let trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
+    const trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
     return trade_data;
   }
 
   async requestWithdrawal(digital_address, participant_code, amount, asset, account_group) {
-    let withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
+    const withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
       address: digital_address,
       participant_code: participant_code,
       amount: amount,
@@ -196,8 +197,17 @@ export class ZeroHashService {
   }
 
   async getWithdrawal(withdrawal_id) {
-    let withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
+    const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
     return withdrawal;
+  }
+
+  async estimateNetworkFee(underlying, quoted_currency) {
+    const network_fee = await this.makeRequest(
+      `/withdrawals/estimate_network_fee?underlying=${underlying}&quoted_currency=${quoted_currency}`,
+      "GET",
+      {},
+    );
+    return network_fee;
   }
 
   async transferCryptoToDestinationWallet(

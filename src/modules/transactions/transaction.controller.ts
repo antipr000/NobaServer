@@ -4,24 +4,20 @@ import {
   Get,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Post,
   Query,
   Response,
-  Request,
-  UnauthorizedException,
-  ForbiddenException,
-  NotFoundException,
 } from "@nestjs/common";
 import {
-  ApiBadGatewayResponse,
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
+  ApiServiceUnavailableResponse,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import * as fs from "fs";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -36,15 +32,18 @@ import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransacti
 import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 
 import { AuthUser } from "../auth/auth.decorator";
+import { Public } from "../auth/public.decorator";
 import { CsvService } from "../common/csv.service";
 import { Consumer } from "../consumer/domain/Consumer";
-import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
+import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
+import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
+import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
+import { ExchangeRateService } from "./exchangerate.service";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
-import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -58,8 +57,23 @@ export class TransactionController {
     private readonly configService: CustomConfigService,
     private readonly limitsService: LimitsService,
     private readonly zerohashService: ZeroHashService,
+    private readonly exchangeRateService: ExchangeRateService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
+
+  @Public()
+  @Get("/transactions/quote")
+  @ApiTags("Transactions")
+  @ApiOperation({
+    summary: "Get transaction quote (exchange rate, provider fees, network fees etc.)",
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: TransactionQuoteDTO })
+  @ApiBadRequestResponse({ description: "Invalid currency code (fiat or crypto)" })
+  @ApiServiceUnavailableResponse({ description: "Unable to connect to underlying service provider" })
+  async getTransactionQuote(@Query() transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
+    const transactionQuote = await this.transactionService.getTransactionQuote(transactionQuoteQuery);
+    return transactionQuote;
+  }
 
   @Get("/transactions/check")
   @ApiTags("Transactions")

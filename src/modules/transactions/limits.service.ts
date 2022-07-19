@@ -112,7 +112,7 @@ export class LimitsService {
     if (total > limits.monthlyLimit) {
       // Spent + new amount exceeds monthly limit
       let maxRemaining = limits.monthlyLimit - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
-      let minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
       if (maxRemaining < 0) {
         // This would mean we've over-spent monthly limit, which should never happen
         maxRemaining = 0;
