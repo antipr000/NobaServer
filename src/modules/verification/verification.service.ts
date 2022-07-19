@@ -11,7 +11,7 @@ import { ConsumerInformation } from "./domain/ConsumerInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "./domain/VerificationResult";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { DocumentInformation } from "./domain/DocumentInformation";
-import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus } from "../consumer/domain/VerificationStatus";
 import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
@@ -81,20 +81,20 @@ export class VerificationService {
         kycVerificationStatus: result.status,
         idVerificationTimestamp: new Date().getTime(),
         documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
-          ? DocumentVerificationStatus.NOT_SUBMITTED
+          ? DocumentVerificationStatus.REQUIRED
           : DocumentVerificationStatus.NOT_REQUIRED,
       },
       socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
     };
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
 
-    if (result.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED) {
+    if (result.status === KYCStatus.APPROVED) {
       await this.emailService.sendKycApprovedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
       );
-    } else if (result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
+    } else if (result.status === KYCStatus.REJECTED) {
       await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,

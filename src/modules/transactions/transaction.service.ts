@@ -6,7 +6,7 @@ import { CurrencyService } from "../common/currency.service";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerService } from "../consumer/consumer.service";
 import { PaymentMethods } from "../consumer/domain/PaymentMethods";
-import { ConsumerVerificationStatus } from "../consumer/domain/VerificationStatus";
+import { KYCStatus } from "../consumer/domain/VerificationStatus";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { Transaction } from "./domain/Transaction";
@@ -188,7 +188,7 @@ export class TransactionService {
       sardineTransactionInformation,
     );
 
-    if (result.status !== ConsumerVerificationStatus.APPROVED) {
+    if (result.status !== KYCStatus.OLD_APPROVED) {
       throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
     }
 

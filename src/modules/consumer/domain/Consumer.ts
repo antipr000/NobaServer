@@ -4,7 +4,7 @@ import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { Entity } from "../../../core/domain/Entity";
 import { Address } from "./Address";
-import { ConsumerVerificationStatus, DocumentVerificationStatus } from "./VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus } from "./VerificationStatus";
 import { PartnerDetails } from "./PartnerDetails";
 import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
@@ -26,6 +26,9 @@ export interface ConsumerProps extends VersioningInfo {
   nationalID?: string;
   nationalIDType?: string;
   riskRating?: string;
+  isSuspectedFraud?: boolean;
+  isLocked?: boolean;
+  isDeleted?: boolean;
   partners?: PartnerDetails[];
   paymentProviderAccounts?: PaymentProviderDetails[];
   verificationData?: VerificationData;
@@ -44,7 +47,7 @@ const paymentProviderValidationJoiKeys: KeysRequired<PaymentProviderDetails> = {
 
 const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
   verificationProvider: Joi.string().required().default(VerificationProviders.SARDINE),
-  kycVerificationStatus: Joi.string().default(ConsumerVerificationStatus.PENDING_NEW),
+  kycVerificationStatus: Joi.string().optional(),
   documentVerificationStatus: Joi.string().default(DocumentVerificationStatus.NOT_REQUIRED),
   documentVerificationTransactionID: Joi.string().optional(),
   idVerificationTimestamp: Joi.number().optional(),
@@ -59,13 +62,15 @@ const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethods> = {
   imageUri: Joi.string().optional(),
   paymentToken: Joi.string().required(),
   paymentProviderID: Joi.string().required(),
+  status: Joi.string().optional(),
 };
 
 const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallets> = {
+  walletName: Joi.string().required(),
   address: Joi.string().required(),
   chainType: Joi.string().required(),
   isEVMCompatible: Joi.boolean().required(),
-  status: Joi.string().required(),
+  status: Joi.string().optional(),
 };
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
@@ -98,6 +103,9 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   nationalID: Joi.string().optional(),
   nationalIDType: Joi.string().optional(),
   riskRating: Joi.string().optional(),
+  isSuspectedFraud: Joi.boolean().optional(),
+  isLocked: Joi.boolean().optional(),
+  isDeleted: Joi.boolean().optional(),
   partners: Joi.array().items(partnerValidationJoiKeys).required(),
   paymentProviderAccounts: Joi.array().items(paymentProviderValidationJoiKeys).optional(),
   verificationData: Joi.object().keys(verificationDataValidationJoiKeys).optional(),

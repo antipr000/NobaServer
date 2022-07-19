@@ -1,4 +1,4 @@
-import { ConsumerVerificationStatus, DocumentVerificationStatus } from "./VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus } from "./VerificationStatus";
 
 export enum VerificationProviders {
   SARDINE = "sardine",
@@ -6,7 +6,7 @@ export enum VerificationProviders {
 
 export type VerificationData = {
   verificationProvider: VerificationProviders;
-  kycVerificationStatus: ConsumerVerificationStatus;
+  kycVerificationStatus: KYCStatus;
   documentVerificationStatus: DocumentVerificationStatus;
   documentVerificationTransactionID?: string;
   idVerificationTimestamp?: number;

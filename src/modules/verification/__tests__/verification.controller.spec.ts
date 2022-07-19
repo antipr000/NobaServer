@@ -5,7 +5,7 @@ import { VerificationService } from "../verification.service";
 import { getMockVerificationServiceWithDefaults } from "../mocks/mock.verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
-import { ConsumerVerificationStatus } from "../../consumer/domain/VerificationStatus";
+import { KYCStatus } from "../../consumer/domain/VerificationStatus";
 import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
@@ -105,7 +105,7 @@ describe("VerificationController", () => {
     when(
       verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
     ).thenResolve({
-      status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
+      status: KYCStatus.APPROVED,
     });
 
     const result = await verificationController.verifyConsumer(
@@ -155,7 +155,7 @@ describe("VerificationController", () => {
     when(
       verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
     ).thenResolve({
-      status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
+      status: KYCStatus.REJECTED,
     });
 
     const result = await verificationController.verifyConsumer(
@@ -205,7 +205,7 @@ describe("VerificationController", () => {
     when(
       verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
     ).thenResolve({
-      status: ConsumerVerificationStatus.PENDING_FLAGGED_KYC,
+      status: KYCStatus.FLAGGED,
     });
 
     const result = await verificationController.verifyConsumer(

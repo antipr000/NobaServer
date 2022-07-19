@@ -3,7 +3,7 @@ import { ConsumerDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/Consume
 import { Mapper } from "../../../core/infra/Mapper";
 import { CryptoWallets } from "../domain/CryptoWallets";
 import { PaymentMethods } from "../domain/PaymentMethods";
-import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus } from "../domain/VerificationStatus";
 
 export class ConsumerMapper implements Mapper<Consumer> {
   public toDomain(raw: any): Consumer {
@@ -12,6 +12,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
   public toCryptoWalletsDTO(cryptoWallets: CryptoWallets): CryptoWalletsDTO {
     return {
+      walletName: cryptoWallets.walletName,
       address: cryptoWallets.address,
       chainType: cryptoWallets.chainType,
       isEVMCompatible: cryptoWallets.isEVMCompatible,
@@ -27,6 +28,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       paymentToken: paymentMethod.paymentToken,
       first6Digits: paymentMethod.first6Digits,
       last4Digits: paymentMethod.last4Digits,
+      status: paymentMethod.status,
     };
   }
 
@@ -38,10 +40,11 @@ export class ConsumerMapper implements Mapper<Consumer> {
       lastName: p.lastName,
       email: p.email,
       phone: p.phone,
+      isSuspectedFraud: p.isSuspectedFraud,
+      isLocked: p.isLocked,
+      isDeleted: p.isDeleted,
       kycVerificationData: {
-        kycVerificationStatus: p.verificationData
-          ? p.verificationData.kycVerificationStatus
-          : ConsumerVerificationStatus.PENDING_NEW,
+        kycVerificationStatus: p.verificationData ? p.verificationData.kycVerificationStatus : KYCStatus.NOT_SUBMITTED,
         updatedTimestamp: p.verificationData ? p.verificationData.idVerificationTimestamp : 0,
       },
       documentVerificationData: {

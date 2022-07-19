@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Address } from "../domain/Address";
-import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 
 export class PaymentMethodsDTO {
   @ApiPropertyOptional()
@@ -20,9 +20,15 @@ export class PaymentMethodsDTO {
 
   @ApiProperty()
   last4Digits: string;
+
+  @ApiProperty()
+  status: PaymentMethodStatus;
 }
 
 export class CryptoWalletsDTO {
+  @ApiProperty()
+  walletName: string;
+
   @ApiProperty()
   address: string;
 
@@ -33,11 +39,11 @@ export class CryptoWalletsDTO {
   isEVMCompatible: boolean;
 
   @ApiProperty()
-  status: string;
+  status: WalletStatus;
 }
 
 export class KycVerificationDTO {
-  @ApiPropertyOptional({ enum: ConsumerVerificationStatus })
+  @ApiPropertyOptional({ enum: KYCStatus })
   kycVerificationStatus?: string;
 
   @ApiPropertyOptional()
@@ -78,6 +84,15 @@ export class ConsumerDTO {
 
   @ApiPropertyOptional()
   address?: Address;
+
+  @ApiProperty()
+  isSuspectedFraud: boolean;
+
+  @ApiProperty()
+  isLocked: boolean;
+
+  @ApiPropertyOptional()
+  isDeleted?: boolean;
 
   @ApiPropertyOptional({ type: [PaymentMethodsDTO] })
   paymentMethods?: PaymentMethodsDTO[];

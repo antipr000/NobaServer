@@ -93,7 +93,7 @@ export class ConsumerService {
   public static getConsumerLimits(): CancelablePromise<ConsumerLimitsDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/consumers/limits/",
+      url: "/v1/consumers/limits",
       errors: {
         400: `Invalid request parameters`,
       },

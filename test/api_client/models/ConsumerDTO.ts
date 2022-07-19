@@ -17,6 +17,9 @@ export type ConsumerDTO = {
   phone?: string;
   dateOfBirth?: string;
   address?: any;
+  isSuspectedFraud: boolean;
+  isLocked: boolean;
+  isDeleted?: boolean;
   paymentMethods?: Array<PaymentMethodsDTO>;
   cryptoWallets?: Array<CryptoWalletsDTO>;
 };
