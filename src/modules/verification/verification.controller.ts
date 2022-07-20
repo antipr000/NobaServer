@@ -74,26 +74,6 @@ export class VerificationController {
     return this.verificationService.getCountryCodes();
   }
 
-  @Get("/consents/:countryCode")
-  @ApiOperation({ summary: "Gets all consents for a given country code" })
-  @ApiResponse({ status: HttpStatus.OK, type: [ConsentDTO], description: "Consents" })
-  @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getConsents(@Param("countryCode") countryCode: string): Promise<Array<ConsentDTO>> {
-    return this.verificationService.getConsents(countryCode);
-  }
-
-  @Get("/subdivisions/:countryCode")
-  @ApiOperation({ summary: "Gets subdivisions for a given country code" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: [SubdivisionDTO],
-    description: "Country subdivisions",
-  })
-  @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getSubdivisions(@Param("countryCode") countryCode: string): Promise<Array<SubdivisionDTO>> {
-    return this.verificationService.getSubdivisions(countryCode);
-  }
-
   @Public()
   @Post("/session")
   @ApiOperation({ summary: "Creates a new session for verification" })

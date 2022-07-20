@@ -45,15 +45,8 @@ export class VerificationService {
   }
 
   async getCountryCodes(): Promise<Array<string>> {
-    return await this.truliooProvider.getCountryCodes();
-  }
-
-  async getConsents(countryCode: string): Promise<Array<ConsentDTO>> {
-    return await this.truliooProvider.getConsents(countryCode);
-  }
-
-  async getSubdivisions(countryCode: string): Promise<Array<SubdivisionDTO>> {
-    return await this.truliooProvider.getCountrySubdivisions(countryCode);
+    //return await this.truliooProvider.getCountryCodes();
+    return ["US", "IN", "CA"];
   }
 
   async verifyConsumerInformation(

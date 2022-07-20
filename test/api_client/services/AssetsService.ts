@@ -39,7 +39,7 @@ export class AssetsService {
    * @returns any Location details of supported countries, optionally including subdivision data
    * @throws ApiError
    */
-  public static getSupportedCountries(includeSubdivisions?: boolean): CancelablePromise<Map<string, LocationDTO>> {
+  public static getSupportedCountries(includeSubdivisions?: boolean): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/countries",

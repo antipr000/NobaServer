@@ -48,22 +48,6 @@ describe("VerificationController", () => {
       expect(result).toStrictEqual(["US", "CA"]);
     });
 
-    it("should get subdivisions", async () => {
-      when(verificationService.getSubdivisions("US")).thenResolve([
-        {
-          name: "Albama",
-          code: "AL",
-        },
-        {
-          name: "Alaska",
-          code: "AK",
-        },
-      ]);
-
-      const result = await verificationController.getSubdivisions("US");
-      expect(result.length).toBe(2);
-    });
-
     it("should create session", async () => {
       when(verificationService.createSession()).thenResolve(
         VerificationData.createVerificationData({

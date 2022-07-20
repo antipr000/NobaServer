@@ -1,10 +1,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ConsentDTO } from "../models/ConsentDTO";
 import type { DeviceVerificationResponseDTO } from "../models/DeviceVerificationResponseDTO";
 import type { IDVerificationRequestDTO } from "../models/IDVerificationRequestDTO";
-import type { SubdivisionDTO } from "../models/SubdivisionDTO";
 import type { VerificationResultDTO } from "../models/VerificationResultDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -33,44 +31,6 @@ export class VerificationService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/verify/countryCodes",
-      errors: {
-        400: `Invalid request parameters`,
-      },
-    });
-  }
-
-  /**
-   * Gets all consents for a given country code
-   * @param countryCode
-   * @returns ConsentDTO Consents
-   * @throws ApiError
-   */
-  public static getConsents(countryCode: string): CancelablePromise<Array<ConsentDTO>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/verify/consents/{countryCode}",
-      path: {
-        countryCode: countryCode,
-      },
-      errors: {
-        400: `Invalid request parameters`,
-      },
-    });
-  }
-
-  /**
-   * Gets subdivisions for a given country code
-   * @param countryCode
-   * @returns SubdivisionDTO Country subdivisions
-   * @throws ApiError
-   */
-  public static getSubdivisions(countryCode: string): CancelablePromise<Array<SubdivisionDTO>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/verify/subdivisions/{countryCode}",
-      path: {
-        countryCode: countryCode,
-      },
       errors: {
         400: `Invalid request parameters`,
       },
