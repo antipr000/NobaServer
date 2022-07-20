@@ -75,6 +75,7 @@ export class TransactionService {
       quotedAmount: quotedAmount,
       processingFee: processingFeeInFiat,
       networkFee: estimatedNetworkFeeInCrypto,
+      exchangeRate: priceInFiatForSingleCryptoUnitWithSpread,
     };
 
     return transactionQuote;
