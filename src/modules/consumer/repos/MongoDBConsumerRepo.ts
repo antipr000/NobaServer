@@ -5,7 +5,8 @@ import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CONSUMER_KMS_KEY_ALIAS, KmsService } from "../../../modules/common/kms.service";
+import { KmsService } from "../../../modules/common/kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
@@ -15,11 +16,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
   constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) {}
 
   private async encryptString(text: string): Promise<string> {
-    return this.kmsService.encryptString(text, CONSUMER_KMS_KEY_ALIAS);
-  }
-
-  private async decryptString(text: string): Promise<string> {
-    return this.kmsService.decryptString(text, CONSUMER_KMS_KEY_ALIAS);
+    return this.kmsService.encryptString(text, KmsKeyType.SSN);
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
@@ -53,7 +50,6 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       .exec();
 
     const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-    consumerProps.socialSecurityNumber = await this.decryptString(consumerProps.socialSecurityNumber);
     return this.consumerMapper.toDomain(consumerProps);
   }
 
@@ -63,8 +59,6 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       const result = await userModel.findOne({ email: email }).exec();
       if (result) {
         const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-        consumerProps.socialSecurityNumber = await this.decryptString(consumerProps.socialSecurityNumber);
-
         return Result.ok(this.consumerMapper.toDomain(consumerProps));
       } else {
         return Result.fail("Couldn't find consumer in the db");

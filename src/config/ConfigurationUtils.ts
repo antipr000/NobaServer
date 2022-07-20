@@ -81,6 +81,11 @@ export const KMS_CONFIG_KEY = "kms";
 export const KMS_CONTEXT_STAGE = "stage";
 export const KMS_CONTEXT_PURPOSE = "purpose";
 export const KMS_CONTEXT_ORIGIN = "origin";
+export const KMS_SSN_CONFIG_KEY = "ssn";
+export const GENERATOR_KEY_KMS_ARN = "generatorKeyArn";
+export const FOLLOW_UP_KEY_KMS_ARN = "followUpKeyArn";
+export const AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN = "awsSecretNameForGeneratorKeyArn";
+export const AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN = "awsSecretNameForFollowUpKeyArn";
 
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),

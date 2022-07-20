@@ -14,11 +14,17 @@ awsAccountID: "210194402305"
 awsAccessKeyId: "test"
 awsSecretAccessKey: "test"
 
+# TODO(#279): Refactor all the secrets once e2e_test env shifts to ec2.
 kms:
   context:
     stage: "e2e_test"
     purpose: "Noba Onramp app"
     origin: "us-east-1"
+  ssn:
+    awsSecretNameForGeneratorKeyArn: "TEST_SSN_GENERATOR_KEY_ARN"
+    generatorKeyArn: "bogus-value"
+    awsSecretNameForFollowUpKeyArn: "TEST_SSN_FOLLOW_UP_KEY_1_ARN"
+    followUpKeyArn: "bogus-value"
 
 # AWS KMS Encryption key references
 # kmsGeneratorKeyID is global to all keys
