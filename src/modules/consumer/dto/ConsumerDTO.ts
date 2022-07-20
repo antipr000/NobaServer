@@ -43,8 +43,8 @@ export class CryptoWalletsDTO {
 }
 
 export class KycVerificationDTO {
-  @ApiPropertyOptional({ enum: KYCStatus })
-  kycVerificationStatus?: KYCStatus;
+  @ApiProperty({ enum: KYCStatus })
+  kycVerificationStatus: KYCStatus;
 
   @ApiPropertyOptional()
   updatedTimestamp?: number;

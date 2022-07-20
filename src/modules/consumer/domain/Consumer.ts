@@ -47,7 +47,7 @@ const paymentProviderValidationJoiKeys: KeysRequired<PaymentProviderDetails> = {
 
 const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
   verificationProvider: Joi.string().required().default(VerificationProviders.SARDINE),
-  kycVerificationStatus: Joi.string().optional(),
+  kycVerificationStatus: Joi.string().default(KYCStatus.NOT_SUBMITTED),
   documentVerificationStatus: Joi.string().default(DocumentVerificationStatus.NOT_REQUIRED),
   documentVerificationTransactionID: Joi.string().optional(),
   idVerificationTimestamp: Joi.number().optional(),
