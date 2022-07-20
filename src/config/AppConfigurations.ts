@@ -61,6 +61,7 @@ import {
   KMS_CONTEXT_PURPOSE,
   SUPPORTED_CRYPTO_TOKENS_FILE_NAME,
   SUPPORTED_CRYPTO_TOKENS_FILE_PATH,
+  AWS_ACCOUNT_ID_ATTR,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -175,7 +176,15 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
 
   const awsDefaultRegion = configs[AWS_DEFAULT_REGION_ATTR];
   const awsRegion = configs[AWS_REGION_ATTR];
+  const awsAccountID = configs[AWS_ACCOUNT_ID_ATTR];
 
+  if (!awsAccountID) {
+    throw new Error(
+      "Expected AWS Account ID to be configured in app configuration file with key:" + AWS_ACCESS_KEY_ID_ATTR,
+    );
+  }
+
+  setEnvironmentProperty(AWS_ACCOUNT_ID_ATTR, awsAccountID);
   setEnvironmentProperty(AWS_DEFAULT_REGION_ENV_VARIABLE, awsDefaultRegion);
   setEnvironmentProperty(AWS_REGION_ENV_VARIABLE, awsRegion);
 

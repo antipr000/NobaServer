@@ -7,6 +7,7 @@ logFilePath: "/tmp/noba_server.log"
 
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
+awsAccountID: "210194402305"
 # AWS Credentials for local development & testing.
 # The changes to this file will not be push to github, so feel free to paste the secrets of development environment here.
 

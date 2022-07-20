@@ -11,4 +11,5 @@ export interface ITransactionRepo {
   getMonthlyUserTransactionAmount(userId: string): Promise<number>;
   getWeeklyUserTransactionAmount(userId: string): Promise<number>;
   getDailyUserTransactionAmount(userId: string): Promise<number>;
+  getPendingTransactions(): Promise<Transaction[]>;
 }
