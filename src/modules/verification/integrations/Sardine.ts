@@ -275,16 +275,16 @@ export class Sardine implements IDVProvider {
     if (data.case.status === CaseStatus.RESOLVED) {
       if (data.action.value === CaseAction.APPROVE) {
         return {
-          status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
+          status: KYCStatus.APPROVED,
         };
       } else if (data.action.value === CaseAction.DECLINE) {
         return {
-          status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
+          status: KYCStatus.REJECTED,
         };
       }
     }
     return {
-      status: ConsumerVerificationStatus.PENDING_KYC_SUBMITTED,
+      status: KYCStatus.PENDING,
     };
   }
 }

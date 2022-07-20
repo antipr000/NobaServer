@@ -113,10 +113,7 @@ export class VerificationService {
   async processKycVerificationWebhookRequest(requestBody: CaseNotificationWebhookRequest) {
     const consumerID = requestBody.data.case.customerID;
     const result: ConsumerVerificationResult = this.idvProvider.processKycVerificationWebhookResult(requestBody);
-    if (
-      result.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED ||
-      result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC
-    ) {
+    if (result.status === KYCStatus.APPROVED || result.status === KYCStatus.REJECTED) {
       const consumer = await this.consumerService.getConsumer(consumerID);
       const newConsumerData: ConsumerProps = {
         ...consumer.props,
@@ -128,13 +125,13 @@ export class VerificationService {
 
       await this.consumerService.updateConsumer(newConsumerData);
 
-      if (result.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED) {
+      if (result.status === KYCStatus.APPROVED) {
         await this.emailService.sendKycApprovedEmail(
           consumer.props.firstName,
           consumer.props.lastName,
           consumer.props.email,
         );
-      } else if (result.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
+      } else if (result.status === KYCStatus.REJECTED) {
         await this.emailService.sendKycDeniedEmail(
           consumer.props.firstName,
           consumer.props.lastName,
