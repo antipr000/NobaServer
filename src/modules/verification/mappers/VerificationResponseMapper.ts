@@ -1,14 +1,14 @@
-import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { VerificationResultDTO, VerificationResultStatus } from "../dto/VerificationResultDTO";
 
 export class VerificationResponseMapper {
   toConsumerInformationResultDTO(t: ConsumerVerificationResult): VerificationResultDTO {
-    if (t.status === ConsumerVerificationStatus.PENDING_KYC_APPROVED) {
+    if (t.status === KYCStatus.APPROVED) {
       return {
         status: VerificationResultStatus.APPROVED,
       };
-    } else if (t.status === ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC) {
+    } else if (t.status === KYCStatus.REJECTED) {
       return {
         status: VerificationResultStatus.NOT_APPROVED,
       };

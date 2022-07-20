@@ -5,10 +5,11 @@ import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Inject, Injectable } from "@nestjs/common";
 import { TransactionStatus } from "../domain/Types";
+
+import { subDays } from "date-fns";
+import { TransactionModel } from "../../../infra/mongodb/models/TransactionModel";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-
-const subDays = require("date-fns/subDays");
 
 type AggregateResultType = {
   _id: number;
@@ -23,6 +24,21 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   private readonly transactionMapper = new TransactionMapper();
 
   constructor(private readonly dbProvider: DBProvider) {}
+
+  async getPendingTransactions(): Promise<Transaction[]> {
+    const currentTimeStr = Transaction.getPollingStatusAttribute(new Date().toISOString());
+    this.logger.info("Fetching all pending transaction before " + currentTimeStr.split("#")[1]);
+
+    const results = await TransactionModel.find({
+      dbPollingStatus: {
+        $lt: currentTimeStr,
+      },
+    }).limit(100);
+
+    this.logger.info(`Fetched ${results.length} pending transactions.`);
+
+    return results.map(x => this.transactionMapper.toDomain(convertDBResponseToJsObject(x)));
+  }
 
   async getAll(): Promise<Transaction[]> {
     const transactionModel = await this.dbProvider.getTransactionModel();

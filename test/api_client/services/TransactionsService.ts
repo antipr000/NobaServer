@@ -63,7 +63,7 @@ export class TransactionsService {
   public static transact(sessionKey: string, requestBody: CreateTransactionDTO): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/v1/transactions/",
+      url: "/v1/transactions",
       query: {
         sessionKey: sessionKey,
       },
@@ -85,7 +85,7 @@ export class TransactionsService {
   public static getTransactions(startDate: string, endDate: string): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/transactions/",
+      url: "/v1/transactions",
       query: {
         startDate: startDate,
         endDate: endDate,

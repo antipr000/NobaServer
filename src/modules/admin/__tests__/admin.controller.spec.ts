@@ -24,10 +24,7 @@ import { PartnerDTO } from "../../partner/dto/PartnerDTO";
 import { UpdatePartnerAdminRequestDTO } from "../../../modules/partner/dto/UpdatePartnerAdminRequestDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import {
-  ConsumerVerificationStatus,
-  DocumentVerificationStatus,
-} from "../../../modules/consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
@@ -1366,7 +1363,7 @@ describe("AdminController", () => {
         _id: "test-consumer-1234",
         email: "consumer@noba.com",
         verificationData: {
-          kycVerificationStatus: ConsumerVerificationStatus.PENDING_FLAGGED_KYC,
+          kycVerificationStatus: KYCStatus.FLAGGED,
           documentVerificationStatus: DocumentVerificationStatus.PENDING,
           verificationProvider: VerificationProviders.SARDINE,
         },
@@ -1384,7 +1381,7 @@ describe("AdminController", () => {
         _id: "test-consumer-1234",
         email: "consumer@noba.com",
         verificationData: {
-          kycVerificationStatus: ConsumerVerificationStatus.APPROVED,
+          kycVerificationStatus: KYCStatus.OLD_APPROVED,
           documentVerificationStatus: DocumentVerificationStatus.VERIFIED,
           verificationProvider: VerificationProviders.SARDINE,
         },
@@ -1408,7 +1405,7 @@ describe("AdminController", () => {
         consumerProps._id,
         {
           verificationData: {
-            kycVerificationStatus: ConsumerVerificationStatus.APPROVED,
+            kycVerificationStatus: KYCStatus.OLD_APPROVED,
             documentVerificationStatus: DocumentVerificationStatus.VERIFIED,
           },
         },

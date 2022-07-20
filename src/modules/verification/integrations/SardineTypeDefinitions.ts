@@ -214,3 +214,18 @@ export enum PaymentMethodTypes {
   WIRE = "wire",
   CRYPTO = "crypto",
 }
+
+export enum CaseStatus {
+  PENDING = "pending",
+  NOT_STARTED = "not-started",
+  IN_PROGRESS = "in-progress",
+  WAITING_FOR_CLIENT = "waiting-for-client",
+  RESOLVED = "resolved",
+}
+
+export enum CaseAction {
+  CREATED = "created",
+  NONE = "none",
+  APPROVE = "approve",
+  DECLINE = "decline",
+}

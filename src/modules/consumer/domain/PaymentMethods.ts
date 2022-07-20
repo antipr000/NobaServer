@@ -1,3 +1,5 @@
+import { PaymentMethodStatus } from "./VerificationStatus";
+
 export type PaymentMethods = {
   cardName?: string;
   cardType?: string;
@@ -6,4 +8,5 @@ export type PaymentMethods = {
   imageUri: string;
   paymentToken: string;
   paymentProviderID: string;
+  status?: PaymentMethodStatus;
 };

@@ -13,6 +13,7 @@ import { PaymentMethods } from "./domain/PaymentMethods";
 import Checkout from "checkout-sdk-node";
 import { CheckoutService } from "../common/checkout.service";
 import { EmailService } from "../common/email.service";
+import { CheckoutPaymentStatus, FiatTransactionStatus } from "./domain/Types";
 
 @Injectable()
 export class ConsumerService {
@@ -254,7 +255,12 @@ export class ConsumerService {
     }
   }
 
-  async requestCheckoutPayment(paymentToken: string, amount: number, currency: string): Promise<any> {
+  async requestCheckoutPayment(
+    paymentToken: string,
+    amount: number,
+    currency: string,
+    nobaTransactionId: string,
+  ): Promise<any> {
     try {
       const payment = await this.checkoutApi.payments.request({
         amount: amount * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
@@ -265,12 +271,26 @@ export class ConsumerService {
         },
         description: "Noba Customer Payment at UTC " + Date.now(),
         metadata: {
-          order_id: "test_order_1",
+          order_id: nobaTransactionId,
         },
       });
       return payment;
     } catch (err) {
       throw new BadRequestException("Payment processing failed");
+    }
+  }
+
+  async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProviders): Promise<FiatTransactionStatus> {
+    try {
+      //TODO status check based on the payment provider
+      const payment = await this.checkoutApi.payments.get(paymentId);
+      this.logger.info(`Payment status for payment ${paymentId} is ${payment.status}`);
+      const status: CheckoutPaymentStatus = payment.status;
+      if (status === "Captured") return FiatTransactionStatus.CAPTURED;
+      if (status === "Pending") return FiatTransactionStatus.PENDING;
+      return FiatTransactionStatus.FAILED;
+    } catch (err) {
+      throw new Error("Error while checking payment status from payment id " + paymentId + " " + err);
     }
   }
 

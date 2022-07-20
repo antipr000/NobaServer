@@ -34,6 +34,9 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
   const configService = app.get(CustomConfigService);
 
+  //setup required infra, ideally we should be using Terraform and Terragrunt
+  // initializeAWSEnv(); //TODO enable this when we are ready to deploy Queue based transaction orchestration
+
   const apiPrefix = configService.get<string>("apiPrefix");
   const appEnvType = configService.get<string>("envType");
   winstonLogger.info("Setting API prefix to " + apiPrefix + ", app environment is " + appEnvType);

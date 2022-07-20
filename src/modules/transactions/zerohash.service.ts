@@ -216,7 +216,7 @@ export class ZeroHashService {
     cryptocurrency: string,
     destination_wallet: string,
     amount: number,
-    cryptoAmount: number,
+    cryptoAmount: number, //TODO remove this
     amount_type: string,
     web3TransactionHandler: Web3TransactionHandler,
   ) {
@@ -346,7 +346,7 @@ export class ZeroHashService {
             console.log("Withdrawal completed");
             const withdrawal_data = await this.getWithdrawal(withdrawal_id);
             const tx_hash = withdrawal_data["message"][0]["transaction_id"];
-            web3TransactionHandler.onTransactionHash(tx_hash ?? "tx_dummy_id");
+            web3TransactionHandler.onTransactionHash(tx_hash);
           }
         }, 3000);
       }

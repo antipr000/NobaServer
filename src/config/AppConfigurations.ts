@@ -65,6 +65,7 @@ import {
   AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN,
   FOLLOW_UP_KEY_KMS_ARN,
   AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN,
+  AWS_ACCOUNT_ID_ATTR,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -179,7 +180,15 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
 
   const awsDefaultRegion = configs[AWS_DEFAULT_REGION_ATTR];
   const awsRegion = configs[AWS_REGION_ATTR];
+  const awsAccountID = configs[AWS_ACCOUNT_ID_ATTR];
 
+  if (!awsAccountID) {
+    throw new Error(
+      "Expected AWS Account ID to be configured in app configuration file with key:" + AWS_ACCESS_KEY_ID_ATTR,
+    );
+  }
+
+  setEnvironmentProperty(AWS_ACCOUNT_ID_ATTR, awsAccountID);
   setEnvironmentProperty(AWS_DEFAULT_REGION_ENV_VARIABLE, awsDefaultRegion);
   setEnvironmentProperty(AWS_REGION_ENV_VARIABLE, awsRegion);
 

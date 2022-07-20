@@ -23,6 +23,7 @@ export const SUPPORTED_CRYPTO_TOKENS_FILE_PATH = "SUPPORTED_CRYPTO_TOKENS_FILE_P
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
 export const AWS_SECRET_ACCESS_KEY_ATTR = "awsSecretAccessKey";
 export const AWS_DEFAULT_REGION_ATTR = "awsDefaultRegion";
+export const AWS_ACCOUNT_ID_ATTR = "awsAccountID";
 export const AWS_REGION_ATTR = "awsRegion";
 export const AWS_ACCESS_KEY_ID_ENV_VARIABLE = "AWS_ACCESS_KEY_ID";
 export const AWS_SECRET_ACCESS_KEY_ENV_VARIABLE = "AWS_SECRET_ACCESS_KEY";

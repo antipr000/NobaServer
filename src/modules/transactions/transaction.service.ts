@@ -6,11 +6,11 @@ import { CurrencyService } from "../common/currency.service";
 import { Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerService } from "../consumer/consumer.service";
 import { PaymentMethods } from "../consumer/domain/PaymentMethods";
-import { ConsumerVerificationStatus } from "../consumer/domain/VerificationStatus";
+import { KYCStatus } from "../consumer/domain/VerificationStatus";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { Transaction } from "./domain/Transaction";
-import { TransactionStatus } from "./domain/Types";
+import { CryptoTransactionRequestResult, CryptoTransactionStatus, TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
@@ -20,6 +20,7 @@ import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
 import { EmailService } from "../common/email.service";
+import { BadRequestError } from "../../core/exception/CommonAppException";
 
 @Injectable()
 export class TransactionService {
@@ -74,6 +75,7 @@ export class TransactionService {
       quotedAmount: quotedAmount,
       processingFee: processingFeeInFiat,
       networkFee: estimatedNetworkFeeInCrypto,
+      exchangeRate: priceInFiatForSingleCryptoUnitWithSpread,
     };
 
     return transactionQuote;
@@ -139,12 +141,9 @@ export class TransactionService {
       });
     }
 
-    const currentPrice = await this.exchangeRateService.priceInFiat(leg2, leg1);
-    const bidPrice = (leg1Amount * 1.0) / leg2Amount;
-
-    if (!this.withinSlippage(bidPrice, currentPrice, this.slippageAllowed)) {
-      throw new BadRequestException({
-        messageForClient: `Bid price is not within slippage allowed. Current price: ${currentPrice}, bid price: ${bidPrice}`,
+    if (!this.withinSlippage(leg2, leg1, leg2Amount, leg1Amount)) {
+      throw new BadRequestError({
+        messageForClient: `Bid price is not within slippage allowed of ${this.slippageAllowed}%`,
       });
     }
 
@@ -155,7 +154,7 @@ export class TransactionService {
       leg2Amount: details.leg2Amount,
       leg1: leg1,
       leg2: leg2,
-      transactionStatus: TransactionStatus.INITIATED,
+      transactionStatus: TransactionStatus.PENDING,
       destinationWalletAddress: details.destinationWalletAddress,
     });
 
@@ -188,7 +187,7 @@ export class TransactionService {
       sardineTransactionInformation,
     );
 
-    if (result.status !== ConsumerVerificationStatus.APPROVED) {
+    if (result.status !== KYCStatus.OLD_APPROVED) {
       throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
     }
 
@@ -223,10 +222,15 @@ export class TransactionService {
     //**** starting fiat transaction ***/
 
     // todo refactor this piece when we have the routing flow in place
-    const payment = await this.consumerService.requestCheckoutPayment(details.paymentToken, leg1Amount, leg1);
+    const payment = await this.consumerService.requestCheckoutPayment(
+      details.paymentToken,
+      leg1Amount,
+      leg1,
+      newTransaction.props._id,
+    );
     let updatedTransaction = Transaction.createTransaction({
       ...newTransaction.props,
-      transactionStatus: TransactionStatus.FIAT_INCOMING_PENDING,
+      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
       checkoutPaymentID: payment["id"],
     });
 
@@ -237,7 +241,7 @@ export class TransactionService {
     //updating the status to fiat transaction succeeded for now
     updatedTransaction = Transaction.createTransaction({
       ...updatedTransaction.props,
-      transactionStatus: TransactionStatus.FIAT_INCOMING_CONFIRMED,
+      transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
       checkoutPaymentID: payment["id"],
     });
     this.transactionsRepo.updateTransaction(updatedTransaction);
@@ -250,7 +254,7 @@ export class TransactionService {
           this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
           updatedTransaction = Transaction.createTransaction({
             ...updatedTransaction.props,
-            transactionStatus: TransactionStatus.WALLET_OUTGOING_PENDING,
+            transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
             cryptoTransactionId: transactionHash,
           });
           await this.transactionsRepo.updateTransaction(updatedTransaction);
@@ -270,7 +274,7 @@ export class TransactionService {
           await this.transactionsRepo.updateTransaction(
             Transaction.createTransaction({
               ...newTransaction.props,
-              transactionStatus: TransactionStatus.WALLET_OUTGOING_FAILED,
+              transactionStatus: TransactionStatus.CRYPTO_OUTGOING_FAILED,
               diagnosis: JSON.stringify(error),
             }),
           );
@@ -294,9 +298,30 @@ export class TransactionService {
     return promise;
   }
 
-  //TODO put in some utility class?
-  private withinSlippage(bidPrice: number, marketPrice: number, slippagePercentage: number): boolean {
-    return Math.abs(bidPrice - marketPrice) <= (slippagePercentage / 100) * bidPrice;
+  public async initiateCryptoTransaction(transaction: Transaction): Promise<CryptoTransactionRequestResult> {
+    //Check slippage here and call zero hash service
+    // add risk controller here to reconcile that fiat and crypto balance are in sync!!
+
+    // break above logic here
+    // transaction.props.cryptoTransactionId = "";
+    return null;
+  }
+
+  public async cryptoTransactionStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
+    // break above logic here
+    //
+    return null;
+  }
+
+  public async withinSlippage(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    cryptoAmount: number,
+    fiatAmount: number,
+  ): Promise<boolean> {
+    const marketPrice = await this.exchangeRateService.priceInFiat(cryptoCurrency, fiatCurrency);
+    const bidPrice = (fiatAmount * 1.0) / cryptoAmount;
+    return Math.abs(bidPrice - marketPrice) <= (this.slippageAllowed / 100) * bidPrice;
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {

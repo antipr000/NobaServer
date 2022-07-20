@@ -98,7 +98,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.email).toBe(consumerEmail);
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
-      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.firstName).toBeUndefined();
       expect(getConsumerResponse.lastName).toBeUndefined();
@@ -155,7 +155,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.firstName).toBe("FIRSTNAME");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
-      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.lastName).toBeUndefined();
       expect(getConsumerResponse.address).toBeUndefined();
@@ -179,7 +179,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.lastName).toBe("LASTNAME");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
-      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.firstName).toBeUndefined();
       expect(getConsumerResponse.address).toBeUndefined();
@@ -203,7 +203,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.dateOfBirth).toBe("1980-02-29");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
-      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.firstName).toBeUndefined();
       expect(getConsumerResponse.lastName).toBeUndefined();
@@ -242,7 +242,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.lastName).toBe("LASTNAME");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
-      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.address).toBeUndefined();
     });
@@ -274,7 +274,7 @@ describe("Consumers", () => {
       });
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
-      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.firstName).toBeUndefined();
       expect(getConsumerResponse.lastName).toBeUndefined();
@@ -362,7 +362,7 @@ describe("Consumers", () => {
       expect(addedCardDetails.cardName).toBe("Tester");
 
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
-      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Pending-New");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.firstName).toBeUndefined();
       expect(getConsumerResponse.lastName).toBeUndefined();

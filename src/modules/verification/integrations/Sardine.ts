@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import { ConsumerVerificationStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
@@ -8,6 +8,9 @@ import { DocumentInformation } from "../domain/DocumentInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { IDVProvider } from "./IDVProvider";
 import {
+  CaseAction,
+  CaseNotificationWebhookRequest,
+  CaseStatus,
   DocumentVerificationWebhookRequest,
   PaymentMethodTypes,
   SardineCustomerRequest,
@@ -79,11 +82,11 @@ export class Sardine implements IDVProvider {
       const { data } = await axios.post(this.BASE_URI + "/v1/customers", sardineRequest, this.getAxiosConfig());
       if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
         return {
-          status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_KYC,
+          status: KYCStatus.REJECTED,
         };
       } else {
         return {
-          status: ConsumerVerificationStatus.PENDING_KYC_APPROVED,
+          status: KYCStatus.APPROVED,
         };
       }
     } catch (e) {
@@ -199,9 +202,7 @@ export class Sardine implements IDVProvider {
         },
         recipient: {
           emailAddress: consumer.props.email,
-          isKycVerified:
-            consumer.props.verificationData.kycVerificationStatus === ConsumerVerificationStatus.APPROVED ||
-            consumer.props.verificationData.kycVerificationStatus === ConsumerVerificationStatus.PENDING_KYC_APPROVED,
+          isKycVerified: consumer.props.verificationData.kycVerificationStatus === KYCStatus.APPROVED,
           paymentMethod: {
             type: PaymentMethodTypes.CRYPTO,
             crypto: {
@@ -223,11 +224,11 @@ export class Sardine implements IDVProvider {
       // TODO: Identify how to differentiate between RejectedFraud and RejectedWallet
       if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
         return {
-          status: ConsumerVerificationStatus.NOT_APPROVED_REJECTED_FRAUD,
+          status: KYCStatus.REJECTED,
         };
       } else {
         return {
-          status: ConsumerVerificationStatus.APPROVED,
+          status: KYCStatus.OLD_APPROVED,
         };
       }
     } catch (e) {
@@ -267,5 +268,23 @@ export class Sardine implements IDVProvider {
         riskRating: riskLevel,
       };
     }
+  }
+
+  processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult {
+    const { data } = resultData;
+    if (data.case.status === CaseStatus.RESOLVED) {
+      if (data.action.value === CaseAction.APPROVE) {
+        return {
+          status: KYCStatus.APPROVED,
+        };
+      } else if (data.action.value === CaseAction.DECLINE) {
+        return {
+          status: KYCStatus.REJECTED,
+        };
+      }
+    }
+    return {
+      status: KYCStatus.PENDING,
+    };
   }
 }
