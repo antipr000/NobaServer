@@ -1,5 +1,4 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Cron } from "@nestjs/schedule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionStatus } from "../domain/Types";

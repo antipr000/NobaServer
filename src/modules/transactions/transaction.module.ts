@@ -8,7 +8,6 @@ import { PendingTransactionDBPollerService } from "./crons/PendingTransactionsDB
 import { ExchangeRateController } from "./exchangerate.controller";
 import { ExchangeRateService } from "./exchangerate.service";
 import { LimitsService } from "./limits.service";
-import { FiatTransactionInitiator } from "./queueprocessors/FiatTransactionInitiator";
 import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
