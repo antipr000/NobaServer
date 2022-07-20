@@ -10,7 +10,7 @@ import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { Web3TransactionHandler } from "../common/domain/Types";
+import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
 
 const crypto_ts = require("crypto");
@@ -139,12 +139,14 @@ export class ZeroHashService {
     return participants;
   }
 
-  async requestQuote(underlying, quoted_currency, amount, amount_type) {
+  async requestQuote(underlying: string, quoted_currency: string, amount: number, amount_type: CurrencyType) {
     // Set the endpoint URL based on whether we are placing an order based on FIAT amount or CRYPTO amount
     let route: string;
-    if (amount_type == "fiat") {
+    if (amount_type === CurrencyType.CRYPTO) {
+      this.logger.debug(`Quoting ${amount} ${quoted_currency} to ${underlying}`);
       route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&total=${amount}`;
     } else {
+      this.logger.debug(`Quoting ${amount} ${underlying} to ${quoted_currency}`);
       route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&quantity=${amount}`;
     }
 
@@ -217,7 +219,7 @@ export class ZeroHashService {
     destination_wallet: string,
     amount: number,
     cryptoAmount: number, //TODO remove this
-    amount_type: string,
+    amount_type: CurrencyType,
     web3TransactionHandler: Web3TransactionHandler,
   ) {
     // Ensure that the cryptocurrency and quoted_currency are supported by ZHLS

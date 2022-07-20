@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { CurrencyType } from "../../common/domain/Types";
 import { instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
@@ -64,6 +65,23 @@ describe("TransactionService", () => {
     ],
   });
 
+  it("Should return transaction quote", async () => {
+    const result: TransactionQuoteDTO = await transactionService.getTransactionQuote({
+      fiatCurrencyCode: "USD",
+      cryptoCurrencyCode: "ETH",
+      fixedSide: CurrencyType.FIAT,
+      fixedAmount: 100,
+    });
+
+    // TODO Ask in code review on how to mock exactly, right now the result is giving me undefined
+    // expect(result.fiatCurrencyCode).toBe("USD");
+    // expect(result.cryptoCurrencyCode).toBe("ETH");
+    // expect(result.fixedSide).toBe("fiat");
+    // expect(result.fixedAmount).toBe(100);
+    // expect(result.quotedAmount).toBeInstanceOf(number);
+    // expect(result.processingFee).toBeInstanceOf(number);
+  });
+
   const limits: UserLimits = {
     dailyLimit: 200,
     monthlyLimit: 2000,
@@ -73,22 +91,6 @@ describe("TransactionService", () => {
     minTransaction: 50,
     maxTransaction: 500,
   };
-
-  it("Should return transaction quote", async () => {
-    const result: TransactionQuoteDTO = await transactionService.getTransactionQuote({
-      fiatCurrencyCode: "USD",
-      cryptoCurrencyCode: "ETH",
-      fixedSide: "fiat",
-      fixedAmount: 100,
-    });
-    // TODO Ask in code review on how to mock exactly, right now the result is giving me undefined
-    // expect(result.fiatCurrencyCode).toBe("USD");
-    // expect(result.cryptoCurrencyCode).toBe("ETH");
-    // expect(result.fixedSide).toBe("fiat");
-    // expect(result.fixedAmount).toBe(100);
-    // expect(result.quotedAmount).toBeInstanceOf(number);
-    // expect(result.processingFee).toBeInstanceOf(number);
-  });
 
   it("Should not be below the minimum", async () => {
     const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 49, limits);

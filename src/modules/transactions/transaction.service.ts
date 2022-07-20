@@ -1,9 +1,9 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CurrencyService } from "../common/currency.service";
-import { Web3TransactionHandler } from "../common/domain/Types";
+import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerService } from "../consumer/consumer.service";
 import { PaymentMethods } from "../consumer/domain/PaymentMethods";
 import { KYCStatus } from "../consumer/domain/VerificationStatus";
@@ -46,39 +46,122 @@ export class TransactionService {
   }
 
   async getTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
-    const nobaSpread = 0.02; // Noba charges a two percent spread on all transactions
-    const priceInFiatForSingleCryptoUnitWithoutSpread = await this.exchangeRateService.priceInFiat(
-      transactionQuoteQuery.cryptoCurrencyCode,
-      transactionQuoteQuery.fiatCurrencyCode,
-    );
-    const priceInFiatForSingleCryptoUnitWithSpread = priceInFiatForSingleCryptoUnitWithoutSpread * (1 + nobaSpread);
+    if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
+      throw new BadRequestException("Unsupported fixedSide value");
+    }
+
+    if (transactionQuoteQuery.fixedAmount <= 0 || transactionQuoteQuery.fixedAmount == Number.NaN) {
+      throw new BadRequestException("Invalid amount");
+    }
+
+    const nobaSpreadPercent = 0.029; // Noba charges a 2.9 percent spread on all transactions
+    const nobaFlatFeeDollars = 1.99; // Noba charges $1.99 per transaction
+    const creditCardFeePercent = 0.029; // Credit card processor charges 2.9% per transaction
+    const creditCardFeeDollars = 0.3; // Credit card processor charges $0.30 per transaction
+
+    // Get network / gas fees
     const estimatedNetworkFeeFromZeroHash = await this.zeroHashService.estimateNetworkFee(
       transactionQuoteQuery.cryptoCurrencyCode,
       transactionQuoteQuery.fiatCurrencyCode,
     );
-    const estimatedNetworkFeeInCrypto = estimatedNetworkFeeFromZeroHash["message"]["network_fee_quantity"];
 
-    let processingFeeInFiat: number, quotedAmount: number;
-    if (transactionQuoteQuery.fixedSide == "fiat") {
-      quotedAmount = transactionQuoteQuery.fixedAmount / priceInFiatForSingleCryptoUnitWithSpread;
-      // TODO As of now processing fee is always in USD
-      processingFeeInFiat = transactionQuoteQuery.fixedAmount * 0.029 + 0.3;
+    const networkFeeInFiat = Number(estimatedNetworkFeeFromZeroHash["message"]["total_notional"]);
+
+    if (transactionQuoteQuery.fixedSide == CurrencyType.FIAT) {
+      const fixedAmountFiat = transactionQuoteQuery.fixedAmount;
+      const creditCardFees = fixedAmountFiat * creditCardFeePercent + creditCardFeeDollars;
+      const feeSubtotal = networkFeeInFiat + creditCardFees + nobaFlatFeeDollars;
+      const preSpreadAmount = fixedAmountFiat - feeSubtotal;
+      const priceToQuoteUSD = preSpreadAmount / (1 + nobaSpreadPercent);
+      const totalFees = preSpreadAmount - priceToQuoteUSD + feeSubtotal;
+
+      const quote = await this.exchangeRateService.getQuote(
+        transactionQuoteQuery.cryptoCurrencyCode,
+        transactionQuoteQuery.fiatCurrencyCode,
+        priceToQuoteUSD,
+        CurrencyType.CRYPTO,
+      );
+      const costPerUnit = Number(quote["price"]);
+
+      this.logger.info(`
+      FIAT FIXED (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${fixedAmountFiat}
+      NETWORK FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${networkFeeInFiat}
+      PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardFees}
+      NOBA FLAT FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeDollars}
+      PRE-SPREAD (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${preSpreadAmount}
+      QUOTE PRICE (${transactionQuoteQuery.fiatCurrencyCode}):\t${priceToQuoteUSD}      
+      ESTIMATED CRYPTO (${transactionQuoteQuery.cryptoCurrencyCode}):\t${priceToQuoteUSD / costPerUnit}
+      SPREAD REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD}
+      ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${fixedAmountFiat * 0.007}
+      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
+        preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
+      }
+      `);
+
+      const transactionQuote: TransactionQuoteDTO = {
+        fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
+        cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
+        fixedSide: transactionQuoteQuery.fixedSide,
+        fixedAmount: transactionQuoteQuery.fixedAmount,
+        quotedAmount: priceToQuoteUSD / costPerUnit,
+        processingFee: totalFees,
+        networkFee: networkFeeInFiat,
+        exchangeRate: costPerUnit,
+      };
+
+      this.logger.debug("Transaction quote: " + JSON.stringify(transactionQuote));
+
+      return transactionQuote;
+    } else if (transactionQuoteQuery.fixedSide == CurrencyType.CRYPTO) {
+      const fixedAmountCrypto = transactionQuoteQuery.fixedAmount;
+
+      const quote = await this.exchangeRateService.getQuote(
+        transactionQuoteQuery.cryptoCurrencyCode,
+        transactionQuoteQuery.fiatCurrencyCode,
+        fixedAmountCrypto,
+        CurrencyType.FIAT,
+      );
+      const costPerUnit = Number(quote["price"]);
+
+      const cryptoWithSpread = costPerUnit * (1 + nobaSpreadPercent);
+      const fiatCostPostSpread = fixedAmountCrypto * cryptoWithSpread;
+      const costBeforeCCFee = fiatCostPostSpread + nobaFlatFeeDollars + networkFeeInFiat;
+      const creditCardCharge = (costBeforeCCFee + creditCardFeeDollars) / (1 - creditCardFeePercent);
+      const processingFees = creditCardCharge - costBeforeCCFee;
+
+      this.logger.info(`
+      CRYPTO FIXED (${transactionQuoteQuery.cryptoCurrencyCode}):\t${fixedAmountCrypto}
+      POST-SPREAD (${transactionQuoteQuery.fiatCurrencyCode}):\t${fiatCostPostSpread}
+      NETWORK FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${networkFeeInFiat}
+      NOBA FLAT FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeDollars}
+      COST BEFORE CC FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${costBeforeCCFee}
+      CREDIT CARD CHARGE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge}
+      PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${processingFees}
+      NOBA COST (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${costPerUnit * fixedAmountCrypto}
+      ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge * 0.007}
+      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
+        nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
+      }
+      `);
+
+      const transactionQuote: TransactionQuoteDTO = {
+        fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
+        cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
+        fixedSide: transactionQuoteQuery.fixedSide,
+        fixedAmount: transactionQuoteQuery.fixedAmount,
+        quotedAmount: creditCardCharge / costPerUnit,
+        processingFee: processingFees,
+        networkFee: networkFeeInFiat,
+        exchangeRate: costPerUnit,
+      };
+
+      this.logger.debug("Transaction quote: " + JSON.stringify(transactionQuote));
+
+      return transactionQuote;
     } else {
-      quotedAmount = transactionQuoteQuery.fixedAmount * priceInFiatForSingleCryptoUnitWithSpread;
-      processingFeeInFiat = quotedAmount * 0.029 + 0.3;
+      // Should never get here because of check at top of method, but we have to return or throw something
+      throw new BadRequestException("Unsupported fixedSide value");
     }
-    const transactionQuote: TransactionQuoteDTO = {
-      fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
-      cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
-      fixedSide: transactionQuoteQuery.fixedSide,
-      fixedAmount: transactionQuoteQuery.fixedAmount,
-      quotedAmount: quotedAmount,
-      processingFee: processingFeeInFiat,
-      networkFee: estimatedNetworkFeeInCrypto,
-      exchangeRate: priceInFiatForSingleCryptoUnitWithSpread,
-    };
-
-    return transactionQuote;
   }
 
   async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {
@@ -290,7 +373,7 @@ export class TransactionService {
         details.destinationWalletAddress,
         leg1Amount,
         leg2Amount,
-        "fiat",
+        CurrencyType.FIAT,
         web3TransactionHandler,
       );
     });

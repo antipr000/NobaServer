@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { CurrencyType } from "../../common/domain/Types";
 
 export class TransactionQuoteDTO {
   @ApiProperty()
@@ -7,8 +8,8 @@ export class TransactionQuoteDTO {
   @ApiProperty()
   cryptoCurrencyCode: string;
 
-  @ApiProperty()
-  fixedSide: string;
+  @ApiProperty({ enum: Object.values(CurrencyType) })
+  fixedSide: CurrencyType;
 
   @ApiProperty()
   fixedAmount: number;

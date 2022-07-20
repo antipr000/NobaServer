@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CurrencyDTO } from "../models/CurrencyDTO";
+import type { LocationDTO } from "../models/LocationDTO";
 import type { ProcessingFeeDTO } from "../models/ProcessingFeeDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -30,6 +31,39 @@ export class AssetsService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/fiatcurrencies",
+    });
+  }
+
+  /**
+   * @param includeSubdivisions Include subdivision data
+   * @returns any Location details of supported countries, optionally including subdivision data
+   * @throws ApiError
+   */
+  public static getSupportedCountries(includeSubdivisions?: boolean): CancelablePromise<Map<string, LocationDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/countries",
+      query: {
+        includeSubdivisions: includeSubdivisions,
+      },
+    });
+  }
+
+  /**
+   * @param countryCode
+   * @returns LocationDTO Location details of requested country
+   * @throws ApiError
+   */
+  public static getSupportedCountry(countryCode: string): CancelablePromise<LocationDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/countries/{countryCode}",
+      path: {
+        countryCode: countryCode,
+      },
+      errors: {
+        404: `Country code not found`,
+      },
     });
   }
 

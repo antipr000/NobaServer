@@ -4,12 +4,44 @@
 import type { CheckTransactionDTO } from "../models/CheckTransactionDTO";
 import type { CreateTransactionDTO } from "../models/CreateTransactionDTO";
 import type { TransactionDTO } from "../models/TransactionDTO";
+import type { TransactionQuoteDTO } from "../models/TransactionQuoteDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 
 export class TransactionsService {
+  /**
+   * Get transaction quote (exchange rate, provider fees, network fees etc.)
+   * @param fiatCurrencyCode
+   * @param cryptoCurrencyCode
+   * @param fixedSide
+   * @param fixedAmount
+   * @returns TransactionQuoteDTO
+   * @throws ApiError
+   */
+  public static getTransactionQuote(
+    fiatCurrencyCode: string,
+    cryptoCurrencyCode: string,
+    fixedSide: "fiat" | "crypto",
+    fixedAmount: number,
+  ): CancelablePromise<TransactionQuoteDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/transactions/quote",
+      query: {
+        fiatCurrencyCode: fiatCurrencyCode,
+        cryptoCurrencyCode: cryptoCurrencyCode,
+        fixedSide: fixedSide,
+        fixedAmount: fixedAmount,
+      },
+      errors: {
+        400: `Invalid currency code (fiat or crypto)`,
+        503: `Unable to connect to underlying service provider`,
+      },
+    });
+  }
+
   /**
    * Checks if the transaction parameters are valid
    * @param type
