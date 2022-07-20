@@ -1046,15 +1046,10 @@
   resolved "https://registry.yarnpkg.com/@jsdevtools/ono/-/ono-7.1.3.tgz#9df03bbd7c696a5c58885c34aa06da41c8543796"
   integrity sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==
 
-"@nestjs-plus/discovery@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@nestjs-plus/discovery/-/discovery-2.0.2.tgz#c29a2d70ddecf58082fa3f2574ef511b916c1e8d"
-  integrity sha512-7cOA00gFFbDj6DgWmCD6gXEOKUHs4fn/qBTB4yq7APkWVXKhF3+92D7MKLfpZstFAlKapdDu25c+Ed0ZUKIoGA==
-
-"@nestjs/cli@^7.6.0":
-  version "7.6.0"
-  resolved "https://registry.yarnpkg.com/@nestjs/cli/-/cli-7.6.0.tgz#661f99b578284f9124307a8077f004a091b25e77"
-  integrity sha512-lW1px2gSHkRoBpKSxzP6IJNQscRKs97OAaVyV46OAP6oUR996E0EPkIslIaa16kKLJ3SFOUeZo5xl5nYbqp43g==
+"@nestjs/cli@^8.2.8":
+  version "8.2.8"
+  resolved "https://registry.yarnpkg.com/@nestjs/cli/-/cli-8.2.8.tgz#63e5b477f90e6d0238365dcc6236b95bf4f0c807"
+  integrity sha512-y5Imcw1EY0OxD3POAM7SLUB1rFdn5FjbfSsyJrokjKmXY+i6KcBdbRrv3Ox7aeJ4W7wXuckIXZEUlK6lC52dnA==
   dependencies:
     "@angular-devkit/core" "13.3.6"
     "@angular-devkit/schematics" "13.3.6"
@@ -1324,16 +1319,6 @@
   integrity sha512-MZPUxrmFubI36XS1DI3qmI0YdN1gks62JtFZvxR67ljjSNCeK6U08Zx4msEWOXuofgqUt6zPHSi1H9fbjR/NRA==
   dependencies:
     "@sinonjs/commons" "^1.7.0"
-
-"@ssut/nestjs-sqs@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@ssut/nestjs-sqs/-/nestjs-sqs-1.2.0.tgz#6a4671b64a578712e46fd1cf6aedf198cf549152"
-  integrity sha512-m+QNHThJgVQRwmG2JTlnOAtxRww0zxEKQ5MNaZf1y60Q07iKSlyyyUW6OZwAo5lberHSj9SOZJgrVCFlsz60WQ==
-  dependencies:
-    "@nestjs-plus/discovery" "^2.0.2"
-    aws-sdk "^2.985.0"
-    sqs-consumer "^5.6.0"
-    sqs-producer "^2.1.0"
 
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
@@ -2319,7 +2304,7 @@ available-typed-arrays@^1.0.5:
   resolved "https://registry.yarnpkg.com/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz#92f95616501069d07d10edb2fc37d3e1c65123b7"
   integrity sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==
 
-aws-sdk@*, aws-sdk@^2.650.0, aws-sdk@^2.673.0, aws-sdk@^2.851.0, aws-sdk@^2.948.0, aws-sdk@^2.985.0:
+aws-sdk@*, aws-sdk@^2.650.0, aws-sdk@^2.673.0, aws-sdk@^2.851.0, aws-sdk@^2.948.0:
   version "2.1167.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1167.0.tgz#e8614bce1a7355782734b6928792f14d11b39231"
   integrity sha512-hUJzAqWVfNYpct1S+GjyPIc2s+GZcAhbWVqIG4qbLYZ3+sBTcjv3lLH5zx7K+qcTGINDU0g4EsMi6hIrAU+blg==
@@ -8646,7 +8631,7 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==
 
-sqs-consumer@^5.6.0, sqs-consumer@^5.7.0:
+sqs-consumer@^5.7.0:
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/sqs-consumer/-/sqs-consumer-5.7.0.tgz#d7c83516e0258d261caae199889e094bda93ac05"
   integrity sha512-CjPzGsmmsKb6L0ia1WjbxjojjIHjVZ1FDK8s1MhEnf1eS8lJjuC28QEmcBpryQgsyaIcg1SgTsuicoZe008oQg==
