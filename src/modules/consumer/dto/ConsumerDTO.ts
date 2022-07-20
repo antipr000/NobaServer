@@ -21,7 +21,7 @@ export class PaymentMethodsDTO {
   @ApiProperty()
   last4Digits: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: PaymentMethodStatus })
   status: PaymentMethodStatus;
 }
 
@@ -38,13 +38,13 @@ export class CryptoWalletsDTO {
   @ApiProperty()
   isEVMCompatible: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ enum: WalletStatus })
   status: WalletStatus;
 }
 
 export class KycVerificationDTO {
   @ApiPropertyOptional({ enum: KYCStatus })
-  kycVerificationStatus?: string;
+  kycVerificationStatus?: KYCStatus;
 
   @ApiPropertyOptional()
   updatedTimestamp?: number;
