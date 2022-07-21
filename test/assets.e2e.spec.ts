@@ -333,7 +333,7 @@ describe("Locations", () => {
         allCountries.push(getSupportedCountriesResponse[key]);
       });
 
-      expect(allCountries.values.length).toEqual(205);
+      expect(allCountries.length).toEqual(205);
 
       // Pick one country and validate mappings
       const us = allCountries.find(element => element.countryISOCode === "US");
