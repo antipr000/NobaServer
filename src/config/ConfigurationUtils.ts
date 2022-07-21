@@ -13,6 +13,7 @@ export const NODE_ENV_CONFIG_KEY = "NODE_ENV";
 export const REDIS_CONFIG_CONFIG_KEY = "redis";
 export const SES_CONFIG_KEY = "ses";
 export const S3_CONFIG_KEY = "s3";
+export const MASTER_CONFIG_DIRECTORY = "masterConfigDirectory"; // Set programmatically in AppConfiguration, not from config file
 
 export const SERVER_LOG_FILE_PATH = "logFilePath";
 

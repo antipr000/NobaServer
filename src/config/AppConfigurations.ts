@@ -4,6 +4,7 @@ import { readConfigsFromYamlFiles } from "../core/utils/YamlJsonUtils";
 import {
   appConfigsJoiValidationSchema,
   AppEnvironment,
+  MASTER_CONFIG_DIRECTORY,
   AWS_ACCESS_KEY_ID_ATTR,
   AWS_ACCESS_KEY_ID_ENV_VARIABLE,
   AWS_DEFAULT_REGION_ATTR,
@@ -106,8 +107,8 @@ export default async function loadAppConfigs() {
    *
    */
   const configsDir = process.env["CONFIGS_DIR"] ?? join(__dirname, "appconfigs");
-
   const mainPropertyFile = join(configsDir, configFileName);
+  setEnvironmentProperty(MASTER_CONFIG_DIRECTORY, configsDir);
 
   /**
    * There can be extra properties that you might not want to put in the root configuration files.

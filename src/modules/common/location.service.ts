@@ -4,9 +4,12 @@ import * as path from "path";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationDTO, SubdivisionDTO } from "./dto/LocationDTO";
 import { ZEROHASH_COUNTRY_MAPPING, EXCLUDED_COUNTRY_CODES } from "./SupportedLocations";
+import { getPropertyFromEnvironment, MASTER_CONFIG_DIRECTORY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class LocationService {
+  private static LOCATION_DATA_FILENAME = "countries+states.json";
+
   /*
     Locations stores the locations without subdivisions and locationsWithSubdivisions includes subdivisions.
     Even though this results in duplication of data, it is more efficient than simply storing once with subdivisions
@@ -24,7 +27,11 @@ export class LocationService {
     const results = new Map<string, LocationDTO>();
     const resultsWithSubdivisions = new Map<string, LocationDTO>();
 
-    const locationDataRaw = readFileSync(path.resolve("appconfigs/countries+states.json"), "utf-8");
+    let locationDataRaw = readFileSync(
+      path.resolve(getPropertyFromEnvironment(MASTER_CONFIG_DIRECTORY), LocationService.LOCATION_DATA_FILENAME),
+      "utf-8",
+    );
+
     const locationData = JSON.parse(locationDataRaw);
 
     locationData.forEach(element => {
