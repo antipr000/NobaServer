@@ -69,6 +69,15 @@ import {
   FOLLOW_UP_KEY_KMS_ARN,
   AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN,
   AWS_ACCOUNT_ID_ATTR,
+  NOBA_TRANSACTION_CONFIG_KEY,
+  SPREAD_PERCENTAGE,
+  AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE,
+  DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
+  AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE,
+  FIXED_CREDIT_CARD_FEE,
+  AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE,
+  FLAT_FEE_DOLLARS,
+  AWS_SECRET_KEY_FOR_FLAT_FEE_DOLLARS,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 
@@ -142,10 +151,9 @@ export default async function loadAppConfigs() {
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
-  const finalConfigs = configureNobaParameters(environment, vendorConfigs);
 
   //validate configs
-  return Joi.attempt(finalConfigs, appConfigsJoiValidationSchema);
+  return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
 }
 
 function configureAwsCredentials(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
@@ -211,6 +219,7 @@ async function configureAllVendorCredentials(
   configs: Record<string, any>,
 ): Promise<Record<string, any>> {
   const vendorCredentialConfigurators = [
+    configureNobaParameters,
     configureSendgridCredentials,
     configureTruliooCredentials,
     configureTwilioCredentials,
@@ -386,16 +395,50 @@ async function configureMongoCredentials(
   return configs;
 }
 
-function configureNobaParameters(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
+async function configureNobaParameters(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
   const nobaConfigs: NobaConfigs = configs[NOBA_CONFIG_KEY];
 
-  if (nobaConfigs === undefined) {
+  if (nobaConfigs === undefined || nobaConfigs.transaction === undefined) {
     const errorMessage =
-      "\n'Noba' configurations are required. Please configure the Noba environment variables in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${NOBA_PARTNER_ID}".\n`;
-
+      "\n'Noba' configurations are required. Please configure the Noba environment variables " +
+      "in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${NOBA_CONFIG_KEY}.${NOBA_TRANSACTION_CONFIG_KEY}" ` +
+      `and populate ` +
+      `("${SPREAD_PERCENTAGE}" or "${AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE}"), ` +
+      `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
+      `("${FIXED_CREDIT_CARD_FEE}" or "${AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE}") AND ` +
+      `("${FLAT_FEE_DOLLARS}" or "${AWS_SECRET_KEY_FOR_FLAT_FEE_DOLLARS}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
     throw Error(errorMessage);
   }
+
+  nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForDynamicCreditCardFeePercentage,
+      nobaConfigs.transaction.dynamicCreditCardFeePercentage.toString(),
+    ),
+  );
+  nobaConfigs.transaction.fixedCreditCardFee = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForFixedCreditCardFee,
+      nobaConfigs.transaction.fixedCreditCardFee.toString(),
+    ),
+  );
+  nobaConfigs.transaction.flatFeeDollars = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForFlatFeeDollars,
+      nobaConfigs.transaction.flatFeeDollars.toString(),
+    ),
+  );
+  nobaConfigs.transaction.spreadPercentage = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForSpreadPercentage,
+      nobaConfigs.transaction.spreadPercentage.toString(),
+    ),
+  );
 
   configs[NOBA_CONFIG_KEY] = nobaConfigs;
   return configs;

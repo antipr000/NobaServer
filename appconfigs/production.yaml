@@ -65,6 +65,15 @@ sardine:
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"
+  transaction:
+    spreadPercentage: ""
+    awsSecretKeyForSpreadPercentage: "PROD_NOBA_SPREAD_PERCENTAGE"
+    flatFeeDollars: ""
+    awsSecretKeyForFlatFeeDollars: "PROD_NOBA_FLAT_FEE_DOLLARS"
+    dynamicCreditCardFeePercentage: ""
+    awsSecretKeyForDynamicCreditCardFeePercentage: "PROD_NOBA_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE"
+    fixedCreditCardFee: ""
+    awsSecretKeyForFixedCreditCardFee: "PROD_NOBA_FIXED_CREDIT_CARD_FEE_DOLLARS"
 
 zerohash:
   awsSecretNameforApiKey: "PROD_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
