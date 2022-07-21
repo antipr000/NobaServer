@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -24,6 +24,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { CryptoWallets } from "../consumer/domain/CryptoWallets";
 
 @Injectable()
 export class TransactionService {
@@ -102,8 +103,8 @@ export class TransactionService {
       SPREAD REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${fixedAmountFiat * 0.007}
       NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
-      }
+  preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
+}
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
@@ -148,8 +149,8 @@ export class TransactionService {
       NOBA COST (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${costPerUnit * fixedAmountCrypto}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge * 0.007}
       NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
-      }
+  nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
+}
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
@@ -280,6 +281,24 @@ export class TransactionService {
 
     if (result.status !== KYCStatus.OLD_APPROVED) {
       throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
+    }
+
+    if (result.walletStatus) {
+      const cryptoWallet: CryptoWallets = {
+        walletName: "",
+        address: newTransaction.props.destinationWalletAddress,
+        chainType: "",
+        isEVMCompatible: false,
+        status: result.walletStatus,
+      };
+      await this.consumerService.addOrUpdateCryptoWallet(user.props._id, cryptoWallet);
+    }
+
+    if (result.paymentMethodStatus) {
+      await this.consumerService.updatePaymentMethod(user.props._id, {
+        ...paymentMethod,
+        status: result.paymentMethodStatus,
+      });
     }
 
     try {

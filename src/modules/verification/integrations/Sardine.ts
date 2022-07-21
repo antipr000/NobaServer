@@ -1,11 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import {
-  KYCStatus,
-  DocumentVerificationStatus,
-  RiskLevel,
-  WalletStatus,
-} from "../../consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus, WalletStatus } from "../../consumer/domain/VerificationStatus";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
@@ -229,7 +224,7 @@ export class Sardine implements IDVProvider {
 
       let verificationResult: ConsumerVerificationResult;
 
-      for (let signal of data.signals) {
+      for (const signal of data.signals) {
         if (signal.key === "sanctionLevel") {
           verificationResult.sanctionLevel = signal.value;
         } else if (signal.key === "pepLevel") {
