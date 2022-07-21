@@ -3,11 +3,25 @@ import { ConsumerDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/Consume
 import { Mapper } from "../../../core/infra/Mapper";
 import { CryptoWallets } from "../domain/CryptoWallets";
 import { PaymentMethods } from "../domain/PaymentMethods";
-import { KYCStatus, DocumentVerificationStatus } from "../domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 
 export class ConsumerMapper implements Mapper<Consumer> {
   public toDomain(raw: any): Consumer {
     return Consumer.createConsumer(raw);
+  }
+
+  private getPaymentMethodStatus(paymentMethods: PaymentMethods[]): PaymentMethodStatus {
+    const numApproved = paymentMethods.filter(
+      paymentMethod => paymentMethod.status && paymentMethod.status === PaymentMethodStatus.APPROVED,
+    ).length;
+
+    return numApproved === paymentMethods.length ? PaymentMethodStatus.APPROVED : PaymentMethodStatus.REJECTED;
+  }
+
+  private getWalletStatus(wallets: CryptoWallets[]): WalletStatus {
+    if (wallets.filter(wallet => wallet.status === WalletStatus.REJECTED).length > 0) return WalletStatus.REJECTED;
+    else if (wallets.filter(wallet => wallet.status === WalletStatus.FLAGGED).length > 0) return WalletStatus.FLAGGED;
+    return WalletStatus.APPROVED;
   }
 
   public toCryptoWalletsDTO(cryptoWallets: CryptoWallets): CryptoWalletsDTO {
@@ -57,6 +71,8 @@ export class ConsumerMapper implements Mapper<Consumer> {
       address: p.address,
       cryptoWallets: p.cryptoWallets.map(cryptoWallet => this.toCryptoWalletsDTO(cryptoWallet)),
       paymentMethods: p.paymentMethods.map(paymentMethod => this.toPaymentMethodsDTO(paymentMethod)),
+      paymentMethodStatus: this.getPaymentMethodStatus(consumer.props.paymentMethods),
+      walletStatus: this.getWalletStatus(consumer.props.cryptoWallets),
     };
   }
 }

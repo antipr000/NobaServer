@@ -99,4 +99,10 @@ export class ConsumerDTO {
 
   @ApiPropertyOptional({ type: [CryptoWalletsDTO] })
   cryptoWallets?: CryptoWalletsDTO[];
+
+  @ApiPropertyOptional({ enum: PaymentMethodStatus })
+  paymentMethodStatus?: PaymentMethodStatus;
+
+  @ApiPropertyOptional({ enum: WalletStatus })
+  walletStatus?: WalletStatus;
 }

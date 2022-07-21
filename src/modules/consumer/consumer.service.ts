@@ -15,6 +15,7 @@ import { CheckoutService } from "../common/checkout.service";
 import { EmailService } from "../common/email.service";
 import { CheckoutPaymentStatus, FiatTransactionStatus } from "./domain/Types";
 import { PaymentMethodStatus } from "./domain/VerificationStatus";
+import { CryptoWallets } from "./domain/CryptoWallets";
 
 @Injectable()
 export class ConsumerService {
@@ -205,6 +206,30 @@ export class ConsumerService {
         },
       });
 
+      let paymentMethodStatus: PaymentMethodStatus = undefined;
+      // Check if added payment method is valid
+      try {
+        const payment = await this.checkoutApi.payments.request({
+          currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
+          source: {
+            type: "id",
+            id: instrument["id"],
+          },
+          description: "Noba Customer Payment at UTC " + Date.now(),
+          metadata: {
+            order_id: "test_order_1",
+          },
+        });
+        if (payment["risk"]["flagged"]) {
+          paymentMethodStatus = PaymentMethodStatus.REJECTED;
+        } else {
+          paymentMethodStatus = PaymentMethodStatus.APPROVED;
+        }
+      } catch (err) {
+        //pass
+        this.logger.error(`Failed to make payment while adding card: ${err}`);
+      }
+
       const newPaymentMethod: PaymentMethods = {
         cardName: paymentMethod.cardName,
         cardType: instrument["scheme"],
@@ -214,6 +239,10 @@ export class ConsumerService {
         paymentProviderID: PaymentProviders.CHECKOUT,
         paymentToken: instrument["id"], // TODO: Check if this is the valid way to populate id
       };
+
+      if (paymentMethodStatus) {
+        newPaymentMethod.status = paymentMethodStatus;
+      }
 
       let updatedConsumerProps: ConsumerProps;
       if (hasCustomerIDSaved) {
@@ -293,6 +322,29 @@ export class ConsumerService {
     } catch (err) {
       throw new Error("Error while checking payment status from payment id " + paymentId + " " + err);
     }
+  }
+
+  async updatePaymentMethod(consumerID: string, paymentMethod: PaymentMethods): Promise<Consumer> {
+    const consumer = await this.getConsumer(consumerID);
+    const otherPaymentMethods = consumer.props.paymentMethods.filter(
+      paymentMethod => paymentMethod.paymentToken !== paymentMethod.paymentToken,
+    );
+    return await this.updateConsumer({
+      ...consumer.props,
+      paymentMethods: [...otherPaymentMethods, paymentMethod],
+    });
+  }
+
+  async addOrUpdateCryptoWallet(consumerID: string, cryptoWallet: CryptoWallets): Promise<Consumer> {
+    const consumer = await this.getConsumer(consumerID);
+    const otherCryptoWallets = consumer.props.cryptoWallets.filter(
+      cryptoWallet => cryptoWallet.address !== cryptoWallet.address,
+    );
+
+    return await this.updateConsumer({
+      ...consumer.props,
+      cryptoWallets: [...otherCryptoWallets, cryptoWallet],
+    });
   }
 
   async removePaymentMethod(consumer: Consumer, paymentToken: string): Promise<Consumer> {
