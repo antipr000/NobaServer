@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -144,18 +145,29 @@ export class TransactionController {
     type: [TransactionDTO],
     description: "List of all transactions",
   })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getTransactions(
     @Query() transactionFilters: TransactionFilterDTO,
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO[]> {
-    const fromDateInUTC = new Date(transactionFilters.startDate).toUTCString();
-    const toDateInUTC = new Date(transactionFilters.endDate).toUTCString();
+    if (isNaN(Date.parse(transactionFilters.startDate))) {
+      throw new BadRequestException("Invalid start date");
+    }
 
-    return this.transactionService.getTransactionsInInterval(
-      authUser.props._id,
-      new Date(fromDateInUTC),
-      new Date(toDateInUTC),
-    );
+    if (isNaN(Date.parse(transactionFilters.endDate))) {
+      throw new BadRequestException("Invalid end date");
+    }
+
+    const fromDateInUTC =
+      transactionFilters.startDate != undefined
+        ? new Date(new Date(transactionFilters.startDate).toUTCString())
+        : undefined;
+    const toDateInUTC =
+      transactionFilters.endDate != undefined
+        ? new Date(new Date(transactionFilters.endDate).toUTCString())
+        : undefined;
+
+    return this.transactionService.getTransactionsInInterval(authUser.props._id, fromDateInUTC, toDateInUTC);
   }
 
   @Get("/consumers/limits/")

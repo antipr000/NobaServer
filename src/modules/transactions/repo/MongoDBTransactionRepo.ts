@@ -140,15 +140,29 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
   async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
     const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: any = await transactionModel
-      .find({
-        userId: userId,
-        transactionTimestamp: {
-          $gt: `${fromDate.toISOString()}`,
-          $lt: `${toDate.toISOString()}`,
+
+    let query = transactionModel.find({ userId: userId });
+    if (fromDate != undefined) {
+      query.and([
+        {
+          transactionTimestamp: {
+            $gt: `${new Date(new Date(fromDate.toISOString()).setUTCHours(0, 0, 0)).toISOString()}`, // Ensure toDate is inclusive
+          },
         },
-      })
-      .exec();
+      ]);
+    }
+
+    if (toDate != undefined) {
+      query.and([
+        {
+          transactionTimestamp: {
+            $lt: `${new Date(new Date(toDate.toISOString()).setUTCHours(23, 59, 59)).toISOString()}`, // Ensure fromDate is inclusive
+          },
+        },
+      ]);
+    }
+
+    const result: any = await query.sort({ transactionTimestamp: "asc" }).exec();
     const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
     return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
   }

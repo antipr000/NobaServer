@@ -14,6 +14,7 @@ import Checkout from "checkout-sdk-node";
 import { CheckoutService } from "../common/checkout.service";
 import { EmailService } from "../common/email.service";
 import { CheckoutPaymentStatus, FiatTransactionStatus } from "./domain/Types";
+import { PaymentMethodStatus } from "./domain/VerificationStatus";
 
 @Injectable()
 export class ConsumerService {

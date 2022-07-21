@@ -114,7 +114,7 @@ export class TransactionsService {
    * @returns TransactionDTO List of all transactions
    * @throws ApiError
    */
-  public static getTransactions(startDate: string, endDate: string): CancelablePromise<Array<TransactionDTO>> {
+  public static getTransactions(startDate?: string, endDate?: string): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions",
@@ -122,21 +122,24 @@ export class TransactionsService {
         startDate: startDate,
         endDate: endDate,
       },
+      errors: {
+        400: `Invalid request parameters`,
+      },
     });
   }
 
   /**
    * Downloads all the transactions of a particular consumer
+   * @param reportFormat Format in which you want the transactions report. Current 'CSV' is supported.
    * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
    * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
-   * @param reportFormat Format in which you want the transactions report. Current 'CSV' is supported.
    * @returns TransactionDTO A CSV or PDF file containing details of all the transactions made by the consumer
    * @throws ApiError
    */
   public static downloadTransactions(
-    startDate: string,
-    endDate: string,
     reportFormat: "csv" | "pdf",
+    startDate?: string,
+    endDate?: string,
   ): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",

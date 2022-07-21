@@ -1,12 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 
 export class TransactionFilterDTO {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: "Format: YYYY-MM-DD, example: 2010-04-27",
   })
   startDate: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: "Format: YYYY-MM-DD, example: 2010-04-27",
   })
   endDate: string;
