@@ -22,4 +22,6 @@ export type ConsumerDTO = {
   isDeleted?: boolean;
   paymentMethods?: Array<PaymentMethodsDTO>;
   cryptoWallets?: Array<CryptoWalletsDTO>;
+  paymentMethodStatus?: "Flagged" | "Rejected" | "Approved";
+  walletStatus?: "Flagged" | "Rejected" | "Approved";
 };

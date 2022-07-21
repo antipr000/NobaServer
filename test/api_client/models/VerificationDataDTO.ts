@@ -5,5 +5,5 @@
 export type VerificationDataDTO = {
   verificationProvider?: string;
   kycVerificationStatus?: "NotSubmitted" | "Pending" | "Approved" | "Flagged" | "Rejected";
-  documentVerificationStatus?: "NotRequired" | "Required" | "Pending" | "Verified" | "Rejected" | "LivePhotoVerified";
+  documentVerificationStatus?: "NotRequired" | "Required" | "Pending" | "Approved" | "Rejected" | "LivePhotoVerified";
 };
