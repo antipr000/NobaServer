@@ -22,8 +22,8 @@ import { ZeroHashService } from "./zerohash.service";
 import { EmailService } from "../common/email.service";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/NobaConfigs";
-import { CustomConfigService } from "src/core/utils/AppConfigModule";
-import { NOBA_CONFIG_KEY } from "src/config/ConfigurationUtils";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class TransactionService {
