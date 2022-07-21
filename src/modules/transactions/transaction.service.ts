@@ -149,7 +149,7 @@ export class TransactionService {
         cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
         fixedSide: transactionQuoteQuery.fixedSide,
         fixedAmount: transactionQuoteQuery.fixedAmount,
-        quotedAmount: creditCardCharge / costPerUnit,
+        quotedAmount: creditCardCharge,
         processingFee: processingFees,
         networkFee: networkFeeInFiat,
         exchangeRate: costPerUnit,
