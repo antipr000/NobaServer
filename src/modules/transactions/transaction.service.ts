@@ -21,10 +21,14 @@ import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
 import { EmailService } from "../common/email.service";
 import { BadRequestError } from "../../core/exception/CommonAppException";
+import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/NobaConfigs";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class TransactionService {
   private readonly transactionsMapper: TransactionMapper;
+  private readonly nobaTransactionConfigs: NobaTransactionConfigs;
 
   // This is the id used at coinGecko, so do not change the allowed constants below
   private readonly allowedFiats: string[] = ["USD"];
@@ -33,6 +37,7 @@ export class TransactionService {
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
   constructor(
+    configService: CustomConfigService,
     private readonly currencyService: CurrencyService,
     private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
@@ -43,6 +48,7 @@ export class TransactionService {
     @Inject(EmailService) private readonly emailService: EmailService,
   ) {
     this.transactionsMapper = new TransactionMapper();
+    this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
   }
 
   async getTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
@@ -54,16 +60,17 @@ export class TransactionService {
       throw new BadRequestException("Invalid amount");
     }
 
-    const nobaSpreadPercent = 0.029; // Noba charges a 2.9 percent spread on all transactions
-    const nobaFlatFeeDollars = 1.99; // Noba charges $1.99 per transaction
-    const creditCardFeePercent = 0.029; // Credit card processor charges 2.9% per transaction
-    const creditCardFeeDollars = 0.3; // Credit card processor charges $0.30 per transaction
+    const nobaSpreadPercent = this.nobaTransactionConfigs.spreadPercentage;
+    const nobaFlatFeeDollars = this.nobaTransactionConfigs.flatFeeDollars;
+    const creditCardFeePercent = this.nobaTransactionConfigs.dynamicCreditCardFeePercentage;
+    const creditCardFeeDollars = this.nobaTransactionConfigs.fixedCreditCardFee;
 
     // Get network / gas fees
     const estimatedNetworkFeeFromZeroHash = await this.zeroHashService.estimateNetworkFee(
       transactionQuoteQuery.cryptoCurrencyCode,
       transactionQuoteQuery.fiatCurrencyCode,
     );
+    console.log(estimatedNetworkFeeFromZeroHash);
 
     const networkFeeInFiat = Number(estimatedNetworkFeeFromZeroHash["message"]["total_notional"]);
 
@@ -81,6 +88,7 @@ export class TransactionService {
         priceToQuoteUSD,
         CurrencyType.CRYPTO,
       );
+      console.log(quote);
       const costPerUnit = Number(quote["price"]);
 
       this.logger.info(`
