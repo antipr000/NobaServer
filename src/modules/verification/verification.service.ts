@@ -3,8 +3,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../consumer/consumer.service";
 import TruliooIntegrator from "../../externalclients/idvproviders/providers/trulioo/TruliooIntegrator";
-import { ConsentDTO } from "./dto/ConsentDTO";
-import { SubdivisionDTO } from "./dto/SubdivisionDTO";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { IDVProvider } from "./integrations/IDVProvider";
 import { ConsumerInformation } from "./domain/ConsumerInformation";

@@ -23,7 +23,7 @@ class AddressDTO implements Address {
 }
 
 class VerificationDataDTO implements Partial<VerificationData> {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: VerificationProviders })
   verificationProvider?: VerificationProviders;
 
   @ApiPropertyOptional({ enum: KYCStatus })

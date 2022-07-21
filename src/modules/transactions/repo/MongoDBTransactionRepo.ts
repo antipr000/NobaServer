@@ -141,7 +141,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
     const transactionModel = await this.dbProvider.getTransactionModel();
 
-    let query = transactionModel.find({ userId: userId });
+    const query = transactionModel.find({ userId: userId });
     if (fromDate != undefined) {
       query.and([
         {

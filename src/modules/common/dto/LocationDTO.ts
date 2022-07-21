@@ -18,8 +18,8 @@ export class LocationDTO {
   @ApiProperty()
   countryISOCode: string;
 
-  @ApiPropertyOptional({ type: Map<string, SubdivisionDTO> })
-  subdivisions?: Map<string, SubdivisionDTO>;
+  @ApiPropertyOptional({ type: [SubdivisionDTO] })
+  subdivisions?: Array<SubdivisionDTO>;
 
   @ApiPropertyOptional()
   countryFlagIconPath?: string;

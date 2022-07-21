@@ -36,10 +36,10 @@ export class AssetsService {
 
   /**
    * @param includeSubdivisions Include subdivision data
-   * @returns any Location details of supported countries, optionally including subdivision data
+   * @returns LocationDTO Location details of supported countries, optionally including subdivision data
    * @throws ApiError
    */
-  public static getSupportedCountries(includeSubdivisions?: boolean): CancelablePromise<any> {
+  public static getSupportedCountries(includeSubdivisions?: boolean): CancelablePromise<Array<LocationDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/countries",

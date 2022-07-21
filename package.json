@@ -19,7 +19,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --verbose --silent --config ./test/jest-e2e.json",
+    "test:e2e": "jest --verbose -t Locations --config ./test/jest-e2e.json",
     "ddb-admin": "cross-env DYNAMO_ENDPOINT=http://localhost:4566 dynamodb-admin",
     "gen-test-api-client": "bash ./test/api_client/client.generator.sh"
   },

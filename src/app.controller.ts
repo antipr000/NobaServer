@@ -1,21 +1,11 @@
 import { Controller, Get, HttpStatus, Inject, Param, Query } from "@nestjs/common";
-import {
-  ApiExtraModels,
-  ApiNotFoundResponse,
-  ApiOperation,
-  ApiParam,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-  getSchemaPath,
-} from "@nestjs/swagger";
-import { string } from "joi";
+import { ApiNotFoundResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "./app.service";
 import { Public } from "./modules/auth/public.decorator";
 import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
-import { LocationDTO, SubdivisionDTO } from "./modules/common/dto/LocationDTO";
+import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 
 @Controller()
@@ -68,23 +58,13 @@ export class AppController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Location details of supported countries, optionally including subdivision data",
-    schema: {
-      allOf: [
-        {
-          properties: {
-            countryISOCode: {
-              $ref: getSchemaPath(LocationDTO),
-            },
-          },
-        },
-      ],
-    },
+    type: [LocationDTO],
   })
   @ApiQuery({ name: "includeSubdivisions", type: "boolean", description: "Include subdivision data", required: false })
   @ApiTags("Assets")
   async getSupportedCountries(
-    @Query("includeSubdivisions") includeSubdivisions: string = "false", // Making this a boolean did not work as expected - still comes through as a string.
-  ): Promise<Map<string, LocationDTO>> {
+    @Query("includeSubdivisions") includeSubdivisions = "false", // Making this a boolean did not work as expected - still comes through as a string.
+  ): Promise<Array<LocationDTO>> {
     return this.locationService.getLocations(includeSubdivisions === "true");
   }
 

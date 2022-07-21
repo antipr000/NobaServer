@@ -13,8 +13,8 @@ export class LocationService {
     Even though this results in duplication of data, it is more efficient than simply storing once with subdivisions
     and excluding subdivisions at runtime if requested to not include them.
   */
-  private locations: Map<string, LocationDTO>;
-  private locationsWithSubdivisions: Map<string, LocationDTO>;
+  private locations: Array<LocationDTO>;
+  private locationsWithSubdivisions: Array<LocationDTO>;
   private isLocationsLoaded: boolean;
 
   constructor(private readonly configService: CustomConfigService) {
@@ -22,10 +22,10 @@ export class LocationService {
   }
 
   private loadLocationsFromFile() {
-    const results = new Map<string, LocationDTO>();
-    const resultsWithSubdivisions = new Map<string, LocationDTO>();
+    const results = new Array<LocationDTO>();
+    const resultsWithSubdivisions = new Array<LocationDTO>();
 
-    let locationDataRaw = readFileSync(path.resolve(this.configService.get(LOCATION_DATA_FILE_PATH)), "utf-8");
+    const locationDataRaw = readFileSync(path.resolve(this.configService.get(LOCATION_DATA_FILE_PATH)), "utf-8");
 
     const locationData = JSON.parse(locationDataRaw);
 
@@ -36,25 +36,25 @@ export class LocationService {
         const zhCountryName: string = ZEROHASH_COUNTRY_MAPPING[element.iso2];
         if (zhCountryName != undefined) {
           // Get subdivision data
-          const subdivisions = new Map<string, SubdivisionDTO>();
+          const subdivisions = new Array<SubdivisionDTO>();
           element.states.forEach(subdivision => {
-            subdivisions[subdivision.state_code] = { name: subdivision.name, code: subdivision.state_code };
+            subdivisions.push({ name: subdivision.name, code: subdivision.state_code });
           });
 
           // Store with subdivision data
-          resultsWithSubdivisions[element.iso2] = {
+          resultsWithSubdivisions.push({
             countryName: element.name,
             countryISOCode: element.iso2,
             subdivisions: subdivisions,
             alternateCountryName: zhCountryName,
-          };
+          });
 
           // Store without subdivision data
-          results[element.iso2] = {
+          results.push({
             countryName: element.name,
             countryISOCode: element.iso2,
             alternateCountryName: zhCountryName,
-          };
+          });
         }
       }
     });
@@ -63,7 +63,7 @@ export class LocationService {
     this.locationsWithSubdivisions = resultsWithSubdivisions;
   }
 
-  getLocations(includeSubdivisions: boolean): Map<string, LocationDTO> {
+  getLocations(includeSubdivisions: boolean): Array<LocationDTO> {
     if (!this.isLocationsLoaded) {
       this.loadLocationsFromFile();
       this.isLocationsLoaded = true;
@@ -79,7 +79,7 @@ export class LocationService {
     }
 
     // If requesting location details, we always want to include subdivision data
-    const requestedLocation = this.locationsWithSubdivisions[countryCode];
+    const requestedLocation = this.locationsWithSubdivisions.find(element => element.countryISOCode === countryCode);
     if (requestedLocation === undefined) {
       throw new NotFoundException({ description: "Country code not found" });
     }

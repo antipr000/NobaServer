@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type VerificationDataDTO = {
-  verificationProvider?: string;
+  verificationProvider?: "sardine";
   kycVerificationStatus?: "NotSubmitted" | "Pending" | "Approved" | "Flagged" | "Rejected";
   documentVerificationStatus?: "NotRequired" | "Required" | "Pending" | "Approved" | "Rejected" | "LivePhotoVerified";
 };

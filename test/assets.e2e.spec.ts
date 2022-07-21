@@ -72,7 +72,7 @@ describe("CryptoCurrencies", () => {
   let mongoUri: string;
   let app: INestApplication;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
@@ -290,23 +290,29 @@ describe("Locations", () => {
 
   describe("GET /countries", () => {
     it("should work even if no credentials are passed", async () => {
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as Map<string, LocationDTO> &
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as LocationDTO[] &
         ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
     });
 
-    it("should obtain 206 countries without subdivisions", async () => {
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as Map<string, LocationDTO> &
+    it("should obtain 205 countries without subdivisions", async () => {
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as LocationDTO[] &
         ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
 
-      expect(Object.keys(getSupportedCountriesResponse).length).toEqual(206);
-      console.log(Object.keys(getSupportedCountriesResponse));
+      // Have to remap into array due to the way we're pulling the array & ResponseStatus back into one object
+      const allCountries = [];
+      Object.keys(getSupportedCountriesResponse).forEach(key => {
+        if (key === "__status") return;
+        allCountries.push(getSupportedCountriesResponse[key]);
+      });
+
+      expect(allCountries.length).toEqual(205);
 
       // Pick one country and validate mappings
-      const us = getSupportedCountriesResponse["US"];
+      const us = allCountries.find(element => element.countryISOCode === "US");
 
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
@@ -314,26 +320,30 @@ describe("Locations", () => {
       expect(us.subdivisions).toBeUndefined();
     });
 
-    it("should obtain 206 countries with subdivisions", async () => {
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(true)) as Map<
-        string,
-        LocationDTO
-      > &
+    it("should obtain 205 countries with subdivisions", async () => {
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(true)) as LocationDTO[] &
         ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
 
-      expect(Object.keys(getSupportedCountriesResponse).length).toEqual(206);
+      // Have to remap into array due to the way we're pulling the array & ResponseStatus back into one object
+      const allCountries = [];
+      Object.keys(getSupportedCountriesResponse).forEach(key => {
+        if (key === "__status") return;
+        allCountries.push(getSupportedCountriesResponse[key]);
+      });
+
+      expect(allCountries.values.length).toEqual(205);
 
       // Pick one country and validate mappings
-      const us = getSupportedCountriesResponse["US"];
+      const us = allCountries.find(element => element.countryISOCode === "US");
 
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(Object.keys(us.subdivisions).length).toBe(66);
-      expect(us.subdivisions["WA"].code).toBe("WA");
-      expect(us.subdivisions["WA"].name).toBe("Washington");
+      expect(us.subdivisions.length).toBe(66);
+      expect(us.subdivisions.find(element => element.code === "WA").code).toBe("WA");
+      expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
     });
 
     it("should return the deatils of a single country with subdivisions", async () => {
@@ -343,9 +353,9 @@ describe("Locations", () => {
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(Object.keys(us.subdivisions).length).toBe(66);
-      expect(us.subdivisions["WA"].code).toBe("WA");
-      expect(us.subdivisions["WA"].name).toBe("Washington");
+      expect(us.subdivisions.length).toBe(66);
+      expect(us.subdivisions.find(element => element.code === "WA").code).toBe("WA");
+      expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
     });
   });
 });

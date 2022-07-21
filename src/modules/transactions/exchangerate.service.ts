@@ -8,7 +8,7 @@ import { CurrencyType } from "../common/domain/Types";
 export class ExchangeRateService {
   constructor(private readonly zeroHashService: ZeroHashService, private readonly appService: AppService) {}
 
-  async priceInFiat(cryptoCurrency: string, fiatCurrency: string, cryptoAmount: number = 1): Promise<number> {
+  async priceInFiat(cryptoCurrency: string, fiatCurrency: string, cryptoAmount = 1): Promise<number> {
     /*
     Note: Even though the subsequent getQuote() method validates the currencies, the e2e tests fail
     if we don't check it here. Something to dig into later.
@@ -33,7 +33,7 @@ export class ExchangeRateService {
   async getQuote(
     cryptoCurrency: string,
     fiatCurrency: string,
-    cryptoAmount: number = 1,
+    cryptoAmount = 1,
     amountType: CurrencyType = CurrencyType.CRYPTO,
   ): Promise<any> {
     // Validate fiat currency

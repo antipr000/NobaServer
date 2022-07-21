@@ -21,7 +21,7 @@ export class KmsService {
   }
 
   private generateKeyRing(keyType: KmsKeyType): KmsKeyringNode {
-    let generatorKeyKmsArn: string = "";
+    let generatorKeyKmsArn = "";
     let followUpKeysKmsArns: string[] = [];
 
     switch (keyType) {

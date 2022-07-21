@@ -45,7 +45,6 @@ import {
   SARDINE_AWS_SECRET_KEY_FOR_SARDINE_SECRET_KEY_ATTR,
   SARDINE_SECRET_KEY,
   NOBA_CONFIG_KEY,
-  NOBA_PARTNER_ID,
   ZEROHASH_CONFIG_KEY,
   ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
   ZEROHASH_API_KEY,
@@ -406,7 +405,7 @@ async function configureNobaParameters(
       "\n'Noba' configurations are required. Please configure the Noba environment variables " +
       "in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${NOBA_CONFIG_KEY}.${NOBA_TRANSACTION_CONFIG_KEY}" ` +
-      `and populate ` +
+      "and populate " +
       `("${SPREAD_PERCENTAGE}" or "${AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE}"), ` +
       `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
       `("${FIXED_CREDIT_CARD_FEE}" or "${AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE}") AND ` +

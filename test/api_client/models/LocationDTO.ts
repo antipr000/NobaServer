@@ -2,12 +2,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { Map } from "./Map";
+import type { SubdivisionDTO } from "./SubdivisionDTO";
 
 export type LocationDTO = {
   countryName: string;
   alternateCountryName?: string;
   countryISOCode: string;
-  subdivisions?: Map;
+  subdivisions?: Array<SubdivisionDTO>;
   countryFlagIconPath?: string;
 };
