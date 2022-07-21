@@ -365,7 +365,7 @@ export class TransactionService {
           updatedTransaction = Transaction.createTransaction({
             ...updatedTransaction.props,
             transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-            cryptoTransactionId: transactionHash,
+            //cryptoTransactionId: transactionHash, // This is not coming at this time. @soham is working on a fix
           });
           await this.transactionsRepo.updateTransaction(updatedTransaction);
 
