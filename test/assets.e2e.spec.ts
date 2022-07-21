@@ -86,7 +86,7 @@ describe("CryptoCurrencies", () => {
     await app.listen(port);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     clearAccessTokenForNextRequests();
     await mongoose.disconnect();
     await app.close();
