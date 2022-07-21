@@ -12,7 +12,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
-import { KYCStatus } from "../consumer/domain/VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus } from "../consumer/domain/VerificationStatus";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -107,6 +107,17 @@ export class ZeroHashService {
   }
 
   async createParticipant(consumer: ConsumerProps) {
+    if (consumer.verificationData.kycVerificationStatus != KYCStatus.APPROVED) {
+      return null; // Is handled in the caller
+    }
+
+    if (
+      consumer.verificationData.documentVerificationStatus != DocumentVerificationStatus.APPROVED &&
+      consumer.verificationData.documentVerificationStatus != DocumentVerificationStatus.NOT_REQUIRED
+    ) {
+      return null; // Is handled in the caller
+    }
+
     const consumerData = {
       first_name: consumer.firstName,
       last_name: consumer.lastName,
@@ -122,10 +133,10 @@ export class ZeroHashService {
       id_number: consumer.socialSecurityNumber, // TODO: Support other types outside US
       signed_timestamp: Date.now(),
       metadata: {
-        cip_kyc: consumer.verificationData.kycVerificationStatus === KYCStatus.APPROVED ? "Pass" : "Fail",
-        cip_timestamp: consumer.verificationData.idVerificationTimestamp,
-        sanction_screening: "",
-        sanction_screening_timestamp: consumer.verificationData.idVerificationTimestamp,
+        cip_kyc: "Pass", // We do not allow failed KYC to get here, so this is always pass
+        cip_timestamp: consumer.verificationData.kycVerificationTimestamp,
+        sanction_screening: true,
+        sanction_screening_timestamp: consumer.verificationData.kycVerificationTimestamp,
       },
       risk_rating: consumer.riskRating,
     };

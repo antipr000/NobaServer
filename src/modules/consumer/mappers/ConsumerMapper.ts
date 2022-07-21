@@ -59,7 +59,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       isDeleted: p.isDeleted,
       kycVerificationData: {
         kycVerificationStatus: p.verificationData ? p.verificationData.kycVerificationStatus : KYCStatus.NOT_SUBMITTED,
-        updatedTimestamp: p.verificationData ? p.verificationData.idVerificationTimestamp : 0,
+        updatedTimestamp: p.verificationData ? p.verificationData.kycVerificationTimestamp : 0,
       },
       documentVerificationData: {
         documentVerificationStatus: p.verificationData

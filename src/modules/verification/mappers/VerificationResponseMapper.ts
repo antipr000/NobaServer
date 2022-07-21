@@ -22,7 +22,7 @@ export class VerificationResponseMapper {
   toDocumentResultDTO(t: DocumentVerificationResult): VerificationResultDTO {
     if (
       t.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED ||
-      t.status === DocumentVerificationStatus.VERIFIED
+      t.status === DocumentVerificationStatus.APPROVED
     ) {
       return {
         status: VerificationResultStatus.APPROVED,

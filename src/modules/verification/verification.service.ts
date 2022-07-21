@@ -72,7 +72,7 @@ export class VerificationService {
       verificationData: {
         ...consumer.props.verificationData,
         kycVerificationStatus: result.status,
-        idVerificationTimestamp: new Date().getTime(),
+        kycVerificationTimestamp: new Date().getTime(),
         documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
           ? DocumentVerificationStatus.REQUIRED
           : DocumentVerificationStatus.NOT_REQUIRED,
@@ -176,7 +176,7 @@ export class VerificationService {
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
 
     if (
-      result.status === DocumentVerificationStatus.VERIFIED ||
+      result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
       await this.emailService.sendKycApprovedEmail(
@@ -214,7 +214,7 @@ export class VerificationService {
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
 
     if (
-      result.status === DocumentVerificationStatus.VERIFIED ||
+      result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
       await this.emailService.sendKycApprovedEmail(

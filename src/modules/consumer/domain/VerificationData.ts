@@ -1,4 +1,4 @@
-import { KYCStatus, DocumentVerificationStatus } from "./VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus, RiskLevel } from "./VerificationStatus";
 
 export enum VerificationProviders {
   SARDINE = "sardine",
@@ -9,6 +9,8 @@ export type VerificationData = {
   kycVerificationStatus: KYCStatus;
   documentVerificationStatus: DocumentVerificationStatus;
   documentVerificationTransactionID?: string;
-  idVerificationTimestamp?: number;
+  kycVerificationTimestamp?: number;
   documentVerificationTimestamp?: number;
+  sanctionLevel?: RiskLevel;
+  pepLevel?: RiskLevel;
 };

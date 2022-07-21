@@ -11,7 +11,7 @@ export enum DocumentVerificationStatus {
   NOT_REQUIRED = "NotRequired",
   REQUIRED = "Required",
   PENDING = "Pending",
-  VERIFIED = "Verified",
+  APPROVED = "Approved",
   REJECTED = "Rejected",
   LIVE_PHOTO_VERIFIED = "LivePhotoVerified",
 }
@@ -26,4 +26,10 @@ export enum PaymentMethodStatus {
   FLAGGED = "Flagged",
   REJECTED = "Rejected",
   APPROVED = "Approved",
+}
+
+export enum RiskLevel {
+  HIGH = "High",
+  MEDIUM = "Medium",
+  LOW = "Low",
 }

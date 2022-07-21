@@ -1,6 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import { KYCStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
+import {
+  KYCStatus,
+  DocumentVerificationStatus,
+  RiskLevel,
+  WalletStatus,
+} from "../../consumer/domain/VerificationStatus";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
@@ -161,7 +166,7 @@ export class Sardine implements IDVProvider {
       } else if (data.status === SardineDocumentProcessingStatus.COMPLETE) {
         // TODO: Add logic for differentiating between VERIFIED and LIVE_PHOTO_VERIFIED
         return {
-          status: DocumentVerificationStatus.VERIFIED,
+          status: DocumentVerificationStatus.APPROVED,
         };
       } else {
         return {
@@ -221,16 +226,28 @@ export class Sardine implements IDVProvider {
         sanctionsCheckSardineRequest,
         this.getAxiosConfig(),
       );
-      // TODO: Identify how to differentiate between RejectedFraud and RejectedWallet
-      if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
-        return {
-          status: KYCStatus.REJECTED,
-        };
-      } else {
-        return {
-          status: KYCStatus.OLD_APPROVED,
-        };
+
+      let verificationResult: ConsumerVerificationResult;
+
+      for (let signal of data.signals) {
+        if (signal.key === "sanctionLevel") {
+          verificationResult.sanctionLevel = signal.value;
+        } else if (signal.key === "pepLevel") {
+          verificationResult.pepLevel = signal.value;
+        } else if (signal.key === "cryptoAddressLevel") {
+          signal.level === SardineRiskLevels.HIGH
+            ? (verificationResult.walletStatus = WalletStatus.REJECTED)
+            : (verificationResult.walletStatus = WalletStatus.APPROVED);
+        }
       }
+
+      if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
+        verificationResult.status = KYCStatus.REJECTED;
+      } else {
+        verificationResult.status = KYCStatus.OLD_APPROVED;
+      }
+
+      return verificationResult;
     } catch (e) {
       throw new BadRequestException(e.message);
     }
@@ -264,7 +281,7 @@ export class Sardine implements IDVProvider {
       };
     } else if (riskLevel === SardineRiskLevels.MEDIUM || riskLevel === SardineRiskLevels.LOW) {
       return {
-        status: DocumentVerificationStatus.VERIFIED,
+        status: DocumentVerificationStatus.APPROVED,
         riskRating: riskLevel,
       };
     }

@@ -1382,7 +1382,7 @@ describe("AdminController", () => {
         email: "consumer@noba.com",
         verificationData: {
           kycVerificationStatus: KYCStatus.OLD_APPROVED,
-          documentVerificationStatus: DocumentVerificationStatus.VERIFIED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
           verificationProvider: VerificationProviders.SARDINE,
         },
         partners: [
@@ -1406,7 +1406,7 @@ describe("AdminController", () => {
         {
           verificationData: {
             kycVerificationStatus: KYCStatus.OLD_APPROVED,
-            documentVerificationStatus: DocumentVerificationStatus.VERIFIED,
+            documentVerificationStatus: DocumentVerificationStatus.APPROVED,
           },
         },
         {
