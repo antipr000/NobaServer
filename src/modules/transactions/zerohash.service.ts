@@ -12,6 +12,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
+import { KYCStatus } from "../consumer/domain/VerificationStatus";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -120,7 +121,12 @@ export class ZeroHashService {
       id_number_type: "ssn", // TODO: Support other types outside US
       id_number: consumer.socialSecurityNumber, // TODO: Support other types outside US
       signed_timestamp: Date.now(),
-      metadata: {},
+      metadata: {
+        cip_kyc: consumer.verificationData.kycVerificationStatus === KYCStatus.APPROVED ? "Pass" : "Fail",
+        cip_timestamp: consumer.verificationData.idVerificationTimestamp,
+        sanction_screening: "",
+        sanction_screening_timestamp: consumer.verificationData.idVerificationTimestamp,
+      },
       risk_rating: consumer.riskRating,
     };
 

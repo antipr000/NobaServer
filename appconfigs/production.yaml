@@ -77,3 +77,4 @@ zerohash:
   host: ""
 
 supportedCryptoFileName: "supported_tokens.csv"
+locationDataFileName: "countries+states.json"

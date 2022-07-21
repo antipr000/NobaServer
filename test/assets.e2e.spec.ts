@@ -18,7 +18,7 @@ import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
 import { clearAccessTokenForNextRequests, loginAndGetResponse, setAccessTokenForTheNextRequests } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
-import { AssetsService, CurrencyDTO, ProcessingFeeDTO } from "./api_client";
+import { AssetsService, CurrencyDTO, LocationDTO, ProcessingFeeDTO } from "./api_client";
 
 const supportedCurrenciesTicker = [
   "ZRX",
@@ -256,6 +256,96 @@ describe("CryptoCurrencies", () => {
     it("should throw 400 if 'fiatAmount' is negative number", async () => {
       const response = (await AssetsService.processingFee("USD", -5, "ETH")) as ProcessingFeeDTO & ResponseStatus;
       expect(response.__status).toBe(400);
+    });
+  });
+});
+
+describe("Locations", () => {
+  jest.setTimeout(20000);
+
+  let mongoServer: MongoMemoryServer;
+  let mongoUri: string;
+  let app: INestApplication;
+
+  beforeEach(async () => {
+    const port = process.env.PORT;
+
+    // Spin up an in-memory mongodb server
+    mongoServer = await MongoMemoryServer.create();
+    mongoUri = mongoServer.getUri();
+
+    const environmentVaraibles = {
+      MONGO_URI: mongoUri,
+    };
+    app = await bootstrap(environmentVaraibles);
+    await app.listen(port);
+  });
+
+  afterEach(async () => {
+    clearAccessTokenForNextRequests();
+    await mongoose.disconnect();
+    await app.close();
+    await mongoServer.stop();
+  });
+
+  describe("GET /countries", () => {
+    it("should work even if no credentials are passed", async () => {
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as Map<string, LocationDTO> &
+        ResponseStatus;
+
+      expect(getSupportedCountriesResponse.__status).toBe(200);
+    });
+
+    it("should obtain 206 countries without subdivisions", async () => {
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as Map<string, LocationDTO> &
+        ResponseStatus;
+
+      expect(getSupportedCountriesResponse.__status).toBe(200);
+
+      expect(Object.keys(getSupportedCountriesResponse).length).toEqual(206);
+      console.log(Object.keys(getSupportedCountriesResponse));
+
+      // Pick one country and validate mappings
+      const us = getSupportedCountriesResponse["US"];
+
+      expect(us.countryISOCode).toBe("US");
+      expect(us.countryName).toBe("United States");
+      expect(us.alternateCountryName).toBe("United States");
+      expect(us.subdivisions).toBeUndefined();
+    });
+
+    it("should obtain 206 countries with subdivisions", async () => {
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(true)) as Map<
+        string,
+        LocationDTO
+      > &
+        ResponseStatus;
+
+      expect(getSupportedCountriesResponse.__status).toBe(200);
+
+      expect(Object.keys(getSupportedCountriesResponse).length).toEqual(206);
+
+      // Pick one country and validate mappings
+      const us = getSupportedCountriesResponse["US"];
+
+      expect(us.countryISOCode).toBe("US");
+      expect(us.countryName).toBe("United States");
+      expect(us.alternateCountryName).toBe("United States");
+      expect(Object.keys(us.subdivisions).length).toBe(66);
+      expect(us.subdivisions["WA"].code).toBe("WA");
+      expect(us.subdivisions["WA"].name).toBe("Washington");
+    });
+
+    it("should return the deatils of a single country with subdivisions", async () => {
+      const us = (await AssetsService.getSupportedCountry("US")) as LocationDTO & ResponseStatus;
+      expect(us.__status).toBe(200);
+
+      expect(us.countryISOCode).toBe("US");
+      expect(us.countryName).toBe("United States");
+      expect(us.alternateCountryName).toBe("United States");
+      expect(Object.keys(us.subdivisions).length).toBe(66);
+      expect(us.subdivisions["WA"].code).toBe("WA");
+      expect(us.subdivisions["WA"].name).toBe("Washington");
     });
   });
 });

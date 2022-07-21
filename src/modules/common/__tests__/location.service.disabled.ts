@@ -3,12 +3,20 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { LocationService } from "../location.service";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 
+/**
+ * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
+ */
 describe("LocationService", () => {
   let locationService: LocationService;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
+    process.env = {
+      ...process.env,
+      NODE_ENV: "development",
+    };
+
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
