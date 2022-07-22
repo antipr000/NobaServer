@@ -165,10 +165,10 @@ export class ZeroHashService {
     let route: string;
     if (amount_type === CurrencyType.CRYPTO) {
       this.logger.debug(`Quoting ${amount} ${quoted_currency} to ${underlying}`);
-      route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&total=${amount}`;
+      route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&quantity=${amount}`;
     } else {
       this.logger.debug(`Quoting ${amount} ${underlying} to ${quoted_currency}`);
-      route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&quantity=${amount}`;
+      route = `/liquidity/rfq?underlying=${underlying}&quoted_currency=${quoted_currency}&side=buy&total=${amount}`;
     }
 
     let quote = await this.makeRequest(route, "GET", {});
