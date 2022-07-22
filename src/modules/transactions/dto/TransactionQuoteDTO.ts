@@ -21,6 +21,9 @@ export class TransactionQuoteDTO {
   processingFee: number;
 
   @ApiProperty()
+  nobaFee: number;
+
+  @ApiProperty()
   networkFee: number;
 
   @ApiProperty()

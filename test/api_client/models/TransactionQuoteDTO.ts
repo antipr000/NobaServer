@@ -9,6 +9,7 @@ export type TransactionQuoteDTO = {
   fixedAmount: number;
   quotedAmount: number;
   processingFee: number;
+  nobaFee: number;
   networkFee: number;
   exchangeRate: number;
 };

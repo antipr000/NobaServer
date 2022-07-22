@@ -82,7 +82,6 @@ export class TransactionService {
       const feeSubtotal = networkFeeInFiat + creditCardFees + nobaFlatFeeDollars;
       const preSpreadAmount = fixedAmountFiat - feeSubtotal;
       const priceToQuoteUSD = preSpreadAmount / (1 + nobaSpreadPercent);
-      const totalFees = preSpreadAmount - priceToQuoteUSD + feeSubtotal;
 
       const quote = await this.exchangeRateService.getQuote(
         transactionQuoteQuery.cryptoCurrencyCode,
@@ -114,8 +113,9 @@ export class TransactionService {
         fixedSide: transactionQuoteQuery.fixedSide,
         fixedAmount: transactionQuoteQuery.fixedAmount,
         quotedAmount: priceToQuoteUSD / costPerUnit,
-        processingFee: totalFees,
+        processingFee: creditCardFees,
         networkFee: networkFeeInFiat,
+        nobaFee: nobaFlatFeeDollars,
         exchangeRate: costPerUnit,
       };
 
@@ -162,6 +162,7 @@ export class TransactionService {
         quotedAmount: creditCardCharge,
         processingFee: processingFees,
         networkFee: networkFeeInFiat,
+        nobaFee: nobaFlatFeeDollars,
         exchangeRate: costPerUnit,
       };
 
