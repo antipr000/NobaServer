@@ -150,11 +150,11 @@ export class TransactionController {
     @Query() transactionFilters: TransactionFilterDTO,
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO[]> {
-    if (isNaN(Date.parse(transactionFilters.startDate))) {
+    if (transactionFilters.startDate != undefined && isNaN(Date.parse(transactionFilters.startDate))) {
       throw new BadRequestException("Invalid start date");
     }
 
-    if (isNaN(Date.parse(transactionFilters.endDate))) {
+    if (transactionFilters.endDate != undefined && isNaN(Date.parse(transactionFilters.endDate))) {
       throw new BadRequestException("Invalid end date");
     }
 
