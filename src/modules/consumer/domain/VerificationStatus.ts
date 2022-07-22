@@ -3,7 +3,6 @@ export enum KYCStatus {
   PENDING = "Pending",
   APPROVED = "Approved",
   FLAGGED = "Flagged",
-  OLD_APPROVED = "Approved",
   REJECTED = "Rejected",
 }
 

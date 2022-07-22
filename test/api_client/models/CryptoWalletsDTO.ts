@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type CryptoWalletsDTO = {
-  walletName: string;
+  walletName?: string;
   address: string;
   chainType: string;
   isEVMCompatible: boolean;

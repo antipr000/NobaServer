@@ -1,9 +1,9 @@
 import { WalletStatus } from "./VerificationStatus";
 
 export type CryptoWallets = {
-  walletName: string;
+  walletName?: string;
   address: string;
-  chainType: string;
+  chainType?: string;
   isEVMCompatible: boolean;
   status: WalletStatus;
 };

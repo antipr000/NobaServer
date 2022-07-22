@@ -279,15 +279,15 @@ export class TransactionService {
       sardineTransactionInformation,
     );
 
-    if (result.status !== KYCStatus.OLD_APPROVED) {
+    if (result.status !== KYCStatus.APPROVED) {
       throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
     }
 
     if (result.walletStatus) {
       const cryptoWallet: CryptoWallets = {
-        walletName: "",
+        //walletName: "",
         address: newTransaction.props.destinationWalletAddress,
-        chainType: "",
+        //chainType: "",
         isEVMCompatible: false,
         status: result.walletStatus,
       };

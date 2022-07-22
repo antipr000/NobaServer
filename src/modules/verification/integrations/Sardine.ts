@@ -1,6 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import { KYCStatus, DocumentVerificationStatus, WalletStatus } from "../../consumer/domain/VerificationStatus";
+import {
+  KYCStatus,
+  DocumentVerificationStatus,
+  WalletStatus,
+  RiskLevel,
+} from "../../consumer/domain/VerificationStatus";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
@@ -222,29 +227,48 @@ export class Sardine implements IDVProvider {
         this.getAxiosConfig(),
       );
 
-      let verificationResult: ConsumerVerificationResult;
+      let sanctionLevel: RiskLevel = RiskLevel.HIGH;
+      let pepLevel: RiskLevel = RiskLevel.HIGH;
+      let walletStatus: WalletStatus = WalletStatus.REJECTED;
+      let verificationStatus: KYCStatus = KYCStatus.REJECTED;
 
-      for (const signal of data.signals) {
-        if (signal.key === "sanctionLevel") {
-          verificationResult.sanctionLevel = signal.value;
-        } else if (signal.key === "pepLevel") {
-          verificationResult.pepLevel = signal.value;
-        } else if (signal.key === "cryptoAddressLevel") {
-          signal.level === SardineRiskLevels.HIGH
-            ? (verificationResult.walletStatus = WalletStatus.REJECTED)
-            : (verificationResult.walletStatus = WalletStatus.APPROVED);
+      for (const signal of data["customer"]["signals"]) {
+        if (signal["key"] === "sanctionLevel") {
+          sanctionLevel = this.mapSardineRiskLevelToNobaRiskLevel(signal["value"]);
+        } else if (signal["key"] === "pepLevel") {
+          pepLevel = this.mapSardineRiskLevelToNobaRiskLevel(signal["value"]);
+        } else if (signal["key"] === "cryptoAddressLevel") {
+          signal["value"] === SardineRiskLevels.HIGH
+            ? (walletStatus = WalletStatus.REJECTED)
+            : (walletStatus = WalletStatus.APPROVED);
         }
       }
 
       if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
-        verificationResult.status = KYCStatus.REJECTED;
+        verificationStatus = KYCStatus.REJECTED;
       } else {
-        verificationResult.status = KYCStatus.OLD_APPROVED;
+        verificationStatus = KYCStatus.APPROVED;
       }
 
-      return verificationResult;
+      return {
+        sanctionLevel: sanctionLevel,
+        pepLevel: pepLevel,
+        walletStatus: walletStatus,
+        status: verificationStatus,
+      };
     } catch (e) {
       throw new BadRequestException(e.message);
+    }
+  }
+
+  private mapSardineRiskLevelToNobaRiskLevel(riskLevel: SardineRiskLevels): RiskLevel {
+    switch (riskLevel) {
+      case SardineRiskLevels.LOW:
+        return RiskLevel.LOW;
+      case SardineRiskLevels.MEDIUM:
+        return RiskLevel.MEDIUM;
+      default:
+        return RiskLevel.HIGH;
     }
   }
 

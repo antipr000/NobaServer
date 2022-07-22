@@ -26,14 +26,14 @@ export class PaymentMethodsDTO {
 }
 
 export class CryptoWalletsDTO {
-  @ApiProperty()
-  walletName: string;
+  @ApiPropertyOptional()
+  walletName?: string;
 
   @ApiProperty()
   address: string;
 
-  @ApiProperty()
-  chainType: string;
+  @ApiPropertyOptional()
+  chainType?: string;
 
   @ApiProperty()
   isEVMCompatible: boolean;

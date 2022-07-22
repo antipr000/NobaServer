@@ -1381,7 +1381,7 @@ describe("AdminController", () => {
         _id: "test-consumer-1234",
         email: "consumer@noba.com",
         verificationData: {
-          kycVerificationStatus: KYCStatus.OLD_APPROVED,
+          kycVerificationStatus: KYCStatus.APPROVED,
           documentVerificationStatus: DocumentVerificationStatus.APPROVED,
           verificationProvider: VerificationProviders.SARDINE,
         },
@@ -1405,7 +1405,7 @@ describe("AdminController", () => {
         consumerProps._id,
         {
           verificationData: {
-            kycVerificationStatus: KYCStatus.OLD_APPROVED,
+            kycVerificationStatus: KYCStatus.APPROVED,
             documentVerificationStatus: DocumentVerificationStatus.APPROVED,
           },
         },
