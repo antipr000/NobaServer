@@ -38,7 +38,7 @@ export class TransactionService {
   private readonly slippageAllowed = 2; //2%, todo take from config or user input
 
   constructor(
-    configService: CustomConfigService,
+    private readonly configService: CustomConfigService,
     private readonly currencyService: CurrencyService,
     private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
@@ -77,6 +77,7 @@ export class TransactionService {
 
     if (transactionQuoteQuery.fixedSide == CurrencyType.FIAT) {
       const fixedAmountFiat = transactionQuoteQuery.fixedAmount;
+      // TODO(#306): It says percentage, but not actually calculating percentage.
       const creditCardFees = fixedAmountFiat * creditCardFeePercent + creditCardFeeDollars;
       const feeSubtotal = networkFeeInFiat + creditCardFees + nobaFlatFeeDollars;
       const preSpreadAmount = fixedAmountFiat - feeSubtotal;
