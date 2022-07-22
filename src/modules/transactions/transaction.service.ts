@@ -222,6 +222,7 @@ export class TransactionService {
       });
     }
 
+    //this.cacheManager.
     if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
       throw new BadRequestException({
         messageForClient:
@@ -249,7 +250,6 @@ export class TransactionService {
       destinationWalletAddress: details.destinationWalletAddress,
     });
 
-    console.log("Calling createTransaction");
     this.transactionsRepo.createTransaction(newTransaction);
 
     const paymentMethodList: PaymentMethods[] = user.props.paymentMethods.filter(
@@ -262,7 +262,6 @@ export class TransactionService {
 
     const paymentMethod = paymentMethodList[0];
 
-    console.log("Calling Sardine");
     // Check Sardine for AML
     const sardineTransactionInformation: TransactionInformation = {
       transactionID: newTransaction.props._id,
@@ -274,20 +273,16 @@ export class TransactionService {
       cryptoCurrencyCode: newTransaction.props.leg2,
       walletAddress: newTransaction.props.destinationWalletAddress,
     };
-
-    console.log(`Sardine request: ${JSON.stringify(sardineTransactionInformation)}`);
     const result = await this.verificationService.transactionVerification(
       sessionKey,
       user,
       sardineTransactionInformation,
     );
 
-    console.log("Got Sardine response");
-
     if (result.status !== KYCStatus.APPROVED) {
       throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
     }
-    console.log("Checking wallet status");
+
     if (result.walletStatus) {
       const cryptoWallet: CryptoWallets = {
         //walletName: "",
@@ -298,36 +293,13 @@ export class TransactionService {
       };
       await this.consumerService.addOrUpdateCryptoWallet(user.props._id, cryptoWallet);
     }
-    console.log("After checking wallet status");
+
     if (result.paymentMethodStatus) {
       await this.consumerService.updatePaymentMethod(user.props._id, {
         ...paymentMethod,
         status: result.paymentMethodStatus,
       });
     }
-    console.log("Updated payment method");
-
-    //TODO we shouldn't be processing the below steps synchronously as there may be some partial failures
-    //We should have some sort of transaction queues to process all the scenarios incrementally
-
-    //**** starting fiat transaction ***/
-
-    // todo refactor this piece when we have the routing flow in place
-    console.log("Checkout...");
-    const payment = await this.consumerService.requestCheckoutPayment(
-      details.paymentToken,
-      leg1Amount,
-      leg1,
-      newTransaction.props._id,
-    );
-    let updatedTransaction = Transaction.createTransaction({
-      ...newTransaction.props,
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      checkoutPaymentID: payment["id"],
-    });
-
-    this.transactionsRepo.updateTransaction(updatedTransaction);
-    console.log("Updated transaction");
 
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
@@ -354,6 +326,26 @@ export class TransactionService {
       this.logger.error("Failed to send email at transaction initiation. " + e);
     }
 
+    //TODO we shouldn't be processing the below steps synchronously as there may be some partial failures
+    //We should have some sort of transaction queues to process all the scenarios incrementally
+
+    //**** starting fiat transaction ***/
+
+    // todo refactor this piece when we have the routing flow in place
+    const payment = await this.consumerService.requestCheckoutPayment(
+      details.paymentToken,
+      leg1Amount,
+      leg1,
+      newTransaction.props._id,
+    );
+    let updatedTransaction = Transaction.createTransaction({
+      ...newTransaction.props,
+      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+      checkoutPaymentID: payment["id"],
+    });
+
+    this.transactionsRepo.updateTransaction(updatedTransaction);
+
     //TODO wait here for the transaction to complete and update the status
 
     //updating the status to fiat transaction succeeded for now
@@ -363,29 +355,22 @@ export class TransactionService {
       checkoutPaymentID: payment["id"],
     });
     this.transactionsRepo.updateTransaction(updatedTransaction);
-    console.log("Updated transaction");
 
     //*** assuming that fiat transfer completed*/
-    console.log("Calling ZH");
-    const promise = new Promise<TransactionDTO>((resolve, reject) => {
-      console.log("In here");
-      console.log("Transferring to destination wallet");
-      // leg1 is fiat, leg2 is crypto
 
+    const promise = new Promise<TransactionDTO>((resolve, reject) => {
       const web3TransactionHandler: Web3TransactionHandler = {
         onTransactionHash: async (transactionHash: string) => {
-          console.log(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
+          this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
           updatedTransaction = Transaction.createTransaction({
             ...updatedTransaction.props,
             transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
             //cryptoTransactionId: transactionHash, // This is not coming at this time. @soham is working on a fix
           });
           await this.transactionsRepo.updateTransaction(updatedTransaction);
-          console.log("Updated transaction 2");
 
           //TODO check with Lane or Gal if we should only confirm on the receipt of the transaction or is it fine to confirm the transaction on transaction hash
           resolve(this.transactionsMapper.toDTO(updatedTransaction));
-          console.log("Polling ZH");
         },
 
         /* onReceipt: async (receipt: any) => { 
@@ -407,6 +392,7 @@ export class TransactionService {
         },
       };
 
+      // leg1 is fiat, leg2 is crypto
       this.zeroHashService.transferCryptoToDestinationWallet(
         user.props,
         leg1,
@@ -419,7 +405,6 @@ export class TransactionService {
       );
     });
 
-    console.log("Returning promise");
     return promise;
   }
 
