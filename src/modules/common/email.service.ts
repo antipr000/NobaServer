@@ -4,6 +4,7 @@ import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import * as sgMail from "@sendgrid/mail";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { TransactionEmailParameters } from "./domain/TransactionEmailParameters";
+import { EmailTemplates } from "./domain/EmailTemplates";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -18,7 +19,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-62a393f5f89949f5a5a3d244a51ed2e7", //this is template id for sending otp without any context, see sendgrid dashboard
+      templateId: EmailTemplates.OTP_EMAIL, //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
         user: name ?? "",
         one_time_password: otp,
@@ -33,7 +34,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-0c8d633f6de545c6a562ac8e6d53917d",
+      templateId: EmailTemplates.WELCOME_MESSAGE,
       dynamicTemplateData: {
         username: fullName ?? "",
       },
@@ -48,7 +49,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-2d55cada60ab46209d6d5bcfe9c450d7",
+      templateId: EmailTemplates.KYC_APPROVED_EMAIL,
       dynamicTemplateData: {
         username: fullName ?? "",
       },
@@ -63,7 +64,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-fac2f33374c443cb855641727a735708",
+      templateId: EmailTemplates.KYC_DENIED_EMAIL,
       dynamicTemplateData: {
         username: fullName ?? "",
         duration: 2, // TODO: Remove hardcoded duration
@@ -81,7 +82,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-d25d29442cf44338b72e15ea75bcab26",
+      templateId: EmailTemplates.KYC_FLAGGED_EMAIL,
       dynamicTemplateData: {
         username: fullName ?? "",
         datetimestamp: futureDate,
@@ -103,7 +104,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-8bb9892cbbc1405aa9f833229c9db2e2",
+      templateId: EmailTemplates.CARD_ADDED_EMAIL,
       dynamicTemplateData: {
         username: fullName ?? "",
         card_network: cardNetwork,
@@ -127,7 +128,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-cb1c929f24734c9099f7ba90e08f53ee",
+      templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL,
       dynamicTemplateData: {
         username: fullName ?? "",
         card_network: cardNetwork,
@@ -151,7 +152,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-b0e06a32f6674552979243a2542409b4",
+      templateId: EmailTemplates.CARD_DELETED_EMAIL,
       dynamicTemplateData: {
         username: fullName ?? "",
         card_network: cardNetwork,
@@ -174,7 +175,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: "d-7e413692c9f8497c80d5b5e2a5218171",
+      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL,
       dynamicTemplateData: {
         username: fullName ?? "",
         transaction_id: transactionEmailParameters.transactionID,
