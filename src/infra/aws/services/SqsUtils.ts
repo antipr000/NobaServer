@@ -1,6 +1,10 @@
-import { SQS } from "aws-sdk";
 import { TransactionQueueName } from "../../../modules/transactions/queueprocessors/QueuesMeta";
-import { environmentDependentQueueName, environmentDependentQueueUrl, getQueueEnvironmentPrefix } from "./CommonUtils";
+import {
+  environmentDependentQueueName,
+  environmentDependentQueueUrl,
+  getQueueEnvironmentPrefix,
+  getSQSInstance,
+} from "./CommonUtils";
 
 export function initializeSQS() {
   console.log("Initializing SQS queues *****************");
@@ -11,7 +15,7 @@ export function initializeSQS() {
     return { queueName: environmentDependentQueueName(x), queueUrl: environmentDependentQueueUrl(x) };
   });
 
-  const sqs = new SQS();
+  const sqs = getSQSInstance();
   sqs.listQueues({ QueueNamePrefix: queuePrefix }, (err, data) => {
     if (err) {
       throw err;

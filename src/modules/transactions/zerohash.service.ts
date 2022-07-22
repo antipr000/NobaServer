@@ -6,12 +6,14 @@ import { BadRequestException, Inject, Injectable, ServiceUnavailableException } 
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "../../app.service";
-import { ZerohashConfigs } from "../../config/configtypes/ZerohashConfigs";
+import { NOBA_PLATFORM_CODE, ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { LocationService } from "../common/location.service";
 import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
+import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
 
 const crypto_ts = require("crypto");
@@ -21,6 +23,10 @@ const request = require("request-promise"); // TODO(#125) This library is deprec
 export class ZeroHashService {
   private readonly configs: ZerohashConfigs;
   private readonly appService: AppService;
+  private readonly locationService: LocationService;
+
+  @Inject()
+  private readonly consumerService: ConsumerService;
 
   // ID Types
   private readonly id_options = [
@@ -122,6 +128,8 @@ export class ZeroHashService {
       return null; // Is handled in the caller
     }
 
+    const country = this.locationService.getLocationDetails(consumer.address.countryCode);
+
     const consumerData = {
       first_name: consumer.firstName,
       last_name: consumer.lastName,
@@ -131,7 +139,7 @@ export class ZeroHashService {
       city: consumer.address.city,
       state: consumer.address.regionCode,
       zip: consumer.address.postalCode,
-      country: "United States", // Remove hardcoded value and use countryCode to determine name
+      country: country.alternateCountryName, // ZH has its own spellings for some of the countries, so we store that in alternateCountryName
       date_of_birth: consumer.dateOfBirth, // ZH format and our format are both YYYY-MM-DD
       id_number_type: "ssn", // TODO: Support other types outside US
       id_number: consumer.socialSecurityNumber, // TODO: Support other types outside US
@@ -182,7 +190,7 @@ export class ZeroHashService {
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
-  async transferAssets(sender_participant, sender_group, receiver_participant, receiver_group, asset, amount) {
+  async transferAssetsToNoba(sender_participant, sender_group, receiver_participant, receiver_group, asset, amount) {
     const transfer = await this.makeRequest("/transfers", "POST", {
       from_participant_code: sender_participant,
       from_account_group: sender_group,
@@ -244,106 +252,17 @@ export class ZeroHashService {
     web3TransactionHandler: Web3TransactionHandler,
   ) {
     // Ensure that the cryptocurrency and quoted_currency are supported by ZHLS
-    const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
-    const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
-    if (supportedCryptocurrencies.filter(curr => curr.ticker === cryptocurrency).length == 0) {
-      throw new BadRequestError({
-        messageForClient: `Unsupported cryptocurrency: ${cryptocurrency}`,
-      });
-    }
-
-    if (supportedFiatCurrencies.filter(curr => curr.ticker === quoted_currency).length == 0) {
-      throw new Error(`${quoted_currency} is not supported by ZHLS`);
-    }
-
-    // Check if the user is already registered with ZeroHash
-    const participant = await this.getParticipant(consumer.email);
-    let participant_code: string;
-
-    // If the user is not registered, register them
-    if (participant == null) {
-      const new_participant = await this.createParticipant(consumer);
-      if (new_participant == null) {
-        this.logger.error("Failed to create participant for email:" + consumer.email);
-        throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
-      }
-      participant_code = new_participant["message"]["participant_code"];
-      this.logger.debug("Created new participant: " + participant_code);
-      // participant_code = new_participant.participant_code;
-    } else {
-      participant_code = participant["message"]["participant_code"];
-      this.logger.debug("Existing participant: " + participant_code);
-    }
-
-    const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, amount_type);
-    if (quote == null) {
-      throw new BadRequestError({
-        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
-      });
-    }
-    const quote_id = quote["message"].quote_id;
-
-    const executed_quote = await this.executeQuote(quote_id);
-    if (executed_quote == null) {
-      throw new BadRequestError({
-        messageForClient: "Something went wrong! Contact noba support for immediate resolution!",
-      });
-    }
-    const amount_received = executed_quote["message"]["quote"].quantity;
-    const trade_price = executed_quote["message"]["quote"].price;
-
-    const assetTransfer = await this.transferAssets(
-      "6MWNG6",
-      "00SCXM",
-      "6MWNG6",
-      "6MWNG6",
-      cryptocurrency,
+    var {
+      trade_id,
+      participant_code,
       amount_received,
+    }: { trade_id: any; participant_code: string; amount_received: any } = await this.initiateCryptoTransfer(
+      consumer,
+      quoted_currency,
+      cryptocurrency,
+      amount,
+      amount_type,
     );
-    if (assetTransfer == null) {
-      throw new BadRequestError({
-        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
-      });
-    }
-
-    //Set trade data for next function
-    const tradeData = {
-      symbol: cryptocurrency + "/" + quoted_currency,
-      trade_price: trade_price,
-      trade_quantity: String(amount / trade_price),
-      product_type: "spot",
-      trade_type: "regular",
-      trade_reporter: consumer.email,
-      platform_code: "6MWNG6",
-      client_trade_id: "client_trade_id", // TODO: Check what exactly is client trade id and how is it used
-      physical_delivery: true,
-      parties_anonymous: false,
-      transaction_timestamp: Date.now(),
-      parties: [
-        {
-          participant_code: participant_code,
-          asset: cryptocurrency,
-          amount: String(amount),
-          side: "buy",
-          settling: true,
-        },
-        {
-          participant_code: "6MWNG6",
-          asset: quoted_currency,
-          side: "sell",
-          settling: false,
-        },
-      ],
-    };
-
-    const trade_request = await this.requestTrade(tradeData);
-    if (trade_request == null) {
-      throw new BadRequestError({
-        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
-      });
-    }
-
-    const trade_id = trade_request["message"].trade_id;
 
     // Check trade_state every 3 seconds until it is terminated using setInterval
     const trade_status_checker = setInterval(async () => {
@@ -356,7 +275,7 @@ export class ZeroHashService {
           participant_code,
           amount_received,
           cryptocurrency,
-          "6MWNG6",
+          NOBA_PLATFORM_CODE,
         );
 
         const withdrawal_id = withdrawal_request["message"]["id"];
@@ -374,5 +293,137 @@ export class ZeroHashService {
         }, 3000);
       }
     }, 3000);
+  }
+
+  async initiateCryptoTransfer(
+    consumer: ConsumerProps,
+    fiatCurrency: string,
+    cryptocurrency: string,
+    amount: number,
+    amount_type: CurrencyType,
+  ) {
+    const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
+    const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
+    if (supportedCryptocurrencies.filter(curr => curr.ticker === cryptocurrency).length == 0) {
+      throw new BadRequestError({
+        messageForClient: `Unsupported cryptocurrency: ${cryptocurrency}`,
+      });
+    }
+
+    if (supportedFiatCurrencies.filter(curr => curr.ticker === fiatCurrency).length == 0) {
+      throw new Error(`${fiatCurrency} is not supported by ZHLS`);
+    }
+
+    let participant_code: string = await this.getParticipantCode(consumer);
+
+    const executedQuote = await this.requestAndExecuteQuote(cryptocurrency, fiatCurrency, amount, amount_type);
+
+    const amountReceived = executedQuote["message"]["quote"].quantity;
+    const tradePrice = executedQuote["message"]["quote"].price;
+
+    //TODO: Update transaction with quote details
+
+    const assetTransfer = await this.transferAssetsToNoba(
+      NOBA_PLATFORM_CODE,
+      ZHLS_PLATFORM_CODE,
+      NOBA_PLATFORM_CODE,
+      NOBA_PLATFORM_CODE,
+      cryptocurrency,
+      amountReceived,
+    );
+    if (assetTransfer == null) {
+      throw new BadRequestError({
+        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
+      });
+    }
+
+    //Set trade data for next function
+    const tradeData = {
+      symbol: cryptocurrency + "/" + fiatCurrency,
+      trade_price: tradePrice,
+      trade_quantity: String(amount / tradePrice), // TODO(#310) Confirm this comes out correctly
+      product_type: "spot",
+      trade_type: "regular",
+      trade_reporter: consumer.email,
+      platform_code: NOBA_PLATFORM_CODE,
+      client_trade_id: "client_trade_id",
+      physical_delivery: true,
+      parties_anonymous: false,
+      transaction_timestamp: Date.now(),
+      parties: [
+        {
+          participant_code: participant_code,
+          asset: cryptocurrency,
+          amount: String(amount),
+          side: "buy",
+          settling: true,
+        },
+        {
+          participant_code: NOBA_PLATFORM_CODE,
+          asset: fiatCurrency,
+          side: "sell",
+          settling: false,
+        },
+      ],
+    };
+
+    const trade_request = await this.requestTrade(tradeData);
+    if (trade_request == null) {
+      throw new BadRequestError({
+        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
+      });
+    }
+
+    const trade_id = trade_request["message"].trade_id;
+    return { trade_id, participant_code, amount_received: amountReceived };
+  }
+
+  private async requestAndExecuteQuote(
+    cryptocurrency: string,
+    quoted_currency: string,
+    amount: number,
+    amount_type: CurrencyType,
+  ) {
+    const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, amount_type);
+    if (quote == null) {
+      throw new BadRequestError({
+        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
+      });
+    }
+    const quote_id = quote["message"].quote_id;
+
+    const executed_quote = await this.executeQuote(quote_id);
+    if (executed_quote == null) {
+      throw new BadRequestError({
+        messageForClient: "Something went wrong! Contact noba support for immediate resolution!",
+      });
+    }
+    return executed_quote;
+  }
+
+  private async getParticipantCode(consumer: ConsumerProps) {
+    let participant_code: string = consumer.zhParticipantCode;
+    // If the participant doesn't have a ZH participant code, first look them up and if not existing, create them:
+    if (participant_code == undefined) {
+      // Check if the user is already registered with ZeroHash
+      const participant = await this.getParticipant(consumer.email);
+
+      // If the user is not registered, register them
+      if (participant == null) {
+        const new_participant = await this.createParticipant(consumer);
+        if (new_participant == null) {
+          this.logger.error("Failed to create participant for email:" + consumer.email);
+          throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
+        }
+        participant_code = new_participant["message"]["participant_code"];
+        // Update consumer record with participant_code
+        this.consumerService.addZeroHashParticipantCode(consumer._id, participant_code);
+        this.logger.debug("Created new participant: " + participant_code);
+      } else {
+        participant_code = participant["message"]["participant_code"];
+        this.logger.debug("Existing participant: " + participant_code);
+      }
+    }
+    return participant_code;
   }
 }

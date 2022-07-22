@@ -6,6 +6,7 @@ import { getTransactionQueueProducers, TransactionQueueName } from "../queueproc
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { Producer } from "sqs-producer";
 import { Transaction } from "../domain/Transaction";
+import { Cron } from "@nestjs/schedule";
 
 const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.PENDING]: TransactionQueueName.FiatTransactionInitiator,
@@ -33,7 +34,7 @@ export class PendingTransactionDBPollerService {
   }
 
   //every 5 seconds for now, we should be using db streams actually but it's fine for now
-  // @Cron("*/5 * * * * *", { name: "PendingTransactionsDBPoller" })
+  @Cron("*/5 * * * * *", { name: "PendingTransactionsDBPoller" })
   async handleCron() {
     if (this.isRunningConditonMet()) {
       this.isCronRunning = true; // prevents rescheduling of this cron job if previous run is still running

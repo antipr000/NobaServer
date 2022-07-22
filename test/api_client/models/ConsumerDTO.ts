@@ -19,7 +19,8 @@ export type ConsumerDTO = {
   address?: any;
   isSuspectedFraud: boolean;
   isLocked: boolean;
-  isDeleted?: boolean;
+  isDisabled?: boolean;
+  zhParticipantCode?: string;
   paymentMethods?: Array<PaymentMethodsDTO>;
   cryptoWallets?: Array<CryptoWalletsDTO>;
   paymentMethodStatus?: "Flagged" | "Rejected" | "Approved";

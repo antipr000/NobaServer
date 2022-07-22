@@ -386,6 +386,15 @@ export class ConsumerService {
     return result;
   }
 
+  async addZeroHashParticipantCode(consumerID: string, zeroHashParticipantCode: string): Promise<Consumer> {
+    const consumer = await this.getConsumer(consumerID);
+
+    return await this.updateConsumer({
+      ...consumer.props,
+      zhParticipantCode: zeroHashParticipantCode,
+    });
+  }
+
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {
     // TODO: Write logic for verification status based on current modifications of users verification data
     throw new Error("Method not implemented");

@@ -92,7 +92,7 @@ export class ConsumerDTO {
   isLocked: boolean;
 
   @ApiPropertyOptional()
-  isDeleted?: boolean;
+  isDisabled?: boolean;
 
   @ApiPropertyOptional({ type: [PaymentMethodsDTO] })
   paymentMethods?: PaymentMethodsDTO[];

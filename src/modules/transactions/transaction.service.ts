@@ -254,6 +254,8 @@ export class TransactionService {
 
     this.transactionsRepo.createTransaction(newTransaction);
 
+    if (true) return this.transactionsMapper.toDTO(newTransaction); // Enable the new transaction flow without deleting the remaining code just yet
+
     const paymentMethodList: PaymentMethods[] = user.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken === details.paymentToken,
     );
@@ -413,6 +415,15 @@ export class TransactionService {
   public async initiateCryptoTransaction(transaction: Transaction): Promise<CryptoTransactionRequestResult> {
     //Check slippage here and call zero hash service
     // add risk controller here to reconcile that fiat and crypto balance are in sync!!
+
+    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    this.zeroHashService.initiateCryptoTransfer(
+      consumer.props,
+      transaction.props.leg1,
+      transaction.props.leg2,
+      transaction.props.leg1Amount,
+      CurrencyType.FIAT,
+    );
 
     // break above logic here
     // transaction.props.cryptoTransactionId = "";

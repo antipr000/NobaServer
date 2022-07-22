@@ -56,7 +56,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       phone: p.phone,
       isSuspectedFraud: p.isSuspectedFraud,
       isLocked: p.isLocked,
-      isDeleted: p.isDeleted,
+      isDisabled: p.isDisabled,
       kycVerificationData: {
         kycVerificationStatus: p.verificationData ? p.verificationData.kycVerificationStatus : KYCStatus.NOT_SUBMITTED,
         updatedTimestamp: p.verificationData ? p.verificationData.kycVerificationTimestamp : 0,

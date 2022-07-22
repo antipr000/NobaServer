@@ -19,3 +19,6 @@ export interface ZerohashConfigs {
   [ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR]: string;
   [ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR]: string;
 }
+
+export const NOBA_PLATFORM_CODE = "6MWNG6";
+export const ZHLS_PLATFORM_CODE = "00SCXM";

@@ -28,7 +28,8 @@ export interface ConsumerProps extends VersioningInfo {
   riskRating?: string;
   isSuspectedFraud?: boolean;
   isLocked?: boolean;
-  isDeleted?: boolean;
+  isDisabled?: boolean;
+  zhParticipantCode?: string;
   partners?: PartnerDetails[];
   paymentProviderAccounts?: PaymentProviderDetails[];
   verificationData?: VerificationData;
@@ -107,7 +108,8 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   riskRating: Joi.string().optional(),
   isSuspectedFraud: Joi.boolean().optional(),
   isLocked: Joi.boolean().optional(),
-  isDeleted: Joi.boolean().optional(),
+  isDisabled: Joi.boolean().optional(),
+  zhParticipantCode: Joi.string().optional(),
   partners: Joi.array().items(partnerValidationJoiKeys).required(),
   paymentProviderAccounts: Joi.array().items(paymentProviderValidationJoiKeys).optional(),
   verificationData: Joi.object().keys(verificationDataValidationJoiKeys).optional(),
