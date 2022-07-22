@@ -271,8 +271,9 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: fiatAmountUSD,
         quotedAmount: 6.25,
-        processingFee: 37.5,
+        processingFee: 0,
         networkFee: 0,
+        nobaFee: 0,
         exchangeRate: 10,
       });
     });
@@ -321,8 +322,9 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: fiatAmountUSD,
         quotedAmount: 9.05,
-        processingFee: 9.5,
+        processingFee: 0,
         networkFee: 0,
+        nobaFee: 9.5,
         exchangeRate: 10,
       });
     });
@@ -374,6 +376,7 @@ describe("TransactionService", () => {
         quotedAmount: 8.77,
         processingFee: 12.3,
         networkFee: 0,
+        nobaFee: 0,
         exchangeRate: 10,
       });
     });
@@ -424,6 +427,7 @@ describe("TransactionService", () => {
         quotedAmount: 9.95,
         processingFee: 0.5,
         networkFee: 0,
+        nobaFee: 0,
         exchangeRate: 10,
       });
     });
@@ -472,8 +476,9 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: fiatAmountUSD,
         quotedAmount: 8.09,
-        processingFee: 19.1,
+        processingFee: 12,
         networkFee: 0,
+        nobaFee: 7.1,
         exchangeRate: 10,
       });
     });
@@ -522,8 +527,9 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: fiatAmountUSD,
         quotedAmount: 4.025,
-        processingFee: 59.75,
+        processingFee: 12,
         networkFee: 0,
+        nobaFee: 7.5,
         exchangeRate: 10,
       });
     });
@@ -574,6 +580,7 @@ describe("TransactionService", () => {
         quotedAmount: 8.65,
         processingFee: 13.5,
         networkFee: 0,
+        nobaFee: 0,
         exchangeRate: 10,
       });
     });
