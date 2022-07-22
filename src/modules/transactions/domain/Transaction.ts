@@ -97,8 +97,8 @@ export class Transaction extends AggregateRoot<TransactionProps> {
 
   public static createTransaction(transactionProps: Partial<TransactionProps>): Transaction {
     transactionProps._id = transactionProps._id ?? "transaction_" + Entity.getNewID();
-    transactionProps.dbPollingStatus == transactionProps.dbPollingStatus ??
-      this.getPollingStatusAttribute(new Date().toISOString());
+    transactionProps.dbPollingStatus =
+      transactionProps.dbPollingStatus ?? this.getPollingStatusAttribute(new Date().toISOString());
     transactionProps.transactionTimestamp = transactionProps.transactionTimestamp ?? new Date();
     return new Transaction(Joi.attempt(transactionProps, transactionJoiSchema));
   }
