@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "sqs-consumer";
 import { Producer } from "sqs-producer";
 import { Logger } from "winston";
-import { environmentDependentQueueUrl } from "../../../infra/aws/services/SqsUtils";
+import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { FiatTransactionStatus } from "../../consumer/domain/Types";
 import { Transaction } from "../domain/Transaction";
