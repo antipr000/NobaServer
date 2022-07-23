@@ -3,7 +3,7 @@ import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CurrencyService } from "../common/currency.service";
-import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
+import { CurrencyType, CryptoTransactionHandler } from "../common/domain/Types";
 import { ConsumerService } from "../consumer/consumer.service";
 import { PaymentMethods } from "../consumer/domain/PaymentMethods";
 import { KYCStatus } from "../consumer/domain/VerificationStatus";
@@ -394,7 +394,7 @@ export class TransactionService {
     //*** assuming that fiat transfer completed*/
 
     const promise = new Promise<TransactionDTO>((resolve, reject) => {
-      const web3TransactionHandler: Web3TransactionHandler = {
+      const cryptoTransactionHandler: CryptoTransactionHandler = {
         onSettled: async (transactionHash: string) => {
           this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
           updatedTransaction = Transaction.createTransaction({
@@ -447,7 +447,7 @@ export class TransactionService {
     transaction: Transaction,
   ): Promise<CryptoTransactionStatusRequestResult> {
     const promise = new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
-      const web3TransactionHandler: Web3TransactionHandler = {
+      const cryptoTransactionHandler: CryptoTransactionHandler = {
         onSettled: async (transactionHash: string) => {
           this.logger.info(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
 
@@ -467,7 +467,7 @@ export class TransactionService {
         },
       };
 
-      this.zeroHashService.checkStatus(consumer.props, transaction, web3TransactionHandler);
+      this.zeroHashService.checkStatus(consumer.props, transaction, cryptoTransactionHandler);
     });
 
     return null;

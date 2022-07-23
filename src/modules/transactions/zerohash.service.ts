@@ -11,7 +11,7 @@ import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
-import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
+import { CurrencyType, CryptoTransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
@@ -249,7 +249,11 @@ export class ZeroHashService {
     return networkFee;
   }
 
-  async checkStatus(consumer: ConsumerProps, transaction: Transaction, web3TransactionHandler: Web3TransactionHandler) {
+  async checkStatus(
+    consumer: ConsumerProps,
+    transaction: Transaction,
+    cryptoTransactionHandler: CryptoTransactionHandler,
+  ) {
     // Check trade_state every 3 seconds until it is terminated using setInterval
     const trade_status_checker = setInterval(async () => {
       const tradeData = await this.getTrade(transaction.props.cryptoTransactionId);
@@ -278,7 +282,7 @@ export class ZeroHashService {
             console.log("Withdrawal completed");
 
             const transactionHash = withdrawalData["message"][0]["transaction_id"];
-            web3TransactionHandler.onSettled(transactionHash);
+            cryptoTransactionHandler.onSettled(transactionHash);
           }
         }, 3000);
       }
