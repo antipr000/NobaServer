@@ -207,58 +207,52 @@ export class TransactionService {
 
   //TODO add proper logs without leaking sensitive information
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
-  async transact(userID: string, sessionKey: string, details: CreateTransactionDTO): Promise<TransactionDTO> {
-    const leg1: string = details.leg1;
-    const leg2: string = details.leg2;
-    const destinationWalletAdress: string = details.destinationWalletAddress;
-
+  async initiateTransaction(
+    userID: string,
+    sessionKey: string,
+    transactionDetails: CreateTransactionDTO,
+  ): Promise<TransactionDTO> {
     // Validate that destination wallet address is a valid address for given currency
-    if (!this.isValidDestinationAddress(leg2, destinationWalletAdress)) {
+    if (!this.isValidDestinationAddress(transactionDetails.leg2, transactionDetails.destinationWalletAddress)) {
       throw new BadRequestException({
-        messageForClient: "Invalid destination wallet address " + destinationWalletAdress + " for " + leg2,
+        messageForClient:
+          "Invalid destination wallet address " +
+          transactionDetails.destinationWalletAddress +
+          " for " +
+          transactionDetails.leg2,
       });
     }
 
     const user = await this.consumerService.getConsumer(userID);
 
-    const leg1Amount = details.leg1Amount;
-    const leg2Amount = details.leg2Amount;
-
-    if (this.allowedCryptoCurrencies.length == 0) {
-      // TODO: unsafe code. We should only do this once; waiting for Ankit's refactor and we can re-evaluate.
-      const currencies = await this.currencyService.getSupportedCryptocurrencies();
-      currencies.forEach(curr => {
-        this.allowedCryptoCurrencies.push(curr.ticker);
-      });
+    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
+    if (cryptoCurrencies.filter(curr => curr.ticker === transactionDetails.leg2).length == 0) {
+      throw new BadRequestException(`Unknown cryptocurrency: ${transactionDetails.leg2}`);
     }
 
-    if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
-      throw new BadRequestException({
-        messageForClient:
-          "Supported leg1 (i.e fiat) are " +
-          this.allowedFiats.join(", ") +
-          " and leg2 (i.e crypto) are " +
-          this.allowedCryptoCurrencies.join(", "),
-      });
+    const fiatCurrencies = await this.currencyService.getSupportedFiatCurrencies();
+    if (fiatCurrencies.filter(curr => curr.ticker === transactionDetails.leg1).length == 0) {
+      throw new BadRequestException(`Unknown fiat currency: ${transactionDetails.leg1}`);
     }
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: userID,
-      paymentMethodID: details.paymentToken,
-      leg1Amount: details.leg1Amount,
-      leg2Amount: details.leg2Amount,
-      leg1: leg1,
-      leg2: leg2,
+      paymentMethodID: transactionDetails.paymentToken,
+      leg1Amount: transactionDetails.leg1Amount,
+      leg2Amount: transactionDetails.leg2Amount,
+      leg1: transactionDetails.leg1,
+      leg2: transactionDetails.leg2,
       transactionStatus: TransactionStatus.PENDING,
-      destinationWalletAddress: details.destinationWalletAddress,
+      destinationWalletAddress: transactionDetails.destinationWalletAddress,
     });
 
-    const fixedAmount = details.fixedSide == CurrencyType.FIAT ? details.leg1Amount : details.leg2Amount;
+    const fixedAmount =
+      transactionDetails.fixedSide == CurrencyType.FIAT ? transactionDetails.leg1Amount : transactionDetails.leg2Amount;
     const quote = await this.getTransactionQuote({
-      cryptoCurrencyCode: leg2,
-      fiatCurrencyCode: leg1,
+      cryptoCurrencyCode: transactionDetails.leg2,
+      fiatCurrencyCode: transactionDetails.leg1,
       fixedAmount: fixedAmount,
-      fixedSide: details.fixedSide,
+      fixedSide: transactionDetails.fixedSide,
     });
 
     // Add quote information to new transaction
@@ -269,13 +263,20 @@ export class TransactionService {
     newTransaction.props.exchangeRate = quote.exchangeRate;
 
     // Set the amount that wasn't fixed based on the quote received
-    if (details.fixedSide == CurrencyType.FIAT) {
+    if (transactionDetails.fixedSide == CurrencyType.FIAT) {
       newTransaction.props.leg2Amount = quote.quotedAmount;
     } else {
       newTransaction.props.leg1Amount = quote.quotedAmount;
     }
 
-    if (!this.withinSlippage(leg2, leg1, leg2Amount, leg1Amount)) {
+    if (
+      !this.withinSlippage(
+        transactionDetails.leg2,
+        transactionDetails.leg1,
+        transactionDetails.leg2Amount,
+        transactionDetails.leg1Amount,
+      )
+    ) {
       throw new BadRequestError({
         messageForClient: `Bid price is not within slippage allowed of ${this.slippageAllowed}%`,
       });
@@ -283,12 +284,13 @@ export class TransactionService {
 
     console.log(`Transaction: ${JSON.stringify(newTransaction.props)}`);
 
+    // Save transaction to the database
     this.transactionsRepo.createTransaction(newTransaction);
 
-    if (true) return this.transactionsMapper.toDTO(newTransaction); // Enable the new transaction flow without deleting the remaining code just yet
+    // TODO(#310) We should return at this point and move Sardine + e-mail logic to a queue processor
 
     const paymentMethodList: PaymentMethods[] = user.props.paymentMethods.filter(
-      paymentMethod => paymentMethod.paymentToken === details.paymentToken,
+      paymentMethod => paymentMethod.paymentToken === transactionDetails.paymentToken,
     );
 
     if (paymentMethodList.length === 0) {
@@ -296,7 +298,6 @@ export class TransactionService {
     }
 
     const paymentMethod = paymentMethodList[0];
-
     // Check Sardine for AML
     const sardineTransactionInformation: TransactionInformation = {
       transactionID: newTransaction.props._id,
@@ -336,6 +337,7 @@ export class TransactionService {
       });
     }
 
+    // TODO(#310) Move e-mail logic to a queue processor
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
@@ -361,74 +363,7 @@ export class TransactionService {
       this.logger.error("Failed to send email at transaction initiation. " + e);
     }
 
-    //TODO we shouldn't be processing the below steps synchronously as there may be some partial failures
-    //We should have some sort of transaction queues to process all the scenarios incrementally
-
-    //**** starting fiat transaction ***/
-
-    // todo refactor this piece when we have the routing flow in place
-    const payment = await this.consumerService.requestCheckoutPayment(
-      details.paymentToken,
-      leg1Amount,
-      leg1,
-      newTransaction.props._id,
-    );
-    let updatedTransaction = Transaction.createTransaction({
-      ...newTransaction.props,
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      checkoutPaymentID: payment["id"],
-    });
-
-    this.transactionsRepo.updateTransaction(updatedTransaction);
-
-    //TODO wait here for the transaction to complete and update the status
-
-    //updating the status to fiat transaction succeeded for now
-    updatedTransaction = Transaction.createTransaction({
-      ...updatedTransaction.props,
-      transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
-      checkoutPaymentID: payment["id"],
-    });
-    this.transactionsRepo.updateTransaction(updatedTransaction);
-
-    //*** assuming that fiat transfer completed*/
-
-    const promise = new Promise<TransactionDTO>((resolve, reject) => {
-      const cryptoTransactionHandler: CryptoTransactionHandler = {
-        onSettled: async (transactionHash: string) => {
-          this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
-          updatedTransaction = Transaction.createTransaction({
-            ...updatedTransaction.props,
-            transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-            //cryptoTransactionId: transactionHash, // This is not coming at this time. @soham is working on a fix
-          });
-          await this.transactionsRepo.updateTransaction(updatedTransaction);
-
-          //TODO check with Lane or Gal if we should only confirm on the receipt of the transaction or is it fine to confirm the transaction on transaction hash
-          resolve(this.transactionsMapper.toDTO(updatedTransaction));
-        },
-
-        /* onReceipt: async (receipt: any) => { 
-          this.logger.info(`Transaction ${newTransaction.props.id} has crypto transaction receipt: ${JSON.stringify(receipt)}`);
-        }, */
-
-        onError: async (error: any) => {
-          this.logger.info(
-            `Transaction ${newTransaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`,
-          );
-          await this.transactionsRepo.updateTransaction(
-            Transaction.createTransaction({
-              ...newTransaction.props,
-              transactionStatus: TransactionStatus.CRYPTO_OUTGOING_FAILED,
-              diagnosis: JSON.stringify(error),
-            }),
-          );
-          reject(error);
-        },
-      };
-    });
-
-    return promise;
+    return this.transactionsMapper.toDTO(newTransaction); // Enable the new transaction flow without deleting the remaining code just yet
   }
 
   public async initiateCryptoTransaction(

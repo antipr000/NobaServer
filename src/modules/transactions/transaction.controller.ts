@@ -132,7 +132,7 @@ export class TransactionController {
   ): Promise<string> {
     this.logger.info(`uid ${user.props._id}, transact input:`, orderDetails);
 
-    return (await this.transactionService.transact(user.props._id, sessionKey, orderDetails))._id;
+    return (await this.transactionService.initiateTransaction(user.props._id, sessionKey, orderDetails))._id;
   }
 
   //TODO take filter options, pagination token etc?

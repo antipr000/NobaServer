@@ -32,7 +32,7 @@ export function getMockTransactionServiceWithDefaults(): TransactionService {
     new Error("Method not implemented"),
   );
   when(mockTransactionService.getAllTransactions()).thenReject(new Error("Method not implemented"));
-  when(mockTransactionService.transact(anything(), anything(), anything())).thenReject(
+  when(mockTransactionService.initiateTransaction(anything(), anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
 
