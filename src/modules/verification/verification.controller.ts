@@ -187,7 +187,6 @@ export class VerificationController {
     return await this.verificationService.getDeviceVerificationResult(sessionKey);
   }
 
-  @Public()
   @Post("/webhook/document/result")
   @HttpCode(200)
   async postDocumentVerificationResult(
@@ -206,7 +205,6 @@ export class VerificationController {
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 
-  @Public()
   @Post("/webhook/case/notification")
   @HttpCode(200)
   async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
