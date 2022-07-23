@@ -53,36 +53,47 @@ export class FiatTransactionInitiator {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
-    if (status != TransactionStatus.PENDING) {
+    if (status != TransactionStatus.PENDING && status != TransactionStatus.FIAT_INCOMING_INITIATING) {
       this.logger.info(`Transaction ${transactionId} is not in pending state, skipping, status: ${status}`);
       return;
     }
 
-    //before initiating the transaction we want to update the status so that if the initiator fails we don't execute this block again and manually resolve the failure depending on the type
+    let checkoutPaymentID: string;
+    // If status is already TransactionStatus.FIAT_INCOMING_INITIATING, then we failed this step before. Query checkout to see if our call
+    // succeeded and if so, skip checkout and continue with updating transaction status & enqueueing.
+    if (status == TransactionStatus.FIAT_INCOMING_INITIATING) {
+      // TDOO(#310): query checkout based on transaction.props._id to see if we already have a payment id
+    } else {
+      //before initiating the transaction we want to update the status so that if the initiator fails we don't execute this block again and manually resolve the failure depending on the type
+      transaction = await this.transactionRepo.updateTransaction(
+        Transaction.createTransaction({
+          ...transaction.props,
+          transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
+        }),
+      );
+    }
 
-    //TODO add paymentID method in transaction db model
+    // TODO(#310) This is happening before we've called the ZH logic to calculate the true fiat value! We need to call
+    // ZH before we even get here!
+    if (checkoutPaymentID == undefined) {
+      // Fiat Transaction implementation here
+      const payment = await this.consumerService.requestCheckoutPayment(
+        transaction.props.paymentMethodID,
+        transaction.props.leg1Amount,
+        transaction.props.leg1,
+        transaction.props._id,
+      );
+
+      checkoutPaymentID = payment["id"];
+    }
+
     transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,
-        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        checkoutPaymentID: checkoutPaymentID,
       }),
     );
-
-    // Fiat Transaction implementation here
-    const payment = await this.consumerService.requestCheckoutPayment(
-      transaction.props.paymentMethodID,
-      transaction.props.leg1Amount,
-      transaction.props.leg1,
-      transaction.props._id,
-    );
-
-    transaction = Transaction.createTransaction({
-      ...transaction.props,
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      checkoutPaymentID: payment["id"],
-    });
-
-    // Fiat Transaction implementation ends
 
     //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
     this.queueProducers[TransactionQueueName.FiatTransactionInitated].send({ id: transactionId, body: transactionId });

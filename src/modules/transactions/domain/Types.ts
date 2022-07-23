@@ -21,6 +21,7 @@ export enum TransactionStatus {
 
   CRYPTO_OUTGOING_INITIAING = "CRYTPO_OUTGOING_INITIATING",
   CRYPTO_OUTGOING_INITIATED = "CRYTPO_OUTGOING_INITIATED",
+  CRYPTO_OUTGOING_PENDING = "CRYTPO_OUTGOING_PENDING",
   CRYPTO_OUTGOING_COMPLETED = "CRYPTO_OUTGOING_COMPLETED",
   CRYPTO_OUTGOING_FAILED = "CRYPTO_OUTGOING_FAILED",
 
@@ -35,13 +36,30 @@ export enum TransactionStatus {
   COMPLETED = "COMPLETED",
 }
 
-export interface CryptoTransactionStatus {
-  status: "INITIATED" | "COMPLETED" | "FAILED";
+export enum CryptoTransactionStatus {
+  INITIATED = "Initiated",
+  FAILED = "Failed",
+  COMPLETED = "Completed",
+}
+
+export interface CryptoTransactionStatusRequestResult {
+  status: CryptoTransactionStatus;
   diagnosisMessage?: string;
+  onChainTransactionID?: string; // Required only if status=Completed
+}
+
+export enum CryptoTransactionRequestResultStatus {
+  INITIATED = "Initiated",
+  FAILED = "Failed",
+  OUT_OF_BALANCE = "OutOfBalance",
 }
 
 export interface CryptoTransactionRequestResult {
-  status: "INITIATED" | "FAILED" | "OUT_OF_BALANCE";
-  transactionId: string;
+  status: CryptoTransactionRequestResultStatus;
   diagnosisMessage?: string;
+  amountReceived: number;
+  exchangeRate: number;
+  quoteID: string;
+  nobaTransferID: string;
+  tradeID: string;
 }

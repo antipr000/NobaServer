@@ -10,7 +10,12 @@ import { KYCStatus } from "../consumer/domain/VerificationStatus";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { Transaction } from "./domain/Transaction";
-import { CryptoTransactionRequestResult, CryptoTransactionStatus, TransactionStatus } from "./domain/Types";
+import {
+  CryptoTransactionRequestResult,
+  CryptoTransactionStatus,
+  CryptoTransactionStatusRequestResult,
+  TransactionStatus,
+} from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
@@ -25,6 +30,7 @@ import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/No
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CryptoWallets } from "../consumer/domain/CryptoWallets";
+import { Consumer } from "../consumer/domain/Consumer";
 
 @Injectable()
 export class TransactionService {
@@ -57,7 +63,7 @@ export class TransactionService {
       throw new BadRequestException("Unsupported fixedSide value");
     }
 
-    if (transactionQuoteQuery.fixedAmount <= 0 || transactionQuoteQuery.fixedAmount == Number.NaN) {
+    if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
       throw new BadRequestException("Invalid amount");
     }
 
@@ -226,7 +232,6 @@ export class TransactionService {
       });
     }
 
-    //this.cacheManager.
     if (!(this.allowedFiats.includes(leg1) && this.allowedCryptoCurrencies.includes(leg2))) {
       throw new BadRequestException({
         messageForClient:
@@ -234,12 +239,6 @@ export class TransactionService {
           this.allowedFiats.join(", ") +
           " and leg2 (i.e crypto) are " +
           this.allowedCryptoCurrencies.join(", "),
-      });
-    }
-
-    if (!this.withinSlippage(leg2, leg1, leg2Amount, leg1Amount)) {
-      throw new BadRequestError({
-        messageForClient: `Bid price is not within slippage allowed of ${this.slippageAllowed}%`,
       });
     }
 
@@ -274,6 +273,12 @@ export class TransactionService {
       newTransaction.props.leg2Amount = quote.quotedAmount;
     } else {
       newTransaction.props.leg1Amount = quote.quotedAmount;
+    }
+
+    if (!this.withinSlippage(leg2, leg1, leg2Amount, leg1Amount)) {
+      throw new BadRequestError({
+        messageForClient: `Bid price is not within slippage allowed of ${this.slippageAllowed}%`,
+      });
     }
 
     console.log(`Transaction: ${JSON.stringify(newTransaction.props)}`);
@@ -390,7 +395,7 @@ export class TransactionService {
 
     const promise = new Promise<TransactionDTO>((resolve, reject) => {
       const web3TransactionHandler: Web3TransactionHandler = {
-        onTransactionHash: async (transactionHash: string) => {
+        onSettled: async (transactionHash: string) => {
           this.logger.info(`Transaction ${newTransaction.props._id} has crypto transaction hash: ${transactionHash}`);
           updatedTransaction = Transaction.createTransaction({
             ...updatedTransaction.props,
@@ -421,44 +426,50 @@ export class TransactionService {
           reject(error);
         },
       };
-
-      // leg1 is fiat, leg2 is crypto
-      this.zeroHashService.transferCryptoToDestinationWallet(
-        user.props,
-        leg1,
-        leg2,
-        details.destinationWalletAddress,
-        leg1Amount,
-        leg2Amount,
-        CurrencyType.FIAT,
-        web3TransactionHandler,
-      );
     });
 
     return promise;
   }
 
-  public async initiateCryptoTransaction(transaction: Transaction): Promise<CryptoTransactionRequestResult> {
-    //Check slippage here and call zero hash service
-    // add risk controller here to reconcile that fiat and crypto balance are in sync!!
+  public async initiateCryptoTransaction(
+    consumer: Consumer,
+    transaction: Transaction,
+  ): Promise<CryptoTransactionRequestResult> {
+    // Call ZeroHash to execute crypto transaction
+    // TODO(#310) - where to fit in slippage and crypto/fiat double-check?
+    const result = await this.zeroHashService.initiateCryptoTransfer(consumer.props, transaction);
 
-    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    this.zeroHashService.initiateCryptoTransfer(
-      consumer.props,
-      transaction.props.leg1,
-      transaction.props.leg2,
-      transaction.props.leg1Amount,
-      CurrencyType.FIAT,
-    );
-
-    // break above logic here
-    // transaction.props.cryptoTransactionId = "";
-    return null;
+    return result;
   }
 
-  public async cryptoTransactionStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
-    // break above logic here
-    //
+  public async cryptoTransactionStatus(
+    consumer: Consumer,
+    transaction: Transaction,
+  ): Promise<CryptoTransactionStatusRequestResult> {
+    const promise = new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
+      const web3TransactionHandler: Web3TransactionHandler = {
+        onSettled: async (transactionHash: string) => {
+          this.logger.info(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
+
+          if (transactionHash != undefined) {
+            resolve({ status: CryptoTransactionStatus.INITIATED });
+          } else {
+            resolve({ status: CryptoTransactionStatus.COMPLETED, onChainTransactionID: transactionHash });
+          }
+        },
+
+        onError: async (error: any) => {
+          this.logger.info(
+            `Transaction ${transaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`,
+          );
+
+          reject({ status: CryptoTransactionStatus.FAILED, diagnosisMessage: JSON.stringify(error) });
+        },
+      };
+
+      this.zeroHashService.checkStatus(consumer.props, transaction, web3TransactionHandler);
+    });
+
     return null;
   }
 

@@ -33,12 +33,14 @@ export interface TransactionProps extends VersioningInfo {
   leg2: string;
   type: TransactionType;
   tradeQuoteID: string;
+  nobaTransferID: string;
   nobaFee: number;
   processingFee: number;
   networkFee: number;
   exchangeRate: number;
   diagnosis?: string;
-  cryptoTransactionId?: string;
+  cryptoTransactionId?: string; // ZH ID
+  blockchainTransactionId?: string; // Public chain ID
   transactionStatus: TransactionStatus;
   transactionTimestamp?: Date;
 
@@ -66,6 +68,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
     .valid(...Object.values(TransactionType))
     .default(TransactionType.ONRAMP),
   tradeQuoteID: Joi.string().optional(), // Optional as it may get set after initial transaction record is created
+  nobaTransferID: Joi.string().optional(),
   nobaFee: Joi.number().optional(),
   processingFee: Joi.number().optional(),
   networkFee: Joi.number().optional(),
@@ -75,6 +78,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   destinationWalletAddress: Joi.string().optional(),
   checkoutPaymentID: Joi.string().optional(),
   cryptoTransactionId: Joi.string().optional(),
+  blockchainTransactionId: Joi.string().optional(),
   transactionTimestamp: Joi.date().optional(),
   dbPollingStatus: Joi.string()
     .optional()

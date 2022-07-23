@@ -1,10 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "sqs-consumer";
+import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { Transaction } from "../domain/Transaction";
-import { TransactionStatus } from "../domain/Types";
+import { CryptoTransactionStatus, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
@@ -19,6 +20,9 @@ export class CryptoTransactionStatusProcessor {
 
   @Inject()
   private readonly transactionService: TransactionService;
+
+  @Inject()
+  private readonly consumerService: ConsumerService;
 
   constructor() {
     this.init();
@@ -53,13 +57,17 @@ export class CryptoTransactionStatusProcessor {
       return;
     }
 
+    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     // check transaction status here
-    const cryptoRes = await this.transactionService.cryptoTransactionStatus(transaction);
-    if (cryptoRes.status === "COMPLETED") {
+    const cryptoRes = await this.transactionService.cryptoTransactionStatus(consumer, transaction);
+    if (cryptoRes.status === CryptoTransactionStatus.COMPLETED) {
       this.logger.info(`Crypto transaction for Transaction ${transactionId} is completed`);
       transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_COMPLETED;
-    }
-    if (cryptoRes.status === "FAILED") {
+      transaction.props.blockchainTransactionId = cryptoRes.onChainTransactionID;
+    } else if (cryptoRes.status === CryptoTransactionStatus.INITIATED) {
+      // TODO(#310) We need to poll and/or use websocket until we get an on-chain transaction ID
+      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_PENDING;
+    } else if (cryptoRes.status === CryptoTransactionStatus.FAILED) {
       this.logger.info(
         `Crypto transaction for Transaction ${transactionId} failed, crypto transaction id : ${transaction.props.cryptoTransactionId}`,
       );
@@ -71,6 +79,11 @@ export class CryptoTransactionStatusProcessor {
     //Move to completed queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
     if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
       getTransactionQueueProducers()[TransactionQueueName.TransactionCompleted].send({
+        id: transactionId,
+        body: transactionId,
+      });
+    } else if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_FAILED) {
+      getTransactionQueueProducers()[TransactionQueueName.TransactionFailed].send({
         id: transactionId,
         body: transactionId,
       });

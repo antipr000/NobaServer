@@ -15,6 +15,8 @@ import { CurrencyType, Web3TransactionHandler } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
+import { Transaction } from "./domain/Transaction";
+import { CryptoTransactionRequestResult, CryptoTransactionRequestResultStatus } from "./domain/Types";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -205,90 +207,78 @@ export class ZeroHashService {
 
   // Trade the crypto from Noba to Custom
   async requestTrade(tradeData) {
-    const trade_request = await this.makeRequest("/trades", "POST", tradeData);
-    return trade_request;
+    const tradeRequest = await this.makeRequest("/trades", "POST", tradeData);
+    return tradeRequest;
   }
 
   // Get trade and check status
   // Initiate a withdrawal if trade_status is terminated
-  async getTrade(trade_id) {
-    const trade_data = await this.makeRequest(`/trades/${trade_id}`, "GET", {});
-    return trade_data;
+  async getTrade(tradeID: string) {
+    const tradeData = await this.makeRequest(`/trades/${tradeID}`, "GET", {});
+    return tradeData;
   }
 
-  async requestWithdrawal(digital_address, participant_code, amount, asset, account_group) {
-    const withdrawal_request = await this.makeRequest("/withdrawals/requests", "POST", {
-      address: digital_address,
-      participant_code: participant_code,
+  async requestWithdrawal(
+    cryptocurrencyAddress: string,
+    zhParticipantCode: string,
+    amount: number,
+    asset: string,
+    accountGroup: string,
+  ) {
+    const withdrawalRequest = await this.makeRequest("/withdrawals/requests", "POST", {
+      address: cryptocurrencyAddress,
+      participant_code: zhParticipantCode,
       amount: amount,
       asset: asset,
-      account_group: account_group,
+      account_group: accountGroup,
     });
-    return withdrawal_request;
+    return withdrawalRequest;
   }
 
-  async getWithdrawal(withdrawal_id) {
-    const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawal_id}`, "GET", {});
+  async getWithdrawal(withdrawalID: string) {
+    const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
     return withdrawal;
   }
 
-  async estimateNetworkFee(underlying, quoted_currency) {
-    const network_fee = await this.makeRequest(
-      `/withdrawals/estimate_network_fee?underlying=${underlying}&quoted_currency=${quoted_currency}`,
+  async estimateNetworkFee(underlyingCurrency: string, quotedCurrency: string) {
+    const networkFee = await this.makeRequest(
+      `/withdrawals/estimate_network_fee?underlying=${underlyingCurrency}&quoted_currency=${quotedCurrency}`,
       "GET",
       {},
     );
-    return network_fee;
+    return networkFee;
   }
 
-  async transferCryptoToDestinationWallet(
-    consumer: ConsumerProps,
-    quoted_currency: string,
-    cryptocurrency: string,
-    destination_wallet: string,
-    amount: number,
-    cryptoAmount: number, //TODO remove this
-    amount_type: CurrencyType,
-    web3TransactionHandler: Web3TransactionHandler,
-  ) {
-    // Ensure that the cryptocurrency and quoted_currency are supported by ZHLS
-    var {
-      trade_id,
-      participant_code,
-      amount_received,
-    }: { trade_id: any; participant_code: string; amount_received: any } = await this.initiateCryptoTransfer(
-      consumer,
-      quoted_currency,
-      cryptocurrency,
-      amount,
-      amount_type,
-    );
-
+  async checkStatus(consumer: ConsumerProps, transaction: Transaction, web3TransactionHandler: Web3TransactionHandler) {
     // Check trade_state every 3 seconds until it is terminated using setInterval
     const trade_status_checker = setInterval(async () => {
-      const trade_data = await this.getTrade(trade_id);
-      const trade_state = trade_data["message"]["trade_state"];
-      if (trade_state == "terminated") {
+      const tradeData = await this.getTrade(transaction.props.cryptoTransactionId);
+      const tradeState = tradeData["message"]["trade_state"];
+      if (tradeState == "terminated") {
+        // This means the trade has finished with a status of settled or defaulted
+        // Request withdrawal
         clearInterval(trade_status_checker);
-        const withdrawal_request = await this.requestWithdrawal(
-          destination_wallet,
-          participant_code,
-          amount_received,
-          cryptocurrency,
+        const withdrawalRequest = await this.requestWithdrawal(
+          transaction.props.destinationWalletAddress,
+          consumer.zhParticipantCode,
+          transaction.props.leg2Amount,
+          transaction.props.leg2,
           NOBA_PLATFORM_CODE,
         );
 
-        const withdrawal_id = withdrawal_request["message"]["id"];
-        const withdrawal_status_checker = setInterval(async () => {
-          const withdrawal_data = await this.getWithdrawal(withdrawal_id);
-          console.log(withdrawal_data);
-          const withdrawal_state = withdrawal_data["message"][0]["status"];
-          if (withdrawal_state == "SETTLED") {
-            clearInterval(withdrawal_status_checker);
+        // TODO(#310) What if we fail right here after requesting withdrawal? We haven't saved the
+        // Withdrawal request in order to come back to this polling logic.
+        const withdrawalID = withdrawalRequest["message"]["id"];
+        const withdrawalStatusChecker = setInterval(async () => {
+          const withdrawalData = await this.getWithdrawal(withdrawalID);
+          console.log(withdrawalData);
+          const withdrawalStatus = withdrawalData["message"][0]["status"];
+          if (withdrawalStatus == "SETTLED") {
+            clearInterval(withdrawalStatusChecker);
             console.log("Withdrawal completed");
-            const withdrawal_data = await this.getWithdrawal(withdrawal_id);
-            const tx_hash = withdrawal_data["message"][0]["transaction_id"];
-            web3TransactionHandler.onTransactionHash(tx_hash);
+
+            const transactionHash = withdrawalData["message"][0]["transaction_id"];
+            web3TransactionHandler.onSettled(transactionHash);
           }
         }, 3000);
       }
@@ -297,11 +287,14 @@ export class ZeroHashService {
 
   async initiateCryptoTransfer(
     consumer: ConsumerProps,
-    fiatCurrency: string,
-    cryptocurrency: string,
-    amount: number,
-    fixedSide: CurrencyType,
-  ) {
+    transaction: Transaction,
+  ): Promise<CryptoTransactionRequestResult> {
+    let returnStatus = CryptoTransactionRequestResultStatus.FAILED;
+
+    const fiatCurrency = transaction.props.leg1;
+    const cryptocurrency = transaction.props.leg2;
+    const amount = transaction.props.leg1Amount;
+
     const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
     const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
     if (supportedCryptocurrencies.filter(curr => curr.ticker === cryptocurrency).length == 0) {
@@ -314,14 +307,17 @@ export class ZeroHashService {
       throw new Error(`${fiatCurrency} is not supported by ZHLS`);
     }
 
-    let participant_code: string = await this.getParticipantCode(consumer);
+    // Gets or creates participant code
+    let participantCode: string = await this.getParticipantCode(consumer);
 
-    const executedQuote = await this.requestAndExecuteQuote(cryptocurrency, fiatCurrency, amount, fixedSide);
+    // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
+    const executedQuote = await this.requestAndExecuteQuote(cryptocurrency, fiatCurrency, amount, CurrencyType.FIAT);
+
+    // TODO(#310) Final slippage check here or already too deep?
 
     const amountReceived = executedQuote["message"]["quote"].quantity;
     const tradePrice = executedQuote["message"]["quote"].price;
-
-    //TODO: Update transaction with quote details
+    const quoteID = executedQuote["message"]["quote"].quote_id;
 
     const assetTransfer = await this.transferAssetsToNoba(
       NOBA_PLATFORM_CODE,
@@ -337,22 +333,25 @@ export class ZeroHashService {
       });
     }
 
+    const nobaTransferID = assetTransfer["message"][0]["movement_id"];
+    console.log(`Movement id: ${nobaTransferID}`);
+
     //Set trade data for next function
     const tradeData = {
       symbol: cryptocurrency + "/" + fiatCurrency,
-      trade_price: tradePrice,
+      trade_price: tradePrice, // TODO(#310) Confirm this comes out correctly
       trade_quantity: String(amount / tradePrice), // TODO(#310) Confirm this comes out correctly
       product_type: "spot",
       trade_type: "regular",
       trade_reporter: consumer.email,
       platform_code: NOBA_PLATFORM_CODE,
-      client_trade_id: "client_trade_id",
+      client_trade_id: transaction.props._id,
       physical_delivery: true,
       parties_anonymous: false,
       transaction_timestamp: Date.now(),
       parties: [
         {
-          participant_code: participant_code,
+          participant_code: participantCode,
           asset: cryptocurrency,
           amount: String(amount),
           side: "buy",
@@ -374,31 +373,34 @@ export class ZeroHashService {
       });
     }
 
-    const trade_id = trade_request["message"].trade_id;
-    return { trade_id, participant_code, amount_received: amountReceived };
+    const tradeID = trade_request["message"].trade_id;
+
+    returnStatus = CryptoTransactionRequestResultStatus.INITIATED;
+
+    return { status: returnStatus, amountReceived, exchangeRate: tradePrice, quoteID, nobaTransferID, tradeID };
   }
 
   private async requestAndExecuteQuote(
     cryptocurrency: string,
-    quoted_currency: string,
+    fiatCurrency: string,
     amount: number,
     fixedSide: CurrencyType,
   ) {
-    const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, fixedSide);
+    const quote = await this.requestQuote(cryptocurrency, fiatCurrency, amount, fixedSide);
     if (quote == null) {
       throw new BadRequestError({
         messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
       });
     }
-    const quote_id = quote["message"].quote_id;
+    const quoteID = quote["message"].quote_id;
 
-    const executed_quote = await this.executeQuote(quote_id);
-    if (executed_quote == null) {
+    const executedQuote = await this.executeQuote(quoteID);
+    if (executedQuote == null) {
       throw new BadRequestError({
         messageForClient: "Something went wrong! Contact noba support for immediate resolution!",
       });
     }
-    return executed_quote;
+    return executedQuote;
   }
 
   private async getParticipantCode(consumer: ConsumerProps) {

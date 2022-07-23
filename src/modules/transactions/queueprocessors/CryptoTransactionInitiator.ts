@@ -1,10 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "sqs-consumer";
+import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
-import { Transaction } from "../domain/Transaction";
-import { TransactionStatus } from "../domain/Types";
+import { Transaction, transactionJoiValidationKeys } from "../domain/Transaction";
+import { CryptoTransactionRequestResultStatus, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
@@ -19,6 +20,9 @@ export class CryptoTransactionStatusInitiator {
 
   @Inject()
   private readonly transactionService: TransactionService;
+
+  @Inject()
+  private readonly consumerService: ConsumerService;
 
   constructor() {
     this.init();
@@ -65,24 +69,31 @@ export class CryptoTransactionStatusInitiator {
       }),
     );
 
+    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+
     // crypto transaction here
-    const result = await this.transactionService.initiateCryptoTransaction(transaction);
-    if (result.status === "INITIATED") {
-      this.logger.info(
-        `Crypto Transaction for Noba Transaction ${transactionId} initiated with id ${result.transactionId}`,
-      );
-      transaction.props.cryptoTransactionId = result.transactionId;
+    const result = await this.transactionService.initiateCryptoTransaction(consumer, transaction);
+    if (result.status === CryptoTransactionRequestResultStatus.INITIATED) {
+      transaction.props.cryptoTransactionId = result.tradeID;
+      transaction.props.exchangeRate = result.exchangeRate;
+      transaction.props.nobaTransferID = result.nobaTransferID;
+      transaction.props.tradeQuoteID = result.quoteID;
       transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
+
+      this.logger.info(`Crypto Transaction for Noba Transaction ${transactionId} initiated with id ${result.tradeID}`);
     }
 
-    if (result.status == "FAILED" || result.status == "OUT_OF_BALANCE") {
+    if (
+      result.status === CryptoTransactionRequestResultStatus.FAILED ||
+      result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE
+    ) {
       this.logger.info(
         `Crypto Transaction for Noba transaction ${transactionId} failed, reason: ${result.diagnosisMessage}`,
       );
       transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
     }
 
-    if (result.status == "OUT_OF_BALANCE") {
+    if (result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE) {
       //TODO alert here !!
       this.logger.info("Noba Crypto balance is low, raising alert");
     }

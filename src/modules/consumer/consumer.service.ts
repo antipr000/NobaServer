@@ -300,7 +300,6 @@ export class ConsumerService {
 
   async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProviders): Promise<FiatTransactionStatus> {
     try {
-      //TODO status check based on the payment provider
       const payment = await this.checkoutApi.payments.get(paymentId);
       this.logger.info(`Payment status for payment ${paymentId} is ${payment.status}`);
       const status: CheckoutPaymentStatus = payment.status;
@@ -315,7 +314,7 @@ export class ConsumerService {
   async updatePaymentMethod(consumerID: string, paymentMethod: PaymentMethods): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerID);
     const otherPaymentMethods = consumer.props.paymentMethods.filter(
-      paymentMethod => paymentMethod.paymentToken !== paymentMethod.paymentToken,
+      existingPaymentMethod => existingPaymentMethod.paymentToken !== paymentMethod.paymentToken,
     );
     return await this.updateConsumer({
       ...consumer.props,
@@ -326,7 +325,7 @@ export class ConsumerService {
   async addOrUpdateCryptoWallet(consumerID: string, cryptoWallet: CryptoWallets): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerID);
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
-      cryptoWallet => cryptoWallet.address !== cryptoWallet.address,
+      existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
     );
 
     return await this.updateConsumer({
