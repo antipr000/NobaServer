@@ -48,21 +48,9 @@ export class ConsumerService {
 
     const consumerResult = await this.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumerResult.isFailure) {
-      //user doesn't exist already
-      //first create stripe customer
-      this.logger.info(`Creating user for first time for ${emailOrPhone}`);
-      const stripeCustomer = await this.stripeService.stripeApi.customers.create({ email: email, phone: phone });
-      const stripeCustomerID = stripeCustomer.id;
-
       const newConsumer = Consumer.createConsumer({
         email,
         phone,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: stripeCustomerID,
-            providerID: PaymentProviders.STRIPE,
-          },
-        ],
         partners: [
           {
             partnerID: partnerID,

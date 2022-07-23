@@ -24,7 +24,6 @@ export interface TransactionProps extends VersioningInfo {
   _id: string;
   userId: string;
   paymentMethodID: string;
-  stripePaymentIntentId?: string;
   checkoutPaymentID?: string;
   sourceWalletAddress?: string;
   destinationWalletAddress?: string;
@@ -74,7 +73,6 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   diagnosis: Joi.string().optional(),
   sourceWalletAddress: Joi.string().optional(),
   destinationWalletAddress: Joi.string().optional(),
-  stripePaymentIntentId: Joi.string().optional(),
   checkoutPaymentID: Joi.string().optional(),
   cryptoTransactionId: Joi.string().optional(),
   transactionTimestamp: Joi.date().optional(),
