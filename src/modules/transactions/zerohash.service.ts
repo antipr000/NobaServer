@@ -300,7 +300,7 @@ export class ZeroHashService {
     fiatCurrency: string,
     cryptocurrency: string,
     amount: number,
-    amount_type: CurrencyType,
+    fixedSide: CurrencyType,
   ) {
     const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
     const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
@@ -316,7 +316,7 @@ export class ZeroHashService {
 
     let participant_code: string = await this.getParticipantCode(consumer);
 
-    const executedQuote = await this.requestAndExecuteQuote(cryptocurrency, fiatCurrency, amount, amount_type);
+    const executedQuote = await this.requestAndExecuteQuote(cryptocurrency, fiatCurrency, amount, fixedSide);
 
     const amountReceived = executedQuote["message"]["quote"].quantity;
     const tradePrice = executedQuote["message"]["quote"].price;
@@ -382,9 +382,9 @@ export class ZeroHashService {
     cryptocurrency: string,
     quoted_currency: string,
     amount: number,
-    amount_type: CurrencyType,
+    fixedSide: CurrencyType,
   ) {
-    const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, amount_type);
+    const quote = await this.requestQuote(cryptocurrency, quoted_currency, amount, fixedSide);
     if (quote == null) {
       throw new BadRequestError({
         messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
