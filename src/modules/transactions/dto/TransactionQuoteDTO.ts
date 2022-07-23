@@ -2,6 +2,8 @@ import { ApiProperty } from "@nestjs/swagger";
 import { CurrencyType } from "../../common/domain/Types";
 
 export class TransactionQuoteDTO {
+  quoteID: string;
+
   @ApiProperty()
   fiatCurrencyCode: string;
 

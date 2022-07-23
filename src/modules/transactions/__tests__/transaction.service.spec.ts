@@ -254,8 +254,9 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(exchangeRateService.getQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
-        price: 10,
+
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+        message: { price: 10 },
       });
 
       const receivedTransactionQuote: TransactionQuoteDTO = await transactionService.getTransactionQuote({
@@ -305,8 +306,8 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(exchangeRateService.getQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
-        price: 10,
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+        message: { price: 10 },
       });
 
       const receivedTransactionQuote: TransactionQuoteDTO = await transactionService.getTransactionQuote({
@@ -357,8 +358,8 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(exchangeRateService.getQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
-        price: 10,
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+        message: { price: 10 },
       });
 
       const receivedTransactionQuote: TransactionQuoteDTO = await transactionService.getTransactionQuote({
@@ -408,8 +409,8 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(exchangeRateService.getQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
-        price: 10,
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+        message: { price: 10 },
       });
 
       const receivedTransactionQuote: TransactionQuoteDTO = await transactionService.getTransactionQuote({
@@ -459,8 +460,8 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(exchangeRateService.getQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
-        price: 10,
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+        message: { price: 10 },
       });
 
       const receivedTransactionQuote: TransactionQuoteDTO = await transactionService.getTransactionQuote({
@@ -510,8 +511,8 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(exchangeRateService.getQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
-        price: 10,
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+        message: { price: 10 },
       });
 
       const receivedTransactionQuote: TransactionQuoteDTO = await transactionService.getTransactionQuote({
@@ -561,8 +562,8 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(exchangeRateService.getQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
-        price: 10,
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+        message: { price: 10 },
       });
 
       const receivedTransactionQuote: TransactionQuoteDTO = await transactionService.getTransactionQuote({

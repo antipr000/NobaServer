@@ -122,18 +122,17 @@ export class TransactionController {
   @ApiOperation({ summary: "Submits a new transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: TransactionDTO,
-    description: "Transaction details",
+    description: "Transaction ID",
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async transact(
     @Query("sessionKey") sessionKey: string,
     @Body() orderDetails: CreateTransactionDTO,
     @AuthUser() user: Consumer,
-  ): Promise<TransactionDTO> {
+  ): Promise<string> {
     this.logger.info(`uid ${user.props._id}, transact input:`, orderDetails);
 
-    return this.transactionService.transact(user.props._id, sessionKey, orderDetails);
+    return (await this.transactionService.transact(user.props._id, sessionKey, orderDetails))._id;
   }
 
   //TODO take filter options, pagination token etc?

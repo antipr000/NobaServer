@@ -89,10 +89,10 @@ export class TransactionsService {
    * Submits a new transaction
    * @param sessionKey
    * @param requestBody
-   * @returns TransactionDTO Transaction details
+   * @returns any Transaction ID
    * @throws ApiError
    */
-  public static transact(sessionKey: string, requestBody: CreateTransactionDTO): CancelablePromise<TransactionDTO> {
+  public static transact(sessionKey: string, requestBody: CreateTransactionDTO): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/transactions",

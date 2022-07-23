@@ -83,14 +83,14 @@ export class TransactionService {
       const preSpreadAmount = fixedAmountFiat - feeSubtotal;
       const priceToQuoteUSD = preSpreadAmount / (1 + nobaSpreadPercent);
 
-      const quote = await this.exchangeRateService.getQuote(
+      const quote = await this.zeroHashService.requestQuote(
         transactionQuoteQuery.cryptoCurrencyCode,
         transactionQuoteQuery.fiatCurrencyCode,
         priceToQuoteUSD,
         CurrencyType.CRYPTO,
       );
       console.log(quote);
-      const costPerUnit = Number(quote["price"]);
+      const costPerUnit = Number(quote["message"]["price"]);
 
       this.logger.info(`
       FIAT FIXED (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${fixedAmountFiat}
@@ -108,6 +108,7 @@ export class TransactionService {
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
+        quoteID: quote["message"].quote_id,
         fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
         cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
         fixedSide: transactionQuoteQuery.fixedSide,
@@ -125,13 +126,13 @@ export class TransactionService {
     } else if (transactionQuoteQuery.fixedSide == CurrencyType.CRYPTO) {
       const fixedAmountCrypto = transactionQuoteQuery.fixedAmount;
 
-      const quote = await this.exchangeRateService.getQuote(
+      const quote = await this.zeroHashService.requestQuote(
         transactionQuoteQuery.cryptoCurrencyCode,
         transactionQuoteQuery.fiatCurrencyCode,
         fixedAmountCrypto,
         CurrencyType.FIAT,
       );
-      const costPerUnit = Number(quote["price"]);
+      const costPerUnit = Number(quote["message"]["price"]);
 
       const cryptoWithSpread = costPerUnit * (1 + nobaSpreadPercent);
       const fiatCostPostSpread = fixedAmountCrypto * cryptoWithSpread;
@@ -155,6 +156,7 @@ export class TransactionService {
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
+        quoteID: quote["message"].quote_id,
         fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
         cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
         fixedSide: transactionQuoteQuery.fixedSide,
@@ -251,6 +253,30 @@ export class TransactionService {
       transactionStatus: TransactionStatus.PENDING,
       destinationWalletAddress: details.destinationWalletAddress,
     });
+
+    const fixedAmount = details.fixedSide == CurrencyType.FIAT ? details.leg1Amount : details.leg2Amount;
+    const quote = await this.getTransactionQuote({
+      cryptoCurrencyCode: leg2,
+      fiatCurrencyCode: leg1,
+      fixedAmount: fixedAmount,
+      fixedSide: details.fixedSide,
+    });
+
+    // Add quote information to new transaction
+    newTransaction.props.tradeQuoteID = quote.quoteID;
+    newTransaction.props.nobaFee = quote.nobaFee;
+    newTransaction.props.networkFee = quote.networkFee;
+    newTransaction.props.processingFee = quote.processingFee;
+    newTransaction.props.exchangeRate = quote.exchangeRate;
+
+    // Set the amount that wasn't fixed based on the quote received
+    if (details.fixedSide == CurrencyType.FIAT) {
+      newTransaction.props.leg2Amount = quote.quotedAmount;
+    } else {
+      newTransaction.props.leg1Amount = quote.quotedAmount;
+    }
+
+    console.log(`Transaction: ${JSON.stringify(newTransaction.props)}`);
 
     this.transactionsRepo.createTransaction(newTransaction);
 

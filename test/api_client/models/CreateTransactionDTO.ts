@@ -9,5 +9,6 @@ export type CreateTransactionDTO = {
   leg2: string;
   leg1Amount: number;
   leg2Amount: number;
+  fixedSide: "fiat" | "crypto";
   destinationWalletAddress?: string;
 };
