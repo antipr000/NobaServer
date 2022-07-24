@@ -153,9 +153,9 @@ export default async function loadAppConfigs() {
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
 
   // TODO(#312) Get this working in GitHub and remove the condition
-  if (environment !== AppEnvironment.E2E_TEST) {
+  /*if (environment !== AppEnvironment.E2E_TEST) {
     initializeAWSEnv();
-  }
+  }*/
 
   //validate configs
   return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
