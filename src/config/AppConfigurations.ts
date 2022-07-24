@@ -152,7 +152,8 @@ export default async function loadAppConfigs() {
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
 
-  initializeAWSEnv(); //TODO enable this when we are ready to deploy Queue based transaction orchestration
+  // TODO(#312) Uncomment to create queues once
+  // initializeAWSEnv();
 
   //validate configs
   return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
