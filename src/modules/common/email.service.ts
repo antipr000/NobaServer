@@ -186,6 +186,7 @@ export class EmailService {
         subtotal: transactionEmailParameters.subtotalPrice,
         processing_fees: transactionEmailParameters.processingFee,
         network_fees: transactionEmailParameters.networkFee,
+        noba_fee: transactionEmailParameters.nobaFee,
         total: transactionEmailParameters.totalPrice,
         crypto_currency_code: transactionEmailParameters.cryptoCurrency,
         crypto_currency: transactionEmailParameters.cryptoAmount,

@@ -192,12 +192,19 @@ export class ZeroHashService {
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
-  async transferAssetsToNoba(sender_participant, sender_group, receiver_participant, receiver_group, asset, amount) {
+  async transferAssetsToNoba(
+    senderParticipant: string,
+    senderGroup: string,
+    receiverParticipant: string,
+    receiverGroup: string,
+    asset: string,
+    amount: number,
+  ) {
     const transfer = await this.makeRequest("/transfers", "POST", {
-      from_participant_code: sender_participant,
-      from_account_group: sender_group,
-      to_participant_code: receiver_participant,
-      to_account_group: receiver_group,
+      from_participant_code: senderParticipant,
+      from_account_group: senderGroup,
+      to_participant_code: receiverParticipant,
+      to_account_group: receiverGroup,
       asset: asset,
       amount: amount,
     });
@@ -370,14 +377,14 @@ export class ZeroHashService {
       ],
     };
 
-    const trade_request = await this.requestTrade(tradeData);
-    if (trade_request == null) {
+    const tradeRequest = await this.requestTrade(tradeData);
+    if (tradeRequest == null) {
       throw new BadRequestError({
         messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
       });
     }
 
-    const tradeID = trade_request["message"].trade_id;
+    const tradeID = tradeRequest["message"].trade_id;
 
     returnStatus = CryptoTransactionRequestResultStatus.INITIATED;
 
@@ -408,28 +415,28 @@ export class ZeroHashService {
   }
 
   private async getParticipantCode(consumer: ConsumerProps) {
-    let participant_code: string = consumer.zhParticipantCode;
+    let participantCode: string = consumer.zhParticipantCode;
     // If the participant doesn't have a ZH participant code, first look them up and if not existing, create them:
-    if (participant_code == undefined) {
+    if (participantCode == undefined) {
       // Check if the user is already registered with ZeroHash
       const participant = await this.getParticipant(consumer.email);
 
       // If the user is not registered, register them
       if (participant == null) {
-        const new_participant = await this.createParticipant(consumer);
-        if (new_participant == null) {
+        const newParticipant = await this.createParticipant(consumer);
+        if (newParticipant == null) {
           this.logger.error("Failed to create participant for email:" + consumer.email);
           throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
         }
-        participant_code = new_participant["message"]["participant_code"];
+        participantCode = newParticipant["message"]["participant_code"];
         // Update consumer record with participant_code
-        this.consumerService.addZeroHashParticipantCode(consumer._id, participant_code);
-        this.logger.debug("Created new participant: " + participant_code);
+        this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
+        this.logger.debug("Created new participant: " + participantCode);
       } else {
-        participant_code = participant["message"]["participant_code"];
-        this.logger.debug("Existing participant: " + participant_code);
+        participantCode = participant["message"]["participant_code"];
+        this.logger.debug("Existing participant: " + participantCode);
       }
     }
-    return participant_code;
+    return participantCode;
   }
 }

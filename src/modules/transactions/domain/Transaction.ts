@@ -23,6 +23,7 @@ const transactionEventJoiSchema = Joi.object()
 export interface TransactionProps extends VersioningInfo {
   _id: string;
   userId: string;
+  sessionKey: string;
   paymentMethodID: string;
   checkoutPaymentID?: string;
   sourceWalletAddress?: string;
@@ -56,7 +57,8 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   userId: Joi.string()
     .required()
     .meta({ _mongoose: { index: true, unique: true } }),
-  paymentMethodID: Joi.string().optional(), //TODO ankit make it rquired
+  sessionKey: Joi.string().optional(), // TODO(#310) Make it required once we no longer have old txns in the database.
+  paymentMethodID: Joi.string().optional(), //TODO ankit make it required
   transactionStatus: Joi.string()
     // .valid(...Object.values(TransactionStatus)) //TODO Change this
     .required(),

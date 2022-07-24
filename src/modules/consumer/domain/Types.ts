@@ -3,10 +3,10 @@ export enum PaymentMethodType {
 }
 
 export enum FiatTransactionStatus {
-  PENDING = "PENDING",
-  CAPTURED = "CAPTURED",
-  FAILED = "FAILED",
-  REFUNDED = "REFUNDED",
+  PENDING = "Pending",
+  CAPTURED = "Captured",
+  FAILED = "Failed",
+  REFUNDED = "Refunded",
 }
 
 //https://api-reference.checkout.com/#operation/getPaymentDetails
@@ -30,4 +30,9 @@ export enum VerificationStatusType {
   REJECTED = "Rejected",
   FLAGGED = "Flagged",
   VERIFIED = "Verified",
+}
+
+export enum PendingTransactionValidationStatus {
+  PASS = "Pass",
+  FAIL = "Fail",
 }

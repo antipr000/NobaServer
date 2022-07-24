@@ -7,6 +7,7 @@ export type TransactionEmailParameters = {
   subtotalPrice: number;
   processingFee: number;
   networkFee: number;
+  nobaFee: number;
   totalPrice: number;
   cryptoAmount: number;
   cryptoCurrency: string;

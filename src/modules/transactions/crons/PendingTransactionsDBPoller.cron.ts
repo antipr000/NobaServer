@@ -9,7 +9,8 @@ import { Transaction } from "../domain/Transaction";
 import { Cron } from "@nestjs/schedule";
 
 const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
-  [TransactionStatus.PENDING]: TransactionQueueName.FiatTransactionInitiator,
+  [TransactionStatus.PENDING]: TransactionQueueName.PendingTransactionValidation,
+  [TransactionStatus.VALIDATION_PASSED]: TransactionQueueName.FiatTransactionInitiator,
   [TransactionStatus.FIAT_INCOMING_INITIATED]: TransactionQueueName.FiatTransactionInitated,
   [TransactionStatus.FIAT_INCOMING_COMPLETED]: TransactionQueueName.FiatTransactionCompleted,
   [TransactionStatus.FIAT_INCOMING_FAILED]: TransactionQueueName.TransactionFailed,

@@ -31,6 +31,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CryptoWallets } from "../consumer/domain/CryptoWallets";
 import { Consumer } from "../consumer/domain/Consumer";
+import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 
 @Injectable()
 export class TransactionService {
@@ -208,51 +209,50 @@ export class TransactionService {
   //TODO add proper logs without leaking sensitive information
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
   async initiateTransaction(
-    userID: string,
+    consumerID: string,
     sessionKey: string,
-    transactionDetails: CreateTransactionDTO,
+    transactionRequest: CreateTransactionDTO,
   ): Promise<TransactionDTO> {
     // Validate that destination wallet address is a valid address for given currency
-    if (!this.isValidDestinationAddress(transactionDetails.leg2, transactionDetails.destinationWalletAddress)) {
+    if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
       throw new BadRequestException({
         messageForClient:
           "Invalid destination wallet address " +
-          transactionDetails.destinationWalletAddress +
+          transactionRequest.destinationWalletAddress +
           " for " +
-          transactionDetails.leg2,
+          transactionRequest.leg2,
       });
     }
 
-    const user = await this.consumerService.getConsumer(userID);
-
     const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
-    if (cryptoCurrencies.filter(curr => curr.ticker === transactionDetails.leg2).length == 0) {
-      throw new BadRequestException(`Unknown cryptocurrency: ${transactionDetails.leg2}`);
+    if (cryptoCurrencies.filter(curr => curr.ticker === transactionRequest.leg2).length == 0) {
+      throw new BadRequestException(`Unknown cryptocurrency: ${transactionRequest.leg2}`);
     }
 
     const fiatCurrencies = await this.currencyService.getSupportedFiatCurrencies();
-    if (fiatCurrencies.filter(curr => curr.ticker === transactionDetails.leg1).length == 0) {
-      throw new BadRequestException(`Unknown fiat currency: ${transactionDetails.leg1}`);
+    if (fiatCurrencies.filter(curr => curr.ticker === transactionRequest.leg1).length == 0) {
+      throw new BadRequestException(`Unknown fiat currency: ${transactionRequest.leg1}`);
     }
 
     const newTransaction: Transaction = Transaction.createTransaction({
-      userId: userID,
-      paymentMethodID: transactionDetails.paymentToken,
-      leg1Amount: transactionDetails.leg1Amount,
-      leg2Amount: transactionDetails.leg2Amount,
-      leg1: transactionDetails.leg1,
-      leg2: transactionDetails.leg2,
+      userId: consumerID,
+      sessionKey: sessionKey,
+      paymentMethodID: transactionRequest.paymentToken,
+      leg1Amount: transactionRequest.leg1Amount,
+      leg2Amount: transactionRequest.leg2Amount,
+      leg1: transactionRequest.leg1,
+      leg2: transactionRequest.leg2,
       transactionStatus: TransactionStatus.PENDING,
-      destinationWalletAddress: transactionDetails.destinationWalletAddress,
+      destinationWalletAddress: transactionRequest.destinationWalletAddress,
     });
 
     const fixedAmount =
-      transactionDetails.fixedSide == CurrencyType.FIAT ? transactionDetails.leg1Amount : transactionDetails.leg2Amount;
+      transactionRequest.fixedSide == CurrencyType.FIAT ? transactionRequest.leg1Amount : transactionRequest.leg2Amount;
     const quote = await this.getTransactionQuote({
-      cryptoCurrencyCode: transactionDetails.leg2,
-      fiatCurrencyCode: transactionDetails.leg1,
+      cryptoCurrencyCode: transactionRequest.leg2,
+      fiatCurrencyCode: transactionRequest.leg1,
       fixedAmount: fixedAmount,
-      fixedSide: transactionDetails.fixedSide,
+      fixedSide: transactionRequest.fixedSide,
     });
 
     // Add quote information to new transaction
@@ -263,7 +263,7 @@ export class TransactionService {
     newTransaction.props.exchangeRate = quote.exchangeRate;
 
     // Set the amount that wasn't fixed based on the quote received
-    if (transactionDetails.fixedSide == CurrencyType.FIAT) {
+    if (transactionRequest.fixedSide == CurrencyType.FIAT) {
       newTransaction.props.leg2Amount = quote.quotedAmount;
     } else {
       newTransaction.props.leg1Amount = quote.quotedAmount;
@@ -271,10 +271,10 @@ export class TransactionService {
 
     if (
       !this.withinSlippage(
-        transactionDetails.leg2,
-        transactionDetails.leg1,
-        transactionDetails.leg2Amount,
-        transactionDetails.leg1Amount,
+        transactionRequest.leg2,
+        transactionRequest.leg1,
+        transactionRequest.leg2Amount,
+        transactionRequest.leg1Amount,
       )
     ) {
       throw new BadRequestError({
@@ -287,10 +287,15 @@ export class TransactionService {
     // Save transaction to the database
     this.transactionsRepo.createTransaction(newTransaction);
 
-    // TODO(#310) We should return at this point and move Sardine + e-mail logic to a queue processor
+    return this.transactionsMapper.toDTO(newTransaction); // Enable the new transaction flow without deleting the remaining code just yet
+  }
 
-    const paymentMethodList: PaymentMethods[] = user.props.paymentMethods.filter(
-      paymentMethod => paymentMethod.paymentToken === transactionDetails.paymentToken,
+  public async validatePendingTransaction(
+    consumer: Consumer,
+    transaction: Transaction,
+  ): Promise<PendingTransactionValidationStatus> {
+    const paymentMethodList: PaymentMethods[] = consumer.props.paymentMethods.filter(
+      paymentMethod => paymentMethod.paymentToken === transaction.props.paymentMethodID,
     );
 
     if (paymentMethodList.length === 0) {
@@ -300,70 +305,71 @@ export class TransactionService {
     const paymentMethod = paymentMethodList[0];
     // Check Sardine for AML
     const sardineTransactionInformation: TransactionInformation = {
-      transactionID: newTransaction.props._id,
-      amount: newTransaction.props.leg1Amount,
-      currencyCode: newTransaction.props.leg1,
+      transactionID: transaction.props._id,
+      amount: transaction.props.leg1Amount,
+      currencyCode: transaction.props.leg1,
       first6DigitsOfCard: paymentMethod.first6Digits,
       last4DigitsOfCard: paymentMethod.last4Digits,
       cardID: paymentMethod.paymentToken,
-      cryptoCurrencyCode: newTransaction.props.leg2,
-      walletAddress: newTransaction.props.destinationWalletAddress,
+      cryptoCurrencyCode: transaction.props.leg2,
+      walletAddress: transaction.props.destinationWalletAddress,
     };
     const result = await this.verificationService.transactionVerification(
-      sessionKey,
-      user,
+      transaction.props.sessionKey,
+      consumer,
       sardineTransactionInformation,
     );
 
     if (result.status !== KYCStatus.APPROVED) {
-      throw new BadRequestException("Compliance checks have failed. You will receive an email regarding next steps.");
+      // TODO(#310) Log the details to the transaction (transactionExceptions[])
+      return PendingTransactionValidationStatus.FAIL;
     }
 
     if (result.walletStatus) {
       const cryptoWallet: CryptoWallets = {
         //walletName: "",
-        address: newTransaction.props.destinationWalletAddress,
+        address: transaction.props.destinationWalletAddress,
         //chainType: "",
         isEVMCompatible: false,
         status: result.walletStatus,
       };
-      await this.consumerService.addOrUpdateCryptoWallet(user.props._id, cryptoWallet);
+      await this.consumerService.addOrUpdateCryptoWallet(consumer.props._id, cryptoWallet);
     }
 
     if (result.paymentMethodStatus) {
-      await this.consumerService.updatePaymentMethod(user.props._id, {
+      await this.consumerService.updatePaymentMethod(consumer.props._id, {
         ...paymentMethod,
         status: result.paymentMethodStatus,
       });
     }
 
-    // TODO(#310) Move e-mail logic to a queue processor
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
       await this.emailService.sendTransactionInitiatedEmail(
-        user.props.firstName,
-        user.props.lastName,
-        user.props.email,
+        consumer.props.firstName,
+        consumer.props.lastName,
+        consumer.props.email,
         {
-          transactionID: newTransaction.props._id,
+          transactionID: transaction.props._id,
           createdDate: new Date().toDateString(),
           paymentMethod: paymentMethod.cardType,
           last4Digits: paymentMethod.last4Digits,
-          currencyCode: newTransaction.props.leg1,
-          subtotalPrice: newTransaction.props.leg1Amount,
-          processingFee: 0, // TODO: Update processing fee
-          networkFee: 0, // TODO: Update network fee
-          totalPrice: newTransaction.props.leg1Amount,
-          cryptoAmount: newTransaction.props.leg2Amount,
-          cryptoCurrency: newTransaction.props.leg2,
+          currencyCode: transaction.props.leg1,
+          subtotalPrice: transaction.props.leg1Amount,
+          processingFee: transaction.props.processingFee, // TODO: Update processing fee
+          networkFee: transaction.props.networkFee, // TODO: Update network fee
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.leg2Amount,
+          cryptoCurrency: transaction.props.leg2,
         },
       );
     } catch (e) {
       this.logger.error("Failed to send email at transaction initiation. " + e);
     }
 
-    return this.transactionsMapper.toDTO(newTransaction); // Enable the new transaction flow without deleting the remaining code just yet
+    return PendingTransactionValidationStatus.PASS;
   }
 
   public async initiateCryptoTransaction(

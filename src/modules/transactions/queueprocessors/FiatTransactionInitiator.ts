@@ -53,8 +53,8 @@ export class FiatTransactionInitiator {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
-    if (status != TransactionStatus.PENDING && status != TransactionStatus.FIAT_INCOMING_INITIATING) {
-      this.logger.info(`Transaction ${transactionId} is not in pending state, skipping, status: ${status}`);
+    if (status != TransactionStatus.VALIDATION_PASSED && status != TransactionStatus.FIAT_INCOMING_INITIATING) {
+      this.logger.info(`Transaction ${transactionId} is not in validate passed state, skipping, status: ${status}`);
       return;
     }
 

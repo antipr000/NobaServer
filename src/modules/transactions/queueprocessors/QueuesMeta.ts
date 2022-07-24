@@ -3,6 +3,7 @@ import { environmentDependentQueueUrl } from "../../../infra/aws/services/Common
 
 // **** Do not change the enum values as they are used to create SQS queues ***
 export enum TransactionQueueName {
+  PendingTransactionValidation = "PendingTransactionValidation",
   FiatTransactionInitiator = "FiatTransactionInitiator",
   FiatTransactionInitated = "FiatTransactionInitated",
   FiatTransactionCompleted = "FiatTransactionCompleted",
