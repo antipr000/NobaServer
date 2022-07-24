@@ -18,7 +18,6 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
 import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { VerificationModule } from "./modules/verification/verification.module";
-import { initializeAWSEnv } from "./infra/aws/initEnv";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
@@ -34,9 +33,6 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
   const configService = app.get(CustomConfigService);
-
-  //setup required infra, ideally we should be using Terraform and Terragrunt
-  initializeAWSEnv(); //TODO enable this when we are ready to deploy Queue based transaction orchestration
 
   const apiPrefix = configService.get<string>("apiPrefix");
   const appEnvType = configService.get<string>("envType");

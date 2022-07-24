@@ -89,6 +89,7 @@ import { SardineConfigs } from "./configtypes/SardineConfigs";
 import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 import { KmsConfigs } from "./configtypes/KmsConfigs";
+import { initializeAWSEnv } from "../infra/aws/initEnv";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -150,6 +151,8 @@ export default async function loadAppConfigs() {
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
+
+  initializeAWSEnv(); //TODO enable this when we are ready to deploy Queue based transaction orchestration
 
   //validate configs
   return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
