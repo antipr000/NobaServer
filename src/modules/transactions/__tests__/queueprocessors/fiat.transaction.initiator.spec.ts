@@ -12,7 +12,7 @@ class MockSqsProducer {
   send(message: any) {
     MockSqsProducer.producedMessages.push(message);
   }
-};
+}
 
 class MockSqsConsumer {
   public static intializers: Array<any> = [];
@@ -25,8 +25,7 @@ class MockSqsConsumer {
     MockSqsConsumer.startCallsCount = 0;
   }
 
-  constructor() {
-  }
+  constructor() {}
 
   static create(initializer: any) {
     MockSqsConsumer.intializers.push(initializer);
@@ -36,25 +35,25 @@ class MockSqsConsumer {
   on(type: string, callback) {
     MockSqsConsumer.onCalls.push({
       type: type,
-      callback: callback
+      callback: callback,
     });
   }
 
   start() {
     MockSqsConsumer.startCallsCount++;
   }
-};
+}
 
-jest.mock('sqs-producer', () => {
+jest.mock("sqs-producer", () => {
   return {
-    Producer: MockSqsProducer
-  }
+    Producer: MockSqsProducer,
+  };
 });
 
-jest.mock('sqs-consumer', () => {
+jest.mock("sqs-consumer", () => {
   return {
-    Consumer: MockSqsConsumer
-  }
+    Consumer: MockSqsConsumer,
+  };
 });
 
 import { Test, TestingModule } from "@nestjs/testing";
@@ -66,7 +65,12 @@ import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { getMockTransactionRepoWithDefaults } from "../../mocks/mock.transactions.repo";
 import { FiatTransactionInitiator } from "../../queueprocessors/FiatTransactionInitiator";
 import { ConsumerService } from "../../../consumer/consumer.service";
-import { MONGO_CONFIG_KEY, MONGO_URI, NODE_ENV_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
+import {
+  MONGO_CONFIG_KEY,
+  MONGO_URI,
+  NODE_ENV_CONFIG_KEY,
+  SERVER_LOG_FILE_PATH,
+} from "../../../../config/ConfigurationUtils";
 import { TransactionQueueName } from "../../queueprocessors/QueuesMeta";
 import { Transaction, TransactionProps } from "../../domain/Transaction";
 import { TransactionStatus } from "../../domain/Types";
@@ -75,7 +79,9 @@ import { MongoClient, Collection } from "mongodb";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import mongoose from "mongoose";
 
-const getAllRecordsInTransactionCollection = async (transactionCollection: Collection): Promise<Array<TransactionProps>> => {
+const getAllRecordsInTransactionCollection = async (
+  transactionCollection: Collection,
+): Promise<Array<TransactionProps>> => {
   const transactionDocumetCursor = transactionCollection.find({});
   const allRecords: TransactionProps[] = [];
 
@@ -84,7 +90,7 @@ const getAllRecordsInTransactionCollection = async (transactionCollection: Colle
 
     allRecords.push({
       ...transactionDocument,
-      _id: transactionDocument._id.toString()
+      _id: transactionDocument._id.toString(),
     } as TransactionProps);
   }
 
@@ -112,7 +118,7 @@ describe("FiatTransactionInitiator", () => {
 
     const environmentVariables = {
       [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoUri
+        [MONGO_URI]: mongoUri,
       },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
@@ -122,10 +128,7 @@ describe("FiatTransactionInitiator", () => {
     consumerService = getMockConsumerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        await TestConfigModule.registerAsync(environmentVariables),
-        getTestWinstonModule()
-      ],
+      imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
       providers: [
         DBProvider,
         {
@@ -136,7 +139,7 @@ describe("FiatTransactionInitiator", () => {
           provide: "TransactionRepo",
           useClass: MongoDBTransactionRepo,
         },
-        FiatTransactionInitiator
+        FiatTransactionInitiator,
       ],
     }).compile();
 
@@ -174,26 +177,28 @@ describe("FiatTransactionInitiator", () => {
     expect(MockSqsProducer.producedMessages).toHaveLength(0);
 
     // A handler should already be register in 'Consumer' with queue 'FiatTransactionInitiator'
-    expect(MockSqsConsumer.onCalls.map(val => val.type).sort())
-      .toEqual(["error", "processing_error"].sort());
+    expect(MockSqsConsumer.onCalls.map(val => val.type).sort()).toEqual(["error", "processing_error"].sort());
 
     expect(MockSqsConsumer.startCallsCount).toBe(1);
     expect(MockSqsConsumer.intializers).toHaveLength(1);
-    expect(MockSqsConsumer.intializers[0].queueUrl)
-      .toEqual(expect.stringContaining(TransactionQueueName.FiatTransactionInitiator));
+    expect(MockSqsConsumer.intializers[0].queueUrl).toEqual(
+      expect.stringContaining(TransactionQueueName.FiatTransactionInitiator),
+    );
 
-    when(consumerService.requestCheckoutPayment(transaction.props.paymentMethodID, 1000, "USD", transaction.props._id)).thenResolve({ id: initiatedPaymentId });
+    when(
+      consumerService.requestCheckoutPayment(transaction.props.paymentMethodID, 1000, "USD", transaction.props._id),
+    ).thenResolve({ id: initiatedPaymentId });
 
     await transactionCollection.insertOne({
       ...transaction.props,
-      _id: transaction.props._id as any
+      _id: transaction.props._id as any,
     });
 
     // Call the registered handler (analogous to a message arrival in the queue)
     const registeredHandler = MockSqsConsumer.intializers[0].handleMessage;
     await registeredHandler({
       id: transaction.props._id,
-      Body: transaction.props._id
+      Body: transaction.props._id,
     });
 
     const allTranactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
@@ -204,4 +209,4 @@ describe("FiatTransactionInitiator", () => {
     expect(allTranactionsInDb).toHaveLength(1);
     expect(allTranactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
   });
-})
+});

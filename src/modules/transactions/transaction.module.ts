@@ -35,4 +35,4 @@ import { FiatTransactionInitiator } from "./queueprocessors/FiatTransactionIniti
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
-export class TransactionModule { }
+export class TransactionModule {}

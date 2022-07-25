@@ -71,7 +71,6 @@ export class FiatTransactionInitiator {
       transaction.props._id,
     );
 
-
     transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,
