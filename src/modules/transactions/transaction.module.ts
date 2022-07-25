@@ -13,6 +13,7 @@ import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 import { AppService } from "../../app.service";
+import { FiatTransactionInitiator } from "./queueprocessors/FiatTransactionInitiator";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule],
@@ -25,12 +26,13 @@ import { AppService } from "../../app.service";
     LimitsService,
     ZeroHashService,
     AppService,
-    // FiatTransactionInitiator,
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
     },
+    // All the queue processors
+    FiatTransactionInitiator,
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
-export class TransactionModule {}
+export class TransactionModule { }

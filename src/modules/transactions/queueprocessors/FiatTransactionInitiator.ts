@@ -2,8 +2,8 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "sqs-consumer";
 import { Producer } from "sqs-producer";
+import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { Logger } from "winston";
-import { environmentDependentQueueUrl } from "../../../infra/aws/services/SqsUtils";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
@@ -12,18 +12,13 @@ import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta
 
 @Injectable()
 export class FiatTransactionInitiator {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
-
-  @Inject()
-  private readonly consumerService: ConsumerService;
-
   private readonly queueProducers: Record<TransactionQueueName, Producer>;
 
-  constructor() {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
+    private readonly consumerService: ConsumerService,
+  ) {
     this.queueProducers = getTransactionQueueProducers();
     this.init();
   }
@@ -33,7 +28,7 @@ export class FiatTransactionInitiator {
       queueUrl: environmentDependentQueueUrl(TransactionQueueName.FiatTransactionInitiator),
       handleMessage: async message => {
         console.log(message);
-        this.intiateFiatTransaction(message.Body);
+        return this.intiateFiatTransaction(message.Body);
       },
     });
 
@@ -76,11 +71,14 @@ export class FiatTransactionInitiator {
       transaction.props._id,
     );
 
-    transaction = Transaction.createTransaction({
-      ...transaction.props,
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      checkoutPaymentID: payment["id"],
-    });
+
+    transaction = await this.transactionRepo.updateTransaction(
+      Transaction.createTransaction({
+        ...transaction.props,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        checkoutPaymentID: payment["id"],
+      }),
+    );
 
     // Fiat Transaction implementation ends
 

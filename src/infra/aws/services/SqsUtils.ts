@@ -11,7 +11,7 @@ export function initializeSQS() {
     return { queueName: environmentDependentQueueName(x), queueUrl: environmentDependentQueueUrl(x) };
   });
 
-  const sqs = new SQS();
+  const sqs = new SQS(/*{ endpoint: "http://localhost:4566/000000000000/" }*/);
   sqs.listQueues({ QueueNamePrefix: queuePrefix }, (err, data) => {
     if (err) {
       throw err;
