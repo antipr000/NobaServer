@@ -82,11 +82,11 @@ import mongoose from "mongoose";
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
 ): Promise<Array<TransactionProps>> => {
-  const transactionDocumetCursor = transactionCollection.find({});
+  const transactionDocumentCursor = transactionCollection.find({});
   const allRecords: TransactionProps[] = [];
 
-  while (await transactionDocumetCursor.hasNext()) {
-    const transactionDocument = await transactionDocumetCursor.next();
+  while (await transactionDocumentCursor.hasNext()) {
+    const transactionDocument = await transactionDocumentCursor.next();
 
     allRecords.push({
       ...transactionDocument,
@@ -165,7 +165,7 @@ describe("FiatTransactionInitiator", () => {
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
       userId: "UUUUUUUUU",
-      transactionStatus: TransactionStatus.PENDING,
+      transactionStatus: TransactionStatus.VALIDATION_PASSED,
       paymentMethodID: "XXXXXXXXXX",
       leg1Amount: 1000,
       leg2Amount: 1,
@@ -201,12 +201,12 @@ describe("FiatTransactionInitiator", () => {
       Body: transaction.props._id,
     });
 
-    const allTranactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
 
     expect(MockSqsProducer.producedMessages).toHaveLength(1);
     expect(MockSqsProducer.producedMessages[0].id).toEqual(transaction.props._id);
 
-    expect(allTranactionsInDb).toHaveLength(1);
-    expect(allTranactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
+    expect(allTransactionsInDb).toHaveLength(1);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
   });
 });
