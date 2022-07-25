@@ -27,7 +27,7 @@ class MockSqsConsumer {
     MockSqsConsumer.startCallsCount = 0;
   }
 
-  constructor() { }
+  constructor() {}
 
   static create(initializer: any) {
     MockSqsConsumer.intializers.push(initializer);
