@@ -1,6 +1,6 @@
 # DONOT touch this file if you don't know what you are doing! TODO add codeowners file?
 
-name: CI
+name: Run Tests
 
 # Controls when the workflow will run
 on:
