@@ -13,6 +13,13 @@ import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 import { AppService } from "../../app.service";
+import { FiatTransactionInitiator } from "./queueprocessors/FiatTransactionInitiator";
+import { ValidatePendingTransactionProcessor } from "./queueprocessors/ValidatePendingTransactionProcessor";
+import { FiatReversalInitiator } from "./queueprocessors/FiatReversalInitiator";
+import { FiatTransactionStatusProcessor } from "./queueprocessors/FiatTransactionStatusProcessor";
+import { CryptoTransactionInitiator } from "./queueprocessors/CryptoTransactionInitiator";
+import { CryptoTransactionStatusProcessor } from "./queueprocessors/CryptoTransactionStatusProcessor";
+import { TransactionCompletedProcessor } from "./queueprocessors/TransactionCompletedProcessor";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule],
@@ -25,7 +32,15 @@ import { AppService } from "../../app.service";
     LimitsService,
     ZeroHashService,
     AppService,
-    // FiatTransactionInitiator,
+    CryptoTransactionInitiator,
+    CryptoTransactionStatusProcessor,
+    FiatReversalInitiator,
+    //FiatReversalStatusProcessor,
+    FiatTransactionInitiator,
+    FiatTransactionStatusProcessor,
+    TransactionCompletedProcessor,
+    //TransactionFailedProcessor,
+    ValidatePendingTransactionProcessor,
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,

@@ -99,7 +99,7 @@ export class TransactionService {
       console.log(quote);
       const costPerUnit = Number(quote["message"]["price"]);
 
-      this.logger.info(`
+      this.logger.debug(`
       FIAT FIXED (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${fixedAmountFiat}
       NETWORK FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${networkFeeInFiat}
       PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardFees}
@@ -147,7 +147,7 @@ export class TransactionService {
       const creditCardCharge = (costBeforeCCFee + creditCardFeeDollars) / (1 - creditCardFeePercent);
       const processingFees = creditCardCharge - costBeforeCCFee;
 
-      this.logger.info(`
+      this.logger.debug(`
       CRYPTO FIXED (${transactionQuoteQuery.cryptoCurrencyCode}):\t${fixedAmountCrypto}
       POST-SPREAD (${transactionQuoteQuery.fiatCurrencyCode}):\t${fiatCostPostSpread}
       NETWORK FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${networkFeeInFiat}

@@ -11,7 +11,7 @@ import { TransactionService } from "../transaction.service";
 import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
 
 @Injectable()
-export class CryptoTransactionStatusInitiator {
+export class CryptoTransactionInitiator {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
@@ -53,7 +53,7 @@ export class CryptoTransactionStatusInitiator {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
-    if (status != TransactionStatus.FIAT_INCOMING_COMPLETED) {
+    if (status != TransactionStatus.FIAT_INCOMING_COMPLETED && status != TransactionStatus.CRYPTO_OUTGOING_INITIATING) {
       this.logger.info(
         `Transaction ${transactionId} is not in ${TransactionStatus.FIAT_INCOMING_COMPLETED} status, skipping, current status: ${status}`,
       );
@@ -65,7 +65,7 @@ export class CryptoTransactionStatusInitiator {
     transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,
-        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIAING,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
       }),
     );
 

@@ -9,7 +9,7 @@ import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
 
 @Injectable()
-export class TransactionCompletionProcessor {
+export class TransactionCompletedProcessor {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
@@ -52,7 +52,7 @@ export class TransactionCompletionProcessor {
     transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,
-        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIAING,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
       }),
     );
 

@@ -9,7 +9,7 @@ import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
 
 @Injectable()
-export class FiatTransactionStatusProcessor {
+export class FiatReversalInitiator {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
