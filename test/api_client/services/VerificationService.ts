@@ -23,21 +23,6 @@ export class VerificationService {
   }
 
   /**
-   * Gets the list of all supported country codes
-   * @returns any List of supported country codes
-   * @throws ApiError
-   */
-  public static getCountryCodes(): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/verify/countryCodes",
-      errors: {
-        400: `Invalid request parameters`,
-      },
-    });
-  }
-
-  /**
    * Creates a new session for verification
    * @returns string New session token
    * @throws ApiError

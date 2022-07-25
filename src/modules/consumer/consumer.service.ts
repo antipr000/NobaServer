@@ -1,7 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { StripeService } from "../common/stripe.service";
 import { Result } from "src/core/logic/Result";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
@@ -31,8 +30,7 @@ export class ConsumerService {
   private readonly stripeApi: Stripe;
   private readonly checkoutApi: Checkout;
 
-  constructor(private readonly stripeService: StripeService, private readonly checkoutService: CheckoutService) {
-    this.stripeApi = stripeService.stripeApi;
+  constructor(private readonly checkoutService: CheckoutService) {
     // TODO: Move these configurations to yaml files
     this.checkoutApi = checkoutService.checkoutApi;
   }
@@ -51,18 +49,11 @@ export class ConsumerService {
       //user doesn't exist already
       //first create stripe customer
       this.logger.info(`Creating user for first time for ${emailOrPhone}`);
-      const stripeCustomer = await this.stripeService.stripeApi.customers.create({ email: email, phone: phone });
-      const stripeCustomerID = stripeCustomer.id;
 
       const newConsumer = Consumer.createConsumer({
         email,
         phone,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: stripeCustomerID,
-            providerID: PaymentProviders.STRIPE,
-          },
-        ],
+        paymentProviderAccounts: [],
         partners: [
           {
             partnerID: partnerID,
@@ -110,44 +101,6 @@ export class ConsumerService {
 
   async findConsumerById(consumerId: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerId);
-  }
-
-  async addStripePaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
-    const stripeCustomerID = consumer.props.paymentProviderAccounts.filter(
-      paymentProviderAccount => paymentProviderAccount.providerID === PaymentProviders.STRIPE,
-    )[0].providerCustomerID;
-
-    //TODO expand for other payment methods when needed
-    const params: Stripe.PaymentMethodCreateParams = {
-      type: "card",
-      card: {
-        number: paymentMethod.cardNumber,
-        exp_month: paymentMethod.expiryMonth,
-        exp_year: paymentMethod.expiryYear,
-        cvc: paymentMethod.cvv,
-      },
-    };
-
-    //first create payment method and then attach it to customer
-    const stripePaymentMethod = await this.stripeApi.paymentMethods.create(params);
-    //attach the payment method to the customer
-    await this.stripeApi.paymentMethods.attach(stripePaymentMethod.id, { customer: stripeCustomerID });
-
-    const newPaymentMethod: PaymentMethods = {
-      cardName: paymentMethod.cardName,
-      cardType: "card",
-      first6Digits: paymentMethod.cardNumber.substring(0, 6),
-      last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
-      imageUri: paymentMethod.imageUri,
-      paymentToken: stripePaymentMethod.id,
-      paymentProviderID: PaymentProviders.STRIPE,
-    };
-    // Update user details
-    const updatedConsumerData: ConsumerProps = {
-      ...consumer.props,
-      paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
-    };
-    return this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerData));
   }
 
   async addCheckoutPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
