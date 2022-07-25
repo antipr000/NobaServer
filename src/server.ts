@@ -18,6 +18,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
 import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { VerificationModule } from "./modules/verification/verification.module";
+import { initializeAWSEnv } from "./infra/aws/initEnv";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.

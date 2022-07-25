@@ -12,18 +12,13 @@ import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta
 
 @Injectable()
 export class FiatTransactionInitiator {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
-
-  @Inject()
-  private readonly consumerService: ConsumerService;
-
   private readonly queueProducers: Record<TransactionQueueName, Producer>;
 
-  constructor() {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
+    private readonly consumerService: ConsumerService,
+  ) {
     this.queueProducers = getTransactionQueueProducers();
     this.init();
   }
@@ -33,7 +28,7 @@ export class FiatTransactionInitiator {
       queueUrl: environmentDependentQueueUrl(TransactionQueueName.FiatTransactionInitiator),
       handleMessage: async message => {
         console.log(message);
-        this.intiateFiatTransaction(message.Body);
+        return this.intiateFiatTransaction(message.Body);
       },
     });
 
