@@ -18,7 +18,7 @@ import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
 import { ResponseStatus } from "./api_client/core/request";
 import { AdminService, AuthenticationService, DeleteNobaAdminDTO, VerifyOtpResponseDTO } from "./api_client";
-import { NobaAdminDTO } from "src/modules/admin/dto/NobaAdminDTO";
+import { NobaAdminDTO } from "../src/modules/admin/dto/NobaAdminDTO";
 import {
   clearAccessTokenForNextRequests,
   fetchOtpFromDb,

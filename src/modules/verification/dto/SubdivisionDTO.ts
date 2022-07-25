@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Subdivision } from "src/externalclients/idvproviders/definitions";
+import { Subdivision } from "../../../externalclients/idvproviders/definitions";
 
 export class SubdivisionDTO implements Subdivision {
   @ApiProperty()

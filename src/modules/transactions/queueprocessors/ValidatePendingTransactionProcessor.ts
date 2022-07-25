@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "sqs-consumer";
 import { Producer } from "sqs-producer";
-import { PendingTransactionValidationStatus } from "src/modules/consumer/domain/Types";
+import { PendingTransactionValidationStatus } from "../../consumer/domain/Types";
 import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { ConsumerService } from "../../consumer/consumer.service";

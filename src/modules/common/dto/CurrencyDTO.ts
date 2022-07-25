@@ -6,7 +6,7 @@ export class CurrencyDTO {
   type?: string; // TODO(#235): Will be populated when currencies are stored in the database
 
   @ApiProperty()
-  name: string;
+  name: string; // AAVE.ETH, for example
 
   @ApiProperty()
   ticker: string;

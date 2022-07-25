@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from "@nes
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { StripeService } from "../common/stripe.service";
-import { Result } from "src/core/logic/Result";
+import { Result } from "../../core/logic/Result";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { Consumer, ConsumerProps } from "./domain/Consumer";

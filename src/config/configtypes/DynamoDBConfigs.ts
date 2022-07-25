@@ -1,5 +1,5 @@
 import * as Joi from "joi";
-import { KeysRequired } from "src/modules/common/domain/Types";
+import { KeysRequired } from "../../modules/common/domain/Types";
 import { APP_CONSTANTS } from "../AppConstants";
 
 export const DDB_ACCESS_KEY_ID_ATTR = APP_CONSTANTS.AWS_ACCESS_KEY_ID_ATTR; //for now using common credentials across all aws infra providers as being accessed in same ec2 instance
