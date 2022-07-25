@@ -44,12 +44,6 @@ export const TWILIO_SID = "SID";
 export const TWILIO_AUTH_TOKEN = "authToken";
 export const TWILIO_FROM_PHONE_NUMBER = "fromPhoneNumber";
 
-export const TRULIOO_CONFIG_KEY = "trulioo";
-export const TRULIOO_AWS_SECRET_KEY_FOR_IDV_ATTR = "awsSecretNameForIDVApiKey";
-export const TRULIOO_AWS_SECRET_KEY_FOR_DOCV_API_KEY_ATTR = "awsSecretNameForDocVApiKey";
-export const TRULIOO_IDV = "TruliooIDVApiKey";
-export const TRULIOO_DOCV_API_KEY = "TruliooDocVApiKey";
-
 export const SENDGRID_CONFIG_KEY = "sendgrid";
 export const SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
 export const SENDGRID_API_KEY = "apiKey";

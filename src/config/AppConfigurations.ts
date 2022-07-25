@@ -29,11 +29,6 @@ import {
   STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR,
   STRIPE_CONFIG_KEY,
   STRIPE_SECRET_KEY,
-  TRULIOO_AWS_SECRET_KEY_FOR_DOCV_API_KEY_ATTR,
-  TRULIOO_AWS_SECRET_KEY_FOR_IDV_ATTR,
-  TRULIOO_CONFIG_KEY,
-  TRULIOO_DOCV_API_KEY,
-  TRULIOO_IDV,
   TWILIO_AUTH_TOKEN,
   TWILIO_AWS_SECRET_KEY_FOR_AUTH_TOKEN_ATTR,
   TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR,
@@ -81,7 +76,6 @@ import {
 import * as fs from "fs";
 
 import { TwilioConfigs } from "./configtypes/TwilioConfigs";
-import { TruliooConfigs } from "./configtypes/TruliooConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";
 import { StripeConfigs } from "./configtypes/StripeConfigs";
 import { MongoConfigs } from "./configtypes/MongoConfigs";
@@ -220,7 +214,6 @@ async function configureAllVendorCredentials(
   const vendorCredentialConfigurators = [
     configureNobaParameters,
     configureSendgridCredentials,
-    configureTruliooCredentials,
     configureTwilioCredentials,
     configureStripeCredentials,
     configureMongoCredentials,
@@ -275,35 +268,6 @@ async function configureTwilioCredentials(
   twilioConfigs.authToken = await getParameterValue(twilioConfigs.awsSecretNameForAuthToken, twilioConfigs.authToken);
 
   configs[TWILIO_CONFIG_KEY] = twilioConfigs;
-  return configs;
-}
-
-async function configureTruliooCredentials(
-  environment: AppEnvironment,
-  configs: Record<string, any>,
-): Promise<Record<string, any>> {
-  const truliooConfigs: TruliooConfigs = configs[TRULIOO_CONFIG_KEY];
-
-  if (truliooConfigs === undefined) {
-    const errorMessage =
-      "\n'Trulioo' configurations are required. Please configure the Trulioo credentials in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${TRULIOO_CONFIG_KEY}" and populate ("${TRULIOO_AWS_SECRET_KEY_FOR_IDV_ATTR}" or "${TRULIOO_IDV}") AND ` +
-      `("${TRULIOO_AWS_SECRET_KEY_FOR_DOCV_API_KEY_ATTR}" or "${TRULIOO_DOCV_API_KEY}") ` +
-      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
-
-    throw Error(errorMessage);
-  }
-
-  truliooConfigs.TruliooDocVApiKey = await getParameterValue(
-    truliooConfigs.awsSecretNameForDocVApiKey,
-    truliooConfigs.TruliooDocVApiKey,
-  );
-  truliooConfigs.TruliooIDVApiKey = await getParameterValue(
-    truliooConfigs.awsSecretNameForIDVApiKey,
-    truliooConfigs.TruliooIDVApiKey,
-  );
-
-  configs[TRULIOO_CONFIG_KEY] = truliooConfigs;
   return configs;
 }
 
