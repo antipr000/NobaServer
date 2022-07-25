@@ -7,6 +7,7 @@ import { ITransactionRepo } from "../repo/TransactionRepo";
 import { Producer } from "sqs-producer";
 import { Transaction } from "../domain/Transaction";
 import { Cron } from "@nestjs/schedule";
+import { QueueProcessorHelper } from "../queueprocessors/QueueProcessorHelper";
 
 const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.PENDING]: TransactionQueueName.PendingTransactionValidation,
@@ -22,9 +23,6 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
 
 @Injectable()
 export class PendingTransactionDBPollerService {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
   @Inject("TransactionRepo")
   private readonly transactionRepo: ITransactionRepo;
 
@@ -32,8 +30,10 @@ export class PendingTransactionDBPollerService {
 
   private isCronRunning = false;
 
-  constructor() {
-    this.queueProducers = getTransactionQueueProducers();
+  private queueProcessorHelper: QueueProcessorHelper;
+
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
   }
 
   //every 5 seconds for now, we should be using db streams actually but it's fine for now
@@ -55,9 +55,9 @@ export class PendingTransactionDBPollerService {
   }
 
   private async handlePendingTransactions() {
-    this.logger.info("Polling for pending transactions");
+    this.logger.debug("Polling for pending transactions");
     const pendingTransactions = await this.transactionRepo.getPendingTransactions();
-    this.logger.info(`Found ${pendingTransactions.length} pending transactions`);
+    this.logger.debug(`Found ${pendingTransactions.length} pending transactions`);
     pendingTransactions.forEach(async transaction => {
       const status: TransactionStatus = transaction.props.transactionStatus;
 
@@ -81,18 +81,18 @@ export class PendingTransactionDBPollerService {
 
       const targetQueue = transactionStatusToQueueMap[status];
 
-      this.logger.info(`Sending transaction ${transaction.props._id} to queue ${targetQueue}`);
+      //this.logger.info(`Sending transaction ${transaction.props._id} to queue ${targetQueue}`);
 
-      const result = await this.queueProducers[targetQueue].send({
-        id: transaction.props._id,
-        body: `${transaction.props._id}`,
-      }); // we can send in batch TODO add batching logic
-
+      try {
+        await this.queueProcessorHelper.enqueueTransaction(targetQueue, transaction.props._id);
+      } catch (err) {
+        console.log("Error", err);
+      }
       // we will only poll it after 15 seconds if it's not yet processed again, we will process from one queue to another queue
       transaction.setDBPollingTimeAfterNSeconds(15);
       await this.transactionRepo.updateTransaction(transaction);
 
-      this.logger.info(`Sent transaction ${transaction.props._id} to queue ${targetQueue}`);
+      //this.logger.info(`Sent transaction ${transaction.props._id} to queue ${targetQueue}`);
     });
   }
 

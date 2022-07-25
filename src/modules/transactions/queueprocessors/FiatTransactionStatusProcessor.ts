@@ -1,7 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "sqs-consumer";
-import { Producer } from "sqs-producer";
 import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { ConsumerService } from "../../consumer/consumer.service";
@@ -9,48 +8,31 @@ import { FiatTransactionStatus } from "../../consumer/domain/Types";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
-import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
+import { TransactionQueueName } from "./QueuesMeta";
+import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
 
 @Injectable()
-export class FiatTransactionStatusProcessor {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
+export class FiatTransactionStatusProcessor implements MessageProcessor {
   @Inject("TransactionRepo")
   private readonly transactionRepo: ITransactionRepo;
 
   @Inject()
   private readonly consumerService: ConsumerService;
 
-  private readonly queueProducers: Record<TransactionQueueName, Producer>;
+  private queueProcessorHelper: QueueProcessorHelper;
 
-  constructor() {
-    this.queueProducers = getTransactionQueueProducers();
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
+    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
     this.init();
   }
 
   async init() {
-    const app = Consumer.create({
-      queueUrl: environmentDependentQueueUrl(TransactionQueueName.FiatTransactionInitated),
-      handleMessage: async message => {
-        console.log(message);
-        this.checkFiatTransactionStatus(message.Body);
-      },
-    });
-
-    app.on("error", err => {
-      this.logger.error(`Error while checking transaction status ${err}`);
-    });
-
-    app.on("processing_error", err => {
-      this.logger.error(`Processing Error while checking transaction status ${err}`);
-    });
+    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.FiatTransactionInitated, this);
 
     app.start();
   }
 
-  async checkFiatTransactionStatus(transactionId: string) {
-    this.logger.info("Processing transaction", transactionId);
+  async process(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.FIAT_INCOMING_INITIATED) {
@@ -90,11 +72,7 @@ export class FiatTransactionStatusProcessor {
 
     //Move to completed queue if the transaction is completed so that we can process the next step quickly, we could just wait for the poller cron to put in this queue but poller will take delay as it's scheduled so we move it to the target queue directly from here
     if (TransactionStatus.COMPLETED === transaction.props.transactionStatus) {
-      this.logger.info(`Transaction ${transactionId} is completed, sending to completed queue`);
-      this.queueProducers[TransactionQueueName.FiatTransactionCompleted].send({
-        id: transactionId,
-        body: transactionId,
-      });
+      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionCompleted, transactionId);
     }
   }
 }

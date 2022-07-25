@@ -1,22 +1,17 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Consumer } from "sqs-consumer";
-import { Producer } from "sqs-producer";
 import { PendingTransactionValidationStatus } from "../../consumer/domain/Types";
 import { Logger } from "winston";
-import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
-import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
+import { TransactionQueueName } from "./QueuesMeta";
+import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
 
 @Injectable()
-export class ValidatePendingTransactionProcessor {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
+export class ValidatePendingTransactionProcessor implements MessageProcessor {
   @Inject("TransactionRepo")
   private readonly transactionRepo: ITransactionRepo;
 
@@ -26,35 +21,20 @@ export class ValidatePendingTransactionProcessor {
   @Inject()
   private readonly transactionService: TransactionService;
 
-  private readonly queueProducers: Record<TransactionQueueName, Producer>;
+  private queueProcessorHelper: QueueProcessorHelper;
 
-  constructor() {
-    this.queueProducers = getTransactionQueueProducers();
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
     this.init();
   }
 
   async init() {
-    const app = Consumer.create({
-      queueUrl: environmentDependentQueueUrl(TransactionQueueName.PendingTransactionValidation),
-      handleMessage: async message => {
-        console.log(message);
-        this.initiatePendingTransaction(message.Body);
-      },
-    });
-
-    app.on("error", err => {
-      this.logger.error(`Error while initiating transaction ${err}`);
-    });
-
-    app.on("processing_error", err => {
-      this.logger.error(`Processing Error while initiating transaction ${err}`);
-    });
+    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.PendingTransactionValidation, this);
 
     app.start();
   }
 
-  async initiatePendingTransaction(transactionId: string) {
-    this.logger.info("Initiating pending transaction", transactionId);
+  async process(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     let consumer = await this.consumerService.getConsumer(transaction.props.userId);
 
@@ -80,13 +60,10 @@ export class ValidatePendingTransactionProcessor {
     );
 
     if (updatedStatus === TransactionStatus.VALIDATION_FAILED) {
-      this.queueProducers[TransactionQueueName.TransactionFailed].send({ id: transactionId, body: transactionId });
+      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
     } else {
       //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
-      this.queueProducers[TransactionQueueName.FiatTransactionInitiator].send({
-        id: transactionId,
-        body: transactionId,
-      });
+      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionInitiator, transactionId);
     }
   }
 }

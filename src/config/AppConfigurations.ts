@@ -399,8 +399,6 @@ async function configureMongoCredentials(
     mongoConfigs.uri += `_${hostname}`;
   }
 
-  console.log("Mongo hostname: " + mongoConfigs.uri);
-
   configs[MONGO_CONFIG_KEY] = mongoConfigs;
   return configs;
 }

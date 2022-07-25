@@ -20,6 +20,7 @@ import { FiatTransactionStatusProcessor } from "./queueprocessors/FiatTransactio
 import { CryptoTransactionInitiator } from "./queueprocessors/CryptoTransactionInitiator";
 import { CryptoTransactionStatusProcessor } from "./queueprocessors/CryptoTransactionStatusProcessor";
 import { TransactionCompletedProcessor } from "./queueprocessors/TransactionCompletedProcessor";
+import { QueueProcessorHelper } from "./queueprocessors/QueueProcessorHelper";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule],
@@ -36,6 +37,7 @@ import { TransactionCompletedProcessor } from "./queueprocessors/TransactionComp
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
     },
+    QueueProcessorHelper,
     // All the queue processors
     CryptoTransactionInitiator,
     CryptoTransactionStatusProcessor,

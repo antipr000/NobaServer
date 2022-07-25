@@ -8,13 +8,11 @@ import { Transaction } from "../domain/Transaction";
 import { CryptoTransactionStatus, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
-import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
+import { TransactionQueueName } from "./QueuesMeta";
+import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
 
 @Injectable()
-export class CryptoTransactionStatusProcessor {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
+export class CryptoTransactionStatusProcessor implements MessageProcessor {
   @Inject("TransactionRepo")
   private readonly transactionRepo: ITransactionRepo;
 
@@ -24,32 +22,20 @@ export class CryptoTransactionStatusProcessor {
   @Inject()
   private readonly consumerService: ConsumerService;
 
-  constructor() {
+  private queueProcessorHelper: QueueProcessorHelper;
+
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
+    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
     this.init();
   }
 
   async init() {
-    const app = Consumer.create({
-      queueUrl: environmentDependentQueueUrl(TransactionQueueName.CryptoTransactionInitiated),
-      handleMessage: async message => {
-        console.log(message);
-        this.checkCryptoTransactionStatus(message.Body);
-      },
-    });
-
-    app.on("error", err => {
-      this.logger.error(`Error while checking transaction status ${err}`);
-    });
-
-    app.on("processing_error", err => {
-      this.logger.error(`Processing Error while checking transaction status ${err}`);
-    });
+    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.CryptoTransactionInitiated, this);
 
     app.start();
   }
 
-  async checkCryptoTransactionStatus(transactionId: string) {
-    this.logger.info("Processing transaction", transactionId);
+  async process(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
@@ -89,15 +75,9 @@ export class CryptoTransactionStatusProcessor {
 
     //Move to completed queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
     if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
-      getTransactionQueueProducers()[TransactionQueueName.TransactionCompleted].send({
-        id: transactionId,
-        body: transactionId,
-      });
+      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionCompleted, transactionId);
     } else if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_FAILED) {
-      getTransactionQueueProducers()[TransactionQueueName.TransactionFailed].send({
-        id: transactionId,
-        body: transactionId,
-      });
+      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
     }
   }
 }

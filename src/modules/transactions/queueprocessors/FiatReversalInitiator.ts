@@ -7,41 +7,27 @@ import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
+import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
 
 @Injectable()
-export class FiatReversalInitiator {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
+export class FiatReversalInitiator implements MessageProcessor {
   @Inject("TransactionRepo")
   private readonly transactionRepo: ITransactionRepo;
 
-  constructor() {
+  private queueProcessorHelper: QueueProcessorHelper;
+
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
+    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
     this.init();
   }
 
   async init() {
-    const app = Consumer.create({
-      queueUrl: environmentDependentQueueUrl(TransactionQueueName.FiatTransactionInitated),
-      handleMessage: async message => {
-        console.log(message);
-        this.intiateFiatTransaction(message.Body);
-      },
-    });
-
-    app.on("error", err => {
-      this.logger.error(`Error while checking transaction status ${err}`);
-    });
-
-    app.on("processing_error", err => {
-      this.logger.error(`Processing Error while checking transaction status ${err}`);
-    });
+    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.FiatTransactionInitated, this);
 
     app.start();
   }
 
-  async intiateFiatTransaction(transactionId: string) {
-    this.logger.info("Processing transaction", transactionId);
+  async process(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.FIAT_INCOMING_INITIATED) {
