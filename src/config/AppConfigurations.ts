@@ -79,6 +79,7 @@ import {
   AWS_SECRET_KEY_FOR_FLAT_FEE_DOLLARS,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
+import * as os from "os";
 
 import { TwilioConfigs } from "./configtypes/TwilioConfigs";
 import { TruliooConfigs } from "./configtypes/TruliooConfigs";
@@ -395,6 +396,13 @@ async function configureMongoCredentials(
   }
 
   mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
+
+  if (environment === AppEnvironment.DEV) {
+    const hostname = os.hostname();
+    mongoConfigs.uri += `_${hostname}`;
+  }
+
+  console.log("Mongo hostname: " + mongoConfigs.uri);
 
   configs[MONGO_CONFIG_KEY] = mongoConfigs;
   return configs;
