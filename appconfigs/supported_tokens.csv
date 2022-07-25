@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Name,Symbol (Prod),Symbol USD,Custody*,Liquidity**,Env.,Type,Confirms†,Precision‡,Deposit§,Supported in NY
 Aave,AAVE.ETH,AAVE/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
 Algorand,ALGO,ALGO/USD,Yes,Yes,Prod/Cert,Base,1,6,Yes*,No
