@@ -1,23 +1,23 @@
 Name,Symbol (Prod),Symbol USD,Custody*,Liquidity**,Env.,Type,Confirms†,Precision‡,Deposit§,Supported in NY
-Aave,AAVE,AAVE/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
+Aave,AAVE.ETH,AAVE/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
 Algorand,ALGO,ALGO/USD,Yes,Yes,Prod/Cert,Base,1,6,Yes*,No
 Apecoin,APE.ETH,APE.ETH/USD,Yes,No,Prod,ERC20,1,18,Yes,No
 Avalanche,AVAX,AVAX/USD,Yes,Yes,Prod/Cert,C-Chain,1,18,Yes*,No
 C-Chain,,/USD,,,,,,,,
-Axie Infinity,AXS,AXS/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
-Basic Attention Token,BAT,BAT/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
-Binance USD,BUSD ,BUSD /USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
+Axie Infinity,AXS.ETH,AXS/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+Basic Attention Token,BAT.ETH,BAT/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
+Binance USD,BUSD.ETH,BUSD/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
 Bitcoin Cash,BCH,BCH/USD,Yes,Yes,Prod/Cert,Base,1,8,Yes,Yes
 Bitcoin,BTC,BTC/USD,Yes,Yes,Prod/Cert,Base,1,8,Yes,Yes
 Cardano,ADA,ADA/USD,Yes,Yes,Prod/Cert,Base,1,6,Yes,No
-Chainlink,LINK,LINK/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,Yes
-Civic,CVC,CVC/USD,Yes,No,Prod,ERC20,1,8,Yes,No
-Compound,COMP,COMP/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
-Dai,DAI,DAI/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
-Decentraland,MANA,MANA/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
+Chainlink,LINK.ETH,LINK/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,Yes
+Civic,CVC.ETH,CVC/USD,Yes,No,Prod,ERC20,1,8,Yes,No
+Compound,COMP.ETH,COMP/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+Dai,DAI.ETH,DAI/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+Decentraland,MANA.ETH,MANA/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
 Dogecoin,DOGE,DOGE/USD,Yes,Yes,Prod/Cert,Base,10,8,Yes,No
 Elrond,EGLD,EGLD/USD,Yes,Yes,Prod/Cert,Base,1,18,Yes*,No
-Enjin Coin,ENJ,ENJ/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+Enjin Coin,ENJ.ETH,ENJ/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
 EOS,EOS,EOS/USD,Yes,Yes,Prod/Cert,Base,1,4,Yes,No
 Ethereum Classic,ETC,ETC/USD,Yes,Yes,Prod/Cert,Base,372,18,Yes*,No
 Ethereum,ETH,ETH/USD,Yes,Yes,Prod/Cert,Base,1,18,Yes,Yes
@@ -25,42 +25,42 @@ Ethereum (Arbitrum),ETH.ARBITRUM,ETH.ARBITRUM/USD,Yes,No,Prod/Cert,Account,1,18,
 Ethereum (Optimism),ETH.OPTIMISM,ETH.OPTIMISM/USD,Yes,No,Prod/Cert,Account,1,18,Yes,Yes
 Ethereum (Solana),ETH.SOL,ETH.SOL/USD,Yes,No,Prod,Account,1,8,Yes,Yes
 Fantom,FTM,FTM/USD,Yes,Yes,Prod,Base,1,18,Yes*,No
-GMO USD,ZUSD,ZUSD/USD,Yes,No,Prod/Cert,ERC20,1,6,Yes,Yes
-GMO Yen,GYEN,GYEN/USD,Yes,No,Prod/Cert,ERC20,1,6,Yes,Yes
-The Graph,GRT,GRT/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+GMO USD,ZUSD.ETH,ZUSD/USD,Yes,No,Prod/Cert,ERC20,1,6,Yes,Yes
+GMO Yen,GYEN.ETH,GYEN/USD,Yes,No,Prod/Cert,ERC20,1,6,Yes,Yes
+The Graph,GRT.ETH,GRT/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
 Hedera,HBAR,HBAR/USD,Yes,Yes,Prod/Cert,Tag,1,8,Yes,No
-Kyber Network,KNC,KNC/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
+Kyber Network,KNC.ETH,KNC/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
 Litecoin,LTC,LTC/USD,Yes,Yes,Prod/Cert,Base,1,8,Yes,Yes
-Maker,MKR,MKR/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+Maker,MKR.ETH,MKR/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
 MobileCoin,MOB,MOB/USD,Yes,No,Prod,Base,1,12,Yes*,No
 NEM,XEM,XEM/USD,Yes,No,Prod/Cert,Base,1,6,Yes,No
-OMG Network,OMG,OMG/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
-Orchid,OXT,OXT/USD,Yes,No,Prod,ERC20,1,18,Yes,No
-Pax Gold,PAXG,PAXG/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,Yes
+OMG Network,OMG.ETH,OMG/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
+Orchid,OXT.ETH,OXT/USD,Yes,No,Prod,ERC20,1,18,Yes,No
+Pax Gold,PAXG.ETH,PAXG/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,Yes
 Polkadot,DOT,DOT/USD,Yes,Yes,Prod/Cert,Base,1,10,Yes*,No
-Polygon (ERC20),MATIC,MATIC/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
+Polygon (ERC20),MATIC.ETH,MATIC/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
 Polygon (MATIC),MATIC.POLYGON,MATIC.POLYGON/USD,Yes,No,Prod/Cert,Base,1,18,Yes,No
-The Sandbox,SAND,SAND/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
-SHIBA INU,SHIB,SHIB/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
+The Sandbox,SAND.ETH,SAND/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+SHIBA INU,SHIB.ETH,SHIB/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
 Solana,SOL,SOL/USD,Yes,Yes,Prod,Base,1,9,Yes*,No
-Storj,STORJ,STORJ/USD,Yes,No,Prod,ERC20,1,8,Yes,No
+Storj,STORJ.ETH,STORJ/USD,Yes,No,Prod,ERC20,1,8,Yes,No
 Terra Luna,LUNA,LUNA/USD,Yes,No,Prod/Cert,Base,1,6,Yes,No
-TrueUSD,TUSD,TUSD/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
-Uniswap,UNI,UNI/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
+TrueUSD,TUSD.ETH,TUSD/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
+Uniswap,UNI.ETH,UNI/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No
 USD Coin,USDC.ETH,USDC.ETH/USD,Yes,Yes,Prod/Cert,ERC20,1,6,Yes,No
 USD Coin (Arbitrum),USDC.ARBITRUM,USDC.ARBITRUM/USD,Yes,No,Prod,ERC20,1,6,Yes,No
 USD Coin (Fantom),USDC.FTM,USDC.FTM/USD,Yes,No,Prod,ERC20,1,6,Yes,No
 USD Coin (Polygon),USDC.POLYGON,USDC.POLYGON/USD,Yes,No,Prod,ERC20,1,6,Yes,No
 USD Coin (Solana),USDC.SOL,USDC.SOL/USD,Yes,No,Prod,Account,1,6,Yes,No
-Paxos,USDP,USDP/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
-Tether,USDT,USDT/USD,Yes,Yes,Prod/Cert,ERC20,1,6,Yes,No
+Paxos,USDP.ETH,USDP/USD,Yes,Yes,Prod,ERC20,1,18,Yes,Yes
+Tether,USDT.ETH,USDT/USD,Yes,Yes,Prod/Cert,ERC20,1,6,Yes,No
 Tether (Polygon),USDT.POLYGON,USDT.POLYGON/USD,Yes,No,Prod,ERC20,1,6,Yes,No
 Tether (Solana),USDT.SOL,USDT.SOL/USD,Yes,No,Prod,Account,1,6,Yes,No
 TerraUSD,UST,UST/USD,Yes,No,Prod/Cert,Base,1,6,Yes,No
 Tezos,XTZ,XTZ/USD,Yes,Yes,Prod,Base,1,6,Yes*,No
-Wrapped BTC,WBTC,WBTC/USD,Yes,Yes,Prod/Cert,ERC20,1,8,Yes,No
+Wrapped BTC,WBTC.ETH,WBTC/USD,Yes,Yes,Prod/Cert,ERC20,1,8,Yes,No
 Wrapped ETH,WETH.ETH,WETH.ETH/USD,Yes,No,Prod,ERC20,1,18,Yes,No
 Wrapped ETH (Polygon),WETH.POLYGON,WETH.POLYGON/USD,Yes,No,Prod,ERC20,1,18,Yes,No
 Stellar,XLM,XLM/USD,Yes,Yes,Prod/Cert,Base,1,7,Yes,No
 XRP,XRP,XRP/USD,Yes,Yes,Prod/Cert,Base,1,6,Yes,No
-0x,ZRX,ZRX/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
+0x,ZRX.ETH,ZRX/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No
