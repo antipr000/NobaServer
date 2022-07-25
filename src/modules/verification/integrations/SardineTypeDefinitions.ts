@@ -194,6 +194,18 @@ export type CaseNotificationWebhookRequest = {
   };
 };
 
+export type Feedback = {
+  id: string;
+  scope?: string;
+  type?: FeedbackType;
+  status?: FeedbackStatus;
+};
+
+export type FeedbackRequest = {
+  sessionKey: string;
+  feedback: Feedback;
+};
+
 export enum SardineRiskLevels {
   VERY_HIGH = "very_high",
   HIGH = "high",
@@ -228,4 +240,23 @@ export enum CaseAction {
   NONE = "none",
   APPROVE = "approve",
   DECLINE = "decline",
+}
+
+export enum FeedbackType {
+  KYC = "kyc",
+  ONBOARDING = "onboarding",
+  SIGNUP = "signup",
+  LOGIN = "login",
+  SETTLEMENT = "settlement",
+}
+
+export enum FeedbackStatus {
+  APPROVED = "approved",
+  DECLINED = "declined",
+  CHARGEBACK_DISPUTE = "chargeback_dispute",
+  CHARGEBACK_FRAUD = "chargeback_fraud",
+  CHARGEBACK_REVERSAL = "chargeback_reversal",
+  RETURN = "return",
+  SETTLED = "settled",
+  SUSPECTED_FRAUD = "suspected_fraud",
 }

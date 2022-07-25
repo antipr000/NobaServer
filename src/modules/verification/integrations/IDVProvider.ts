@@ -27,4 +27,8 @@ export interface IDVProvider {
   processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult;
 
   processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult;
+
+  postConsumerFeedback(sessionKey: string, result: ConsumerVerificationResult): Promise<void>;
+
+  postDocumentFeedback(sessionKey: string, result: DocumentVerificationResult): Promise<void>;
 }

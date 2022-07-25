@@ -17,6 +17,9 @@ import {
   CaseNotificationWebhookRequest,
   CaseStatus,
   DocumentVerificationWebhookRequest,
+  FeedbackRequest,
+  FeedbackStatus,
+  FeedbackType,
   PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDeviceInformationResponse,
@@ -322,5 +325,37 @@ export class Sardine implements IDVProvider {
     return {
       status: KYCStatus.PENDING,
     };
+  }
+
+  async postConsumerFeedback(sessionKey: string, result: ConsumerVerificationResult) {
+    try {
+      const payload: FeedbackRequest = {
+        sessionKey: sessionKey,
+        feedback: {
+          id: sessionKey,
+          type: FeedbackType.KYC,
+          status: result.status === KYCStatus.APPROVED ? FeedbackStatus.APPROVED : FeedbackStatus.DECLINED,
+        },
+      };
+
+      await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
+    } catch (e) {}
+  }
+
+  async postDocumentFeedback(sessionKey: string, result: DocumentVerificationResult) {
+    try {
+      const payload: FeedbackRequest = {
+        sessionKey: sessionKey,
+        feedback: {
+          id: sessionKey,
+          type: FeedbackType.KYC,
+          status:
+            result.status === DocumentVerificationStatus.APPROVED || DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
+              ? FeedbackStatus.APPROVED
+              : FeedbackStatus.DECLINED,
+        },
+      };
+      await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
+    } catch (e) {}
   }
 }

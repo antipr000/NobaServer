@@ -69,12 +69,14 @@ export class VerificationService {
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
 
     if (result.status === KYCStatus.APPROVED) {
+      await this.idvProvider.postConsumerFeedback(sessionKey, result);
       await this.emailService.sendKycApprovedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
       );
     } else if (result.status === KYCStatus.REJECTED) {
+      await this.idvProvider.postConsumerFeedback(sessionKey, result);
       await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
@@ -94,6 +96,7 @@ export class VerificationService {
     const consumerID = requestBody.data.case.customerID;
     const result: ConsumerVerificationResult = this.idvProvider.processKycVerificationWebhookResult(requestBody);
     if (result.status === KYCStatus.APPROVED || result.status === KYCStatus.REJECTED) {
+      await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, result);
       const consumer = await this.consumerService.getConsumer(consumerID);
       const newConsumerData: ConsumerProps = {
         ...consumer.props,
@@ -204,12 +207,14 @@ export class VerificationService {
       result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
+      await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
       await this.emailService.sendKycApprovedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
       );
     } else if (result.status === DocumentVerificationStatus.REJECTED) {
+      await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
       await this.emailService.sendKycDeniedEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
