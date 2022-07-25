@@ -17,6 +17,7 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.CRYPTO_OUTGOING_INITIATING]: TransactionQueueName.CryptoTransactionCompleted,
   [TransactionStatus.CRYPTO_OUTGOING_INITIATED]: TransactionQueueName.CryptoTransactionInitiated,
   [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: TransactionQueueName.TransactionCompleted,
+  [TransactionStatus.CRYPTO_OUTGOING_FAILED]: TransactionQueueName.TransactionFailed,
 };
 
 @Injectable()

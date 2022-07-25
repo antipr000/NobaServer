@@ -32,6 +32,11 @@ import { TransactionCompletedProcessor } from "./queueprocessors/TransactionComp
     LimitsService,
     ZeroHashService,
     AppService,
+    {
+      provide: "TransactionRepo",
+      useClass: MongoDBTransactionRepo,
+    },
+    // All the queue processors
     CryptoTransactionInitiator,
     CryptoTransactionStatusProcessor,
     FiatReversalInitiator,
@@ -41,10 +46,6 @@ import { TransactionCompletedProcessor } from "./queueprocessors/TransactionComp
     TransactionCompletedProcessor,
     //TransactionFailedProcessor,
     ValidatePendingTransactionProcessor,
-    {
-      provide: "TransactionRepo",
-      useClass: MongoDBTransactionRepo,
-    },
   ],
   exports: [TransactionService], //Need to access in PublicController
 })

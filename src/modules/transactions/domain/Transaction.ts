@@ -34,7 +34,7 @@ export interface TransactionProps extends VersioningInfo {
   leg2: string;
   type: TransactionType;
   tradeQuoteID: string;
-  nobaTransferID: string;
+  nobaTransferID?: string;
   nobaFee: number;
   processingFee: number;
   networkFee: number;
@@ -56,7 +56,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   _id: Joi.string().min(10).required(),
   userId: Joi.string()
     .required()
-    .meta({ _mongoose: { index: true, unique: true } }),
+    .meta({ _mongoose: { index: true } }),
   sessionKey: Joi.string().optional(), // TODO(#310) Make it required once we no longer have old txns in the database.
   paymentMethodID: Joi.string().optional(), //TODO ankit make it required
   transactionStatus: Joi.string()
@@ -74,7 +74,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   nobaFee: Joi.number().optional(),
   processingFee: Joi.number().optional(),
   networkFee: Joi.number().optional(),
-  exchangeRate: Joi.number().optional(),
+  exchangeRate: Joi.number().unsafe().optional(), // TODO(#310) - exchangeRate can have many decimals. Should we round or keep with unsafe()?
   diagnosis: Joi.string().optional(),
   sourceWalletAddress: Joi.string().optional(),
   destinationWalletAddress: Joi.string().optional(),

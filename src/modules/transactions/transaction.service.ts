@@ -387,7 +387,7 @@ export class TransactionService {
     consumer: Consumer,
     transaction: Transaction,
   ): Promise<CryptoTransactionStatusRequestResult> {
-    const promise = new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
+    return new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
       const cryptoTransactionHandler: CryptoTransactionHandler = {
         onSettled: async (transactionHash: string) => {
           this.logger.info(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
@@ -410,8 +410,6 @@ export class TransactionService {
 
       this.zeroHashService.checkStatus(consumer.props, transaction, cryptoTransactionHandler);
     });
-
-    return null;
   }
 
   public async withinSlippage(

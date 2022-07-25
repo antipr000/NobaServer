@@ -57,20 +57,31 @@ export class CryptoTransactionStatusProcessor {
       return;
     }
 
-    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    // check transaction status here
-    const cryptoRes = await this.transactionService.cryptoTransactionStatus(consumer, transaction);
-    if (cryptoRes.status === CryptoTransactionStatus.COMPLETED) {
-      this.logger.info(`Crypto transaction for Transaction ${transactionId} is completed`);
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_COMPLETED;
-      transaction.props.blockchainTransactionId = cryptoRes.onChainTransactionID;
-    } else if (cryptoRes.status === CryptoTransactionStatus.INITIATED) {
-      // TODO(#310) We need to poll and/or use websocket until we get an on-chain transaction ID
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_PENDING;
-    } else if (cryptoRes.status === CryptoTransactionStatus.FAILED) {
-      this.logger.info(
-        `Crypto transaction for Transaction ${transactionId} failed, crypto transaction id : ${transaction.props.cryptoTransactionId}`,
-      );
+    try {
+      const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+      // check transaction status here
+      const cryptoRes = await this.transactionService.cryptoTransactionStatus(consumer, transaction);
+      console.log(`CryptoRes: ${JSON.stringify(cryptoRes)}`);
+      if (cryptoRes.status === CryptoTransactionStatus.COMPLETED) {
+        this.logger.info(
+          `Crypto transaction for Transaction ${transactionId} is completed with ID ${cryptoRes.onChainTransactionID}`,
+        );
+        transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_COMPLETED;
+        if (cryptoRes.onChainTransactionID != null) {
+          // TODO(#310) - need to poll for this
+          transaction.props.blockchainTransactionId = cryptoRes.onChainTransactionID;
+        }
+      } else if (cryptoRes.status === CryptoTransactionStatus.INITIATED) {
+        // TODO(#310) We need to poll and/or use websocket until we get an on-chain transaction ID
+        transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_PENDING;
+      } else if (cryptoRes.status === CryptoTransactionStatus.FAILED) {
+        this.logger.info(
+          `Crypto transaction for Transaction ${transactionId} failed, crypto transaction id : ${transaction.props.cryptoTransactionId}`,
+        );
+        transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
+      }
+    } catch (e) {
+      this.logger.error("Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.", e);
       transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
     }
 

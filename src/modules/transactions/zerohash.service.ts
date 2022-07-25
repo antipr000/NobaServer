@@ -85,9 +85,7 @@ export class ZeroHashService {
       json: true,
     };
 
-    this.logger.debug(
-      `Sending request [${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`,
-    );
+    this.logger.info(`Sending request [${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`);
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
@@ -235,7 +233,7 @@ export class ZeroHashService {
     const withdrawalRequest = await this.makeRequest("/withdrawals/requests", "POST", {
       address: cryptocurrencyAddress,
       participant_code: zhParticipantCode,
-      amount: amount,
+      amount: String(amount),
       asset: asset,
       account_group: accountGroup,
     });
@@ -344,7 +342,9 @@ export class ZeroHashService {
       });
     }
 
-    const nobaTransferID = assetTransfer["message"][0]["movement_id"];
+    console.log(`Asset transfer: ${JSON.stringify(assetTransfer)}`);
+    // TODO(#310) - movement_id will be null. Need to do polling until settled
+    const nobaTransferID = "1234"; // assetTransfer["message"]["movement_id"];
     console.log(`Movement id: ${nobaTransferID}`);
 
     //Set trade data for next function
@@ -388,7 +388,14 @@ export class ZeroHashService {
 
     returnStatus = CryptoTransactionRequestResultStatus.INITIATED;
 
-    return { status: returnStatus, amountReceived, exchangeRate: tradePrice, quoteID, nobaTransferID, tradeID };
+    return {
+      status: returnStatus,
+      amountReceived,
+      exchangeRate: tradePrice,
+      quoteID,
+      nobaTransferID: nobaTransferID,
+      tradeID,
+    };
   }
 
   private async requestAndExecuteQuote(
@@ -416,11 +423,13 @@ export class ZeroHashService {
 
   private async getParticipantCode(consumer: ConsumerProps) {
     let participantCode: string = consumer.zhParticipantCode;
+    console.log(`Participant code: ${participantCode}`);
+    console.log(`Undefined? ${participantCode == undefined} or null? ${participantCode == null}`);
     // If the participant doesn't have a ZH participant code, first look them up and if not existing, create them:
     if (participantCode == undefined) {
       // Check if the user is already registered with ZeroHash
       const participant = await this.getParticipant(consumer.email);
-
+      console.log(`Participant: ${JSON.stringify(participant)}`);
       // If the user is not registered, register them
       if (participant == null) {
         const newParticipant = await this.createParticipant(consumer);
@@ -431,12 +440,14 @@ export class ZeroHashService {
         participantCode = newParticipant["message"]["participant_code"];
         // Update consumer record with participant_code
         this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
-        this.logger.debug("Created new participant: " + participantCode);
+        this.logger.info("Created new participant: " + participantCode);
       } else {
         participantCode = participant["message"]["participant_code"];
-        this.logger.debug("Existing participant: " + participantCode);
+        this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
+        this.logger.info("Existing participant: " + participantCode);
       }
     }
+
     return participantCode;
   }
 }
