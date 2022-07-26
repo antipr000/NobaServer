@@ -199,6 +199,9 @@ export type Feedback = {
   scope?: string;
   type?: FeedbackType;
   status?: FeedbackStatus;
+  reason?: string;
+  description?: string;
+  processor?: string;
 };
 
 export type FeedbackRequest = {
@@ -248,6 +251,7 @@ export enum FeedbackType {
   SIGNUP = "signup",
   LOGIN = "login",
   SETTLEMENT = "settlement",
+  AUTHORIZATION = "authorization",
 }
 
 export enum FeedbackStatus {

@@ -240,8 +240,24 @@ export class VerificationService {
     };
 
     await this.consumerService.updateConsumer(newConsumerData);
+    await this.verificationDataRepo.updateVerificationData(
+      VerificationData.createVerificationData({
+        _id: sessionKey,
+        transactionID: transactionInformation.transactionID,
+      }),
+    );
 
     return result;
+  }
+
+  async provideTransactionFeedback(
+    errorCode: string,
+    errorDescription: string,
+    transactionID: string,
+    processor: string,
+  ): Promise<void> {
+    const sessionKey = await this.verificationDataRepo.getSessionKeyFromFilters({ transactionID: transactionID });
+    await this.idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionID, processor);
   }
 
   async getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse> {

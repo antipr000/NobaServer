@@ -20,7 +20,6 @@ import { FiatTransactionStatusProcessor } from "./queueprocessors/FiatTransactio
 import { CryptoTransactionInitiator } from "./queueprocessors/CryptoTransactionInitiator";
 import { CryptoTransactionStatusProcessor } from "./queueprocessors/CryptoTransactionStatusProcessor";
 import { TransactionCompletedProcessor } from "./queueprocessors/TransactionCompletedProcessor";
-import { QueueProcessorHelper } from "./queueprocessors/QueueProcessorHelper";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule],

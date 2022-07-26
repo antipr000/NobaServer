@@ -111,8 +111,8 @@ export class TransactionService {
       SPREAD REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${fixedAmountFiat * 0.007}
       NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
-      }
+  preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
+}
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
@@ -159,8 +159,8 @@ export class TransactionService {
       NOBA COST (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${costPerUnit * fixedAmountCrypto}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge * 0.007}
       NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
-      }
+  nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
+}
       `);
 
       const transactionQuote: TransactionQuoteDTO = {

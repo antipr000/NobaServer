@@ -358,4 +358,27 @@ export class Sardine implements IDVProvider {
       await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
     } catch (e) {}
   }
+
+  async postTransactionFeedback(
+    sessionKey: string,
+    errorCode: string,
+    errorDescription: string,
+    transactionID: string,
+    processor: string,
+  ): Promise<void> {
+    try {
+      const payload: FeedbackRequest = {
+        sessionKey: sessionKey,
+        feedback: {
+          id: transactionID,
+          type: FeedbackType.AUTHORIZATION,
+          status: FeedbackStatus.DECLINED,
+          reason: errorCode,
+          description: errorDescription,
+          processor: processor,
+        },
+      };
+      await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
+    } catch (e) {}
+  }
 }

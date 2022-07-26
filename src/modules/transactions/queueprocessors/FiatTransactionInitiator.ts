@@ -7,6 +7,9 @@ import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
 import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
+import { CheckoutValidationError, CHECKOUT_VALIDATION_ERROR_HTTP_CODE } from "../domain/CheckoutErrorTypes";
+import { VerificationService } from "../../../modules/verification/verification.service";
+import { BadRequestException } from "@nestjs/common";
 
 @Injectable()
 export class FiatTransactionInitiator implements MessageProcessor {
@@ -15,6 +18,7 @@ export class FiatTransactionInitiator implements MessageProcessor {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
     @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
+    private readonly verificationService: VerificationService,
     private readonly consumerService: ConsumerService,
   ) {
     this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
@@ -55,12 +59,35 @@ export class FiatTransactionInitiator implements MessageProcessor {
     // ZH before we even get here!
     if (checkoutPaymentID == undefined) {
       // Fiat Transaction implementation here
-      const payment = await this.consumerService.requestCheckoutPayment(
-        transaction.props.paymentMethodID,
-        transaction.props.leg1Amount,
-        transaction.props.leg1,
-        transaction.props._id,
-      );
+      let payment;
+      try {
+        payment = await this.consumerService.requestCheckoutPayment(
+          transaction.props.paymentMethodID,
+          transaction.props.leg1Amount,
+          transaction.props.leg1,
+          transaction.props._id,
+        );
+      } catch (e) {
+        if (e.http_code === CHECKOUT_VALIDATION_ERROR_HTTP_CODE) {
+          const paymentMethod = (
+            await this.consumerService.getConsumer(transaction.props.userId)
+          ).props.paymentMethods.filter(
+            currPaymentMethod => currPaymentMethod.paymentToken === transaction.props.paymentMethodID,
+          )[0];
+          const errorBody: CheckoutValidationError = e.body;
+          const errorDescription = errorBody.error_type;
+          const errorCode = errorBody.error_codes.join(",");
+
+          await this.verificationService.provideTransactionFeedback(
+            errorCode,
+            errorDescription,
+            transaction.props._id,
+            paymentMethod.paymentProviderID,
+          );
+        }
+        this.logger.error(`Fiat payment failed: Name: ${e.name}, Body: ${e.body}`);
+        throw new BadRequestException("Failed to make fiat payment");
+      }
 
       checkoutPaymentID = payment["id"];
     }

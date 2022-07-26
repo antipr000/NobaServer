@@ -6,13 +6,15 @@ import { Entity } from "../../../core/domain/Entity";
 
 export interface VerificationDataProps extends VersioningInfo {
   _id: string;
-  userID: string;
+  userID?: string;
+  transactionID?: string;
 }
 
 export const verificationDataValidationKeys: KeysRequired<VerificationDataProps> = {
   ...versioningInfoJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   userID: Joi.string().optional(),
+  transactionID: Joi.string().optional(),
 };
 
 export const verificationDataJoiSchema = Joi.object(verificationDataValidationKeys).options({

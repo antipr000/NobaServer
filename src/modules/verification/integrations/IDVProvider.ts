@@ -31,4 +31,12 @@ export interface IDVProvider {
   postConsumerFeedback(sessionKey: string, result: ConsumerVerificationResult): Promise<void>;
 
   postDocumentFeedback(sessionKey: string, result: DocumentVerificationResult): Promise<void>;
+
+  postTransactionFeedback(
+    sessionKey: string,
+    errorCode: string,
+    errorDescription: string,
+    transactionID: string,
+    processor: string,
+  ): Promise<void>;
 }
