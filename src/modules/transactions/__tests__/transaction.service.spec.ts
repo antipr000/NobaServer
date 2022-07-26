@@ -272,7 +272,7 @@ describe("TransactionService", () => {
         processingFee: 0,
         networkFee: 0,
         nobaFee: 0,
-        exchangeRate: 10,
+        exchangeRate: 16,
       });
     });
 
@@ -528,7 +528,7 @@ describe("TransactionService", () => {
         processingFee: 12,
         networkFee: 0,
         nobaFee: 7.5,
-        exchangeRate: 10,
+        exchangeRate: 20,
       });
     });
 
