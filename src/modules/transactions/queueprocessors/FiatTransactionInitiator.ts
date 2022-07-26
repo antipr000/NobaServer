@@ -10,10 +10,10 @@ import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
 
 @Injectable()
 export class FiatTransactionInitiator implements MessageProcessor {
-  @Inject(WINSTON_MODULE_PROVIDER) logger: Logger;
   private queueProcessorHelper: QueueProcessorHelper;
 
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
     @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
     private readonly consumerService: ConsumerService,
   ) {
@@ -72,7 +72,7 @@ export class FiatTransactionInitiator implements MessageProcessor {
         checkoutPaymentID: checkoutPaymentID,
       }),
     );
-
+    console.log("Pushing to queue");
     //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
     await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionInitated, transactionId);
   }

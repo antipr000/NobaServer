@@ -78,6 +78,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoClient, Collection } from "mongodb";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import mongoose from "mongoose";
+import * as os from "os";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -199,6 +200,7 @@ describe("FiatTransactionInitiator", () => {
     await registeredHandler({
       id: transaction.props._id,
       Body: transaction.props._id,
+      MessageAttributes: { hostname: { DataType: "String", StringValue: os.hostname() } },
     });
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);

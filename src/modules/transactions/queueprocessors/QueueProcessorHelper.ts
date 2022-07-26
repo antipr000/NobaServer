@@ -17,18 +17,15 @@ export interface MessageProcessor {
 export class QueueProcessorHelper {
   private static readonly SELECTOR_ATTRIBUTE = "hostname";
   private readonly queueProducers: Record<TransactionQueueName, Producer>;
-  @Inject(WINSTON_MODULE_PROVIDER)
-  readonly logger: Logger;
 
   //TODO(#310) figure out why winston doesn't work
 
-  constructor(logger: Logger) {
+  constructor(private logger: Logger) {
     this.queueProducers = getTransactionQueueProducers();
-    this.logger = logger;
   }
 
   async enqueueTransaction(queueName: string, transactionId: string): Promise<any> {
-    console.log(`${transactionId}   ====>   ${queueName}`);
+    this.logger.info(`${transactionId}   ====>   ${queueName}`);
     return await this.queueProducers[queueName].send({
       messageAttributes: this.getMessageAttributeHeaders(),
       id: transactionId,
@@ -36,12 +33,12 @@ export class QueueProcessorHelper {
     });
   }
 
-  shouldProcessMessage(message: SQS.Message): boolean {
+  private shouldProcessMessage(message: SQS.Message): boolean {
     if (getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST) {
       // Confirm that the producer's hostname is in the message headers
       const hostname = message.MessageAttributes[QueueProcessorHelper.SELECTOR_ATTRIBUTE]["StringValue"];
       if (hostname !== os.hostname()) {
-        console.log(`Skipping message for ${hostname}`);
+        this.logger.info(`Skipping message for ${hostname}`);
         return false;
       } // else fall through to return true
     }
@@ -60,20 +57,20 @@ export class QueueProcessorHelper {
       queueUrl: environmentDependentQueueUrl(queueName),
       handleMessage: async message => {
         if (this.shouldProcessMessage(message)) {
-          console.log(`${message.Body} [${messageProcessor.constructor.name}] `);
-          messageProcessor.process(message.Body);
+          this.logger.info(`${message.Body} [${messageProcessor.constructor.name}] `);
+          return messageProcessor.process(message.Body);
         }
       },
     });
 
     app.on("error", err => {
-      errorHandler ? errorHandler(err) : console.log(`Error while handling transaction ${err}`);
+      errorHandler ? errorHandler(err) : this.logger.info(`Error while handling transaction ${err}`);
     });
 
     app.on("processing_error", err => {
       processingErrorHandler
         ? processingErrorHandler(err)
-        : console.log(`Processing Error while handling transaction ${err}`);
+        : this.logger.info(`Processing Error while handling transaction ${err}`);
     });
 
     return app;

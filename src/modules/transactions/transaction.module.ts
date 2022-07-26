@@ -37,7 +37,6 @@ import { QueueProcessorHelper } from "./queueprocessors/QueueProcessorHelper";
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
     },
-    QueueProcessorHelper,
     // All the queue processors
     CryptoTransactionInitiator,
     CryptoTransactionStatusProcessor,
