@@ -98,6 +98,7 @@ export class TransactionService {
       );
       console.log(quote);
       const costPerUnit = Number(quote["message"]["price"]);
+      const rateWithSpread = costPerUnit * (1 + nobaSpreadPercent);
 
       this.logger.debug(`
       FIAT FIXED (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${fixedAmountFiat}
@@ -124,7 +125,7 @@ export class TransactionService {
         processingFee: creditCardFees,
         networkFee: networkFeeInFiat,
         nobaFee: nobaFlatFeeDollars,
-        exchangeRate: costPerUnit,
+        exchangeRate: rateWithSpread,
       };
 
       this.logger.debug("Transaction quote: " + JSON.stringify(transactionQuote));
@@ -141,8 +142,8 @@ export class TransactionService {
       );
       const costPerUnit = Number(quote["message"]["price"]);
 
-      const cryptoWithSpread = costPerUnit * (1 + nobaSpreadPercent);
-      const fiatCostPostSpread = fixedAmountCrypto * cryptoWithSpread;
+      const rateWithSpread = costPerUnit * (1 + nobaSpreadPercent);
+      const fiatCostPostSpread = fixedAmountCrypto * rateWithSpread;
       const costBeforeCCFee = fiatCostPostSpread + nobaFlatFeeDollars + networkFeeInFiat;
       const creditCardCharge = (costBeforeCCFee + creditCardFeeDollars) / (1 - creditCardFeePercent);
       const processingFees = creditCardCharge - costBeforeCCFee;
@@ -172,7 +173,7 @@ export class TransactionService {
         processingFee: processingFees,
         networkFee: networkFeeInFiat,
         nobaFee: nobaFlatFeeDollars,
-        exchangeRate: costPerUnit,
+        exchangeRate: rateWithSpread,
       };
 
       this.logger.debug("Transaction quote: " + JSON.stringify(transactionQuote));
