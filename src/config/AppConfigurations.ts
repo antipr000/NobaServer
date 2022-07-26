@@ -153,7 +153,7 @@ export default async function loadAppConfigs() {
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
 
-  initializeAWSEnv();
+  //initializeAWSEnv();
 
   //validate configs
   return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
