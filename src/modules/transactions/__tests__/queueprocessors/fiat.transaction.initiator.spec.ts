@@ -17,15 +17,13 @@ class MockSqsProducer {
 class MockSqsConsumer {
   public static intializers: Array<any> = [];
   public static onCalls: Array<any> = [];
-  public static startCallsCount: number = 0;
+  public static startCallsCount = 0;
 
   static reset() {
     MockSqsConsumer.intializers = [];
     MockSqsConsumer.onCalls = [];
     MockSqsConsumer.startCallsCount = 0;
   }
-
-  constructor() {}
 
   static create(initializer: any) {
     MockSqsConsumer.intializers.push(initializer);
@@ -59,10 +57,9 @@ jest.mock("sqs-consumer", () => {
 import { Test, TestingModule } from "@nestjs/testing";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
-import { anything, instance, when } from "ts-mockito";
+import { instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { getMockTransactionRepoWithDefaults } from "../../mocks/mock.transactions.repo";
 import { FiatTransactionInitiator } from "../../queueprocessors/FiatTransactionInitiator";
 import { ConsumerService } from "../../../consumer/consumer.service";
 import {

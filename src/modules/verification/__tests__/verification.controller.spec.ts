@@ -41,13 +41,6 @@ describe("VerificationController", () => {
   });
 
   describe("verification controller tests", () => {
-    it("should get supported country codes", async () => {
-      when(verificationService.getCountryCodes()).thenResolve(["US", "CA"]);
-      const result = await verificationController.getCountryCodes();
-      expect(result.length).toBe(2);
-      expect(result).toStrictEqual(["US", "CA"]);
-    });
-
     it("should create session", async () => {
       when(verificationService.createSession()).thenResolve(
         VerificationData.createVerificationData({

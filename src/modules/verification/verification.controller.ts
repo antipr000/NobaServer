@@ -64,14 +64,6 @@ export class VerificationController {
     return "Verification API is functioning"; // TODO: Should ping Sardine
   }
 
-  @Get("/countryCodes")
-  @ApiOperation({ summary: "Gets the list of all supported country codes" })
-  @ApiResponse({ status: HttpStatus.OK, description: "List of supported country codes" })
-  @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getCountryCodes(): Promise<Array<string>> {
-    return this.verificationService.getCountryCodes();
-  }
-
   @Public()
   @Post("/session")
   @ApiOperation({ summary: "Creates a new session for verification" })

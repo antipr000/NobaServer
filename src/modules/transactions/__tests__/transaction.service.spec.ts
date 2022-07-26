@@ -13,10 +13,7 @@ import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
 import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
 import { LimitsService } from "../limits.service";
-import {
-  getMockTransactionRepoWithDefaults,
-  getMockTransactionServiceWithDefaults,
-} from "../mocks/mock.transactions.repo";
+import { getMockTransactionRepoWithDefaults } from "../mocks/mock.transactions.repo";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import {

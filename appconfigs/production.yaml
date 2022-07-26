@@ -37,12 +37,6 @@ stripe:
   awsSecretNameForSecretKey: "PROD_STRIPE_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   secretKey: "bogus-value"
 
-trulioo:
-  awsSecretNameForIDVApiKey: "PROD_TRULIOO_IDV_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForDocVApiKey: "PROD_TRULIOO_DOCV_SECRET"
-  TruliooIDVApiKey: "bogus-value"
-  TruliooDocVApiKey: "bogus-value"
-
 twilio:
   awsSecretNameForSID: "PROD_TWILIO_SID"
   awsSecretNameForAuthToken: "PROD_TWILIO_SECRET"

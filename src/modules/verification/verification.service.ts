@@ -2,8 +2,6 @@ import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../consumer/consumer.service";
-import TruliooIntegrator from "../../externalclients/idvproviders/providers/trulioo/TruliooIntegrator";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { IDVProvider } from "./integrations/IDVProvider";
 import { ConsumerInformation } from "./domain/ConsumerInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "./domain/VerificationResult";
@@ -36,16 +34,7 @@ export class VerificationService {
   @Inject()
   private readonly emailService: EmailService;
 
-  private truliooProvider: TruliooIntegrator;
-
-  constructor(private consumerService: ConsumerService, private readonly configService: CustomConfigService) {
-    this.truliooProvider = new TruliooIntegrator(configService);
-  }
-
-  async getCountryCodes(): Promise<Array<string>> {
-    //return await this.truliooProvider.getCountryCodes();
-    return ["US", "IN", "CA"];
-  }
+  constructor(private consumerService: ConsumerService) {}
 
   async verifyConsumerInformation(
     consumerID: string,
