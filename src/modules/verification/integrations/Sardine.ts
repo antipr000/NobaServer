@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
 import {
   KYCStatus,
@@ -31,9 +31,14 @@ import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import * as FormData from "form-data";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionInformation } from "../domain/TransactionInformation";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 
 @Injectable()
 export class Sardine implements IDVProvider {
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
+
   BASE_URI: string;
   constructor(private readonly configService: CustomConfigService) {
     this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
@@ -98,6 +103,7 @@ export class Sardine implements IDVProvider {
         };
       }
     } catch (e) {
+      this.logger.error(`Sardine request failed for KYC: ${e}`);
       throw new BadRequestException(e.message);
     }
   }
@@ -138,6 +144,7 @@ export class Sardine implements IDVProvider {
       const { data } = await axios.post(this.BASE_URI + "/v1/identity-documents/verifications", formData, config);
       return data.id;
     } catch (e) {
+      this.logger.error(`Sardine request failed for Document submit: ${e}`);
       throw new BadRequestException(e.message);
     }
   }
@@ -177,7 +184,7 @@ export class Sardine implements IDVProvider {
         };
       }
     } catch (e) {
-      console.log(e);
+      this.logger.error(`Sardine request failed for get document result: ${e}`);
       throw new NotFoundException();
     }
   }
@@ -260,6 +267,7 @@ export class Sardine implements IDVProvider {
         status: verificationStatus,
       };
     } catch (e) {
+      this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
       throw new BadRequestException(e.message);
     }
   }
@@ -289,6 +297,7 @@ export class Sardine implements IDVProvider {
       );
       return data;
     } catch (e) {
+      this.logger.error(`Sardine request failed for get device verification result: ${e}`);
       throw new BadRequestException(e.message);
     }
   }
@@ -339,7 +348,9 @@ export class Sardine implements IDVProvider {
       };
 
       await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
-    } catch (e) {}
+    } catch (e) {
+      this.logger.error(`Sardine request failed for postConsumerFeedback: ${e}`);
+    }
   }
 
   async postDocumentFeedback(sessionKey: string, result: DocumentVerificationResult) {
@@ -356,7 +367,9 @@ export class Sardine implements IDVProvider {
         },
       };
       await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
-    } catch (e) {}
+    } catch (e) {
+      this.logger.error(`Sardine request failed for postDocumentFeedback: ${e}`);
+    }
   }
 
   async postTransactionFeedback(
@@ -379,6 +392,8 @@ export class Sardine implements IDVProvider {
         },
       };
       await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
-    } catch (e) {}
+    } catch (e) {
+      this.logger.error(`Sardine request failed for postTransactionFeedback: ${e}`);
+    }
   }
 }
