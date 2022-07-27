@@ -55,6 +55,7 @@ export class AppController {
 
   @Public()
   @Get("countries")
+  @ApiOperation({ summary: "Returns a list of all countries supported by Noba Onramp" })
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Location details of supported countries, optionally including subdivision data",
@@ -70,6 +71,7 @@ export class AppController {
 
   @Public()
   @Get("countries/:countryCode?")
+  @ApiOperation({ summary: "Returns details of a country and its subdivisions supported by Noba Onramp" })
   @ApiResponse({ status: HttpStatus.OK, description: "Location details of requested country", type: LocationDTO })
   @ApiTags("Assets")
   @ApiNotFoundResponse({ description: "Country code not found" })
