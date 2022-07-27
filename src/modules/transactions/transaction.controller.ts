@@ -41,7 +41,6 @@ import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
-import { ExchangeRateService } from "./exchangerate.service";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
@@ -55,10 +54,7 @@ export class TransactionController {
 
   constructor(
     private readonly transactionService: TransactionService,
-    private readonly configService: CustomConfigService,
     private readonly limitsService: LimitsService,
-    private readonly zerohashService: ZeroHashService,
-    private readonly exchangeRateService: ExchangeRateService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 

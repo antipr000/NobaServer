@@ -5,8 +5,6 @@ import { CommonModule } from "../common/common.module";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { VerificationModule } from "../verification/verification.module";
 import { PendingTransactionDBPollerService } from "./crons/PendingTransactionsDBPoller.cron";
-import { ExchangeRateController } from "./exchangerate.controller";
-import { ExchangeRateService } from "./exchangerate.service";
 import { LimitsService } from "./limits.service";
 import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionController } from "./transaction.controller";
@@ -23,12 +21,11 @@ import { TransactionCompletedProcessor } from "./queueprocessors/TransactionComp
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule],
-  controllers: [TransactionController, ExchangeRateController],
+  controllers: [TransactionController],
   providers: [
     PendingTransactionDBPollerService,
     TransactionService,
     DBProvider,
-    ExchangeRateService,
     LimitsService,
     ZeroHashService,
     AppService,
