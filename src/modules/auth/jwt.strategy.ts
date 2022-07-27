@@ -37,7 +37,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   private async getIdentityDomain(id: string, identityType: string): Promise<AuthenticatedUser> {
-    console.log(id, identityType);
     switch (identityType) {
       case consumerIdentityIdentifier:
         try {
