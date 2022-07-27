@@ -9,7 +9,7 @@ import { getWinstonModule } from "./core/utils/WinstonModule";
 import { InfraProvidersModule } from "./infraproviders/infra.module";
 import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
-import { VerificationModule } from "./modules/verification/verification.module";
+import { VerificationModule, VerificationWebhookModule } from "./modules/verification/verification.module";
 import { CommonModule } from "./modules/common/common.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { PartnerModule } from "./modules/partner/partner.module";
@@ -24,6 +24,7 @@ import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
     AuthModule,
     ConsumerModule,
     VerificationModule,
+    VerificationWebhookModule,
     TransactionModule,
     AdminModule,
     PartnerModule,

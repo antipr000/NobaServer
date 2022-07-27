@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { VerificationController } from "./verification.controller";
+import { VerificationController, VerificationWebhookController } from "./verification.controller";
 import { VerificationService } from "./verification.service";
 import { ConfigModule } from "@nestjs/config";
 import { ConsumerModule } from "../consumer/consumer.module";
@@ -27,3 +27,21 @@ import { CommonModule } from "../common/common.module";
   exports: [VerificationService], //Need to access in PublicController
 })
 export class VerificationModule {}
+
+@Module({
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule],
+  controllers: [VerificationWebhookController],
+  providers: [
+    VerificationService,
+    DBProvider,
+    {
+      provide: "IDVProvider",
+      useClass: Sardine,
+    },
+    {
+      provide: "VerificationDataRepo",
+      useClass: MongoDBVerificationDataRepo,
+    },
+  ],
+})
+export class VerificationWebhookModule {}

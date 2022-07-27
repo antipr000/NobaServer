@@ -178,8 +178,22 @@ export class VerificationController {
   async getDeviceVerificationResult(@Query("sessionKey") sessionKey: string): Promise<DeviceVerificationResponseDTO> {
     return await this.verificationService.getDeviceVerificationResult(sessionKey);
   }
+}
 
-  @Post("/webhook/document/result")
+@Roles(Role.User)
+@Controller("verify/webhook")
+@ApiTags("VerificationWebhooks")
+export class VerificationWebhookController {
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
+  private readonly verificationResponseMapper: VerificationResponseMapper;
+
+  constructor(private readonly verificationService: VerificationService) {
+    this.verificationResponseMapper = new VerificationResponseMapper();
+  }
+
+  @Public()
+  @Post("/document/result")
   @HttpCode(200)
   async postDocumentVerificationResult(
     @Headers() headers,
@@ -197,9 +211,12 @@ export class VerificationController {
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 
-  @Post("/webhook/case/notification")
+  @Public()
+  @Post("/case/notification")
   @HttpCode(200)
   async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
+    // Logging this for initial debugging in staging and prod
+    this.logger.debug("Sardine notification: " + requestBody);
     const sardineSignature = headers["x-sardine-signature"];
     const hmac = crypto.createHmac("sha256", "");
     const data = hmac.update(JSON.stringify(requestBody));
@@ -207,8 +224,6 @@ export class VerificationController {
     if (sardineSignature !== hexString) {
       throw new ForbiddenException("Signature does not match");
     }
-    // Logging this for initial debugging in staging and prod
-    this.logger.debug("Sardine notification: " + requestBody);
     this.verificationService.processKycVerificationWebhookRequest(requestBody);
     return "Successfully received";
   }
