@@ -11,5 +11,5 @@ export class ConfigurationsDTO {
   cryptoImageBaseUrl: string;
 
   @ApiProperty()
-  fiatImagesBaseUrl: string;
+  fiatImageBaseUrl: string;
 }

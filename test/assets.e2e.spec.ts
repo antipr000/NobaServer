@@ -370,7 +370,7 @@ describe("Locations", () => {
       expect(config.cryptoImageBaseUrl).toBe(
         "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto",
       );
-      expect(config.fiatImagesBaseUrl).toBe("https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat");
+      expect(config.fiatImageBaseUrl).toBe("https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat");
     });
   });
 });

@@ -13,7 +13,7 @@ export class ConfigurationProviderService {
       lowAmountThreshold: this.configService.get<CommonConfigs>(COMMON_CONFIG_KEY).lowAmountThreshold,
       highAmountThreshold: this.configService.get<CommonConfigs>(COMMON_CONFIG_KEY).highAmountThreshold,
       cryptoImageBaseUrl: this.configService.get<CommonConfigs>(COMMON_CONFIG_KEY).cryptoImageBaseUrl,
-      fiatImagesBaseUrl: this.configService.get<CommonConfigs>(COMMON_CONFIG_KEY).fiatImageBaseUrl,
+      fiatImageBaseUrl: this.configService.get<CommonConfigs>(COMMON_CONFIG_KEY).fiatImageBaseUrl,
     };
   }
 }

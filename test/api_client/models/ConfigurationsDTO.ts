@@ -6,5 +6,5 @@ export type ConfigurationsDTO = {
   lowAmountThreshold: number;
   highAmountThreshold: number;
   cryptoImageBaseUrl: string;
-  fiatImagesBaseUrl: string;
+  fiatImageBaseUrl: string;
 };

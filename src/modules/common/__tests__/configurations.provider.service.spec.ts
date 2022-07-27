@@ -46,7 +46,7 @@ describe("ConfigurationsProviderService", () => {
       expect(configurations.cryptoImageBaseUrl).toBe(
         "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto",
       );
-      expect(configurations.fiatImagesBaseUrl).toBe(
+      expect(configurations.fiatImageBaseUrl).toBe(
         "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat",
       );
     });
