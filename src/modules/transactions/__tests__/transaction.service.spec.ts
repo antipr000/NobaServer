@@ -218,6 +218,7 @@ describe("TransactionService", () => {
   });
 
   describe("withinSlippage()", () => {
+    const paymentAmount = 500;
     const slippageAllowed = 0.02;
     const environmentVariables = {
       [NOBA_CONFIG_KEY]: {
@@ -230,28 +231,40 @@ describe("TransactionService", () => {
     it("Should allow a transaction with higher quoted amount but still within the slippage tolerance", async () => {
       await setupTestModule(environmentVariables);
 
-      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (slippageAllowed / 2));
+      const withinSlippage = transactionService.withinSlippage(
+        paymentAmount,
+        paymentAmount - paymentAmount * (slippageAllowed / 2),
+      );
       expect(withinSlippage).toBe(true);
     });
 
     it("Should allow a transaction with lower quoted amount but still within the slippage tolerance", async () => {
       await setupTestModule(environmentVariables);
 
-      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (-slippageAllowed / 2));
+      const withinSlippage = transactionService.withinSlippage(
+        paymentAmount,
+        paymentAmount - paymentAmount * (-slippageAllowed / 2),
+      );
       expect(withinSlippage).toBe(true);
     });
 
     it("Should not allow a transaction with higher quoted amount but outside slippage tolerance", async () => {
       await setupTestModule(environmentVariables);
 
-      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (slippageAllowed * 2));
+      const withinSlippage = transactionService.withinSlippage(
+        paymentAmount,
+        paymentAmount - paymentAmount * (slippageAllowed * 2),
+      );
       expect(withinSlippage).toBe(false);
     });
 
     it("Should not allow a transaction with lower quoted amount but outside slippage tolerance", async () => {
       await setupTestModule(environmentVariables);
 
-      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (-slippageAllowed * 2));
+      const withinSlippage = transactionService.withinSlippage(
+        paymentAmount,
+        paymentAmount - paymentAmount * (-slippageAllowed * 2),
+      );
       expect(withinSlippage).toBe(false);
     });
   });
