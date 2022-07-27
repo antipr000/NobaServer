@@ -17,9 +17,9 @@ import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
 import { Transaction } from "./domain/Transaction";
 import { CryptoTransactionRequestResult, CryptoTransactionRequestResultStatus } from "./domain/Types";
+import * as axios from 'axios';
 
 const crypto_ts = require("crypto");
-const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
 
 @Injectable()
 export class ZeroHashService {
@@ -86,20 +86,27 @@ export class ZeroHashService {
     };
 
     this.logger.info(`Sending request [${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`);
-    const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
-      if (err.statusCode == 403) {
-        // Generally means we are not using a whitelisted IP to ZH
-        this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
-        throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
-      } else if (err.statusCode == 400) {
-        throw new BadRequestException(err);
-      } else {
-        this.logger.error("Error in ZeroHash Request: " + err.statusCode);
-        throw err;
+
+    try {
+      const response = await axios.default[derivedMethod](`https://${this.configs.host}${route}`, options);
+      this.logger.debug(`Received response: ${JSON.stringify(response.data)}`);
+      return response.data;
+    } catch (err) {
+      this.logger.error("Error in ZeroHash Request: " + JSON.stringify(err));
+
+      if (err.response) {
+        if (err.response.status === 403) {
+          // Generally means we are not using a whitelisted IP to ZH
+          this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
+          throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
+        }
+        if (err.response.status === 400) {
+          throw new BadRequestException(err);
+        }
       }
-    });
-    this.logger.debug(`Received response: ${JSON.stringify(response)}`);
-    return response;
+
+      throw err;
+    }
   }
 
   async getPrice(underlying, quoted_currency) {
