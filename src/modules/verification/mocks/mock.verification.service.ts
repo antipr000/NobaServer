@@ -14,6 +14,25 @@ export function getMockVerificationServiceWithDefaults(): VerificationService {
   when(mockVerificationService.getDocumentVerificationResult(anyString(), anyString(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
+  when(
+    mockVerificationService.provideTransactionFeedback(anyString(), anyString(), anyString(), anyString()),
+  ).thenReject(new Error("Method not implemented"));
+
+  when(mockVerificationService.getDeviceVerificationResult(anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
+
+  when(mockVerificationService.processDocumentVerificationWebhookResult(anything())).thenReject(
+    new Error("Method not implemented"),
+  );
+
+  when(mockVerificationService.processKycVerificationWebhookRequest(anything())).thenReject(
+    new Error("Method not implemented"),
+  );
+
+  when(mockVerificationService.transactionVerification(anyString(), anything(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
 
   return mockVerificationService;
 }

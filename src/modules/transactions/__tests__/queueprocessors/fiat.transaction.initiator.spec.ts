@@ -76,6 +76,8 @@ import { MongoClient, Collection } from "mongodb";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import mongoose from "mongoose";
 import * as os from "os";
+import { VerificationService } from "../../../../modules/verification/verification.service";
+import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -104,6 +106,7 @@ describe("FiatTransactionInitiator", () => {
   let mongoServer: MongoMemoryServer;
   let mongoClient: MongoClient;
   let transactionCollection: Collection;
+  let verificationService: VerificationService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -124,6 +127,7 @@ describe("FiatTransactionInitiator", () => {
     MockSqsConsumer.reset();
     MockSqsProducer.reset();
     consumerService = getMockConsumerServiceWithDefaults();
+    verificationService = getMockVerificationServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
@@ -136,6 +140,10 @@ describe("FiatTransactionInitiator", () => {
         {
           provide: "TransactionRepo",
           useClass: MongoDBTransactionRepo,
+        },
+        {
+          provide: VerificationService,
+          useFactory: () => instance(verificationService),
         },
         FiatTransactionInitiator,
       ],
