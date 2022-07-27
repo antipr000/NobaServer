@@ -418,6 +418,13 @@ async function configureNobaParameters(
     ),
   );
 
+  nobaConfigs.transaction.slippageAllowedPercentage = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForSlippageAllowedPercentage,
+      nobaConfigs.transaction.slippageAllowedPercentage.toString(),
+    ),
+  );
+
   configs[NOBA_CONFIG_KEY] = nobaConfigs;
   return configs;
 }

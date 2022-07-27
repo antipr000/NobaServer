@@ -20,7 +20,6 @@ import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
-import { ExchangeRateService } from "./exchangerate.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
@@ -38,18 +37,11 @@ export class TransactionService {
   private readonly transactionsMapper: TransactionMapper;
   private readonly nobaTransactionConfigs: NobaTransactionConfigs;
 
-  // This is the id used at coinGecko, so do not change the allowed constants below
-  private readonly allowedFiats: string[] = ["USD"];
-  private allowedCryptoCurrencies = new Array<string>(); // = ["ETH", "terrausd", "terra-luna"];
-
-  private readonly slippageAllowed = 2; //2%, todo take from config or user input
-
   constructor(
     private readonly configService: CustomConfigService,
     private readonly currencyService: CurrencyService,
     private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
-    private readonly exchangeRateService: ExchangeRateService,
     private readonly consumerService: ConsumerService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
@@ -256,6 +248,20 @@ export class TransactionService {
       fixedSide: transactionRequest.fixedSide,
     });
 
+    // Check slippage between the original quoted transaction that the user confirmed and the quote we just received above against the non-fixed side
+    // quote.quotedAmount will always be the in the currency opposite of the fixed side
+    const withinSlippage =
+      transactionRequest.fixedSide == CurrencyType.FIAT
+        ? this.withinSlippage(transactionRequest.leg2Amount, quote.quotedAmount)
+        : this.withinSlippage(transactionRequest.leg1Amount, quote.quotedAmount);
+    if (!withinSlippage) {
+      throw new BadRequestException({
+        messageForClient: `Bid price is not within slippage allowed of ${
+          this.nobaTransactionConfigs.slippageAllowedPercentage * 100
+        }%`,
+      });
+    }
+
     // Add quote information to new transaction
     newTransaction.props.tradeQuoteID = quote.quoteID;
     newTransaction.props.nobaFee = quote.nobaFee;
@@ -268,19 +274,6 @@ export class TransactionService {
       newTransaction.props.leg2Amount = quote.quotedAmount;
     } else {
       newTransaction.props.leg1Amount = quote.quotedAmount;
-    }
-
-    if (
-      !this.withinSlippage(
-        transactionRequest.leg2,
-        transactionRequest.leg1,
-        transactionRequest.leg2Amount,
-        transactionRequest.leg1Amount,
-      )
-    ) {
-      throw new BadRequestError({
-        messageForClient: `Bid price is not within slippage allowed of ${this.slippageAllowed}%`,
-      });
     }
 
     console.log(`Transaction: ${JSON.stringify(newTransaction.props)}`);
@@ -378,7 +371,6 @@ export class TransactionService {
     transaction: Transaction,
   ): Promise<CryptoTransactionRequestResult> {
     // Call ZeroHash to execute crypto transaction
-    // TODO(#310) - where to fit in slippage and crypto/fiat double-check?
     const result = await this.zeroHashService.initiateCryptoTransfer(consumer.props, transaction);
 
     return result;
@@ -413,15 +405,20 @@ export class TransactionService {
     });
   }
 
-  public async withinSlippage(
-    cryptoCurrency: string,
-    fiatCurrency: string,
-    cryptoAmount: number,
-    fiatAmount: number,
-  ): Promise<boolean> {
-    const marketPrice = await this.exchangeRateService.priceInFiat(cryptoCurrency, fiatCurrency);
-    const bidPrice = (fiatAmount * 1.0) / cryptoAmount;
-    return Math.abs(bidPrice - marketPrice) <= (this.slippageAllowed / 100) * bidPrice;
+  /**
+   * Slippage is calculated as the absolute value of quoted price (that the user confirmed) - current price (quote just received). If this is < slippageAllowed * quoted price, we're good.
+   */
+  withinSlippage(quotedPrice: number, currentPrice: number): boolean {
+    const withinSlippage =
+      Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
+
+    console.log(
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
+        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      }? ${withinSlippage}`,
+    );
+
+    return withinSlippage;
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {

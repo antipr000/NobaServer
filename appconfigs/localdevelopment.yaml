@@ -64,6 +64,8 @@ noba:
     awsSecretKeyForDynamicCreditCardFeePercentage: ""
     fixedCreditCardFee: "0.3"
     awsSecretKeyForFixedCreditCardFee: ""
+    slippageAllowedPercentage: ".02"
+    awsSecretKeyForSlippageAllowedPercentage: ""
 
 zerohash:
   awsSecretNameforApiKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

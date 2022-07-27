@@ -23,11 +23,10 @@ import {
   FLAT_FEE_DOLLARS,
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
   FIXED_CREDIT_CARD_FEE,
+  SLIPPAGE_ALLOWED_PERCENTAGE,
 } from "../../../config/ConfigurationUtils";
 import { ZeroHashService } from "../zerohash.service";
-import { ExchangeRateService } from "../exchangerate.service";
 import { getMockZerohashServiceWithDefaults } from "../mocks/mock.zerohash.service";
-import { getMockExchangeRateServiceWithDefaults } from "../mocks/mock.exchange.service";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { CurrencyService } from "../../common/currency.service";
 import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.currency.service";
@@ -43,6 +42,7 @@ const defaultEnvironmentVariables = {
       [FLAT_FEE_DOLLARS]: 0,
       [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0,
       [FIXED_CREDIT_CARD_FEE]: 0,
+      [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
     },
   },
 };
@@ -53,7 +53,6 @@ describe("TransactionService", () => {
   let consumerService: ConsumerService;
   let transactionService: TransactionService;
   let zerohashService: ZeroHashService;
-  let exchangeRateService: ExchangeRateService;
   let verificationService: VerificationService;
   let currencyService: CurrencyService;
   let emailService: EmailService;
@@ -73,7 +72,6 @@ describe("TransactionService", () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     zerohashService = getMockZerohashServiceWithDefaults();
-    exchangeRateService = getMockExchangeRateServiceWithDefaults();
     currencyService = getMockCurrencyServiceWithDefaults();
     verificationService = getMockVerificationServiceWithDefaults();
     emailService = getMockEmailServiceWithDefaults();
@@ -95,10 +93,6 @@ describe("TransactionService", () => {
         {
           provide: ZeroHashService,
           useFactory: () => instance(zerohashService),
-        },
-        {
-          provide: ExchangeRateService,
-          useFactory: () => instance(exchangeRateService),
         },
         {
           provide: CurrencyService,
@@ -223,6 +217,45 @@ describe("TransactionService", () => {
     expect(result.monthly.period).toBe(30);
   });
 
+  describe("withinSlippage()", () => {
+    const slippageAllowed = 0.02;
+    const environmentVariables = {
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_TRANSACTION_CONFIG_KEY]: {
+          [SLIPPAGE_ALLOWED_PERCENTAGE]: slippageAllowed,
+        },
+      },
+    };
+
+    it("Should allow a transaction with higher quoted amount but still within the slippage tolerance", async () => {
+      await setupTestModule(environmentVariables);
+
+      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (slippageAllowed / 2));
+      expect(withinSlippage).toBe(true);
+    });
+
+    it("Should allow a transaction with lower quoted amount but still within the slippage tolerance", async () => {
+      await setupTestModule(environmentVariables);
+
+      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (-slippageAllowed / 2));
+      expect(withinSlippage).toBe(true);
+    });
+
+    it("Should not allow a transaction with higher quoted amount but outside slippage tolerance", async () => {
+      await setupTestModule(environmentVariables);
+
+      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (slippageAllowed * 2));
+      expect(withinSlippage).toBe(false);
+    });
+
+    it("Should not allow a transaction with lower quoted amount but outside slippage tolerance", async () => {
+      await setupTestModule(environmentVariables);
+
+      const withinSlippage = transactionService.withinSlippage(500, 500 - 500 * (-slippageAllowed * 2));
+      expect(withinSlippage).toBe(false);
+    });
+  });
+
   describe("getTransactionQuote() - FIAT side fixed:", () => {
     it("Noba spread percentage is taken into account correctly", async () => {
       const environmentVariables = {
@@ -232,6 +265,7 @@ describe("TransactionService", () => {
             [FLAT_FEE_DOLLARS]: 0,
             [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0,
             [FIXED_CREDIT_CARD_FEE]: 0,
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
           },
         },
       };
@@ -284,6 +318,7 @@ describe("TransactionService", () => {
             [FLAT_FEE_DOLLARS]: 9.5,
             [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0,
             [FIXED_CREDIT_CARD_FEE]: 0,
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
           },
         },
       };
@@ -336,6 +371,7 @@ describe("TransactionService", () => {
             [FLAT_FEE_DOLLARS]: 0,
             [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0.123, // really a fraction rather than percentage.
             [FIXED_CREDIT_CARD_FEE]: 0,
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
           },
         },
       };
@@ -387,6 +423,7 @@ describe("TransactionService", () => {
             [FLAT_FEE_DOLLARS]: 0,
             [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0, // really a fraction rather than percentage.
             [FIXED_CREDIT_CARD_FEE]: 0.5,
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
           },
         },
       };
@@ -438,6 +475,7 @@ describe("TransactionService", () => {
             [FLAT_FEE_DOLLARS]: 7.1,
             [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0.12, // really a fraction rather than percentage.
             [FIXED_CREDIT_CARD_FEE]: 0,
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
           },
         },
       };
@@ -489,6 +527,7 @@ describe("TransactionService", () => {
             [FLAT_FEE_DOLLARS]: 7.5,
             [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0.12, // really a fraction rather than percentage.
             [FIXED_CREDIT_CARD_FEE]: 0,
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
           },
         },
       };
@@ -540,6 +579,7 @@ describe("TransactionService", () => {
             [FLAT_FEE_DOLLARS]: 0,
             [DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE]: 0.125, // really a fraction rather than percentage.
             [FIXED_CREDIT_CARD_FEE]: 1,
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
           },
         },
       };
