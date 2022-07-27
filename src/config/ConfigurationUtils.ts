@@ -94,6 +94,12 @@ export const FOLLOW_UP_KEY_KMS_ARN = "followUpKeyArn";
 export const AWS_SECRET_KEY_FOR_GENERATOR_KEY_KMS_ARN = "awsSecretNameForGeneratorKeyArn";
 export const AWS_SECRET_KEY_FOR_FOLLOW_UP_KEY_KMS_ARN = "awsSecretNameForFollowUpKeyArn";
 
+export const COMMON_CONFIG_KEY = "configuration";
+export const COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY = "lowAmountThreshold";
+export const COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY = "highAmountThreshold";
+export const COMMON_CONFIG_CRYPTO_IMAGE_BASE_URL = "cryptoImageBaseUrl";
+export const COMMON_CONFIG_FIAT_IMAGE_BASE_URL = "fiatImageBaseUrl";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

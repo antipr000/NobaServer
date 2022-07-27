@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ConfigurationsDTO } from "../models/ConfigurationsDTO";
 import type { CurrencyDTO } from "../models/CurrencyDTO";
 import type { LocationDTO } from "../models/LocationDTO";
 import type { ProcessingFeeDTO } from "../models/ProcessingFeeDTO";
@@ -35,6 +36,7 @@ export class AssetsService {
   }
 
   /**
+   * Returns a list of all countries supported by Noba Onramp
    * @param includeSubdivisions Include subdivision data
    * @returns LocationDTO Location details of supported countries, optionally including subdivision data
    * @throws ApiError
@@ -50,6 +52,7 @@ export class AssetsService {
   }
 
   /**
+   * Returns details of a country and its subdivisions supported by Noba Onramp
    * @param countryCode
    * @returns LocationDTO Location details of requested country
    * @throws ApiError
@@ -63,6 +66,21 @@ export class AssetsService {
       },
       errors: {
         404: `Country code not found`,
+      },
+    });
+  }
+
+  /**
+   * Returns common api configurations
+   * @returns ConfigurationsDTO Common api configurations
+   * @throws ApiError
+   */
+  public static getCommonConfigurations(): CancelablePromise<ConfigurationsDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/config",
+      errors: {
+        404: `Configurations not found`,
       },
     });
   }

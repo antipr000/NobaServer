@@ -19,6 +19,7 @@ import { bootstrap } from "../src/server";
 import { clearAccessTokenForNextRequests, loginAndGetResponse, setAccessTokenForTheNextRequests } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 import { AssetsService, CurrencyDTO, LocationDTO, ProcessingFeeDTO } from "./api_client";
+import { ConfigurationsDTO } from "./api_client/models/ConfigurationsDTO";
 
 const supportedCurrenciesTicker = [
   "ZRX.ETH",
@@ -356,6 +357,20 @@ describe("Locations", () => {
       expect(us.subdivisions.length).toBe(66);
       expect(us.subdivisions.find(element => element.code === "WA").code).toBe("WA");
       expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
+    });
+  });
+
+  describe("GET /configs", () => {
+    it("should return all api configurations", async () => {
+      const config = (await AssetsService.getCommonConfigurations()) as ConfigurationsDTO & ResponseStatus;
+      expect(config.__status).toBe(200);
+
+      expect(config.lowAmountThreshold).toBe(50);
+      expect(config.highAmountThreshold).toBe(200);
+      expect(config.cryptoImageBaseUrl).toBe(
+        "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto",
+      );
+      expect(config.fiatImagesBaseUrl).toBe("https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat");
     });
   });
 });

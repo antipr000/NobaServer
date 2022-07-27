@@ -75,5 +75,11 @@ zerohash:
   passPhrase: "noba_zerohash_sandbox"
   host: "api.cert.zerohash.com"
 
+configuration:
+  lowAmountThreshold: 50
+  highAmountThreshold: 200
+  cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
+  fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
+
 supportedCryptoFileName: "supported_tokens.csv"
 locationDataFileName: "countries+states.json"

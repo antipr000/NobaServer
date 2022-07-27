@@ -72,6 +72,11 @@ import {
   AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE,
   FLAT_FEE_DOLLARS,
   AWS_SECRET_KEY_FOR_FLAT_FEE_DOLLARS,
+  COMMON_CONFIG_KEY,
+  COMMON_CONFIG_CRYPTO_IMAGE_BASE_URL,
+  COMMON_CONFIG_FIAT_IMAGE_BASE_URL,
+  COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY,
+  COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 import * as os from "os";
@@ -84,7 +89,7 @@ import { SardineConfigs } from "./configtypes/SardineConfigs";
 import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 import { KmsConfigs } from "./configtypes/KmsConfigs";
-import { initializeAWSEnv } from "../infra/aws/initEnv";
+import { CommonConfigs } from "./configtypes/CommonConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -224,6 +229,7 @@ async function configureAllVendorCredentials(
     configureSardineCredentials,
     configureZerohashCredentials,
     configureAwsKmsCredentials,
+    configureCommonConfigurations,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -484,5 +490,38 @@ async function configureAwsKmsCredentials(
   );
 
   configs[KMS_CONFIG_KEY] = kmsConfigs;
+  return configs;
+}
+
+async function configureCommonConfigurations(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const commonConfigs: CommonConfigs = configs[COMMON_CONFIG_KEY];
+
+  if (commonConfigs === undefined) {
+    const errorMessage =
+      "\n'Common' configurations are required. Please configure the Noba environment variables " +
+      "in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${COMMON_CONFIG_KEY}" ` +
+      "and populate " +
+      `("${COMMON_CONFIG_CRYPTO_IMAGE_BASE_URL}"), ` +
+      `("${COMMON_CONFIG_FIAT_IMAGE_BASE_URL}"), ` +
+      `("${COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY}") AND ` +
+      `("${COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+    throw Error(errorMessage);
+  }
+
+  commonConfigs.lowAmountThreshold = Number(
+    await getParameterValue(undefined, commonConfigs.lowAmountThreshold.toString()),
+  );
+  commonConfigs.highAmountThreshold = Number(
+    await getParameterValue(undefined, commonConfigs.highAmountThreshold.toString()),
+  );
+  commonConfigs.cryptoImageBaseUrl = await getParameterValue(undefined, commonConfigs.cryptoImageBaseUrl);
+  commonConfigs.fiatImageBaseUrl = await getParameterValue(undefined, commonConfigs.fiatImageBaseUrl);
+
+  configs[COMMON_CONFIG_KEY] = commonConfigs;
   return configs;
 }

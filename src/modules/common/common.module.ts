@@ -7,10 +7,29 @@ import { LocationService } from "./location.service";
 import { EmailService } from "./email.service";
 import { KmsService } from "./kms.service";
 import { SMSService } from "./sms.service";
+import { ConfigurationProviderService } from "./configuration.provider.service";
 
 @Module({
   imports: [],
-  providers: [CsvService, CheckoutService, EmailService, SMSService, KmsService, CurrencyService, LocationService],
-  exports: [CsvService, CheckoutService, EmailService, SMSService, KmsService, CurrencyService, LocationService],
+  providers: [
+    CsvService,
+    CheckoutService,
+    EmailService,
+    SMSService,
+    KmsService,
+    CurrencyService,
+    LocationService,
+    ConfigurationProviderService,
+  ],
+  exports: [
+    CsvService,
+    CheckoutService,
+    EmailService,
+    SMSService,
+    KmsService,
+    CurrencyService,
+    LocationService,
+    ConfigurationProviderService,
+  ],
 })
 export class CommonModule {}

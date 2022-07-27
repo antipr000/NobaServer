@@ -140,26 +140,4 @@ export class VerificationService {
       },
     });
   }
-
-  /**
-   * @returns any
-   * @throws ApiError
-   */
-  public static postDocumentVerificationResult(): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/verify/webhook/document/result",
-    });
-  }
-
-  /**
-   * @returns any
-   * @throws ApiError
-   */
-  public static postCaseNotification(): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/verify/webhook/case/notification",
-    });
-  }
 }
