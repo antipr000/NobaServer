@@ -17,7 +17,7 @@ import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
 import { Transaction } from "./domain/Transaction";
 import { CryptoTransactionRequestResult, CryptoTransactionRequestResultStatus } from "./domain/Types";
-import * as axios from 'axios';
+import * as axios from "axios";
 
 const crypto_ts = require("crypto");
 
