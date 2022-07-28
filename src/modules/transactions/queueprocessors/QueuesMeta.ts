@@ -11,6 +11,7 @@ export enum TransactionQueueName {
   CryptoTransactionCompleted = "CryptoTransactionCompleted",
   TransactionCompleted = "TransactionCompleted",
   TransactionFailed = "TransactionFailed",
+  OnChainPendingTransaction = "OnChainPendingTransaction",
 }
 
 export const getTransactionQueueProducers = (): Record<TransactionQueueName, Producer> => {

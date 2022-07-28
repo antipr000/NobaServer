@@ -19,21 +19,19 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.CRYPTO_OUTGOING_INITIATING]: TransactionQueueName.CryptoTransactionCompleted,
   [TransactionStatus.CRYPTO_OUTGOING_INITIATED]: TransactionQueueName.CryptoTransactionInitiated,
   [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: TransactionQueueName.TransactionCompleted,
+  [TransactionStatus.ON_CHAIN_PENDING]: TransactionQueueName.OnChainPendingTransaction,
   [TransactionStatus.CRYPTO_OUTGOING_FAILED]: TransactionQueueName.TransactionFailed,
 };
 
 @Injectable()
 export class PendingTransactionDBPollerService {
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
-
-  private readonly queueProducers: Record<TransactionQueueName, Producer>;
-
   private isCronRunning = false;
-
   private queueProcessorHelper: QueueProcessorHelper;
 
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo
+  ) {
     this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
   }
 
@@ -59,11 +57,12 @@ export class PendingTransactionDBPollerService {
     this.logger.debug("Polling for pending transactions");
     const pendingTransactions = await this.transactionRepo.getPendingTransactions();
     this.logger.debug(`Found ${pendingTransactions.length} pending transactions`);
-    pendingTransactions.forEach(async transaction => {
+    pendingTransactions.forEach(async (transaction: Transaction) => {
       const status: TransactionStatus = transaction.props.transactionStatus;
 
       const timeElapsed = Date.now() - transaction.props.transactionTimestamp.getTime();
 
+      // TODO(#324): Evaluate the polling time as ON_CHAIN transaction can take more than 1hr to finish sometimes.
       if (timeElapsed > 1000 * 60 * 30) {
         this.logger.info(`Transaction ${transaction.props._id} is older than 30 minutes, won't poll it further`);
         await this.disablePolling(transaction);
@@ -81,8 +80,15 @@ export class PendingTransactionDBPollerService {
       }
 
       const targetQueue = transactionStatusToQueueMap[status];
-
-      //this.logger.info(`Sending transaction ${transaction.props._id} to queue ${targetQueue}`);
+      if (targetQueue === TransactionQueueName.OnChainPendingTransaction) {
+        // TODO(#): Replace this field with "last updated timestamp"
+        const secondElapsed: number = (new Date().getTime() - transaction.props.transactionTimestamp.getTime()) / 1000;
+        if (secondElapsed < 5 * 60) {
+          // No need to poll. Just wait until 5 mins have elapsed.
+          return;
+        }
+      }
+      this.logger.info(`Sending transaction ${transaction.props._id} to queue ${targetQueue}`);
 
       try {
         await this.queueProcessorHelper.enqueueTransaction(targetQueue, transaction.props._id);

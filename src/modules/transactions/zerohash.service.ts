@@ -287,7 +287,7 @@ export class ZeroHashService {
             console.log("Withdrawal completed");
 
             const transactionHash = withdrawalData["message"][0]["transaction_id"];
-            cryptoTransactionHandler.onSettled(transactionHash);
+            cryptoTransactionHandler.onSettled(transactionHash, withdrawalID);
           }
         }, 3000);
       }

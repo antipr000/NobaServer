@@ -102,9 +102,8 @@ export class TransactionService {
       ESTIMATED CRYPTO (${transactionQuoteQuery.cryptoCurrencyCode}):\t${priceToQuoteUSD / costPerUnit}
       SPREAD REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${fixedAmountFiat * 0.007}
-      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
-      }
+      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
+        }
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
@@ -150,9 +149,8 @@ export class TransactionService {
       PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${processingFees}
       NOBA COST (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${costPerUnit * fixedAmountCrypto}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge * 0.007}
-      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
-      }
+      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
+        }
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
@@ -382,8 +380,13 @@ export class TransactionService {
   ): Promise<CryptoTransactionStatusRequestResult> {
     return new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
       const cryptoTransactionHandler: CryptoTransactionHandler = {
-        onSettled: async (transactionHash: string) => {
+        onSettled: async (transactionHash: string, withdrawalID: string) => {
           this.logger.info(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
+
+          await this.transactionsRepo.updateTransaction(Transaction.createTransaction({
+            ...transaction.props,
+            zerohashWithdrawlID: withdrawalID,
+          }));
 
           if (transactionHash != undefined) {
             resolve({ status: CryptoTransactionStatus.INITIATED });

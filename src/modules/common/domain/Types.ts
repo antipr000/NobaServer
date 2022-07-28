@@ -1,7 +1,7 @@
 export type KeysRequired<T> = { [P in keyof Required<T>]: any };
 
 export type CryptoTransactionHandler = {
-  onSettled: (transactionHash: string) => void;
+  onSettled: (transactionHash: string, withdrawalID: string) => void;
   onReceipt?: (receipt: any) => void;
   onError: (error: any) => void;
   onConfirmation?: (confirmationNumber: number) => void;
