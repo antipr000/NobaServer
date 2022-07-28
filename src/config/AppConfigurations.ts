@@ -153,7 +153,7 @@ export default async function loadAppConfigs() {
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
 
-  initializeAWSEnv();
+  // initializeAWSEnv();
 
   //validate configs
   return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
@@ -366,7 +366,7 @@ async function configureMongoCredentials(
   mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
 
   if (environment === AppEnvironment.DEV) {
-    const hostname = ""; // os.hostname();
+    const hostname = os.hostname().replace(".", "_");
     mongoConfigs.uri += `_${hostname}`;
   }
 
