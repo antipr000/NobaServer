@@ -70,7 +70,7 @@ export class TransactionService {
       transactionQuoteQuery.cryptoCurrencyCode,
       transactionQuoteQuery.fiatCurrencyCode,
     );
-    console.log(estimatedNetworkFeeFromZeroHash);
+    this.logger.debug(estimatedNetworkFeeFromZeroHash);
 
     const networkFeeInFiat = Number(estimatedNetworkFeeFromZeroHash["message"]["total_notional"]);
 
@@ -88,7 +88,7 @@ export class TransactionService {
         priceToQuoteUSD,
         CurrencyType.CRYPTO,
       );
-      console.log(quote);
+      this.logger.debug(quote);
       const costPerUnit = Number(quote["message"]["price"]);
       const rateWithSpread = costPerUnit * (1 + nobaSpreadPercent);
 
@@ -276,7 +276,7 @@ export class TransactionService {
       newTransaction.props.leg1Amount = quote.quotedAmount;
     }
 
-    console.log(`Transaction: ${JSON.stringify(newTransaction.props)}`);
+    this.logger.debug(`Transaction: ${JSON.stringify(newTransaction.props)}`);
 
     // Save transaction to the database
     this.transactionsRepo.createTransaction(newTransaction);
@@ -383,7 +383,7 @@ export class TransactionService {
     return new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
       const cryptoTransactionHandler: CryptoTransactionHandler = {
         onSettled: async (transactionHash: string, withdrawalID: string) => {
-          this.logger.info(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
+          this.logger.debug(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
 
           await this.transactionsRepo.updateTransaction(
             Transaction.createTransaction({
@@ -400,7 +400,7 @@ export class TransactionService {
         },
 
         onError: async (error: any) => {
-          this.logger.info(
+          this.logger.debug(
             `Transaction ${transaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`,
           );
 
@@ -419,7 +419,7 @@ export class TransactionService {
     const withinSlippage =
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
-    console.log(
+    this.logger.debug(
       `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
         this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
