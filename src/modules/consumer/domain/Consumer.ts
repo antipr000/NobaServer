@@ -8,8 +8,8 @@ import { KYCStatus, DocumentVerificationStatus } from "./VerificationStatus";
 import { PartnerDetails } from "./PartnerDetails";
 import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
-import { PaymentMethods } from "./PaymentMethods";
-import { CryptoWallets } from "./CryptoWallets";
+import { PaymentMethod } from "./PaymentMethod";
+import { CryptoWallet } from "./CryptoWallet";
 import { BadRequestException } from "@nestjs/common";
 import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 
@@ -33,8 +33,8 @@ export interface ConsumerProps extends VersioningInfo {
   partners?: PartnerDetails[];
   paymentProviderAccounts?: PaymentProviderDetails[];
   verificationData?: VerificationData;
-  paymentMethods?: PaymentMethods[];
-  cryptoWallets?: CryptoWallets[];
+  paymentMethods?: PaymentMethod[];
+  cryptoWallets?: CryptoWallet[];
 }
 
 const partnerValidationJoiKeys: KeysRequired<PartnerDetails> = {
@@ -57,7 +57,7 @@ const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
   pepLevel: Joi.string().optional(),
 };
 
-const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethods> = {
+const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethod> = {
   cardName: Joi.string().optional(),
   cardType: Joi.string().optional(),
   first6Digits: Joi.string().optional(),
@@ -68,7 +68,7 @@ const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethods> = {
   status: Joi.string().optional(),
 };
 
-const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallets> = {
+const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
   walletName: Joi.string().optional(),
   address: Joi.string().required(),
   chainType: Joi.string().optional(),
@@ -140,5 +140,17 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     }
 
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));
+  }
+
+  public getPaymentMethodByID(paymentMethodID: string): PaymentMethod {
+    const paymentMethodList: PaymentMethod[] = this.props.paymentMethods.filter(
+      paymentMethod => paymentMethod.paymentToken === paymentMethodID,
+    );
+
+    if (paymentMethodList.length === 0) {
+      return null;
+    }
+
+    return paymentMethodList[0];
   }
 }

@@ -44,6 +44,7 @@ export interface TransactionProps extends VersioningInfo {
   blockchainTransactionId?: string; // Public chain ID
   transactionStatus: TransactionStatus;
   transactionTimestamp?: Date;
+  settledTimestamp?: Date;
   zhWithdrawalID: string; // WithdrawalId after transaction is settled.
 
   // this is database specific record we put index on this. it signifies if the transaction needs to be polled for processing or not
@@ -83,6 +84,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   cryptoTransactionId: Joi.string().optional(),
   blockchainTransactionId: Joi.string().optional(),
   transactionTimestamp: Joi.date().optional(),
+  settledTimestamp: Joi.date().optional(),
   zhWithdrawalID: Joi.string().optional(),
   dbPollingStatus: Joi.string()
     .optional()

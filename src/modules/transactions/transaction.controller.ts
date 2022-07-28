@@ -126,7 +126,7 @@ export class TransactionController {
     @Body() orderDetails: CreateTransactionDTO,
     @AuthUser() user: Consumer,
   ): Promise<string> {
-    this.logger.info(`uid ${user.props._id}, transact input:`, orderDetails);
+    this.logger.debug(`uid ${user.props._id}, transact input:`, orderDetails);
 
     return (await this.transactionService.initiateTransaction(user.props._id, sessionKey, orderDetails))._id;
   }

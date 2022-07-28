@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import { CurrencyService } from "../common/currency.service";
 import { CurrencyType, CryptoTransactionHandler } from "../common/domain/Types";
 import { ConsumerService } from "../consumer/consumer.service";
-import { PaymentMethods } from "../consumer/domain/PaymentMethods";
+import { PaymentMethod } from "../consumer/domain/PaymentMethod";
 import { KYCStatus } from "../consumer/domain/VerificationStatus";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
@@ -24,11 +24,10 @@ import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
 import { EmailService } from "../common/email.service";
-import { BadRequestError } from "../../core/exception/CommonAppException";
 import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { CryptoWallets } from "../consumer/domain/CryptoWallets";
+import { CryptoWallet } from "../consumer/domain/CryptoWallet";
 import { Consumer } from "../consumer/domain/Consumer";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 
@@ -288,15 +287,13 @@ export class TransactionService {
     consumer: Consumer,
     transaction: Transaction,
   ): Promise<PendingTransactionValidationStatus> {
-    const paymentMethodList: PaymentMethods[] = consumer.props.paymentMethods.filter(
-      paymentMethod => paymentMethod.paymentToken === transaction.props.paymentMethodID,
-    );
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
 
-    if (paymentMethodList.length === 0) {
-      throw new BadRequestException("Payment Token is invalid!");
+    if (paymentMethod == null) {
+      this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
+      return PendingTransactionValidationStatus.FAIL;
     }
 
-    const paymentMethod = paymentMethodList[0];
     // Check Sardine for AML
     const sardineTransactionInformation: TransactionInformation = {
       transactionID: transaction.props._id,
@@ -320,7 +317,7 @@ export class TransactionService {
     }
 
     if (result.walletStatus) {
-      const cryptoWallet: CryptoWallets = {
+      const cryptoWallet: CryptoWallet = {
         //walletName: "",
         address: transaction.props.destinationWalletAddress,
         //chainType: "",
@@ -337,6 +334,9 @@ export class TransactionService {
       });
     }
 
+    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
+    const cryptoCurrencyName = cryptoCurrencies.find(curr => curr.ticker === transaction.props.leg2).name;
+
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
@@ -346,13 +346,13 @@ export class TransactionService {
         consumer.props.email,
         {
           transactionID: transaction.props._id,
-          createdDate: new Date().toDateString(),
+          transactionTimestamp: transaction.props.transactionTimestamp,
           paymentMethod: paymentMethod.cardType,
           last4Digits: paymentMethod.last4Digits,
           currencyCode: transaction.props.leg1,
-          subtotalPrice: transaction.props.leg1Amount,
-          processingFee: transaction.props.processingFee, // TODO: Update processing fee
-          networkFee: transaction.props.networkFee, // TODO: Update network fee
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
           nobaFee: transaction.props.nobaFee,
           totalPrice: transaction.props.leg1Amount,
           cryptoAmount: transaction.props.leg2Amount,

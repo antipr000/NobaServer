@@ -47,7 +47,6 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
       const consumer = await this.consumerService.getConsumer(transaction.props.userId);
       // check transaction status here
       const cryptoRes = await this.transactionService.cryptoTransactionStatus(consumer, transaction);
-      console.log(`CryptoRes: ${JSON.stringify(cryptoRes)}`);
       if (cryptoRes.status === CryptoTransactionStatus.COMPLETED) {
         this.logger.info(
           `Crypto transaction for Transaction ${transactionId} is completed with ID ${cryptoRes.onChainTransactionID}`,

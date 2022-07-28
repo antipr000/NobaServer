@@ -8,13 +8,13 @@ import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { PaymentProviders } from "./domain/PaymentProviderDetails";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import Stripe from "stripe";
-import { PaymentMethods } from "./domain/PaymentMethods";
+import { PaymentMethod } from "./domain/PaymentMethod";
 import Checkout from "checkout-sdk-node";
 import { CheckoutService } from "../common/checkout.service";
 import { EmailService } from "../common/email.service";
 import { CheckoutPaymentStatus, FiatTransactionStatus } from "./domain/Types";
 import { PaymentMethodStatus } from "./domain/VerificationStatus";
-import { CryptoWallets } from "./domain/CryptoWallets";
+import { CryptoWallet } from "./domain/CryptoWallet";
 
 @Injectable()
 export class ConsumerService {
@@ -178,7 +178,7 @@ export class ConsumerService {
         this.logger.error(`Failed to make payment while adding card: ${err}`);
       }
 
-      const newPaymentMethod: PaymentMethods = {
+      const newPaymentMethod: PaymentMethod = {
         cardName: paymentMethod.cardName,
         cardType: instrument["scheme"],
         first6Digits: paymentMethod.cardNumber.substring(0, 6),
@@ -271,7 +271,7 @@ export class ConsumerService {
     }
   }
 
-  async updatePaymentMethod(consumerID: string, paymentMethod: PaymentMethods): Promise<Consumer> {
+  async updatePaymentMethod(consumerID: string, paymentMethod: PaymentMethod): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerID);
     const otherPaymentMethods = consumer.props.paymentMethods.filter(
       existingPaymentMethod => existingPaymentMethod.paymentToken !== paymentMethod.paymentToken,
@@ -282,7 +282,7 @@ export class ConsumerService {
     });
   }
 
-  async addOrUpdateCryptoWallet(consumerID: string, cryptoWallet: CryptoWallets): Promise<Consumer> {
+  async addOrUpdateCryptoWallet(consumerID: string, cryptoWallet: CryptoWallet): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerID);
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,

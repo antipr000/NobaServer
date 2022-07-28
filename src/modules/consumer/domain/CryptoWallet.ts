@@ -1,6 +1,6 @@
 import { WalletStatus } from "./VerificationStatus";
 
-export type CryptoWallets = {
+export type CryptoWallet = {
   walletName?: string;
   address: string;
   chainType?: string;

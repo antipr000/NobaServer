@@ -1,8 +1,8 @@
 import { Consumer } from "../domain/Consumer";
 import { ConsumerDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
 import { Mapper } from "../../../core/infra/Mapper";
-import { CryptoWallets } from "../domain/CryptoWallets";
-import { PaymentMethods } from "../domain/PaymentMethods";
+import { CryptoWallet } from "../domain/CryptoWallet";
+import { PaymentMethod } from "../domain/PaymentMethod";
 import { KYCStatus, DocumentVerificationStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 
 export class ConsumerMapper implements Mapper<Consumer> {
@@ -10,7 +10,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
     return Consumer.createConsumer(raw);
   }
 
-  private getPaymentMethodStatus(paymentMethods: PaymentMethods[]): PaymentMethodStatus {
+  private getPaymentMethodStatus(paymentMethods: PaymentMethod[]): PaymentMethodStatus {
     const numApproved = paymentMethods.filter(
       paymentMethod => paymentMethod.status && paymentMethod.status === PaymentMethodStatus.APPROVED,
     ).length;
@@ -18,13 +18,13 @@ export class ConsumerMapper implements Mapper<Consumer> {
     return numApproved === paymentMethods.length ? PaymentMethodStatus.APPROVED : PaymentMethodStatus.REJECTED;
   }
 
-  private getWalletStatus(wallets: CryptoWallets[]): WalletStatus {
+  private getWalletStatus(wallets: CryptoWallet[]): WalletStatus {
     if (wallets.filter(wallet => wallet.status === WalletStatus.REJECTED).length > 0) return WalletStatus.REJECTED;
     else if (wallets.filter(wallet => wallet.status === WalletStatus.FLAGGED).length > 0) return WalletStatus.FLAGGED;
     return WalletStatus.APPROVED;
   }
 
-  public toCryptoWalletsDTO(cryptoWallets: CryptoWallets): CryptoWalletsDTO {
+  public toCryptoWalletsDTO(cryptoWallets: CryptoWallet): CryptoWalletsDTO {
     return {
       walletName: cryptoWallets.walletName,
       address: cryptoWallets.address,
@@ -34,7 +34,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
     };
   }
 
-  public toPaymentMethodsDTO(paymentMethod: PaymentMethods): PaymentMethodsDTO {
+  public toPaymentMethodsDTO(paymentMethod: PaymentMethod): PaymentMethodsDTO {
     return {
       cardName: paymentMethod.cardName,
       cardType: paymentMethod.cardType,

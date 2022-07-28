@@ -78,6 +78,8 @@ export class FiatTransactionInitiator implements MessageProcessor {
           const errorDescription = errorBody.error_type;
           const errorCode = errorBody.error_codes.join(",");
 
+          this.logger.error(`Fiat payment failed: Error code: ${errorCode}, Error Description: ${errorDescription}`);
+
           await this.verificationService.provideTransactionFeedback(
             errorCode,
             errorDescription,
@@ -85,8 +87,16 @@ export class FiatTransactionInitiator implements MessageProcessor {
             paymentMethod.paymentProviderID,
           );
         }
-        this.logger.error(`Fiat payment failed: Name: ${e.name}, Body: ${e.body}`);
-        throw new BadRequestException("Failed to make fiat payment");
+        this.logger.error(`Fiat payment failed: Name: ${JSON.stringify(e)}`);
+
+        transaction = await this.transactionRepo.updateTransaction(
+          Transaction.createTransaction({
+            ...transaction.props,
+            transactionStatus: TransactionStatus.FIAT_INCOMING_FAILED,
+            checkoutPaymentID: checkoutPaymentID,
+          }),
+        );
+        await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
       }
 
       checkoutPaymentID = payment["id"];
@@ -99,7 +109,7 @@ export class FiatTransactionInitiator implements MessageProcessor {
         checkoutPaymentID: checkoutPaymentID,
       }),
     );
-    console.log("Pushing to queue");
+
     //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
     await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionInitated, transactionId);
   }

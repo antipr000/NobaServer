@@ -1,16 +1,20 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { SendGridConfigs } from "../../config/configtypes/SendGridConfigs";
 import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import * as sgMail from "@sendgrid/mail";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { TransactionEmailParameters } from "./domain/TransactionEmailParameters";
+import { TransactionInitiatedEmailParameters, OrderExecutedEmailParameters } from "./domain/EmailParameters";
 import { EmailTemplates } from "./domain/EmailTemplates";
+import { CurrencyService } from "../../modules/common/currency.service";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
 @Injectable()
 export class EmailService {
-  constructor(configService: CustomConfigService) {
+  constructor(
+    configService: CustomConfigService,
+    @Inject(CurrencyService) private readonly currencyService: CurrencyService,
+  ) {
     const sendGridApiKey = configService.get<SendGridConfigs>(SENDGRID_CONFIG_KEY).apiKey;
     sgMail.setApiKey(sendGridApiKey);
   }
@@ -30,13 +34,12 @@ export class EmailService {
   }
 
   public async sendWelcomeMessage(email: string, firstName?: string, lastName?: string) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.WELCOME_MESSAGE,
       dynamicTemplateData: {
-        username: fullName ?? "",
+        username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -44,14 +47,12 @@ export class EmailService {
   }
 
   public async sendKycApprovedEmail(firstName: string, lastName: string, email: string) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
-
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.KYC_APPROVED_EMAIL,
       dynamicTemplateData: {
-        username: fullName ?? "",
+        username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -59,14 +60,12 @@ export class EmailService {
   }
 
   public async sendKycDeniedEmail(firstName: string, lastName: string, email: string) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
-
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.KYC_DENIED_EMAIL,
       dynamicTemplateData: {
-        username: fullName ?? "",
+        username: this.getUsernameFromNameParts(firstName, lastName),
         duration: 2, // TODO: Remove hardcoded duration
       },
     };
@@ -75,7 +74,6 @@ export class EmailService {
   }
 
   public async sendKycPendingOrFlaggedEmail(firstName: string, lastName: string, email: string) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
     const minutesFromNow = 10; // TODO: Remove hardcoded minutes
     const futureDate = new Date(new Date().getTime() + minutesFromNow * 60000).toUTCString();
 
@@ -84,7 +82,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.KYC_FLAGGED_EMAIL,
       dynamicTemplateData: {
-        username: fullName ?? "",
+        username: this.getUsernameFromNameParts(firstName, lastName),
         datetimestamp: futureDate,
       },
     };
@@ -99,14 +97,12 @@ export class EmailService {
     cardNetwork: string,
     last4Digits: string,
   ) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
-
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_ADDED_EMAIL,
       dynamicTemplateData: {
-        username: fullName ?? "",
+        username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_4_digits_of_card: last4Digits,
         support_url: SUPPORT_URL,
@@ -123,14 +119,12 @@ export class EmailService {
     cardNetwork: string,
     last4Digits: string,
   ) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
-
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL,
       dynamicTemplateData: {
-        username: fullName ?? "",
+        username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_4_digits_of_card: last4Digits,
         support_url: SUPPORT_URL,
@@ -147,14 +141,12 @@ export class EmailService {
     cardNetwork: string,
     last4Digits: string,
   ) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
-
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_DELETED_EMAIL,
       dynamicTemplateData: {
-        username: fullName ?? "",
+        username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_4_digits_of_card: last4Digits,
         support_url: SUPPORT_URL,
@@ -168,33 +160,137 @@ export class EmailService {
     firstName: string,
     lastName: string,
     email: string,
-    transactionEmailParameters: TransactionEmailParameters,
+    params: TransactionInitiatedEmailParameters,
   ) {
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`;
+    const subtotal =
+      this.roundTo2DecimalNumber(params.totalPrice) -
+      this.roundTo2DecimalNumber(params.processingFee) -
+      this.roundTo2DecimalNumber(params.networkFee) -
+      this.roundTo2DecimalNumber(params.nobaFee);
 
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL,
       dynamicTemplateData: {
-        username: fullName ?? "",
-        transaction_id: transactionEmailParameters.transactionID,
-        payment_method: transactionEmailParameters.paymentMethod,
-        last_4_digits_of_card: transactionEmailParameters.last4Digits,
-        order_date: transactionEmailParameters.createdDate,
-        currency_code: transactionEmailParameters.currencyCode,
-        subtotal: transactionEmailParameters.subtotalPrice,
-        processing_fees: transactionEmailParameters.processingFee,
-        network_fees: transactionEmailParameters.networkFee,
-        noba_fee: transactionEmailParameters.nobaFee,
-        total: transactionEmailParameters.totalPrice,
-        crypto_currency_code: transactionEmailParameters.cryptoCurrency,
-        crypto_currency: transactionEmailParameters.cryptoAmount,
-        expected_crypto: transactionEmailParameters.cryptoAmount,
-        fiat_amount: transactionEmailParameters.totalPrice,
+        username: this.getUsernameFromNameParts(firstName, lastName),
+        transaction_id: params.transactionID,
+        user_id: email,
+        fiat_currency_code: params.currencyCode,
+        card_network: params.paymentMethod,
+        last_four: params.last4Digits,
+        order_date: params.transactionTimestamp.toLocaleString(),
+        subtotal: this.roundTo2DecimalString(subtotal),
+        conversion_rate: params.conversionRate,
+        processing_fees: this.roundTo2DecimalString(params.processingFee),
+        network_fees: this.roundTo2DecimalString(params.networkFee),
+        noba_fee: this.roundTo2DecimalString(params.nobaFee),
+        total_price: this.roundTo2DecimalString(params.totalPrice),
+        cryptocurrency_code: params.cryptoCurrency,
+        cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
+        crypto_expected: params.cryptoAmount,
       },
     };
 
     await sgMail.send(msg);
+  }
+
+  public async sendOrderExecutedEmail(
+    firstName: string,
+    lastName: string,
+    email: string,
+    params: OrderExecutedEmailParameters,
+  ) {
+    const subtotal =
+      this.roundTo2DecimalNumber(params.totalPrice) -
+      this.roundTo2DecimalNumber(params.processingFee) -
+      this.roundTo2DecimalNumber(params.networkFee) -
+      this.roundTo2DecimalNumber(params.nobaFee);
+
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.ORDER_EXECUTED_EMAIL,
+      dynamicTemplateData: {
+        username: this.getUsernameFromNameParts(firstName, lastName),
+        transaction_id: params.transactionID,
+        user_id: email,
+        transaction_hash: params.transactionHash,
+        fiat_currency_code: params.currencyCode,
+        payment_method: params.paymentMethod,
+        last_four: params.last4Digits,
+        order_date: params.transactionTimestamp.toLocaleString(),
+        settled_timestamp: params.settledTimestamp.toLocaleString(),
+        subtotal: this.roundTo2DecimalString(subtotal),
+        conversion_rate: params.conversionRate,
+        processing_fees: this.roundTo2DecimalString(params.processingFee),
+        network_fees: this.roundTo2DecimalString(params.networkFee),
+        noba_fee: this.roundTo2DecimalString(params.nobaFee),
+        total_price: this.roundTo2DecimalString(params.totalPrice),
+        cryptocurrency_code: params.cryptoCurrency,
+        cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
+        crypto_received: params.cryptoAmount,
+        crypto_expected: params.cryptoAmountExpected,
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendOrderFailedEmail(
+    firstName: string,
+    lastName: string,
+    email: string,
+    params: OrderExecutedEmailParameters,
+  ) {
+    const subtotal =
+      this.roundTo2DecimalNumber(params.totalPrice) -
+      this.roundTo2DecimalNumber(params.processingFee) -
+      this.roundTo2DecimalNumber(params.networkFee) -
+      this.roundTo2DecimalNumber(params.nobaFee);
+
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.ORDER_FAILED_EMAIL,
+      dynamicTemplateData: {
+        username: this.getUsernameFromNameParts(firstName, lastName),
+        transaction_id: params.transactionID,
+        user_id: email,
+        fiat_currency_code: params.currencyCode,
+        card_network: params.paymentMethod,
+        last_four: params.last4Digits,
+        order_date: params.transactionTimestamp.toLocaleString(),
+        subtotal: this.roundTo2DecimalString(subtotal),
+        conversion_rate: params.conversionRate,
+        processing_fees: this.roundTo2DecimalString(params.processingFee),
+        network_fees: this.roundTo2DecimalString(params.networkFee),
+        noba_fee: this.roundTo2DecimalString(params.nobaFee),
+        total_price: this.roundTo2DecimalString(params.totalPrice),
+        cryptocurrency_code: params.cryptoCurrency,
+        cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
+        crypto_received: params.cryptoAmount,
+        reason_declined: "TODO", // TODO
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  private async getCryptocurrencyNameFromTicker(ticker: string): Promise<string> {
+    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
+    return cryptoCurrencies.find(curr => curr.ticker === ticker).name;
+  }
+
+  private getUsernameFromNameParts(firstName: string, lastName: string): string {
+    return `${firstName ?? ""} ${lastName ?? ""}` ?? "";
+  }
+
+  private roundTo2DecimalNumber(num: number): number {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  }
+
+  private roundTo2DecimalString(num: number): string {
+    return num.toFixed(2);
   }
 }

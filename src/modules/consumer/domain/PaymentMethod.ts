@@ -1,6 +1,6 @@
 import { PaymentMethodStatus } from "./VerificationStatus";
 
-export type PaymentMethods = {
+export type PaymentMethod = {
   cardName?: string;
   cardType?: string;
   first6Digits: string;
