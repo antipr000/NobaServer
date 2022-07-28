@@ -382,13 +382,13 @@ export class TransactionService {
   ): Promise<CryptoTransactionStatusRequestResult> {
     return new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
       const cryptoTransactionHandler: CryptoTransactionHandler = {
-        onSettled: async (transactionHash: string, withdrawlID: string) => {
+        onSettled: async (transactionHash: string, withdrawalID: string) => {
           this.logger.info(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
 
           await this.transactionsRepo.updateTransaction(
             Transaction.createTransaction({
               ...transaction.props,
-              zhWithdrawalID: withdrawlID.toString(),
+              zhWithdrawalID: withdrawalID.toString(),
             }),
           );
 
