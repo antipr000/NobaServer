@@ -15,7 +15,7 @@ export class OnChainPendingProcessor implements MessageProcessor {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger,
     private readonly zerohashService: ZeroHashService,
-    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo
+    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
   ) {
     this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
     this.init();
@@ -31,26 +31,34 @@ export class OnChainPendingProcessor implements MessageProcessor {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
-    if (status != TransactionStatus.ON_CHAIN_PENDING) {
+    this.logger.debug(`Received ${transactionId} in 'OnChainPendingProcessor'.`);
+
+    if (status != TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
       this.logger.info(
-        `Transaction ${transactionId} is not in ${TransactionStatus.ON_CHAIN_PENDING} status, skipping, current status: ${status}`,
+        `Transaction ${transactionId} is not in ${TransactionStatus.CRYPTO_OUTGOING_COMPLETED} status, skipping, current status: ${status}`,
       );
       return;
     }
 
-    // No need to guard this with an intermediate Transaction state 
+    // No need to guard this with an intermediate Transaction state
     // as this processor is idempotent.
-    const withdrawlResponse = await this.zerohashService.getWithdrawal(transaction.props.zerohashWithdrawlID);
-    const onChainStatus = withdrawlResponse["message"][0]["on_chain_status"]
+    const withdrawalResponse = await this.zerohashService.getWithdrawal(transaction.props.zhWithdrawalID);
+    this.logger.debug("Withdrawal Response: " + JSON.stringify(withdrawalResponse));
+
+    const onChainStatus = withdrawalResponse["message"][0]["on_chain_status"];
     if (onChainStatus === "PENDING") {
       // no-op
       // TODO(#): Update the transaction timestamp.
       return;
     }
 
-    await this.transactionRepo.updateTransaction(Transaction.createTransaction({
-      ...transaction.props,
-      transactionStatus: TransactionStatus.COMPLETED
-    }));
+    await this.transactionRepo.updateTransaction(
+      Transaction.createTransaction({
+        ...transaction.props,
+        transactionStatus: TransactionStatus.COMPLETED,
+      }),
+    );
+
+    // await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionCompleted, transactionId);
   }
 }

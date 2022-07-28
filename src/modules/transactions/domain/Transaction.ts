@@ -44,7 +44,7 @@ export interface TransactionProps extends VersioningInfo {
   blockchainTransactionId?: string; // Public chain ID
   transactionStatus: TransactionStatus;
   transactionTimestamp?: Date;
-  zerohashWithdrawlID: string; // WithdrawlId after transaction is settled.
+  zhWithdrawalID: string; // WithdrawlId after transaction is settled.
 
   // this is database specific record we put index on this. it signifies if the transaction needs to be polled for processing or not
   // and if needs to polled then at what time e.g. Poll#2022-10-08T10:00:00 that basically means this item needs to be polled for processing by this time
@@ -83,7 +83,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   cryptoTransactionId: Joi.string().optional(),
   blockchainTransactionId: Joi.string().optional(),
   transactionTimestamp: Joi.date().optional(),
-  zerohashWithdrawlID: Joi.string().optional(),
+  zhWithdrawalID: Joi.string().optional(),
   dbPollingStatus: Joi.string()
     .optional()
     .meta({ _mongoose: { index: true } }),

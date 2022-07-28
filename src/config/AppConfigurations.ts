@@ -90,6 +90,7 @@ import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 import { KmsConfigs } from "./configtypes/KmsConfigs";
 import { CommonConfigs } from "./configtypes/CommonConfigs";
+import { initializeAWSEnv } from "src/infra/aws/initEnv";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -152,7 +153,7 @@ export default async function loadAppConfigs() {
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
 
-  //initializeAWSEnv();
+  initializeAWSEnv();
 
   //validate configs
   return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
@@ -365,7 +366,7 @@ async function configureMongoCredentials(
   mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
 
   if (environment === AppEnvironment.DEV) {
-    const hostname = os.hostname();
+    const hostname = ""; // os.hostname();
     mongoConfigs.uri += `_${hostname}`;
   }
 

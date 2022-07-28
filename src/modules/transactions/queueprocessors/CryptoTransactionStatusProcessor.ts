@@ -1,7 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Consumer } from "sqs-consumer";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
+import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { Transaction } from "../domain/Transaction";
 import { CryptoTransactionStatus, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
@@ -73,7 +75,7 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
 
     //Move to completed queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
     if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
-      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.OnChainPendingTransaction, transactionId);
+      // await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionCompleted, transactionId);
     } else if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_FAILED) {
       await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
     }

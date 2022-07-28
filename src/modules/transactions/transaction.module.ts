@@ -18,6 +18,7 @@ import { FiatTransactionStatusProcessor } from "./queueprocessors/FiatTransactio
 import { CryptoTransactionInitiator } from "./queueprocessors/CryptoTransactionInitiator";
 import { CryptoTransactionStatusProcessor } from "./queueprocessors/CryptoTransactionStatusProcessor";
 import { TransactionCompletedProcessor } from "./queueprocessors/TransactionCompletedProcessor";
+import { OnChainPendingProcessor } from "./queueprocessors/OnChainPendingProcessor";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule],
@@ -43,6 +44,7 @@ import { TransactionCompletedProcessor } from "./queueprocessors/TransactionComp
     TransactionCompletedProcessor,
     //TransactionFailedProcessor,
     ValidatePendingTransactionProcessor,
+    OnChainPendingProcessor,
   ],
   exports: [TransactionService], //Need to access in PublicController
 })

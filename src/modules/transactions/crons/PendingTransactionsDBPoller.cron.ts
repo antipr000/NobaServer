@@ -18,8 +18,7 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.FIAT_INCOMING_FAILED]: TransactionQueueName.TransactionFailed,
   [TransactionStatus.CRYPTO_OUTGOING_INITIATING]: TransactionQueueName.CryptoTransactionCompleted,
   [TransactionStatus.CRYPTO_OUTGOING_INITIATED]: TransactionQueueName.CryptoTransactionInitiated,
-  [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: TransactionQueueName.TransactionCompleted,
-  [TransactionStatus.ON_CHAIN_PENDING]: TransactionQueueName.OnChainPendingTransaction,
+  [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: TransactionQueueName.OnChainPendingTransaction,
   [TransactionStatus.CRYPTO_OUTGOING_FAILED]: TransactionQueueName.TransactionFailed,
 };
 
@@ -30,7 +29,7 @@ export class PendingTransactionDBPollerService {
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo
+    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
   ) {
     this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
   }
