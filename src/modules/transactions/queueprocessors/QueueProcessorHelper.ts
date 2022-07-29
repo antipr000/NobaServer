@@ -1,7 +1,7 @@
 import { SQS } from "aws-sdk";
 import { MessageBodyAttributeMap } from "aws-sdk/clients/sqs";
 import { AppEnvironment, getEnvironmentName } from "../../../config/ConfigurationUtils";
-import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
+import { TransactionQueueName } from "./QueuesMeta";
 import * as os from "os";
 import { Producer } from "sqs-producer";
 import { Consumer } from "sqs-consumer";
@@ -19,22 +19,34 @@ export interface MessageProcessor {
 
 export class QueueProcessorHelper {
   private static readonly SELECTOR_ATTRIBUTE = "hostname";
-  private readonly queueProducers: Record<TransactionQueueName, Producer>;
+  private static readonly queueProducers = new Map<TransactionQueueName, Producer>();
 
   //TODO(#310) figure out why winston doesn't work
 
   constructor(private logger: Logger) {
-    this.queueProducers = getTransactionQueueProducers();
+    if (Object.keys(QueueProcessorHelper.queueProducers).length == 0) {
+      this.getTransactionQueueProducers();
+    }
   }
 
   async enqueueTransaction(queueName: string, transactionId: string): Promise<any> {
     this.logger.info(`${transactionId}   ====>   ${queueName}`);
-    return await this.queueProducers[queueName].send({
+    await QueueProcessorHelper.queueProducers[queueName].send({
       messageAttributes: this.getMessageAttributeHeaders(),
       id: transactionId,
       body: transactionId,
+      delaySeconds: 0,
     });
   }
+
+  private getTransactionQueueProducers = (): void => {
+    Object.values(TransactionQueueName).forEach(queueName => {
+      this.logger.info(`Creating queue producer for ${queueName}`);
+      QueueProcessorHelper.queueProducers[queueName] = new Producer({
+        queueUrl: environmentDependentQueueUrl(queueName),
+      });
+    });
+  };
 
   private shouldProcessMessage(message: SQS.Message): boolean {
     if (getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST) {
@@ -55,9 +67,10 @@ export class QueueProcessorHelper {
     errorHandler?: Function,
     processingErrorHandler?: Function,
   ): Consumer {
-    const app = Consumer.create({
+    const consumer = Consumer.create({
       messageAttributeNames: [QueueProcessorHelper.SELECTOR_ATTRIBUTE],
       queueUrl: environmentDependentQueueUrl(queueName),
+      visibilityTimeout: 0,
       handleMessage: async message => {
         if (this.shouldProcessMessage(message)) {
           this.logger.info(`${message.Body} [${messageProcessor.constructor.name}] `);
@@ -66,17 +79,33 @@ export class QueueProcessorHelper {
       },
     });
 
-    app.on("error", err => {
+    consumer.on("error", err => {
       errorHandler ? errorHandler(err) : this.logger.info(`Error while handling transaction ${err}`);
     });
 
-    app.on("processing_error", err => {
+    consumer.on("message_received", message => {
+      this.logger.info(`${message.Body} dequeued from ${queueName}`);
+    });
+
+    consumer.on("message_processed", message => {
+      this.logger.info(`${message.Body} finished from ${queueName}`);
+    });
+
+    consumer.on("timeout_error", err => {
+      this.logger.info(`Timeout from queue: ${err.message}`);
+    });
+
+    consumer.on("empty", () => {
+      this.logger.debug(`${queueName} is empty!`);
+    });
+
+    consumer.on("processing_error", err => {
       processingErrorHandler
         ? processingErrorHandler(err)
         : this.logger.info(`Processing Error while handling transaction ${err}`);
     });
 
-    return app;
+    return consumer;
   }
 
   // Populate message attributes with hostname so we can ensure cross-processing between dev workstations

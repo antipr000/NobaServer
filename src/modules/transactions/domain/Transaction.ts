@@ -112,7 +112,7 @@ export class Transaction extends AggregateRoot<TransactionProps> {
   }
 
   public disableDBPolling() {
-    this.props.dbPollingStatus = Transaction.getPollingStatusAttribute(new Date(8640000000000000).toISOString());
+    this.props.dbPollingStatus = null;
   }
 
   public static createTransaction(transactionProps: Partial<TransactionProps>): Transaction {

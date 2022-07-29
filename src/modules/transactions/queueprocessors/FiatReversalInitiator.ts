@@ -18,11 +18,11 @@ export class FiatReversalInitiator implements MessageProcessor {
 
   constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
     this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    this.init();
+    //this.init();
   }
 
   async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.FiatTransactionInitated, this);
+    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.FiatTransactionInitiated, this);
 
     app.start();
   }

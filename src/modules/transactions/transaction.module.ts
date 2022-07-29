@@ -38,7 +38,7 @@ import { TransactionFailedProcessor } from "./queueprocessors/TransactionFailedP
     // All the queue processors
     CryptoTransactionInitiator,
     CryptoTransactionStatusProcessor,
-    FiatReversalInitiator,
+    //FiatReversalInitiator,
     //FiatReversalStatusProcessor,
     FiatTransactionInitiator,
     FiatTransactionStatusProcessor,

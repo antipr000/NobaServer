@@ -77,6 +77,7 @@ export class FiatTransactionInitiator implements MessageProcessor {
           const errorBody: CheckoutValidationError = e.body;
           const errorDescription = errorBody.error_type;
           const errorCode = errorBody.error_codes.join(",");
+          // TODO: Update payment method with error
 
           this.logger.error(`Fiat payment failed: Error code: ${errorCode}, Error Description: ${errorDescription}`);
 
@@ -119,6 +120,6 @@ export class FiatTransactionInitiator implements MessageProcessor {
     );
 
     //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
-    await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionInitated, transactionId);
+    await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionInitiated, transactionId);
   }
 }

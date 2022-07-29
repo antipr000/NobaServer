@@ -39,26 +39,33 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
-      this.logger.info(`Transaction is not initiated yet, skipping ${status}`);
+      this.logger.info(
+        `Transaction with status ${status} should not be in queue ${TransactionQueueName.CryptoTransactionInitiated}`,
+      );
       return;
     }
 
+    let newStatus: TransactionStatus;
     try {
       const consumer = await this.consumerService.getConsumer(transaction.props.userId);
       // check transaction status here
       const cryptoRes = await this.transactionService.cryptoTransactionStatus(consumer, transaction);
+      this.logger.info("Crypto status is " + cryptoRes.status);
       if (cryptoRes.status === CryptoTransactionStatus.COMPLETED) {
-        this.logger.info(
-          `Crypto transaction for Transaction ${transactionId} is completed with ID ${cryptoRes.onChainTransactionID}`,
-        );
-        transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_COMPLETED;
-        if (cryptoRes.onChainTransactionID != null) {
-          // TODO(#310) - need to poll for this
+        if (!cryptoRes.onChainTransactionID) {
+          // Wait for another poll cycle
+          this.logger.info("Going another poll cycle to get on-chain ID");
+          return;
+        } else {
+          this.logger.info(
+            `Crypto transaction for Transaction ${transactionId} is completed with ID ${cryptoRes.onChainTransactionID}`,
+          );
           transaction.props.blockchainTransactionId = cryptoRes.onChainTransactionID;
+          newStatus = TransactionStatus.CRYPTO_OUTGOING_COMPLETED;
         }
       } else if (cryptoRes.status === CryptoTransactionStatus.INITIATED) {
-        // TODO(#310) We need to poll and/or use websocket until we get an on-chain transaction ID
-        transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_PENDING;
+        this.logger.info("Going another poll cycle to get on-chain ID");
+        newStatus = TransactionStatus.CRYPTO_OUTGOING_PENDING;
       } else if (cryptoRes.status === CryptoTransactionStatus.FAILED) {
         this.logger.info(
           `Crypto transaction for Transaction ${transactionId} failed, crypto transaction id : ${transaction.props.cryptoTransactionId}`,
@@ -83,12 +90,14 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
       return;
     }
 
-    transaction = await this.transactionRepo.updateTransaction(Transaction.createTransaction({ ...transaction.props }));
+    transaction = await this.transactionRepo.updateTransaction(
+      Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
+    );
 
     //Move to completed queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
-    if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
+    if (newStatus === TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
       // await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionCompleted, transactionId);
-    } else if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_FAILED) {
+    } else if (newStatus === TransactionStatus.CRYPTO_OUTGOING_FAILED) {
       await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
     }
   }

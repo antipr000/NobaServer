@@ -2,9 +2,8 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionStatus } from "../domain/Types";
-import { getTransactionQueueProducers, TransactionQueueName } from "../queueprocessors/QueuesMeta";
+import { TransactionQueueName } from "../queueprocessors/QueuesMeta";
 import { ITransactionRepo } from "../repo/TransactionRepo";
-import { Producer } from "sqs-producer";
 import { Transaction } from "../domain/Transaction";
 import { Cron } from "@nestjs/schedule";
 import { QueueProcessorHelper } from "../queueprocessors/QueueProcessorHelper";
@@ -13,7 +12,7 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.PENDING]: TransactionQueueName.PendingTransactionValidation,
   [TransactionStatus.VALIDATION_PASSED]: TransactionQueueName.FiatTransactionInitiator,
   [TransactionStatus.VALIDATION_FAILED]: TransactionQueueName.TransactionFailed,
-  [TransactionStatus.FIAT_INCOMING_INITIATED]: TransactionQueueName.FiatTransactionInitated,
+  [TransactionStatus.FIAT_INCOMING_INITIATED]: TransactionQueueName.FiatTransactionInitiated,
   [TransactionStatus.FIAT_INCOMING_INITIATING]: TransactionQueueName.FiatTransactionInitiator,
   [TransactionStatus.FIAT_INCOMING_COMPLETED]: TransactionQueueName.FiatTransactionCompleted,
   [TransactionStatus.FIAT_INCOMING_FAILED]: TransactionQueueName.TransactionFailed,
@@ -64,13 +63,13 @@ export class PendingTransactionDBPollerService {
 
       // TODO(#324): Evaluate the polling time as ON_CHAIN transaction can take more than 1hr to finish sometimes.
       if (timeElapsed > 1000 * 60 * 30) {
-        this.logger.info(`Transaction ${transaction.props._id} is older than 30 minutes, won't poll it further`);
+        this.logger.debug(`Transaction ${transaction.props._id} is older than 30 minutes, won't poll it further`);
         await this.disablePolling(transaction);
         return;
       }
 
       if (status === TransactionStatus.COMPLETED || status === TransactionStatus.FAILED) {
-        this.logger.info(`Transaction ${transaction.props._id} is finished processing, won't poll it further`);
+        this.logger.debug(`Transaction ${transaction.props._id} is finished processing, won't poll it further`);
         await this.disablePolling(transaction);
         return;
       }
@@ -83,14 +82,14 @@ export class PendingTransactionDBPollerService {
       if (targetQueue === TransactionQueueName.OnChainPendingTransaction) {
         // TODO(#): Replace this field with "last updated timestamp"
         const secondElapsed: number = (new Date().getTime() - transaction.props.transactionTimestamp.getTime()) / 1000;
-        if (secondElapsed < 5 * 60) {
+        if (secondElapsed < 1 * 60) {
           // No need to poll. Just wait until 5 mins have elapsed.
           return;
         }
       }
-      this.logger.info(`Sending transaction ${transaction.props._id} to queue ${targetQueue}`);
 
       try {
+        this.logger.debug("Enqueueing from poller");
         await this.queueProcessorHelper.enqueueTransaction(targetQueue, transaction.props._id);
       } catch (err) {
         console.log("Error", err);
@@ -98,8 +97,6 @@ export class PendingTransactionDBPollerService {
       // we will only poll it after 15 seconds if it's not yet processed again, we will process from one queue to another queue
       transaction.setDBPollingTimeAfterNSeconds(15);
       await this.transactionRepo.updateTransaction(transaction);
-
-      //this.logger.info(`Sent transaction ${transaction.props._id} to queue ${targetQueue}`);
     });
   }
 

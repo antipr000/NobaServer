@@ -56,6 +56,7 @@ export class CryptoTransactionInitiator implements MessageProcessor {
     );
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    let newStatus: TransactionStatus;
 
     // crypto transaction here
     const result = await this.transactionService.initiateCryptoTransaction(consumer, transaction);
@@ -64,7 +65,7 @@ export class CryptoTransactionInitiator implements MessageProcessor {
       transaction.props.exchangeRate = result.exchangeRate;
       transaction.props.nobaTransferID = result.nobaTransferID;
       transaction.props.tradeQuoteID = result.quoteID;
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
+      newStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
 
       this.logger.info(`Crypto Transaction for Noba Transaction ${transactionId} initiated with id ${result.tradeID}`);
     }
@@ -82,14 +83,12 @@ export class CryptoTransactionInitiator implements MessageProcessor {
         this.logger.info("Noba Crypto balance is low, raising alert");
       }
 
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
-
       const statusReason =
         result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE ? "Out of balance." : "General failure."; // TODO (#332): Improve error responses
 
       await this.queueProcessorHelper.failure(
         TransactionStatus.CRYPTO_OUTGOING_FAILED,
-        "Transaction validation failure.", // TODO: Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+        statusReason, // TODO: Need more detail here - should throw exception from validatePendingTransaction with detailed reason
         transaction,
         this.transactionRepo,
       );
@@ -98,10 +97,12 @@ export class CryptoTransactionInitiator implements MessageProcessor {
 
     // crypto transaction ends here
 
-    transaction = await this.transactionRepo.updateTransaction(Transaction.createTransaction({ ...transaction.props }));
+    transaction = await this.transactionRepo.updateTransaction(
+      Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
+    );
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
-    if (transaction.props.transactionStatus == TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
+    if (newStatus === TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
       await this.queueProcessorHelper.enqueueTransaction(
         TransactionQueueName.CryptoTransactionInitiated,
         transactionId,
