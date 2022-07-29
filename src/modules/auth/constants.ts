@@ -3,5 +3,5 @@ export const jwtConstants = {
 };
 
 export const otpConstants = {
-  EXPIRY_TIME_IN_MINUTES: 10,
+  EXPIRY_TIME_IN_MINUTES: 15,
 };
