@@ -29,12 +29,14 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     const currentTimeStr = Transaction.getPollingStatusAttribute(new Date().toISOString());
     this.logger.info("Fetching all pending transaction before " + currentTimeStr.split("#")[1]);
 
-    // TODO(#810) Figure out why we need to access the UI to get this find to complete. And why don't we need an exec() here?
-    const results = await TransactionModel.find({
-      dbPollingStatus: {
-        $lt: currentTimeStr,
-      },
-    }).limit(100);
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const results = await transactionModel
+      .find({
+        dbPollingStatus: {
+          $lt: currentTimeStr,
+        },
+      })
+      .limit(100);
 
     this.logger.info(`Fetched ${results.length} pending transactions.`);
 
