@@ -76,12 +76,24 @@ export class CryptoTransactionInitiator implements MessageProcessor {
       this.logger.info(
         `Crypto Transaction for Noba transaction ${transactionId} failed, reason: ${result.diagnosisMessage}`,
       );
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
-    }
 
-    if (result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE) {
-      //TODO alert here !!
-      this.logger.info("Noba Crypto balance is low, raising alert");
+      if (result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE) {
+        //TODO alert here !!
+        this.logger.info("Noba Crypto balance is low, raising alert");
+      }
+
+      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
+
+      const statusReason =
+        result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE ? "Out of balance." : "General failure."; // TODO (#332): Improve error responses
+
+      await this.queueProcessorHelper.failure(
+        TransactionStatus.CRYPTO_OUTGOING_FAILED,
+        "Transaction validation failure.", // TODO: Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+        transaction,
+        this.transactionRepo,
+      );
+      return;
     }
 
     // crypto transaction ends here

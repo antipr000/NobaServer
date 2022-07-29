@@ -3,7 +3,11 @@ import { SendGridConfigs } from "../../config/configtypes/SendGridConfigs";
 import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import * as sgMail from "@sendgrid/mail";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { TransactionInitiatedEmailParameters, OrderExecutedEmailParameters } from "./domain/EmailParameters";
+import {
+  TransactionInitiatedEmailParameters,
+  OrderExecutedEmailParameters,
+  OrderFailedEmailParameters,
+} from "./domain/EmailParameters";
 import { EmailTemplates } from "./domain/EmailTemplates";
 import { CurrencyService } from "../../modules/common/currency.service";
 
@@ -241,7 +245,7 @@ export class EmailService {
     firstName: string,
     lastName: string,
     email: string,
-    params: OrderExecutedEmailParameters,
+    params: OrderFailedEmailParameters,
   ) {
     const subtotal =
       this.roundTo2DecimalNumber(params.totalPrice) -
@@ -269,8 +273,8 @@ export class EmailService {
         total_price: this.roundTo2DecimalString(params.totalPrice),
         cryptocurrency_code: params.cryptoCurrency,
         cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
-        crypto_received: params.cryptoAmount,
-        reason_declined: "TODO", // TODO
+        crypto_expected: params.cryptoAmount,
+        reason_declined: params.failureReason,
       },
     };
 

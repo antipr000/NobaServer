@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../../consumer/consumer.service";
-import { Transaction } from "../domain/Transaction";
+import { Transaction, TransactionEvent } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
@@ -80,23 +80,30 @@ export class FiatTransactionInitiator implements MessageProcessor {
 
           this.logger.error(`Fiat payment failed: Error code: ${errorCode}, Error Description: ${errorDescription}`);
 
+          await this.queueProcessorHelper.failure(
+            TransactionStatus.FIAT_INCOMING_FAILED,
+            `${errorCode} - ${errorDescription}`,
+            transaction,
+            this.transactionRepo,
+          );
+
           await this.verificationService.provideTransactionFeedback(
             errorCode,
             errorDescription,
             transaction.props._id,
             paymentMethod.paymentProviderID,
           );
-        }
-        this.logger.error(`Fiat payment failed: Name: ${JSON.stringify(e)}`);
+        } else {
+          this.logger.error(`Fiat payment failed: ${JSON.stringify(e)}`);
 
-        transaction = await this.transactionRepo.updateTransaction(
-          Transaction.createTransaction({
-            ...transaction.props,
-            transactionStatus: TransactionStatus.FIAT_INCOMING_FAILED,
-            checkoutPaymentID: checkoutPaymentID,
-          }),
-        );
-        await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
+          await this.queueProcessorHelper.failure(
+            TransactionStatus.FIAT_INCOMING_FAILED,
+            `Error from Checkout: ${JSON.stringify(e)}`,
+            transaction,
+            this.transactionRepo,
+          );
+        }
+        return;
       }
 
       checkoutPaymentID = payment["id"];

@@ -12,6 +12,7 @@ import { QueueProcessorHelper } from "../queueprocessors/QueueProcessorHelper";
 const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.PENDING]: TransactionQueueName.PendingTransactionValidation,
   [TransactionStatus.VALIDATION_PASSED]: TransactionQueueName.FiatTransactionInitiator,
+  [TransactionStatus.VALIDATION_FAILED]: TransactionQueueName.TransactionFailed,
   [TransactionStatus.FIAT_INCOMING_INITIATED]: TransactionQueueName.FiatTransactionInitated,
   [TransactionStatus.FIAT_INCOMING_INITIATING]: TransactionQueueName.FiatTransactionInitiator,
   [TransactionStatus.FIAT_INCOMING_COMPLETED]: TransactionQueueName.FiatTransactionCompleted,
@@ -68,8 +69,8 @@ export class PendingTransactionDBPollerService {
         return;
       }
 
-      if (status === TransactionStatus.COMPLETED) {
-        this.logger.info(`Transaction ${transaction.props._id} is completed, won't poll it further`);
+      if (status === TransactionStatus.COMPLETED || status === TransactionStatus.FAILED) {
+        this.logger.info(`Transaction ${transaction.props._id} is finished processing, won't poll it further`);
         await this.disablePolling(transaction);
         return;
       }

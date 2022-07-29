@@ -7,12 +7,12 @@ import { TransactionStatus, TransactionType } from "./Types";
 export const PENDING_TRANSACTION_POLLING_PREFIX = "Poll";
 
 export class TransactionEvent {
-  timestamp: string;
+  timestamp: Date;
   message: string;
 }
 
 const transactionEventJoiSchemaKeys: KeysRequired<TransactionEvent> = {
-  timestamp: Joi.string().required(),
+  timestamp: Joi.date().required(),
   message: Joi.string().required(),
 };
 

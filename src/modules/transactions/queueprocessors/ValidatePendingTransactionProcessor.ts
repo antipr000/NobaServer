@@ -52,17 +52,20 @@ export class ValidatePendingTransactionProcessor implements MessageProcessor {
         ? TransactionStatus.VALIDATION_PASSED
         : TransactionStatus.VALIDATION_FAILED;
 
-    transaction = await this.transactionRepo.updateTransaction(
-      Transaction.createTransaction({
-        ...transaction.props,
-        transactionStatus: updatedStatus,
-      }),
-    );
-
     if (updatedStatus === TransactionStatus.VALIDATION_FAILED) {
-      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
+      await this.queueProcessorHelper.failure(
+        updatedStatus,
+        "Transaction validation failure.", // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+        transaction,
+        this.transactionRepo,
+      );
     } else {
-      //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
+      transaction = await this.transactionRepo.updateTransaction(
+        Transaction.createTransaction({
+          ...transaction.props,
+          transactionStatus: updatedStatus,
+        }),
+      );
       await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionInitiator, transactionId);
     }
   }

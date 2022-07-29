@@ -9,6 +9,9 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Inject } from "@nestjs/common";
 import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
+import { Transaction, TransactionEvent } from "../domain/Transaction";
+import { ITransactionRepo } from "../repo/TransactionRepo";
+import { TransactionStatus } from "../domain/Types";
 
 export interface MessageProcessor {
   process(transactionId: string): void;
@@ -85,5 +88,26 @@ export class QueueProcessorHelper {
     }
 
     return null;
+  }
+
+  // TODO (#310) move transactionRepo to a class variable
+  async failure(
+    status: TransactionStatus,
+    reason: string,
+    transaction: Transaction,
+    transactionRepo: ITransactionRepo,
+  ) {
+    const existingExceptions = transaction.props.transactionExceptions;
+    console.log(`Size of existing exceptions: ${existingExceptions.length}`);
+    const error: TransactionEvent = { timestamp: new Date(), message: reason };
+    console.log("Failing!");
+    await transactionRepo.updateTransaction(
+      Transaction.createTransaction({
+        ...transaction.props,
+        transactionStatus: status,
+        transactionExceptions: [...existingExceptions, error],
+      }),
+    );
+    await this.enqueueTransaction(TransactionQueueName.TransactionFailed, transaction.props._id);
   }
 }

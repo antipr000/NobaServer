@@ -20,3 +20,7 @@ export interface OrderExecutedEmailParameters extends TransactionParameters {
   settledTimestamp: Date;
   cryptoAmountExpected: number;
 }
+
+export interface OrderFailedEmailParameters extends TransactionParameters {
+  failureReason: string;
+}

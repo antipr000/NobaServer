@@ -63,11 +63,24 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
         this.logger.info(
           `Crypto transaction for Transaction ${transactionId} failed, crypto transaction id : ${transaction.props.cryptoTransactionId}`,
         );
-        transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
+
+        await this.queueProcessorHelper.failure(
+          TransactionStatus.CRYPTO_OUTGOING_FAILED,
+          "Failed to settle crypto transaction.", // TODO: Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
+          transaction,
+          this.transactionRepo,
+        );
+        return;
       }
-    } catch (e) {
-      this.logger.error("Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.", e);
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
+    } catch (err) {
+      this.logger.error("Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.", err);
+      await this.queueProcessorHelper.failure(
+        TransactionStatus.CRYPTO_OUTGOING_FAILED,
+        "Failed to settle crypto transaction.", // TODO: Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
+        transaction,
+        this.transactionRepo,
+      );
+      return;
     }
 
     transaction = await this.transactionRepo.updateTransaction(Transaction.createTransaction({ ...transaction.props }));
