@@ -289,7 +289,7 @@ export class TransactionService {
   ): Promise<PendingTransactionValidationStatus> {
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
 
-    if (paymentMethod == null) {
+    if (!paymentMethod) {
       this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
       return PendingTransactionValidationStatus.FAIL;
     }
