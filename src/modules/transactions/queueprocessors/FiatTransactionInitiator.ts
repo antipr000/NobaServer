@@ -93,6 +93,7 @@ export class FiatTransactionInitiator implements MessageProcessor {
             transaction.props._id,
             paymentMethod.paymentProviderID,
           );
+          return;
         } else {
           this.logger.error(`Fiat payment failed: ${JSON.stringify(e)}`);
 
