@@ -53,19 +53,38 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
       this.logger.info("Crypto status is " + cryptoRes.status);
       if (cryptoRes.status === CryptoTransactionStatus.COMPLETED) {
         if (!cryptoRes.onChainTransactionID) {
+          // If we have a status of COMPLETED but no on-chain ID it really shouldn't take more than another poll cycle or two to get that on-chain ID. So fail after 5 minutes.
+          const timeElapsed = Date.now() - transaction.props.transactionTimestamp.getTime();
+          if (timeElapsed > 5 * 1000 * 60) {
+            this.logger.warn(`${transactionId} - status is COMPLETED but no on-chain ID available. Disabling polling.`);
+            transaction.disableDBPolling();
+            await this.transactionRepo.updateTransaction(transaction);
+            return;
+          }
+
           // Wait for another poll cycle
-          this.logger.info("Going another poll cycle to get on-chain ID");
+          this.logger.info(`${transactionId} - completed - going another poll cycle to get on-chain ID`);
           return;
-        } else {
-          this.logger.info(
-            `Crypto transaction for Transaction ${transactionId} is completed with ID ${cryptoRes.onChainTransactionID}`,
-          );
-          transaction.props.blockchainTransactionId = cryptoRes.onChainTransactionID;
-          newStatus = TransactionStatus.CRYPTO_OUTGOING_COMPLETED;
         }
+
+        this.logger.info(
+          `Crypto transaction for Transaction ${transactionId} is completed with ID ${cryptoRes.onChainTransactionID}`,
+        );
+        transaction.props.blockchainTransactionId = cryptoRes.onChainTransactionID;
+        newStatus = TransactionStatus.CRYPTO_OUTGOING_COMPLETED;
       } else if (cryptoRes.status === CryptoTransactionStatus.INITIATED) {
-        this.logger.info("Going another poll cycle to get on-chain ID");
-        newStatus = TransactionStatus.CRYPTO_OUTGOING_PENDING;
+        // If we have a status of COMPLETED but no on-chain ID it really shouldn't take more than another poll cycle or two to get that on-chain ID. So fail after 5 minutes.
+        const timeElapsed = Date.now() - transaction.props.transactionTimestamp.getTime();
+        if (timeElapsed > 15 * 1000 * 60) {
+          this.logger.warn(`${transactionId} - status has been INITIATED for 15 minutes. Disabling polling.`);
+          transaction.disableDBPolling();
+          await this.transactionRepo.updateTransaction(transaction);
+          return;
+        }
+
+        this.logger.info(`${transactionId} - initiated - going another poll cycle to get on-chain ID`);
+        //newStatus = TransactionStatus.CRYPTO_OUTGOING_PENDING;
+        return;
       } else if (cryptoRes.status === CryptoTransactionStatus.FAILED) {
         this.logger.info(
           `Crypto transaction for Transaction ${transactionId} failed, crypto transaction id : ${transaction.props.cryptoTransactionId}`,
