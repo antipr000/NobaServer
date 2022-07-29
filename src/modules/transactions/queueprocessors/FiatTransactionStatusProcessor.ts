@@ -64,7 +64,13 @@ export class FiatTransactionStatusProcessor implements MessageProcessor {
       this.logger.info(
         `Transaction ${transactionId} failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
       );
-      transaction.props.transactionStatus = TransactionStatus.FIAT_INCOMING_FAILED;
+      await this.queueProcessorHelper.failure(
+        TransactionStatus.FIAT_INCOMING_FAILED,
+        "Need more details on the failure",
+        transaction,
+        this.transactionRepo,
+      ); // TODO (#332) get details from exception thrown by getFiatPaymentStatus()
+      return;
     }
 
     //save the new status in db
