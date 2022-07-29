@@ -98,9 +98,8 @@ export class QueueProcessorHelper {
     transactionRepo: ITransactionRepo,
   ) {
     const existingExceptions = transaction.props.transactionExceptions;
-    console.log(`Size of existing exceptions: ${existingExceptions.length}`);
-    const error: TransactionEvent = { timestamp: new Date(), message: reason };
-    console.log("Failing!");
+    const error: TransactionEvent = { timestamp: new Date(), message: reason, details: reason }; // TODO (#332) Improve population of details (internal details, not to be viewed by consumer)
+
     await transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,

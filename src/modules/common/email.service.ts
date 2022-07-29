@@ -50,11 +50,24 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  public async sendKycApprovedEmail(firstName: string, lastName: string, email: string) {
+  public async sendKycApprovedUSEmail(firstName: string, lastName: string, email: string) {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.KYC_APPROVED_EMAIL,
+      templateId: EmailTemplates.KYC_APPROVED_US_EMAIL,
+      dynamicTemplateData: {
+        username: this.getUsernameFromNameParts(firstName, lastName),
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendKycApprovedNonUSEmail(firstName: string, lastName: string, email: string) {
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.KYC_APPROVED_NON_US_EMAIL,
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
       },

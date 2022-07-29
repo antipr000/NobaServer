@@ -93,7 +93,6 @@ export class TransactionFailedProcessor implements MessageProcessor {
       {
         transactionID: transaction.props._id,
         transactionTimestamp: transaction.props.transactionTimestamp,
-
         paymentMethod: paymentMethod.cardType,
         last4Digits: paymentMethod.last4Digits,
         currencyCode: transaction.props.leg1,

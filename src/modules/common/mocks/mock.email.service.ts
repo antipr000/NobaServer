@@ -14,7 +14,10 @@ export const getMockEmailServiceWithDefaults = () => {
   when(
     mockEmailService.sendCardDeletedEmail(anyString(), anyString(), anyString(), anyString(), anyString()),
   ).thenReject(new Error("Not implemented!"));
-  when(mockEmailService.sendKycApprovedEmail(anyString(), anyString(), anyString())).thenReject(
+  when(mockEmailService.sendKycApprovedUSEmail(anyString(), anyString(), anyString())).thenReject(
+    new Error("Not implemented!"),
+  );
+  when(mockEmailService.sendKycApprovedNonUSEmail(anyString(), anyString(), anyString())).thenReject(
     new Error("Not implemented!"),
   );
   when(mockEmailService.sendKycDeniedEmail(anyString(), anyString(), anyString())).thenReject(

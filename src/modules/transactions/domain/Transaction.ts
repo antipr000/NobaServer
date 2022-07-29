@@ -9,11 +9,13 @@ export const PENDING_TRANSACTION_POLLING_PREFIX = "Poll";
 export class TransactionEvent {
   timestamp: Date;
   message: string;
+  details: string;
 }
 
 const transactionEventJoiSchemaKeys: KeysRequired<TransactionEvent> = {
   timestamp: Joi.date().required(),
   message: Joi.string().required(),
+  details: Joi.string().required(),
 };
 
 const transactionEventJoiSchema = Joi.object()

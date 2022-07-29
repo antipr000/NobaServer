@@ -66,15 +66,25 @@ export class VerificationService {
       },
       socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
     };
+
+    const isUS = consumerInformation.address.countryCode === "US";
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
 
     if (result.status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
-      await this.emailService.sendKycApprovedEmail(
-        updatedConsumer.props.firstName,
-        updatedConsumer.props.lastName,
-        updatedConsumer.props.email,
-      );
+      if (isUS) {
+        await this.emailService.sendKycApprovedUSEmail(
+          updatedConsumer.props.firstName,
+          updatedConsumer.props.lastName,
+          updatedConsumer.props.email,
+        );
+      } else {
+        await this.emailService.sendKycApprovedNonUSEmail(
+          updatedConsumer.props.firstName,
+          updatedConsumer.props.lastName,
+          updatedConsumer.props.email,
+        );
+      }
     } else if (result.status === KYCStatus.REJECTED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       await this.emailService.sendKycDeniedEmail(
@@ -109,7 +119,7 @@ export class VerificationService {
       await this.consumerService.updateConsumer(newConsumerData);
 
       if (result.status === KYCStatus.APPROVED) {
-        await this.emailService.sendKycApprovedEmail(
+        await this.emailService.sendKycApprovedUSEmail(
           consumer.props.firstName,
           consumer.props.lastName,
           consumer.props.email,
@@ -169,7 +179,7 @@ export class VerificationService {
       result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
-      await this.emailService.sendKycApprovedEmail(
+      await this.emailService.sendKycApprovedUSEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
@@ -208,7 +218,7 @@ export class VerificationService {
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
       await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
-      await this.emailService.sendKycApprovedEmail(
+      await this.emailService.sendKycApprovedUSEmail(
         updatedConsumer.props.firstName,
         updatedConsumer.props.lastName,
         updatedConsumer.props.email,
