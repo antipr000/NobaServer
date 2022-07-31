@@ -1,41 +1,28 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Consumer } from "sqs-consumer";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
-import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { Transaction } from "../domain/Transaction";
 import { CryptoTransactionStatus, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { TransactionQueueName } from "./QueuesMeta";
-import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
+import { MessageProcessor } from "./message.processor";
+import { SqsClient } from "./sqs.client";
 
-@Injectable()
-export class CryptoTransactionStatusProcessor implements MessageProcessor {
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
+export class CryptoTransactionStatusProcessor extends MessageProcessor {
 
-  @Inject()
-  private readonly transactionService: TransactionService;
-
-  @Inject()
-  private readonly consumerService: ConsumerService;
-
-  private queueProcessorHelper: QueueProcessorHelper;
-
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    this.init();
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
+    sqsClient: SqsClient,
+    consumerService: ConsumerService,
+    transactionService: TransactionService,
+  ) {
+    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.CryptoTransactionInitiated);
   }
 
-  async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.CryptoTransactionInitiated, this);
-
-    app.start();
-  }
-
-  async process(transactionId: string) {
+  async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
@@ -64,21 +51,19 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
           `Crypto transaction for Transaction ${transactionId} failed, crypto transaction id : ${transaction.props.cryptoTransactionId}`,
         );
 
-        await this.queueProcessorHelper.failure(
+        await this.processFailure(
           TransactionStatus.CRYPTO_OUTGOING_FAILED,
           "Failed to settle crypto transaction.", // TODO: Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
           transaction,
-          this.transactionRepo,
         );
         return;
       }
     } catch (err) {
       this.logger.error("Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.", err);
-      await this.queueProcessorHelper.failure(
+      await this.processFailure(
         TransactionStatus.CRYPTO_OUTGOING_FAILED,
         "Failed to settle crypto transaction.", // TODO: Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
         transaction,
-        this.transactionRepo,
       );
       return;
     }
@@ -89,7 +74,7 @@ export class CryptoTransactionStatusProcessor implements MessageProcessor {
     if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
       // await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionCompleted, transactionId);
     } else if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_FAILED) {
-      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionFailed, transactionId);
+      await this.sqsClient.enqueue(TransactionQueueName.TransactionFailed, transactionId);
     }
   }
 }

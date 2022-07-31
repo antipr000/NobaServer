@@ -14,6 +14,7 @@ import { FiatTransactionInitiator } from "./FiatTransactionInitiator";
 import { FiatTransactionStatusProcessor } from "./FiatTransactionStatusProcessor";
 import { OnChainPendingProcessor } from "./OnChainPendingProcessor";
 import { TransactionQueueName } from "./QueuesMeta";
+import { SqsClient } from "./sqs.client";
 import { TransactionFailedProcessor } from "./TransactionFailedProcessor";
 import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactionProcessor";
 
@@ -30,6 +31,7 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
     ZeroHashService,
     TransactionService,
     AppService,
+    SqsClient,
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,

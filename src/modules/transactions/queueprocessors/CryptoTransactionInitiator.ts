@@ -1,41 +1,28 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Consumer } from "sqs-consumer";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
-import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { Transaction } from "../domain/Transaction";
 import { CryptoTransactionRequestResultStatus, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { TransactionQueueName } from "./QueuesMeta";
-import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
+import { SqsClient } from "./sqs.client";
+import { MessageProcessor } from "./message.processor";
 
-@Injectable()
-export class CryptoTransactionInitiator implements MessageProcessor {
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
+export class CryptoTransactionInitiator extends MessageProcessor {
 
-  @Inject()
-  private readonly transactionService: TransactionService;
-
-  @Inject()
-  private readonly consumerService: ConsumerService;
-
-  private queueProcessorHelper: QueueProcessorHelper;
-
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    this.init();
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
+    sqsClient: SqsClient,
+    consumerService: ConsumerService,
+    transactionService: TransactionService,
+  ) {
+    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.FiatTransactionCompleted);
   }
 
-  async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.FiatTransactionCompleted, this);
-
-    app.start();
-  }
-
-  async process(transactionId: string) {
+  async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
@@ -85,12 +72,10 @@ export class CryptoTransactionInitiator implements MessageProcessor {
 
       const statusReason =
         result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE ? "Out of balance." : "General failure."; // TODO (#332): Improve error responses
-
-      await this.queueProcessorHelper.failure(
+      await this.processFailure(
         TransactionStatus.CRYPTO_OUTGOING_FAILED,
-        "Transaction validation failure.", // TODO: Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+        statusReason, // TODO: Need more detail here - should throw exception from validatePendingTransaction with detailed reason
         transaction,
-        this.transactionRepo,
       );
       return;
     }
@@ -104,7 +89,7 @@ export class CryptoTransactionInitiator implements MessageProcessor {
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
     if (transaction.props.transactionStatus == TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
-      await this.queueProcessorHelper.enqueueTransaction(
+      await this.sqsClient.enqueue(
         TransactionQueueName.CryptoTransactionInitiated,
         transactionId,
       );

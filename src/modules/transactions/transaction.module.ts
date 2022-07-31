@@ -11,11 +11,13 @@ import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 import { AppService } from "../../app.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
+import { SqsClient } from "./queueprocessors/sqs.client";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule, AsyncTransactionProcessorModule],
   controllers: [TransactionController],
   providers: [
+    SqsClient,
     PendingTransactionDBPollerService,
     TransactionService,
     LimitsService,

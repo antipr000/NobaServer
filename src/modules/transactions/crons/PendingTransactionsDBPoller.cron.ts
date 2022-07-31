@@ -2,12 +2,11 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionStatus } from "../domain/Types";
-import { getTransactionQueueProducers, TransactionQueueName } from "../queueprocessors/QueuesMeta";
+import { TransactionQueueName } from "../queueprocessors/QueuesMeta";
 import { ITransactionRepo } from "../repo/TransactionRepo";
-import { Producer } from "sqs-producer";
 import { Transaction } from "../domain/Transaction";
 import { Cron } from "@nestjs/schedule";
-import { QueueProcessorHelper } from "../queueprocessors/QueueProcessorHelper";
+import { SqsClient } from "../queueprocessors/sqs.client";
 
 const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.PENDING]: TransactionQueueName.PendingTransactionValidation,
@@ -26,14 +25,12 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
 @Injectable()
 export class PendingTransactionDBPollerService {
   private isCronRunning = false;
-  private queueProcessorHelper: QueueProcessorHelper;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
-  ) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-  }
+    private readonly sqsClient: SqsClient
+  ) { }
 
   //every 5 seconds for now, we should be using db streams actually but it's fine for now
   @Cron("*/5 * * * * *", { name: "PendingTransactionsDBPoller" })
@@ -91,7 +88,7 @@ export class PendingTransactionDBPollerService {
       this.logger.info(`Sending transaction ${transaction.props._id} to queue ${targetQueue}`);
 
       try {
-        await this.queueProcessorHelper.enqueueTransaction(targetQueue, transaction.props._id);
+        await this.sqsClient.enqueue(targetQueue, transaction.props._id);
       } catch (err) {
         console.log("Error", err);
       }

@@ -1,37 +1,32 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
-import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
 import { ZeroHashService } from "../zerohash.service";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { EmailService } from "../../common/email.service";
+import { TransactionService } from "../transaction.service";
+import { SqsClient } from "./sqs.client";
+import { MessageProcessor } from "./message.processor";
 
-@Injectable()
-export class OnChainPendingProcessor implements MessageProcessor {
-  private queueProcessorHelper: QueueProcessorHelper;
+export class OnChainPendingProcessor extends MessageProcessor {
 
   constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger,
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
+    sqsClient: SqsClient,
+    consumerService: ConsumerService,
+    transactionService: TransactionService,
     private readonly zerohashService: ZeroHashService,
-    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
-    @Inject(EmailService) private readonly emailService: EmailService,
-    @Inject(ConsumerService) private readonly consumerService: ConsumerService,
+    private readonly emailService: EmailService,
   ) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    this.init();
+    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.OnChainPendingTransaction);
   }
 
-  async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.OnChainPendingTransaction, this);
-
-    app.start();
-  }
-
-  async process(transactionId: string) {
+  async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
