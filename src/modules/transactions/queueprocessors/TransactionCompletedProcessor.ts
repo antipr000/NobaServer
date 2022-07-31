@@ -11,7 +11,6 @@ import { MessageProcessor } from "./message.processor";
 import { ConsumerService } from "../../consumer/consumer.service";
 
 export class TransactionCompletedProcessor extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -19,14 +18,23 @@ export class TransactionCompletedProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.CryptoTransactionCompleted);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.CryptoTransactionCompleted,
+    );
   }
 
   async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
-      this.logger.info(`Transaction is not initiated yet, skipping ${status}`);
+      this.logger.info(
+        `Transaction with status ${status} should not be in queue ${TransactionQueueName.CryptoTransactionCompleted}`,
+      );
       return;
     }
 

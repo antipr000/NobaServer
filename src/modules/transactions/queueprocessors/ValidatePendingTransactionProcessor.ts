@@ -12,7 +12,6 @@ import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 
 export class ValidatePendingTransactionProcessor extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -20,7 +19,14 @@ export class ValidatePendingTransactionProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.PendingTransactionValidation);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.PendingTransactionValidation,
+    );
   }
 
   async processMessage(transactionId: string) {

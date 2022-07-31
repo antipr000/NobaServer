@@ -16,9 +16,7 @@ export class SqsClient {
   private static readonly SELECTOR_ATTRIBUTE = "hostname";
   private readonly queueProducers: Record<TransactionQueueName, Producer>;
 
-  constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     this.queueProducers = getTransactionQueueProducers();
   }
 
@@ -75,27 +73,3 @@ export class SqsClient {
     return true;
   }
 }
-
-
-// transactions = {
-//   [S1]: {
-//     pollingDelay: 5,
-//     queue: "",
-//     processor: FiatInit,
-
-//   },
-//   [S2]: {
-
-//   }
-// }
-
-// sqsRepo {
-//   enqueue(transactionId, queueName);
-//   private registerDequeHandler(hadnler, queueName);
-//   enqueueError();
-
-// }
-
-// FiatInitHandler() : MessageHandler() {
-//   ...
-// }

@@ -12,7 +12,6 @@ import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 
 export class FiatTransactionStatusProcessor extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -20,17 +19,26 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.FiatTransactionInitated);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.FiatTransactionInitiated,
+    );
   }
 
   async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
+
     if (status != TransactionStatus.FIAT_INCOMING_INITIATED) {
       this.logger.info(`Transaction ${transactionId} is not in initiated state, skipping ${status}`);
       return;
     }
 
+    let newStatus: TransactionStatus;
     // check transaction status here
     const paymentStatus = await this.consumerService.getFiatPaymentStatus(
       transaction.props.checkoutPaymentID,
@@ -41,28 +49,31 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       this.logger.info(
         `Transaction ${transactionId} is captured with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_COMPLETED}`,
       );
-      transaction.props.transactionStatus = TransactionStatus.FIAT_INCOMING_COMPLETED; // update transaction status
-    }
-
-    if (paymentStatus === FiatTransactionStatus.PENDING) {
+      newStatus = TransactionStatus.FIAT_INCOMING_COMPLETED; // update transaction status
+    } else if (paymentStatus === FiatTransactionStatus.PENDING) {
       this.logger.info(
         `Transaction ${transactionId} is stilling Pending paymentID ${transaction.props.checkoutPaymentID}`,
       );
       transaction.setDBPollingTimeAfterNSeconds(5); //reprocess this transaction in 5 seconds
-    }
-
-    if (paymentStatus === FiatTransactionStatus.FAILED) {
+    } else if (paymentStatus === FiatTransactionStatus.FAILED) {
       this.logger.info(
         `Transaction ${transactionId} failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
       );
-      transaction.props.transactionStatus = TransactionStatus.FIAT_INCOMING_FAILED;
+      await this.processFailure(
+        TransactionStatus.FIAT_INCOMING_FAILED,
+        "Need more details on the failure",
+        transaction,
+      ); // TODO (#332) get details from exception thrown by getFiatPaymentStatus()
+      return;
     }
 
     //save the new status in db
-    transaction = await this.transactionRepo.updateTransaction(Transaction.createTransaction(transaction.props));
+    transaction = await this.transactionRepo.updateTransaction(
+      Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
+    );
 
     //Move to completed queue if the transaction is completed so that we can process the next step quickly, we could just wait for the poller cron to put in this queue but poller will take delay as it's scheduled so we move it to the target queue directly from here
-    if (TransactionStatus.COMPLETED === transaction.props.transactionStatus) {
+    if (newStatus === TransactionStatus.FIAT_INCOMING_COMPLETED) {
       await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transactionId);
     }
   }

@@ -13,7 +13,6 @@ import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 
 export class OnChainPendingProcessor extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -23,7 +22,14 @@ export class OnChainPendingProcessor extends MessageProcessor {
     private readonly zerohashService: ZeroHashService,
     private readonly emailService: EmailService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.OnChainPendingTransaction);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.OnChainPendingTransaction,
+    );
   }
 
   async processMessage(transactionId: string) {

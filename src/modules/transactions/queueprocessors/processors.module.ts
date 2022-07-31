@@ -19,13 +19,7 @@ import { TransactionFailedProcessor } from "./TransactionFailedProcessor";
 import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactionProcessor";
 
 @Module({
-  imports: [
-    CommonModule,
-    InfraProvidersModule,
-    ConsumerModule,
-    VerificationModule,
-    getWinstonModule()
-  ],
+  imports: [CommonModule, InfraProvidersModule, ConsumerModule, VerificationModule, getWinstonModule()],
   controllers: [],
   providers: [
     ZeroHashService,
@@ -49,7 +43,7 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
     },
     {
       // TransactionStatus.FIAT_INCOMING_INITIATED
-      provide: TransactionQueueName.FiatTransactionInitated,
+      provide: TransactionQueueName.FiatTransactionInitiated,
       useClass: FiatTransactionStatusProcessor,
     },
 
@@ -79,7 +73,7 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
       // TransactionStatus.VALIDATION_FAILED
       provide: TransactionQueueName.TransactionFailed,
       useClass: TransactionFailedProcessor,
-    }
+    },
   ],
 })
-export class AsyncTransactionProcessorModule { }
+export class AsyncTransactionProcessorModule {}

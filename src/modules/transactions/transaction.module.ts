@@ -22,7 +22,7 @@ import { SqsClient } from "./queueprocessors/sqs.client";
     TransactionService,
     LimitsService,
     ZeroHashService,
-    AppService,   // Replace with 'CurrencyService'
+    AppService, // Replace with 'CurrencyService'
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
@@ -30,4 +30,4 @@ import { SqsClient } from "./queueprocessors/sqs.client";
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
-export class TransactionModule { }
+export class TransactionModule {}

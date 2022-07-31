@@ -11,7 +11,6 @@ import { TransactionQueueName } from "./QueuesMeta";
 import { SqsClient } from "./sqs.client";
 
 export class FiatReversalInitiator extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -19,7 +18,14 @@ export class FiatReversalInitiator extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.FiatTransactionInitated);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.FiatTransactionInitiated,
+    );
   }
 
   async processMessage(transactionId: string) {

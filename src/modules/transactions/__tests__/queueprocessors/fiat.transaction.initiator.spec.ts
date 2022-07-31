@@ -183,7 +183,9 @@ describe("FiatTransactionInitiator", () => {
     expect(MockSqsProducer.producedMessages).toHaveLength(0);
 
     // A handler should already be register in 'Consumer' with queue 'FiatTransactionInitiator'
-    expect(MockSqsConsumer.onCalls.map(val => val.type).sort()).toEqual(["error", "processing_error"].sort());
+    expect(MockSqsConsumer.onCalls.map(val => val.type).sort()).toEqual(
+      ["error", "processing_error", "empty", "message_processed", "message_received", "timeout_error"].sort(),
+    );
 
     expect(MockSqsConsumer.startCallsCount).toBe(1);
     expect(MockSqsConsumer.intializers).toHaveLength(1);

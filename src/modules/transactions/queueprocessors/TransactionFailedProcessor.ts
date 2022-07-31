@@ -12,7 +12,6 @@ import { SqsClient } from "./sqs.client";
 import { TransactionService } from "../transaction.service";
 
 export class TransactionFailedProcessor extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -21,7 +20,14 @@ export class TransactionFailedProcessor extends MessageProcessor {
     transactionService: TransactionService,
     private readonly emailService: EmailService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.TransactionFailed);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.TransactionFailed,
+    );
   }
 
   async processMessage(transactionId: string) {
@@ -45,6 +51,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
       return;
     }
 
+    transaction.disableDBPolling();
     transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,

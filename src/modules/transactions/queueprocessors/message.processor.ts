@@ -35,11 +35,7 @@ export abstract class MessageProcessor {
   }
 
   // TODO (#310) move transactionRepo to a class variable
-  protected async processFailure(
-    status: TransactionStatus,
-    reason: string,
-    transaction: Transaction,
-  ) {
+  protected async processFailure(status: TransactionStatus, reason: string, transaction: Transaction) {
     const existingExceptions = transaction.props.transactionExceptions;
 
     // TODO (#332) Improve population of details (internal details, not to be viewed by consumer)

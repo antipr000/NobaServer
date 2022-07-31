@@ -13,7 +13,6 @@ import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 
 export class FiatTransactionInitiator extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -22,7 +21,14 @@ export class FiatTransactionInitiator extends MessageProcessor {
     transactionService: TransactionService,
     private readonly verificationService: VerificationService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.FiatTransactionInitiator);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.FiatTransactionInitiator,
+    );
   }
 
   async processMessage(transactionId: string) {
@@ -71,6 +77,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
           const errorBody: CheckoutValidationError = e.body;
           const errorDescription = errorBody.error_type;
           const errorCode = errorBody.error_codes.join(",");
+          // TODO: Update payment method with error
 
           this.logger.error(`Fiat payment failed: Error code: ${errorCode}, Error Description: ${errorDescription}`);
 
@@ -111,6 +118,6 @@ export class FiatTransactionInitiator extends MessageProcessor {
     );
 
     //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
-    await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitated, transactionId);
+    await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
   }
 }

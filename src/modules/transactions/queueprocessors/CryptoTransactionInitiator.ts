@@ -11,7 +11,6 @@ import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
-
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
     @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
@@ -19,7 +18,14 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
   ) {
-    super(logger, transactionRepo, sqsClient, consumerService, transactionService, TransactionQueueName.FiatTransactionCompleted);
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.FiatTransactionCompleted,
+    );
   }
 
   async processMessage(transactionId: string) {
@@ -43,6 +49,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     );
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    let newStatus: TransactionStatus;
 
     // crypto transaction here
     const result = await this.transactionService.initiateCryptoTransaction(consumer, transaction);
@@ -51,11 +58,10 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       transaction.props.exchangeRate = result.exchangeRate;
       transaction.props.nobaTransferID = result.nobaTransferID;
       transaction.props.tradeQuoteID = result.quoteID;
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
+      newStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
 
       this.logger.info(`Crypto Transaction for Noba Transaction ${transactionId} initiated with id ${result.tradeID}`);
-    }
-    else if (
+    } else if (
       result.status === CryptoTransactionRequestResultStatus.FAILED ||
       result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE
     ) {
@@ -68,8 +74,6 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         this.logger.info("Noba Crypto balance is low, raising alert");
       }
 
-      transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_FAILED;
-
       const statusReason =
         result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE ? "Out of balance." : "General failure."; // TODO (#332): Improve error responses
       await this.processFailure(
@@ -78,21 +82,19 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         transaction,
       );
       return;
-    }
-    else {
+    } else {
       // TODO(#): Define the behaviour for other kind of statuses
     }
 
     // crypto transaction ends here
 
-    transaction = await this.transactionRepo.updateTransaction(Transaction.createTransaction({ ...transaction.props }));
+    transaction = await this.transactionRepo.updateTransaction(
+      Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
+    );
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
-    if (transaction.props.transactionStatus == TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
-      await this.sqsClient.enqueue(
-        TransactionQueueName.CryptoTransactionInitiated,
-        transactionId,
-      );
+    if (newStatus === TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
+      await this.sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transactionId);
     }
   }
 }
