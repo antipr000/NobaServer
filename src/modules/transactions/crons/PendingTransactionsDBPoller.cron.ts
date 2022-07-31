@@ -17,7 +17,7 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.FIAT_INCOMING_INITIATING]: TransactionQueueName.FiatTransactionInitiator,
   [TransactionStatus.FIAT_INCOMING_COMPLETED]: TransactionQueueName.FiatTransactionCompleted,
   [TransactionStatus.FIAT_INCOMING_FAILED]: TransactionQueueName.TransactionFailed,
-  [TransactionStatus.CRYPTO_OUTGOING_INITIATING]: TransactionQueueName.CryptoTransactionCompleted,
+  [TransactionStatus.CRYPTO_OUTGOING_INITIATING]: TransactionQueueName.FiatTransactionCompleted,
   [TransactionStatus.CRYPTO_OUTGOING_INITIATED]: TransactionQueueName.CryptoTransactionInitiated,
   [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: TransactionQueueName.OnChainPendingTransaction,
   [TransactionStatus.CRYPTO_OUTGOING_FAILED]: TransactionQueueName.TransactionFailed,

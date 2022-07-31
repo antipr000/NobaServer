@@ -68,8 +68,7 @@ export class CryptoTransactionInitiator implements MessageProcessor {
 
       this.logger.info(`Crypto Transaction for Noba Transaction ${transactionId} initiated with id ${result.tradeID}`);
     }
-
-    if (
+    else if (
       result.status === CryptoTransactionRequestResultStatus.FAILED ||
       result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE
     ) {
@@ -94,6 +93,9 @@ export class CryptoTransactionInitiator implements MessageProcessor {
         this.transactionRepo,
       );
       return;
+    }
+    else {
+      // TODO(#): Define the behaviour for other kind of statuses
     }
 
     // crypto transaction ends here

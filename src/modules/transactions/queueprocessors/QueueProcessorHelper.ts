@@ -110,3 +110,27 @@ export class QueueProcessorHelper {
     await this.enqueueTransaction(TransactionQueueName.TransactionFailed, transaction.props._id);
   }
 }
+
+
+// transactions = {
+//   [S1]: {
+//     pollingDelay: 5,
+//     queue: "",
+//     processor: FiatInit,
+
+//   },
+//   [S2]: {
+
+//   }
+// }
+
+// sqsRepo {
+//   enqueue(transactionId, queueName);
+//   private registerDequeHandler(hadnler, queueName);
+//   enqueueError();
+
+// }
+
+// FiatInitHandler() : MessageHandler() {
+//   ...
+// }
