@@ -47,7 +47,8 @@ export class ConsumerService {
     const consumerResult = await this.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumerResult.isFailure) {
       const newConsumer = Consumer.createConsumer({
-        email,
+        email: email.toLowerCase(),
+        displayEmail: email,
         phone,
         partners: [
           {
@@ -89,7 +90,7 @@ export class ConsumerService {
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
     const isEmail = emailOrPhone.includes("@");
     const consumerResult = isEmail
-      ? await this.consumerRepo.getConsumerByEmail(emailOrPhone)
+      ? await this.consumerRepo.getConsumerByEmail(emailOrPhone.toLowerCase())
       : await this.consumerRepo.getConsumerByPhone(emailOrPhone);
     return consumerResult;
   }

@@ -45,7 +45,6 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
   async verifyOtp(@Body() request: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
     const authService: AuthService = this.getAuthService(request.identityType);
-
     const userId: string = await authService.validateAndGetUserId(request.emailOrPhone, request.otp, request.partnerID);
     return authService.generateAccessToken(userId);
   }

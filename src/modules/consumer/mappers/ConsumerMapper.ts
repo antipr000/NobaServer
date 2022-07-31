@@ -52,7 +52,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       _id: p._id,
       firstName: p.firstName,
       lastName: p.lastName,
-      email: p.email,
+      email: p.displayEmail ? p.displayEmail : p.email,
       phone: p.phone,
       isSuspectedFraud: p.isSuspectedFraud,
       isLocked: p.isLocked,

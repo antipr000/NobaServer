@@ -22,7 +22,8 @@ export type TransactionDTO = {
     | "CRYPTO_OUTGOING_PENDING"
     | "CRYPTO_OUTGOING_COMPLETED"
     | "CRYPTO_OUTGOING_FAILED"
-    | "COMPLETED";
+    | "COMPLETED"
+    | "FAILED";
   type: "onramp" | "offramp" | "swap";
   statusMessage?: string;
   leg1: string;

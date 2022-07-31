@@ -18,6 +18,7 @@ export interface ConsumerProps extends VersioningInfo {
   firstName?: string;
   lastName?: string;
   email?: string;
+  displayEmail?: string;
   phone?: string;
   isAdmin?: boolean;
   dateOfBirth?: string;
@@ -95,6 +96,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
     .allow(null)
     .optional()
     .meta({ _mongoose: { index: true } }),
+  displayEmail: Joi.string().email().optional(),
   phone: Joi.string()
     .optional()
     .allow(null)

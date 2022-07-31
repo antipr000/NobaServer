@@ -93,6 +93,54 @@ describe("Authentication", () => {
       expect(loggedInConsumer.email).toBe(consumerEmail);
     });
 
+    it("should be successful with different cases", async () => {
+      const consumerEmail = "Test+Consumer@noba.com";
+
+      await AuthenticationService.loginUser({
+        email: consumerEmail,
+        identityType: "CONSUMER",
+        partnerID: "partner-1",
+      });
+
+      (await AuthenticationService.verifyOtp({
+        emailOrPhone: consumerEmail,
+        otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
+        identityType: "CONSUMER",
+        partnerID: "partner-1",
+      })) as VerifyOtpResponseDTO & ResponseStatus;
+
+      const newRequestConsumerEmail = "test+consumer@noba.com";
+
+      const loginResponse = await AuthenticationService.loginUser({
+        email: consumerEmail,
+        identityType: "CONSUMER",
+        partnerID: "partner-1",
+      });
+      expect(loginResponse.__status).toBe(201);
+
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+        emailOrPhone: consumerEmail,
+        otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
+        identityType: "CONSUMER",
+        partnerID: "partner-1",
+      })) as VerifyOtpResponseDTO & ResponseStatus;
+      console.log(verifyOtpResponse);
+
+      const accessToken = verifyOtpResponse.access_token;
+      const userId = verifyOtpResponse.user_id;
+
+      expect(verifyOtpResponse.__status).toBe(201);
+      expect(accessToken).toBeDefined();
+      expect(userId).toBeDefined();
+
+      setAccessTokenForTheNextRequests(accessToken);
+      const loggedInConsumer = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+
+      expect(loggedInConsumer.__status).toBe(200);
+      expect(loggedInConsumer._id).toBe(userId);
+      expect(loggedInConsumer.email).toBe(consumerEmail);
+    });
+
     it("signup with invalid 'identityType' throws 400 error", async () => {
       const consumerEmail = "test+consumer@noba.com";
 
