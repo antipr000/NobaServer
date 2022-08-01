@@ -55,9 +55,9 @@ jest.mock("sqs-consumer", () => {
 });
 
 import { Test, TestingModule } from "@nestjs/testing";
-import { NODE_ENV_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "src/config/ConfigurationUtils";
-import { TestConfigModule } from "src/core/utils/AppConfigModule";
-import { getTestWinstonModule } from "src/core/utils/WinstonModule";
+import { NODE_ENV_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
+import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { TransactionQueueName } from "../../queueprocessors/QueuesMeta";
 import { SqsClient } from "../../queueprocessors/sqs.client";
 

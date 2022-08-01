@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { AppService } from "src/app.service";
-import { getWinstonModule } from "src/core/utils/WinstonModule";
-import { InfraProvidersModule } from "src/infraproviders/infra.module";
-import { CommonModule } from "src/modules/common/common.module";
-import { ConsumerModule } from "src/modules/consumer/consumer.module";
-import { VerificationModule } from "src/modules/verification/verification.module";
+import { AppService } from "../../../app.service";
+import { getWinstonModule } from "../../../core/utils/WinstonModule";
+import { InfraProvidersModule } from "../../../infraproviders/infra.module";
+import { CommonModule } from "../../../modules/common/common.module";
+import { ConsumerModule } from "../../../modules/consumer/consumer.module";
+import { VerificationModule } from "../../../modules/verification/verification.module";
 import { MongoDBTransactionRepo } from "../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
