@@ -7,6 +7,7 @@ import {
   TransactionInitiatedEmailParameters,
   OrderExecutedEmailParameters,
   OrderFailedEmailParameters,
+  CryptoFailedEmailParameters,
 } from "./domain/EmailParameters";
 import { EmailTemplates } from "./domain/EmailTemplates";
 import { CurrencyService } from "../../modules/common/currency.service";
@@ -206,6 +207,46 @@ export class EmailService {
         cryptocurrency_code: params.cryptoCurrency,
         cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
         crypto_expected: params.cryptoAmount,
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendCryptoFailedEmail(
+    firstName: string,
+    lastName: string,
+    email: string,
+    params: CryptoFailedEmailParameters,
+  ) {
+    const subtotal =
+      this.roundTo2DecimalNumber(params.totalPrice) -
+      this.roundTo2DecimalNumber(params.processingFee) -
+      this.roundTo2DecimalNumber(params.networkFee) -
+      this.roundTo2DecimalNumber(params.nobaFee);
+
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.CRYPTO_FAILED_EMAIL,
+      dynamicTemplateData: {
+        username: this.getUsernameFromNameParts(firstName, lastName),
+        transaction_id: params.transactionID,
+        user_id: email,
+        fiat_currency_code: params.currencyCode,
+        card_network: params.paymentMethod,
+        last_four: params.last4Digits,
+        order_date: params.transactionTimestamp.toLocaleString(),
+        cryptocurrency_code: params.cryptoCurrency,
+        conversion_rate: params.conversionRate,
+        crypto_expected: params.cryptoAmount,
+        subtotal: this.roundTo2DecimalString(subtotal),
+        processing_fees: this.roundTo2DecimalString(params.processingFee),
+        network_fees: this.roundTo2DecimalString(params.networkFee),
+        noba_fee: this.roundTo2DecimalString(params.nobaFee),
+        total_price: this.roundTo2DecimalString(params.totalPrice),
+        reason_failed: params.failureReason,
+        cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
       },
     };
 

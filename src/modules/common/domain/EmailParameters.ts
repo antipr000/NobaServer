@@ -13,6 +13,10 @@ export type TransactionParameters = {
   cryptoCurrency: string;
 };
 
+export interface CryptoFailedEmailParameters extends TransactionParameters {
+  failureReason: string;
+}
+
 export interface TransactionInitiatedEmailParameters extends TransactionParameters {}
 
 export interface OrderExecutedEmailParameters extends TransactionParameters {

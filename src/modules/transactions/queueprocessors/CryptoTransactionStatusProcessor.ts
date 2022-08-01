@@ -9,6 +9,7 @@ import { TransactionService } from "../transaction.service";
 import { TransactionQueueName } from "./QueuesMeta";
 import { MessageProcessor } from "./message.processor";
 import { SqsClient } from "./sqs.client";
+import { EmailService } from "../../../modules/common/email.service";
 
 export class CryptoTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -17,6 +18,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
     sqsClient: SqsClient,
     consumerService: ConsumerService,
     transactionService: TransactionService,
+    private readonly emailService: EmailService,
   ) {
     super(
       logger,
@@ -87,6 +89,34 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           TransactionStatus.CRYPTO_OUTGOING_FAILED,
           "Failed to settle crypto transaction.", // TODO: Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
           transaction,
+        );
+
+        const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+        if (paymentMethod == null) {
+          // Should never happen if we got this far
+          this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
+          return;
+        }
+
+        await this.emailService.sendCryptoFailedEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.email,
+          {
+            transactionID: transaction.props._id,
+            transactionTimestamp: transaction.props.transactionTimestamp,
+            paymentMethod: paymentMethod.cardType,
+            last4Digits: paymentMethod.last4Digits,
+            currencyCode: transaction.props.leg1,
+            conversionRate: transaction.props.exchangeRate,
+            processingFee: transaction.props.processingFee,
+            networkFee: transaction.props.networkFee,
+            nobaFee: transaction.props.nobaFee,
+            totalPrice: transaction.props.leg1Amount,
+            cryptoAmount: transaction.props.leg2Amount,
+            cryptoCurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
+            failureReason: "Failed to settle crypto transaction", // TODO: Better message
+          },
         );
         return;
       }
