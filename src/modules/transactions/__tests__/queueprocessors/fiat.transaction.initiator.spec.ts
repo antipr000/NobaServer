@@ -1,63 +1,7 @@
-class MockSqsProducer {
-  public static producedMessages: Array<any> = [];
-
-  static reset() {
-    MockSqsProducer.producedMessages = [];
-  }
-
-  constructor(public readonly constructedWith: any) {
-    MockSqsProducer.producedMessages = [];
-  }
-
-  send(message: any) {
-    MockSqsProducer.producedMessages.push(message);
-  }
-}
-
-class MockSqsConsumer {
-  public static intializers: Array<any> = [];
-  public static onCalls: Array<any> = [];
-  public static startCallsCount = 0;
-
-  static reset() {
-    MockSqsConsumer.intializers = [];
-    MockSqsConsumer.onCalls = [];
-    MockSqsConsumer.startCallsCount = 0;
-  }
-
-  static create(initializer: any) {
-    MockSqsConsumer.intializers.push(initializer);
-    return new MockSqsConsumer();
-  }
-
-  on(type: string, callback) {
-    MockSqsConsumer.onCalls.push({
-      type: type,
-      callback: callback,
-    });
-  }
-
-  start() {
-    MockSqsConsumer.startCallsCount++;
-  }
-}
-
-jest.mock("sqs-producer", () => {
-  return {
-    Producer: MockSqsProducer,
-  };
-});
-
-jest.mock("sqs-consumer", () => {
-  return {
-    Consumer: MockSqsConsumer,
-  };
-});
-
 import { Test, TestingModule } from "@nestjs/testing";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
-import { instance, when } from "ts-mockito";
+import { anything, capture, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { FiatTransactionInitiator } from "../../queueprocessors/FiatTransactionInitiator";
@@ -78,6 +22,10 @@ import mongoose from "mongoose";
 import * as os from "os";
 import { VerificationService } from "../../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
+import { SqsClient } from "../../queueprocessors/sqs.client";
+import { TransactionService } from "../../transaction.service";
+import { getMockTransactionServiceWithDefaults } from "../../mocks/mock.transactions.repo";
+import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -101,6 +49,8 @@ describe("FiatTransactionInitiator", () => {
   jest.setTimeout(10000);
 
   let consumerService: ConsumerService;
+  let sqsClient: SqsClient;
+  let transactionService: TransactionService;
   let fiatTransactionInitiator: FiatTransactionInitiator;
 
   let mongoServer: MongoMemoryServer;
@@ -124,10 +74,18 @@ describe("FiatTransactionInitiator", () => {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
 
-    MockSqsConsumer.reset();
-    MockSqsProducer.reset();
     consumerService = getMockConsumerServiceWithDefaults();
     verificationService = getMockVerificationServiceWithDefaults();
+    transactionService = getMockTransactionServiceWithDefaults();
+    sqsClient = getMockSqsClientWithDefaults();
+
+    // This behaviour is in the 'beforeEach' because `FiatTransactionInitiator` will be initiated
+    // by Nest in the `createTestingModule()` method.
+    // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
+    // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
+    when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiator, anything())).thenReturn({
+      start: () => {},
+    } as any);
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
@@ -145,6 +103,14 @@ describe("FiatTransactionInitiator", () => {
           provide: VerificationService,
           useFactory: () => instance(verificationService),
         },
+        {
+          provide: SqsClient,
+          useFactory: () => instance(sqsClient),
+        },
+        {
+          provide: TransactionService,
+          useFactory: () => instance(transactionService),
+        },
         FiatTransactionInitiator,
       ],
     }).compile();
@@ -158,15 +124,17 @@ describe("FiatTransactionInitiator", () => {
   });
 
   afterEach(async () => {
-    MockSqsConsumer.reset();
-    MockSqsProducer.reset();
-
     await mongoClient.close();
     await mongoose.disconnect();
     await mongoServer.stop();
   });
 
   it("should process the fiat transaction and put it in next queue", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
     const initiatedPaymentId = "CCCCCCCCCC";
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
@@ -179,43 +147,25 @@ describe("FiatTransactionInitiator", () => {
       leg2: "ETH",
     });
 
-    // Producer shouldnot have anything
-    expect(MockSqsProducer.producedMessages).toHaveLength(0);
-
-    // A handler should already be register in 'Consumer' with queue 'FiatTransactionInitiator'
-    expect(MockSqsConsumer.onCalls.map(val => val.type).sort()).toEqual(
-      ["error", "processing_error", "empty", "message_processed", "message_received", "timeout_error"].sort(),
-    );
-
-    expect(MockSqsConsumer.startCallsCount).toBe(1);
-    expect(MockSqsConsumer.intializers).toHaveLength(1);
-    expect(MockSqsConsumer.intializers[0].queueUrl).toEqual(
-      expect.stringContaining(TransactionQueueName.FiatTransactionInitiator),
-    );
-
-    when(
-      consumerService.requestCheckoutPayment(transaction.props.paymentMethodID, 1000, "USD", transaction.props._id),
-    ).thenResolve({ id: initiatedPaymentId });
-
     await transactionCollection.insertOne({
       ...transaction.props,
       _id: transaction.props._id as any,
     });
 
-    // Call the registered handler (analogous to a message arrival in the queue)
-    const registeredHandler = MockSqsConsumer.intializers[0].handleMessage;
-    await registeredHandler({
-      id: transaction.props._id,
-      Body: transaction.props._id,
-      MessageAttributes: { hostname: { DataType: "String", StringValue: os.hostname() } },
-    });
+    when(
+      consumerService.requestCheckoutPayment(transaction.props.paymentMethodID, 1000, "USD", transaction.props._id),
+    ).thenResolve({ id: initiatedPaymentId });
+    when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
+
+    await fiatTransactionInitiator.processMessage(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
-
-    expect(MockSqsProducer.producedMessages).toHaveLength(1);
-    expect(MockSqsProducer.producedMessages[0].id).toEqual(transaction.props._id);
-
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
+    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+
+    const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+    expect(queueName).toBe(TransactionQueueName.FiatTransactionInitiated);
+    expect(transactionId).toBe(transaction.props._id);
   });
 });

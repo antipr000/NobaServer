@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PendingTransactionValidationStatus } from "../../consumer/domain/Types";
 import { Logger } from "winston";
@@ -8,33 +8,28 @@ import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { TransactionQueueName } from "./QueuesMeta";
-import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
+import { SqsClient } from "./sqs.client";
+import { MessageProcessor } from "./message.processor";
 
-@Injectable()
-export class ValidatePendingTransactionProcessor implements MessageProcessor {
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
-
-  @Inject()
-  private readonly consumerService: ConsumerService;
-
-  @Inject()
-  private readonly transactionService: TransactionService;
-
-  private queueProcessorHelper: QueueProcessorHelper;
-
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    this.init();
+export class ValidatePendingTransactionProcessor extends MessageProcessor {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
+    sqsClient: SqsClient,
+    consumerService: ConsumerService,
+    transactionService: TransactionService,
+  ) {
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.PendingTransactionValidation,
+    );
   }
 
-  async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.PendingTransactionValidation, this);
-
-    app.start();
-  }
-
-  async process(transactionId: string) {
+  async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     let consumer = await this.consumerService.getConsumer(transaction.props.userId);
 
@@ -53,11 +48,10 @@ export class ValidatePendingTransactionProcessor implements MessageProcessor {
         : TransactionStatus.VALIDATION_FAILED;
 
     if (updatedStatus === TransactionStatus.VALIDATION_FAILED) {
-      await this.queueProcessorHelper.failure(
+      await this.processFailure(
         updatedStatus,
         "Transaction validation failure.", // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
         transaction,
-        this.transactionRepo,
       );
     } else {
       transaction = await this.transactionRepo.updateTransaction(
@@ -66,7 +60,7 @@ export class ValidatePendingTransactionProcessor implements MessageProcessor {
           transactionStatus: updatedStatus,
         }),
       );
-      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionInitiator, transactionId);
+      await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, transactionId);
     }
   }
 }

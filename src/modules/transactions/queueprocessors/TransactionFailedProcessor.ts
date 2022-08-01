@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../../consumer/consumer.service";
@@ -6,33 +6,31 @@ import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
-import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
-import { CheckoutValidationError, CHECKOUT_VALIDATION_ERROR_HTTP_CODE } from "../domain/CheckoutErrorTypes";
-import { VerificationService } from "../../../modules/verification/verification.service";
-import { BadRequestException } from "@nestjs/common";
 import { EmailService } from "../../../modules/common/email.service";
+import { MessageProcessor } from "./message.processor";
+import { SqsClient } from "./sqs.client";
+import { TransactionService } from "../transaction.service";
 
-@Injectable()
-export class TransactionFailedProcessor implements MessageProcessor {
-  private queueProcessorHelper: QueueProcessorHelper;
-
+export class TransactionFailedProcessor extends MessageProcessor {
   constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
-    @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
-    @Inject(EmailService) private readonly emailService: EmailService,
-    private readonly consumerService: ConsumerService,
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
+    sqsClient: SqsClient,
+    consumerService: ConsumerService,
+    transactionService: TransactionService,
+    private readonly emailService: EmailService,
   ) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    this.init();
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.TransactionFailed,
+    );
   }
 
-  async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.TransactionFailed, this);
-
-    app.start();
-  }
-
-  async process(transactionId: string) {
+  async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 

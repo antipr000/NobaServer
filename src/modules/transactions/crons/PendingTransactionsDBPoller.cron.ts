@@ -6,7 +6,7 @@ import { TransactionQueueName } from "../queueprocessors/QueuesMeta";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { Transaction } from "../domain/Transaction";
 import { Cron } from "@nestjs/schedule";
-import { QueueProcessorHelper } from "../queueprocessors/QueueProcessorHelper";
+import { SqsClient } from "../queueprocessors/sqs.client";
 
 const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.PENDING]: TransactionQueueName.PendingTransactionValidation,
@@ -16,7 +16,7 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
   [TransactionStatus.FIAT_INCOMING_INITIATING]: TransactionQueueName.FiatTransactionInitiator,
   [TransactionStatus.FIAT_INCOMING_COMPLETED]: TransactionQueueName.FiatTransactionCompleted,
   [TransactionStatus.FIAT_INCOMING_FAILED]: TransactionQueueName.TransactionFailed,
-  [TransactionStatus.CRYPTO_OUTGOING_INITIATING]: TransactionQueueName.CryptoTransactionCompleted,
+  [TransactionStatus.CRYPTO_OUTGOING_INITIATING]: TransactionQueueName.FiatTransactionCompleted,
   [TransactionStatus.CRYPTO_OUTGOING_INITIATED]: TransactionQueueName.CryptoTransactionInitiated,
   [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: TransactionQueueName.OnChainPendingTransaction,
   [TransactionStatus.CRYPTO_OUTGOING_FAILED]: TransactionQueueName.TransactionFailed,
@@ -25,14 +25,12 @@ const transactionStatusToQueueMap: { [key: string]: TransactionQueueName } = {
 @Injectable()
 export class PendingTransactionDBPollerService {
   private isCronRunning = false;
-  private queueProcessorHelper: QueueProcessorHelper;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
-  ) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-  }
+    private readonly sqsClient: SqsClient,
+  ) {}
 
   //every 5 seconds for now, we should be using db streams actually but it's fine for now
   @Cron("*/5 * * * * *", { name: "PendingTransactionsDBPoller" })
@@ -90,7 +88,7 @@ export class PendingTransactionDBPollerService {
 
       try {
         this.logger.debug("Enqueueing from poller");
-        await this.queueProcessorHelper.enqueueTransaction(targetQueue, transaction.props._id);
+        await this.sqsClient.enqueue(targetQueue, transaction.props._id);
       } catch (err) {
         console.log("Error", err);
       }

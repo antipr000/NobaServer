@@ -1,33 +1,34 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Consumer } from "sqs-consumer";
+import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
-import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
+import { TransactionService } from "../transaction.service";
+import { MessageProcessor } from "./message.processor";
 import { TransactionQueueName } from "./QueuesMeta";
-import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
+import { SqsClient } from "./sqs.client";
 
-@Injectable()
-export class FiatReversalInitiator implements MessageProcessor {
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
-
-  private queueProcessorHelper: QueueProcessorHelper;
-
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    //this.init();
+export class FiatReversalInitiator extends MessageProcessor {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
+    sqsClient: SqsClient,
+    consumerService: ConsumerService,
+    transactionService: TransactionService,
+  ) {
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.FiatTransactionInitiated,
+    );
   }
 
-  async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.FiatTransactionInitiated, this);
-
-    app.start();
-  }
-
-  async process(transactionId: string) {
+  async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.FIAT_INCOMING_INITIATED) {

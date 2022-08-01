@@ -1,38 +1,35 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Consumer } from "sqs-consumer";
 import { Logger } from "winston";
-import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { FiatTransactionStatus } from "../../consumer/domain/Types";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionQueueName } from "./QueuesMeta";
-import { MessageProcessor, QueueProcessorHelper } from "./QueueProcessorHelper";
+import { TransactionService } from "../transaction.service";
+import { SqsClient } from "./sqs.client";
+import { MessageProcessor } from "./message.processor";
 
-@Injectable()
-export class FiatTransactionStatusProcessor implements MessageProcessor {
-  @Inject("TransactionRepo")
-  private readonly transactionRepo: ITransactionRepo;
-
-  @Inject()
-  private readonly consumerService: ConsumerService;
-
-  private queueProcessorHelper: QueueProcessorHelper;
-
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) readonly logger: Logger) {
-    this.queueProcessorHelper = new QueueProcessorHelper(this.logger);
-    this.init();
+export class FiatTransactionStatusProcessor extends MessageProcessor {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    @Inject("TransactionRepo") transactionRepo: ITransactionRepo,
+    sqsClient: SqsClient,
+    consumerService: ConsumerService,
+    transactionService: TransactionService,
+  ) {
+    super(
+      logger,
+      transactionRepo,
+      sqsClient,
+      consumerService,
+      transactionService,
+      TransactionQueueName.FiatTransactionInitiated,
+    );
   }
 
-  async init() {
-    const app = this.queueProcessorHelper.createConsumer(TransactionQueueName.FiatTransactionInitiated, this);
-
-    app.start();
-  }
-
-  async process(transactionId: string) {
+  async processMessage(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
@@ -62,11 +59,10 @@ export class FiatTransactionStatusProcessor implements MessageProcessor {
       this.logger.info(
         `Transaction ${transactionId} failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
       );
-      await this.queueProcessorHelper.failure(
+      await this.processFailure(
         TransactionStatus.FIAT_INCOMING_FAILED,
         "Need more details on the failure",
         transaction,
-        this.transactionRepo,
       ); // TODO (#332) get details from exception thrown by getFiatPaymentStatus()
       return;
     }
@@ -76,8 +72,9 @@ export class FiatTransactionStatusProcessor implements MessageProcessor {
       Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
     );
 
-    if (TransactionStatus.FIAT_INCOMING_COMPLETED === newStatus) {
-      await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.FiatTransactionCompleted, transactionId);
+    //Move to completed queue if the transaction is completed so that we can process the next step quickly, we could just wait for the poller cron to put in this queue but poller will take delay as it's scheduled so we move it to the target queue directly from here
+    if (newStatus === TransactionStatus.FIAT_INCOMING_COMPLETED) {
+      await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transactionId);
     }
   }
 }
