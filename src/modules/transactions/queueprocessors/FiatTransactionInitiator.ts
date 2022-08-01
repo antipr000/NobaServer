@@ -40,7 +40,6 @@ export class FiatTransactionInitiator extends MessageProcessor {
       return;
     }
 
-    let checkoutPaymentID: string;
     // If status is already TransactionStatus.FIAT_INCOMING_INITIATING, then we failed this step before. Query checkout to see if our call
     // succeeded and if so, skip checkout and continue with updating transaction status & enqueueing.
     if (status == TransactionStatus.FIAT_INCOMING_INITIATING) {
@@ -55,6 +54,8 @@ export class FiatTransactionInitiator extends MessageProcessor {
       );
     }
 
+    // TODO(#): What is this variable doing here?
+    let checkoutPaymentID: string;
     // TODO(#310) This is happening before we've called the ZH logic to calculate the true fiat value! We need to call
     // ZH before we even get here!
     if (checkoutPaymentID == undefined) {

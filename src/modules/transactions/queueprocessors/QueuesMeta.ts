@@ -1,5 +1,5 @@
 import { Producer } from "sqs-producer";
-import { environmentDependentQueueUrl } from "src/infra/aws/services/CommonUtils";
+import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 
 // **** Do not change the enum values as they are used to create SQS queues ***
 export enum TransactionQueueName {
