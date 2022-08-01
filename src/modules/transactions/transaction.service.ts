@@ -3,19 +3,13 @@ import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CurrencyService } from "../common/currency.service";
-import { CurrencyType, CryptoTransactionHandler } from "../common/domain/Types";
+import { CurrencyType } from "../common/domain/Types";
 import { ConsumerService } from "../consumer/consumer.service";
-import { PaymentMethod } from "../consumer/domain/PaymentMethod";
 import { KYCStatus } from "../consumer/domain/VerificationStatus";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { Transaction } from "./domain/Transaction";
-import {
-  CryptoTransactionRequestResult,
-  CryptoTransactionStatus,
-  CryptoTransactionStatusRequestResult,
-  TransactionStatus,
-} from "./domain/Types";
+import { CryptoTransactionRequestResult, CryptoTransactionStatus, TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
@@ -376,40 +370,12 @@ export class TransactionService {
     return result;
   }
 
-  public async cryptoTransactionStatus(
-    consumer: Consumer,
-    transaction: Transaction,
-  ): Promise<CryptoTransactionStatusRequestResult> {
-    return new Promise<CryptoTransactionStatusRequestResult>((resolve, reject) => {
-      const cryptoTransactionHandler: CryptoTransactionHandler = {
-        onSettled: async (transactionHash: string, withdrawalID: string) => {
-          this.logger.debug(`Transaction ${transaction.props._id} has crypto transaction hash: ${transactionHash}`);
+  public async checkTradeStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
+    return await this.zeroHashService.checkTradeStatus(transaction);
+  }
 
-          await this.transactionsRepo.updateTransaction(
-            Transaction.createTransaction({
-              ...transaction.props,
-              zhWithdrawalID: withdrawalID.toString(),
-            }),
-          );
-
-          if (transactionHash != undefined) {
-            resolve({ status: CryptoTransactionStatus.INITIATED });
-          } else {
-            resolve({ status: CryptoTransactionStatus.COMPLETED, onChainTransactionID: transactionHash });
-          }
-        },
-
-        onError: async (error: any) => {
-          this.logger.debug(
-            `Transaction ${transaction.props._id} has crypto transaction error: ${JSON.stringify(error)}`,
-          );
-
-          reject({ status: CryptoTransactionStatus.FAILED, diagnosisMessage: JSON.stringify(error) });
-        },
-      };
-
-      this.zeroHashService.checkStatus(consumer.props, transaction, cryptoTransactionHandler);
-    });
+  public async moveCryptoToConsumerWallet(consumer: Consumer, transaction: Transaction): Promise<string> {
+    return await this.zeroHashService.moveCryptoToConsumerWallet(consumer.props, transaction);
   }
 
   /**

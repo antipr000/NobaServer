@@ -47,12 +47,6 @@ export enum CryptoTransactionStatus {
   COMPLETED = "Completed",
 }
 
-export interface CryptoTransactionStatusRequestResult {
-  status: CryptoTransactionStatus;
-  diagnosisMessage?: string;
-  onChainTransactionID?: string; // Required only if status=Completed
-}
-
 export enum CryptoTransactionRequestResultStatus {
   INITIATED = "Initiated",
   FAILED = "Failed",

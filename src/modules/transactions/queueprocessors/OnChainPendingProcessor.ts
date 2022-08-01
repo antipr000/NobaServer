@@ -43,10 +43,47 @@ export class OnChainPendingProcessor extends MessageProcessor {
       return;
     }
 
+    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+
+    // Skip this if we already have a withdrawalID
+    let withdrawalID = transaction.props.zhWithdrawalID;
+    if (!withdrawalID) {
+      withdrawalID = await this.transactionService.moveCryptoToConsumerWallet(consumer, transaction);
+      if (withdrawalID) {
+        transaction = await this.transactionRepo.updateTransaction(
+          Transaction.createTransaction({ ...transaction.props, zhWithdrawalID: String(withdrawalID) }),
+        );
+        console.log("Set zhWithdrawalID on transaction to " + withdrawalID);
+      }
+    }
+
     // No need to guard this with an intermediate Transaction state
     // as this processor is idempotent.
-    const withdrawalResponse = await this.zerohashService.getWithdrawal(transaction.props.zhWithdrawalID);
-    this.logger.info("Withdrawal Response: " + JSON.stringify(withdrawalResponse));
+    const withdrawalResponse = await this.zerohashService.getWithdrawal(withdrawalID);
+    this.logger.debug("Withdrawal Response: " + JSON.stringify(withdrawalResponse));
+
+    const withdrawalStatus = withdrawalResponse["message"][0]["status"];
+    /*
+    From ZH docs:
+    Status
+    - PENDING	The request has been created and is pending approval from users
+    - APPROVED	The request is approved but not settled
+    - REJECTED	The request is rejected and in a terminal state
+    - SETTLED	The request was settled and sent for confirmation onchain if a digital asset
+    */
+    if (withdrawalStatus === "PENDING" || withdrawalStatus == "APPROVED") {
+      this.logger.debug(`Transaction ${transactionId} still in ${withdrawalStatus} status`);
+      return; // Will requeue, in which we wait until not pending or approved
+    } else if (withdrawalStatus === "REJECTED") {
+      // TODO: What to do with the transaction?
+      return;
+    } else if (withdrawalStatus === "SETTLED") {
+      this.logger.debug("Withdrawal completed");
+    } else {
+      this.logger.error(`Unknown withdrawal status: ${withdrawalStatus}`);
+      // TODO: What to do with the transaction?
+      return;
+    }
 
     const onChainStatus = withdrawalResponse["message"][0]["on_chain_status"];
     if (onChainStatus === "PENDING") {
@@ -58,16 +95,17 @@ export class OnChainPendingProcessor extends MessageProcessor {
       const originalAmount = transaction.props.leg2Amount;
       const settledTimestamp = new Date();
       const finalSettledAmount = withdrawalResponse["message"][0]["settled_amount"];
+      const transactionHash = withdrawalResponse["message"][0]["transaction_id"];
       await this.transactionRepo.updateTransaction(
         Transaction.createTransaction({
           ...transaction.props,
           settledTimestamp: settledTimestamp, // This doesn't seem to come from ZH so this is the best we can do
           leg2Amount: finalSettledAmount,
+          blockchainTransactionId: transactionHash,
           transactionStatus: TransactionStatus.COMPLETED,
         }),
       );
 
-      const consumer = await this.consumerService.getConsumer(transaction.props.userId);
       const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
       if (paymentMethod == null) {
         // Should never happen if we got this far
@@ -97,10 +135,9 @@ export class OnChainPendingProcessor extends MessageProcessor {
           cryptoAmountExpected: originalAmount, // This is the original quoted amount
         },
       );
-    } else {
+    } else if (onChainStatus != null) {
+      // Totally valid for it to be null, so we don't care about that here. We only want to log if it's a non-null unknown status.
       this.logger.error(`Unknown on_chain_status: ${onChainStatus} for transaction id ${transaction.props._id}`);
     }
-
-    // await this.queueProcessorHelper.enqueueTransaction(TransactionQueueName.TransactionCompleted, transactionId);
   }
 }

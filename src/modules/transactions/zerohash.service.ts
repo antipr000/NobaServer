@@ -11,12 +11,16 @@ import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
-import { CurrencyType, CryptoTransactionHandler } from "../common/domain/Types";
+import { CurrencyType } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
 import { Transaction } from "./domain/Transaction";
-import { CryptoTransactionRequestResult, CryptoTransactionRequestResultStatus } from "./domain/Types";
+import {
+  CryptoTransactionRequestResult,
+  CryptoTransactionRequestResultStatus,
+  CryptoTransactionStatus,
+} from "./domain/Types";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -257,44 +261,47 @@ export class ZeroHashService {
     return networkFee;
   }
 
-  async checkStatus(
-    consumer: ConsumerProps,
-    transaction: Transaction,
-    cryptoTransactionHandler: CryptoTransactionHandler,
-  ) {
+  async checkTradeStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
     // Check trade_state every 3 seconds until it is terminated using setInterval
-    const trade_status_checker = setInterval(async () => {
-      const tradeData = await this.getTrade(transaction.props.cryptoTransactionId);
-      const tradeState = tradeData["message"]["trade_state"];
-      if (tradeState == "terminated") {
-        // This means the trade has finished with a status of settled or defaulted
-        // Request withdrawal
-        clearInterval(trade_status_checker);
-        const withdrawalRequest = await this.requestWithdrawal(
-          transaction.props.destinationWalletAddress,
-          consumer.zhParticipantCode,
-          transaction.props.leg2Amount,
-          transaction.props.leg2,
-          NOBA_PLATFORM_CODE,
-        );
+    const tradeData = await this.getTrade(transaction.props.cryptoTransactionId);
+    const tradeState = tradeData["message"]["trade_state"];
 
-        // TODO(#310) What if we fail right here after requesting withdrawal? We haven't saved the
-        // Withdrawal request in order to come back to this polling logic.
-        const withdrawalID = withdrawalRequest["message"]["id"];
-        const withdrawalStatusChecker = setInterval(async () => {
-          const withdrawalData = await this.getWithdrawal(withdrawalID);
-          this.logger.debug(withdrawalData);
-          const withdrawalStatus = withdrawalData["message"][0]["status"];
-          if (withdrawalStatus == "SETTLED") {
-            clearInterval(withdrawalStatusChecker);
-            this.logger.debug("Withdrawal completed");
+    /* 
+      From ZH docs:
+      Trade State
+      - accepted means the trade has been accepted by Zero Hash for settlement.
+      - active means the trade is actively being settled.
+      - terminated means the trade is in a terminal state, and has a settlement_state of either settled or defaulted.
+    */
 
-            const transactionHash = withdrawalData["message"][0]["transaction_id"];
-            cryptoTransactionHandler.onSettled(transactionHash, withdrawalID);
-          }
-        }, 3000);
-      }
-    }, 3000);
+    if (tradeState === "accepted" || tradeState === "active") {
+      // These are non-final states so we just return Accepted and let the processor poll again until we get "terminated"
+      return CryptoTransactionStatus.INITIATED;
+    } else if (tradeState === "terminated") {
+      return CryptoTransactionStatus.COMPLETED;
+    } else {
+      // TODO: Unexpected state, throw error
+    }
+  }
+
+  async moveCryptoToConsumerWallet(consumer: ConsumerProps, transaction: Transaction): Promise<string> {
+    // If we already have a zhWithdrawalID then DO NOT make another request!
+    let withdrawalID = transaction.props.zhWithdrawalID;
+    this.logger.info("Existing withdrawal ID: " + withdrawalID);
+    if (!withdrawalID) {
+      const withdrawalRequest = await this.requestWithdrawal(
+        transaction.props.destinationWalletAddress,
+        consumer.zhParticipantCode,
+        transaction.props.leg2Amount,
+        transaction.props.leg2,
+        NOBA_PLATFORM_CODE,
+      );
+
+      withdrawalID = withdrawalRequest["message"]["id"];
+      this.logger.info("New withdrawal ID: " + withdrawalID);
+    }
+
+    return withdrawalID;
   }
 
   async initiateCryptoTransfer(
