@@ -5,7 +5,7 @@ import { environmentDependentQueueUrl } from "../../../infra/aws/services/Common
 export enum TransactionQueueName {
   PendingTransactionValidation = "PendingTransactionValidation",
   FiatTransactionInitiator = "FiatTransactionInitiator",
-  FiatTransactionInitiated = "FiatTransactionInitated", // TODO: Fix typo (missing i in initiated)
+  FiatTransactionInitiated = "FiatTransactionInitiated",
   FiatTransactionCompleted = "FiatTransactionCompleted",
   CryptoTransactionInitiated = "CryptoTransactionInitiated",
   CryptoTransactionCompleted = "CryptoTransactionCompleted",

@@ -20,7 +20,6 @@ export class SqsClient {
     this.queueProducers = getTransactionQueueProducers();
   }
 
-  // TODO(#): Change the interface to take 'queue name' instead of 'transactionId'?
   async enqueue(queueName: string, transactionId: string): Promise<any> {
     this.logger.info(`Enqueuing transaction with ID '${transactionId}'  ==>  '${queueName}'`);
 
@@ -37,7 +36,9 @@ export class SqsClient {
       queueUrl: environmentDependentQueueUrl(queueName),
 
       handleMessage: async message => {
-        if (!this.shouldProcessMessage(message)) return;
+        if (!this.shouldProcessMessage(message)) {
+          throw Error("This message doesn't belong to current host!");
+        }
         this.logger.info(`${message.Body} [${messageProcessor.constructor.name}]`);
         return messageProcessor.processMessage(message.Body);
       },

@@ -34,7 +34,6 @@ export abstract class MessageProcessor {
     this.logger.error(err.stack);
   }
 
-  // TODO (#310) move transactionRepo to a class variable
   protected async processFailure(status: TransactionStatus, reason: string, transaction: Transaction) {
     const existingExceptions = transaction.props.transactionExceptions;
 
