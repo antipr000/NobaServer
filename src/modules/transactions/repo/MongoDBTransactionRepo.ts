@@ -23,22 +23,26 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
   private readonly transactionMapper = new TransactionMapper();
 
-  constructor(private readonly dbProvider: DBProvider) {}
+  constructor(private readonly dbProvider: DBProvider) { }
 
-  async getPendingTransactions(): Promise<Transaction[]> {
-    const currentTimeStr = Transaction.getPollingStatusAttribute(new Date().toISOString());
-    this.logger.info("Fetching all pending transaction before " + currentTimeStr.split("#")[1]);
+  // TODO(#349): Migrate the "sync" Transaction fetching logic to "cursor" based logic.
+  async getTransactionsBeforeTime(time: number, status: TransactionStatus): Promise<Transaction[]> {
+    this.logger.info(
+      `Fetching all pending transaction with status "${status}" which are updated ` +
+      ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`);
 
     const transactionModel = await this.dbProvider.getTransactionModel();
     const results = await transactionModel
       .find({
-        dbPollingStatus: {
-          $lt: currentTimeStr,
+        transactionStatus: status,
+        lastUpdatedTimestamp: {
+          $lte: time,
         },
-      })
-      .limit(100);
+      });
 
-    this.logger.info(`Fetched ${results.length} pending transactions.`);
+    this.logger.info(
+      `Fetched ${results.length} transactions with status "${status}" which are updated ` +
+      ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`);
 
     return results.map(x => this.transactionMapper.toDomain(convertDBResponseToJsObject(x)));
   }
@@ -58,6 +62,10 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   }
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
+    // Date.now() will give you the same UTC timestamp independent of your current timezone. 
+    // Such a timestamp, rather a point in time, does not depend on timezones.
+    transaction.props.lastUpdatedTimestamp = Date.now().valueOf();
+
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result: any = await transactionModel.create(transaction.props);
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
@@ -65,6 +73,10 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   }
 
   async updateTransaction(transaction: Transaction): Promise<Transaction> {
+    // Date.now() will give you the same UTC timestamp independent of your current timezone. 
+    // Such a timestamp, rather a point in time, does not depend on timezones.
+    transaction.props.lastUpdatedTimestamp = Date.now().valueOf();
+
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result: any = await transactionModel.findByIdAndUpdate(transaction.props._id, transaction.props).exec();
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);

@@ -49,9 +49,10 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           // Ensure we don't poll forever if status never moves off INITIATED. 15 minutes should be enough time.
           const timeElapsed = Date.now() - transaction.props.transactionTimestamp.getTime();
           if (timeElapsed > 15 * 1000 * 60) {
-            this.logger.warn(`${transactionId} - status has been INITIATED for 15 minutes. Disabling polling.`);
-            transaction.disableDBPolling();
-            await this.transactionRepo.updateTransaction(Transaction.createTransaction({ ...transaction.props }));
+            // this.logger.warn(`${transactionId} - status has been INITIATED for 15 minutes. Disabling polling.`);
+            // transaction.disableDBPolling();
+            // await this.transactionRepo.updateTransaction(Transaction.createTransaction({ ...transaction.props }));
+            this.processFailure(status, `${transactionId} - status has been INITIATED for 15 minutes.`, transaction);
             return;
           }
 
@@ -84,6 +85,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           transaction,
         );
 
+        const consumer = await this.consumerService.getConsumer(transaction.props.userId);
         const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
         if (paymentMethod == null) {
           // Should never happen if we got this far

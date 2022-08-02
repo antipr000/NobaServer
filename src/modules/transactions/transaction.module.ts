@@ -12,13 +12,15 @@ import { ZeroHashService } from "./zerohash.service";
 import { AppService } from "../../app.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
 import { SqsClient } from "./queueprocessors/sqs.client";
+import { TransactionPollerService } from "./crons/transaction.poller.cron";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule, AsyncTransactionProcessorModule],
   controllers: [TransactionController],
   providers: [
     SqsClient,
-    PendingTransactionDBPollerService,
+    // PendingTransactionDBPollerService,
+    TransactionPollerService,
     TransactionService,
     LimitsService,
     ZeroHashService,
@@ -30,4 +32,4 @@ import { SqsClient } from "./queueprocessors/sqs.client";
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
-export class TransactionModule {}
+export class TransactionModule { }

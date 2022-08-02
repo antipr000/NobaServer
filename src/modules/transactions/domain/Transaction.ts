@@ -4,8 +4,6 @@ import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../co
 import { KeysRequired } from "../../common/domain/Types";
 import { TransactionStatus, TransactionType } from "./Types";
 
-export const PENDING_TRANSACTION_POLLING_PREFIX = "Poll";
-
 export class TransactionEvent {
   timestamp: Date;
   message: string;
@@ -45,13 +43,15 @@ export interface TransactionProps extends VersioningInfo {
   cryptoTransactionId?: string; // ZH ID
   blockchainTransactionId?: string; // Public chain ID
   transactionStatus: TransactionStatus;
+  // TODO(#348): Evaluate if this timestamp is required.
   transactionTimestamp?: Date;
   settledTimestamp?: Date;
   zhWithdrawalID: string; // WithdrawalId after transaction is settled.
 
-  // this is database specific record we put index on this. it signifies if the transaction needs to be polled for processing or not
-  // and if needs to polled then at what time e.g. Poll#2022-10-08T10:00:00 that basically means this item needs to be polled for processing by this time
-  dbPollingStatus?: string;
+  // Denotes the timestamp when the status of this tranaction is last updated.
+  // The data-type is 'number' instead of 'string' to optimise index space used.
+  lastUpdatedTimestamp: number;
+
   transactionExceptions?: TransactionEvent[];
 }
 
@@ -88,9 +88,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   transactionTimestamp: Joi.date().optional(),
   settledTimestamp: Joi.date().optional(),
   zhWithdrawalID: Joi.string().optional(),
-  dbPollingStatus: Joi.string()
-    .optional()
-    .meta({ _mongoose: { index: true } }),
+  lastUpdatedTimestamp: Joi.number().optional().meta({ _mongooes: { index: true } }),
   transactionExceptions: Joi.array().items(transactionEventJoiSchema).optional(),
 };
 
@@ -101,24 +99,8 @@ export class Transaction extends AggregateRoot<TransactionProps> {
     super(transactionProps);
   }
 
-  public static getPollingStatusAttribute(utcIsoTimestamp: string) {
-    return `${PENDING_TRANSACTION_POLLING_PREFIX}#${utcIsoTimestamp}`;
-  }
-
-  public setDBPollingTimeAfterNSeconds(nSeconds: number) {
-    this.props.dbPollingStatus = Transaction.getPollingStatusAttribute(
-      new Date(new Date().getTime() + nSeconds * 1000).toISOString(),
-    );
-  }
-
-  public disableDBPolling() {
-    this.props.dbPollingStatus = null;
-  }
-
   public static createTransaction(transactionProps: Partial<TransactionProps>): Transaction {
     transactionProps._id = transactionProps._id ?? "transaction_" + Entity.getNewID();
-    transactionProps.dbPollingStatus =
-      transactionProps.dbPollingStatus ?? this.getPollingStatusAttribute(new Date().toISOString());
     transactionProps.transactionTimestamp = transactionProps.transactionTimestamp ?? new Date();
     return new Transaction(Joi.attempt(transactionProps, transactionJoiSchema));
   }

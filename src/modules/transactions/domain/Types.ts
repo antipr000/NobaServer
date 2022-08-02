@@ -1,3 +1,5 @@
+import { TransactionQueueName } from "../queueprocessors/QueuesMeta";
+
 // *** DO NOT CHANGE VALUE *** //
 export enum TransactionType {
   ONRAMP = "onramp",
@@ -40,6 +42,76 @@ export enum TransactionStatus {
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
 }
+
+export interface TransactionStateAttributes {
+  transactionStatus: TransactionStatus;
+  processingQueue: string;
+  waitTimeInMilliSecondsBeforeRequeue: number;
+}
+
+export const allTransactionAttributes: TransactionStateAttributes[] = [
+  {
+    transactionStatus: TransactionStatus.PENDING,
+    processingQueue: TransactionQueueName.PendingTransactionValidation,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.VALIDATION_PASSED,
+    processingQueue: TransactionQueueName.FiatTransactionInitiator,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
+    processingQueue: TransactionQueueName.FiatTransactionInitiator,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+    processingQueue: TransactionQueueName.FiatTransactionInitiated,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
+    processingQueue: TransactionQueueName.FiatTransactionCompleted,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
+    processingQueue: TransactionQueueName.FiatTransactionCompleted,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+    processingQueue: TransactionQueueName.CryptoTransactionInitiated,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+    processingQueue: TransactionQueueName.OnChainPendingTransaction,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+
+  // **************************************************************
+  // *                                                            *
+  // *                      ERROR SCENARIOS                       *
+  // *                                                            *
+  // **************************************************************
+  {
+    transactionStatus: TransactionStatus.VALIDATION_FAILED,
+    processingQueue: TransactionQueueName.TransactionFailed,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.FIAT_INCOMING_FAILED,
+    processingQueue: TransactionQueueName.TransactionFailed,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+  {
+    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_FAILED,
+    processingQueue: TransactionQueueName.TransactionFailed,
+    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000  // 10 seconds.
+  },
+];
 
 export enum CryptoTransactionStatus {
   INITIATED = "Initiated",
