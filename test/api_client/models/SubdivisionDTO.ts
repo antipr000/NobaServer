@@ -5,4 +5,5 @@
 export type SubdivisionDTO = {
   code: string;
   name: string;
+  supported: boolean;
 };

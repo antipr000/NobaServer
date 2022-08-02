@@ -100,13 +100,11 @@ export class ConsumerService {
   }
 
   async addCheckoutPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
-    // TODO Populate checkout customer id in create user
     const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
       paymentProviderAccount => paymentProviderAccount.providerID === PaymentProviders.CHECKOUT,
     );
 
-    let checkoutCustomerID;
-
+    let checkoutCustomerID: string;
     let hasCustomerIDSaved = true;
 
     if (checkoutCustomerData.length === 0) {
