@@ -84,6 +84,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           transaction,
         );
 
+        const consumer = await this.consumerService.getConsumer(transaction.props.userId);
         const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
         if (paymentMethod == null) {
           // Should never happen if we got this far
