@@ -35,7 +35,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     const transactionModel = await this.dbProvider.getTransactionModel();
     const results = await transactionModel.find({
       transactionStatus: status,
-      lastUpdatedTimestamp: {
+      lastProcessingTimestamp: {
         $lte: time,
       },
     });
@@ -65,7 +65,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async createTransaction(transaction: Transaction): Promise<Transaction> {
     // Date.now() will give you the same UTC timestamp independent of your current timezone.
     // Such a timestamp, rather a point in time, does not depend on timezones.
-    transaction.props.lastUpdatedTimestamp = Date.now().valueOf();
+    transaction.props.lastProcessingTimestamp = Date.now().valueOf();
 
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result: any = await transactionModel.create(transaction.props);
@@ -76,7 +76,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async updateTransaction(transaction: Transaction): Promise<Transaction> {
     // Date.now() will give you the same UTC timestamp independent of your current timezone.
     // Such a timestamp, rather a point in time, does not depend on timezones.
-    transaction.props.lastUpdatedTimestamp = Date.now().valueOf();
+    transaction.props.lastProcessingTimestamp = Date.now().valueOf();
 
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result: any = await transactionModel.findByIdAndUpdate(transaction.props._id, transaction.props).exec();
