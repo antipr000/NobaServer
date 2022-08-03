@@ -99,10 +99,16 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
         {
           $match: {
             userId: userId,
-            transactionStatus: TransactionStatus.COMPLETED, // TODO: What about other in-flight statuses?
+
             transactionTimestamp: {
               $gt: dateToCheck,
             },
+            $or: [
+              // Transactions that are PENDING or COMPLETED or are still processing
+              // (lastProcessingTimestamp will not exist after processing completes)
+              { transactionStatus: { $in: [TransactionStatus.PENDING, TransactionStatus.COMPLETED] } },
+              { lastProcessingTimestamp: { $exists: true } },
+            ],
           },
         },
         {
