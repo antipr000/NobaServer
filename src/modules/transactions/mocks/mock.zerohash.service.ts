@@ -4,7 +4,7 @@ import { ZeroHashService } from "../zerohash.service";
 export function getMockZerohashServiceWithDefaults(): ZeroHashService {
   const mockZerohashService = mock(ZeroHashService);
 
-  when(mockZerohashService.createParticipant(anything())).thenReject(new Error("Method not implemented"));
+  when(mockZerohashService.createParticipant(anything(), anything())).thenReject(new Error("Method not implemented"));
   when(mockZerohashService.estimateNetworkFee(anything(), anything())).thenReject(new Error("Method not implemented"));
   when(mockZerohashService.executeQuote(anything())).thenReject(new Error("Method not implemented"));
   when(mockZerohashService.getAccounts()).thenReject(new Error("Method not implemented"));
