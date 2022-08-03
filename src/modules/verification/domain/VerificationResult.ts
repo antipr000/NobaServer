@@ -12,6 +12,7 @@ export type ConsumerVerificationResult = {
   pepLevel?: RiskLevel;
   walletStatus?: WalletStatus;
   paymentMethodStatus?: PaymentMethodStatus;
+  idvProviderRiskLevel?: string;
 };
 
 export type DocumentVerificationResult = {

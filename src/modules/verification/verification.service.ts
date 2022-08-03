@@ -56,6 +56,7 @@ export class VerificationService {
       lastName: consumerInformation.lastName,
       dateOfBirth: consumerInformation.dateOfBirth,
       phone: consumerInformation.phoneNumber,
+      riskRating: result.idvProviderRiskLevel,
       verificationData: {
         ...consumer.props.verificationData,
         kycVerificationStatus: result.status,
