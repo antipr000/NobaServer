@@ -1,4 +1,4 @@
-import { anything, mock, when } from "ts-mockito";
+import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
 import { MongoDBTransactionRepo } from "../repo/MongoDBTransactionRepo";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
@@ -18,6 +18,9 @@ export function getMockTransactionRepoWithDefaults(): ITransactionRepo {
   when(mockTransactionRepo.getMonthlyUserTransactionAmount(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.getWeeklyUserTransactionAmount(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.getDailyUserTransactionAmount(anything())).thenReject(new Error("Method not implemented"));
+  when(mockTransactionRepo.getTransactionsBeforeTime(anyNumber(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
 
   return mockTransactionRepo;
 }

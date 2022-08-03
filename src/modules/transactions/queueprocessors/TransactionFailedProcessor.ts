@@ -51,7 +51,6 @@ export class TransactionFailedProcessor extends MessageProcessor {
       return;
     }
 
-    transaction.disableDBPolling();
     transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,
