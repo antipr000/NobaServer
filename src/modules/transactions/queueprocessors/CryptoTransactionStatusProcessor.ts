@@ -96,7 +96,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
         await this.emailService.sendCryptoFailedEmail(
           consumer.props.firstName,
           consumer.props.lastName,
-          consumer.props.email,
+          consumer.props.displayEmail,
           {
             transactionID: transaction.props._id,
             transactionTimestamp: transaction.props.transactionTimestamp,

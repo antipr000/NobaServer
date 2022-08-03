@@ -116,7 +116,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
       await this.emailService.sendOrderExecutedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
-        consumer.props.email,
+        consumer.props.displayEmail,
         {
           transactionID: transaction.props._id,
           transactionTimestamp: transaction.props.transactionTimestamp,

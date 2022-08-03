@@ -215,7 +215,7 @@ export class ConsumerService {
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
-        consumer.props.email,
+        consumer.props.displayEmail,
         newPaymentMethod.cardType,
         newPaymentMethod.last4Digits,
       );
@@ -224,7 +224,7 @@ export class ConsumerService {
       await this.emailService.sendCardAdditionFailedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
-        consumer.props.email,
+        consumer.props.displayEmail,
         /* cardNetwork = */ "",
         paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       );
@@ -327,7 +327,7 @@ export class ConsumerService {
     await this.emailService.sendCardDeletedEmail(
       consumer.props.firstName,
       consumer.props.lastName,
-      consumer.props.email,
+      consumer.props.displayEmail,
       paymentMethod[0].cardType,
       paymentMethod[0].last4Digits,
     );
