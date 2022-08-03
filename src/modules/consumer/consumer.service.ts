@@ -15,6 +15,8 @@ import { EmailService } from "../common/email.service";
 import { CheckoutPaymentStatus, FiatTransactionStatus } from "./domain/Types";
 import { PaymentMethodStatus } from "./domain/VerificationStatus";
 import { CryptoWallet } from "./domain/CryptoWallet";
+import { KmsService } from "../common/kms.service";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 
 @Injectable()
 export class ConsumerService {
@@ -26,6 +28,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly emailService: EmailService;
+
+  @Inject()
+  private readonly kmsService: KmsService;
 
   private readonly stripeApi: Stripe;
   private readonly checkoutApi: Checkout;
@@ -332,6 +337,11 @@ export class ConsumerService {
       paymentMethod[0].last4Digits,
     );
     return result;
+  }
+
+  // Be VERY cautious about using this. We should only need it to send to ZeroHash.
+  async getDecryptedSSN(consumer: ConsumerProps) {
+    return await this.kmsService.decryptString(consumer.socialSecurityNumber, KmsKeyType.SSN);
   }
 
   async addZeroHashParticipantCode(consumerID: string, zeroHashParticipantCode: string): Promise<Consumer> {

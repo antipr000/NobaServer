@@ -11,6 +11,7 @@ import { PaymentProviders } from "../domain/PaymentProviderDetails";
 import { CheckoutService } from "../../../modules/common/checkout.service";
 import { EmailService } from "../../../modules/common/email.service";
 import { getMockEmailServiceWithDefaults } from "../../../modules/common/mocks/mock.email.service";
+import { KmsService } from "../../../modules/common/kms.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -47,6 +48,7 @@ describe("ConsumerService", () => {
           useFactory: () => instance(emailService),
         },
         CheckoutService,
+        KmsService,
       ],
     }).compile();
 
