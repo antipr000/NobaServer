@@ -88,7 +88,9 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   transactionTimestamp: Joi.date().optional(),
   settledTimestamp: Joi.date().optional(),
   zhWithdrawalID: Joi.string().optional(),
-  lastUpdatedTimestamp: Joi.number().optional().meta({ _mongooes: { index: true } }),
+  lastUpdatedTimestamp: Joi.number()
+    .optional()
+    .meta({ _mongooes: { index: true } }),
   transactionExceptions: Joi.array().items(transactionEventJoiSchema).optional(),
 };
 

@@ -32,4 +32,4 @@ import { TransactionPollerService } from "./crons/transaction.poller.cron";
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
-export class TransactionModule { }
+export class TransactionModule {}

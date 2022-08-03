@@ -14,7 +14,7 @@ export class TransactionPollerService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
     private readonly sqsClient: SqsClient,
-  ) { }
+  ) {}
 
   //every 5 seconds for now, we should be using db streams actually but it's fine for now
   @Cron("*/5 * * * * *", { name: "TransactionsPoller" })
@@ -38,17 +38,18 @@ export class TransactionPollerService {
 
     for (let i = 0; i < allTransactionAttributes.length; i += 1) {
       const transactionAttr: TransactionStateAttributes = allTransactionAttributes[i];
-      // The idea is to not poll a transaction which have not been updated since 
+      // The idea is to not poll a transaction which have not been updated since
       // `transactionAttr.waitTimeInMilliSecondsBeforeRequeue` seconds.
       //
       // => CURRENT_TIME - LAST_UPDATED_TIME >= waitTimeInMilliSecondsBeforeRequeue
       // => LAST_UPDATED_TIME <= CURRENT_TIME - waitTimeInMilliSecondsBeforeRequeue
       //
-      const allowedTransactionTime: number =
-        Date.now().valueOf() - transactionAttr.waitTimeInMilliSecondsBeforeRequeue;
+      const allowedTransactionTime: number = Date.now().valueOf() - transactionAttr.waitTimeInMilliSecondsBeforeRequeue;
 
-      const pendingTransactionsWithCurrentAttr =
-        await this.transactionRepo.getTransactionsBeforeTime(allowedTransactionTime, transactionAttr.transactionStatus);
+      const pendingTransactionsWithCurrentAttr = await this.transactionRepo.getTransactionsBeforeTime(
+        allowedTransactionTime,
+        transactionAttr.transactionStatus,
+      );
       allAsyncOperations.push(this.enqueueTransactions(pendingTransactionsWithCurrentAttr, transactionAttr));
     }
 
@@ -58,9 +59,7 @@ export class TransactionPollerService {
   private async enqueueTransactions(transactions: Transaction[], transactionAttributes: TransactionStateAttributes) {
     const allEnqueueOperations = [];
     transactions.forEach(transaction => {
-      allEnqueueOperations.push(
-        this.sqsClient.enqueue(transactionAttributes.processingQueue, transaction.props._id)
-      );
+      allEnqueueOperations.push(this.sqsClient.enqueue(transactionAttributes.processingQueue, transaction.props._id));
     });
 
     return Promise.all(allEnqueueOperations);
