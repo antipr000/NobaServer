@@ -100,13 +100,11 @@ export class ConsumerService {
   }
 
   async addCheckoutPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
-    // TODO Populate checkout customer id in create user
     const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
       paymentProviderAccount => paymentProviderAccount.providerID === PaymentProviders.CHECKOUT,
     );
 
-    let checkoutCustomerID;
-
+    let checkoutCustomerID: string;
     let hasCustomerIDSaved = true;
 
     if (checkoutCustomerData.length === 0) {
@@ -262,10 +260,12 @@ export class ConsumerService {
   async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProviders): Promise<FiatTransactionStatus> {
     try {
       const payment = await this.checkoutApi.payments.get(paymentId);
-      this.logger.info(`Payment status for payment ${paymentId} is ${payment.status}`);
       const status: CheckoutPaymentStatus = payment.status;
-      if (status === "Captured") return FiatTransactionStatus.CAPTURED;
+      if (status === "Authorized" || status === "Paid") return FiatTransactionStatus.AUTHORIZED;
+      if (status === "Captured" || status === "Partially Captured") return FiatTransactionStatus.CAPTURED;
       if (status === "Pending") return FiatTransactionStatus.PENDING;
+
+      this.logger.error(`Payment ${paymentId} failed fiat processing with status ${status}`);
       return FiatTransactionStatus.FAILED;
     } catch (err) {
       throw new Error("Error while checking payment status from payment id " + paymentId + " " + err);
