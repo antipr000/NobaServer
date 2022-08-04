@@ -27,7 +27,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
   // TODO(#349): Migrate the "sync" Transaction fetching logic to "cursor" based logic.
   async getTransactionsBeforeTime(time: number, status: TransactionStatus): Promise<Transaction[]> {
-    this.logger.info(
+    this.logger.debug(
       `Fetching all pending transaction with status "${status}" which are updated ` +
         ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
     );
@@ -40,7 +40,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       },
     });
 
-    this.logger.info(
+    this.logger.debug(
       `Fetched ${results.length} transactions with status "${status}" which are updated ` +
         ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
     );
