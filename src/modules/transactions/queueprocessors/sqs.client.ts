@@ -1,7 +1,6 @@
 import { SQS } from "aws-sdk";
 import { MessageBodyAttributeMap } from "aws-sdk/clients/sqs";
 import { AppEnvironment, getEnvironmentName } from "../../../config/ConfigurationUtils";
-import { getTransactionQueueProducers, TransactionQueueName } from "./QueuesMeta";
 import * as os from "os";
 import { Producer } from "sqs-producer";
 import { Consumer } from "sqs-consumer";
@@ -10,6 +9,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { MessageProcessor } from "./message.processor";
+import { TransactionQueueName } from "../domain/Types";
 
 @Injectable()
 export class SqsClient {
@@ -17,7 +17,7 @@ export class SqsClient {
   private readonly queueProducers: Record<TransactionQueueName, Producer>;
 
   constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
-    this.queueProducers = getTransactionQueueProducers();
+    this.queueProducers = this.getTransactionQueueProducers();
   }
 
   async enqueue(queueName: string, transactionId: string): Promise<any> {
@@ -73,4 +73,15 @@ export class SqsClient {
 
     return true;
   }
+
+  private getTransactionQueueProducers(): Record<TransactionQueueName, Producer> {
+    const transactionQueueMap = {} as Record<TransactionQueueName, Producer>;
+    Object.values(TransactionQueueName).forEach(queueName => {
+      transactionQueueMap[queueName] = new Producer({
+        queueUrl: environmentDependentQueueUrl(queueName),
+      });
+    });
+    return transactionQueueMap;
+  };
+
 }
