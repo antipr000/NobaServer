@@ -79,7 +79,7 @@ export class TransactionService {
         transactionQuoteQuery.cryptoCurrencyCode,
         transactionQuoteQuery.fiatCurrencyCode,
         priceToQuoteUSD,
-        CurrencyType.CRYPTO,
+        CurrencyType.FIAT,
       );
       this.logger.debug(quote);
       const costPerUnit = Number(quote["message"]["price"]);
@@ -123,7 +123,7 @@ export class TransactionService {
         transactionQuoteQuery.cryptoCurrencyCode,
         transactionQuoteQuery.fiatCurrencyCode,
         fixedAmountCrypto,
-        CurrencyType.FIAT,
+        CurrencyType.CRYPTO,
       );
       const costPerUnit = Number(quote["message"]["price"]);
 
