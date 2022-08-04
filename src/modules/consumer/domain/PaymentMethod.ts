@@ -9,4 +9,6 @@ export type PaymentMethod = {
   paymentToken: string;
   paymentProviderID: string;
   status?: PaymentMethodStatus;
+  authCode?: string;
+  authReason?: string;
 };

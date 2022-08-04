@@ -14,6 +14,7 @@ import { CurrencyService } from "../../modules/common/currency.service";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
+const NOBA_COMPLIANCE_EMAIL = "Noba Compliance <compliance@noba.com>";
 @Injectable()
 export class EmailService {
   constructor(
@@ -370,6 +371,17 @@ export class EmailService {
         crypto_expected: params.cryptoAmount,
         reason_declined: params.failureReason,
       },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendNobaAlert(data) {
+    const msg = {
+      to: NOBA_COMPLIANCE_EMAIL,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.NOBA_ALERT,
+      dynamicTemplateData: {},
     };
 
     await sgMail.send(msg);

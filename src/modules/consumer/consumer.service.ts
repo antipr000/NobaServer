@@ -17,6 +17,11 @@ import { PaymentMethodStatus } from "./domain/VerificationStatus";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { KmsService } from "../common/kms.service";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import {
+  REASON_CODE_SOFT_DECLINE_BANK_ERROR,
+  REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA,
+  REASON_CODE_SOFT_DECLINE_CARD_ERROR,
+} from "../transactions/domain/CheckoutConstants";
 
 @Injectable()
 export class ConsumerService {
@@ -138,6 +143,10 @@ export class ConsumerService {
       checkoutCustomerID = checkoutCustomerData[0].providerCustomerID;
     }
 
+    let paymentMethodStatus: PaymentMethodStatus = undefined;
+    let instrumentID;
+    let cardType;
+    let payment;
     try {
       // To add payment method, we first need to tokenize the card
       // Token is only valid for 15 mins
@@ -158,38 +167,89 @@ export class ConsumerService {
         },
       });
 
-      let paymentMethodStatus: PaymentMethodStatus = undefined;
-      // Check if added payment method is valid
-      try {
-        const payment = await this.checkoutApi.payments.request({
-          currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
-          source: {
-            type: "id",
-            id: instrument["id"],
-          },
-          description: "Noba Customer Payment at UTC " + Date.now(),
-          metadata: {
-            order_id: "test_order_1",
-          },
-        });
-        if (payment["risk"]["flagged"]) {
-          paymentMethodStatus = PaymentMethodStatus.REJECTED;
-        } else {
-          paymentMethodStatus = PaymentMethodStatus.APPROVED;
-        }
-      } catch (err) {
-        //pass
-        this.logger.error(`Failed to make payment while adding card: ${err}`);
-      }
+      instrumentID = instrument["id"];
+      cardType = instrument["scheme"];
+    } catch (err) {
+      //pass
+      this.logger.error(`Failed to make payment while adding card: ${err}`);
+    }
 
+    // Check if this card already exists for the consumer
+    const existingPaymentMethod = consumer.getPaymentMethodByID(instrumentID);
+    if (existingPaymentMethod) {
+      throw new BadRequestException({ message: "Card already added" });
+    }
+
+    try {
+      // Check if added payment method is valid
+      payment = await this.checkoutApi.payments.request({
+        currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
+        source: {
+          type: "id",
+          id: instrumentID,
+        },
+        description: "Noba Customer Payment at UTC " + Date.now(),
+        metadata: {
+          order_id: "test_order_1",
+        },
+      });
+    } catch (err) {
+      //pass
+      this.logger.error(`Failed to make payment while adding card: ${err}`);
+    }
+
+    const responseCode: string = payment["response_code"];
+    const responseSummary = payment["response_summary"];
+    this.logger.info(`Card add response: ${responseCode} - ${responseSummary}`);
+
+    if (!responseCode) {
+      // TODO throw error
+    } else if (responseCode.startsWith("10")) {
+      // Accepted
+      paymentMethodStatus = PaymentMethodStatus.APPROVED;
+    } else if (responseCode.startsWith("20")) {
+      // Soft decline, with several categories
+      if (REASON_CODE_SOFT_DECLINE_CARD_ERROR.indexOf(responseCode) > -1) {
+        // Card error, possibly bad number, user should confirm details
+        throw new BadRequestException({ message: "Invalid card data" });
+      } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR.indexOf(responseCode) > -1) {
+        throw new BadRequestException({ message: "Invalid card data" });
+      } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(responseCode)) {
+        throw new BadRequestException({ message: "Invalid card data" });
+        //this.emailService.sendNobaAlert("User card decline"); // TODO
+      }
+    } else if (responseCode.startsWith("30")) {
+      // Hard decline
+      paymentMethodStatus = PaymentMethodStatus.REJECTED;
+    } else if (responseCode.startsWith("40") || payment["risk"]["flagged"]) {
+      // Risk
+      paymentMethodStatus = PaymentMethodStatus.REJECTED;
+    } else {
+      // Should never get here, but log if we do
+    }
+
+    if (paymentMethodStatus === PaymentMethodStatus.REJECTED) {
+      await this.emailService.sendCardAdditionFailedEmail(
+        consumer.props.firstName,
+        consumer.props.lastName,
+        consumer.props.displayEmail,
+        /* cardNetwork = */ "",
+        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+      );
+      throw new BadRequestException({ message: "Rejected card" }, "This card won't work");
+    } else if (paymentMethodStatus === PaymentMethodStatus.FLAGGED) {
+      // TODO
+    } else {
       const newPaymentMethod: PaymentMethod = {
         cardName: paymentMethod.cardName,
-        cardType: instrument["scheme"],
+        cardType: cardType,
         first6Digits: paymentMethod.cardNumber.substring(0, 6),
         last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
         imageUri: paymentMethod.imageUri,
         paymentProviderID: PaymentProviders.CHECKOUT,
-        paymentToken: instrument["id"], // TODO: Check if this is the valid way to populate id
+        paymentToken: instrumentID, // TODO: Check if this is the valid way to populate id
+        authCode: responseCode,
+        authReason: responseSummary,
       };
 
       if (paymentMethodStatus) {
@@ -217,6 +277,7 @@ export class ConsumerService {
       }
 
       const result = await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
+
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
@@ -225,15 +286,6 @@ export class ConsumerService {
         newPaymentMethod.last4Digits,
       );
       return result;
-    } catch (e) {
-      await this.emailService.sendCardAdditionFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.displayEmail,
-        /* cardNetwork = */ "",
-        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
-      );
-      throw new BadRequestException("Card details are not valid");
     }
   }
 

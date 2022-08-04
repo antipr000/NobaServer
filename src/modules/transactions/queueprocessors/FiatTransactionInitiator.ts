@@ -5,7 +5,7 @@ import { ConsumerService } from "../../consumer/consumer.service";
 import { Transaction } from "../domain/Transaction";
 import { TransactionQueueName, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
-import { CheckoutValidationError, CHECKOUT_VALIDATION_ERROR_HTTP_CODE } from "../domain/CheckoutErrorTypes";
+import { CheckoutValidationError, CHECKOUT_VALIDATION_ERROR_HTTP_CODE } from "../domain/CheckoutConstants";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
