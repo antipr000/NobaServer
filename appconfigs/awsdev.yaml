@@ -49,7 +49,7 @@ sardine:
   awsSecretNameForSardineSecretKey: "TEST_SARDINE_SECRET"
   clientID: "bogus-value"
   secretKey: "bogus-value"
-  sardineBaseUri: "https://api.dev.sardine.ai"
+  sardineBaseUri: "https://api.sandbox.sardine.ai"
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"
