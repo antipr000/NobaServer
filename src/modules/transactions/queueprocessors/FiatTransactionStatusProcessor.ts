@@ -54,6 +54,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       this.logger.info(
         `Transaction ${transactionId} is stilling Pending paymentID ${transaction.props.checkoutPaymentID}`,
       );
+      return;
     } else if (paymentStatus === FiatTransactionStatus.FAILED) {
       this.logger.info(
         `Transaction ${transactionId} failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
