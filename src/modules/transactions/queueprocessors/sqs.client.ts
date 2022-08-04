@@ -82,6 +82,5 @@ export class SqsClient {
       });
     });
     return transactionQueueMap;
-  };
-
+  }
 }
