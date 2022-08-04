@@ -133,12 +133,7 @@ describe("ValidatePendingTransaction", () => {
     await mongoServer.stop();
   });
 
-  it("should validate successful transaction and put it in next queue", async () => {
-    // expect that 'ValidatePendingTransactionProcessor' actually subscribed to 'PendingTransactionValidation' queue.
-    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
-    expect(subscribedQueueName).toBe(TransactionQueueName.PendingTransactionValidation);
-    expect(processor).toBeInstanceOf(ValidatePendingTransactionProcessor);
-
+  describe("processMessage()", () => {
     const consumerID = "2222222222";
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
@@ -151,11 +146,6 @@ describe("ValidatePendingTransaction", () => {
       leg1: "USD",
       leg2: "ETH",
       destinationWalletAddress: "12345",
-    });
-
-    await transactionCollection.insertOne({
-      ...transaction.props,
-      _id: transaction.props._id as any,
     });
 
     const paymentMethod: PaymentMethod = {
@@ -181,87 +171,80 @@ describe("ValidatePendingTransaction", () => {
       email: "mock@noba.com",
     });
 
-    when(transactionService.validatePendingTransaction(anything(), anything())).thenResolve(
-      PendingTransactionValidationStatus.PASS,
-    );
+    it("should should exit flow if transaction status is not PENDING", async () => {
+      transaction.props.transactionStatus = TransactionStatus.COMPLETED;
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
 
-    when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-    when(sqsClient.enqueue(anything(), anything())).thenResolve("");
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(sqsClient.enqueue(anything(), anything())).thenResolve("");
 
-    await validatePendingTransaction.processMessage(transaction.props._id);
-
-    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
-    expect(allTransactionsInDb).toHaveLength(1);
-    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_PASSED);
-
-    const [queueName, transactionId] = capture(sqsClient.enqueue).last();
-    expect(queueName).toBe(TransactionQueueName.FiatTransactionInitiator);
-    expect(transactionId).toBe(transaction.props._id);
-  });
-
-  it("should validate failed transaction and put it in failure queue", async () => {
-    // expect that 'ValidatePendingTransactionProcessor' actually subscribed to 'PendingTransactionValidation' queue.
-    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
-    expect(subscribedQueueName).toBe(TransactionQueueName.PendingTransactionValidation);
-    expect(processor).toBeInstanceOf(ValidatePendingTransactionProcessor);
-
-    const consumerID = "2222222222";
-    const transaction: Transaction = Transaction.createTransaction({
-      _id: "1111111111",
-      userId: consumerID,
-      sessionKey: "12345",
-      transactionStatus: TransactionStatus.PENDING,
-      paymentMethodID: "XXXXXXXXXX",
-      leg1Amount: 1000,
-      leg2Amount: 1,
-      leg1: "USD",
-      leg2: "ETH",
-      destinationWalletAddress: "12345",
+      await validatePendingTransaction.processMessage(transaction.props._id);
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.COMPLETED);
     });
 
-    await transactionCollection.insertOne({
-      ...transaction.props,
-      _id: transaction.props._id as any,
+    it("should validate successful transaction and put it in next queue", async () => {
+      transaction.props.transactionStatus = TransactionStatus.PENDING;
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      // expect that 'ValidatePendingTransactionProcessor' actually subscribed to 'PendingTransactionValidation' queue.
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.PendingTransactionValidation);
+      expect(processor).toBeInstanceOf(ValidatePendingTransactionProcessor);
+
+      when(transactionService.validatePendingTransaction(anything(), anything())).thenResolve(
+        PendingTransactionValidationStatus.PASS,
+      );
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(sqsClient.enqueue(anything(), anything())).thenResolve("");
+
+      await validatePendingTransaction.processMessage(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_PASSED);
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+      expect(transactionId).toBe(transaction.props._id);
     });
 
-    const paymentMethod: PaymentMethod = {
-      first6Digits: "123456",
-      last4Digits: "7890",
-      paymentToken: "ABCDE12345",
-      imageUri: "xxx",
-      paymentProviderID: "xxx",
-    };
+    it("should validate failed transaction and put it in failure queue", async () => {
+      transaction.props.transactionStatus = TransactionStatus.PENDING;
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
 
-    //const consumerProps: ConsumerProps = ;
-    const consumer = Consumer.createConsumer({
-      _id: consumerID,
-      firstName: "Mock",
-      lastName: "Consumer",
-      partners: [
-        {
-          partnerID: "partner-1",
-        },
-      ],
-      paymentMethods: [paymentMethod],
-      dateOfBirth: "1998-01-01",
-      email: "mock@noba.com",
+      // expect that 'ValidatePendingTransactionProcessor' actually subscribed to 'PendingTransactionValidation' queue.
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.PendingTransactionValidation);
+      expect(processor).toBeInstanceOf(ValidatePendingTransactionProcessor);
+
+      when(transactionService.validatePendingTransaction(anything(), anything())).thenResolve(
+        PendingTransactionValidationStatus.FAIL,
+      );
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(sqsClient.enqueue(anything(), anything())).thenResolve("");
+
+      await validatePendingTransaction.processMessage(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_FAILED);
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+      expect(transactionId).toBe(transaction.props._id);
     });
-
-    when(transactionService.validatePendingTransaction(anything(), anything())).thenResolve(
-      PendingTransactionValidationStatus.FAIL,
-    );
-
-    when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-    when(sqsClient.enqueue(anything(), anything())).thenResolve("");
-
-    await validatePendingTransaction.processMessage(transaction.props._id);
-
-    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
-    expect(allTransactionsInDb).toHaveLength(1);
-    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_FAILED);
-
-    const [queueName, transactionId] = capture(sqsClient.enqueue).last();
-    expect(queueName).toBe(TransactionQueueName.TransactionFailed);
-    expect(transactionId).toBe(transaction.props._id);
   });
 });
