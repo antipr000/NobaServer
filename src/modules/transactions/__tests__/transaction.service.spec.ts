@@ -299,7 +299,7 @@ describe("TransactionService", () => {
         },
       });
 
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -351,7 +351,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -404,7 +404,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -456,7 +456,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -508,7 +508,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -560,7 +560,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -612,7 +612,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 

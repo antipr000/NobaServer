@@ -177,15 +177,15 @@ export class ZeroHashService {
     return participants;
   }
 
-  async requestQuote(underlyingCurrency: string, quotedCurrency: string, amount: number, fixedSide: CurrencyType) {
+  async requestQuote(cryptocurrency: string, fiatCurrency: string, amount: number, fixedSide: CurrencyType) {
     // Set the endpoint URL based on whether we are placing an order based on FIAT amount or CRYPTO amount
     let route: string;
     if (fixedSide === CurrencyType.CRYPTO) {
-      this.logger.debug(`Quoting ${amount} ${quotedCurrency} to ${underlyingCurrency}`);
-      route = `/liquidity/rfq?underlying=${underlyingCurrency}&quoted_currency=${quotedCurrency}&side=buy&quantity=${amount}`;
+      this.logger.debug(`Quoting ${amount} ${fiatCurrency} to ${cryptocurrency}`);
+      route = `/liquidity/rfq?underlying=${cryptocurrency}&quoted_currency=${fiatCurrency}&side=buy&quantity=${amount}`;
     } else {
-      this.logger.debug(`Quoting ${amount} ${underlyingCurrency} to ${quotedCurrency}`);
-      route = `/liquidity/rfq?underlying=${underlyingCurrency}&quoted_currency=${quotedCurrency}&side=buy&total=${amount}`;
+      this.logger.debug(`Quoting ${amount} ${cryptocurrency} to ${fiatCurrency}`);
+      route = `/liquidity/rfq?underlying=${cryptocurrency}&quoted_currency=${fiatCurrency}&side=buy&total=${amount}`;
     }
 
     let quote = await this.makeRequest(route, "GET", {});
