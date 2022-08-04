@@ -15,6 +15,8 @@ import { EmailService } from "../common/email.service";
 import { CheckoutPaymentStatus, FiatTransactionStatus } from "./domain/Types";
 import { PaymentMethodStatus } from "./domain/VerificationStatus";
 import { CryptoWallet } from "./domain/CryptoWallet";
+import { KmsService } from "../common/kms.service";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 
 @Injectable()
 export class ConsumerService {
@@ -26,6 +28,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly emailService: EmailService;
+
+  @Inject()
+  private readonly kmsService: KmsService;
 
   private readonly stripeApi: Stripe;
   private readonly checkoutApi: Checkout;
@@ -100,13 +105,11 @@ export class ConsumerService {
   }
 
   async addCheckoutPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
-    // TODO Populate checkout customer id in create user
     const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
       paymentProviderAccount => paymentProviderAccount.providerID === PaymentProviders.CHECKOUT,
     );
 
-    let checkoutCustomerID;
-
+    let checkoutCustomerID: string;
     let hasCustomerIDSaved = true;
 
     if (checkoutCustomerData.length === 0) {
@@ -217,7 +220,7 @@ export class ConsumerService {
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
-        consumer.props.email,
+        consumer.props.displayEmail,
         newPaymentMethod.cardType,
         newPaymentMethod.last4Digits,
       );
@@ -226,7 +229,7 @@ export class ConsumerService {
       await this.emailService.sendCardAdditionFailedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
-        consumer.props.email,
+        consumer.props.displayEmail,
         /* cardNetwork = */ "",
         paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       );
@@ -262,10 +265,12 @@ export class ConsumerService {
   async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProviders): Promise<FiatTransactionStatus> {
     try {
       const payment = await this.checkoutApi.payments.get(paymentId);
-      this.logger.info(`Payment status for payment ${paymentId} is ${payment.status}`);
       const status: CheckoutPaymentStatus = payment.status;
-      if (status === "Captured") return FiatTransactionStatus.CAPTURED;
+      if (status === "Authorized" || status === "Paid") return FiatTransactionStatus.AUTHORIZED;
+      if (status === "Captured" || status === "Partially Captured") return FiatTransactionStatus.CAPTURED;
       if (status === "Pending") return FiatTransactionStatus.PENDING;
+
+      this.logger.error(`Payment ${paymentId} failed fiat processing with status ${status}`);
       return FiatTransactionStatus.FAILED;
     } catch (err) {
       throw new Error("Error while checking payment status from payment id " + paymentId + " " + err);
@@ -327,11 +332,16 @@ export class ConsumerService {
     await this.emailService.sendCardDeletedEmail(
       consumer.props.firstName,
       consumer.props.lastName,
-      consumer.props.email,
+      consumer.props.displayEmail,
       paymentMethod[0].cardType,
       paymentMethod[0].last4Digits,
     );
     return result;
+  }
+
+  // Be VERY cautious about using this. We should only need it to send to ZeroHash.
+  async getDecryptedSSN(consumer: ConsumerProps) {
+    return await this.kmsService.decryptString(consumer.socialSecurityNumber, KmsKeyType.SSN);
   }
 
   async addZeroHashParticipantCode(consumerID: string, zeroHashParticipantCode: string): Promise<Consumer> {

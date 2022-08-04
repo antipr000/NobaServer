@@ -29,6 +29,7 @@ const request = require("request-promise"); // TODO(#125) This library is deprec
 export class ZeroHashService {
   private readonly configs: ZerohashConfigs;
   private readonly appService: AppService;
+  @Inject()
   private readonly locationService: LocationService;
 
   @Inject()
@@ -119,7 +120,7 @@ export class ZeroHashService {
     return accounts;
   }
 
-  async createParticipant(consumer: ConsumerProps) {
+  async createParticipant(consumer: ConsumerProps, transactionTimestamp: Date) {
     if (consumer.verificationData.kycVerificationStatus != KYCStatus.APPROVED) {
       return null; // Is handled in the caller
     }
@@ -146,11 +147,12 @@ export class ZeroHashService {
       city: consumer.address.city,
       state: consumer.address.regionCode,
       zip: consumer.address.postalCode,
+
       country: country.alternateCountryName, // ZH has its own spellings for some of the countries, so we store that in alternateCountryName
       date_of_birth: consumer.dateOfBirth, // ZH format and our format are both YYYY-MM-DD
       id_number_type: "ssn", // TODO: Support other types outside US
-      id_number: consumer.socialSecurityNumber, // TODO: Support other types outside US
-      signed_timestamp: Date.now(),
+      id_number: await this.consumerService.getDecryptedSSN(consumer), // TODO: Support other types outside US
+      signed_timestamp: transactionTimestamp.getTime(),
       metadata: {
         cip_kyc: "Pass", // We do not allow failed KYC to get here, so this is always pass
         cip_timestamp: consumer.verificationData.kycVerificationTimestamp,
@@ -327,7 +329,7 @@ export class ZeroHashService {
     }
 
     // Gets or creates participant code
-    let participantCode: string = await this.getParticipantCode(consumer);
+    let participantCode: string = await this.getParticipantCode(consumer, transaction.props.transactionTimestamp);
 
     // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
     const executedQuote = await this.requestAndExecuteQuote(cryptocurrency, fiatCurrency, amount, CurrencyType.FIAT);
@@ -431,15 +433,21 @@ export class ZeroHashService {
     return executedQuote;
   }
 
-  private async getParticipantCode(consumer: ConsumerProps) {
+  private async getParticipantCode(consumer: ConsumerProps, transactionTimestamp: Date) {
     let participantCode: string = consumer.zhParticipantCode;
     // If the participant doesn't have a ZH participant code, first look them up and if not existing, create them:
     if (participantCode == undefined) {
+      let participant: string;
       // Check if the user is already registered with ZeroHash
-      const participant = await this.getParticipant(consumer.email);
+      try {
+        participant = await this.getParticipant(consumer.email);
+      } catch (e) {
+        // Generally just a 404 here, but log anyway.
+        this.logger.error(`Error looking up participant ${consumer.email} (passibly not created yet)`);
+      }
       // If the user is not registered, register them
       if (participant == null) {
-        const newParticipant = await this.createParticipant(consumer);
+        const newParticipant = await this.createParticipant(consumer, transactionTimestamp);
         if (newParticipant == null) {
           this.logger.error("Failed to create participant for email:" + consumer.email);
           throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });

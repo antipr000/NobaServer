@@ -269,3 +269,7 @@ export const ZEROHASH_COUNTRY_MAPPING = {
   EH: "Western Sahara",
   ZM: "Zambia",
 };
+
+export const EXCLUDED_SUBDIVISIONS = {
+  US: ["HI", "NY"],
+};

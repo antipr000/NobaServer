@@ -42,7 +42,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WELCOME_MESSAGE,
+      templateId: EmailTemplates.WELCOME_EMAIL,
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
@@ -55,7 +55,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.KYC_APPROVED_US_EMAIL,
+      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL,
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
@@ -68,7 +68,7 @@ export class EmailService {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.KYC_APPROVED_NON_US_EMAIL,
+      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL,
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
@@ -102,6 +102,45 @@ export class EmailService {
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
         datetimestamp: futureDate,
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendDocVerificationPendingEmail(firstName: string, lastName: string, email: string) {
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL,
+      dynamicTemplateData: {
+        username: this.getUsernameFromNameParts(firstName, lastName),
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendDocVerificationRejectedEmail(firstName: string, lastName: string, email: string) {
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL,
+      dynamicTemplateData: {
+        username: this.getUsernameFromNameParts(firstName, lastName),
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendDocVerificationFailedTechEmail(firstName: string, lastName: string, email: string) {
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL,
+      dynamicTemplateData: {
+        username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -275,7 +314,7 @@ export class EmailService {
         user_id: email,
         transaction_hash: params.transactionHash,
         fiat_currency_code: params.currencyCode,
-        payment_method: params.paymentMethod,
+        card_network: params.paymentMethod,
         last_four: params.last4Digits,
         order_date: params.transactionTimestamp.toLocaleString(),
         settled_timestamp: params.settledTimestamp.toLocaleString(),
@@ -315,6 +354,7 @@ export class EmailService {
         username: this.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
         user_id: email,
+        user_email: email,
         fiat_currency_code: params.currencyCode,
         card_network: params.paymentMethod,
         last_four: params.last4Digits,

@@ -45,16 +45,16 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       null, // TODO add payment method provider in the transaction itself
     );
 
-    if (paymentStatus === FiatTransactionStatus.CAPTURED) {
+    if (paymentStatus === FiatTransactionStatus.CAPTURED || paymentStatus === FiatTransactionStatus.AUTHORIZED) {
       this.logger.info(
-        `Transaction ${transactionId} is captured with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_COMPLETED}`,
+        `Transaction ${transactionId} is ${paymentStatus} with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_COMPLETED}`,
       );
       newStatus = TransactionStatus.FIAT_INCOMING_COMPLETED; // update transaction status
     } else if (paymentStatus === FiatTransactionStatus.PENDING) {
       this.logger.info(
         `Transaction ${transactionId} is stilling Pending paymentID ${transaction.props.checkoutPaymentID}`,
       );
-      transaction.setDBPollingTimeAfterNSeconds(5); //reprocess this transaction in 5 seconds
+      return;
     } else if (paymentStatus === FiatTransactionStatus.FAILED) {
       this.logger.info(
         `Transaction ${transactionId} failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,

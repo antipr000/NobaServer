@@ -328,16 +328,13 @@ export class TransactionService {
       });
     }
 
-    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
-    const cryptoCurrencyName = cryptoCurrencies.find(curr => curr.ticker === transaction.props.leg2).name;
-
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
       await this.emailService.sendTransactionInitiatedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
-        consumer.props.email,
+        consumer.props.displayEmail,
         {
           transactionID: transaction.props._id,
           transactionTimestamp: transaction.props.transactionTimestamp,

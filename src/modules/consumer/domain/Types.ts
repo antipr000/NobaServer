@@ -3,6 +3,7 @@ export enum PaymentMethodType {
 }
 
 export enum FiatTransactionStatus {
+  AUTHORIZED = "Authorized",
   PENDING = "Pending",
   CAPTURED = "Captured",
   FAILED = "Failed",

@@ -6,6 +6,9 @@ export class SubdivisionDTO {
 
   @ApiProperty()
   name: string;
+
+  @ApiProperty()
+  supported?: boolean; // defaults to true. Set to false to indicate not supported.
 }
 
 export class LocationDTO {

@@ -93,13 +93,20 @@ export class Sardine implements IDVProvider {
 
     try {
       const { data } = await axios.post(this.BASE_URI + "/v1/customers", sardineRequest, this.getAxiosConfig());
-      if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
+      if (data.level === SardineRiskLevels.VERY_HIGH) {
         return {
           status: KYCStatus.REJECTED,
+          idvProviderRiskLevel: data.level,
+        };
+      } else if (data.level === SardineRiskLevels.HIGH) {
+        return {
+          status: KYCStatus.PENDING,
+          idvProviderRiskLevel: data.level,
         };
       } else {
         return {
           status: KYCStatus.APPROVED,
+          idvProviderRiskLevel: data.level,
         };
       }
     } catch (e) {
@@ -254,8 +261,10 @@ export class Sardine implements IDVProvider {
         }
       }
 
-      if (data.level === SardineRiskLevels.VERY_HIGH || data.level === SardineRiskLevels.HIGH) {
+      if (data.level === SardineRiskLevels.VERY_HIGH) {
         verificationStatus = KYCStatus.REJECTED;
+      } else if (data.level === SardineRiskLevels.HIGH) {
+        verificationStatus = KYCStatus.PENDING;
       } else {
         verificationStatus = KYCStatus.APPROVED;
       }
@@ -265,6 +274,7 @@ export class Sardine implements IDVProvider {
         pepLevel: pepLevel,
         walletStatus: walletStatus,
         status: verificationStatus,
+        idvProviderRiskLevel: data.level,
       };
     } catch (e) {
       this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
@@ -305,9 +315,14 @@ export class Sardine implements IDVProvider {
   processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult {
     const { data } = resultData;
     const riskLevel: SardineRiskLevels = data.documentVerificationResult.verification.riskLevel;
-    if (riskLevel === SardineRiskLevels.VERY_HIGH || riskLevel === SardineRiskLevels.HIGH) {
+    if (riskLevel === SardineRiskLevels.VERY_HIGH) {
       return {
         status: DocumentVerificationStatus.REJECTED,
+        riskRating: riskLevel,
+      };
+    } else if (riskLevel === SardineRiskLevels.HIGH) {
+      return {
+        status: DocumentVerificationStatus.PENDING,
         riskRating: riskLevel,
       };
     } else if (riskLevel === SardineRiskLevels.MEDIUM || riskLevel === SardineRiskLevels.LOW) {
