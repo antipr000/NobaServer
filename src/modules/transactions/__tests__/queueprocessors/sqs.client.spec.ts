@@ -58,7 +58,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { NODE_ENV_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { TransactionQueueName } from "../../queueprocessors/QueuesMeta";
 import { SqsClient } from "../../queueprocessors/sqs.client";
 
 describe("FiatTransactionInitiator", () => {

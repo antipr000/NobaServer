@@ -4,10 +4,9 @@ import { PendingTransactionValidationStatus } from "../../consumer/domain/Types"
 import { Logger } from "winston";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Transaction } from "../domain/Transaction";
-import { TransactionStatus } from "../domain/Types";
+import { TransactionStatus, TransactionQueueName } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
-import { TransactionQueueName } from "./QueuesMeta";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 

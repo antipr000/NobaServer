@@ -6,6 +6,7 @@ import { CommonModule } from "../../../modules/common/common.module";
 import { ConsumerModule } from "../../../modules/consumer/consumer.module";
 import { VerificationModule } from "../../../modules/verification/verification.module";
 import { TransactionPollerService } from "../crons/transaction.poller.cron";
+import { TransactionQueueName } from "../domain/Types";
 import { MongoDBTransactionRepo } from "../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
@@ -14,7 +15,6 @@ import { CryptoTransactionStatusProcessor } from "./CryptoTransactionStatusProce
 import { FiatTransactionInitiator } from "./FiatTransactionInitiator";
 import { FiatTransactionStatusProcessor } from "./FiatTransactionStatusProcessor";
 import { OnChainPendingProcessor } from "./OnChainPendingProcessor";
-import { TransactionQueueName } from "./QueuesMeta";
 import { SqsClient } from "./sqs.client";
 import { TransactionFailedProcessor } from "./TransactionFailedProcessor";
 import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactionProcessor";

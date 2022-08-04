@@ -7,7 +7,6 @@ import { Inject, Injectable } from "@nestjs/common";
 import { TransactionStatus } from "../domain/Types";
 
 import { subDays } from "date-fns";
-import { TransactionModel } from "../../../infra/mongodb/models/TransactionModel";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 

@@ -1,10 +1,9 @@
 import { ConsumerService } from "src/modules/consumer/consumer.service";
 import { Logger } from "winston";
 import { Transaction, TransactionEvent } from "../domain/Transaction";
-import { TransactionStatus } from "../domain/Types";
+import { TransactionStatus, TransactionQueueName } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
-import { TransactionQueueName } from "./QueuesMeta";
 import { SqsClient } from "./sqs.client";
 
 export abstract class MessageProcessor {

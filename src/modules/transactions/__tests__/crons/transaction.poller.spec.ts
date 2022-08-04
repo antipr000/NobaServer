@@ -4,10 +4,9 @@ import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { anyNumber, anyString, instance, verify, when } from "ts-mockito";
 import { TransactionPollerService } from "../../crons/transaction.poller.cron";
 import { Transaction } from "../../domain/Transaction";
-import { TransactionStatus } from "../../domain/Types";
+import { TransactionQueueName, TransactionStatus } from "../../domain/Types";
 import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 import { getMockTransactionRepoWithDefaults } from "../../mocks/mock.transactions.repo";
-import { TransactionQueueName } from "../../queueprocessors/QueuesMeta";
 import { SqsClient } from "../../queueprocessors/sqs.client";
 import { ITransactionRepo } from "../../repo/TransactionRepo";
 
