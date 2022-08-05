@@ -42,6 +42,9 @@ import {
   DocumentVerificationWebhookRequest,
 } from "./integrations/SardineTypeDefinitions";
 import crypto from "crypto";
+import { SardineConfigs } from "../../config/configtypes/SardineConfigs";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { SARDINE_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -186,10 +189,12 @@ export class VerificationController {
 export class VerificationWebhookController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+  private readonly sardineConfigs: SardineConfigs;
   private readonly verificationResponseMapper: VerificationResponseMapper;
 
-  constructor(private readonly verificationService: VerificationService) {
+  constructor(private readonly verificationService: VerificationService, configService: CustomConfigService) {
     this.verificationResponseMapper = new VerificationResponseMapper();
+    this.sardineConfigs = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY);
   }
 
   @Public()
@@ -200,8 +205,8 @@ export class VerificationWebhookController {
     @Body() requestBody: DocumentVerificationWebhookRequest,
   ): Promise<VerificationResultDTO> {
     this.logger.debug("Sardine document verification webhook: " + requestBody);
-    const sardineSignature = headers["x-sardine-signature"];
-    const hmac = crypto.createHmac("sha256", "");
+    const sardineSignature = headers["X-Sardine-Signature"];
+    const hmac = crypto.createHmac("sha256", this.sardineConfigs.secretKey);
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {
@@ -216,9 +221,10 @@ export class VerificationWebhookController {
   @HttpCode(200)
   async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
     // Logging this for initial debugging in staging and prod
-    this.logger.debug("Sardine notification: " + requestBody);
-    const sardineSignature = headers["x-sardine-signature"];
-    const hmac = crypto.createHmac("sha256", "");
+    this.logger.info("Sardine notification: " + requestBody);
+    this.logger.info("Sardine headers: " + JSON.stringify(headers));
+    const sardineSignature = headers["X-Sardine-Signature"];
+    const hmac = crypto.createHmac("sha256", this.sardineConfigs.secretKey);
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {
