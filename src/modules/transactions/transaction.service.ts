@@ -322,10 +322,11 @@ export class TransactionService {
     }
 
     if (result.paymentMethodStatus) {
-      await this.consumerService.updatePaymentMethod(consumer.props._id, {
+      consumer = await this.consumerService.updatePaymentMethod(consumer.props._id, {
         ...paymentMethod,
         status: result.paymentMethodStatus,
       });
+      console.log(`Payment method: ${JSON.stringify(result.paymentMethodStatus)}`);
     }
 
     try {
