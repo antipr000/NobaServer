@@ -1,4 +1,4 @@
-import { TransactionQueueName } from "../../../modules/transactions/queueprocessors/QueuesMeta";
+import { TransactionQueueName } from "../../../modules/transactions/domain/Types";
 import {
   environmentDependentQueueName,
   environmentDependentQueueUrl,

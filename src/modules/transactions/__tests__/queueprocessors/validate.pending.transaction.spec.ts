@@ -11,7 +11,7 @@ import {
   NODE_ENV_CONFIG_KEY,
   SERVER_LOG_FILE_PATH,
 } from "../../../../config/ConfigurationUtils";
-import { TransactionQueueName } from "../../queueprocessors/QueuesMeta";
+import { TransactionQueueName } from "../../domain/Types";
 import { Transaction, TransactionProps } from "../../domain/Transaction";
 import { TransactionStatus } from "../../domain/Types";
 import { MongoMemoryServer } from "mongodb-memory-server";
