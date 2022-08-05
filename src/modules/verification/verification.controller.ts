@@ -41,11 +41,10 @@ import {
   CaseNotificationWebhookRequest,
   DocumentVerificationWebhookRequest,
 } from "./integrations/SardineTypeDefinitions";
-import crypto from "crypto";
 import { SardineConfigs } from "../../config/configtypes/SardineConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { SARDINE_CONFIG_KEY } from "../../config/ConfigurationUtils";
-
+const crypto_ts = require("crypto");
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("verify")
@@ -205,8 +204,8 @@ export class VerificationWebhookController {
     @Body() requestBody: DocumentVerificationWebhookRequest,
   ): Promise<VerificationResultDTO> {
     this.logger.debug("Sardine document verification webhook: " + requestBody);
-    const sardineSignature = headers["X-Sardine-Signature"];
-    const hmac = crypto.createHmac("sha256", this.sardineConfigs.secretKey);
+    const sardineSignature = headers["x-sardine-signature"];
+    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.secretKey);
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {
@@ -221,10 +220,11 @@ export class VerificationWebhookController {
   @HttpCode(200)
   async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
     // Logging this for initial debugging in staging and prod
-    this.logger.info("Sardine notification: " + requestBody);
+    this.logger.info("Sardine notification: " + JSON.stringify(requestBody));
     this.logger.info("Sardine headers: " + JSON.stringify(headers));
-    const sardineSignature = headers["X-Sardine-Signature"];
-    const hmac = crypto.createHmac("sha256", this.sardineConfigs.secretKey);
+    this.logger.info("Secret key: " + this.sardineConfigs.secretKey);
+    const sardineSignature = headers["x-sardine-signature"];
+    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.secretKey);
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {
