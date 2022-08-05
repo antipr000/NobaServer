@@ -318,7 +318,6 @@ export class TransactionService {
         isEVMCompatible: false,
         status: result.walletStatus,
       };
-      console.log(JSON.stringify(cryptoWallet));
       await this.consumerService.addOrUpdateCryptoWallet(consumer.props._id, cryptoWallet);
     }
 
