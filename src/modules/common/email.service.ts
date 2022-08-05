@@ -403,7 +403,7 @@ export class EmailService {
     responseSummary: string,
   ) {
     const msg = {
-      to: "justin@noba.com", // Testing :)
+      to: NOBA_COMPLIANCE_EMAIL,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.NOBA_INTERNAL_HARD_DECLINE,
       dynamicTemplateData: {
