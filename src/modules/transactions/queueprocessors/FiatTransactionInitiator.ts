@@ -10,6 +10,9 @@ import { VerificationService } from "../../../modules/verification/verification.
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
+import { PaymentRequestResponse } from "../../../modules/consumer/domain/Types";
+import { PaymentMethodStatus } from "../../../modules/consumer/domain/VerificationStatus";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 
 export class FiatTransactionInitiator extends MessageProcessor {
   constructor(
@@ -53,50 +56,43 @@ export class FiatTransactionInitiator extends MessageProcessor {
       );
     }
 
+    let consumer = await this.consumerService.getConsumer(transaction.props.userId);
+
     // TODO(#): What is this variable doing here?
+    // [JA] - See comment above for if status is FIAT_INCOMING_INITIATING - that explains why we would want it this early
     let checkoutPaymentID: string;
     // TODO(#310) This is happening before we've called the ZH logic to calculate the true fiat value! We need to call
     // ZH before we even get here!
     if (checkoutPaymentID == undefined) {
       // Fiat Transaction implementation here
-      let payment;
+      let paymentResponse: PaymentRequestResponse;
       try {
-        payment = await this.consumerService.requestCheckoutPayment(
-          transaction.props.paymentMethodID,
-          transaction.props.leg1Amount,
-          transaction.props.leg1,
-          transaction.props._id,
-        );
+        paymentResponse = await this.consumerService.requestCheckoutPayment(consumer, transaction);
+        if (
+          paymentResponse.status === PaymentMethodStatus.REJECTED ||
+          paymentResponse.status === PaymentMethodStatus.FLAGGED
+        ) {
+          this.handleCheckoutFailure(
+            paymentResponse.responseCode,
+            paymentResponse.responseSummary,
+            paymentResponse.status,
+            consumer,
+            transaction,
+          );
+        }
       } catch (e) {
         if (e.http_code === CHECKOUT_VALIDATION_ERROR_HTTP_CODE) {
-          const paymentMethod = (
-            await this.consumerService.getConsumer(transaction.props.userId)
-          ).props.paymentMethods.filter(
-            currPaymentMethod => currPaymentMethod.paymentToken === transaction.props.paymentMethodID,
-          )[0];
           const errorBody: CheckoutValidationError = e.body;
           const errorDescription = errorBody.error_type;
           const errorCode = errorBody.error_codes.join(",");
-          // TODO: Update payment method with error
 
-          this.logger.error(`Fiat payment failed: Error code: ${errorCode}, Error Description: ${errorDescription}`);
+          this.handleCheckoutFailure(errorCode, errorDescription, PaymentMethodStatus.REJECTED, consumer, transaction);
 
-          await this.processFailure(
-            TransactionStatus.FIAT_INCOMING_FAILED,
-            `${errorCode} - ${errorDescription}`,
-            transaction,
-          );
-
-          await this.verificationService.provideTransactionFeedback(
-            errorCode,
-            errorDescription,
-            transaction.props._id,
-            paymentMethod.paymentProviderID,
-          );
           return;
         } else {
           this.logger.error(`Fiat payment failed: ${JSON.stringify(e)}`);
 
+          // TODO: What more to do here?
           await this.processFailure(
             TransactionStatus.FIAT_INCOMING_FAILED,
             `Error from Checkout: ${JSON.stringify(e)}`,
@@ -106,7 +102,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
         return;
       }
 
-      checkoutPaymentID = payment["id"];
+      checkoutPaymentID = paymentResponse.paymentID;
     }
 
     transaction = await this.transactionRepo.updateTransaction(
@@ -119,5 +115,43 @@ export class FiatTransactionInitiator extends MessageProcessor {
 
     //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
     await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
+  }
+
+  async handleCheckoutFailure(
+    errorCode: string,
+    errorDescription: string,
+    status: PaymentMethodStatus,
+    consumer: Consumer,
+    transaction: Transaction,
+  ) {
+    this.logger.error(`Fiat payment failed with error code: ${errorCode}, error description: ${errorDescription}`);
+
+    // Send to failure queue
+    await this.processFailure(
+      TransactionStatus.FIAT_INCOMING_FAILED,
+      `${errorCode} - ${errorDescription}`,
+      transaction,
+    );
+
+    const paymentMethod = (
+      await this.consumerService.getConsumer(transaction.props.userId)
+    ).props.paymentMethods.filter(
+      currPaymentMethod => currPaymentMethod.paymentToken === transaction.props.paymentMethodID,
+    )[0];
+
+    this.consumerService.updatePaymentMethod(consumer.props._id, {
+      ...paymentMethod,
+      status: status,
+      authCode: errorCode,
+      authReason: errorDescription,
+    });
+
+    // Inform Sardine
+    await this.verificationService.provideTransactionFeedback(
+      errorCode,
+      errorDescription,
+      transaction.props._id,
+      paymentMethod.paymentProviderID,
+    );
   }
 }

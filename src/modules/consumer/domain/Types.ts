@@ -1,3 +1,5 @@
+import { PaymentMethodStatus } from "./VerificationStatus";
+
 export enum PaymentMethodType {
   CARD = "Card",
 }
@@ -37,3 +39,10 @@ export enum PendingTransactionValidationStatus {
   PASS = "Pass",
   FAIL = "Fail",
 }
+
+export type PaymentRequestResponse = {
+  status: PaymentMethodStatus;
+  paymentID?: string;
+  responseCode?: string;
+  responseSummary?: string;
+};
