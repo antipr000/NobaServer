@@ -188,7 +188,7 @@ export class ConsumerService {
           type: "id",
           id: instrumentID,
         },
-        description: "Noba Customer Payment at UTC " + Date.now(),
+        description: "Noba Customer Preauth at UTC " + Date.now(),
         metadata: {
           order_id: "test_order_1",
         },
@@ -215,13 +215,37 @@ export class ConsumerService {
       } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR.indexOf(responseCode) > -1) {
         throw new BadRequestException({ message: "Invalid card data" });
       } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(responseCode)) {
+        this.emailService.sendHardDeclineEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.email,
+          instrumentID,
+          responseCode,
+          responseSummary,
+        );
         throw new BadRequestException({ message: "Invalid card data" });
-        //this.emailService.sendNobaAlert("User card decline"); // TODO
       }
     } else if (responseCode.startsWith("30")) {
       // Hard decline
+      this.emailService.sendHardDeclineEmail(
+        consumer.props.firstName,
+        consumer.props.lastName,
+        consumer.props.email,
+        instrumentID,
+        responseCode,
+        responseSummary,
+      );
+
       paymentMethodStatus = PaymentMethodStatus.REJECTED;
     } else if (responseCode.startsWith("40") || payment["risk"]["flagged"]) {
+      this.emailService.sendHardDeclineEmail(
+        consumer.props.firstName,
+        consumer.props.lastName,
+        consumer.props.email,
+        instrumentID,
+        responseCode,
+        responseSummary,
+      );
       // Risk
       paymentMethodStatus = PaymentMethodStatus.REJECTED;
     } else {

@@ -32,6 +32,7 @@ export class EmailService {
       templateId: EmailTemplates.OTP_EMAIL, //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
         user: name ?? "",
+        user_email: email,
         one_time_password: otp,
       },
     };
@@ -45,6 +46,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.WELCOME_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
@@ -58,6 +60,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
@@ -71,6 +74,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
@@ -84,6 +88,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.KYC_DENIED_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         duration: 2, // TODO: Remove hardcoded duration
       },
@@ -101,6 +106,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.KYC_FLAGGED_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         datetimestamp: futureDate,
       },
@@ -115,6 +121,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
@@ -128,6 +135,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
@@ -141,6 +149,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
       },
     };
@@ -160,6 +169,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_ADDED_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_4_digits_of_card: last4Digits,
@@ -182,6 +192,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_4_digits_of_card: last4Digits,
@@ -204,6 +215,7 @@ export class EmailService {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_DELETED_EMAIL,
       dynamicTemplateData: {
+        user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_4_digits_of_card: last4Digits,
@@ -233,6 +245,7 @@ export class EmailService {
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
+        user_email: email,
         user_id: email,
         fiat_currency_code: params.currencyCode,
         card_network: params.paymentMethod,
@@ -272,6 +285,7 @@ export class EmailService {
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
+        user_email: email,
         user_id: email,
         fiat_currency_code: params.currencyCode,
         card_network: params.paymentMethod,
@@ -312,6 +326,7 @@ export class EmailService {
       dynamicTemplateData: {
         username: this.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
+        user_email: email,
         user_id: email,
         transaction_hash: params.transactionHash,
         fiat_currency_code: params.currencyCode,
@@ -376,12 +391,26 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  public async sendNobaAlert(data) {
+  public async sendHardDeclineEmail(
+    firstName: string,
+    lastName: string,
+    email: string,
+    paymentMethod: string,
+    responseCode: string,
+    responseSummary: string,
+  ) {
     const msg = {
-      to: NOBA_COMPLIANCE_EMAIL,
+      to: "justin@noba.com", // Testing :)
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.NOBA_ALERT,
-      dynamicTemplateData: {},
+      templateId: EmailTemplates.NOBA_INTERNAL_HARD_DECLINE,
+      dynamicTemplateData: {
+        user_email: email,
+        username: this.getUsernameFromNameParts(firstName, lastName),
+        payment_method: paymentMethod,
+        timestamp: new Date().toLocaleString(),
+        response_code: responseCode,
+        response_summary: responseSummary,
+      },
     };
 
     await sgMail.send(msg);
