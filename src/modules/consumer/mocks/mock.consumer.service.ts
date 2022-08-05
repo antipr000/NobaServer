@@ -17,7 +17,8 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
   when(mockConsumerService.removePaymentMethod(anything(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockConsumerService.updatePaymentMethod(anything(), anyString())).thenReject(
+  when(mockConsumerService.updatePaymentMethod(anything(), anything())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerService.addOrUpdateCryptoWallet(anyString(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockConsumerService.requestCheckoutPayment(anyString(), anyNumber(), anyString(), anyString())).thenReject(

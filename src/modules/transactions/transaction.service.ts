@@ -318,6 +318,7 @@ export class TransactionService {
         isEVMCompatible: false,
         status: result.walletStatus,
       };
+      console.log(JSON.stringify(cryptoWallet));
       await this.consumerService.addOrUpdateCryptoWallet(consumer.props._id, cryptoWallet);
     }
 
@@ -326,7 +327,6 @@ export class TransactionService {
         ...paymentMethod,
         status: result.paymentMethodStatus,
       });
-      console.log(`Payment method: ${JSON.stringify(result.paymentMethodStatus)}`);
     }
 
     try {
