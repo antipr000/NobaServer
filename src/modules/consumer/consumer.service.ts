@@ -219,7 +219,9 @@ export class ConsumerService {
           consumer.props.firstName,
           consumer.props.lastName,
           consumer.props.email,
+          "xxx",
           instrumentID,
+          "Checkout",
           responseCode,
           responseSummary,
         );
@@ -231,9 +233,11 @@ export class ConsumerService {
         consumer.props.firstName,
         consumer.props.lastName,
         consumer.props.email,
+        "xxx",
         instrumentID,
+        "Checkout",
         responseCode,
-        responseSummary,
+        JSON.stringify(payment),
       );
 
       paymentMethodStatus = PaymentMethodStatus.REJECTED;
@@ -242,7 +246,9 @@ export class ConsumerService {
         consumer.props.firstName,
         consumer.props.lastName,
         consumer.props.email,
+        "xxx",
         instrumentID,
+        "Checkout",
         responseCode,
         responseSummary,
       );

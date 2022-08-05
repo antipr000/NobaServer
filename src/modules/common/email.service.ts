@@ -395,7 +395,9 @@ export class EmailService {
     firstName: string,
     lastName: string,
     email: string,
-    paymentMethod: string,
+    sessionID: string,
+    paymentToken: string,
+    processor: string,
     responseCode: string,
     responseSummary: string,
   ) {
@@ -406,10 +408,12 @@ export class EmailService {
       dynamicTemplateData: {
         user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
-        payment_method: paymentMethod,
+        session_id: sessionID,
+        payment_token: paymentToken,
+        processor: processor,
         timestamp: new Date().toLocaleString(),
         response_code: responseCode,
-        response_summary: responseSummary,
+        summary: responseSummary,
       },
     };
 
