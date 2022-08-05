@@ -203,9 +203,8 @@ export class VerificationWebhookController {
     @Headers() headers,
     @Body() requestBody: DocumentVerificationWebhookRequest,
   ): Promise<VerificationResultDTO> {
-    this.logger.debug("Sardine document verification webhook: " + requestBody);
     const sardineSignature = headers["x-sardine-signature"];
-    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.secretKey);
+    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {
@@ -219,12 +218,8 @@ export class VerificationWebhookController {
   @Post("/case/notification")
   @HttpCode(200)
   async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
-    // Logging this for initial debugging in staging and prod
-    this.logger.info("Sardine notification: " + JSON.stringify(requestBody));
-    this.logger.info("Sardine headers: " + JSON.stringify(headers));
-    this.logger.info("Secret key: " + this.sardineConfigs.secretKey);
     const sardineSignature = headers["x-sardine-signature"];
-    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.secretKey);
+    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {

@@ -306,6 +306,10 @@ async function configureSardineCredentials(
     sardineConfigs.awsSecretNameForSardineSecretKey,
     sardineConfigs.secretKey,
   );
+  sardineConfigs.webhookSecretKey = await getParameterValue(
+    sardineConfigs.awsSecretNameForSardineWebhookSecretKey,
+    sardineConfigs.webhookSecretKey,
+  );
 
   sardineConfigs.sardineBaseUri = await getParameterValue(undefined, sardineConfigs.sardineBaseUri);
 
