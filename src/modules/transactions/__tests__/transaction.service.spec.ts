@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { CurrencyType } from "../../common/domain/Types";
-import { instance, when } from "ts-mockito";
+import { instance, when, anything, verify, reset, deepEqual } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
@@ -34,6 +34,12 @@ import { VerificationService } from "../../verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../verification/mocks/mock.verification.service";
 import { EmailService } from "../../common/email.service";
 import { getMockEmailServiceWithDefaults } from "../../common/mocks/mock.email.service";
+import { PendingTransactionValidationStatus } from "../../../modules/consumer/domain/Types";
+import { Transaction } from "../domain/Transaction";
+import { TransactionStatus } from "../domain/Types";
+import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
+import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
+import { CryptoWallet } from "../../../modules/consumer/domain/CryptoWallet";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -299,7 +305,7 @@ describe("TransactionService", () => {
         },
       });
 
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -351,7 +357,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -404,7 +410,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -456,7 +462,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -508,7 +514,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -560,7 +566,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -612,7 +618,7 @@ describe("TransactionService", () => {
           total_notional: 0,
         },
       });
-      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.CRYPTO)).thenResolve({
+      when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
       });
 
@@ -634,6 +640,297 @@ describe("TransactionService", () => {
         nobaFee: 0,
         exchangeRate: 10,
       });
+    });
+  });
+
+  describe("validatePendingTransaction()", () => {
+    const consumerID = "2222222222";
+    const sessionKey = "12345";
+    const paymentMethodID = "XXXXXXXXXX";
+    const walletAddress = "1234567890";
+    const transaction: Transaction = Transaction.createTransaction({
+      _id: "1111111111",
+      userId: consumerID,
+      sessionKey: sessionKey,
+      transactionStatus: TransactionStatus.PENDING,
+      paymentMethodID: paymentMethodID,
+      leg1Amount: 1000,
+      leg2Amount: 1,
+      leg1: "USD",
+      leg2: "ETH",
+      destinationWalletAddress: walletAddress,
+    });
+
+    const paymentMethod: PaymentMethod = {
+      first6Digits: "123456",
+      last4Digits: "7890",
+      imageUri: "xxx",
+      paymentProviderID: "12345",
+      paymentToken: paymentMethodID,
+    };
+
+    const cryptoWallet: CryptoWallet = {
+      address: walletAddress,
+      isEVMCompatible: false,
+      status: undefined,
+    };
+
+    const consumerNoPaymentMethod = Consumer.createConsumer({
+      _id: consumerID,
+      firstName: "Mock",
+      lastName: "Consumer",
+      partners: [{ partnerID: "partner-1" }],
+      dateOfBirth: "1998-01-01",
+      email: "mock@noba.com",
+    });
+
+    const consumer = Consumer.createConsumer({
+      ...consumerNoPaymentMethod.props,
+      paymentMethods: [paymentMethod],
+      cryptoWallets: [cryptoWallet],
+    });
+
+    it("should fail if the payment method is unknown", async () => {
+      reset(consumerService);
+      const status = await transactionService.validatePendingTransaction(consumerNoPaymentMethod, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.FAIL);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(paymentMethod))).never();
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(cryptoWallet))).never();
+    });
+    it("should pass if verification service returns KYC APPROVED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.APPROVED,
+        paymentMethodStatus: PaymentMethodStatus.APPROVED,
+      });
+
+      when(consumerService.addOrUpdateCryptoWallet(consumerID, anything())).thenResolve(consumer);
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(consumer);
+
+      reset(consumerService);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.PASS);
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.APPROVED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.APPROVED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(updatedWallet))).times(1);
+    });
+    it("should fail if verification service returns KYC FLAGGED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.FLAGGED,
+      });
+      reset(consumerService);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.FAIL);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(paymentMethod))).never();
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(cryptoWallet))).never();
+    });
+    it("should fail if verification service returns KYC PENDING", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.PENDING,
+      });
+
+      reset(consumerService);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.FAIL);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(paymentMethod))).never();
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(cryptoWallet))).never();
+    });
+    it("should fail if verification service returns KYC REJECTED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.REJECTED,
+      });
+      reset(consumerService);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.FAIL);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(paymentMethod))).never();
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(cryptoWallet))).never();
+    });
+    it("should update payment method status to APPROVED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.APPROVED,
+        paymentMethodStatus: PaymentMethodStatus.APPROVED,
+      });
+
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.APPROVED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.APPROVED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumerID, anything())).thenResolve(updatedConsumer);
+
+      reset(consumerService);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.PASS);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(updatedWallet))).times(1);
+    });
+    it("should update payment method status to FLAGGED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.APPROVED,
+        paymentMethodStatus: PaymentMethodStatus.FLAGGED,
+      });
+
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.APPROVED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.FLAGGED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+
+      reset(consumerService);
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumerID, anything())).thenResolve(updatedConsumer);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.PASS);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(updatedWallet))).times(1);
+    });
+    it("should update payment method status to REJECTED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.APPROVED,
+        paymentMethodStatus: PaymentMethodStatus.REJECTED,
+      });
+
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.APPROVED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.REJECTED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+
+      reset(consumerService);
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumerID, anything())).thenResolve(updatedConsumer);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.PASS);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(updatedWallet))).times(1);
+    });
+    it("should update wallet status to APPROVED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.APPROVED,
+        paymentMethodStatus: PaymentMethodStatus.APPROVED,
+      });
+
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.APPROVED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.APPROVED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+
+      reset(consumerService);
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumerID, anything())).thenResolve(updatedConsumer);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.PASS);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(updatedWallet))).times(1);
+    });
+    it("should update wallet status to FLAGGED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.FLAGGED,
+        paymentMethodStatus: PaymentMethodStatus.APPROVED,
+      });
+
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.FLAGGED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.APPROVED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+
+      reset(consumerService);
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumerID, anything())).thenResolve(updatedConsumer);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.PASS);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(updatedWallet))).times(1);
+    });
+    it("should update wallet status to REJECTED", async () => {
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.REJECTED,
+        paymentMethodStatus: PaymentMethodStatus.APPROVED,
+      });
+
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.REJECTED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.APPROVED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+
+      reset(consumerService);
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumerID, anything())).thenResolve(updatedConsumer);
+      const status = await transactionService.validatePendingTransaction(consumer, transaction);
+      expect(status).toEqual(PendingTransactionValidationStatus.PASS);
+      verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
+      verify(consumerService.addOrUpdateCryptoWallet(consumerID, deepEqual(updatedWallet))).times(1);
     });
   });
 });

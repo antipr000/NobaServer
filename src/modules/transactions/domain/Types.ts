@@ -1,5 +1,3 @@
-import { TransactionQueueName } from "../queueprocessors/QueuesMeta";
-
 // *** DO NOT CHANGE VALUE *** //
 export enum TransactionType {
   ONRAMP = "onramp",
@@ -41,6 +39,19 @@ export enum TransactionStatus {
   // Finality statuses
   COMPLETED = "COMPLETED",
   FAILED = "FAILED",
+}
+
+// **** Do not change the enum values as they are used to create SQS queues ***
+export enum TransactionQueueName {
+  PendingTransactionValidation = "PendingTransactionValidation",
+  FiatTransactionInitiator = "FiatTransactionInitiator",
+  FiatTransactionInitiated = "FiatTransactionInitiated",
+  FiatTransactionCompleted = "FiatTransactionCompleted",
+  CryptoTransactionInitiated = "CryptoTransactionInitiated",
+  CryptoTransactionCompleted = "CryptoTransactionCompleted",
+  TransactionCompleted = "TransactionCompleted",
+  TransactionFailed = "TransactionFailed",
+  OnChainPendingTransaction = "OnChainPendingTransaction",
 }
 
 export interface TransactionStateAttributes {

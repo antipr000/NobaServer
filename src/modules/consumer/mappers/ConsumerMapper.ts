@@ -11,6 +11,9 @@ export class ConsumerMapper implements Mapper<Consumer> {
   }
 
   private getPaymentMethodStatus(paymentMethods: PaymentMethod[]): PaymentMethodStatus {
+    if (paymentMethods.length == 0) return undefined; // We have no payment methods
+
+    // If all payment methods are approved, payment method status is approved
     const numApproved = paymentMethods.filter(
       paymentMethod => paymentMethod.status && paymentMethod.status === PaymentMethodStatus.APPROVED,
     ).length;
@@ -19,9 +22,15 @@ export class ConsumerMapper implements Mapper<Consumer> {
   }
 
   private getWalletStatus(wallets: CryptoWallet[]): WalletStatus {
+    // At least one wallet is rejected
     if (wallets.filter(wallet => wallet.status === WalletStatus.REJECTED).length > 0) return WalletStatus.REJECTED;
+    // At least one wallet is flagged
     else if (wallets.filter(wallet => wallet.status === WalletStatus.FLAGGED).length > 0) return WalletStatus.FLAGGED;
-    return WalletStatus.APPROVED;
+    // We have at least one wallet but none are rejected or flagged
+    else if (wallets.length > 0) return WalletStatus.APPROVED;
+
+    // We have no wallets
+    return undefined;
   }
 
   public toCryptoWalletsDTO(cryptoWallets: CryptoWallet): CryptoWalletsDTO {
