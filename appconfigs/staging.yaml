@@ -4,7 +4,7 @@ envType: "staging"
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
 
 apiPrefix: "/v1"
-logFilePath: "/home/ubuntu/noba_server.log"
+logFilePath: "noba_server.log"
 
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
