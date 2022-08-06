@@ -44,9 +44,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
 
     // If status is already TransactionStatus.FIAT_INCOMING_INITIATING, then we failed this step before. Query checkout to see if our call
     // succeeded and if so, skip checkout and continue with updating transaction status & enqueueing.
-    if (status == TransactionStatus.FIAT_INCOMING_INITIATING) {
-      // TDOO(#310): query checkout based on transaction.props._id to see if we already have a payment id
-    } else {
+    if (status !== TransactionStatus.FIAT_INCOMING_INITIATING) {
       //before initiating the transaction we want to update the status so that if the initiator fails we don't execute this block again and manually resolve the failure depending on the type
       transaction = await this.transactionRepo.updateTransaction(
         Transaction.createTransaction({
@@ -54,16 +52,20 @@ export class FiatTransactionInitiator extends MessageProcessor {
           transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
         }),
       );
+    } else {
+      // Will check below whether we already have a checkoutPaymentID and if so, skip the rest of the logic.
     }
 
     let consumer = await this.consumerService.getConsumer(transaction.props.userId);
-
-    // TODO(#): What is this variable doing here?
-    // [JA] - See comment above for if status is FIAT_INCOMING_INITIATING - that explains why we would want it this early
-    let checkoutPaymentID: string;
+    let checkoutPaymentID: string = transaction.props.checkoutPaymentID;
     // TODO(#310) This is happening before we've called the ZH logic to calculate the true fiat value! We need to call
     // ZH before we even get here!
-    if (checkoutPaymentID == undefined) {
+    if (checkoutPaymentID !== undefined && checkoutPaymentID !== null) {
+      this.logger.error(
+        `Got into FiatTransctionInitiator with an existing checkoutPaymentID: ${checkoutPaymentID} for transaction: ${transaction.props._id}. Moving to next queue...`,
+      );
+      await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
+    } else {
       // Fiat Transaction implementation here
       let paymentResponse: PaymentRequestResponse;
       try {
@@ -72,13 +74,33 @@ export class FiatTransactionInitiator extends MessageProcessor {
           paymentResponse.status === PaymentMethodStatus.REJECTED ||
           paymentResponse.status === PaymentMethodStatus.FLAGGED
         ) {
-          this.handleCheckoutFailure(
+          await this.handleCheckoutFailure(
             paymentResponse.responseCode,
             paymentResponse.responseSummary,
             paymentResponse.status,
             consumer,
             transaction,
+            true,
           );
+          return;
+        } else if (paymentResponse.status === PaymentMethodStatus.APPROVED) {
+          checkoutPaymentID = paymentResponse.paymentID;
+          transaction = await this.transactionRepo.updateTransaction(
+            Transaction.createTransaction({
+              ...transaction.props,
+              transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+              checkoutPaymentID: checkoutPaymentID,
+            }),
+          );
+          //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
+          await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
+          return;
+        } else {
+          // Should not be any other response
+          this.logger.error(
+            `Invalid response received from consumerService.requestCheckoutPayment(): ${paymentResponse.status}`,
+          );
+          return;
         }
       } catch (e) {
         if (e.http_code === CHECKOUT_VALIDATION_ERROR_HTTP_CODE) {
@@ -86,7 +108,14 @@ export class FiatTransactionInitiator extends MessageProcessor {
           const errorDescription = errorBody.error_type;
           const errorCode = errorBody.error_codes.join(",");
 
-          this.handleCheckoutFailure(errorCode, errorDescription, PaymentMethodStatus.REJECTED, consumer, transaction);
+          await this.handleCheckoutFailure(
+            errorCode,
+            errorDescription,
+            PaymentMethodStatus.REJECTED,
+            consumer,
+            transaction,
+            false,
+          );
 
           return;
         } else {
@@ -101,20 +130,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
         }
         return;
       }
-
-      checkoutPaymentID = paymentResponse.paymentID;
     }
-
-    transaction = await this.transactionRepo.updateTransaction(
-      Transaction.createTransaction({
-        ...transaction.props,
-        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-        checkoutPaymentID: checkoutPaymentID,
-      }),
-    );
-
-    //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
-    await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
   }
 
   async handleCheckoutFailure(
@@ -123,6 +139,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
     status: PaymentMethodStatus,
     consumer: Consumer,
     transaction: Transaction,
+    updateSardine: boolean,
   ) {
     this.logger.error(`Fiat payment failed with error code: ${errorCode}, error description: ${errorDescription}`);
 
@@ -146,12 +163,14 @@ export class FiatTransactionInitiator extends MessageProcessor {
       authReason: errorDescription,
     });
 
-    // Inform Sardine
-    await this.verificationService.provideTransactionFeedback(
-      errorCode,
-      errorDescription,
-      transaction.props._id,
-      paymentMethod.paymentProviderID,
-    );
+    if (updateSardine) {
+      // Inform Sardine
+      await this.verificationService.provideTransactionFeedback(
+        errorCode,
+        errorDescription,
+        transaction.props._id,
+        paymentMethod.paymentProviderID,
+      );
+    }
   }
 }
