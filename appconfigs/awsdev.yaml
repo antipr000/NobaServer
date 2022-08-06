@@ -47,9 +47,11 @@ mongo:
 sardine:
   awsSecretNameForSardineClientID: "TEST_SARDINE_CLIENT_ID" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSardineSecretKey: "TEST_SARDINE_SECRET"
+  awsSecretNameForSardineWebhookSecretKey: "TEST_SARDINE_WEBHOOK_SECRET" # Sardine will never call us in this env, however
   clientID: "bogus-value"
   secretKey: "bogus-value"
-  sardineBaseUri: "https://api.dev.sardine.ai"
+  webhookSecretKey: "" # Useless in this environment because Sardine is not calling us
+  sardineBaseUri: "https://api.sandbox.sardine.ai"
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"

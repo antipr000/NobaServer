@@ -27,7 +27,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
     // At least one wallet is flagged
     else if (wallets.filter(wallet => wallet.status === WalletStatus.FLAGGED).length > 0) return WalletStatus.FLAGGED;
     // We have at least one wallet but none are rejected or flagged
-    else if (wallets.length > 0) WalletStatus.APPROVED;
+    else if (wallets.length > 0) return WalletStatus.APPROVED;
 
     // We have no wallets
     return undefined;
