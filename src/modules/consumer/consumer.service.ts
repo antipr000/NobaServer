@@ -12,12 +12,23 @@ import { PaymentMethod } from "./domain/PaymentMethod";
 import Checkout from "checkout-sdk-node";
 import { CheckoutService } from "../common/checkout.service";
 import { EmailService } from "../common/email.service";
-import { CheckoutPaymentStatus, FiatTransactionStatus } from "./domain/Types";
+import { CheckoutPaymentStatus, FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { PaymentMethodStatus } from "./domain/VerificationStatus";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { KmsService } from "../common/kms.service";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import {
+  REASON_CODE_SOFT_DECLINE_BANK_ERROR,
+  REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA,
+  REASON_CODE_SOFT_DECLINE_CARD_ERROR,
+} from "../transactions/domain/CheckoutConstants";
+import { Transaction } from "../transactions/domain/Transaction";
 
+class CheckoutResponseData {
+  paymentMethodStatus: PaymentMethodStatus;
+  responseCode: string;
+  responseSummary: string;
+}
 @Injectable()
 export class ConsumerService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -138,6 +149,9 @@ export class ConsumerService {
       checkoutCustomerID = checkoutCustomerData[0].providerCustomerID;
     }
 
+    let instrumentID;
+    let cardType;
+    let checkoutResponse;
     try {
       // To add payment method, we first need to tokenize the card
       // Token is only valid for 15 mins
@@ -158,42 +172,66 @@ export class ConsumerService {
         },
       });
 
-      let paymentMethodStatus: PaymentMethodStatus = undefined;
-      // Check if added payment method is valid
-      try {
-        const payment = await this.checkoutApi.payments.request({
-          currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
-          source: {
-            type: "id",
-            id: instrument["id"],
-          },
-          description: "Noba Customer Payment at UTC " + Date.now(),
-          metadata: {
-            order_id: "test_order_1",
-          },
-        });
-        if (payment["risk"]["flagged"]) {
-          paymentMethodStatus = PaymentMethodStatus.REJECTED;
-        } else {
-          paymentMethodStatus = PaymentMethodStatus.APPROVED;
-        }
-      } catch (err) {
-        //pass
-        this.logger.error(`Failed to make payment while adding card: ${err}`);
-      }
+      instrumentID = instrument["id"];
+      cardType = instrument["scheme"];
+    } catch (err) {
+      //pass
+      this.logger.error(`Failed to make payment while adding card: ${err}`);
+    }
 
+    // Check if this card already exists for the consumer
+    const existingPaymentMethod = consumer.getPaymentMethodByID(instrumentID);
+    if (existingPaymentMethod) {
+      throw new BadRequestException({ message: "Card already added" });
+    }
+
+    try {
+      // Check if added payment method is valid
+      checkoutResponse = await this.checkoutApi.payments.request({
+        currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
+        source: {
+          type: "id",
+          id: instrumentID,
+        },
+        description: "Noba Customer Preauth at UTC " + Date.now(),
+        metadata: {
+          order_id: "test_order_1",
+        },
+      });
+    } catch (err) {
+      //pass
+      this.logger.error(`Error validating card instrument ${instrumentID}: ${err}`);
+      throw new BadRequestException("Card validation error");
+    }
+
+    const response = await this.handleCheckoutResponse(consumer, checkoutResponse, instrumentID, "preauth", "preauth");
+
+    if (response.paymentMethodStatus === PaymentMethodStatus.REJECTED) {
+      await this.emailService.sendCardAdditionFailedEmail(
+        consumer.props.firstName,
+        consumer.props.lastName,
+        consumer.props.displayEmail,
+        /* cardNetwork = */ "",
+        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+      );
+      throw new BadRequestException("Card rejected");
+    } else if (response.paymentMethodStatus === PaymentMethodStatus.FLAGGED) {
+      // TODO - we don't currently have a use case for FLAGGED
+    } else {
       const newPaymentMethod: PaymentMethod = {
         cardName: paymentMethod.cardName,
-        cardType: instrument["scheme"],
+        cardType: cardType,
         first6Digits: paymentMethod.cardNumber.substring(0, 6),
         last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
         imageUri: paymentMethod.imageUri,
         paymentProviderID: PaymentProviders.CHECKOUT,
-        paymentToken: instrument["id"], // TODO: Check if this is the valid way to populate id
+        paymentToken: instrumentID,
+        authCode: response.responseCode,
+        authReason: response.responseSummary,
       };
 
-      if (paymentMethodStatus) {
-        newPaymentMethod.status = paymentMethodStatus;
+      if (response.paymentMethodStatus) {
+        newPaymentMethod.status = response.paymentMethodStatus;
       }
 
       let updatedConsumerProps: ConsumerProps;
@@ -217,6 +255,7 @@ export class ConsumerService {
       }
 
       const result = await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
+
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
@@ -225,41 +264,111 @@ export class ConsumerService {
         newPaymentMethod.last4Digits,
       );
       return result;
-    } catch (e) {
-      await this.emailService.sendCardAdditionFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.displayEmail,
-        /* cardNetwork = */ "",
-        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
-      );
-      throw new BadRequestException("Card details are not valid");
     }
   }
 
-  async requestCheckoutPayment(
-    paymentToken: string,
-    amount: number,
-    currency: string,
-    nobaTransactionId: string,
-  ): Promise<any> {
+  async requestCheckoutPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
+    let checkoutResponse;
     try {
-      const payment = await this.checkoutApi.payments.request({
-        amount: amount * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
-        currency: currency,
+      checkoutResponse = await this.checkoutApi.payments.request({
+        amount: transaction.props.leg1Amount * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
+        currency: transaction.props.leg1,
         source: {
           type: "id",
-          id: paymentToken,
+          id: transaction.props.paymentMethodID,
         },
         description: "Noba Customer Payment at UTC " + Date.now(),
         metadata: {
-          order_id: nobaTransactionId,
+          order_id: transaction.props._id,
         },
       });
-      return payment;
     } catch (err) {
       throw new BadRequestException("Payment processing failed");
     }
+
+    const response = await this.handleCheckoutResponse(
+      consumer,
+      checkoutResponse,
+      transaction.props.paymentMethodID,
+      transaction.props.sessionKey,
+      transaction.props._id,
+    );
+
+    switch (response.paymentMethodStatus) {
+      case PaymentMethodStatus.APPROVED:
+        return { status: response.paymentMethodStatus, paymentID: checkoutResponse["id"] };
+      case PaymentMethodStatus.REJECTED:
+        return {
+          status: response.paymentMethodStatus,
+          responseCode: response.responseCode,
+          responseSummary: response.responseSummary,
+        };
+      case PaymentMethodStatus.FLAGGED:
+      // TODO: Don't yet have a use for this?
+    }
+  }
+
+  async handleCheckoutResponse(
+    consumer: Consumer,
+    checkoutResponse,
+    instrumentID: string,
+    sessionID,
+    transactionID: string,
+  ): Promise<CheckoutResponseData> {
+    let response: CheckoutResponseData = new CheckoutResponseData();
+    response.responseCode = checkoutResponse["response_code"];
+    response.responseSummary = checkoutResponse["response_summary"];
+    let sendNobaEmail: boolean = false;
+
+    try {
+      if (!response.responseCode) {
+        this.logger.error(`No response code received validating card instrument ${instrumentID}`);
+        throw new BadRequestException("Card validation error");
+      } else if (response.responseCode.startsWith("10")) {
+        // Accepted
+        response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
+      } else if (response.responseCode.startsWith("20")) {
+        // Soft decline, with several categories
+        if (REASON_CODE_SOFT_DECLINE_CARD_ERROR.indexOf(response.responseCode) > -1) {
+          // Card error, possibly bad number, user should confirm details
+          throw new BadRequestException("Invalid card data");
+        } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR.indexOf(response.responseCode) > -1) {
+          throw new BadRequestException("Invalid card data");
+        } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(response.responseCode)) {
+          throw new BadRequestException("Invalid card data");
+        }
+      } else if (response.responseCode.startsWith("30")) {
+        // Hard decline
+        sendNobaEmail = true;
+        response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
+      } else if (response.responseCode.startsWith("40") || checkoutResponse["risk"]["flagged"]) {
+        // Risk
+        sendNobaEmail = true;
+        response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
+      } else {
+        // Should never get here, but log if we do
+        this.logger.error(
+          `Unknown response code '${response.responseCode}' received when validating card instrument ${instrumentID}`,
+        );
+        throw new BadRequestException("Card validation error");
+      }
+    } finally {
+      if (sendNobaEmail) {
+        this.emailService.sendHardDeclineEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.email,
+          sessionID,
+          transactionID,
+          instrumentID,
+          PaymentProviders.CHECKOUT,
+          response.responseCode,
+          response.responseSummary,
+        );
+      }
+    }
+
+    return response;
   }
 
   async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProviders): Promise<FiatTransactionStatus> {

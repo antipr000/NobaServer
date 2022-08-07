@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { FiatTransactionInitiator } from "../../queueprocessors/FiatTransactionInitiator";
@@ -18,13 +18,14 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoClient, Collection } from "mongodb";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import mongoose from "mongoose";
-import * as os from "os";
 import { VerificationService } from "../../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
 import { SqsClient } from "../../queueprocessors/sqs.client";
 import { TransactionService } from "../../transaction.service";
 import { getMockTransactionServiceWithDefaults } from "../../mocks/mock.transactions.repo";
 import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
+import { Consumer } from "../../../../modules/consumer/domain/Consumer";
+import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -135,9 +136,10 @@ describe("FiatTransactionInitiator", () => {
     expect(processor).toBeInstanceOf(FiatTransactionInitiator);
 
     const initiatedPaymentId = "CCCCCCCCCC";
+    const consumerID = "UUUUUUUUUU";
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
-      userId: "UUUUUUUUU",
+      userId: consumerID,
       transactionStatus: TransactionStatus.VALIDATION_PASSED,
       paymentMethodID: "XXXXXXXXXX",
       leg1Amount: 1000,
@@ -145,15 +147,26 @@ describe("FiatTransactionInitiator", () => {
       leg1: "USD",
       leg2: "ETH",
     });
+    const consumer: Consumer = Consumer.createConsumer({
+      _id: consumerID,
+      email: "test@noba.com",
+      partners: [
+        {
+          partnerID: "partner-1",
+        },
+      ],
+    });
 
     await transactionCollection.insertOne({
       ...transaction.props,
       _id: transaction.props._id as any,
     });
 
-    when(
-      consumerService.requestCheckoutPayment(transaction.props.paymentMethodID, 1000, "USD", transaction.props._id),
-    ).thenResolve({ id: initiatedPaymentId });
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+      status: PaymentMethodStatus.APPROVED,
+      paymentID: initiatedPaymentId,
+    });
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
 
     await fiatTransactionInitiator.processMessage(transaction.props._id);
