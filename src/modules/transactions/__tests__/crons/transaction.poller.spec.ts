@@ -95,24 +95,8 @@ describe("FiatTransactionInitiator", () => {
     });
   });
 
-  it("should push 'FIAT_INCOMING_INITIATING' & 'VALIDATION_PASSED' transacions to 'FiatTransactionInitiator' queue", async () => {
-    const fiatInitiatingTransactionIds = ["11111111111", "11111111112", "11111111113", "11111111114", "11111111115"];
+  it("should push 'VALIDATION_PASSED' transacions to 'FiatTransactionInitiator' queue", async () => {
     const validationPassedTransactionIds = ["21111111111", "21111111112", "21111111113", "21111111114", "21111111115"];
-
-    const transactionsWithFiatIncomingInitiatingStatus = [];
-    fiatInitiatingTransactionIds.forEach(id => {
-      const transaction: Transaction = Transaction.createTransaction({
-        _id: id,
-        userId: "UUUUUUUUU",
-        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
-        paymentMethodID: "XXXXXXXXXX",
-        leg1Amount: 1000,
-        leg2Amount: 1,
-        leg1: "USD",
-        leg2: "ETH",
-      });
-      transactionsWithFiatIncomingInitiatingStatus.push(transaction);
-    });
 
     const transactionsWithValidationPassedStatus = [];
     validationPassedTransactionIds.forEach(id => {
@@ -130,7 +114,6 @@ describe("FiatTransactionInitiator", () => {
     });
 
     setupGetTransactionsBeforeTimeMocks({
-      [TransactionStatus.FIAT_INCOMING_INITIATING]: transactionsWithFiatIncomingInitiatingStatus,
       [TransactionStatus.VALIDATION_PASSED]: transactionsWithValidationPassedStatus,
     });
     when(sqsClient.enqueue(anyString(), anyString())).thenResolve("");
@@ -138,9 +121,6 @@ describe("FiatTransactionInitiator", () => {
     await transactionPoller.handleCron();
 
     // Verify whether all the transaction enque requests was sent to `sqsClient`.
-    fiatInitiatingTransactionIds.forEach(id => {
-      verify(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, id)).once();
-    });
     validationPassedTransactionIds.forEach(id => {
       verify(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, id)).once();
     });
