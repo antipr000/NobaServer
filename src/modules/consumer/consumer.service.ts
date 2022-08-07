@@ -270,18 +270,21 @@ export class ConsumerService {
   async requestCheckoutPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
     let checkoutResponse;
     try {
-      checkoutResponse = await this.checkoutApi.payments.request({
-        amount: transaction.props.leg1Amount * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
-        currency: transaction.props.leg1,
-        source: {
-          type: "id",
-          id: transaction.props.paymentMethodID,
+      checkoutResponse = await this.checkoutApi.payments.request(
+        {
+          amount: transaction.props.leg1Amount * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
+          currency: transaction.props.leg1,
+          source: {
+            type: "id",
+            id: transaction.props.paymentMethodID,
+          },
+          description: "Noba Customer Payment at UTC " + Date.now(),
+          metadata: {
+            order_id: transaction.props._id,
+          },
         },
-        description: "Noba Customer Payment at UTC " + Date.now(),
-        metadata: {
-          order_id: transaction.props._id,
-        },
-      });
+        /*idempotencyKey=*/ transaction.props._id,
+      );
     } catch (err) {
       throw new BadRequestException("Payment processing failed");
     }

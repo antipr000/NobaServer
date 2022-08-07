@@ -13,7 +13,6 @@ export enum TransactionStatus {
   VALIDATION_PASSED = "VALIDATION_PASSED",
 
   // Onramp transaction statuses
-  FIAT_INCOMING_INITIATING = "FIAT_INCOMING_INITIATING",
   FIAT_INCOMING_INITIATED = "FIAT_INCOMING_INITIATED",
   FIAT_INCOMING_COMPLETED = "FIAT_INCOMING_COMPLETED",
   FIAT_INCOMING_FAILED = "FIAT_INCOMING_FAILED",
@@ -68,11 +67,6 @@ export const allTransactionAttributes: TransactionStateAttributes[] = [
   },
   {
     transactionStatus: TransactionStatus.VALIDATION_PASSED,
-    processingQueue: TransactionQueueName.FiatTransactionInitiator,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-  },
-  {
-    transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
     processingQueue: TransactionQueueName.FiatTransactionInitiator,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
   },

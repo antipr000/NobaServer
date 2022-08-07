@@ -34,102 +34,74 @@ export class FiatTransactionInitiator extends MessageProcessor {
   }
 
   async processMessage(transactionId: string) {
-    let transaction = await this.transactionRepo.getTransaction(transactionId);
+    const transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
-    if (status != TransactionStatus.VALIDATION_PASSED && status != TransactionStatus.FIAT_INCOMING_INITIATING) {
+    if (status != TransactionStatus.VALIDATION_PASSED) {
       this.logger.info(`Transaction ${transactionId} is not in validate passed state, skipping, status: ${status}`);
       return;
     }
 
-    // If status is already TransactionStatus.FIAT_INCOMING_INITIATING, then we failed this step before. Query checkout to see if our call
-    // succeeded and if so, skip checkout and continue with updating transaction status & enqueueing.
-    if (status !== TransactionStatus.FIAT_INCOMING_INITIATING) {
-      //before initiating the transaction we want to update the status so that if the initiator fails we don't execute this block again and manually resolve the failure depending on the type
-      transaction = await this.transactionRepo.updateTransaction(
-        Transaction.createTransaction({
-          ...transaction.props,
-          transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
-        }),
+    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    try {
+      // `requestCheckoutPayment` is idempotent. So, it is safe to call it multiple times.
+      const paymentResponse: PaymentRequestResponse = await this.consumerService.requestCheckoutPayment(
+        consumer,
+        transaction,
       );
-    } else {
-      // Will check below whether we already have a checkoutPaymentID and if so, skip the rest of the logic.
-    }
 
-    let consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    let checkoutPaymentID: string = transaction.props.checkoutPaymentID;
-    // TODO(#310) This is happening before we've called the ZH logic to calculate the true fiat value! We need to call
-    // ZH before we even get here!
-    if (checkoutPaymentID !== undefined && checkoutPaymentID !== null) {
-      this.logger.error(
-        `Got into FiatTransctionInitiator with an existing checkoutPaymentID: ${checkoutPaymentID} for transaction: ${transaction.props._id}. Moving to next queue...`,
-      );
-      await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
-    } else {
-      // Fiat Transaction implementation here
-      let paymentResponse: PaymentRequestResponse;
-      try {
-        paymentResponse = await this.consumerService.requestCheckoutPayment(consumer, transaction);
-        if (
-          paymentResponse.status === PaymentMethodStatus.REJECTED ||
-          paymentResponse.status === PaymentMethodStatus.FLAGGED
-        ) {
-          await this.handleCheckoutFailure(
-            paymentResponse.responseCode,
-            paymentResponse.responseSummary,
-            paymentResponse.status,
-            consumer,
-            transaction,
-            true,
-          );
-          return;
-        } else if (paymentResponse.status === PaymentMethodStatus.APPROVED) {
-          checkoutPaymentID = paymentResponse.paymentID;
-          transaction = await this.transactionRepo.updateTransaction(
-            Transaction.createTransaction({
-              ...transaction.props,
-              transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-              checkoutPaymentID: checkoutPaymentID,
-            }),
-          );
-          //Move to initiated queue, db poller will take delay to put it to queue as it's scheduled so we move it to the target queue directly from here
-          await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
-          return;
-        } else {
-          // Should not be any other response
-          this.logger.error(
-            `Invalid response received from consumerService.requestCheckoutPayment(): ${paymentResponse.status}`,
-          );
-          return;
-        }
-      } catch (e) {
-        if (e.http_code === CHECKOUT_VALIDATION_ERROR_HTTP_CODE) {
-          const errorBody: CheckoutValidationError = e.body;
-          const errorDescription = errorBody.error_type;
-          const errorCode = errorBody.error_codes.join(",");
-
-          await this.handleCheckoutFailure(
-            errorCode,
-            errorDescription,
-            PaymentMethodStatus.REJECTED,
-            consumer,
-            transaction,
-            false,
-          );
-
-          return;
-        } else {
-          this.logger.error(`Fiat payment failed: ${JSON.stringify(e)}`);
-
-          // TODO: What more to do here?
-          await this.processFailure(
-            TransactionStatus.FIAT_INCOMING_FAILED,
-            `Error from Checkout: ${JSON.stringify(e)}`,
-            transaction,
-          );
-        }
+      if (
+        paymentResponse.status === PaymentMethodStatus.REJECTED ||
+        paymentResponse.status === PaymentMethodStatus.FLAGGED
+      ) {
+        return this.handleCheckoutFailure(
+          paymentResponse.responseCode,
+          paymentResponse.responseSummary,
+          paymentResponse.status,
+          consumer,
+          transaction,
+          true,
+        );
+      } else if (paymentResponse.status === PaymentMethodStatus.APPROVED) {
+        await this.transactionRepo.updateTransaction(
+          Transaction.createTransaction({
+            ...transaction.props,
+            transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+            checkoutPaymentID: paymentResponse.paymentID,
+          }),
+        );
+        // Move to initiated queue.
+        // DBPoller will take delay to put it to queue as it's scheduled periodically.
+        await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transactionId);
+        return;
+      } else {
+        // Should not be any other response
+        this.logger.error(
+          `Invalid response received from consumerService.requestCheckoutPayment(): ${paymentResponse.status}`,
+        );
         return;
       }
+    } catch (e) {
+      if (e.http_code === CHECKOUT_VALIDATION_ERROR_HTTP_CODE) {
+        const errorBody: CheckoutValidationError = e.body;
+        const errorDescription = errorBody.error_type;
+        const errorCode = errorBody.error_codes.join(",");
+
+        await this.handleCheckoutFailure(
+          errorCode,
+          errorDescription,
+          PaymentMethodStatus.REJECTED,
+          consumer,
+          transaction,
+          false,
+        );
+
+        return;
+      } else {
+        this.logger.error(`Fiat payment failed: ${JSON.stringify(e)}`);
+        // Will be retried later when DBPoller will poll the transaction.
+      }
+      return;
     }
   }
 
