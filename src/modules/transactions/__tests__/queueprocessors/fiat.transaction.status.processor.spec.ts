@@ -167,7 +167,7 @@ describe("FiatTransactionInitiator", () => {
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
       userId: "UUUUUUUUU",
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATING,
+      transactionStatus: TransactionStatus.VALIDATION_PASSED,
       paymentMethodID: "XXXXXXXXXX",
       leg1Amount: 1000,
       leg2Amount: 1,
@@ -184,7 +184,7 @@ describe("FiatTransactionInitiator", () => {
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
-    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATING);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_PASSED);
   });
 
   it("should move into failed queue if transaction fails", async () => {
