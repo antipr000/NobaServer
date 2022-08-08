@@ -78,6 +78,7 @@
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
+    "rxjs": "^7",
     "shallow-equal-object": "^1.1.1",
     "sqs-consumer": "^5.7.0",
     "sqs-producer": "^2.1.0",
