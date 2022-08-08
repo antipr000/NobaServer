@@ -9,6 +9,7 @@ import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
+import { LockService } from "../../../modules/common/lock.service";
 
 export class FiatTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -17,6 +18,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
     sqsClient: SqsClient,
     consumerService: ConsumerService,
     transactionService: TransactionService,
+    lockService: LockService,
   ) {
     super(
       logger,
@@ -25,10 +27,11 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       consumerService,
       transactionService,
       TransactionQueueName.FiatTransactionInitiated,
+      lockService,
     );
   }
 
-  async processMessage(transactionId: string) {
+  async processMessageInternal(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 

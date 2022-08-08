@@ -169,7 +169,7 @@ describe("FiatTransactionInitiator", () => {
     });
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
 
-    await fiatTransactionInitiator.processMessage(transaction.props._id);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);

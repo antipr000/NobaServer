@@ -20,6 +20,8 @@ import { OtpProps } from "../modules/auth/domain/Otp";
 import { CustomConfigService } from "../core/utils/AppConfigModule";
 import { VerificationDataProps } from "../modules/verification/domain/VerificationData";
 import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataModel";
+import { LockModel } from "../infra/mongodb/models/LockModel";
+import { LockProps } from "../modules/common/domain/Lock";
 import * as path from "path";
 
 @Injectable()
@@ -85,5 +87,11 @@ export class DBProvider {
   async getVerificationDataModel(): Promise<Model<VerificationDataProps>> {
     await this.connectToDb();
     return VerificationDataModel;
+  }
+
+  async getLockModel(): Promise<Model<LockProps>> {
+    await this.connectToDb();
+    await LockModel.ensureIndexes();
+    return LockModel;
   }
 }

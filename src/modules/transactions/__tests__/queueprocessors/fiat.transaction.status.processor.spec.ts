@@ -146,7 +146,7 @@ describe("FiatTransactionInitiator", () => {
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, null)).thenResolve(FiatTransactionStatus.CAPTURED);
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transaction.props._id)).thenResolve("");
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
@@ -180,7 +180,7 @@ describe("FiatTransactionInitiator", () => {
       _id: transaction.props._id as any,
     });
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
@@ -213,7 +213,7 @@ describe("FiatTransactionInitiator", () => {
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, null)).thenResolve(FiatTransactionStatus.FAILED);
     when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
@@ -246,7 +246,7 @@ describe("FiatTransactionInitiator", () => {
 
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, null)).thenResolve(FiatTransactionStatus.PENDING);
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
 

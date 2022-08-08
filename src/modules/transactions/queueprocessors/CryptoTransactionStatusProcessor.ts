@@ -9,6 +9,7 @@ import { TransactionService } from "../transaction.service";
 import { MessageProcessor } from "./message.processor";
 import { SqsClient } from "./sqs.client";
 import { EmailService } from "../../../modules/common/email.service";
+import { LockService } from "../../../modules/common/lock.service";
 
 export class CryptoTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -18,6 +19,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
     private readonly emailService: EmailService,
+    lockService: LockService,
   ) {
     super(
       logger,
@@ -26,11 +28,12 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
       consumerService,
       transactionService,
       TransactionQueueName.CryptoTransactionInitiated,
+      lockService,
     );
   }
 
-  async processMessage(transactionId: string) {
-    let transaction = await this.transactionRepo.getTransaction(transactionId);
+  async processMessageInternal(transactionId: string) {
+    const transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
       this.logger.info(

@@ -1,3 +1,4 @@
+import { LockService } from "../../../modules/common/lock.service";
 import { ConsumerService } from "src/modules/consumer/consumer.service";
 import { Logger } from "winston";
 import { Transaction, TransactionEvent } from "../domain/Transaction";
@@ -5,6 +6,7 @@ import { TransactionStatus, TransactionQueueName } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
+import { ObjectType } from "../../../modules/common/domain/ObjectType";
 
 export abstract class MessageProcessor {
   constructor(
@@ -14,12 +16,26 @@ export abstract class MessageProcessor {
     protected readonly consumerService: ConsumerService,
     protected readonly transactionService: TransactionService,
     protected readonly transactionQueue: TransactionQueueName,
+    protected readonly lockService: LockService,
   ) {
     const app = sqsClient.subscribeToQueue(transactionQueue, this);
     app.start();
   }
 
-  public abstract processMessage(transactionId: string): void;
+  // TODO(#377): Use activeTransaction in all processors instead of fetching transaction at first
+  protected activeTransaction: Transaction;
+  protected abstract processMessageInternal(transactionId: string): Promise<void>;
+
+  public async processMessage(transactionId: string): Promise<void> {
+    const lockId = await this.lockService.acquireLockForKey(transactionId, ObjectType.TRANSACTION);
+    if (lockId) {
+      this.activeTransaction = await this.transactionRepo.getTransaction(transactionId);
+      await this.processMessageInternal(transactionId);
+      await this.lockService.releaseLockForKey(transactionId, ObjectType.TRANSACTION);
+    } else {
+      this.logger.debug(`Transaction ${transactionId} being processed by another worker`);
+    }
+  }
 
   // Handle any unexpected error like connection to the queue is broken.
   public subscriptionErrorHandler(err: Error) {

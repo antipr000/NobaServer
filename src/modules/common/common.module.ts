@@ -8,10 +8,15 @@ import { EmailService } from "./email.service";
 import { KmsService } from "./kms.service";
 import { SMSService } from "./sms.service";
 import { ConfigurationProviderService } from "./configuration.provider.service";
+import { MongoDBLockRepo } from "./repo/MongoDBLockRepo";
+import { LockService } from "./lock.service";
+import { DBProvider } from "../../infraproviders/DBProvider";
+import { InfraProvidersModule } from "../../infraproviders/infra.module";
 
 @Module({
-  imports: [],
+  imports: [InfraProvidersModule],
   providers: [
+    DBProvider,
     CsvService,
     CheckoutService,
     EmailService,
@@ -20,6 +25,11 @@ import { ConfigurationProviderService } from "./configuration.provider.service";
     CurrencyService,
     LocationService,
     ConfigurationProviderService,
+    {
+      provide: "LockRepo",
+      useClass: MongoDBLockRepo,
+    },
+    LockService,
   ],
   exports: [
     CsvService,
@@ -30,6 +40,7 @@ import { ConfigurationProviderService } from "./configuration.provider.service";
     CurrencyService,
     LocationService,
     ConfigurationProviderService,
+    LockService,
   ],
 })
 export class CommonModule {}

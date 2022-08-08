@@ -10,6 +10,7 @@ import { EmailService } from "../../common/email.service";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
+import { LockService } from "../../../modules/common/lock.service";
 
 export class OnChainPendingProcessor extends MessageProcessor {
   constructor(
@@ -18,6 +19,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     sqsClient: SqsClient,
     consumerService: ConsumerService,
     transactionService: TransactionService,
+    lockService: LockService,
     private readonly zerohashService: ZeroHashService,
     private readonly emailService: EmailService,
   ) {
@@ -28,10 +30,11 @@ export class OnChainPendingProcessor extends MessageProcessor {
       consumerService,
       transactionService,
       TransactionQueueName.OnChainPendingTransaction,
+      lockService,
     );
   }
 
-  async processMessage(transactionId: string) {
+  async processMessageInternal(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 

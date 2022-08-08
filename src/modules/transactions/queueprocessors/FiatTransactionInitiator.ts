@@ -13,6 +13,7 @@ import { MessageProcessor } from "./message.processor";
 import { PaymentRequestResponse } from "../../../modules/consumer/domain/Types";
 import { PaymentMethodStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { LockService } from "../../../modules/common/lock.service";
 
 export class FiatTransactionInitiator extends MessageProcessor {
   constructor(
@@ -21,6 +22,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
     sqsClient: SqsClient,
     consumerService: ConsumerService,
     transactionService: TransactionService,
+    lockService: LockService,
     private readonly verificationService: VerificationService,
   ) {
     super(
@@ -30,10 +32,11 @@ export class FiatTransactionInitiator extends MessageProcessor {
       consumerService,
       transactionService,
       TransactionQueueName.FiatTransactionInitiator,
+      lockService,
     );
   }
 
-  async processMessage(transactionId: string) {
+  async processMessageInternal(transactionId: string) {
     const transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
