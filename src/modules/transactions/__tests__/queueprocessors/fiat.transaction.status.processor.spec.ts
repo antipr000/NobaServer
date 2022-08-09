@@ -23,6 +23,9 @@ import { getMockTransactionServiceWithDefaults } from "../../mocks/mock.transact
 import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 import { FiatTransactionStatusProcessor } from "../../queueprocessors/FiatTransactionStatusProcessor";
 import { FiatTransactionStatus } from "../../../../modules/consumer/domain/Types";
+import { LockService } from "../../../../modules/common/lock.service";
+import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
+import { ObjectType } from "../../../../modules/common/domain/ObjectType";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -53,6 +56,7 @@ describe("FiatTransactionInitiator", () => {
   let mongoServer: MongoMemoryServer;
   let mongoClient: MongoClient;
   let transactionCollection: Collection;
+  let lockService: LockService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -73,6 +77,7 @@ describe("FiatTransactionInitiator", () => {
     consumerService = getMockConsumerServiceWithDefaults();
     transactionService = getMockTransactionServiceWithDefaults();
     sqsClient = getMockSqsClientWithDefaults();
+    lockService = getMockLockServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `FiatTransactionInitiator` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -101,6 +106,10 @@ describe("FiatTransactionInitiator", () => {
         {
           provide: TransactionService,
           useFactory: () => instance(transactionService),
+        },
+        {
+          provide: LockService,
+          useFactory: () => instance(lockService),
         },
         FiatTransactionStatusProcessor,
       ],
@@ -145,8 +154,10 @@ describe("FiatTransactionInitiator", () => {
 
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, null)).thenResolve(FiatTransactionStatus.CAPTURED);
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transaction.props._id)).thenResolve("");
+    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
@@ -179,8 +190,10 @@ describe("FiatTransactionInitiator", () => {
       ...transaction.props,
       _id: transaction.props._id as any,
     });
+    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
@@ -212,8 +225,10 @@ describe("FiatTransactionInitiator", () => {
 
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, null)).thenResolve(FiatTransactionStatus.FAILED);
     when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
@@ -246,7 +261,7 @@ describe("FiatTransactionInitiator", () => {
 
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, null)).thenResolve(FiatTransactionStatus.PENDING);
 
-    await fiatTransactionStatusProcessor.processMessage(transaction.props._id);
+    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
 

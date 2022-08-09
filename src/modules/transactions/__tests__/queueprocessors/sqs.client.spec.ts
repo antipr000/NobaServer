@@ -55,18 +55,23 @@ jest.mock("sqs-consumer", () => {
 });
 
 import { Test, TestingModule } from "@nestjs/testing";
+import { LockService } from "../../../../modules/common/lock.service";
 import { NODE_ENV_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { SqsClient } from "../../queueprocessors/sqs.client";
+import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
+import { instance } from "ts-mockito";
 
 describe("FiatTransactionInitiator", () => {
   jest.setTimeout(10000);
 
   let sqsClient: SqsClient;
+  let lockService: LockService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
+    lockService = getMockLockServiceWithDefaults();
 
     const environmentVariables = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -74,7 +79,13 @@ describe("FiatTransactionInitiator", () => {
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
-      providers: [SqsClient],
+      providers: [
+        SqsClient,
+        {
+          provide: LockService,
+          useFactory: () => instance(lockService),
+        },
+      ],
     }).compile();
 
     sqsClient = app.get<SqsClient>(SqsClient);

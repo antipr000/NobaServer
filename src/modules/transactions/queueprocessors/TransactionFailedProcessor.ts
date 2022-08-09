@@ -9,6 +9,7 @@ import { EmailService } from "../../../modules/common/email.service";
 import { MessageProcessor } from "./message.processor";
 import { SqsClient } from "./sqs.client";
 import { TransactionService } from "../transaction.service";
+import { LockService } from "../../../modules/common/lock.service";
 
 export class TransactionFailedProcessor extends MessageProcessor {
   constructor(
@@ -18,6 +19,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
     private readonly emailService: EmailService,
+    lockService: LockService,
   ) {
     super(
       logger,
@@ -26,10 +28,11 @@ export class TransactionFailedProcessor extends MessageProcessor {
       consumerService,
       transactionService,
       TransactionQueueName.TransactionFailed,
+      lockService,
     );
   }
 
-  async processMessage(transactionId: string) {
+  async processMessageInternal(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 

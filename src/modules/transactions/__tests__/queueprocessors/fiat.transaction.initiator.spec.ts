@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
-import { anything, capture, deepEqual, instance, when } from "ts-mockito";
+import { anything, capture, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { FiatTransactionInitiator } from "../../queueprocessors/FiatTransactionInitiator";
@@ -26,6 +26,9 @@ import { getMockTransactionServiceWithDefaults } from "../../mocks/mock.transact
 import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
+import { LockService } from "../../../../modules/common/lock.service";
+import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
+import { ObjectType } from "../../../../modules/common/domain/ObjectType";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -57,6 +60,7 @@ describe("FiatTransactionInitiator", () => {
   let mongoClient: MongoClient;
   let transactionCollection: Collection;
   let verificationService: VerificationService;
+  let lockService: LockService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -78,6 +82,7 @@ describe("FiatTransactionInitiator", () => {
     verificationService = getMockVerificationServiceWithDefaults();
     transactionService = getMockTransactionServiceWithDefaults();
     sqsClient = getMockSqsClientWithDefaults();
+    lockService = getMockLockServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `FiatTransactionInitiator` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -110,6 +115,10 @@ describe("FiatTransactionInitiator", () => {
         {
           provide: TransactionService,
           useFactory: () => instance(transactionService),
+        },
+        {
+          provide: LockService,
+          useFactory: () => instance(lockService),
         },
         FiatTransactionInitiator,
       ],
@@ -168,8 +177,10 @@ describe("FiatTransactionInitiator", () => {
       paymentID: initiatedPaymentId,
     });
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
+    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
-    await fiatTransactionInitiator.processMessage(transaction.props._id);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);

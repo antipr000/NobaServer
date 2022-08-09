@@ -141,7 +141,7 @@ export class Sardine implements IDVProvider {
       },
     };
 
-    formData.append("inputData", inputData);
+    formData.append("inputData", JSON.stringify(inputData));
 
     const config = this.getAxiosConfig();
     config.headers = {

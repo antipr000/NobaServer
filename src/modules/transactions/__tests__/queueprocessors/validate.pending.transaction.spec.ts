@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
-import { anything, capture, deepEqual, instance, when } from "ts-mockito";
+import { anything, capture, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { ConsumerService } from "../../../consumer/consumer.service";
@@ -18,7 +18,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongoClient, Collection } from "mongodb";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import mongoose from "mongoose";
-import * as os from "os";
 import { VerificationService } from "../../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
 import { SqsClient } from "../../queueprocessors/sqs.client";
@@ -26,10 +25,12 @@ import { TransactionService } from "../../transaction.service";
 import { getMockTransactionServiceWithDefaults } from "../../mocks/mock.transactions.repo";
 import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 import { ValidatePendingTransactionProcessor } from "../../queueprocessors/ValidatePendingTransactionProcessor";
-import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../../../../modules/consumer/domain/VerificationStatus";
-import { Consumer, ConsumerProps } from "../../../../modules/consumer/domain/Consumer";
+import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../../../../modules/consumer/domain/Types";
+import { LockService } from "../../../../modules/common/lock.service";
+import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
+import { ObjectType } from "../../../../modules/common/domain/ObjectType";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -61,6 +62,7 @@ describe("ValidatePendingTransaction", () => {
   let mongoClient: MongoClient;
   let transactionCollection: Collection;
   let verificationService: VerificationService;
+  let lockService: LockService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -82,6 +84,7 @@ describe("ValidatePendingTransaction", () => {
     verificationService = getMockVerificationServiceWithDefaults();
     transactionService = getMockTransactionServiceWithDefaults();
     sqsClient = getMockSqsClientWithDefaults();
+    lockService = getMockLockServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `ValidatePendingTransactionProcessor` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -114,6 +117,10 @@ describe("ValidatePendingTransaction", () => {
         {
           provide: TransactionService,
           useFactory: () => instance(transactionService),
+        },
+        {
+          provide: LockService,
+          useFactory: () => instance(lockService),
         },
         ValidatePendingTransactionProcessor,
       ],
@@ -180,6 +187,8 @@ describe("ValidatePendingTransaction", () => {
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(sqsClient.enqueue(anything(), anything())).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
       await validatePendingTransaction.processMessage(transaction.props._id);
       const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
@@ -202,6 +211,8 @@ describe("ValidatePendingTransaction", () => {
       when(transactionService.validatePendingTransaction(anything(), anything())).thenResolve(
         PendingTransactionValidationStatus.PASS,
       );
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(sqsClient.enqueue(anything(), anything())).thenResolve("");
@@ -235,6 +246,8 @@ describe("ValidatePendingTransaction", () => {
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(sqsClient.enqueue(anything(), anything())).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
       await validatePendingTransaction.processMessage(transaction.props._id);
 

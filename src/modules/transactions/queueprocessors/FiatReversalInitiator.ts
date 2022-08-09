@@ -8,6 +8,7 @@ import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { MessageProcessor } from "./message.processor";
 import { SqsClient } from "./sqs.client";
+import { LockService } from "../../../modules/common/lock.service";
 
 export class FiatReversalInitiator extends MessageProcessor {
   constructor(
@@ -16,6 +17,7 @@ export class FiatReversalInitiator extends MessageProcessor {
     sqsClient: SqsClient,
     consumerService: ConsumerService,
     transactionService: TransactionService,
+    lockService: LockService,
   ) {
     super(
       logger,
@@ -24,10 +26,11 @@ export class FiatReversalInitiator extends MessageProcessor {
       consumerService,
       transactionService,
       TransactionQueueName.FiatTransactionInitiated,
+      lockService,
     );
   }
 
-  async processMessage(transactionId: string) {
+  async processMessageInternal(transactionId: string) {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.FIAT_INCOMING_INITIATED) {
