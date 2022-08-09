@@ -454,11 +454,11 @@ export class ZeroHashService {
         }
         participantCode = newParticipant["message"]["participant_code"];
         // Update consumer record with participant_code
-        this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
+        await this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
         this.logger.debug("Created new participant: " + participantCode);
       } else {
         participantCode = participant["message"]["participant_code"];
-        this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
+        await this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
         this.logger.debug("Existing participant: " + participantCode);
       }
     }

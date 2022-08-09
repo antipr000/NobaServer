@@ -88,12 +88,12 @@ export const allTransactionAttributes: TransactionStateAttributes[] = [
   {
     transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
     processingQueue: TransactionQueueName.CryptoTransactionInitiated,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    waitTimeInMilliSecondsBeforeRequeue: 30 * 1000, // 30 seconds.
   },
   {
     transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
     processingQueue: TransactionQueueName.OnChainPendingTransaction,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    waitTimeInMilliSecondsBeforeRequeue: 5 * 60 * 1000, // 5 mins.
   },
 
   // **************************************************************

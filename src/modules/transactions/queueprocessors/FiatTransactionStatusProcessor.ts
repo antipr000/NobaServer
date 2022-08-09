@@ -64,6 +64,10 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
         transaction,
       ); // TODO (#332) get details from exception thrown by getFiatPaymentStatus()
       return;
+    } else {
+      // Unknown error. So, retry again after sometime (DBPoller will poll and retry).
+      // TODO(#): Add limit on retry.
+      return;
     }
 
     //save the new status in db
