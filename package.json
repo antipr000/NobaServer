@@ -62,7 +62,7 @@
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "mongodb-memory-server": "^8.6.1",
-    "mongoose": "^6.2.8",
+    "mongoose": "^6.4.6",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "multicoin-address-validator": "^0.5.10",
