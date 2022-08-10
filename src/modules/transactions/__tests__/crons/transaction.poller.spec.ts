@@ -270,14 +270,19 @@ describe("FiatTransactionInitiator", () => {
   });
 
   it("should skip transacions which haven't been updated since 15mins", async () => {
-    const transactionIds = ["11111111111", "11111111112", "11111111113", "11111111114", "11111111115"];
+    const transactionIds = [];
 
-    const transactionsWithOnChainPendingTransactionStatus = [];
-    transactionIds.forEach(id => {
+    const allTransactionStatus = Object.keys(TransactionStatus).filter(item => {
+      return isNaN(Number(item));
+    });
+    const statusToTransactionsMap = {};
+
+    allTransactionStatus.forEach((status, index) => {
+      const transactionId = `111111111${index}${index}`;
       const transaction: Transaction = Transaction.createTransaction({
-        _id: id,
+        _id: transactionId,
         userId: "UUUUUUUUU",
-        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        transactionStatus: status as any,
         paymentMethodID: "XXXXXXXXXX",
         leg1Amount: 1000,
         leg2Amount: 1,
@@ -285,12 +290,12 @@ describe("FiatTransactionInitiator", () => {
         leg2: "ETH",
         lastStatusUpdateTimestamp: Date.now().valueOf() - 15 * 60 * 1000,
       });
-      transactionsWithOnChainPendingTransactionStatus.push(transaction);
+
+      statusToTransactionsMap[status] = [transaction];
+      transactionIds.push(transactionId);
     });
 
-    setupGetTransactionsBeforeTimeMocks({
-      [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: transactionsWithOnChainPendingTransactionStatus,
-    });
+    setupGetTransactionsBeforeTimeMocks(statusToTransactionsMap);
     when(sqsClient.enqueue(anyString(), anyString())).thenResolve("");
 
     await transactionPoller.handleCron();
