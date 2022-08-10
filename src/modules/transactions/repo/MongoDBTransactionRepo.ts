@@ -65,6 +65,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     // Date.now() will give you the same UTC timestamp independent of your current timezone.
     // Such a timestamp, rather a point in time, does not depend on timezones.
     transaction.props.lastProcessingTimestamp = Date.now().valueOf();
+    transaction.props.lastStatusUpdateTimestamp = Date.now().valueOf();
 
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result: any = await transactionModel.create(transaction.props);
@@ -73,14 +74,42 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   }
 
   async updateTransaction(transaction: Transaction): Promise<Transaction> {
-    // Date.now() will give you the same UTC timestamp independent of your current timezone.
-    // Such a timestamp, rather a point in time, does not depend on timezones.
-    transaction.props.lastProcessingTimestamp = Date.now().valueOf();
-
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result: any = await transactionModel.findByIdAndUpdate(transaction.props._id, transaction.props).exec();
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(transactionProps);
+  }
+
+  async updateLastProcessingTimestamp(transactionId: string): Promise<Transaction> {
+    // Date.now() will give you the same UTC timestamp independent of your current timezone.
+    // Such a timestamp, rather a point in time, does not depend on timezones.
+    const lastProcessingTimestamp: number = Date.now().valueOf();
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.findByIdAndUpdate(transactionId, { lastProcessingTimestamp: lastProcessingTimestamp }).exec();
+    const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
+    return this.transactionMapper.toDomain(transactionProps);
+  }
+
+  async updateTransactionStatus(
+    transactionId: string,
+    newStatus: TransactionStatus,
+    otherProps: Partial<TransactionProps>
+  ): Promise<Transaction> {
+    // Date.now() will give you the same UTC timestamp independent of your current timezone.
+    // Such a timestamp, rather a point in time, does not depend on timezones.
+    const lastStatusUpdateTimestamp = Date.now().valueOf();
+
+    const transactionProps = {
+      ...(otherProps ?? {}),
+      transactionStatus: newStatus,
+      lastStatusUpdateTimestamp: lastStatusUpdateTimestamp
+    };
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.findByIdAndUpdate(transactionId, transactionProps).exec();
+    const updatedTransactionProps: TransactionProps = convertDBResponseToJsObject(result);
+    return this.transactionMapper.toDomain(updatedTransactionProps);
   }
 
   async getUserTransactions(userId: string): Promise<Transaction[]> {

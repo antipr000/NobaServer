@@ -66,6 +66,7 @@ export class DBProvider {
 
   async getTransactionModel(): Promise<Model<TransactionProps>> {
     await this.connectToDb();
+    await TransactionModel.ensureIndexes();
     return TransactionModel;
   }
 

@@ -10,7 +10,7 @@ const mongooseTransactionSchema = new Schema(joigoose.convert(transactionJoiSche
     createdAt: "createdTimestamp",
     updatedAt: "updatedTimestamp",
   },
-});
+}).index({ transactionStatus: 1, lastProcessingTimestamp: 1 }, { unique: true });
 
 export const TRANSACTION_MODEL_NAME = "transaction";
 

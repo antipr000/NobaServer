@@ -14,7 +14,7 @@ export class TransactionPollerService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionRepo: ITransactionRepo,
     private readonly sqsClient: SqsClient,
-  ) {}
+  ) { }
 
   //every 5 seconds for now, we should be using db streams actually but it's fine for now
   @Cron("*/5 * * * * *", { name: "TransactionsPoller" })
@@ -59,6 +59,16 @@ export class TransactionPollerService {
   private async enqueueTransactions(transactions: Transaction[], transactionAttributes: TransactionStateAttributes) {
     const allEnqueueOperations = [];
     transactions.forEach(transaction => {
+      if (
+        (Date.now().valueOf() - transaction.props.lastStatusUpdateTimestamp) >=
+        transactionAttributes.maxAllowedMilliSecondsInThisStatus
+      ) {
+        this.logger.info(
+          `Skipping transaction with ID: "${transaction.props._id}" ` +
+          `as it is stuck on "${transaction.props.transactionStatus}" for more than ` +
+          `${transactionAttributes.maxAllowedMilliSecondsInThisStatus} milliseconds.`);
+        return;
+      }
       allEnqueueOperations.push(this.sqsClient.enqueue(transactionAttributes.processingQueue, transaction.props._id));
     });
 

@@ -29,7 +29,7 @@ export abstract class MessageProcessor {
   public async processMessage(transactionId: string): Promise<void> {
     const lockId = await this.lockService.acquireLockForKey(transactionId, ObjectType.TRANSACTION);
     if (lockId) {
-      this.activeTransaction = await this.transactionRepo.getTransaction(transactionId);
+      this.activeTransaction = await this.transactionRepo.updateLastProcessingTimestamp(transactionId);
       await this.processMessageInternal(transactionId);
       await this.lockService.releaseLockForKey(transactionId, ObjectType.TRANSACTION);
     } else {
