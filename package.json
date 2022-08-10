@@ -86,7 +86,7 @@
     "swagger-ui-express": "^4.1.6",
     "ts-mockito": "^2.6.1",
     "twilio": "^3.77.0",
-    "web3": "^0.20.7",
+    "web3": "^1.7.4",
     "winston": "^3.3.3"
   },
   "devDependencies": {
