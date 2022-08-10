@@ -75,7 +75,8 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
 
     //save the new status in db
     transaction = await this.transactionRepo.updateTransactionStatus(
-      transaction.props._id, newStatus,
+      transaction.props._id,
+      newStatus,
       transaction.props,
     );
 

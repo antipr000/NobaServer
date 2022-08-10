@@ -58,7 +58,7 @@ describe("FiatTransactionInitiator", () => {
     });
 
     allTransactionStatus.forEach(status => {
-      when(transactionRepo.getTransactionsBeforeTime(anyNumber(), status)).thenResolve(
+      when(transactionRepo.getTransactionsBeforeTime(anyNumber(), status as any)).thenResolve(
         transactionsPerStaus[status] ?? [],
       );
     });
@@ -266,6 +266,38 @@ describe("FiatTransactionInitiator", () => {
     // Verify whether all the transaction enque requests was sent to `sqsClient`.
     transactionIds.forEach(id => {
       verify(sqsClient.enqueue(TransactionQueueName.OnChainPendingTransaction, id)).once();
+    });
+  });
+
+  it("should skip transacions which haven't been updated since 15mins", async () => {
+    const transactionIds = ["11111111111", "11111111112", "11111111113", "11111111114", "11111111115"];
+
+    const transactionsWithOnChainPendingTransactionStatus = [];
+    transactionIds.forEach(id => {
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: id,
+        userId: "UUUUUUUUU",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        paymentMethodID: "XXXXXXXXXX",
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf() - 15 * 60 * 1000,
+      });
+      transactionsWithOnChainPendingTransactionStatus.push(transaction);
+    });
+
+    setupGetTransactionsBeforeTimeMocks({
+      [TransactionStatus.CRYPTO_OUTGOING_COMPLETED]: transactionsWithOnChainPendingTransactionStatus,
+    });
+    when(sqsClient.enqueue(anyString(), anyString())).thenResolve("");
+
+    await transactionPoller.handleCron();
+
+    // Verify whether all the transaction enque requests was sent to `sqsClient`.
+    transactionIds.forEach(id => {
+      verify(sqsClient.enqueue(TransactionQueueName.OnChainPendingTransaction, id)).never();
     });
   });
 });

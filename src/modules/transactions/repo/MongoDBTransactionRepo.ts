@@ -22,13 +22,13 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
   private readonly transactionMapper = new TransactionMapper();
 
-  constructor(private readonly dbProvider: DBProvider) { }
+  constructor(private readonly dbProvider: DBProvider) {}
 
   // TODO(#349): Migrate the "sync" Transaction fetching logic to "cursor" based logic.
   async getTransactionsBeforeTime(time: number, status: TransactionStatus): Promise<Transaction[]> {
     this.logger.debug(
       `Fetching all pending transaction with status "${status}" which are updated ` +
-      ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
+        ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
     );
 
     const transactionModel = await this.dbProvider.getTransactionModel();
@@ -41,7 +41,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
     this.logger.debug(
       `Fetched ${results.length} transactions with status "${status}" which are updated ` +
-      ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
+        ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
     );
 
     return results.map(x => this.transactionMapper.toDomain(convertDBResponseToJsObject(x)));
@@ -86,7 +86,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     const lastProcessingTimestamp: number = Date.now().valueOf();
 
     const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: any = await transactionModel.findByIdAndUpdate(transactionId, { lastProcessingTimestamp: lastProcessingTimestamp }).exec();
+    const result: any = await transactionModel
+      .findByIdAndUpdate(transactionId, { lastProcessingTimestamp: lastProcessingTimestamp })
+      .exec();
     const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(transactionProps);
   }
@@ -94,7 +96,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async updateTransactionStatus(
     transactionId: string,
     newStatus: TransactionStatus,
-    otherProps: Partial<TransactionProps>
+    otherProps: Partial<TransactionProps>,
   ): Promise<Transaction> {
     // Date.now() will give you the same UTC timestamp independent of your current timezone.
     // Such a timestamp, rather a point in time, does not depend on timezones.
@@ -103,7 +105,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     const transactionProps = {
       ...(otherProps ?? {}),
       transactionStatus: newStatus,
-      lastStatusUpdateTimestamp: lastStatusUpdateTimestamp
+      lastStatusUpdateTimestamp: lastStatusUpdateTimestamp,
     };
 
     const transactionModel = await this.dbProvider.getTransactionModel();

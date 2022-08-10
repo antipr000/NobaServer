@@ -46,7 +46,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     transaction = await this.transactionRepo.updateTransactionStatus(
       transaction.props._id,
       TransactionStatus.CRYPTO_OUTGOING_INITIATING,
-      {}
+      {},
     );
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
@@ -92,7 +92,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     transaction = await this.transactionRepo.updateTransactionStatus(
       transaction.props._id,
       newStatus,
-      transaction.props
+      transaction.props,
     );
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here

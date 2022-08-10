@@ -89,7 +89,7 @@ describe("FiatTransactionInitiator", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiator, anything())).thenReturn({
-      start: () => { },
+      start: () => {},
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -188,7 +188,9 @@ describe("FiatTransactionInitiator", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
     expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
-    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(transaction.props.lastStatusUpdateTimestamp);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+      transaction.props.lastStatusUpdateTimestamp,
+    );
 
     const [queueName, transactionId] = capture(sqsClient.enqueue).last();
     expect(queueName).toBe(TransactionQueueName.FiatTransactionInitiated);

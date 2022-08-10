@@ -6,7 +6,11 @@ export interface ITransactionRepo {
   getTransaction(transactionId: string): Promise<Transaction>;
   createTransaction(transaction: Transaction): Promise<Transaction>;
   updateTransaction(transaction: Transaction): Promise<Transaction>;
-  updateTransactionStatus(transactionId: string, newStatus: TransactionStatus, otherProps: Partial<TransactionProps>): Promise<Transaction>;
+  updateTransactionStatus(
+    transactionId: string,
+    newStatus: TransactionStatus,
+    otherProps: Partial<TransactionProps>,
+  ): Promise<Transaction>;
   updateLastProcessingTimestamp(transactionId: string): Promise<Transaction>;
   getUserTransactions(userId: string): Promise<Transaction[]>; //TODO pagination? transaction filter options?
   getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]>;
