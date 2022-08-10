@@ -66,12 +66,13 @@ export class FiatTransactionInitiator extends MessageProcessor {
           true,
         );
       } else if (paymentResponse.status === PaymentMethodStatus.APPROVED) {
-        await this.transactionRepo.updateTransaction(
-          Transaction.createTransaction({
+        await this.transactionRepo.updateTransactionStatus(
+          transaction.props._id,
+          TransactionStatus.FIAT_INCOMING_INITIATED,
+          {
             ...transaction.props,
-            transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
             checkoutPaymentID: paymentResponse.paymentID,
-          }),
+          },
         );
         // Move to initiated queue.
         // DBPoller will take delay to put it to queue as it's scheduled periodically.

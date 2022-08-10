@@ -155,6 +155,8 @@ describe("FiatTransactionInitiator", () => {
       leg2Amount: 1,
       leg1: "USD",
       leg2: "ETH",
+      lastProcessingTimestamp: Date.now().valueOf(),
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
     });
     const consumer: Consumer = Consumer.createConsumer({
       _id: consumerID,
@@ -186,6 +188,9 @@ describe("FiatTransactionInitiator", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
     expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+      transaction.props.lastStatusUpdateTimestamp,
+    );
 
     const [queueName, transactionId] = capture(sqsClient.enqueue).last();
     expect(queueName).toBe(TransactionQueueName.FiatTransactionInitiated);

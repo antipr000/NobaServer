@@ -153,6 +153,7 @@ describe("ValidatePendingTransaction", () => {
       leg1: "USD",
       leg2: "ETH",
       destinationWalletAddress: "12345",
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
     });
 
     const paymentMethod: PaymentMethod = {
@@ -178,7 +179,7 @@ describe("ValidatePendingTransaction", () => {
       email: "mock@noba.com",
     });
 
-    it("should should exit flow if transaction status is not PENDING", async () => {
+    it("should exit flow if transaction status is not PENDING", async () => {
       transaction.props.transactionStatus = TransactionStatus.COMPLETED;
       await transactionCollection.insertOne({
         ...transaction.props,
@@ -194,6 +195,7 @@ describe("ValidatePendingTransaction", () => {
       const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
       expect(allTransactionsInDb).toHaveLength(1);
       expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.COMPLETED);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
     });
 
     it("should validate successful transaction and put it in next queue", async () => {
@@ -222,6 +224,9 @@ describe("ValidatePendingTransaction", () => {
       const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
       expect(allTransactionsInDb).toHaveLength(1);
       expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_PASSED);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+        transaction.props.lastStatusUpdateTimestamp,
+      );
 
       const [queueName, transactionId] = capture(sqsClient.enqueue).last();
       expect(queueName).toBe(TransactionQueueName.FiatTransactionInitiator);
@@ -254,6 +259,7 @@ describe("ValidatePendingTransaction", () => {
       const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
       expect(allTransactionsInDb).toHaveLength(1);
       expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_FAILED);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
 
       const [queueName, transactionId] = capture(sqsClient.enqueue).last();
       expect(queueName).toBe(TransactionQueueName.TransactionFailed);

@@ -56,11 +56,10 @@ export class ValidatePendingTransactionProcessor extends MessageProcessor {
         transaction,
       );
     } else {
-      transaction = await this.transactionRepo.updateTransaction(
-        Transaction.createTransaction({
-          ...transaction.props,
-          transactionStatus: updatedStatus,
-        }),
+      transaction = await this.transactionRepo.updateTransactionStatus(
+        transaction.props._id,
+        updatedStatus,
+        transaction.props,
       );
       await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, transactionId);
     }

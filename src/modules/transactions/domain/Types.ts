@@ -57,6 +57,9 @@ export interface TransactionStateAttributes {
   transactionStatus: TransactionStatus;
   processingQueue: string;
   waitTimeInMilliSecondsBeforeRequeue: number;
+  // Should be populated based on the time it take to process the current status.
+  // Do consider the latency due to queue processing delay & traffic.
+  maxAllowedMilliSecondsInThisStatus: number;
 }
 
 export const allTransactionAttributes: TransactionStateAttributes[] = [
@@ -64,36 +67,43 @@ export const allTransactionAttributes: TransactionStateAttributes[] = [
     transactionStatus: TransactionStatus.PENDING,
     processingQueue: TransactionQueueName.PendingTransactionValidation,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
   },
   {
     transactionStatus: TransactionStatus.VALIDATION_PASSED,
     processingQueue: TransactionQueueName.FiatTransactionInitiator,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
   },
   {
     transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
     processingQueue: TransactionQueueName.FiatTransactionInitiated,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
   },
   {
     transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
     processingQueue: TransactionQueueName.FiatTransactionCompleted,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 10 * 60 * 1000, // 10 mins.
   },
   {
     transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
     processingQueue: TransactionQueueName.FiatTransactionCompleted,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 10 * 60 * 1000, // 10 mins.
   },
   {
     transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
     processingQueue: TransactionQueueName.CryptoTransactionInitiated,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    waitTimeInMilliSecondsBeforeRequeue: 30 * 1000, // 30 seconds.
+    maxAllowedMilliSecondsInThisStatus: 15 * 60 * 1000, // 15 mins.
   },
   {
     transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
     processingQueue: TransactionQueueName.OnChainPendingTransaction,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    waitTimeInMilliSecondsBeforeRequeue: 5 * 60 * 1000, // 5 mins.
+    maxAllowedMilliSecondsInThisStatus: 15 * 60 * 1000, // 15 mins.
   },
 
   // **************************************************************
@@ -105,16 +115,19 @@ export const allTransactionAttributes: TransactionStateAttributes[] = [
     transactionStatus: TransactionStatus.VALIDATION_FAILED,
     processingQueue: TransactionQueueName.TransactionFailed,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
   },
   {
     transactionStatus: TransactionStatus.FIAT_INCOMING_FAILED,
     processingQueue: TransactionQueueName.TransactionFailed,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
   },
   {
     transactionStatus: TransactionStatus.CRYPTO_OUTGOING_FAILED,
     processingQueue: TransactionQueueName.TransactionFailed,
     waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
+    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
   },
 ];
 

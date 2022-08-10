@@ -59,6 +59,17 @@ export class TransactionPollerService {
   private async enqueueTransactions(transactions: Transaction[], transactionAttributes: TransactionStateAttributes) {
     const allEnqueueOperations = [];
     transactions.forEach(transaction => {
+      if (
+        Date.now().valueOf() - transaction.props.lastStatusUpdateTimestamp >=
+        transactionAttributes.maxAllowedMilliSecondsInThisStatus
+      ) {
+        this.logger.info(
+          `Skipping transaction with ID: "${transaction.props._id}" ` +
+            `as it is stuck on "${transaction.props.transactionStatus}" for more than ` +
+            `${transactionAttributes.maxAllowedMilliSecondsInThisStatus} milliseconds.`,
+        );
+        return;
+      }
       allEnqueueOperations.push(this.sqsClient.enqueue(transactionAttributes.processingQueue, transaction.props._id));
     });
 

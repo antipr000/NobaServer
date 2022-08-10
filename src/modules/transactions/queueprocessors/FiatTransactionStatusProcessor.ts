@@ -67,11 +67,17 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
         transaction,
       ); // TODO (#332) get details from exception thrown by getFiatPaymentStatus()
       return;
+    } else {
+      // Unknown error. So, retry again after sometime (DBPoller will poll and retry).
+      // TODO(#): Add limit on retry.
+      return;
     }
 
     //save the new status in db
-    transaction = await this.transactionRepo.updateTransaction(
-      Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
+    transaction = await this.transactionRepo.updateTransactionStatus(
+      transaction.props._id,
+      newStatus,
+      transaction.props,
     );
 
     //Move to completed queue if the transaction is completed so that we can process the next step quickly, we could just wait for the poller cron to put in this queue but poller will take delay as it's scheduled so we move it to the target queue directly from here

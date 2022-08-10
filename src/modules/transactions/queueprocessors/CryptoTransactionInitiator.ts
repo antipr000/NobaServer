@@ -43,11 +43,10 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     // updating transaction status so that this transaction cannot be reprocessed to purchase crypto if this attempt
     // fails for any possible reason as there is no queue processor to pick from this state other than failure processor
-    transaction = await this.transactionRepo.updateTransaction(
-      Transaction.createTransaction({
-        ...transaction.props,
-        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
-      }),
+    transaction = await this.transactionRepo.updateTransactionStatus(
+      transaction.props._id,
+      TransactionStatus.CRYPTO_OUTGOING_INITIATING,
+      {},
     );
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
@@ -90,8 +89,10 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     // crypto transaction ends here
 
-    transaction = await this.transactionRepo.updateTransaction(
-      Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
+    transaction = await this.transactionRepo.updateTransactionStatus(
+      transaction.props._id,
+      newStatus,
+      transaction.props,
     );
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
