@@ -98,14 +98,15 @@ export class OnChainPendingProcessor extends MessageProcessor {
       const settledTimestamp = new Date();
       const finalSettledAmount = withdrawalResponse["message"][0]["settled_amount"];
       const transactionHash = withdrawalResponse["message"][0]["transaction_id"];
-      await this.transactionRepo.updateTransaction(
-        Transaction.createTransaction({
+      await this.transactionRepo.updateTransactionStatus(
+        transaction.props._id,
+        TransactionStatus.COMPLETED,
+        {
           ...transaction.props,
           settledTimestamp: settledTimestamp, // This doesn't seem to come from ZH so this is the best we can do
           leg2Amount: finalSettledAmount,
           blockchainTransactionId: transactionHash,
-          transactionStatus: TransactionStatus.COMPLETED,
-        }),
+        },
       );
 
       const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);

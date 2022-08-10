@@ -74,8 +74,9 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
     }
 
     //save the new status in db
-    transaction = await this.transactionRepo.updateTransaction(
-      Transaction.createTransaction({ ...transaction.props, transactionStatus: newStatus }),
+    transaction = await this.transactionRepo.updateTransactionStatus(
+      transaction.props._id, newStatus,
+      transaction.props,
     );
 
     //Move to completed queue if the transaction is completed so that we can process the next step quickly, we could just wait for the poller cron to put in this queue but poller will take delay as it's scheduled so we move it to the target queue directly from here

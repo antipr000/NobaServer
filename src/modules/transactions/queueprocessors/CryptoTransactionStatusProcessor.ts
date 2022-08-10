@@ -61,11 +61,10 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           this.logger.debug(`${transactionId} - initiated - going another poll cycle until status is COMPLETED`);
           return;
         } else if (tradeStatus === CryptoTransactionStatus.COMPLETED) {
-          await this.transactionRepo.updateTransaction(
-            Transaction.createTransaction({
-              ...transaction.props,
-              transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
-            }),
+          await this.transactionRepo.updateTransactionStatus(
+            transaction.props._id,
+            TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+            transaction.props,
           );
         } else if (tradeStatus === CryptoTransactionStatus.FAILED) {
           this.logger.info(

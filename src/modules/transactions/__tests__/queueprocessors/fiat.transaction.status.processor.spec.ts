@@ -84,7 +84,7 @@ describe("FiatTransactionInitiator", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiated, anything())).thenReturn({
-      start: () => {},
+      start: () => { },
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -145,6 +145,7 @@ describe("FiatTransactionInitiator", () => {
       leg1: "USD",
       leg2: "ETH",
       checkoutPaymentID: initiatedPaymentId,
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
     });
 
     await transactionCollection.insertOne({
@@ -163,6 +164,7 @@ describe("FiatTransactionInitiator", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_COMPLETED);
     expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(transaction.props.lastStatusUpdateTimestamp);
 
     const [queueName, transactionId] = capture(sqsClient.enqueue).last();
     expect(queueName).toBe(TransactionQueueName.FiatTransactionCompleted);
@@ -184,6 +186,7 @@ describe("FiatTransactionInitiator", () => {
       leg2Amount: 1,
       leg1: "USD",
       leg2: "ETH",
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
     });
 
     await transactionCollection.insertOne({
@@ -198,6 +201,7 @@ describe("FiatTransactionInitiator", () => {
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_PASSED);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
   });
 
   it("should move into failed queue if transaction fails", async () => {
@@ -216,6 +220,7 @@ describe("FiatTransactionInitiator", () => {
       leg1: "USD",
       leg2: "ETH",
       checkoutPaymentID: initiatedPaymentId,
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
     });
 
     await transactionCollection.insertOne({
@@ -234,6 +239,7 @@ describe("FiatTransactionInitiator", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
     expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
 
     const [queueName, transactionId] = capture(sqsClient.enqueue).last();
     expect(queueName).toBe(TransactionQueueName.TransactionFailed);
@@ -252,6 +258,7 @@ describe("FiatTransactionInitiator", () => {
       leg1: "USD",
       leg2: "ETH",
       checkoutPaymentID: initiatedPaymentId,
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
     });
 
     await transactionCollection.insertOne({
@@ -268,5 +275,6 @@ describe("FiatTransactionInitiator", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
     expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
   });
 });
