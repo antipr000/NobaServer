@@ -16,7 +16,8 @@ import {
   CaseAction,
   CaseNotificationWebhookRequest,
   CaseStatus,
-  DocumentVerificationWebhookRequest,
+  DocumentVerificationErrorCodes,
+  DocumentVerificationSardineResponse,
   FeedbackRequest,
   FeedbackStatus,
   FeedbackType,
@@ -172,24 +173,8 @@ export class Sardine implements IDVProvider {
           customerId: userID,
         },
       });
-      if (data.status === SardineDocumentProcessingStatus.PENDING) {
-        return {
-          status: DocumentVerificationStatus.PENDING,
-        };
-      } else if (data.status === SardineDocumentProcessingStatus.PROCESSING) {
-        return {
-          status: DocumentVerificationStatus.PENDING,
-        };
-      } else if (data.status === SardineDocumentProcessingStatus.COMPLETE) {
-        // TODO: Add logic for differentiating between VERIFIED and LIVE_PHOTO_VERIFIED
-        return {
-          status: DocumentVerificationStatus.APPROVED,
-        };
-      } else {
-        return {
-          status: DocumentVerificationStatus.REJECTED,
-        };
-      }
+      console.log("....", data);
+      return this.processDocumentVerificationWebhookResult(data as DocumentVerificationSardineResponse);
     } catch (e) {
       this.logger.error(`Sardine request failed for get document result: ${e}`);
       throw new NotFoundException();
@@ -312,25 +297,65 @@ export class Sardine implements IDVProvider {
     }
   }
 
-  processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult {
-    const { data } = resultData;
-    const riskLevel: SardineRiskLevels = data.documentVerificationResult.verification.riskLevel;
-    if (riskLevel === SardineRiskLevels.VERY_HIGH) {
-      return {
-        status: DocumentVerificationStatus.REJECTED,
-        riskRating: riskLevel,
-      };
-    } else if (riskLevel === SardineRiskLevels.HIGH) {
+  processDocumentVerificationWebhookResult(
+    documentVerificationSardineResponse: DocumentVerificationSardineResponse,
+  ): DocumentVerificationResult {
+    const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification.riskLevel;
+    const status: SardineDocumentProcessingStatus = documentVerificationSardineResponse.status;
+    const errorCodes: DocumentVerificationErrorCodes[] = documentVerificationSardineResponse.errorCodes;
+
+    console.log(riskLevel, status, errorCodes);
+
+    if (
+      status === SardineDocumentProcessingStatus.PENDING ||
+      status === SardineDocumentProcessingStatus.PROCESSING ||
+      (status === SardineDocumentProcessingStatus.COMPLETE && riskLevel === SardineRiskLevels.HIGH)
+    ) {
       return {
         status: DocumentVerificationStatus.PENDING,
         riskRating: riskLevel,
       };
-    } else if (riskLevel === SardineRiskLevels.MEDIUM || riskLevel === SardineRiskLevels.LOW) {
+    }
+
+    if (
+      status === SardineDocumentProcessingStatus.COMPLETE &&
+      (riskLevel === SardineRiskLevels.MEDIUM || riskLevel === SardineRiskLevels.LOW)
+    ) {
       return {
         status: DocumentVerificationStatus.APPROVED,
         riskRating: riskLevel,
       };
     }
+
+    if (status === SardineDocumentProcessingStatus.ERROR) {
+      console.log("here");
+      if (errorCodes.length === 1 && errorCodes[0] === DocumentVerificationErrorCodes.DOCUMENT_NOT_SUPPORTED) {
+        return {
+          status: DocumentVerificationStatus.REJECTED_DOCUMENT_NOT_SUPPORTED,
+          riskRating: riskLevel,
+        };
+      }
+
+      if (errorCodes.length === 1 && errorCodes[0] === DocumentVerificationErrorCodes.DOCUMENT_UNRECOGNIZABLE) {
+        console.log("here");
+        return {
+          status: DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+          riskRating: riskLevel,
+        };
+      }
+
+      if (errorCodes.length === 1 && errorCodes[0] === DocumentVerificationErrorCodes.DOCUMENT_BAD_SIZE_OR_TYPE) {
+        return {
+          status: DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
+          riskRating: riskLevel,
+        };
+      }
+    }
+
+    return {
+      status: DocumentVerificationStatus.PENDING,
+      riskRating: riskLevel,
+    };
   }
 
   processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult {

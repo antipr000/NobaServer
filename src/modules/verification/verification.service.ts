@@ -177,6 +177,7 @@ export class VerificationService {
     verificationID: string,
   ): Promise<DocumentVerificationResult> {
     const result = await this.idvProvider.getDocumentVerificationResult(sessionKey, verificationID, consumerID);
+    console.log(result);
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
@@ -211,8 +212,9 @@ export class VerificationService {
     documentVerificationResult: DocumentVerificationWebhookRequest,
   ): Promise<DocumentVerificationResult> {
     const consumerID = documentVerificationResult.data.case.customerID;
-    const result: DocumentVerificationResult =
-      this.idvProvider.processDocumentVerificationWebhookResult(documentVerificationResult);
+    const result: DocumentVerificationResult = this.idvProvider.processDocumentVerificationWebhookResult(
+      documentVerificationResult.data.documentVerificationResult,
+    );
 
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
     const newConsumerData: ConsumerProps = {

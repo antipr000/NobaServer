@@ -5,6 +5,7 @@ import { TransactionInformation } from "../domain/TransactionInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import {
   CaseNotificationWebhookRequest,
+  DocumentVerificationSardineResponse,
   DocumentVerificationWebhookRequest,
   SardineDeviceInformationResponse,
 } from "./SardineTypeDefinitions";
@@ -24,7 +25,9 @@ export interface IDVProvider {
 
   getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse>;
 
-  processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult;
+  processDocumentVerificationWebhookResult(
+    documentVerificationSardineResponse: DocumentVerificationSardineResponse,
+  ): DocumentVerificationResult;
 
   processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult;
 
