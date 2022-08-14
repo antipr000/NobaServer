@@ -13,7 +13,7 @@ import { setUp } from "./setup";
 setUp();
 
 import { INestApplication } from "@nestjs/common";
-import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
+import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, VerifyOtpResponseDTO } from "./api_client";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { ConsumerService } from "./api_client/services/ConsumerService";
@@ -21,10 +21,13 @@ import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
 import { bootstrap } from "../src/server";
 import {
   clearAccessTokenForNextRequests,
+  computeSignature,
   fetchOtpFromDb,
   insertNobaAdmin,
   insertPartnerAdmin,
   setAccessTokenForTheNextRequests,
+  setupPartner,
+  TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 
@@ -34,6 +37,8 @@ describe("Authentication", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
+  const partnerId = "dummy-partner";
+  const timestamp = "testtimestamp";
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -41,41 +46,60 @@ describe("Authentication", () => {
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
-    console.log("MongoMemoryServer running at: ", mongoUri);
+    await setupPartner(mongoUri, partnerId);
 
     const environmentVaraibles = {
       MONGO_URI: mongoUri,
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
-
-    console.log(`Server started on port '${port} ...'`);
   });
 
   afterEach(async () => {
-    clearAccessTokenForNextRequests();
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
+    clearAccessTokenForNextRequests();
   });
 
   describe("SignUp or Login as CONSUMER", () => {
     it("should be successful", async () => {
       const consumerEmail = "test+consumer@noba.com";
 
-      const loginResponse = await AuthenticationService.loginUser({
+      const loginRequestBody: LoginRequestDTO = {
         email: consumerEmail,
         identityType: "CONSUMER",
-        partnerID: "partner-1",
-      });
+      };
+
+      const loginSignature = computeSignature(timestamp, "POST", "/v1/auth/login", JSON.stringify(loginRequestBody));
+
+      const loginResponse = await AuthenticationService.loginUser(
+        TEST_API_KEY,
+        timestamp,
+        loginSignature,
+        loginRequestBody,
+      );
       expect(loginResponse.__status).toBe(201);
 
-      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+      const verifyOtpRequestBody: VerifyOtpRequestDTO = {
         emailOrPhone: consumerEmail,
         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
         identityType: "CONSUMER",
-        partnerID: "partner-1",
-      })) as VerifyOtpResponseDTO & ResponseStatus;
+      };
+
+      const verifyOtpSignature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify(verifyOtpRequestBody),
+      );
+
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp(
+        TEST_API_KEY,
+        timestamp,
+        verifyOtpSignature,
+        verifyOtpRequestBody,
+      )) as VerifyOtpResponseDTO & ResponseStatus;
       console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.access_token;
@@ -95,34 +119,71 @@ describe("Authentication", () => {
 
     it("should be successful with different cases", async () => {
       const consumerEmail = "Test+Consumer@noba.com";
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMER",
+        }),
+      );
 
-      await AuthenticationService.loginUser({
+      await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: consumerEmail,
         identityType: "CONSUMER",
-        partnerID: "partner-1",
       });
 
-      (await AuthenticationService.verifyOtp({
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: consumerEmail,
+          otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
+          identityType: "CONSUMER",
+        }),
+      );
+
+      (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: consumerEmail,
         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
         identityType: "CONSUMER",
-        partnerID: "partner-1",
       })) as VerifyOtpResponseDTO & ResponseStatus;
 
       const newRequestConsumerEmail = "test+consumer@noba.com";
 
-      const loginResponse = await AuthenticationService.loginUser({
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMER",
+        }),
+      );
+
+      const loginResponse = await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: consumerEmail,
         identityType: "CONSUMER",
-        partnerID: "partner-1",
       });
       expect(loginResponse.__status).toBe(201);
 
-      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: consumerEmail,
+          otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
+          identityType: "CONSUMER",
+        }),
+      );
+
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: consumerEmail,
         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
         identityType: "CONSUMER",
-        partnerID: "partner-1",
       })) as VerifyOtpResponseDTO & ResponseStatus;
       console.log(verifyOtpResponse);
 
@@ -143,8 +204,16 @@ describe("Authentication", () => {
 
     it("signup with invalid 'identityType' throws 400 error", async () => {
       const consumerEmail = "test+consumer@noba.com";
-
-      const loginResponse = await AuthenticationService.loginUser({
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMR" as any,
+        }),
+      );
+      const loginResponse = await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: consumerEmail,
         identityType: "CONSUMR" as any,
       });
@@ -155,8 +224,16 @@ describe("Authentication", () => {
   describe("NobaAdmin login", () => {
     it("shouldn't be successful for an unregistered NobaAdmin", async () => {
       const nobaAdminEmail = "test.noba.admin@noba.com";
-
-      const loginResponse = (await AuthenticationService.loginUser({
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: nobaAdminEmail,
+          identityType: "NOBA_ADMIN",
+        }),
+      );
+      const loginResponse = (await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: nobaAdminEmail,
         identityType: "NOBA_ADMIN",
       })) as any & ResponseStatus;
@@ -166,17 +243,30 @@ describe("Authentication", () => {
 
     it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
       const consumerEmail = "consumer@noba.com";
-
-      const consumerLoginResponse = await AuthenticationService.loginUser({
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMER",
+        }),
+      );
+      const consumerLoginResponse = await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: consumerEmail,
         identityType: "CONSUMER",
       });
       expect(consumerLoginResponse.__status).toBe(201);
 
-      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser({
-        email: consumerEmail,
-        identityType: "NOBA_ADMIN",
-      });
+      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser(
+        TEST_API_KEY,
+        timestamp,
+        signature,
+        {
+          email: consumerEmail,
+          identityType: "NOBA_ADMIN",
+        },
+      );
       expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
     });
 
@@ -184,11 +274,24 @@ describe("Authentication", () => {
       const partnerAdminEmail = "test.partner.admin@noba.com";
 
       expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
-
-      const adminWithSamePartnerAdminEmailLogin = await AuthenticationService.loginUser({
-        email: partnerAdminEmail,
-        identityType: "NOBA_ADMIN",
-      });
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: partnerAdminEmail,
+          identityType: "NOBA_ADMIN",
+        }),
+      );
+      const adminWithSamePartnerAdminEmailLogin = await AuthenticationService.loginUser(
+        TEST_API_KEY,
+        timestamp,
+        signature,
+        {
+          email: partnerAdminEmail,
+          identityType: "NOBA_ADMIN",
+        },
+      );
       expect(adminWithSamePartnerAdminEmailLogin.__status).toBe(403);
     });
 
@@ -197,13 +300,33 @@ describe("Authentication", () => {
 
       expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
 
-      const partnerAdminLogin = await AuthenticationService.loginUser({
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: partnerAdminEmail,
+          identityType: "PARTNER_ADMIN",
+        }),
+      );
+      const partnerAdminLogin = await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: partnerAdminEmail,
         identityType: "PARTNER_ADMIN",
       });
       expect(partnerAdminLogin.__status).toBe(201);
 
-      const nobaAdminVerifyOtpResponse = (await AuthenticationService.verifyOtp({
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: partnerAdminEmail,
+          otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN"),
+          identityType: "NOBA_ADMIN",
+        }),
+      );
+
+      const nobaAdminVerifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: partnerAdminEmail,
         identityType: "NOBA_ADMIN",
         otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN"),
@@ -216,16 +339,37 @@ describe("Authentication", () => {
     it("should be successful for registered NobaAdmin", async () => {
       const nobaAdminEmail = "test.noba.admin@noba.com";
 
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: nobaAdminEmail,
+          identityType: "NOBA_ADMIN",
+        }),
+      );
+
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
 
-      const loginResponse = (await AuthenticationService.loginUser({
+      const loginResponse = (await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: nobaAdminEmail,
         identityType: "NOBA_ADMIN",
       })) as any & ResponseStatus;
 
       expect(loginResponse.__status).toBe(201);
 
-      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: nobaAdminEmail,
+          otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
+          identityType: "NOBA_ADMIN",
+        }),
+      );
+
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: nobaAdminEmail,
         identityType: "NOBA_ADMIN",
         otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
@@ -241,7 +385,17 @@ describe("Authentication", () => {
     it("shouldn't be successful for an unregistered PartnerAdmin", async () => {
       const partnerAdminEmail = "test.partner.admin@noba.com";
 
-      const loginResponse = (await AuthenticationService.loginUser({
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: partnerAdminEmail,
+          identityType: "PARTNER_ADMIN",
+        }),
+      );
+
+      const loginResponse = (await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: partnerAdminEmail,
         identityType: "PARTNER_ADMIN",
       })) as any & ResponseStatus;
@@ -252,16 +406,41 @@ describe("Authentication", () => {
     it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
       const consumerEmail = "consumer@noba.com";
 
-      const consumerLoginResponse = await AuthenticationService.loginUser({
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMER",
+        }),
+      );
+
+      const consumerLoginResponse = await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: consumerEmail,
         identityType: "CONSUMER",
       });
       expect(consumerLoginResponse.__status).toBe(201);
 
-      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser({
-        email: consumerEmail,
-        identityType: "PARTNER_ADMIN",
-      });
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "PARTNER_ADMIN",
+        }),
+      );
+
+      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser(
+        TEST_API_KEY,
+        timestamp,
+        signature,
+        {
+          email: consumerEmail,
+          identityType: "PARTNER_ADMIN",
+        },
+      );
       expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
     });
 
@@ -270,10 +449,25 @@ describe("Authentication", () => {
 
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
 
-      const adminWithSameNobaAdminEmailLogin = await AuthenticationService.loginUser({
-        email: nobaAdminEmail,
-        identityType: "PARTNER_ADMIN",
-      });
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: nobaAdminEmail,
+          identityType: "PARTNER_ADMIN",
+        }),
+      );
+
+      const adminWithSameNobaAdminEmailLogin = await AuthenticationService.loginUser(
+        TEST_API_KEY,
+        timestamp,
+        signature,
+        {
+          email: nobaAdminEmail,
+          identityType: "PARTNER_ADMIN",
+        },
+      );
       expect(adminWithSameNobaAdminEmailLogin.__status).toBe(403);
     });
 
@@ -282,16 +476,37 @@ describe("Authentication", () => {
 
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
 
-      const nobaAdminLogin = await AuthenticationService.loginUser({
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: nobaAdminEmail,
+          identityType: "NOBA_ADMIN",
+        }),
+      );
+
+      const nobaAdminLogin = await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: nobaAdminEmail,
         identityType: "NOBA_ADMIN",
       });
       expect(nobaAdminLogin.__status).toBe(201);
 
-      const partnerAdminVerifyOtpResponse = (await AuthenticationService.verifyOtp({
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: nobaAdminEmail,
+          otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
+          identityType: "PARTNER_ADMIN",
+        }),
+      );
+
+      const partnerAdminVerifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: nobaAdminEmail,
-        identityType: "PARTNER_ADMIN",
         otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
+        identityType: "PARTNER_ADMIN",
       })) as VerifyOtpResponseDTO & ResponseStatus;
 
       // TODO: Fix the 'verifyOtp' to return 403 instead of 404.
@@ -303,14 +518,35 @@ describe("Authentication", () => {
 
       expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
 
-      const loginResponse = (await AuthenticationService.loginUser({
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: partnerAdminEmail,
+          identityType: "PARTNER_ADMIN",
+        }),
+      );
+
+      const loginResponse = (await AuthenticationService.loginUser(TEST_API_KEY, timestamp, signature, {
         email: partnerAdminEmail,
         identityType: "PARTNER_ADMIN",
       })) as any & ResponseStatus;
 
       expect(loginResponse.__status).toBe(201);
 
-      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: partnerAdminEmail,
+          otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN"),
+          identityType: "PARTNER_ADMIN",
+        }),
+      );
+
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: partnerAdminEmail,
         identityType: "PARTNER_ADMIN",
         otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN"),

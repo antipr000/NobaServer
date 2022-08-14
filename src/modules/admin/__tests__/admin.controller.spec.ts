@@ -97,7 +97,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.createNobaAdmin({ user: authenticatedConsumer }, newNobaAdmin);
+        await adminController.createNobaAdmin({ user: { entity: authenticatedConsumer } }, newNobaAdmin);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -110,7 +110,7 @@ describe("AdminController", () => {
         role: "BASIC",
         name: "Admin",
       };
-      const authenticatedParterAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
+      const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
         role: "ALL",
@@ -118,7 +118,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.createNobaAdmin({ user: authenticatedParterAdmin }, newNobaAdmin);
+        await adminController.createNobaAdmin({ user: { entity: authenticatedPartnerAdmin } }, newNobaAdmin);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -138,7 +138,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.createNobaAdmin({ user: authenticatedNobaAdmin }, newNobaAdmin);
+        await adminController.createNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, newNobaAdmin);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -158,7 +158,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.createNobaAdmin({ user: authenticatedNobaAdmin }, newNobaAdmin);
+        await adminController.createNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, newNobaAdmin);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -187,7 +187,7 @@ describe("AdminController", () => {
       );
 
       const result: NobaAdminDTO = await adminController.createNobaAdmin(
-        { user: authenticatedNobaAdmin },
+        { user: { entity: authenticatedNobaAdmin } },
         newNobaAdmin,
       );
       const addNobaAdminArgument: Admin = capture(mockAdminService.addNobaAdmin).last()[0];
@@ -217,7 +217,7 @@ describe("AdminController", () => {
       when(mockAdminService.addNobaAdmin(anything())).thenResolve(undefined);
 
       try {
-        await adminController.createNobaAdmin({ user: authenticatedNobaAdmin }, newNobaAdmin);
+        await adminController.createNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, newNobaAdmin);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ConflictException);
@@ -238,7 +238,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.getNobaAdmin({ user: authenticatedConsumer });
+        await adminController.getNobaAdmin({ user: { entity: authenticatedConsumer } });
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -246,7 +246,7 @@ describe("AdminController", () => {
     });
 
     it("Logged-in PartnerAdmins shouldn't be able to call GET /admins", async () => {
-      const authenticatedParterAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
+      const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: "partner.admin@noba.com",
         role: "ALL",
@@ -254,7 +254,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.getNobaAdmin({ user: authenticatedParterAdmin });
+        await adminController.getNobaAdmin({ user: { entity: authenticatedPartnerAdmin } });
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -269,7 +269,7 @@ describe("AdminController", () => {
         role: "BASIC",
       });
 
-      const queriedNobaAdmin = await adminController.getNobaAdmin({ user: authenticatedNobaAdmin });
+      const queriedNobaAdmin = await adminController.getNobaAdmin({ user: { entity: authenticatedNobaAdmin } });
 
       expect(queriedNobaAdmin._id).toBe(authenticatedNobaAdmin.props._id);
       expect(queriedNobaAdmin.email).toBe(authenticatedNobaAdmin.props.email);
@@ -296,7 +296,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        await adminController.updateNobaAdmin({ user: authenticatedConsumer }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: { entity: authenticatedConsumer } }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -306,7 +306,7 @@ describe("AdminController", () => {
     it("PartnerAdmin with most privileged role shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
       const UPDATED_ROLE = "INTERMEDIATE";
-      const authenticatedParterAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
+      const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
         role: "ALL",
@@ -317,7 +317,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        await adminController.updateNobaAdmin({ user: authenticatedParterAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: { entity: authenticatedPartnerAdmin } }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -337,7 +337,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -357,7 +357,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -397,7 +397,11 @@ describe("AdminController", () => {
       const request: UpdateNobaAdminDTO = {
         role: UPDATED_ROLE,
       };
-      const result = await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, TARGET_ADMIN_ID, request);
+      const result = await adminController.updateNobaAdmin(
+        { user: { entity: authenticatedNobaAdmin } },
+        TARGET_ADMIN_ID,
+        request,
+      );
 
       expect(result).toEqual({
         _id: TARGET_ADMIN_ID,
@@ -440,7 +444,11 @@ describe("AdminController", () => {
       const request: UpdateNobaAdminDTO = {
         name: UPDATED_NAME,
       };
-      const result = await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, TARGET_ADMIN_ID, request);
+      const result = await adminController.updateNobaAdmin(
+        { user: { entity: authenticatedNobaAdmin } },
+        TARGET_ADMIN_ID,
+        request,
+      );
 
       expect(result).toEqual({
         _id: TARGET_ADMIN_ID,
@@ -487,7 +495,11 @@ describe("AdminController", () => {
         name: UPDATED_NAME,
         role: UPDATE_ROLE,
       };
-      const result = await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, TARGET_ADMIN_ID, request);
+      const result = await adminController.updateNobaAdmin(
+        { user: { entity: authenticatedNobaAdmin } },
+        TARGET_ADMIN_ID,
+        request,
+      );
 
       expect(result).toEqual({
         _id: TARGET_ADMIN_ID,
@@ -510,7 +522,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: UPDATED_ROLE,
         };
-        await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -532,7 +544,7 @@ describe("AdminController", () => {
         const request: UpdateNobaAdminDTO = {
           role: "INTERMEDIATE",
         };
-        await adminController.updateNobaAdmin({ user: authenticatedNobaAdmin }, ADMIN_ID, request);
+        await adminController.updateNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, ADMIN_ID, request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(NotFoundException);
@@ -552,7 +564,7 @@ describe("AdminController", () => {
         ],
       });
       try {
-        await adminController.deleteNobaAdmin({ user: authenticatedConsumer }, "id");
+        await adminController.deleteNobaAdmin({ user: { entity: authenticatedConsumer } }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -561,7 +573,7 @@ describe("AdminController", () => {
     });
 
     it("PartnerAdmin with 'most' privileged role shouldn't be able to delete any NobaAdmin", async () => {
-      const authenticatedParterAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
+      const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
         role: "ALL",
@@ -569,7 +581,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.deleteNobaAdmin({ user: authenticatedParterAdmin }, "id");
+        await adminController.deleteNobaAdmin({ user: { entity: authenticatedPartnerAdmin } }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -585,7 +597,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, "id");
+        await adminController.deleteNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -601,7 +613,7 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, "id");
+        await adminController.deleteNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, "id");
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -620,7 +632,7 @@ describe("AdminController", () => {
       when(mockAdminService.deleteNobaAdmin(adminId)).thenResolve(adminId);
 
       const result: DeleteNobaAdminDTO = await adminController.deleteNobaAdmin(
-        { user: authenticatedNobaAdmin },
+        { user: { entity: authenticatedNobaAdmin } },
         adminId,
       );
 
@@ -638,7 +650,7 @@ describe("AdminController", () => {
       when(mockAdminService.deleteNobaAdmin(adminId)).thenReject(new NotFoundException());
 
       try {
-        await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, adminId);
+        await adminController.deleteNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, adminId);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(NotFoundException);
@@ -653,7 +665,10 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.deleteNobaAdmin({ user: authenticatedNobaAdmin }, authenticatedNobaAdmin.props._id);
+        await adminController.deleteNobaAdmin(
+          { user: { entity: authenticatedNobaAdmin } },
+          authenticatedNobaAdmin.props._id,
+        );
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -687,7 +702,9 @@ describe("AdminController", () => {
       };
 
       try {
-        await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, { user: requestingConsumer });
+        await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, {
+          user: { entity: requestingConsumer },
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -715,7 +732,9 @@ describe("AdminController", () => {
       };
 
       try {
-        await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, { user: requestingPartnerAdmin });
+        await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, {
+          user: { entity: requestingPartnerAdmin },
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -741,7 +760,9 @@ describe("AdminController", () => {
       };
 
       try {
-        await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, { user: requestingNobaAdmin });
+        await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, {
+          user: { entity: requestingNobaAdmin },
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -784,7 +805,7 @@ describe("AdminController", () => {
         role: newPartnerAdminRole,
       };
       const result = await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, {
-        user: requestingNobaAdmin,
+        user: { entity: requestingNobaAdmin },
       });
 
       expect(result).toEqual({
@@ -833,7 +854,7 @@ describe("AdminController", () => {
         role: newPartnerAdminRole,
       };
       const result = await adminController.addAdminsForPartners(partnerId, addPartnerAdminRequest, {
-        user: requestingNobaAdmin,
+        user: { entity: requestingNobaAdmin },
       });
 
       expect(result).toEqual({
@@ -863,7 +884,9 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, { user: requestingConsumer });
+        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, {
+          user: { entity: requestingConsumer },
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -884,7 +907,9 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, { user: requestingPartnerAdmin });
+        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, {
+          user: { entity: requestingPartnerAdmin },
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -904,7 +929,9 @@ describe("AdminController", () => {
       });
 
       try {
-        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, { user: requestingNobaAdmin });
+        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, {
+          user: { entity: requestingNobaAdmin },
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -936,7 +963,7 @@ describe("AdminController", () => {
       );
 
       const result = await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, {
-        user: requestingNobaAdmin,
+        user: { entity: requestingNobaAdmin },
       });
 
       expect(result).toEqual({
@@ -974,7 +1001,7 @@ describe("AdminController", () => {
       );
 
       const result = await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, {
-        user: requestingNobaAdmin,
+        user: { entity: requestingNobaAdmin },
       });
 
       expect(result).toEqual({
@@ -1002,7 +1029,9 @@ describe("AdminController", () => {
       );
 
       try {
-        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, { user: requestingNobaAdmin });
+        await adminController.deleteAdminsForPartners(partnerId, partnerAdminId, {
+          user: { entity: requestingNobaAdmin },
+        });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -1033,7 +1062,7 @@ describe("AdminController", () => {
           role: "ALL",
         };
         await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
-          user: requestingConsumer,
+          user: { entity: requestingConsumer },
         });
 
         expect(true).toBe(false);
@@ -1060,7 +1089,7 @@ describe("AdminController", () => {
           role: "ALL",
         };
         await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
-          user: requestingPartnerAdmin,
+          user: { entity: requestingPartnerAdmin },
         });
 
         expect(true).toBe(false);
@@ -1086,7 +1115,7 @@ describe("AdminController", () => {
           role: "ALL",
         };
         await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
-          user: requestingNobaAdmin,
+          user: { entity: requestingNobaAdmin },
         });
 
         expect(true).toBe(false);
@@ -1129,7 +1158,9 @@ describe("AdminController", () => {
         partnerAdminId,
         updatePartnerAdminRequest,
         {
-          user: requestingNobaAdmin,
+          user: {
+            entity: requestingNobaAdmin,
+          },
         },
       );
 
@@ -1177,7 +1208,11 @@ describe("AdminController", () => {
         partnerId,
         partnerAdminId,
         updatePartnerAdminRequest,
-        { user: requestingNobaAdmin },
+        {
+          user: {
+            entity: requestingNobaAdmin,
+          },
+        },
       );
 
       expect(result).toEqual({
@@ -1205,7 +1240,12 @@ describe("AdminController", () => {
       );
 
       try {
-        await adminController.updateAdminForPartners(partnerId, partnerAdminId, {}, { user: requestingNobaAdmin });
+        await adminController.updateAdminForPartners(
+          partnerId,
+          partnerAdminId,
+          {},
+          { user: { entity: requestingNobaAdmin } },
+        );
 
         expect(true).toBe(false);
       } catch (err) {
@@ -1233,7 +1273,7 @@ describe("AdminController", () => {
         const addPartnerRequest: AddPartnerRequestDTO = {
           name: newPartnerName,
         };
-        await adminController.registerPartner(addPartnerRequest, { user: requestingConsumer });
+        await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingConsumer } });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -1258,7 +1298,7 @@ describe("AdminController", () => {
         const addPartnerRequest: AddPartnerRequestDTO = {
           name: newPartnerName,
         };
-        await adminController.registerPartner(addPartnerRequest, { user: requestingPartnerAdmin });
+        await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingPartnerAdmin } });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -1280,7 +1320,7 @@ describe("AdminController", () => {
         const addPartnerRequest: AddPartnerRequestDTO = {
           name: newPartnerName,
         };
-        await adminController.registerPartner(addPartnerRequest, { user: requestingNobaAdmin });
+        await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingNobaAdmin } });
 
         expect(true).toBe(false);
       } catch (err) {
@@ -1310,13 +1350,13 @@ describe("AdminController", () => {
         name: newPartnerName,
       };
       const result: PartnerDTO = await adminController.registerPartner(addPartnerRequest, {
-        user: requestingNobaAdmin,
+        user: {
+          entity: requestingNobaAdmin,
+        },
       });
 
-      expect(result).toEqual({
-        _id: createdPartnerId,
-        name: newPartnerName,
-      });
+      expect(result._id).toBe(createdPartnerId);
+      expect(result.name).toBe(newPartnerName);
     });
 
     it("NobaAdmin with 'ADMIN' role should be able to register a new Partner", async () => {
@@ -1341,13 +1381,13 @@ describe("AdminController", () => {
         name: newPartnerName,
       };
       const result: PartnerDTO = await adminController.registerPartner(addPartnerRequest, {
-        user: requestingNobaAdmin,
+        user: {
+          entity: requestingNobaAdmin,
+        },
       });
 
-      expect(result).toEqual({
-        _id: createdPartnerId,
-        name: newPartnerName,
-      });
+      expect(result._id).toBe(createdPartnerId);
+      expect(result.name).toBe(newPartnerName);
     });
 
     it("NobaAdmin with 'Admin' role should be able to update consumer details", async () => {
@@ -1410,7 +1450,7 @@ describe("AdminController", () => {
           },
         },
         {
-          user: requestingNobaAdmin,
+          user: { entity: requestingNobaAdmin },
         },
       );
 

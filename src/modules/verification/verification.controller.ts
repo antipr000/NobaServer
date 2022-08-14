@@ -87,7 +87,7 @@ export class VerificationController {
     @Body() requestBody: IDVerificationRequestDTO,
     @Request() request,
   ): Promise<VerificationResultDTO> {
-    const consumer: Consumer = request.user;
+    const consumer: Consumer = request.user.entity;
     const result = await this.verificationService.verifyConsumerInformation(consumer.props._id, sessionKey, {
       ...requestBody,
       userID: consumer.props._id,
@@ -141,7 +141,7 @@ export class VerificationController {
     @Body() requestData: DocVerificationRequestDTO,
     @Request() request,
   ): Promise<string> {
-    const consumer: Consumer = request.user;
+    const consumer: Consumer = request.user.entity;
     const result = await this.verificationService.verifyDocument(consumer.props._id, sessionKey, {
       userID: consumer.props._id,
       documentType: requestData.documentType,
@@ -163,7 +163,7 @@ export class VerificationController {
     @Query("sessionKey") sessionKey: string,
     @Request() request,
   ): Promise<VerificationResultDTO> {
-    const consumer: Consumer = request.user;
+    const consumer: Consumer = request.user.entity;
     const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, sessionKey, id);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }

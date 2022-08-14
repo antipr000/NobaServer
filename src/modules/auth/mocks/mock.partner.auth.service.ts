@@ -5,7 +5,7 @@ export const getMockPartnerAuthServiceWithDefaults = () => {
   const mockPartnerAuthService: PartnerAuthService = mock(PartnerAuthService);
 
   when(mockPartnerAuthService.validateAndGetUserId(anyString(), anyString())).thenReject(new Error("Not implemented!"));
-  when(mockPartnerAuthService.generateAccessToken(anyString())).thenReject(new Error("Not implemented!"));
+  when(mockPartnerAuthService.generateAccessToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAuthService.saveOtp(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAuthService.sendOtp(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAuthService.createOtp()).thenReject(new Error("Not implemented!"));

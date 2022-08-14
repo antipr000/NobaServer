@@ -16,7 +16,12 @@ import { INestApplication } from "@nestjs/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
-import { clearAccessTokenForNextRequests, loginAndGetResponse, setAccessTokenForTheNextRequests } from "./common";
+import {
+  clearAccessTokenForNextRequests,
+  loginAndGetResponse,
+  setAccessTokenForTheNextRequests,
+  setupPartner,
+} from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 import { AssetsService, CurrencyDTO, LocationDTO } from "./api_client";
 import { ConfigurationsDTO } from "./api_client/models/ConfigurationsDTO";
@@ -66,19 +71,20 @@ const supportedCurrenciesTicker = [
 ];
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 
-describe("CryptoCurrencies", () => {
+describe("CryptoCurrencies & Locations", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
+    await setupPartner(mongoUri, "dummy-partner");
 
     const environmentVaraibles = {
       MONGO_URI: mongoUri,
@@ -87,7 +93,7 @@ describe("CryptoCurrencies", () => {
     await app.listen(port);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     clearAccessTokenForNextRequests();
     await mongoose.disconnect();
     await app.close();
@@ -187,35 +193,6 @@ describe("CryptoCurrencies", () => {
 
       expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
     });
-  });
-});
-
-describe("Locations", () => {
-  jest.setTimeout(20000);
-
-  let mongoServer: MongoMemoryServer;
-  let mongoUri: string;
-  let app: INestApplication;
-
-  beforeEach(async () => {
-    const port = process.env.PORT;
-
-    // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    mongoUri = mongoServer.getUri();
-
-    const environmentVaraibles = {
-      MONGO_URI: mongoUri,
-    };
-    app = await bootstrap(environmentVaraibles);
-    await app.listen(port);
-  });
-
-  afterEach(async () => {
-    clearAccessTokenForNextRequests();
-    await mongoose.disconnect();
-    await app.close();
-    await mongoServer.stop();
   });
 
   describe("GET /countries", () => {

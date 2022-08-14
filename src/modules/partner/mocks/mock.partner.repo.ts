@@ -7,6 +7,7 @@ export function getMockPartnerRepoWithDefaults(): IPartnerRepo {
 
   when(mockedPartnerRepo.addPartner(anything())).thenReject(new Error("Not implemented!"));
   when(mockedPartnerRepo.getPartner(anyString())).thenReject(new Error("Not implemented!"));
+  when(mockedPartnerRepo.getPartnerFromApiKey(anyString())).thenReject(new Error("Not implemented!"));
   when(mockedPartnerRepo.updatePartner(anything())).thenReject(new Error("Not implemented!"));
   return mockedPartnerRepo;
 }

@@ -58,7 +58,7 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getConsumer(@Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user;
+    const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
@@ -78,7 +78,7 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updateConsumer(@Request() request, @Body() requestBody: UpdateConsumerRequestDTO): Promise<ConsumerDTO> {
-    const consumer = request.user;
+    const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
@@ -101,7 +101,7 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
   async addPaymentMethod(@Body() requestBody: AddPaymentMethodDTO, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user;
+    const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
@@ -120,7 +120,7 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
   async deletePaymentMethod(@Param("paymentToken") paymentToken: string, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user;
+    const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }

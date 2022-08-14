@@ -54,7 +54,7 @@ describe("ConsumerController", () => {
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
 
       const result: ConsumerDTO = await consumerController.getConsumer({
-        user: consumer,
+        user: { entity: consumer },
       });
 
       expect(result).toStrictEqual(consumerMapper.toDTO(consumer));
@@ -95,7 +95,7 @@ describe("ConsumerController", () => {
 
       const result = await consumerController.updateConsumer(
         {
-          user: consumer,
+          user: { entity: consumer },
         },
         requestData,
       );
@@ -150,7 +150,9 @@ describe("ConsumerController", () => {
       );
 
       const result = await consumerController.addPaymentMethod(paymentMethodRequest, {
-        user: consumer,
+        user: {
+          entity: consumer,
+        },
       });
 
       expect(result._id).toBe(consumer.props._id);

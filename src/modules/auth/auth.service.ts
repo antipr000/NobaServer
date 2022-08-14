@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IOTPRepo } from "./repo/OTPRepo";
@@ -9,7 +9,9 @@ import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
-
+import { PartnerService } from "../partner/partner.service";
+import { Partner } from "../partner/domain/Partner";
+import { createHmac } from "crypto";
 @Injectable()
 export abstract class AuthService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -27,6 +29,9 @@ export abstract class AuthService {
   @Inject()
   private readonly jwtService: JwtService;
 
+  @Inject()
+  private readonly partnerService: PartnerService;
+
   readonly nobaPartnerID: string;
 
   constructor(private readonly configService: CustomConfigService) {
@@ -38,7 +43,6 @@ export abstract class AuthService {
     if (!partnerID || partnerID.length == 0) {
       partnerID = this.nobaPartnerID;
     }
-
     const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType(), partnerID);
     const currentDateTime: number = new Date().getTime();
 
@@ -50,10 +54,11 @@ export abstract class AuthService {
     }
   }
 
-  async generateAccessToken(id: string): Promise<VerifyOtpResponseDTO> {
+  async generateAccessToken(id: string, partnerId: string): Promise<VerifyOtpResponseDTO> {
     const payload = {
       id: id,
       identityType: this.getIdentityType(),
+      partnerId: partnerId,
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -93,6 +98,29 @@ export abstract class AuthService {
 
   async deleteAllExpiredOTPs(): Promise<void> {
     return this.otpRepo.deleteAllExpiredOTPs();
+  }
+
+  async validateApiKeyAndGetPartnerId(
+    apiKey: string,
+    timestamp: string,
+    signature: string,
+    requestMethod: string,
+    requestPath: string,
+    requestBody: string,
+  ): Promise<string> {
+    try {
+      const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
+      const secretKey = partner.props.secretKey;
+      const signatureString = `${timestamp}${requestMethod}${requestPath}${requestBody}`;
+      const hmacSignatureString = createHmac("sha256", secretKey).update(signatureString).digest("hex");
+      if (hmacSignatureString !== signature) {
+        throw new BadRequestException("Signature does not match");
+      }
+      return partner.props._id;
+    } catch (e) {
+      console.log(e, requestBody);
+      throw new BadRequestException("Api key is invalid");
+    }
   }
 
   protected abstract getIdentityType();

@@ -61,7 +61,9 @@ describe("PartnerController", () => {
         role: "ALL",
       });
       const mockRequest = {
-        user: requestingPartnerAdmin,
+        user: {
+          entity: requestingPartnerAdmin,
+        },
       };
 
       when(
@@ -99,7 +101,9 @@ describe("PartnerController", () => {
         role: "BASIC",
       });
       const mockRequest = {
-        user: requestingPartnerAdmin,
+        user: {
+          entity: requestingPartnerAdmin,
+        },
       };
 
       when(
@@ -140,7 +144,9 @@ describe("PartnerController", () => {
         role: "INTERMEDIATE",
       });
       const mockRequest = {
-        user: requestingPartnerAdmin,
+        user: {
+          entity: requestingPartnerAdmin,
+        },
       };
 
       when(
@@ -197,13 +203,13 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(intermediateAccessAdmin.props._id)).thenResolve(intermediateAccessAdmin);
 
       const allAccessResult = await partnerController.getPartnerAdmin(partnerAdminAllAccessId, {
-        user: allAccessAdmin,
+        user: { entity: allAccessAdmin },
       });
       const basicAccessResult = await partnerController.getPartnerAdmin(partnerAdminBasicAccessId, {
-        user: basicAccessAdmin,
+        user: { entity: basicAccessAdmin },
       });
       const intermediateAccessResult = await partnerController.getPartnerAdmin(partnerAdminIntermediateAccessId, {
-        user: intermediateAccessAdmin,
+        user: { entity: intermediateAccessAdmin },
       });
 
       expect(allAccessResult).toStrictEqual(partnerAdminMapper.toDTO(allAccessAdmin));
@@ -229,7 +235,9 @@ describe("PartnerController", () => {
       when(partnerAdminService.getPartnerAdmin(partnerAdmin.props._id)).thenResolve(partnerAdmin);
 
       const result = await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
-        user: requestingPartnerAdmin,
+        user: {
+          entity: requestingPartnerAdmin,
+        },
       });
 
       expect(result).toStrictEqual(partnerAdminMapper.toDTO(partnerAdmin));
@@ -254,7 +262,9 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         });
         expect(true).toBe(false);
       } catch (e) {
@@ -281,7 +291,9 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.getPartnerAdmin(partnerAdmin.props._id, {
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         });
         expect(true).toBe(false);
       } catch (e) {
@@ -314,7 +326,9 @@ describe("PartnerController", () => {
       ]);
 
       const result = await partnerController.getAllPartnerAdmins({
-        user: requestingPartnerAdmin,
+        user: {
+          entity: requestingPartnerAdmin,
+        },
       });
 
       expect(result.length).toBe(2);
@@ -346,7 +360,9 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.getAllPartnerAdmins({
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         });
         expect(true).toBe(false);
       } catch (e) {
@@ -380,7 +396,9 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.getAllPartnerAdmins({
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         });
         expect(true).toBe(false);
       } catch (e) {
@@ -392,8 +410,8 @@ describe("PartnerController", () => {
       const partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
@@ -405,7 +423,9 @@ describe("PartnerController", () => {
       when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
 
       const result = await partnerController.getPartner(partner.props._id, {
-        user: requestingPartnerAdmin,
+        user: {
+          entity: requestingPartnerAdmin,
+        },
       });
 
       expect(result).toStrictEqual(partnerMapper.toDTO(partner));
@@ -415,8 +435,8 @@ describe("PartnerController", () => {
       const partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-1",
@@ -446,7 +466,9 @@ describe("PartnerController", () => {
           takeRate: newTakeRate,
         },
         {
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         },
       );
 
@@ -464,8 +486,8 @@ describe("PartnerController", () => {
       const partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-1",
@@ -493,7 +515,9 @@ describe("PartnerController", () => {
             takeRate: newTakeRate,
           },
           {
-            user: requestingPartnerAdmin,
+            user: {
+              entity: requestingPartnerAdmin,
+            },
           },
         );
         expect(true).toBe(false);
@@ -506,8 +530,8 @@ describe("PartnerController", () => {
       const partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-1",
@@ -534,7 +558,9 @@ describe("PartnerController", () => {
             takeRate: newTakeRate,
           },
           {
-            user: requestingPartnerAdmin,
+            user: {
+              entity: requestingPartnerAdmin,
+            },
           },
         );
         expect(true).toBe(false);
@@ -585,7 +611,9 @@ describe("PartnerController", () => {
           role: updatedPartnerAdmin.props.role,
         },
         {
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         },
       );
 
@@ -635,7 +663,9 @@ describe("PartnerController", () => {
             role: updatedPartnerAdmin.props.role,
           },
           {
-            user: requestingPartnerAdmin,
+            user: {
+              entity: requestingPartnerAdmin,
+            },
           },
         );
         expect(true).toBe(false);
@@ -687,7 +717,9 @@ describe("PartnerController", () => {
             role: updatedPartnerAdmin.props.role,
           },
           {
-            user: requestingPartnerAdmin,
+            user: {
+              entity: requestingPartnerAdmin,
+            },
           },
         );
         expect(true).toBe(false);
@@ -739,7 +771,9 @@ describe("PartnerController", () => {
             role: updatedPartnerAdmin.props.role,
           },
           {
-            user: requestingPartnerAdmin,
+            user: {
+              entity: requestingPartnerAdmin,
+            },
           },
         );
         expect(true).toBe(false);
@@ -769,7 +803,9 @@ describe("PartnerController", () => {
       ).thenResolve(partnerAdmin);
 
       const result = await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
-        user: requestingPartnerAdmin,
+        user: {
+          entity: requestingPartnerAdmin,
+        },
       });
 
       expect(result).toStrictEqual(partnerAdminMapper.toDTO(partnerAdmin));
@@ -797,7 +833,9 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         });
         expect(true).toBe(false);
       } catch (e) {
@@ -827,7 +865,9 @@ describe("PartnerController", () => {
 
       try {
         await partnerController.deletePartnerAdmin(partnerAdmin.props._id, {
-          user: requestingPartnerAdmin,
+          user: {
+            entity: requestingPartnerAdmin,
+          },
         });
         expect(true).toBe(false);
       } catch (e) {

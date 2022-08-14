@@ -17,15 +17,15 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
 import { ResponseStatus } from "./api_client/core/request";
-import { AdminService, AuthenticationService, DeleteNobaAdminDTO, VerifyOtpResponseDTO } from "./api_client";
+import { AdminService, DeleteNobaAdminDTO } from "./api_client";
 import { NobaAdminDTO } from "../src/modules/admin/dto/NobaAdminDTO";
 import {
   clearAccessTokenForNextRequests,
-  fetchOtpFromDb,
   insertNobaAdmin,
   insertPartnerAdmin,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
+  setupPartner,
 } from "./common";
 
 describe("Noba Admin", () => {
@@ -41,15 +41,13 @@ describe("Noba Admin", () => {
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
-    console.log("MongoMemoryServer running at: ", mongoUri);
+    await setupPartner(mongoUri, "dummy-partner");
 
     const environmentVaraibles = {
       MONGO_URI: mongoUri,
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
-
-    console.log(`Server started on port '${port} ...'`);
   });
 
   afterEach(async () => {

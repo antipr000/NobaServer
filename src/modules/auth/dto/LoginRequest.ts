@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { allIdentities } from "../domain/IdentityType";
 
 export class LoginRequestDTO {
@@ -7,7 +7,4 @@ export class LoginRequestDTO {
 
   @ApiProperty({ enum: allIdentities })
   identityType: string;
-
-  @ApiPropertyOptional()
-  partnerID?: string;
 }

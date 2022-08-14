@@ -1,6 +1,7 @@
 import { MongoClient } from "mongodb";
 import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
+import { createHmac } from "crypto";
 
 export const fetchOtpFromDb = async (mongoUri: string, email: string, identityType: string): Promise<number> => {
   // Setup a mongodb client for interacting with "admins" collection.
@@ -13,6 +14,7 @@ export const fetchOtpFromDb = async (mongoUri: string, email: string, identityTy
 
   while (await otpDocumentsCursor.hasNext()) {
     const otpDocument = await otpDocumentsCursor.next();
+    // console.log(otpDocument);
 
     if ((otpDocument.emailOrPhone ?? "") === email && (otpDocument.identityType ?? "") === identityType) {
       otp = otpDocument.otp;
@@ -61,7 +63,6 @@ export const insertPartnerAdmin = async (
     role: role,
     partnerId: partnerId,
   });
-
   await mongoClient.close();
   return true;
 };
@@ -74,21 +75,83 @@ export const clearAccessTokenForNextRequests = () => {
   delete process.env.ACCESS_TOKEN;
 };
 
+export const TEST_API_KEY = "testapikey";
+export const TEST_SECRET_KEY = "testsecretkey";
+
 export const loginAndGetResponse = async (
   mongoUri: string,
   email: string,
   identityType: string,
 ): Promise<VerifyOtpResponseDTO & ResponseStatus> => {
-  await AuthenticationService.loginUser({
+  const requestBody = {
     email: email,
     identityType: identityType as any,
-    partnerID: "dummy-partner", // TODO(#194): Fix the tests once the strategy is finalised.
+  };
+  const TEST_TIMESTAMP = "testtimestamp";
+  const loginSignature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/auth/login", JSON.stringify(requestBody));
+  await AuthenticationService.loginUser(TEST_API_KEY, TEST_TIMESTAMP, loginSignature, requestBody);
+
+  const verifyOtpRequestBody = {
+    emailOrPhone: email,
+    otp: await fetchOtpFromDb(mongoUri, email, identityType),
+    identityType: identityType as any,
+  };
+
+  const verifyOtpSignature = computeSignature(
+    TEST_TIMESTAMP,
+    "POST",
+    "/v1/auth/verifyotp",
+    JSON.stringify(verifyOtpRequestBody),
+  );
+  return (await AuthenticationService.verifyOtp(
+    TEST_API_KEY,
+    TEST_TIMESTAMP,
+    verifyOtpSignature,
+    verifyOtpRequestBody,
+  )) as VerifyOtpResponseDTO & ResponseStatus;
+};
+
+export const setupPartner = async (mongoUri: string, partnerId: string) => {
+  const mongoClient = new MongoClient(mongoUri);
+  await mongoClient.connect();
+
+  const partnersCollection = mongoClient.db("").collection("partners");
+  await partnersCollection.insertOne({
+    _id: partnerId as any,
+    name: "Test Partner",
+    apiKey: TEST_API_KEY,
+    secretKey: TEST_SECRET_KEY,
   });
 
-  return (await AuthenticationService.verifyOtp({
-    emailOrPhone: email,
-    identityType: identityType as any,
-    otp: await fetchOtpFromDb(mongoUri, email, identityType),
-    partnerID: "dummy-partner", // TODO(#194): Fix the tests once the strategy is finalised.
-  })) as VerifyOtpResponseDTO & ResponseStatus;
+  await mongoClient.close();
+  return true;
+};
+
+export const computeSignature = (
+  timestamp: string,
+  requestMethod: string,
+  requestPath: string,
+  requestBody: string,
+) => {
+  const signatureString = `${timestamp}${requestMethod}${requestPath}${requestBody}`;
+  const hmacSignatureString = createHmac("sha256", TEST_SECRET_KEY).update(signatureString).digest("hex");
+  return hmacSignatureString;
+};
+
+export const dropAllCollections = async (mongoUri: string) => {
+  const mongoClient = new MongoClient(mongoUri);
+  await mongoClient.connect();
+  const collections = [
+    "partners",
+    "admins",
+    "locks",
+    "otps",
+    "partneradmins",
+    "transactions",
+    "consumers",
+    "verificationdatas",
+  ];
+
+  const promises = collections.map(collection => mongoClient.db("").dropCollection(collection));
+  await Promise.all(promises);
 };

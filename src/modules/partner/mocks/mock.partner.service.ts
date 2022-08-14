@@ -6,6 +6,7 @@ export const getMockPartnerServiceWithDefaults = () => {
 
   when(mockPartnerService.createPartner(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerService.getPartner(anyString())).thenReject(new Error("Not implemented!"));
+  when(mockPartnerService.getPartnerFromApiKey(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerService.updatePartner(anyString(), anything())).thenReject(new Error("Not implemented!"));
 
   return mockPartnerService;

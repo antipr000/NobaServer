@@ -4,7 +4,7 @@ import { Consumer } from "../consumer/domain/Consumer";
 //returns authenticated user details undefined if user not authenticated
 export const AuthUser = createParamDecorator((data: unknown, ctx: ExecutionContext): Consumer => {
   const request = ctx.switchToHttp().getRequest();
-  const user = request.user;
+  const user = request.user.entity;
   return user;
 });
 

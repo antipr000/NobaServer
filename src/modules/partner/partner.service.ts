@@ -20,6 +20,11 @@ export class PartnerService {
     return partner;
   }
 
+  async getPartnerFromApiKey(apiKey: string): Promise<Partner> {
+    const partner: Partner = await this.partnerRepo.getPartnerFromApiKey(apiKey);
+    return partner;
+  }
+
   async createPartner(partnerName: string): Promise<Partner> {
     const partner = Partner.createPartner({ name: partnerName });
     const partnerResult: Partner = await this.partnerRepo.addPartner(partner);

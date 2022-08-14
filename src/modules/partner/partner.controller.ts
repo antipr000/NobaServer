@@ -21,6 +21,7 @@ import {
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { Public } from "../auth/public.decorator";
 import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
 import { Partner } from "./domain/Partner";
 import { PartnerAdmin } from "./domain/PartnerAdmin";
@@ -49,6 +50,15 @@ export class PartnerController {
     this.partnerAdminMapper = new PartnerAdminMapper();
   }
 
+  // TODO: Temporarily for tests. Remove this
+  @Public()
+  @Post("/")
+  @ApiOperation({ summary: "Creates a partner" })
+  async createPartner(@Body() requestBody: UpdatePartnerRequestDTO): Promise<PartnerDTO> {
+    const partner = await this.partnerService.createPartner(requestBody.name);
+    return this.partnerMapper.toDTO(partner);
+  }
+
   @Get("/:" + PartnerID)
   @ApiOperation({ summary: "Gets details of a partner" })
   @ApiResponse({
@@ -59,7 +69,7 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner details" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getPartner(@Param(PartnerID) partnerID: string, @Request() request): Promise<PartnerDTO> {
-    const requestUser: PartnerAdmin = request.user;
+    const requestUser: PartnerAdmin = request.user.entity;
     if (!requestUser.canGetPartnerDetails()) throw new ForbiddenException();
     const partner: Partner = await this.partnerService.getPartner(partnerID);
     return this.partnerMapper.toDTO(partner);
@@ -71,7 +81,7 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to update partner details" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updatePartner(@Body() requestBody: UpdatePartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
-    const requestUser: PartnerAdmin = request.user;
+    const requestUser: PartnerAdmin = request.user.entity;
     if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
     const partner: Partner = await this.partnerService.updatePartner(requestUser.props.partnerId, requestBody);
     return this.partnerMapper.toDTO(partner);
@@ -87,7 +97,7 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getPartnerAdmin(@Param(PartnerAdminID) partnerAdminID: string, @Request() request): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user;
+    const requestUser: PartnerAdmin = request.user.entity;
     if (requestUser.props._id !== partnerAdminID && !requestUser.canGetAllAdmins()) throw new ForbiddenException();
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.getPartnerAdmin(partnerAdminID);
     return this.partnerAdminMapper.toDTO(partnerAdmin);
@@ -103,7 +113,7 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin list" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllPartnerAdmins(@Request() request): Promise<PartnerAdminDTO[]> {
-    const requestUser: PartnerAdmin = request.user;
+    const requestUser: PartnerAdmin = request.user.entity;
     if (!requestUser.canGetAllAdmins()) throw new ForbiddenException();
     const partnerAdmins: PartnerAdmin[] = await this.partnerAdminService.getAllPartnerAdmins(
       requestUser.props.partnerId,
@@ -117,7 +127,7 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to add a new partner admin" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async addPartnerAdmin(@Body() requestBody: AddPartnerAdminRequestDTO, @Request() request): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user;
+    const requestUser: PartnerAdmin = request.user.entity;
     if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
 
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addAdminForPartner(
@@ -139,7 +149,7 @@ export class PartnerController {
     @Body() requestBody: UpdatePartnerRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user;
+    const requestUser: PartnerAdmin = request.user.entity;
     if (!requestUser.canUpdatePartnerAdmin()) throw new ForbiddenException();
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.updateAdminForPartner(
       requestUser.props.partnerId,
@@ -158,7 +168,7 @@ export class PartnerController {
     @Param(PartnerAdminID) partnerAdminID: string,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user;
+    const requestUser: PartnerAdmin = request.user.entity;
     if (!requestUser.canRemovePartnerAdmin()) throw new ForbiddenException();
     const deletedPartnerAdmin = await this.partnerAdminService.deleteAdminForPartner(
       requestUser.props.partnerId,

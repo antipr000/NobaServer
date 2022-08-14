@@ -59,7 +59,7 @@ jest.mock("sqs-consumer", () => {
 });
 
 export const setUp = () => {
-  const port = 9000 + Math.floor(Math.random() * 1000);
+  const port = 9000 + Math.floor(Math.random() * 2000);
 
   process.env.PORT = `${port}`;
   process.env.NODE_ENV = "e2e_test";

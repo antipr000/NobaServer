@@ -1,5 +1,6 @@
 import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { PartnerService } from "../../../modules/partner/partner.service";
 import { anyString, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
@@ -16,6 +17,7 @@ import { getMockPartnerAuthServiceWithDefaults } from "../mocks/mock.partner.aut
 import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.service";
 import { PartnerAuthService } from "../partner.auth.service";
 import { UserAuthService } from "../user.auth.service";
+import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -23,13 +25,21 @@ describe("AdminService", () => {
   let mockAdminAuthService: AdminAuthService;
   let mockConsumerAuthService: UserAuthService;
   let mockPartnerAuthService: PartnerAuthService;
+  let mockPartnerService: PartnerService;
 
   let authController: AuthController;
+
+  const apiKey = "test-api-key";
+  const partnerId = "partner-1";
+  const signature = "test-signature";
+  const timestamp = "test-timestamp";
+  const secretKey = "test-secret";
 
   beforeEach(async () => {
     mockAdminAuthService = getMockAdminAuthServiceWithDefaults();
     mockConsumerAuthService = getMockUserAuthServiceWithDefaults();
     mockPartnerAuthService = getMockPartnerAuthServiceWithDefaults();
+    mockPartnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -64,14 +74,33 @@ describe("AdminService", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, undefined)).thenResolve(adminId);
-      when(mockAdminAuthService.generateAccessToken(adminId)).thenResolve(generateAccessTokenResponse);
+      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, partnerId)).thenResolve(adminId);
+      when(mockAdminAuthService.generateAccessToken(adminId, partnerId)).thenResolve(generateAccessTokenResponse);
+      when(
+        mockAdminAuthService.validateApiKeyAndGetPartnerId(
+          apiKey,
+          timestamp,
+          signature,
+          "POST",
+          "/v1/auth/verifyotp",
+          JSON.stringify({
+            emailOrPhone: adminEmail,
+            identityType: identityType,
+            otp: otp,
+          }),
+        ),
+      ).thenResolve(partnerId);
 
-      const result: VerifyOtpResponseDTO = await authController.verifyOtp({
-        emailOrPhone: adminEmail,
-        identityType: identityType,
-        otp: otp,
-      });
+      const result: VerifyOtpResponseDTO = await authController.verifyOtp(
+        {
+          emailOrPhone: adminEmail,
+          identityType: identityType,
+          otp: otp,
+        },
+        apiKey,
+        timestamp,
+        signature,
+      );
 
       expect(result).toEqual(generateAccessTokenResponse);
     });
@@ -86,15 +115,33 @@ describe("AdminService", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, "partner-1")).thenResolve(consumerId);
-      when(mockConsumerAuthService.generateAccessToken(consumerId)).thenResolve(generateAccessTokenResponse);
+      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, partnerId)).thenResolve(consumerId);
+      when(mockConsumerAuthService.generateAccessToken(consumerId, partnerId)).thenResolve(generateAccessTokenResponse);
+      when(
+        mockConsumerAuthService.validateApiKeyAndGetPartnerId(
+          apiKey,
+          timestamp,
+          signature,
+          "POST",
+          "/v1/auth/verifyotp",
+          JSON.stringify({
+            emailOrPhone: consumerEmail,
+            identityType: identityType,
+            otp: otp,
+          }),
+        ),
+      ).thenResolve(partnerId);
 
-      const result: VerifyOtpResponseDTO = await authController.verifyOtp({
-        emailOrPhone: consumerEmail,
-        identityType: identityType,
-        otp: otp,
-        partnerID: "partner-1",
-      });
+      const result: VerifyOtpResponseDTO = await authController.verifyOtp(
+        {
+          emailOrPhone: consumerEmail,
+          identityType: identityType,
+          otp: otp,
+        },
+        apiKey,
+        timestamp,
+        signature,
+      );
 
       expect(result).toEqual(generateAccessTokenResponse);
     });
@@ -110,11 +157,29 @@ describe("AdminService", () => {
       when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
       when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
+      when(
+        mockAdminAuthService.validateApiKeyAndGetPartnerId(
+          apiKey,
+          timestamp,
+          signature,
+          "POST",
+          "/v1/auth/login",
+          JSON.stringify({
+            email: adminEmail,
+            identityType: identityType,
+          }),
+        ),
+      ).thenResolve(partnerId);
 
-      await authController.loginUser({
-        email: adminEmail,
-        identityType: identityType,
-      });
+      await authController.loginUser(
+        {
+          email: adminEmail,
+          identityType: identityType,
+        },
+        apiKey,
+        timestamp,
+        signature,
+      );
     });
 
     it("should use 'UserAuthService' if 'identityType' is 'CONSUMER'", async () => {
@@ -126,12 +191,29 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(
+        mockConsumerAuthService.validateApiKeyAndGetPartnerId(
+          apiKey,
+          timestamp,
+          signature,
+          "POST",
+          "/v1/auth/login",
+          JSON.stringify({
+            email: consumerEmail,
+            identityType: identityType,
+          }),
+        ),
+      ).thenResolve(partnerId);
 
-      await authController.loginUser({
-        email: consumerEmail,
-        identityType: identityType,
-        partnerID: "partner-1",
-      });
+      await authController.loginUser(
+        {
+          email: consumerEmail,
+          identityType: identityType,
+        },
+        apiKey,
+        timestamp,
+        signature,
+      );
     });
 
     it("should not allow any OTP to be used more than once", async () => {
@@ -143,20 +225,41 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(
+        mockConsumerAuthService.validateApiKeyAndGetPartnerId(
+          apiKey,
+          timestamp,
+          signature,
+          "POST",
+          "/v1/auth/login",
+          JSON.stringify({
+            email: consumerEmail,
+            identityType: identityType,
+          }),
+        ),
+      ).thenResolve(partnerId);
 
-      await authController.loginUser({
-        email: consumerEmail,
-        identityType: identityType,
-        partnerID: "partner-1",
-      });
+      await authController.loginUser(
+        {
+          email: consumerEmail,
+          identityType: identityType,
+        },
+        apiKey,
+        timestamp,
+        signature,
+      );
 
       try {
         // Second attempt should throw an error
-        await authController.loginUser({
-          email: consumerEmail,
-          identityType: identityType,
-          partnerID: "partner-1",
-        });
+        await authController.loginUser(
+          {
+            email: consumerEmail,
+            identityType: identityType,
+          },
+          apiKey,
+          timestamp,
+          signature,
+        );
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
       }
@@ -171,11 +274,29 @@ describe("AdminService", () => {
       when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp)).thenResolve();
       when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString())).thenResolve();
       when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(
+        mockPartnerAuthService.validateApiKeyAndGetPartnerId(
+          apiKey,
+          timestamp,
+          signature,
+          "POST",
+          "/v1/auth/login",
+          JSON.stringify({
+            email: partnerAdminEmail,
+            identityType: identityType,
+          }),
+        ),
+      ).thenResolve(partnerId);
 
-      await authController.loginUser({
-        email: partnerAdminEmail,
-        identityType: identityType,
-      });
+      await authController.loginUser(
+        {
+          email: partnerAdminEmail,
+          identityType: identityType,
+        },
+        apiKey,
+        timestamp,
+        signature,
+      );
     });
 
     it("should throw 'ForbiddenException' if unregistered Admin tries to login as 'NOBA_ADMIN'", async () => {
@@ -185,10 +306,15 @@ describe("AdminService", () => {
       when(mockAdminAuthService.verifyUserExistence(unregisteredAdminEmail)).thenResolve(false);
 
       try {
-        await authController.loginUser({
-          email: unregisteredAdminEmail,
-          identityType: identityType,
-        });
+        await authController.loginUser(
+          {
+            email: unregisteredAdminEmail,
+            identityType: identityType,
+          },
+          apiKey,
+          timestamp,
+          signature,
+        );
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -202,10 +328,15 @@ describe("AdminService", () => {
       when(mockPartnerAuthService.verifyUserExistence(unregisteredPartnerAdminEmail)).thenResolve(false);
 
       try {
-        await authController.loginUser({
-          email: unregisteredPartnerAdminEmail,
-          identityType: identityType,
-        });
+        await authController.loginUser(
+          {
+            email: unregisteredPartnerAdminEmail,
+            identityType: identityType,
+          },
+          apiKey,
+          timestamp,
+          signature,
+        );
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
