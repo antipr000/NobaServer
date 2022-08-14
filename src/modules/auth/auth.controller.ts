@@ -1,4 +1,13 @@
-import { BadRequestException, Body, Controller, ForbiddenException, HttpStatus, Inject, Post } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Headers,
+  HttpStatus,
+  Inject,
+  Post,
+} from "@nestjs/common";
 import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from "@nestjs/swagger";
 import { AdminAuthService } from "./admin.auth.service";
 import { AuthService } from "./auth.service";
@@ -14,6 +23,7 @@ import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { PartnerAuthService } from "./partner.auth.service";
 import { Public } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
+import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "./domain/HeaderConstants";
 
 @Controller("auth")
 @ApiTags("Authentication")
@@ -43,10 +53,23 @@ export class AuthController {
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "API access token" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
-  async verifyOtp(@Body() request: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
-    const authService: AuthService = this.getAuthService(request.identityType);
-    const userId: string = await authService.validateAndGetUserId(request.emailOrPhone, request.otp, request.partnerID);
-    return authService.generateAccessToken(userId);
+  async verifyOtp(
+    @Body() requestBody: VerifyOtpRequestDTO,
+    @Headers(X_NOBA_API_KEY) apiKey: string,
+    @Headers(X_NOBA_TIMESTAMP) timestamp: string,
+    @Headers(X_NOBA_SIGNATURE) signature: string,
+  ): Promise<VerifyOtpResponseDTO> {
+    const authService: AuthService = this.getAuthService(requestBody.identityType);
+    const partnerId = await authService.validateApiKeyAndGetPartnerId(
+      apiKey,
+      timestamp,
+      signature,
+      /*requestMethod = */ "POST",
+      /*requestPath = */ "/v1/auth/verifyotp",
+      JSON.stringify(requestBody),
+    );
+    const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp, partnerId);
+    return authService.generateAccessToken(userId, partnerId);
   }
 
   @Public()
@@ -54,21 +77,34 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, description: "Email successfully sent" })
   @ApiForbiddenResponse({ description: "Account does not exist" })
   @Post("/login")
-  async loginUser(@Body() request: LoginRequestDTO) {
-    const authService: AuthService = this.getAuthService(request.identityType);
+  async loginUser(
+    @Body() requestBody: LoginRequestDTO,
+    @Headers(X_NOBA_API_KEY) apiKey: string,
+    @Headers(X_NOBA_TIMESTAMP) timestamp: string,
+    @Headers(X_NOBA_SIGNATURE) signature: string,
+  ) {
+    const authService: AuthService = this.getAuthService(requestBody.identityType);
 
-    const isLoginAllowed = await authService.verifyUserExistence(request.email);
+    const isLoginAllowed = await authService.verifyUserExistence(requestBody.email);
     if (!isLoginAllowed) {
       throw new ForbiddenException(
-        `User "${request.email}" is not allowed to login as identity "${request.identityType}". ` +
+        `User "${requestBody.email}" is not allowed to login as identity "${requestBody.identityType}". ` +
           "Please contact support team, if you think this is an error.",
       );
     }
 
-    const otp = authService.createOtp();
+    const partnerId = await authService.validateApiKeyAndGetPartnerId(
+      apiKey,
+      timestamp,
+      signature,
+      /*requestMethod = */ "POST",
+      /*requestPath = */ "/v1/auth/login",
+      JSON.stringify(requestBody),
+    );
 
-    await authService.deleteAnyExistingOTP(request.email);
-    await authService.saveOtp(request.email, otp, request.partnerID);
-    return authService.sendOtp(request["email"], otp.toString()); //TODO change parameter to emailOrPhone, front end client also need to be updated
+    const otp = authService.createOtp();
+    await authService.deleteAnyExistingOTP(requestBody.email);
+    await authService.saveOtp(requestBody.email, otp, partnerId);
+    return authService.sendOtp(requestBody["email"], otp.toString()); //TODO change parameter to emailOrPhone, front end client also need to be updated
   }
 }

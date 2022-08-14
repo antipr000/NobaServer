@@ -24,6 +24,7 @@ import {
   insertPartnerAdmin,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
+  setupPartner,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 
@@ -40,6 +41,7 @@ describe("Consumers", () => {
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
+    await setupPartner(mongoUri, "dummy-partner");
 
     const environmentVaraibles = {
       MONGO_URI: mongoUri,
@@ -49,10 +51,10 @@ describe("Consumers", () => {
   });
 
   afterEach(async () => {
-    clearAccessTokenForNextRequests();
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
+    clearAccessTokenForNextRequests();
   });
 
   describe("GET /consumers", () => {

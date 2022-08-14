@@ -17,6 +17,8 @@ import { Otp } from "../domain/Otp";
 import { PartnerAuthService } from "../partner.auth.service";
 import { PartnerAdmin } from "../../../../src/modules/partner/domain/PartnerAdmin";
 import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID } from "../../../config/ConfigurationUtils";
+import { PartnerService } from "../../../modules/partner/partner.service";
+import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 
 describe("PartnerAuthService", () => {
   jest.setTimeout(5000);
@@ -25,6 +27,7 @@ describe("PartnerAuthService", () => {
   let mockOtpRepo: IOTPRepo;
   let mockEmailService: EmailService;
   let mockSmsService: SMSService;
+  let mockPartnerService: PartnerService;
 
   let partnerAuthService: PartnerAuthService;
 
@@ -55,6 +58,7 @@ describe("PartnerAuthService", () => {
     mockOtpRepo = getMockOtpRepoWithDefaults();
     mockEmailService = getMockEmailServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
+    mockPartnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [
@@ -82,6 +86,10 @@ describe("PartnerAuthService", () => {
         {
           provide: SMSService,
           useFactory: () => instance(mockSmsService),
+        },
+        {
+          provide: PartnerService,
+          useFactory: () => instance(mockPartnerService),
         },
         PartnerAuthService,
       ],

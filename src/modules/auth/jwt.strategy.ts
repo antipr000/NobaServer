@@ -33,26 +33,38 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // TODO: Move all the payload related logic to a single file.
   async validate(payload: any): Promise<AuthenticatedUser> {
-    return this.getIdentityDomain(payload.id, payload.identityType);
+    return this.getIdentityDomain(payload.id, payload.identityType, payload.partnerId);
   }
 
-  private async getIdentityDomain(id: string, identityType: string): Promise<AuthenticatedUser> {
+  private async getIdentityDomain(id: string, identityType: string, partnerId: string): Promise<AuthenticatedUser> {
     switch (identityType) {
       case consumerIdentityIdentifier:
         try {
-          return await this.consumerService.findConsumerById(id);
+          const consumer = await this.consumerService.findConsumerById(id);
+          return {
+            partnerId: partnerId,
+            entity: consumer,
+          };
         } catch (e) {
           throw new UnauthorizedException("Token is invalid!");
         }
       case nobaAdminIdentityIdentifier:
         try {
-          return await this.adminService.getAdminById(id);
+          const admin = await this.adminService.getAdminById(id);
+          return {
+            partnerId: partnerId,
+            entity: admin,
+          };
         } catch (e) {
           throw new UnauthorizedException("Token is invalid!");
         }
       case partnerAdminIdentityIdenitfier:
         try {
-          return await this.partnerAdminService.getPartnerAdmin(id);
+          const partnerAdmin = await this.partnerAdminService.getPartnerAdmin(id);
+          return {
+            partnerId: partnerId,
+            entity: partnerAdmin,
+          };
         } catch (e) {
           throw new UnauthorizedException("Token is invalid!");
         }

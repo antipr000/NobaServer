@@ -14,6 +14,8 @@ export class PartnerMapper implements Mapper<Partner> {
       name: p.name,
       verificationData: p.verificationData,
       takeRate: p.takeRate,
+      apiKey: p.apiKey,
+      secretKey: p.secretKey,
     };
   }
 }

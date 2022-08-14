@@ -95,7 +95,7 @@ describe("VerificationController", () => {
         dateOfBirth: consumerInfo.dateOfBirth,
       },
       {
-        user: Consumer.createConsumer(consumer),
+        user: { entity: Consumer.createConsumer(consumer) },
       },
     );
 
@@ -145,7 +145,7 @@ describe("VerificationController", () => {
         dateOfBirth: consumerInfo.dateOfBirth,
       },
       {
-        user: Consumer.createConsumer(consumer),
+        user: { entity: Consumer.createConsumer(consumer) },
       },
     );
 
@@ -195,7 +195,7 @@ describe("VerificationController", () => {
         dateOfBirth: consumerInfo.dateOfBirth,
       },
       {
-        user: Consumer.createConsumer(consumer),
+        user: { entity: Consumer.createConsumer(consumer) },
       },
     );
 

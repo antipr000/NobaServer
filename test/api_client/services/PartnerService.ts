@@ -12,22 +12,17 @@ import { request as __request } from "../core/request";
 
 export class PartnerService {
   /**
-   * Gets details of a partner
-   * @param partnerId
-   * @returns PartnerDTO Details of partner
+   * Creates a partner
+   * @param requestBody
+   * @returns any
    * @throws ApiError
    */
-  public static getPartner(partnerId: string): CancelablePromise<PartnerDTO> {
+  public static createPartner(requestBody: UpdatePartnerRequestDTO): CancelablePromise<any> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/partners/{partnerID}",
-      path: {
-        partnerID: partnerId,
-      },
-      errors: {
-        400: `Invalid request parameters`,
-        403: `User lacks permission to retrieve partner details`,
-      },
+      method: "POST",
+      url: "/v1/partners",
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
 
@@ -46,6 +41,26 @@ export class PartnerService {
       errors: {
         400: `Invalid request parameters`,
         403: `User lacks permission to update partner details`,
+      },
+    });
+  }
+
+  /**
+   * Gets details of a partner
+   * @param partnerId
+   * @returns PartnerDTO Details of partner
+   * @throws ApiError
+   */
+  public static getPartner(partnerId: string): CancelablePromise<PartnerDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/partners/{partnerID}",
+      path: {
+        partnerID: partnerId,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+        403: `User lacks permission to retrieve partner details`,
       },
     });
   }

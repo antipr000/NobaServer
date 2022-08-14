@@ -24,6 +24,17 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
     }
   }
 
+  async getPartnerFromApiKey(apiKey: string): Promise<Partner> {
+    try {
+      const partnerModel = await this.dbProvider.getPartnerModel();
+      const result: any = await partnerModel.findOne({ apiKey: apiKey }).exec();
+      const partnerData: PartnerProps = convertDBResponseToJsObject(result);
+      return this.partnerMapper.toDomain(partnerData);
+    } catch (e) {
+      throw new NotFoundException();
+    }
+  }
+
   async addPartner(partner: Partner): Promise<Partner> {
     try {
       const partnerModel = await this.dbProvider.getPartnerModel();

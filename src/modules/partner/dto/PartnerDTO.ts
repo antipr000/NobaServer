@@ -21,4 +21,10 @@ export class PartnerDTO {
 
   @ApiPropertyOptional()
   takeRate?: number;
+
+  @ApiProperty()
+  apiKey: string;
+
+  @ApiProperty()
+  secretKey: string;
 }

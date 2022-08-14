@@ -33,8 +33,8 @@ describe("PartnerService", () => {
       const partner: Partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
 
       when(partnerRepo.addPartner(anything())).thenResolve(partner);
@@ -47,8 +47,8 @@ describe("PartnerService", () => {
       const partner: Partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
       when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
       const result = await partnerService.getPartner(partner.props._id);
@@ -59,14 +59,14 @@ describe("PartnerService", () => {
       const partner: Partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
       const updatedPartner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "New Partner Name",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
 
       when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
@@ -82,15 +82,15 @@ describe("PartnerService", () => {
       const partner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
       });
       const newTakeRate = 20;
       const updatePartner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
-        publicKey: "mockPublicKey",
-        privateKey: "mockPrivateKey",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
         takeRate: newTakeRate,
       });
 

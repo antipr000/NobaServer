@@ -113,7 +113,7 @@ export class AdminController {
   @ApiForbiddenResponse({ description: "User forbidden from adding new Noba admin" })
   @ApiConflictResponse({ description: "User is already a Noba admin" })
   async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<NobaAdminDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddNobaAdmin()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba admin.`);
     }
@@ -131,7 +131,7 @@ export class AdminController {
   @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The logged in Noba admin" })
   @ApiForbiddenResponse({ description: "User forbidden from retrieving details of the Noba admin" })
   async getNobaAdmin(@Request() request): Promise<NobaAdminDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("This endpoint is only for Noba admins.");
     }
@@ -151,7 +151,7 @@ export class AdminController {
     @Param(AdminId) adminId: string,
     @Body() req: UpdateNobaAdminDTO,
   ): Promise<NobaAdminDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canChangeNobaAdminPrivileges()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update NobaAdmins.`);
     }
@@ -182,7 +182,7 @@ export class AdminController {
   })
   @ApiNotFoundResponse({ description: "Noba admin not found" })
   async deleteNobaAdmin(@Request() request, @Param(AdminId) adminId: string): Promise<DeleteNobaAdminDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveNobaAdmin()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
     }
@@ -211,7 +211,7 @@ export class AdminController {
     @Body() requestBody: AddPartnerAdminRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add PartnerAdmins.`);
     }
@@ -238,7 +238,7 @@ export class AdminController {
     @Param(PartnerAdminID) partnerAdminId: string,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveAdminsFromPartner()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't remove PartnerAdmins.`);
     }
@@ -264,7 +264,7 @@ export class AdminController {
     @Body() requestBody: UpdatePartnerAdminRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateAdminsForPartner()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update PartnerAdmins.`);
     }
@@ -285,7 +285,7 @@ export class AdminController {
   })
   @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
   async registerPartner(@Body() requestBody: AddPartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);
     }
@@ -306,7 +306,7 @@ export class AdminController {
     @Body() requestBody: AdminUpdateConsumerRequestDTO,
     @Request() request,
   ) {
-    const authenticatedUser: Admin = request.user;
+    const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateConsumerData()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update a Consumer.`);
     }

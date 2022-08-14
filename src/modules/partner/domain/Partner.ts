@@ -7,8 +7,8 @@ import { KybStatusInfo } from "./KybStatus";
 export interface PartnerProps extends VersioningInfo {
   _id: string;
   name: string;
-  publicKey: string;
-  privateKey: string;
+  apiKey: string;
+  secretKey: string;
   verificationData?: KybStatusInfo;
   takeRate?: number;
 }
@@ -17,8 +17,8 @@ export const partnerKeys: KeysRequired<PartnerProps> = {
   ...versioningInfoJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   name: Joi.string().min(2).max(100).required(),
-  publicKey: Joi.string().required(),
-  privateKey: Joi.string().required(),
+  apiKey: Joi.string().required(),
+  secretKey: Joi.string().required(),
   verificationData: Joi.object().optional(),
   takeRate: Joi.number().optional(),
 };
@@ -32,9 +32,8 @@ export class Partner extends AggregateRoot<PartnerProps> {
 
   public static createPartner(partnerProps: Partial<PartnerProps>): Partner {
     if (!partnerProps._id) partnerProps._id = Entity.getNewID();
-    // assign public and private keys here (https://github.com/nobapay/NobaServer/issues/46)
-    if (!partnerProps.publicKey) partnerProps.publicKey = "dummyKey";
-    if (!partnerProps.privateKey) partnerProps.privateKey = "dummyPrivateKey";
+    if (!partnerProps.apiKey) partnerProps.apiKey = "Noba-Partner-" + Entity.getNewID();
+    if (!partnerProps.secretKey) partnerProps.secretKey = `Noba_Secret_${new Date().valueOf()}_${Entity.getNewID()}`;
     return new Partner(Joi.attempt(partnerProps, partnerSchema));
   }
 }

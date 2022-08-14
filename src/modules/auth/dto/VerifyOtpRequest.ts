@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { allIdentities } from "../domain/IdentityType";
 
 export class VerifyOtpRequestDTO {
@@ -10,7 +10,4 @@ export class VerifyOtpRequestDTO {
 
   @ApiProperty({ enum: allIdentities })
   identityType: string;
-
-  @ApiPropertyOptional()
-  partnerID?: string;
 }

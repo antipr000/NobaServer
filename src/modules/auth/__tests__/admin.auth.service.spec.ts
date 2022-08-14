@@ -17,11 +17,14 @@ import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
 import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID } from "../../../config/ConfigurationUtils";
+import { PartnerService } from "../../../modules/partner/partner.service";
+import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 
 describe("AdminAuthService", () => {
   jest.setTimeout(5000);
 
   let mockAdminService: AdminService;
+  let mockPartnerService: PartnerService;
   let mockOtpRepo: IOTPRepo;
   let mockEmailService: EmailService;
   let mockSmsService: SMSService;
@@ -55,6 +58,7 @@ describe("AdminAuthService", () => {
     mockOtpRepo = getMockOtpRepoWithDefaults();
     mockEmailService = getMockEmailServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
+    mockPartnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [
@@ -82,6 +86,10 @@ describe("AdminAuthService", () => {
         {
           provide: SMSService,
           useFactory: () => instance(mockSmsService),
+        },
+        {
+          provide: PartnerService,
+          useFactory: () => instance(mockPartnerService),
         },
         AdminAuthService,
       ],
