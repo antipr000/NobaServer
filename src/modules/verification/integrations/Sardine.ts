@@ -179,7 +179,6 @@ export class Sardine implements IDVProvider {
           customerId: userID,
         },
       });
-      console.log("....", data);
       return this.processDocumentVerificationWebhookResult(data as DocumentVerificationSardineResponse);
     } catch (e) {
       this.logger.error(`Sardine request failed for get document result: ${e}`);
@@ -309,8 +308,6 @@ export class Sardine implements IDVProvider {
     const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification.riskLevel;
     const status: SardineDocumentProcessingStatus = documentVerificationSardineResponse.status;
     const errorCodes: DocumentVerificationErrorCodes[] = documentVerificationSardineResponse.errorCodes;
-
-    console.log(riskLevel, status, errorCodes);
 
     switch (status) {
       case SardineDocumentProcessingStatus.PENDING:
