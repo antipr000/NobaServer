@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
 import {
   KYCStatus,
@@ -16,7 +22,8 @@ import {
   CaseAction,
   CaseNotificationWebhookRequest,
   CaseStatus,
-  DocumentVerificationWebhookRequest,
+  DocumentVerificationErrorCodes,
+  DocumentVerificationSardineResponse,
   FeedbackRequest,
   FeedbackStatus,
   FeedbackType,
@@ -172,24 +179,7 @@ export class Sardine implements IDVProvider {
           customerId: userID,
         },
       });
-      if (data.status === SardineDocumentProcessingStatus.PENDING) {
-        return {
-          status: DocumentVerificationStatus.PENDING,
-        };
-      } else if (data.status === SardineDocumentProcessingStatus.PROCESSING) {
-        return {
-          status: DocumentVerificationStatus.PENDING,
-        };
-      } else if (data.status === SardineDocumentProcessingStatus.COMPLETE) {
-        // TODO: Add logic for differentiating between VERIFIED and LIVE_PHOTO_VERIFIED
-        return {
-          status: DocumentVerificationStatus.APPROVED,
-        };
-      } else {
-        return {
-          status: DocumentVerificationStatus.REJECTED,
-        };
-      }
+      return this.processDocumentVerificationWebhookResult(data as DocumentVerificationSardineResponse);
     } catch (e) {
       this.logger.error(`Sardine request failed for get document result: ${e}`);
       throw new NotFoundException();
@@ -312,24 +302,105 @@ export class Sardine implements IDVProvider {
     }
   }
 
-  processDocumentVerificationWebhookResult(resultData: DocumentVerificationWebhookRequest): DocumentVerificationResult {
-    const { data } = resultData;
-    const riskLevel: SardineRiskLevels = data.documentVerificationResult.verification.riskLevel;
-    if (riskLevel === SardineRiskLevels.VERY_HIGH) {
-      return {
-        status: DocumentVerificationStatus.REJECTED,
-        riskRating: riskLevel,
-      };
-    } else if (riskLevel === SardineRiskLevels.HIGH) {
-      return {
-        status: DocumentVerificationStatus.PENDING,
-        riskRating: riskLevel,
-      };
-    } else if (riskLevel === SardineRiskLevels.MEDIUM || riskLevel === SardineRiskLevels.LOW) {
-      return {
-        status: DocumentVerificationStatus.APPROVED,
-        riskRating: riskLevel,
-      };
+  processDocumentVerificationWebhookResult(
+    documentVerificationSardineResponse: DocumentVerificationSardineResponse,
+  ): DocumentVerificationResult {
+    const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification.riskLevel;
+    const status: SardineDocumentProcessingStatus = documentVerificationSardineResponse.status;
+    const errorCodes: DocumentVerificationErrorCodes[] = documentVerificationSardineResponse.errorCodes;
+
+    switch (status) {
+      case SardineDocumentProcessingStatus.PENDING:
+        return {
+          status: DocumentVerificationStatus.PENDING,
+          riskRating: riskLevel,
+        };
+
+      case SardineDocumentProcessingStatus.PROCESSING:
+        return {
+          status: DocumentVerificationStatus.PENDING,
+          riskRating: riskLevel,
+        };
+
+      case SardineDocumentProcessingStatus.COMPLETE:
+        switch (riskLevel) {
+          case SardineRiskLevels.VERY_HIGH:
+            return {
+              status: DocumentVerificationStatus.PENDING,
+              riskRating: riskLevel,
+            };
+
+          case SardineRiskLevels.HIGH:
+            return {
+              status: DocumentVerificationStatus.PENDING,
+              riskRating: riskLevel,
+            };
+
+          case SardineRiskLevels.MEDIUM:
+            return {
+              status: DocumentVerificationStatus.APPROVED,
+              riskRating: riskLevel,
+            };
+
+          case SardineRiskLevels.LOW:
+            return {
+              status: DocumentVerificationStatus.APPROVED,
+              riskRating: riskLevel,
+            };
+        }
+
+      case SardineDocumentProcessingStatus.ERROR:
+        if (errorCodes.length > 0) {
+          switch (errorCodes[0]) {
+            case DocumentVerificationErrorCodes.DOCUMENT_UNRECOGNIZABLE:
+              return {
+                status: DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+                riskRating: riskLevel,
+              };
+
+            case DocumentVerificationErrorCodes.DOCUMENT_BAD_SIZE_OR_TYPE:
+              return {
+                status: DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
+                riskRating: riskLevel,
+              };
+
+            case DocumentVerificationErrorCodes.DOCUMENT_NOT_SUPPORTED:
+              return {
+                status: DocumentVerificationStatus.REJECTED_DOCUMENT_NOT_SUPPORTED,
+                riskRating: riskLevel,
+              };
+
+            default:
+              this.logger.error(
+                `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
+                  documentVerificationSardineResponse,
+                )}"`,
+              );
+              throw new InternalServerErrorException();
+          }
+        } else {
+          this.logger.error(
+            `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
+              documentVerificationSardineResponse,
+            )}"`,
+          );
+          throw new InternalServerErrorException();
+        }
+
+      case SardineDocumentProcessingStatus.REJECTED:
+        return {
+          status: DocumentVerificationStatus.REJECTED,
+          riskRating: riskLevel,
+        };
+
+      default:
+        this.logger.error(
+          `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(documentVerificationSardineResponse)}"`,
+        );
+        return {
+          status: DocumentVerificationStatus.PENDING,
+          riskRating: riskLevel,
+        };
     }
   }
 

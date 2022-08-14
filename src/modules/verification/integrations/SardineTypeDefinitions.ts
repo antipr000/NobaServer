@@ -145,34 +145,42 @@ export type DocumentVerificationWebhookRequest = {
       sessionKey: string;
       customerID: string;
     };
-    documentVerificationResult: {
-      verificationId: string;
-      status: string;
-      documentData: {
-        type: string;
-        number: string;
-        dateOfBirth: string;
-        dateOfIssue: string;
-        dateOfExpiry: string;
-        issuingCountry: string;
-        firstName: string;
-        middleName: string;
-        lastName: string;
-        gender: string;
-        address: string;
-      };
-      verification: {
-        riskLevel: SardineRiskLevels;
-        forgeryLevel: SardineRiskLevels;
-        documentMatchLevel: SardineRiskLevels;
-        imageQualityLevel: string;
-        faceMatchLevel: string;
-        reasonCodes: string[];
-      };
-      errorCodes: string[];
-    };
+    documentVerificationResult: DocumentVerificationSardineResponse;
   };
 };
+
+export type DocumentVerificationSardineResponse = {
+  verificationId: string;
+  status: SardineDocumentProcessingStatus;
+  documentData: {
+    type: string;
+    number: string;
+    dateOfBirth: string;
+    dateOfIssue: string;
+    dateOfExpiry: string;
+    issuingCountry: string;
+    firstName: string;
+    middleName: string;
+    lastName: string;
+    gender: string;
+    address: string;
+  };
+  verification: {
+    riskLevel: SardineRiskLevels;
+    forgeryLevel: SardineRiskLevels;
+    documentMatchLevel: SardineRiskLevels;
+    imageQualityLevel: string;
+    faceMatchLevel: string;
+    reasonCodes: string[];
+  };
+  errorCodes: DocumentVerificationErrorCodes[];
+};
+
+export enum DocumentVerificationErrorCodes {
+  DOCUMENT_NOT_SUPPORTED = "document_not_supported",
+  DOCUMENT_UNRECOGNIZABLE = "unrecognizable_document",
+  DOCUMENT_BAD_SIZE_OR_TYPE = "document_bad_size_or_type",
+}
 
 export type CaseNotificationWebhookRequest = {
   id: string;
@@ -221,6 +229,7 @@ export enum SardineDocumentProcessingStatus {
   PROCESSING = "processing",
   COMPLETE = "complete",
   REJECTED = "rejected",
+  ERROR = "error",
 }
 
 export enum PaymentMethodTypes {
