@@ -1,9 +1,9 @@
-import { Consumer } from "../domain/Consumer";
-import { ConsumerDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
 import { Mapper } from "../../../core/infra/Mapper";
+import { Consumer } from "../domain/Consumer";
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod } from "../domain/PaymentMethod";
-import { KYCStatus, DocumentVerificationStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { ConsumerDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
 
 export class ConsumerMapper implements Mapper<Consumer> {
   public toDomain(raw: any): Consumer {
@@ -33,13 +33,13 @@ export class ConsumerMapper implements Mapper<Consumer> {
     return undefined;
   }
 
-  public toCryptoWalletsDTO(cryptoWallets: CryptoWallet): CryptoWalletsDTO {
+  public toCryptoWalletsDTO(cryptoWallet: CryptoWallet): CryptoWalletsDTO {
     return {
-      walletName: cryptoWallets.walletName,
-      address: cryptoWallets.address,
-      chainType: cryptoWallets.chainType,
-      isEVMCompatible: cryptoWallets.isEVMCompatible,
-      status: cryptoWallets.status,
+      walletName: cryptoWallet.walletName,
+      address: cryptoWallet.address,
+      chainType: cryptoWallet.chainType,
+      isEVMCompatible: cryptoWallet.isEVMCompatible,
+      status: cryptoWallet.status,
     };
   }
 

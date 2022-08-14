@@ -18,17 +18,21 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
-import { ConsumerDTO } from "./dto/ConsumerDTO";
 import { ConsumerService } from "./consumer.service";
 import { Consumer } from "./domain/Consumer";
-import { ConsumerMapper } from "./mappers/ConsumerMapper";
-import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
+import { CryptoWallet } from "./domain/CryptoWallet";
+import { WalletStatus } from "./domain/VerificationStatus";
+import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
+import { ConsumerDTO } from "./dto/ConsumerDTO";
+import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
+import { ConsumerMapper } from "./mappers/ConsumerMapper";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -138,4 +142,65 @@ export class ConsumerController {
     const decrypted = await new KMSUtil("ssn-encryption-key").decryptString(consumer.props.socialSecurityNumber);
     return decrypted;
   }*/
+
+  @Post("/wallets")
+  @ApiOperation({ summary: "Adds a crypto wallet for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    type: ConsumerDTO,
+    description: "Updated consumer record with the crypto wallet",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid crypto wallet details" })
+  async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @Request() request): Promise<ConsumerDTO> {
+    const consumer = request.user;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    // Initialise the crypto wallet object with a pending status here in case of any updates made to wallet OR addition of a new wallet
+    const cryptoWallet: CryptoWallet = {
+      walletName: requestBody.walletName,
+      address: requestBody.address,
+      chainType: requestBody.chainType,
+      isEVMCompatible: requestBody.isEVMCompatible,
+      status: WalletStatus.PENDING,
+    };
+
+    const res = await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+    return this.consumerMapper.toDTO(res);
+  }
+
+  @Delete("/wallets/:walletAddress")
+  @ApiOperation({ summary: "Deletes a saved wallet for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerDTO,
+    description: "Deleted wallet for consumer",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid wallet address" })
+  async deleteCryptoWallet(@Param("walletAddress") walletAddress: string, @Request() request): Promise<ConsumerDTO> {
+    const consumer = request.user;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    const res = await this.consumerService.removeCryptoWallet(consumer, walletAddress);
+    return this.consumerMapper.toDTO(res);
+  }
+
+  @Post("/wallets/confirm")
+  @ApiOperation({ summary: "Submits the one-time passcode (OTP) to confirm wallet additon or updation" })
+  @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Verified wallet for consumer" })
+  @ApiUnauthorizedResponse({ description: "Invalid OTP" })
+  async confirmWalletUpdate(@Body() requestBody: ConfirmWalletUpdateDTO, @Request() request): Promise<ConsumerDTO> {
+    const consumer = request.user;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    const res = await this.consumerService.confirmWalletUpdateOTP(consumer, requestBody.address, requestBody.otp);
+    return this.consumerMapper.toDTO(res);
+  }
 }

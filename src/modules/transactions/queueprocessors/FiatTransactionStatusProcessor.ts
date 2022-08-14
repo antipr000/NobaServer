@@ -3,7 +3,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { FiatTransactionStatus } from "../../consumer/domain/Types";
-import { Transaction } from "../domain/Transaction";
 import { TransactionQueueName, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";

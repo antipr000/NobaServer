@@ -11,9 +11,9 @@ import {
 import { LoginRequestDTO } from "./dto/LoginRequest";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
+import { PartnerAuthService } from "./partner.auth.service";
 import { Public } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
-import { PartnerAuthService } from "./partner.auth.service";
 
 @Controller("auth")
 @ApiTags("Authentication")
@@ -66,6 +66,7 @@ export class AuthController {
     }
 
     const otp = authService.createOtp();
+
     await authService.deleteAnyExistingOTP(request.email);
     await authService.saveOtp(request.email, otp, request.partnerID);
     return authService.sendOtp(request["email"], otp.toString()); //TODO change parameter to emailOrPhone, front end client also need to be updated

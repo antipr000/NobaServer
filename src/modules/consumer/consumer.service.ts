@@ -1,28 +1,29 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Logger } from "winston";
-import { Result } from "src/core/logic/Result";
-import { UserVerificationStatus } from "./domain/UserVerificationStatus";
-import { IConsumerRepo } from "./repos/ConsumerRepo";
-import { Consumer, ConsumerProps } from "./domain/Consumer";
-import { PaymentProviders } from "./domain/PaymentProviderDetails";
-import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
-import Stripe from "stripe";
-import { PaymentMethod } from "./domain/PaymentMethod";
+import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Result } from "src/core/logic/Result";
+import Stripe from "stripe";
+import { Logger } from "winston";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import { IOTPRepo } from "../auth/repo/OTPRepo";
 import { CheckoutService } from "../common/checkout.service";
 import { EmailService } from "../common/email.service";
-import { CheckoutPaymentStatus, FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
-import { PaymentMethodStatus } from "./domain/VerificationStatus";
-import { CryptoWallet } from "./domain/CryptoWallet";
 import { KmsService } from "../common/kms.service";
-import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import {
   REASON_CODE_SOFT_DECLINE_BANK_ERROR,
   REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA,
   REASON_CODE_SOFT_DECLINE_CARD_ERROR,
 } from "../transactions/domain/CheckoutConstants";
 import { Transaction } from "../transactions/domain/Transaction";
+import { Consumer, ConsumerProps } from "./domain/Consumer";
+import { CryptoWallet } from "./domain/CryptoWallet";
+import { PaymentMethod } from "./domain/PaymentMethod";
+import { PaymentProviders } from "./domain/PaymentProviderDetails";
+import { CheckoutPaymentStatus, FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
+import { UserVerificationStatus } from "./domain/UserVerificationStatus";
+import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
+import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
+import { IConsumerRepo } from "./repos/ConsumerRepo";
 
 class CheckoutResponseData {
   paymentMethodStatus: PaymentMethodStatus;
@@ -42,6 +43,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly kmsService: KmsService;
+
+  @Inject("OTPRepo")
+  private readonly otpRepo: IOTPRepo;
 
   private readonly stripeApi: Stripe;
   private readonly checkoutApi: Checkout;
@@ -318,10 +322,10 @@ export class ConsumerService {
     sessionID,
     transactionID: string,
   ): Promise<CheckoutResponseData> {
-    let response: CheckoutResponseData = new CheckoutResponseData();
+    const response: CheckoutResponseData = new CheckoutResponseData();
     response.responseCode = checkoutResponse["response_code"];
     response.responseSummary = checkoutResponse["response_summary"];
-    let sendNobaEmail: boolean = false;
+    let sendNobaEmail = false;
 
     try {
       if (!response.responseCode) {
@@ -400,15 +404,64 @@ export class ConsumerService {
     });
   }
 
-  async addOrUpdateCryptoWallet(consumerID: string, cryptoWallet: CryptoWallet): Promise<Consumer> {
-    const consumer = await this.getConsumer(consumerID);
+  async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string) {
+    const otp: number = Math.floor(100000 + Math.random() * 900000);
+    await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, "CONSUMER");
+    await this.otpRepo.saveOTP(consumer.props.email, otp, "CONSUMER");
+    await this.emailService.sendWalletUpdateVerificationCode(
+      consumer.props.email,
+      otp.toString(),
+      walletAddress,
+      consumer.props.firstName,
+    );
+  }
+
+  async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number) {
+    // Verify if the otp is correct
+    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, "CONSUMER");
+    const currentDateTime: number = new Date().getTime();
+
+    if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {
+      // If otp doesn't match or if it is expired then raise unauthorized exception
+      throw new UnauthorizedException();
+    } else {
+      // Just delete the OTP and proceed further
+      await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
+    }
+
+    // Find the wallet and mark it verified
+    const cryptoWallet: CryptoWallet = consumer.props.cryptoWallets.filter(
+      existingCryptoWallet => existingCryptoWallet.address == walletAddress,
+    )[0];
+    cryptoWallet.status = WalletStatus.APPROVED;
+
+    return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+  }
+
+  async addOrUpdateCryptoWallet(consumer: Consumer, cryptoWallet: CryptoWallet): Promise<Consumer> {
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
     );
 
+    // Send the verification OTP to the user
+    if (cryptoWallet.status == WalletStatus.PENDING) {
+      await this.sendWalletVerificationOTP(consumer, cryptoWallet.address);
+    }
+
     return await this.updateConsumer({
       ...consumer.props,
       cryptoWallets: [...otherCryptoWallets, cryptoWallet],
+    });
+  }
+
+  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {
+    const otherCryptoWallets = consumer.props.cryptoWallets.filter(
+      existingCryptoWallet => existingCryptoWallet.address !== cryptoWalletAddress,
+    );
+
+    return await this.updateConsumer({
+      ...consumer.props,
+      cryptoWallets: [...otherCryptoWallets],
     });
   }
 

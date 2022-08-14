@@ -1,4 +1,10 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
 import {
   KYCStatus,
@@ -306,56 +312,99 @@ export class Sardine implements IDVProvider {
 
     console.log(riskLevel, status, errorCodes);
 
-    if (
-      status === SardineDocumentProcessingStatus.PENDING ||
-      status === SardineDocumentProcessingStatus.PROCESSING ||
-      (status === SardineDocumentProcessingStatus.COMPLETE && riskLevel === SardineRiskLevels.HIGH)
-    ) {
-      return {
-        status: DocumentVerificationStatus.PENDING,
-        riskRating: riskLevel,
-      };
-    }
-
-    if (
-      status === SardineDocumentProcessingStatus.COMPLETE &&
-      (riskLevel === SardineRiskLevels.MEDIUM || riskLevel === SardineRiskLevels.LOW)
-    ) {
-      return {
-        status: DocumentVerificationStatus.APPROVED,
-        riskRating: riskLevel,
-      };
-    }
-
-    if (status === SardineDocumentProcessingStatus.ERROR) {
-      console.log("here");
-      if (errorCodes.length === 1 && errorCodes[0] === DocumentVerificationErrorCodes.DOCUMENT_NOT_SUPPORTED) {
+    switch (status) {
+      case SardineDocumentProcessingStatus.PENDING:
         return {
-          status: DocumentVerificationStatus.REJECTED_DOCUMENT_NOT_SUPPORTED,
+          status: DocumentVerificationStatus.PENDING,
           riskRating: riskLevel,
         };
-      }
 
-      if (errorCodes.length === 1 && errorCodes[0] === DocumentVerificationErrorCodes.DOCUMENT_UNRECOGNIZABLE) {
-        console.log("here");
+      case SardineDocumentProcessingStatus.PROCESSING:
         return {
-          status: DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+          status: DocumentVerificationStatus.PENDING,
           riskRating: riskLevel,
         };
-      }
 
-      if (errorCodes.length === 1 && errorCodes[0] === DocumentVerificationErrorCodes.DOCUMENT_BAD_SIZE_OR_TYPE) {
+      case SardineDocumentProcessingStatus.COMPLETE:
+        switch (riskLevel) {
+          case SardineRiskLevels.VERY_HIGH:
+            return {
+              status: DocumentVerificationStatus.PENDING,
+              riskRating: riskLevel,
+            };
+
+          case SardineRiskLevels.HIGH:
+            return {
+              status: DocumentVerificationStatus.PENDING,
+              riskRating: riskLevel,
+            };
+
+          case SardineRiskLevels.MEDIUM:
+            return {
+              status: DocumentVerificationStatus.APPROVED,
+              riskRating: riskLevel,
+            };
+
+          case SardineRiskLevels.LOW:
+            return {
+              status: DocumentVerificationStatus.APPROVED,
+              riskRating: riskLevel,
+            };
+        }
+
+      case SardineDocumentProcessingStatus.ERROR:
+        if (errorCodes.length > 0) {
+          switch (errorCodes[0]) {
+            case DocumentVerificationErrorCodes.DOCUMENT_UNRECOGNIZABLE:
+              return {
+                status: DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+                riskRating: riskLevel,
+              };
+
+            case DocumentVerificationErrorCodes.DOCUMENT_BAD_SIZE_OR_TYPE:
+              return {
+                status: DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
+                riskRating: riskLevel,
+              };
+
+            case DocumentVerificationErrorCodes.DOCUMENT_NOT_SUPPORTED:
+              return {
+                status: DocumentVerificationStatus.REJECTED_DOCUMENT_NOT_SUPPORTED,
+                riskRating: riskLevel,
+              };
+
+            default:
+              this.logger.error(
+                `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
+                  documentVerificationSardineResponse,
+                )}"`,
+              );
+              throw new InternalServerErrorException();
+          }
+        } else {
+          this.logger.error(
+            `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
+              documentVerificationSardineResponse,
+            )}"`,
+          );
+          throw new InternalServerErrorException();
+        }
+
+      case SardineDocumentProcessingStatus.REJECTED:
         return {
-          status: DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
+          status: DocumentVerificationStatus.REJECTED,
           riskRating: riskLevel,
         };
-      }
+
+      default:
+        this.logger.error(
+          `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(documentVerificationSardineResponse)}"`,
+        );
+        return {
+          status: DocumentVerificationStatus.PENDING,
+          riskRating: riskLevel,
+        };
     }
-
-    return {
-      status: DocumentVerificationStatus.PENDING,
-      riskRating: riskLevel,
-    };
   }
 
   processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult {

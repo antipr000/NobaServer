@@ -318,7 +318,7 @@ export class TransactionService {
         isEVMCompatible: false,
         status: result.walletStatus,
       };
-      await this.consumerService.addOrUpdateCryptoWallet(consumer.props._id, cryptoWallet);
+      await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
     }
 
     if (result.paymentMethodStatus) {
