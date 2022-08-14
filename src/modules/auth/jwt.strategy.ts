@@ -28,11 +28,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: jwtConstants.secret,
+      passReqToCallback: true,
     });
   }
 
   // TODO: Move all the payload related logic to a single file.
-  async validate(payload: any): Promise<AuthenticatedUser> {
+  async validate(_: Request, payload: any, headers: Headers): Promise<AuthenticatedUser> {
+    console.log(headers);
     return this.getIdentityDomain(payload.id, payload.identityType, payload.partnerId);
   }
 
