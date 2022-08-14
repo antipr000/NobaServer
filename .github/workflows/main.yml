@@ -1,8 +1,6 @@
-# DONOT touch this file if you don't know what you are doing! TODO add codeowners file?
+name: CI 
 
-name: CI
-
-# Controls when the workflow will run
+# Controls when the workflow will run 
 on:
   # Only deploy the changes on push to master branch
   push:
@@ -50,14 +48,25 @@ jobs:
 
       # Generates a build_info file which can be shown in buildInfo controller of the server
       - name: Generate build info file
+        id: build_info
         run: |
           cat > build_info.yml <<- EOM
           commitSHA: $GITHUB_SHA
           commitRef: $GITHUB_REF
           buildTime: $( date -u )
           EOM
-
-          cat build_info.yml
+        
+          refName=${GITHUB_REF##*/}
+          shortSHA=$(git rev-parse --short HEAD)
+          version_label="dev"
+          
+          if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            version_label=$refName
+          else
+            version_label="${refName}-${shortSHA}"
+          fi
+            
+          echo ::set-output name=version_label::$version_label
 
       # Runs a set of commands using the runners shell
       - name: Build
@@ -65,6 +74,7 @@ jobs:
           yarn build
           ls -l
           echo [SUCCESS] yarn build succeeded.
+          zip -r artifacts.zip ./ -x ./src
 
       - name: Check If should deploy and Decide deployment type
         id: check-tag
@@ -76,44 +86,32 @@ jobs:
           fi
 
           #figure out AWS code deployment Group
-          export deploymentGroup=Dev
+          ebEnvironment=dev
           if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              export deploymentGroup=Production
+              ebEnvironment=production
           elif [[ ${GITHUB_REF:-noref} =~ master ]]; then
-              export deploymentGroup=Staging
+              ebEnvironment=staging
           elif [[ ${GITHUB_REF:-noref} =~ dev ]]; then
-              export deploymentGroup=Dev
+              ebEnvironment=dev
           fi
+          echo ::set-output name=deploy::true
 
-          echo "*** Will deploy to $deploymentGroup ***"
+          echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
 
-          echo ::set-output name=deploymentGroup::$deploymentGroup
-
-      - name: Create Artifacts Directory
+          echo ::set-output name=ebEnvironment::$ebEnvironment
+          
+          
+      - name: Deploy to EB
         if: steps.check-tag.outputs.deploy == 'true'
-        run: |
-          mkdir artifacts
-          mkdir uploads
-          cp build_info.yml ./artifacts/build_info.yml
-          cp appspec.yml ./artifacts/appspec.yml
-          cp -R ./deployscripts/ artifacts 
-          cp -R ./dist/ artifacts/
-          cp -R ./node_modules/ artifacts
-          cp -R ./cloudwatch_agents/ artifacts
-          ls -ltr artifacts
-
-      - name: AWS CodeDeploy
-        uses: sourcetoad/aws-codedeploy-action@v1
-        if: steps.check-tag.outputs.deploy == 'true'
+        uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-east-1
-          codedeploy_name: NobaServer
-          codedeploy_group: ${{ steps.check-tag.outputs.deploymentGroup }}
-          codedeploy_register_only: false
-          s3_bucket: github-code-artifacts
-          s3_folder: server
-          # excluded_files: '.git/* .env storage/framework/cache/* node_modules/*'
-          max_polling_iterations: 60
-          directory: ./artifacts
+          application_name: nobaserver
+          environment_name: nobaserver-${{steps.check-tag.outputs.ebEnvironment}}
+          version_label: ${{steps.build_info.outputs.version_label}}
+          use_existing_version_if_available: "true"
+          region: us-east-1
+          deployment_package: artifacts.zip
+
+
