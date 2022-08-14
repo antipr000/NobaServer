@@ -1,5 +1,4 @@
 import { SQS } from "aws-sdk";
-import { MessageBodyAttributeMap } from "aws-sdk/clients/sqs";
 import { AppEnvironment, AWS_ACCOUNT_ID_ATTR, getEnvironmentName } from "../../../config/ConfigurationUtils";
 
 // TODO(#310) - Get LocalStack working

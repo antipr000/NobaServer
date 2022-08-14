@@ -24,7 +24,6 @@ import * as fs from "fs";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
@@ -43,7 +42,6 @@ import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
-import { ZeroHashService } from "./zerohash.service";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")

@@ -2,7 +2,6 @@ import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
-import { Transaction } from "../domain/Transaction";
 import { CryptoTransactionRequestResultStatus, TransactionQueueName, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";

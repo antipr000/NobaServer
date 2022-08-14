@@ -90,7 +90,6 @@ import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 import { KmsConfigs } from "./configtypes/KmsConfigs";
 import { CommonConfigs } from "./configtypes/CommonConfigs";
-import { initializeAWSEnv } from "src/infra/aws/initEnv";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",

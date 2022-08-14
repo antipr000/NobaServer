@@ -17,7 +17,7 @@ export interface CryptoFailedEmailParameters extends TransactionParameters {
   failureReason: string;
 }
 
-export interface TransactionInitiatedEmailParameters extends TransactionParameters {}
+export type TransactionInitiatedEmailParameters = TransactionParameters;
 
 export interface OrderExecutedEmailParameters extends TransactionParameters {
   transactionHash: string;

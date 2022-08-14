@@ -1,4 +1,4 @@
-import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
+import { anyString, anything, mock, when } from "ts-mockito";
 import { ConsumerService } from "../consumer.service";
 
 export function getMockConsumerServiceWithDefaults(): ConsumerService {
@@ -18,7 +18,7 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
     new Error("Method not implemented"),
   );
   when(mockConsumerService.updatePaymentMethod(anything(), anything())).thenReject(new Error("Method not implemented"));
-  when(mockConsumerService.addOrUpdateCryptoWallet(anyString(), anything())).thenReject(
+  when(mockConsumerService.addOrUpdateCryptoWallet(anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockConsumerService.requestCheckoutPayment(anything(), anything())).thenReject(

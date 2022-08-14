@@ -1,17 +1,16 @@
-import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
-import { KeysRequired } from "../../common/domain/Types";
+import { BadRequestException } from "@nestjs/common";
 import * as Joi from "joi";
-import { Entity } from "../../../core/domain/Entity";
+import { AggregateRoot } from "../../../core/domain/AggregateRoot";
+import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
+import { KeysRequired } from "../../common/domain/Types";
 import { Address } from "./Address";
-import { KYCStatus, DocumentVerificationStatus } from "./VerificationStatus";
+import { CryptoWallet } from "./CryptoWallet";
 import { PartnerDetails } from "./PartnerDetails";
+import { PaymentMethod } from "./PaymentMethod";
 import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
-import { PaymentMethod } from "./PaymentMethod";
-import { CryptoWallet } from "./CryptoWallet";
-import { BadRequestException } from "@nestjs/common";
-import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
+import { DocumentVerificationStatus, KYCStatus } from "./VerificationStatus";
 
 export interface ConsumerProps extends VersioningInfo {
   _id: string;

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Address } from "../domain/Address";
-import { KYCStatus, DocumentVerificationStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 
 export class PaymentMethodsDTO {
   @ApiPropertyOptional()

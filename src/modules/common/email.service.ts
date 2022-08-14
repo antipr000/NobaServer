@@ -1,16 +1,16 @@
-import { Injectable, Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
+import * as sgMail from "@sendgrid/mail";
 import { SendGridConfigs } from "../../config/configtypes/SendGridConfigs";
 import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import * as sgMail from "@sendgrid/mail";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { CurrencyService } from "../../modules/common/currency.service";
 import {
-  TransactionInitiatedEmailParameters,
+  CryptoFailedEmailParameters,
   OrderExecutedEmailParameters,
   OrderFailedEmailParameters,
-  CryptoFailedEmailParameters,
+  TransactionInitiatedEmailParameters,
 } from "./domain/EmailParameters";
 import { EmailTemplates } from "./domain/EmailTemplates";
-import { CurrencyService } from "../../modules/common/currency.service";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -34,6 +34,22 @@ export class EmailService {
         user: name ?? "",
         user_email: email,
         one_time_password: otp,
+      },
+    };
+
+    await sgMail.send(msg);
+  }
+
+  public async sendWalletUpdateVerificationCode(email: string, otp: string, walletAddress: string, name?: string) {
+    const msg = {
+      to: email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.WALLET_UPDATE_OTP,
+      dynamicTemplateData: {
+        user: name ?? "",
+        user_email: email,
+        one_time_password: otp,
+        wallet_address: walletAddress,
       },
     };
 
