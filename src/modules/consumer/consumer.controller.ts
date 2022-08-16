@@ -153,7 +153,7 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid crypto wallet details" })
   async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user;
+    const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
