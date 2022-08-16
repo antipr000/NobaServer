@@ -25,7 +25,7 @@ export interface IDVProvider {
 
   getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse>;
 
-  processDocumentVerificationWebhookResult(
+  processDocumentVerificationResult(
     documentVerificationSardineResponse: DocumentVerificationSardineResponse,
   ): DocumentVerificationResult;
 
