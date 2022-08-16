@@ -181,7 +181,7 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid wallet address" })
   async deleteCryptoWallet(@Param("walletAddress") walletAddress: string, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user;
+    const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
@@ -195,7 +195,7 @@ export class ConsumerController {
   @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Verified wallet for consumer" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
   async confirmWalletUpdate(@Body() requestBody: ConfirmWalletUpdateDTO, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user;
+    const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
