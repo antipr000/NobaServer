@@ -219,6 +219,7 @@ export type FeedbackRequest = {
 
 export enum SardineRiskLevels {
   UNKNOWN = "unknown",
+  VERY_HIGH = "very_high",
   HIGH = "high",
   MEDIUM = "medium",
   LOW = "low",
