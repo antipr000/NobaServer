@@ -159,6 +159,11 @@ export class Sardine implements IDVProvider {
       return data.id;
     } catch (e) {
       this.logger.error(`Sardine request failed for Document submit: ${e}`);
+      if (e.response) {
+        if (e.response.status === 400) {
+          return e.response.data.verification_id;
+        }
+      }
       throw new BadRequestException(e.message);
     }
   }
@@ -179,7 +184,7 @@ export class Sardine implements IDVProvider {
           customerId: userID,
         },
       });
-      return this.processDocumentVerificationWebhookResult(data as DocumentVerificationSardineResponse);
+      return this.processDocumentVerificationResult(data as DocumentVerificationSardineResponse);
     } catch (e) {
       this.logger.error(`Sardine request failed for get document result: ${e}`);
       throw new NotFoundException();
@@ -302,7 +307,7 @@ export class Sardine implements IDVProvider {
     }
   }
 
-  processDocumentVerificationWebhookResult(
+  processDocumentVerificationResult(
     documentVerificationSardineResponse: DocumentVerificationSardineResponse,
   ): DocumentVerificationResult {
     const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification.riskLevel;
@@ -324,7 +329,7 @@ export class Sardine implements IDVProvider {
 
       case SardineDocumentProcessingStatus.COMPLETE:
         switch (riskLevel) {
-          case SardineRiskLevels.VERY_HIGH:
+          case SardineRiskLevels.UNKNOWN:
             return {
               status: DocumentVerificationStatus.PENDING,
               riskRating: riskLevel,
@@ -347,6 +352,14 @@ export class Sardine implements IDVProvider {
               status: DocumentVerificationStatus.APPROVED,
               riskRating: riskLevel,
             };
+
+          default:
+            this.logger.error(
+              `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
+                documentVerificationSardineResponse,
+              )}"`,
+            );
+            throw new InternalServerErrorException();
         }
 
       case SardineDocumentProcessingStatus.ERROR:
@@ -364,9 +377,9 @@ export class Sardine implements IDVProvider {
                 riskRating: riskLevel,
               };
 
-            case DocumentVerificationErrorCodes.DOCUMENT_NOT_SUPPORTED:
+            case DocumentVerificationErrorCodes.DOCUMENT_REQUIRES_RECAPTURE:
               return {
-                status: DocumentVerificationStatus.REJECTED_DOCUMENT_NOT_SUPPORTED,
+                status: DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE,
                 riskRating: riskLevel,
               };
 

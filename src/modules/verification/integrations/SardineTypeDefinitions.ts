@@ -177,7 +177,7 @@ export type DocumentVerificationSardineResponse = {
 };
 
 export enum DocumentVerificationErrorCodes {
-  DOCUMENT_NOT_SUPPORTED = "document_not_supported",
+  DOCUMENT_REQUIRES_RECAPTURE = "requires_recapture",
   DOCUMENT_UNRECOGNIZABLE = "unrecognizable_document",
   DOCUMENT_BAD_SIZE_OR_TYPE = "document_bad_size_or_type",
 }
@@ -218,7 +218,7 @@ export type FeedbackRequest = {
 };
 
 export enum SardineRiskLevels {
-  VERY_HIGH = "very_high",
+  UNKNOWN = "unknown",
   HIGH = "high",
   MEDIUM = "medium",
   LOW = "low",
