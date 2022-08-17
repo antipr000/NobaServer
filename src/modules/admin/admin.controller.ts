@@ -23,6 +23,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiForbiddenResponse,
+  ApiHeaders,
   ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
@@ -52,10 +53,12 @@ import { ConsumerDTO } from "../consumer/dto/ConsumerDTO";
 import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestDTO";
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Admin")
+@ApiHeaders(getCommonHeaders())
 export class AdminController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;

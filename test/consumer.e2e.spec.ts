@@ -20,11 +20,13 @@ import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
 import { bootstrap } from "../src/server";
 import {
   clearAccessTokenForNextRequests,
+  computeSignature,
   insertNobaAdmin,
   insertPartnerAdmin,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
   setupPartner,
+  TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 
@@ -34,6 +36,7 @@ describe("Consumers", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
+  const TEST_TIMESTAMP = "test_timestamp";
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -59,7 +62,12 @@ describe("Consumers", () => {
 
   describe("GET /consumers", () => {
     it("should return 401 if not logged in as any identity", async () => {
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(401);
     });
@@ -70,8 +78,12 @@ describe("Consumers", () => {
 
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
       expect(getConsumerResponse.__status).toBe(403);
     });
 
@@ -84,7 +96,12 @@ describe("Consumers", () => {
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
       expect(getConsumerResponse.__status).toBe(403);
     });
 
@@ -94,7 +111,12 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -111,7 +133,13 @@ describe("Consumers", () => {
 
   describe("PATCH /consumers", () => {
     it("should return 401 if not logged in as any identity", async () => {
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({})) as ConsumerDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {},
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(updateConsumerResponse.__status).toBe(401);
     });
@@ -123,7 +151,13 @@ describe("Consumers", () => {
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({})) as ConsumerDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {},
+      )) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(403);
     });
 
@@ -136,7 +170,13 @@ describe("Consumers", () => {
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({})) as ConsumerDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {},
+      )) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(403);
     });
 
@@ -145,12 +185,25 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          firstName: "FIRSTNAME",
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
         firstName: "FIRSTNAME",
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -169,12 +222,25 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          lastName: "LASTNAME",
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
         lastName: "LASTNAME",
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -193,12 +259,25 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          dateOfBirth: "1980-02-29",
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
         dateOfBirth: "1980-02-29",
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -217,7 +296,15 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          dateOfBirth: "1980-02-30",
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
         dateOfBirth: "1980-02-30",
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(400);
@@ -228,14 +315,29 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          dateOfBirth: "1980-02-29",
+          lastName: "LASTNAME",
+          firstName: "FIRSTNAME",
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
         dateOfBirth: "1980-02-29",
         lastName: "LASTNAME",
         firstName: "FIRSTNAME",
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -254,7 +356,20 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          address: {
+            streetLine1: "Street Line 1",
+            streetLine2: "Street Line 2",
+            countryCode: "US",
+            postalCode: "712356",
+          },
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
         address: {
           streetLine1: "Street Line 1",
           streetLine2: "Street Line 2",
@@ -264,7 +379,12 @@ describe("Consumers", () => {
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -286,8 +406,13 @@ describe("Consumers", () => {
 
   describe("POST /consumers/paymentmethods", () => {
     it("should return 401 if not logged in as any identity", async () => {
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({} as any)) as ConsumerDTO &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {} as any,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(addPaymentMethodResponse.__status).toBe(401);
     });
@@ -299,8 +424,13 @@ describe("Consumers", () => {
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({} as any)) as ConsumerDTO &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {} as any,
+      )) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(403);
     });
 
@@ -313,8 +443,13 @@ describe("Consumers", () => {
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({} as any)) as ConsumerDTO &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {} as any,
+      )) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(403);
     });
 
@@ -342,16 +477,38 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
-        cardName: "Tester",
-        cardNumber: "2222400070000005",
-        expiryMonth: 3,
-        expiryYear: 2030,
-        cvv: "737",
-      })) as ConsumerDTO & ResponseStatus;
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "POST",
+        "/v1/consumers/paymentmethods",
+        JSON.stringify({
+          cardName: "Tester",
+          cardNumber: "2222400070000005",
+          expiryMonth: 3,
+          expiryYear: 2030,
+          cvv: "737",
+        }),
+      );
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {
+          cardName: "Tester",
+          cardNumber: "2222400070000005",
+          expiryMonth: 3,
+          expiryYear: 2030,
+          cvv: "737",
+        },
+      )) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -377,15 +534,36 @@ describe("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
-        cardNumber: "2222400070000005",
-        expiryMonth: 3,
-        expiryYear: 2030,
-        cvv: "737",
-      })) as ConsumerDTO & ResponseStatus;
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "POST",
+        "/v1/consumers/paymentmethods",
+        JSON.stringify({
+          cardNumber: "2222400070000005",
+          expiryMonth: 3,
+          expiryYear: 2030,
+          cvv: "737",
+        }),
+      );
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        {
+          cardNumber: "2222400070000005",
+          expiryMonth: 3,
+          expiryYear: 2030,
+          cvv: "737",
+        },
+      )) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);
 
-      const getConsumerResponse = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
 

@@ -13,6 +13,9 @@ import { request as __request } from "../core/request";
 export class TransactionsService {
   /**
    * Get transaction quote (exchange rate, provider fees, network fees etc.)
+   * @param xNobaApiKey
+   * @param xNobaSignature
+   * @param xNobaTimestamp
    * @param fiatCurrencyCode
    * @param cryptoCurrencyCode
    * @param fixedSide
@@ -21,6 +24,9 @@ export class TransactionsService {
    * @throws ApiError
    */
   public static getTransactionQuote(
+    xNobaApiKey: string,
+    xNobaSignature: string,
+    xNobaTimestamp: string,
     fiatCurrencyCode: string,
     cryptoCurrencyCode: string,
     fixedSide: "fiat" | "crypto",
@@ -29,6 +35,11 @@ export class TransactionsService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/quote",
+      headers: {
+        "X-Noba-API-Key": xNobaApiKey,
+        "X-Noba-Signature": xNobaSignature,
+        "X-Noba-Timestamp": xNobaTimestamp,
+      },
       query: {
         fiatCurrencyCode: fiatCurrencyCode,
         cryptoCurrencyCode: cryptoCurrencyCode,
@@ -44,6 +55,9 @@ export class TransactionsService {
 
   /**
    * Checks if the transaction parameters are valid
+   * @param xNobaApiKey
+   * @param xNobaSignature
+   * @param xNobaTimestamp
    * @param type
    * @param transactionAmount
    * @param baseCurrency
@@ -51,6 +65,9 @@ export class TransactionsService {
    * @throws ApiError
    */
   public static checkIfTransactionPossible(
+    xNobaApiKey: string,
+    xNobaSignature: string,
+    xNobaTimestamp: string,
     type: "onramp" | "offramp" | "swap",
     transactionAmount: number,
     baseCurrency: string,
@@ -58,6 +75,11 @@ export class TransactionsService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/check",
+      headers: {
+        "X-Noba-API-Key": xNobaApiKey,
+        "X-Noba-Signature": xNobaSignature,
+        "X-Noba-Timestamp": xNobaTimestamp,
+      },
       query: {
         type: type,
         transactionAmount: transactionAmount,
@@ -68,16 +90,29 @@ export class TransactionsService {
 
   /**
    * Gets details of a transaction
+   * @param xNobaApiKey
+   * @param xNobaSignature
+   * @param xNobaTimestamp
    * @param transactionId
    * @returns TransactionDTO Details of a transaction
    * @throws ApiError
    */
-  public static getTransactionStatus(transactionId: string): CancelablePromise<TransactionDTO> {
+  public static getTransactionStatus(
+    xNobaApiKey: string,
+    xNobaSignature: string,
+    xNobaTimestamp: string,
+    transactionId: string,
+  ): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/{transactionID}",
       path: {
         transactionID: transactionId,
+      },
+      headers: {
+        "X-Noba-API-Key": xNobaApiKey,
+        "X-Noba-Signature": xNobaSignature,
+        "X-Noba-Timestamp": xNobaTimestamp,
       },
       errors: {
         404: `Transaction does not exist`,
@@ -87,15 +122,29 @@ export class TransactionsService {
 
   /**
    * Submits a new transaction
+   * @param xNobaApiKey
+   * @param xNobaSignature
+   * @param xNobaTimestamp
    * @param sessionKey
    * @param requestBody
    * @returns any Transaction ID
    * @throws ApiError
    */
-  public static transact(sessionKey: string, requestBody: CreateTransactionDTO): CancelablePromise<any> {
+  public static transact(
+    xNobaApiKey: string,
+    xNobaSignature: string,
+    xNobaTimestamp: string,
+    sessionKey: string,
+    requestBody: CreateTransactionDTO,
+  ): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/transactions",
+      headers: {
+        "X-Noba-API-Key": xNobaApiKey,
+        "X-Noba-Signature": xNobaSignature,
+        "X-Noba-Timestamp": xNobaTimestamp,
+      },
       query: {
         sessionKey: sessionKey,
       },
@@ -109,15 +158,29 @@ export class TransactionsService {
 
   /**
    * Gets all transactions for the logged-in consumer
+   * @param xNobaApiKey
+   * @param xNobaSignature
+   * @param xNobaTimestamp
    * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
    * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
    * @returns TransactionDTO List of all transactions
    * @throws ApiError
    */
-  public static getTransactions(startDate?: string, endDate?: string): CancelablePromise<Array<TransactionDTO>> {
+  public static getTransactions(
+    xNobaApiKey: string,
+    xNobaSignature: string,
+    xNobaTimestamp: string,
+    startDate?: string,
+    endDate?: string,
+  ): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions",
+      headers: {
+        "X-Noba-API-Key": xNobaApiKey,
+        "X-Noba-Signature": xNobaSignature,
+        "X-Noba-Timestamp": xNobaTimestamp,
+      },
       query: {
         startDate: startDate,
         endDate: endDate,
@@ -130,6 +193,9 @@ export class TransactionsService {
 
   /**
    * Downloads all the transactions of a particular consumer
+   * @param xNobaApiKey
+   * @param xNobaSignature
+   * @param xNobaTimestamp
    * @param reportFormat Format in which you want the transactions report. Current 'CSV' is supported.
    * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
    * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
@@ -137,6 +203,9 @@ export class TransactionsService {
    * @throws ApiError
    */
   public static downloadTransactions(
+    xNobaApiKey: string,
+    xNobaSignature: string,
+    xNobaTimestamp: string,
     reportFormat: "csv" | "pdf",
     startDate?: string,
     endDate?: string,
@@ -144,6 +213,11 @@ export class TransactionsService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/download",
+      headers: {
+        "X-Noba-API-Key": xNobaApiKey,
+        "X-Noba-Signature": xNobaSignature,
+        "X-Noba-Timestamp": xNobaTimestamp,
+      },
       query: {
         startDate: startDate,
         endDate: endDate,

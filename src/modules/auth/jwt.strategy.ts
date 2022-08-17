@@ -13,6 +13,8 @@ import {
 import { AdminService } from "../admin/admin.service";
 import { PartnerAdminService } from "../partner/partneradmin.service";
 import { AuthenticatedUser } from "./domain/AuthenticatedUser";
+import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "./domain/HeaderConstants";
+import { UserAuthService } from "./user.auth.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -23,16 +25,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   @Inject()
   private partnerAdminService: PartnerAdminService;
 
+  @Inject()
+  private authService: UserAuthService;
+
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: jwtConstants.secret,
+      passReqToCallback: true,
     });
   }
 
   // TODO: Move all the payload related logic to a single file.
-  async validate(payload: any): Promise<AuthenticatedUser> {
+  async validate(request: Request, payload: any): Promise<AuthenticatedUser> {
+    const apiKey = request.headers[X_NOBA_API_KEY.toLowerCase()];
+    const signature = request.headers[X_NOBA_SIGNATURE.toLowerCase()];
+    const timestamp = request.headers[X_NOBA_TIMESTAMP.toLowerCase()];
+    await this.authService.validateApiKeyAndGetPartnerId(
+      apiKey,
+      timestamp,
+      signature,
+      request.method,
+      request.url,
+      JSON.stringify(request.body),
+    );
     return this.getIdentityDomain(payload.id, payload.identityType, payload.partnerId);
   }
 

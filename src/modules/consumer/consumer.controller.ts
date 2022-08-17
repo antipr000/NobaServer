@@ -15,12 +15,14 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiForbiddenResponse,
+  ApiHeaders,
   ApiOperation,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
@@ -38,6 +40,7 @@ import { ConsumerMapper } from "./mappers/ConsumerMapper";
 @ApiBearerAuth("JWT-auth")
 @Controller("consumers")
 @ApiTags("Consumer")
+@ApiHeaders(getCommonHeaders())
 export class ConsumerController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;

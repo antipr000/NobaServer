@@ -2,10 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type CryptoWalletsDTO = {
+export type AddCryptoWalletDTO = {
   walletName?: string;
   address: string;
   chainType?: string;
   isEVMCompatible: boolean;
-  status: "PENDING" | "Flagged" | "Rejected" | "Approved";
 };

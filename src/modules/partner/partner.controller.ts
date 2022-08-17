@@ -15,11 +15,13 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiForbiddenResponse,
+  ApiHeaders,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
 import { Public } from "../auth/public.decorator";
 import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
@@ -37,6 +39,7 @@ import { PartnerAdminService } from "./partneradmin.service";
 @ApiBearerAuth("JWT-auth")
 @Controller("partners")
 @ApiTags("Partner")
+@ApiHeaders(getCommonHeaders())
 export class PartnerController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
