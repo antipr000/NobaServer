@@ -63,6 +63,7 @@ const supportedCurrenciesTicker = [
   "TUSD.ETH",
   "UNI.ETH",
   "USDC.ETH",
+  "USDC.POLYGON",
   "USDP.ETH",
   "USDT.ETH",
   "XTZ",
@@ -118,7 +119,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
-    it("should return 41 currencies list", async () => {
+    it("should return 42 currencies list", async () => {
       const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
         ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
