@@ -249,7 +249,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(us.subdivisions.length).toBe(66);
+      expect(us.subdivisions.length).toBe(52);
       expect(us.subdivisions.find(element => element.code === "WA").code).toBe("WA");
       expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
     });
@@ -261,7 +261,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(us.subdivisions.length).toBe(66);
+      expect(us.subdivisions.length).toBe(52);
       expect(us.subdivisions.find(element => element.code === "WA").code).toBe("WA");
       expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
     });
