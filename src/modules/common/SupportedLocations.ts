@@ -270,6 +270,70 @@ export const ZEROHASH_COUNTRY_MAPPING = {
   ZM: "Zambia",
 };
 
+/**
+ * List of subdivisions by country that we want to include in the list.
+ * Countries not defined here will have all subdivisions included by default.
+ * Anything on this list that is also in the EXCLUDED_SUBDIVISIONS list will be
+ * in the list of acceptable subdivisions for that country BUT with the supported
+ * flag set to false.
+ */
+export const INCLUDED_SUBDIVISIONS = {
+  US: [
+    "AL",
+    "AK",
+    "AZ",
+    "AR",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "DC",
+    "FL",
+    "GA",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "IA",
+    "KS",
+    "KY",
+    "LA",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "MN",
+    "MS",
+    "MO",
+    "MT",
+    "NE",
+    "NV",
+    "NH",
+    "NJ",
+    "NM",
+    "NC",
+    "ND",
+    "NY",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "PR",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VT",
+    "VA",
+    "WA",
+    "WV",
+    "WI",
+    "WY",
+  ],
+};
+
 export const EXCLUDED_SUBDIVISIONS = {
   US: ["HI", "NY"],
 };
