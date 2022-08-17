@@ -12,7 +12,7 @@ export enum DocumentVerificationStatus {
   PENDING = "Pending",
   APPROVED = "Approved",
   REJECTED = "Rejected",
-  REJECTED_DOCUMENT_NOT_SUPPORTED = "Rejected_NotSupported",
+  REJECTED_DOCUMENT_REQUIRES_RECAPTURE = "Rejected_RequiresRecapture",
   REJECTED_DOCUMENT_POOR_QUALITY = "Rejected_PoorQuality",
   REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE = "Rejected_SizeOrType",
   LIVE_PHOTO_VERIFIED = "LivePhotoVerified",
