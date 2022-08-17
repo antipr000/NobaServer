@@ -129,6 +129,31 @@ describe("Consumers", () => {
       expect(getConsumerResponse.address).toBeUndefined();
       expect(getConsumerResponse.dateOfBirth).toBeUndefined();
     });
+
+    it("should allow signature to validate even with extra request params", async () => {
+      const consumerEmail = "test.consumer@noba.com";
+
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers?param1=12345", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+      expect(getConsumerResponse.email).toBe(consumerEmail);
+      expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
+      expect(getConsumerResponse.paymentMethods).toHaveLength(0);
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
+      expect(getConsumerResponse.firstName).toBeUndefined();
+      expect(getConsumerResponse.lastName).toBeUndefined();
+      expect(getConsumerResponse.address).toBeUndefined();
+      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+    });
   });
 
   describe("PATCH /consumers", () => {

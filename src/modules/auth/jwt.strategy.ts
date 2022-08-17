@@ -47,7 +47,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       timestamp,
       signature,
       request.method,
-      request.url,
+      request.url.split("?")[0], // Only take URI path, no parameters
       JSON.stringify(request.body),
     );
     return this.getIdentityDomain(payload.id, payload.identityType, payload.partnerId);
