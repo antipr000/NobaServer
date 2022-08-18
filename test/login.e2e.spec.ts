@@ -110,7 +110,13 @@ describe("Authentication", () => {
       expect(userId).toBeDefined();
 
       setAccessTokenForTheNextRequests(accessToken);
-      const loggedInConsumer = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+
+      const getConsumerSignature = computeSignature(timestamp, "GET", "/v1/consumers", JSON.stringify({}));
+      const loggedInConsumer = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        getConsumerSignature,
+        timestamp,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(loggedInConsumer.__status).toBe(200);
       expect(loggedInConsumer._id).toBe(userId);
@@ -195,7 +201,13 @@ describe("Authentication", () => {
       expect(userId).toBeDefined();
 
       setAccessTokenForTheNextRequests(accessToken);
-      const loggedInConsumer = (await ConsumerService.getConsumer()) as ConsumerDTO & ResponseStatus;
+
+      const getConsumerSignature = computeSignature(timestamp, "GET", "/v1/consumers", JSON.stringify({}));
+      const loggedInConsumer = (await ConsumerService.getConsumer(
+        TEST_API_KEY,
+        getConsumerSignature,
+        timestamp,
+      )) as ConsumerDTO & ResponseStatus;
 
       expect(loggedInConsumer.__status).toBe(200);
       expect(loggedInConsumer._id).toBe(userId);

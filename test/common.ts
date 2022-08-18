@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
-import { createHmac } from "crypto";
+import * as CryptoJS from "crypto-js";
 
 export const fetchOtpFromDb = async (mongoUri: string, email: string, identityType: string): Promise<number> => {
   // Setup a mongodb client for interacting with "admins" collection.
@@ -133,9 +133,10 @@ export const computeSignature = (
   requestPath: string,
   requestBody: string,
 ) => {
-  const signatureString = `${timestamp}${requestMethod}${requestPath}${requestBody}`;
-  const hmacSignatureString = createHmac("sha256", TEST_SECRET_KEY).update(signatureString).digest("hex");
-  return hmacSignatureString;
+  const signatureString = CryptoJS.enc.Utf8.parse(
+    `${timestamp}${requestMethod}${requestPath.split("?")[0]}${requestBody}`,
+  );
+  return CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(signatureString, CryptoJS.enc.Utf8.parse(TEST_SECRET_KEY)));
 };
 
 export const dropAllCollections = async (mongoUri: string) => {

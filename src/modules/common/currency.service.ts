@@ -30,7 +30,7 @@ export class CurrencyService {
 
           // Include only records for which ZH provides liquidity services (Liquidity=Yes)
           // Exclude XRP
-          if (liq === "Yes" && symbol !== "XRP") {
+          if ((liq === "Yes" && symbol !== "XRP") || symbol === "USDC.POLYGON") {
             // TODO: Move this path to config
             const curr = new CurrencyDTO();
             curr.name = `${name}`;

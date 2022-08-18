@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export type { AddCryptoWalletDTO } from "./models/AddCryptoWalletDTO";
 export type { AddPartnerAdminRequestDTO } from "./models/AddPartnerAdminRequestDTO";
 export type { AddPartnerRequestDTO } from "./models/AddPartnerRequestDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
@@ -9,6 +10,7 @@ export type { AddressDTO } from "./models/AddressDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
 export type { CheckTransactionDTO } from "./models/CheckTransactionDTO";
 export type { ConfigurationsDTO } from "./models/ConfigurationsDTO";
+export type { ConfirmWalletUpdateDTO } from "./models/ConfirmWalletUpdateDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
 export type { ConsumerLimitsDTO } from "./models/ConsumerLimitsDTO";
 export type { CreateTransactionDTO } from "./models/CreateTransactionDTO";

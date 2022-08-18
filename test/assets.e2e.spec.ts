@@ -63,6 +63,7 @@ const supportedCurrenciesTicker = [
   "TUSD.ETH",
   "UNI.ETH",
   "USDC.ETH",
+  "USDC.POLYGON",
   "USDP.ETH",
   "USDT.ETH",
   "XTZ",
@@ -118,7 +119,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
-    it("should return 41 currencies list", async () => {
+    it("should return 42 currencies list", async () => {
       const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
         ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
@@ -248,7 +249,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(us.subdivisions.length).toBe(66);
+      expect(us.subdivisions.length).toBe(52);
       expect(us.subdivisions.find(element => element.code === "WA").code).toBe("WA");
       expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
     });
@@ -260,7 +261,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(us.subdivisions.length).toBe(66);
+      expect(us.subdivisions.length).toBe(52);
       expect(us.subdivisions.find(element => element.code === "WA").code).toBe("WA");
       expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
     });

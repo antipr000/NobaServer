@@ -24,6 +24,7 @@ import {
   ApiResponse,
   ApiTags,
   ApiBody,
+  ApiHeaders,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -44,11 +45,14 @@ import {
 import { SardineConfigs } from "../../config/configtypes/SardineConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { SARDINE_CONFIG_KEY } from "../../config/ConfigurationUtils";
-const crypto_ts = require("crypto");
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import * as crypto_ts from "crypto";
+
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("verify")
 @ApiTags("Verification")
+@ApiHeaders(getCommonHeaders())
 export class VerificationController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;

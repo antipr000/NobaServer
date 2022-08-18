@@ -3,7 +3,12 @@ import { readFileSync } from "fs";
 import * as path from "path";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationDTO, SubdivisionDTO } from "./dto/LocationDTO";
-import { ZEROHASH_COUNTRY_MAPPING, EXCLUDED_COUNTRY_CODES, EXCLUDED_SUBDIVISIONS } from "./SupportedLocations";
+import {
+  ZEROHASH_COUNTRY_MAPPING,
+  EXCLUDED_COUNTRY_CODES,
+  EXCLUDED_SUBDIVISIONS,
+  INCLUDED_SUBDIVISIONS,
+} from "./SupportedLocations";
 import { LOCATION_DATA_FILE_PATH } from "../../config/ConfigurationUtils";
 
 @Injectable()
@@ -38,14 +43,20 @@ export class LocationService {
           // Get subdivision data
           const subdivisions = new Array<SubdivisionDTO>();
           element.states.forEach(subdivision => {
-            // Ensure subdivision code is not in our exclusion list
+            // Ensure subdivision code is in the include list if defined for the country
             if (
-              EXCLUDED_SUBDIVISIONS[element.iso2] != undefined &&
-              EXCLUDED_SUBDIVISIONS[element.iso2].indexOf(subdivision.state_code) > -1
+              INCLUDED_SUBDIVISIONS[element.iso2] == undefined ||
+              INCLUDED_SUBDIVISIONS[element.iso2].indexOf(subdivision.state_code) > -1
             ) {
-              subdivisions.push({ name: subdivision.name, code: subdivision.state_code, supported: false });
-            } else {
-              subdivisions.push({ name: subdivision.name, code: subdivision.state_code });
+              // If also in the exclude list, store with supported=false.
+              if (
+                EXCLUDED_SUBDIVISIONS[element.iso2] != undefined &&
+                EXCLUDED_SUBDIVISIONS[element.iso2].indexOf(subdivision.state_code) > -1
+              ) {
+                subdivisions.push({ name: subdivision.name, code: subdivision.state_code, supported: false });
+              } else {
+                subdivisions.push({ name: subdivision.name, code: subdivision.state_code });
+              }
             }
           });
 

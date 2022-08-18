@@ -14,6 +14,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiHeaders,
   ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
@@ -42,10 +43,12 @@ import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller()
+@ApiHeaders(getCommonHeaders())
 export class TransactionController {
   // @Inject(WINSTON_MODULE_PROVIDER)
   // private readonly logger: Logger;
