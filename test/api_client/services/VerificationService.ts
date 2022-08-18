@@ -104,7 +104,7 @@ export class VerificationService {
    * @param xNobaTimestamp
    * @param sessionKey
    * @param formData
-   * @returns VerificationResultDTO Document upload result
+   * @returns string Document upload result
    * @throws ApiError
    */
   public static verifyDocument(
@@ -121,7 +121,7 @@ export class VerificationService {
       backImage?: Blob;
       photoImage?: Blob;
     },
-  ): CancelablePromise<VerificationResultDTO> {
+  ): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/verify/document",

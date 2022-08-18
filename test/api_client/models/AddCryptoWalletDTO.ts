@@ -6,5 +6,5 @@ export type AddCryptoWalletDTO = {
   walletName?: string;
   address: string;
   chainType?: string;
-  isEVMCompatible: boolean;
+  isEVMCompatible?: boolean;
 };

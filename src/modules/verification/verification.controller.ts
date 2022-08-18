@@ -105,7 +105,7 @@ export class VerificationController {
   @ApiOperation({ summary: "Verifies consumer uploaded identification documents" })
   @ApiResponse({
     status: HttpStatus.ACCEPTED,
-    type: VerificationResultDTO,
+    type: String,
     description: "Document upload result",
   })
   @ApiBody({

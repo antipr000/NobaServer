@@ -204,7 +204,7 @@ export class ConsumerService {
   }
 
   /**
-   * Submits the one-time passcode (OTP) to confirm wallet additon or updation
+   * Submits the one-time passcode (OTP) to confirm wallet add or update
    * @param xNobaApiKey
    * @param xNobaSignature
    * @param xNobaTimestamp

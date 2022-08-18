@@ -19,7 +19,7 @@ export enum DocumentVerificationStatus {
 }
 
 export enum WalletStatus {
-  PENDING = "PENDING",
+  PENDING = "Pending",
   FLAGGED = "Flagged",
   REJECTED = "Rejected",
   APPROVED = "Approved",

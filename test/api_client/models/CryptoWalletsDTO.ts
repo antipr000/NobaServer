@@ -7,5 +7,5 @@ export type CryptoWalletsDTO = {
   address: string;
   chainType?: string;
   isEVMCompatible?: boolean;
-  status: "PENDING" | "Flagged" | "Rejected" | "Approved";
+  status: "Pending" | "Flagged" | "Rejected" | "Approved";
 };
