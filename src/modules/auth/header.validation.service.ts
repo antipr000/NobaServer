@@ -23,7 +23,9 @@ export class HeaderValidationService {
     try {
       const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
       const secretKey = CryptoJS.enc.Utf8.parse(partner.props.secretKey);
-      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${requestMethod}${requestPath}${requestBody}`);
+      const signatureString = CryptoJS.enc.Utf8.parse(
+        `${timestamp}${apiKey}${requestMethod}${requestPath}${requestBody}`,
+      );
       const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, secretKey));
       if (hmacSignatureString !== signature) {
         this.logger.error(`Signature mismatch. Signature: ${hmacSignatureString}, Expected: ${signature}, 

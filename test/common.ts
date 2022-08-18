@@ -134,7 +134,7 @@ export const computeSignature = (
   requestBody: string,
 ) => {
   const signatureString = CryptoJS.enc.Utf8.parse(
-    `${timestamp}${requestMethod}${requestPath.split("?")[0]}${requestBody}`,
+    `${timestamp}${TEST_API_KEY}${requestMethod}${requestPath.split("?")[0]}${requestBody}`,
   );
   return CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(signatureString, CryptoJS.enc.Utf8.parse(TEST_SECRET_KEY)));
 };
