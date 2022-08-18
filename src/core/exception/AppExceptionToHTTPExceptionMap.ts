@@ -1,13 +1,8 @@
-import { ItemNotFoundException } from "@aws/dynamodb-data-mapper";
 import { HttpStatus, HttpException } from "@nestjs/common";
 import * as Joi from "joi";
 import { AppExceptionCode, ApplicationException, BadRequestError } from "./CommonAppException";
 
 export function convertToHTTPException(exception: any): HttpException {
-  if (exception instanceof ItemNotFoundException || exception.name === "ItemNotFoundException") {
-    return ApplicationException.dbItemNotFoundHTTPException();
-  }
-
   if (Joi.isError(exception)) {
     return new BadRequestError({
       message: exception.message,
