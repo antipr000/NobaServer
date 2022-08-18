@@ -1,4 +1,4 @@
-envType: "staging"
+envType: "partner"
 
 # ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE,
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
@@ -38,7 +38,7 @@ twilio:
   fromPhoneNumber: "+19894557345"
 
 mongo:
-  awsSecretNameForUri: "STAGING_DOCUMENT_DB_URI"
+  awsSecretNameForUri: "PARTNER_DOCUMENT_DB_URI"
   uri: "bogus-value"
   sslEnabled: true
   sslCAPath: rds-combined-ca-bundle.pem # bootstrapped in deploy scripts
