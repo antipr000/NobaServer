@@ -1,12 +1,12 @@
-name: CI 
+name: CI
 
-# Controls when the workflow will run 
+# Controls when the workflow will run
 on:
   # Only deploy the changes on push to master branch
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
-      - ".*-partner$"
+      - "*-partner"
     branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -55,11 +55,11 @@ jobs:
           commitRef: $GITHUB_REF
           buildTime: $( date -u )
           EOM
-        
+
           refName=${GITHUB_REF##*/}
           shortSHA=$(git rev-parse --short HEAD)
           version_label="dev"
-          
+
           if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             version_label=$refName
           else
@@ -101,8 +101,7 @@ jobs:
           echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
 
           echo ::set-output name=ebEnvironment::$ebEnvironment
-          
-          
+
       - name: Deploy to EB
         if: steps.check-tag.outputs.deploy == 'true'
         uses: einaregilsson/beanstalk-deploy@v20
@@ -115,5 +114,3 @@ jobs:
           use_existing_version_if_available: "true"
           region: us-east-1
           deployment_package: artifacts.zip
-
-
