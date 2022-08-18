@@ -1,5 +1,5 @@
 import { LockService } from "../../../modules/common/lock.service";
-import { ConsumerService } from "src/modules/consumer/consumer.service";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { Logger } from "winston";
 import { Transaction, TransactionEvent } from "../domain/Transaction";
 import { TransactionStatus, TransactionQueueName } from "../domain/Types";

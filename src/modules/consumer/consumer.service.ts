@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Result } from "src/core/logic/Result";
+import { Result } from "../../core/logic/Result";
 import Stripe from "stripe";
 import { Logger } from "winston";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
