@@ -2,7 +2,7 @@ import { ExecutionContext, Inject, Injectable } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
-import { IS_PUBLIC_KEY } from "./public.decorator";
+import { IS_ADMIN_KEY, IS_PUBLIC_KEY } from "./public.decorator";
 import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "./domain/HeaderConstants";
 import { HeaderValidationService } from "./header.validation.service";
 
@@ -35,11 +35,17 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
   }
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-    console.log("Inside canActivate");
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+
+    const isAdmin = this.reflector.getAllAndOverride<boolean>(IS_ADMIN_KEY, [context.getHandler(), context.getClass()]);
+
+    if (isAdmin) {
+      return true;
+    }
+
     if (isPublic) {
       const request = context.switchToHttp().getRequest();
       return this.validateHeaders(request);
