@@ -1358,7 +1358,7 @@ describe("AdminController", () => {
       expect(result._id).toBe(createdPartnerId);
       expect(result.name).toBe(newPartnerName);
       expect(result.apiKey).toHaveLength(32);
-      expect(result.secretKey).toHaveLength(32);
+      expect(result.secretKey).toHaveLength(88);
       expect(result.apiKey).not.toEqual(result.secretKey);
     });
 
@@ -1392,7 +1392,7 @@ describe("AdminController", () => {
       expect(result._id).toBe(createdPartnerId);
       expect(result.name).toBe(newPartnerName);
       expect(result.apiKey).toHaveLength(32);
-      expect(result.secretKey).toHaveLength(32);
+      expect(result.secretKey).toHaveLength(88);
       expect(result.apiKey).not.toEqual(result.secretKey);
     });
 

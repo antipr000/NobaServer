@@ -45,7 +45,6 @@
     "cache-manager": "^3.6.3",
     "checkout-sdk-node": "^2.0.1",
     "coingecko-api": "^1.0.10",
-    "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
     "csurf": "^1.11.0",
     "csv": "^6.1.3",

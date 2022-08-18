@@ -3,7 +3,7 @@ import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../co
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
 
 export interface PartnerProps extends VersioningInfo {
   _id: string;
