@@ -35,8 +35,8 @@ export class CryptoWalletsDTO {
   @ApiPropertyOptional()
   chainType?: string;
 
-  @ApiProperty()
-  isEVMCompatible: boolean;
+  @ApiPropertyOptional()
+  isEVMCompatible?: boolean;
 
   @ApiProperty({ enum: WalletStatus })
   status: WalletStatus;

@@ -10,7 +10,7 @@ export class AddCryptoWalletDTO {
   @ApiPropertyOptional()
   chainType?: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   isEVMCompatible: boolean;
 }
 

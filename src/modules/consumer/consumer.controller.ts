@@ -194,7 +194,7 @@ export class ConsumerController {
   }
 
   @Post("/wallets/confirm")
-  @ApiOperation({ summary: "Submits the one-time passcode (OTP) to confirm wallet additon or updation" })
+  @ApiOperation({ summary: "Submits the one-time passcode (OTP) to confirm wallet add or update" })
   @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Verified wallet for consumer" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
   async confirmWalletUpdate(@Body() requestBody: ConfirmWalletUpdateDTO, @Request() request): Promise<ConsumerDTO> {

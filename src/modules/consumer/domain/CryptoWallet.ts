@@ -4,6 +4,6 @@ export type CryptoWallet = {
   walletName?: string;
   address: string;
   chainType?: string;
-  isEVMCompatible: boolean;
+  isEVMCompatible?: boolean;
   status: WalletStatus;
 };
