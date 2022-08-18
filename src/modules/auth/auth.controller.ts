@@ -24,6 +24,8 @@ import { PartnerAuthService } from "./partner.auth.service";
 import { Public } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
 import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "./domain/HeaderConstants";
+import { HeaderValidationService } from "./header.validation.service";
+import { PartnerService } from "../partner/partner.service";
 
 @Controller("auth")
 @ApiTags("Authentication")
@@ -34,6 +36,10 @@ export class AuthController {
   private readonly adminAuthService: AdminAuthService;
   @Inject()
   private readonly partnerAuthService: PartnerAuthService;
+  @Inject()
+  private readonly partnerService: PartnerService;
+  @Inject()
+  private readonly headerValidationService: HeaderValidationService;
 
   private getAuthService(identityType: string): AuthService {
     switch (identityType) {
@@ -60,7 +66,7 @@ export class AuthController {
     @Headers(X_NOBA_SIGNATURE) signature: string,
   ): Promise<VerifyOtpResponseDTO> {
     const authService: AuthService = this.getAuthService(requestBody.identityType);
-    const partnerId = await authService.validateApiKeyAndGetPartnerId(
+    await this.headerValidationService.validateApiKeyAndSignature(
       apiKey,
       timestamp,
       signature,
@@ -68,6 +74,7 @@ export class AuthController {
       /*requestPath = */ "/v1/auth/verifyotp",
       JSON.stringify(requestBody),
     );
+    const partnerId = (await this.partnerService.getPartnerFromApiKey(apiKey)).props._id;
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp, partnerId);
     return authService.generateAccessToken(userId, partnerId);
   }
@@ -93,7 +100,7 @@ export class AuthController {
       );
     }
 
-    const partnerId = await authService.validateApiKeyAndGetPartnerId(
+    await this.headerValidationService.validateApiKeyAndSignature(
       apiKey,
       timestamp,
       signature,
@@ -102,6 +109,7 @@ export class AuthController {
       JSON.stringify(requestBody),
     );
 
+    const partnerId = (await this.partnerService.getPartnerFromApiKey(apiKey)).props._id;
     const otp = authService.createOtp();
     await authService.deleteAnyExistingOTP(requestBody.email);
     await authService.saveOtp(requestBody.email, otp, partnerId);

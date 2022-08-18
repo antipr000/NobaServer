@@ -1,8 +1,9 @@
 import { Controller, Get, HttpStatus, Inject, Param, Query } from "@nestjs/common";
-import { ApiNotFoundResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "./app.service";
+import { getCommonHeaders } from "./core/utils/CommonHeaders";
 import { Public } from "./modules/auth/public.decorator";
 import { ConfigurationProviderService } from "./modules/common/configuration.provider.service";
 import { ConfigurationsDTO } from "./modules/common/dto/ConfigurationsDTO";
@@ -11,6 +12,7 @@ import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 
 @Controller()
+@ApiHeaders(getCommonHeaders())
 export class AppController {
   constructor(
     private readonly appService: AppService,

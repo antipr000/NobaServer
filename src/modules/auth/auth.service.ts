@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IOTPRepo } from "./repo/OTPRepo";
@@ -10,9 +10,6 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { PartnerService } from "../partner/partner.service";
-import { Partner } from "../partner/domain/Partner";
-import * as CryptoJS from "crypto-js";
-import { HmacSHA256 } from "crypto-js";
 
 @Injectable()
 export abstract class AuthService {
@@ -100,31 +97,6 @@ export abstract class AuthService {
 
   async deleteAllExpiredOTPs(): Promise<void> {
     return this.otpRepo.deleteAllExpiredOTPs();
-  }
-
-  async validateApiKeyAndGetPartnerId(
-    apiKey: string,
-    timestamp: string,
-    signature: string,
-    requestMethod: string,
-    requestPath: string,
-    requestBody: string,
-  ): Promise<string> {
-    try {
-      const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
-      const secretKey = CryptoJS.enc.Utf8.parse(partner.props.secretKey);
-      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${requestMethod}${requestPath}${requestBody}`);
-      const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, secretKey));
-      if (hmacSignatureString !== signature) {
-        this.logger.error(`Signature mismatch. Signature: ${hmacSignatureString}, Expected: ${signature}, 
-        timestamp: ${timestamp}, requestMethod: ${requestMethod}, requestPath: ${requestPath}, requestBody: ${requestBody}`);
-        throw new BadRequestException("Signature does not match");
-      }
-      return partner.props._id;
-    } catch (e) {
-      this.logger.error(e);
-      throw new BadRequestException("Failed to validate headers. Reason: " + e.message);
-    }
   }
 
   protected abstract getIdentityType();

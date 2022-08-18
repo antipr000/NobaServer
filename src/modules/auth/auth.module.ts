@@ -16,6 +16,7 @@ import { AdminModule } from "../admin/admin.module";
 import { PartnerModule } from "../partner/partner.module";
 import { PartnerAuthService } from "./partner.auth.service";
 import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
+import { HeaderValidationService } from "./header.validation.service";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
   ],
   providers: [
     JwtStrategy,
+    HeaderValidationService,
     DBProvider,
     {
       provide: "OTPRepo",
@@ -44,5 +46,6 @@ import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
     DeleteExpiredOTPs,
   ],
   controllers: [AuthController],
+  exports: [HeaderValidationService],
 })
 export class AuthModule {}

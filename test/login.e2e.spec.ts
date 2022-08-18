@@ -340,8 +340,8 @@ describe("Authentication", () => {
 
       const nobaAdminVerifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: partnerAdminEmail,
-        identityType: "NOBA_ADMIN",
         otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN"),
+        identityType: "NOBA_ADMIN",
       })) as VerifyOtpResponseDTO & ResponseStatus;
 
       // TODO: Fix the 'verifyOtp' to return 403 instead of 404.
@@ -383,8 +383,8 @@ describe("Authentication", () => {
 
       const verifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: nobaAdminEmail,
-        identityType: "NOBA_ADMIN",
         otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
+        identityType: "NOBA_ADMIN",
       })) as VerifyOtpResponseDTO & ResponseStatus;
 
       // TODO: Modify 'verifyOtp' to return 200.
@@ -560,8 +560,8 @@ describe("Authentication", () => {
 
       const verifyOtpResponse = (await AuthenticationService.verifyOtp(TEST_API_KEY, timestamp, signature, {
         emailOrPhone: partnerAdminEmail,
-        identityType: "PARTNER_ADMIN",
         otp: await fetchOtpFromDb(mongoUri, partnerAdminEmail, "PARTNER_ADMIN"),
+        identityType: "PARTNER_ADMIN",
       })) as VerifyOtpResponseDTO & ResponseStatus;
 
       // TODO: Modify 'verifyOtp' to return 200.

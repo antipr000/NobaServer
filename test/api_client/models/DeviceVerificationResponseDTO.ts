@@ -9,7 +9,7 @@ import type { DeviceIpLocationDTO } from "./DeviceIpLocationDTO";
 
 export type DeviceVerificationResponseDTO = {
   id: string;
-  level: "very_high" | "high" | "medium" | "low";
+  level: "unknown" | "very_high" | "high" | "medium" | "low";
   attributes?: DeviceAttributesDTO;
   signals?: Array<string>;
   sessionKey: string;

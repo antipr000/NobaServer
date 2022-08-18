@@ -18,6 +18,9 @@ import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.serv
 import { PartnerAuthService } from "../partner.auth.service";
 import { UserAuthService } from "../user.auth.service";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
+import { HeaderValidationService } from "../header.validation.service";
+import { getMockHeaderValidationServiceWithDefaults } from "../mocks/mock.header.validation.service";
+import { Partner } from "../../../modules/partner/domain/Partner";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -26,11 +29,12 @@ describe("AdminService", () => {
   let mockConsumerAuthService: UserAuthService;
   let mockPartnerAuthService: PartnerAuthService;
   let mockPartnerService: PartnerService;
+  let mockHeaderValidationService: HeaderValidationService;
 
   let authController: AuthController;
 
   const apiKey = "test-api-key";
-  const partnerId = "partner-1";
+  const partnerId = "test-partner-1";
   const signature = "test-signature";
   const timestamp = "test-timestamp";
   const secretKey = "test-secret";
@@ -40,6 +44,7 @@ describe("AdminService", () => {
     mockConsumerAuthService = getMockUserAuthServiceWithDefaults();
     mockPartnerAuthService = getMockPartnerAuthServiceWithDefaults();
     mockPartnerService = getMockPartnerServiceWithDefaults();
+    mockHeaderValidationService = getMockHeaderValidationServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -57,10 +62,25 @@ describe("AdminService", () => {
           provide: PartnerAuthService,
           useFactory: () => instance(mockPartnerAuthService),
         },
+        {
+          provide: PartnerService,
+          useFactory: () => instance(mockPartnerService),
+        },
+        {
+          provide: HeaderValidationService,
+          useFactory: () => instance(mockHeaderValidationService),
+        },
       ],
     }).compile();
 
     authController = app.get<AuthController>(AuthController);
+
+    when(mockPartnerService.getPartnerFromApiKey(apiKey)).thenResolve(
+      Partner.createPartner({
+        _id: partnerId,
+        name: "Test Partner",
+      }),
+    );
   });
 
   describe("verifyOtp", () => {
@@ -77,7 +97,7 @@ describe("AdminService", () => {
       when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, partnerId)).thenResolve(adminId);
       when(mockAdminAuthService.generateAccessToken(adminId, partnerId)).thenResolve(generateAccessTokenResponse);
       when(
-        mockAdminAuthService.validateApiKeyAndGetPartnerId(
+        mockHeaderValidationService.validateApiKeyAndSignature(
           apiKey,
           timestamp,
           signature,
@@ -89,7 +109,7 @@ describe("AdminService", () => {
             otp: otp,
           }),
         ),
-      ).thenResolve(partnerId);
+      ).thenResolve(true);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
         {
@@ -118,7 +138,7 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, partnerId)).thenResolve(consumerId);
       when(mockConsumerAuthService.generateAccessToken(consumerId, partnerId)).thenResolve(generateAccessTokenResponse);
       when(
-        mockConsumerAuthService.validateApiKeyAndGetPartnerId(
+        mockHeaderValidationService.validateApiKeyAndSignature(
           apiKey,
           timestamp,
           signature,
@@ -130,7 +150,7 @@ describe("AdminService", () => {
             otp: otp,
           }),
         ),
-      ).thenResolve(partnerId);
+      ).thenResolve(true);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
         {
@@ -158,7 +178,7 @@ describe("AdminService", () => {
       when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
       when(
-        mockAdminAuthService.validateApiKeyAndGetPartnerId(
+        mockHeaderValidationService.validateApiKeyAndSignature(
           apiKey,
           timestamp,
           signature,
@@ -169,7 +189,7 @@ describe("AdminService", () => {
             identityType: identityType,
           }),
         ),
-      ).thenResolve(partnerId);
+      ).thenResolve(true);
 
       await authController.loginUser(
         {
@@ -192,7 +212,7 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
       when(
-        mockConsumerAuthService.validateApiKeyAndGetPartnerId(
+        mockHeaderValidationService.validateApiKeyAndSignature(
           apiKey,
           timestamp,
           signature,
@@ -203,7 +223,7 @@ describe("AdminService", () => {
             identityType: identityType,
           }),
         ),
-      ).thenResolve(partnerId);
+      ).thenResolve(true);
 
       await authController.loginUser(
         {
@@ -226,7 +246,7 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
       when(
-        mockConsumerAuthService.validateApiKeyAndGetPartnerId(
+        mockHeaderValidationService.validateApiKeyAndSignature(
           apiKey,
           timestamp,
           signature,
@@ -237,7 +257,7 @@ describe("AdminService", () => {
             identityType: identityType,
           }),
         ),
-      ).thenResolve(partnerId);
+      ).thenResolve(true);
 
       await authController.loginUser(
         {
@@ -275,7 +295,7 @@ describe("AdminService", () => {
       when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString())).thenResolve();
       when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
       when(
-        mockPartnerAuthService.validateApiKeyAndGetPartnerId(
+        mockHeaderValidationService.validateApiKeyAndSignature(
           apiKey,
           timestamp,
           signature,
@@ -286,7 +306,7 @@ describe("AdminService", () => {
             identityType: identityType,
           }),
         ),
-      ).thenResolve(partnerId);
+      ).thenResolve(true);
 
       await authController.loginUser(
         {

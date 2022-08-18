@@ -11,7 +11,7 @@ export type VerificationDataDTO = {
     | "Pending"
     | "Approved"
     | "Rejected"
-    | "Rejected_NotSupported"
+    | "Rejected_RequiresRecapture"
     | "Rejected_PoorQuality"
     | "Rejected_SizeOrType"
     | "LivePhotoVerified";

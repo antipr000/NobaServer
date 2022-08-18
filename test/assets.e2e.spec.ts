@@ -18,9 +18,11 @@ import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
 import {
   clearAccessTokenForNextRequests,
+  computeSignature,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
   setupPartner,
+  TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 import { AssetsService, CurrencyDTO, LocationDTO } from "./api_client";
@@ -78,6 +80,7 @@ describe("CryptoCurrencies & Locations", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
+  const TEST_TIMESTAMP = "test-timestamp";
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -103,8 +106,12 @@ describe("CryptoCurrencies & Locations", () => {
 
   describe("GET /cryptocurrencies", () => {
     it("should work even if no credentials are passed", async () => {
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
 
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
@@ -114,14 +121,22 @@ describe("CryptoCurrencies & Locations", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
     it("should return 42 currencies list", async () => {
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
 
       const allTickers = [];
@@ -134,8 +149,12 @@ describe("CryptoCurrencies & Locations", () => {
     });
 
     it("returned 41 currencies list should have proper iconPath", async () => {
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies()) as CurrencyDTO[] &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
 
       const receivedIconPaths = [];
@@ -149,11 +168,26 @@ describe("CryptoCurrencies & Locations", () => {
       );
       expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
     });
+
+    it("should return 403 status code if signature is wrong", async () => {
+      const signature = "some-random-signature";
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
+      expect(getCryptoCurrencyResponse.__status).toBe(403);
+    });
   });
 
   describe("GET /fiatcurrencies", () => {
     it("should work even if no credentials are passed", async () => {
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
 
       expect(getFiatCurrencyResponse.__status).toBe(200);
     });
@@ -163,12 +197,22 @@ describe("CryptoCurrencies & Locations", () => {
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
       expect(getFiatCurrencyResponse.__status).toBe(200);
     });
 
     it("should return only 'US' currency", async () => {
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
       expect(getFiatCurrencyResponse.__status).toBe(200);
 
       const allTickers = [];
@@ -181,7 +225,12 @@ describe("CryptoCurrencies & Locations", () => {
     });
 
     it("returned currencies list should have proper iconPath", async () => {
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies()) as CurrencyDTO[] & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
       expect(getFiatCurrencyResponse.__status).toBe(200);
 
       const receivedIconPaths = [];
@@ -194,19 +243,37 @@ describe("CryptoCurrencies & Locations", () => {
 
       expect(receivedIconPaths.sort()).toEqual(expectedIconPaths.sort());
     });
+
+    it("should return 403 status code if signature is wrong", async () => {
+      const signature = "some-random-signature";
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as CurrencyDTO[] & ResponseStatus;
+      expect(getFiatCurrencyResponse.__status).toBe(403);
+    });
   });
 
   describe("GET /countries", () => {
     it("should work even if no credentials are passed", async () => {
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as LocationDTO[] &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries", JSON.stringify({}));
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as LocationDTO[] & ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
     });
 
     it("should obtain 205 countries without subdivisions", async () => {
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries()) as LocationDTO[] &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries", JSON.stringify({}));
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as LocationDTO[] & ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
 
@@ -229,8 +296,13 @@ describe("CryptoCurrencies & Locations", () => {
     });
 
     it("should obtain 205 countries with subdivisions", async () => {
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(true)) as LocationDTO[] &
-        ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries", JSON.stringify({}));
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        true,
+      )) as LocationDTO[] & ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
 
@@ -254,8 +326,25 @@ describe("CryptoCurrencies & Locations", () => {
       expect(us.subdivisions.find(element => element.code === "WA").name).toBe("Washington");
     });
 
+    it("should return 403 status code if signature is wrong", async () => {
+      const signature = "some-random-signature";
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        true,
+      )) as LocationDTO[] & ResponseStatus;
+      expect(getSupportedCountriesResponse.__status).toBe(403);
+    });
+
     it("should return the deatils of a single country with subdivisions", async () => {
-      const us = (await AssetsService.getSupportedCountry("US")) as LocationDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries/US", JSON.stringify({}));
+      const us = (await AssetsService.getSupportedCountry(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+        "US",
+      )) as LocationDTO & ResponseStatus;
       expect(us.__status).toBe(200);
 
       expect(us.countryISOCode).toBe("US");
@@ -267,9 +356,14 @@ describe("CryptoCurrencies & Locations", () => {
     });
   });
 
-  describe("GET /configs", () => {
+  describe("GET /config", () => {
     it("should return all api configurations", async () => {
-      const config = (await AssetsService.getCommonConfigurations()) as ConfigurationsDTO & ResponseStatus;
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/config", JSON.stringify({}));
+      const config = (await AssetsService.getCommonConfigurations(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConfigurationsDTO & ResponseStatus;
       expect(config.__status).toBe(200);
 
       expect(config.lowAmountThreshold).toBe(50);
@@ -278,6 +372,16 @@ describe("CryptoCurrencies & Locations", () => {
         "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto",
       );
       expect(config.fiatImageBaseUrl).toBe("https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat");
+    });
+
+    it("should return 403 if signature is incorrect", async () => {
+      const signature = "some-random-signature";
+      const config = (await AssetsService.getCommonConfigurations(
+        TEST_API_KEY,
+        signature,
+        TEST_TIMESTAMP,
+      )) as ConfigurationsDTO & ResponseStatus;
+      expect(config.__status).toBe(403);
     });
   });
 });
