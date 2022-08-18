@@ -3,6 +3,7 @@ import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../co
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
+import { randomBytes, randomUUID } from "node:crypto";
 
 export interface PartnerProps extends VersioningInfo {
   _id: string;
@@ -32,8 +33,20 @@ export class Partner extends AggregateRoot<PartnerProps> {
 
   public static createPartner(partnerProps: Partial<PartnerProps>): Partner {
     if (!partnerProps._id) partnerProps._id = Entity.getNewID();
-    if (!partnerProps.apiKey) partnerProps.apiKey = "Noba-Partner-" + Entity.getNewID();
-    if (!partnerProps.secretKey) partnerProps.secretKey = `Noba_Secret_${new Date().valueOf()}_${Entity.getNewID()}`;
+    if (!partnerProps.apiKey) partnerProps.apiKey = Partner.generateAPIKey();
+    if (!partnerProps.secretKey) partnerProps.secretKey = Partner.generateSecretKey();
     return new Partner(Joi.attempt(partnerProps, partnerSchema));
+  }
+
+  private static generateAPIKey(): string {
+    // 1. Generate UUID
+    // 2. Convert to lowercase
+    // 3. Remove all hyphens
+    return randomUUID().toLowerCase().replace(/-/g, "");
+  }
+
+  private static generateSecretKey(): string {
+    // Base64-encoded 64 random bytes
+    return randomBytes(64).toString("base64");
   }
 }

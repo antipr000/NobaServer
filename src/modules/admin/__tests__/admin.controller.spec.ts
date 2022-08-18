@@ -1357,6 +1357,9 @@ describe("AdminController", () => {
 
       expect(result._id).toBe(createdPartnerId);
       expect(result.name).toBe(newPartnerName);
+      expect(result.apiKey).toHaveLength(32);
+      expect(result.secretKey).toHaveLength(32);
+      expect(result.apiKey).not.toEqual(result.secretKey);
     });
 
     it("NobaAdmin with 'ADMIN' role should be able to register a new Partner", async () => {
@@ -1388,6 +1391,9 @@ describe("AdminController", () => {
 
       expect(result._id).toBe(createdPartnerId);
       expect(result.name).toBe(newPartnerName);
+      expect(result.apiKey).toHaveLength(32);
+      expect(result.secretKey).toHaveLength(32);
+      expect(result.apiKey).not.toEqual(result.secretKey);
     });
 
     it("NobaAdmin with 'Admin' role should be able to update consumer details", async () => {
