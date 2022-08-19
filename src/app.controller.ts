@@ -4,7 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "./app.service";
 import { getCommonHeaders } from "./core/utils/CommonHeaders";
-import { Public } from "./modules/auth/public.decorator";
+import { IsNoApiKeyNeeded, Public } from "./modules/auth/public.decorator";
 import { ConfigurationProviderService } from "./modules/common/configuration.provider.service";
 import { ConfigurationsDTO } from "./modules/common/dto/ConfigurationsDTO";
 import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
@@ -21,7 +21,7 @@ export class AppController {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  @Public()
+  @IsNoApiKeyNeeded()
   @Get("health")
   @ApiOperation({ summary: "Checks if the Noba service is up and running" })
   @ApiResponse({ status: HttpStatus.OK, description: "Health status of the Noba service" })

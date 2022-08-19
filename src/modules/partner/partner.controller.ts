@@ -23,7 +23,7 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
-import { Admin } from "../auth/public.decorator";
+import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
 import { Partner } from "./domain/Partner";
 import { PartnerAdmin } from "./domain/PartnerAdmin";
@@ -54,7 +54,7 @@ export class PartnerController {
   }
 
   // TODO: Temporarily for tests. Remove this
-  @Admin()
+  @IsNoApiKeyNeeded()
   @Post("/")
   @ApiOperation({ summary: "Creates a partner" })
   async createPartner(@Body() requestBody: UpdatePartnerRequestDTO): Promise<PartnerDTO> {
