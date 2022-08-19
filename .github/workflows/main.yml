@@ -7,6 +7,7 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
       - "*-partner"
+      - "*-staging"
     branches: [master]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -91,9 +92,9 @@ jobs:
               ebEnvironment=production
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-partner$ ]]; then
               ebEnvironment=partner
-          elif [[ ${GITHUB_REF:-noref} =~ master ]]; then
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
               ebEnvironment=staging
-          elif [[ ${GITHUB_REF:-noref} =~ dev ]]; then
+          elif [[ ${GITHUB_REF:-noref} =~ master ]]; then
               ebEnvironment=dev
           fi
           echo ::set-output name=deploy::true
