@@ -64,7 +64,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
       },
       "JWT-auth",
     )
-    .addServer("https://api.noba.com/")
+    .addServer("https://api-partner.noba.com/")
     .build();
 
   // Any API which we want to expose publicly (to partners) must be explicitly declared here
