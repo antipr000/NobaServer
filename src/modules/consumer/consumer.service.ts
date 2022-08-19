@@ -179,8 +179,8 @@ export class ConsumerService {
       instrumentID = instrument["id"];
       cardType = instrument["scheme"];
     } catch (err) {
-      //pass
-      this.logger.error(`Failed to make payment while adding card: ${err}`);
+      this.logger.error(`Failed to add card card: ${err}`);
+      throw new BadRequestException({ message: "Failed to add card" });
     }
 
     // Check if this card already exists for the consumer
@@ -342,6 +342,7 @@ export class ConsumerService {
         } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR.indexOf(response.responseCode) > -1) {
           throw new BadRequestException("Invalid card data");
         } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(response.responseCode)) {
+          sendNobaEmail = true;
           throw new BadRequestException("Invalid card data");
         }
       } else if (response.responseCode.startsWith("30")) {
