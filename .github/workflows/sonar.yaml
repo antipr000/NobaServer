@@ -28,7 +28,7 @@ jobs:
         run: yarn install
 
       - name: Test and coverage
-        run: yarn jest --coverage
+        run: yarn jest --verbose --silent --coverage --runInBand
 
       - uses: sonarsource/sonarqube-scan-action@master
         env:
