@@ -3,8 +3,9 @@ name: Sync OpenAPI definition to ReadMe
 # Run workflow for every push to the `main` branch
 on:
   push:
-    branches:
-      - master
+    tags:
+      - "*-partner"
+    branches: [master]
 
 jobs:
   sync:
