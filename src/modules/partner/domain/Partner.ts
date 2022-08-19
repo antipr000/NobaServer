@@ -3,7 +3,7 @@ import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../co
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
-import { randomBytes } from "crypto"; // built-in node crypto, not from npm
+import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
 
 export interface PartnerProps extends VersioningInfo {
   _id: string;
@@ -42,7 +42,7 @@ export class Partner extends AggregateRoot<PartnerProps> {
     // 1. Generate UUID
     // 2. Convert to lowercase
     // 3. Remove all hyphens
-    return randomBytes(16).toString("hex");
+    return randomUUID().toLowerCase().replace(/-/g, "");
   }
 
   private static generateSecretKey(): string {
