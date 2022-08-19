@@ -433,7 +433,7 @@ export class ZeroHashService {
     return executedQuote;
   }
 
-  private async getParticipantCode(consumer: ConsumerProps, transactionTimestamp: Date) {
+  async getParticipantCode(consumer: ConsumerProps, transactionTimestamp: Date) {
     let participantCode: string = consumer.zhParticipantCode;
     // If the participant doesn't have a ZH participant code, first look them up and if not existing, create them:
     if (participantCode == undefined) {
