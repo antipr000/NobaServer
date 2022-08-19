@@ -6,7 +6,7 @@ export enum AppEnvironment {
   PROD = "production",
   STAGING = "staging",
   E2E_TEST = "e2e_test",
-  AWSDEV = "AWSDEV",
+  AWSDEV = "awsdev",
 }
 
 export const NODE_ENV_CONFIG_KEY = "NODE_ENV";
