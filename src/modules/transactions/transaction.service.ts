@@ -95,9 +95,8 @@ export class TransactionService {
       ESTIMATED CRYPTO (${transactionQuoteQuery.cryptoCurrencyCode}):\t${priceToQuoteUSD / costPerUnit}
       SPREAD REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${fixedAmountFiat * 0.007}
-      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
-      }
+      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
+        }
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
@@ -143,9 +142,8 @@ export class TransactionService {
       PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${processingFees}
       NOBA COST (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${costPerUnit * fixedAmountCrypto}
       ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge * 0.007}
-      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
-      }
+      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
+        }
       `);
 
       const transactionQuote: TransactionQuoteDTO = {
@@ -249,9 +247,8 @@ export class TransactionService {
         : this.withinSlippage(transactionRequest.leg1Amount, quote.quotedAmount);
     if (!withinSlippage) {
       throw new BadRequestException({
-        messageForClient: `Bid price is not within slippage allowed of ${
-          this.nobaTransactionConfigs.slippageAllowedPercentage * 100
-        }%`,
+        messageForClient: `Bid price is not within slippage allowed of ${this.nobaTransactionConfigs.slippageAllowedPercentage * 100
+          }%`,
       });
     }
 
@@ -357,6 +354,8 @@ export class TransactionService {
     return PendingTransactionValidationStatus.PASS;
   }
 
+  // [DEPRECATED]: Use AssetService interface instead. 
+  // Will be removed once everything works in staging.
   public async initiateCryptoTransaction(
     consumer: Consumer,
     transaction: Transaction,
@@ -383,8 +382,7 @@ export class TransactionService {
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
     this.logger.debug(
-      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
-        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
     );
 

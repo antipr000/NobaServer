@@ -21,6 +21,7 @@ import {
   CryptoTransactionRequestResultStatus,
   CryptoTransactionStatus,
 } from "./domain/Types";
+import { ExecutedQuote, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer } from "./domain/ZerohashTypes";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -56,6 +57,10 @@ export class ZeroHashService {
   ) {
     this.configs = configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
     this.appService = appService;
+  }
+
+  getNobaPlatformCode(): string {
+    return NOBA_PLATFORM_CODE;
   }
 
   // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
@@ -199,24 +204,18 @@ export class ZeroHashService {
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
-  async transferAssetsToNoba(
-    senderParticipant: string,
-    senderGroup: string,
-    receiverParticipant: string,
-    receiverGroup: string,
-    asset: string,
-    amount: number,
-  ) {
+  async transferAssetsToNoba(asset: string, amount: number): Promise<string> {
     const transfer = await this.makeRequest("/transfers", "POST", {
-      from_participant_code: senderParticipant,
-      from_account_group: senderGroup,
-      to_participant_code: receiverParticipant,
-      to_account_group: receiverGroup,
+      from_participant_code: NOBA_PLATFORM_CODE,
+      from_account_group: ZHLS_PLATFORM_CODE,
+      to_participant_code: NOBA_PLATFORM_CODE,
+      to_account_group: NOBA_PLATFORM_CODE,
       asset: asset,
       amount: amount,
     });
 
-    return transfer;
+    console.log(transfer);
+    return transfer.message.id;
   }
 
   // Trade the crypto from Noba to Custom
@@ -225,11 +224,70 @@ export class ZeroHashService {
     return tradeRequest;
   }
 
+  async executeTrade(request: ZerohashTradeRquest): Promise<ZerohashTradeResponse> {
+    const tradeData = {
+      symbol: request.broughtAssetId + "/" + request.soldAssetId,
+
+      trade_price: String(request.tradePrice),
+      trade_quantity: String(request.tradeAmount / request.tradePrice),
+      client_trade_id: request.idempotencyId,
+
+      trade_reporter: request.requestorEmail,
+      platform_code: this.getNobaPlatformCode(),
+
+      product_type: "spot",
+      trade_type: "regular",
+      physical_delivery: true,
+      parties_anonymous: false,
+      transaction_timestamp: Date.now(),
+
+      parties: [
+        {
+          participant_code: request.buyerParticipantCode,
+          asset: request.broughtAssetId,
+          amount: String(request.tradeAmount),
+          side: "buy",
+          settling: true,
+        },
+        {
+          participant_code: request.sellerParticipantCode,
+          asset: request.soldAssetId,
+          side: "sell",
+          settling: false,
+        },
+      ],
+    };
+
+    const tradeRequest = await this.requestTrade(tradeData);
+    if (tradeRequest == null) {
+      throw new BadRequestError({
+        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
+      });
+    }
+
+    return {
+      tradeId: tradeRequest["message"].trade_id,
+    };
+  }
+
   // Get trade and check status
   // Initiate a withdrawal if trade_status is terminated
   async getTrade(tradeID: string) {
     const tradeData = await this.makeRequest(`/trades/${tradeID}`, "GET", {});
     return tradeData;
+  }
+
+  async getTransfer(transferId: string): Promise<ZerohashTransfer> {
+    console.log(transferId);
+    const response = await this.makeRequest(`/transfers/${transferId}`, "GET", {});
+    return {
+      id: response.message.id,
+      createdAt: new Date(response.message.created_at),
+      updatedAt: new Date(response.message.updated_at),
+      status: response.message.status,
+      asset: response.message.asset,
+      movementId: response.message.movement_id,
+    };
   }
 
   async requestWithdrawal(
@@ -306,6 +364,8 @@ export class ZeroHashService {
     return withdrawalID;
   }
 
+  // [DEPRECATED]: Use AssetService interface instead. 
+  // Will be removed once everything works in staging.
   async initiateCryptoTransfer(
     consumer: ConsumerProps,
     transaction: Transaction,
@@ -340,14 +400,7 @@ export class ZeroHashService {
     const tradePrice = executedQuote["message"]["quote"].price;
     const quoteID = executedQuote["message"]["quote"].quote_id;
 
-    const assetTransfer = await this.transferAssetsToNoba(
-      NOBA_PLATFORM_CODE,
-      ZHLS_PLATFORM_CODE,
-      NOBA_PLATFORM_CODE,
-      NOBA_PLATFORM_CODE,
-      cryptocurrency,
-      amountReceived,
-    );
+    const assetTransfer = await this.transferAssetsToNoba(cryptocurrency, amountReceived);
     if (assetTransfer == null) {
       throw new BadRequestError({
         messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
@@ -410,12 +463,12 @@ export class ZeroHashService {
     };
   }
 
-  private async requestAndExecuteQuote(
+  async requestAndExecuteQuote(
     cryptocurrency: string,
     fiatCurrency: string,
     amount: number,
     fixedSide: CurrencyType,
-  ) {
+  ): Promise<ExecutedQuote> {
     const quote = await this.requestQuote(cryptocurrency, fiatCurrency, amount, fixedSide);
     if (quote == null) {
       throw new BadRequestError({
@@ -430,7 +483,12 @@ export class ZeroHashService {
         messageForClient: "Something went wrong! Contact noba support for immediate resolution!",
       });
     }
-    return executedQuote;
+
+    return {
+      tradePrice: executedQuote["message"]["quote"].price,
+      cryptoReceived: executedQuote["message"]["quote"].quantity,
+      quoteId: executedQuote["message"]["quote"].quote_id,
+    };
   }
 
   async getParticipantCode(consumer: ConsumerProps, transactionTimestamp: Date) {

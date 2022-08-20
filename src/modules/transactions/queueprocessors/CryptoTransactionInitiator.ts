@@ -2,12 +2,15 @@ import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
-import { CryptoTransactionRequestResultStatus, TransactionQueueName, TransactionStatus } from "../domain/Types";
+import { TransactionQueueName, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
+import { AssetServiceFactory } from "../assets/asset.service.factory";
+import { AssetService } from "../assets/asset.service";
+import { FundsAvailabilityRequest, FundsAvailabilityResponse, ConsumerAccountTransferRequest, FundsAvailabilityStatus, PollStatus } from "../domain/AssetTypes";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
   constructor(
@@ -17,6 +20,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
     lockService: LockService,
+    private readonly assetServiceFactory: AssetServiceFactory,
   ) {
     super(
       logger,
@@ -27,6 +31,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       TransactionQueueName.FiatTransactionCompleted,
       lockService,
     );
+
   }
 
   async processMessageInternal(transactionId: string) {
@@ -40,62 +45,74 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       return;
     }
 
-    // updating transaction status so that this transaction cannot be reprocessed to purchase crypto if this attempt
-    // fails for any possible reason as there is no queue processor to pick from this state other than failure processor
-    transaction = await this.transactionRepo.updateTransactionStatus(
-      transaction.props._id,
-      TransactionStatus.CRYPTO_OUTGOING_INITIATING,
-      {},
-    );
-
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    let newStatus: TransactionStatus;
+    const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
-    // crypto transaction here
-    const result = await this.transactionService.initiateCryptoTransaction(consumer, transaction);
-    if (result.status === CryptoTransactionRequestResultStatus.INITIATED) {
-      transaction.props.cryptoTransactionId = result.tradeID;
-      transaction.props.exchangeRate = result.exchangeRate;
-      transaction.props.nobaTransferID = result.nobaTransferID;
-      transaction.props.tradeQuoteID = result.quoteID;
-      newStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
+    if (!transaction.props.nobaTransferTradeID) {
+      const makeFundsAvailableRequest: FundsAvailabilityRequest = {
+        consumer: consumer.props,
+        cryptoCurrency: transaction.props.leg2,
+        fiatCurrency: transaction.props.leg1,
 
-      this.logger.info(`Crypto Transaction for Noba Transaction ${transactionId} initiated with id ${result.tradeID}`);
-    } else if (
-      result.status === CryptoTransactionRequestResultStatus.FAILED ||
-      result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE
-    ) {
-      this.logger.info(
-        `Crypto Transaction for Noba transaction ${transactionId} failed, reason: ${result.diagnosisMessage}`,
-      );
+        cryptoQuantity: transaction.props.leg2Amount,
+        fiatAmount: transaction.props.leg1Amount,
 
-      if (result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE) {
-        //TODO alert here !!
-        this.logger.info("Noba Crypto balance is low, raising alert");
+        // TODO(#): Populate slippage correctly using 'AssetService'
+        slippage: 0,
+
+        transactionCreationTimestamp: transaction.props.transactionTimestamp,
+        transactionId: transaction.props._id,
       }
+      const fundAvailableResponse: FundsAvailabilityResponse =
+        await assetService.makeFundsAvailable(makeFundsAvailableRequest);
 
-      const statusReason =
-        result.status === CryptoTransactionRequestResultStatus.OUT_OF_BALANCE ? "Out of balance." : "General failure."; // TODO (#332): Improve error responses
-      await this.processFailure(
-        TransactionStatus.CRYPTO_OUTGOING_FAILED,
-        statusReason, // TODO: Need more detail here - should throw exception from validatePendingTransaction with detailed reason
-        transaction,
-      );
-      return;
-    } else {
-      // TODO(#): Define the behaviour for other kind of statuses
+      // TODO(#): Rename the field to something genric.
+      transaction.props.nobaTransferTradeID = fundAvailableResponse.id;
+      transaction.props.exchangeRate = fundAvailableResponse.tradePrice;
+      transaction = await this.transactionRepo.updateTransaction(transaction);
     }
 
-    // crypto transaction ends here
+    // TODO(#): Move this to new processor.
+    if (!transaction.props.nobaTransferSettlementId) {
+      const fundsAvailabilityStatus: FundsAvailabilityStatus =
+        await assetService.pollFundsAvailableStatus(transaction.props.nobaTransferTradeID);
 
-    transaction = await this.transactionRepo.updateTransactionStatus(
-      transaction.props._id,
-      newStatus,
-      transaction.props,
-    );
+      switch (fundsAvailabilityStatus.status) {
+        case PollStatus.SUCCESS:
+          transaction.props.nobaTransferSettlementId = fundsAvailabilityStatus.settledId;
+          transaction = await this.transactionRepo.updateTransaction(transaction);
+
+        case PollStatus.PENDING:
+          return;
+
+        case PollStatus.FAILURE:
+          return this.processFailure(TransactionStatus.FAILED, fundsAvailabilityStatus.errorMessage, transaction);
+
+        case PollStatus.FATAL_ERROR:
+          // TODO(#): Add an alarm here.
+          this.logger.error(`Unexpected error occured: "${fundsAvailabilityStatus.errorMessage}"`);
+          return this.processFailure(TransactionStatus.FAILED, fundsAvailabilityStatus.errorMessage, transaction);
+      }
+    }
+
+    const assetTransferToConsumerAccountRequest: ConsumerAccountTransferRequest = {
+      consumer: consumer.props,
+      cryptoAssetTradePrice: transaction.props.exchangeRate,
+      totalCryptoAmount: transaction.props.leg2Amount,
+
+      cryptoCurrency: transaction.props.leg2,
+      fiatCurrency: transaction.props.leg1,
+      transactionId: transaction.props._id,
+      transactionCreationTimestamp: transaction.props.transactionTimestamp,
+    };
+    const tradeId: string = await assetService.transferAssetToConsumerAccount(assetTransferToConsumerAccountRequest);
+
+    transaction.props.cryptoTransactionId = tradeId;
+    transaction =
+      await this.transactionRepo.updateTransactionStatus(transaction.props._id, TransactionStatus.CRYPTO_OUTGOING_INITIATED, transaction.props);
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
-    if (newStatus === TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
+    if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
       await this.sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transactionId);
     }
   }

@@ -1,14 +1,14 @@
-import { ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityRequest } from "../domain/AssetTypes";
+import { ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityRequest, FundsAvailabilityResponse, FundsAvailabilityStatus } from "../domain/AssetTypes";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 
 export interface AssetService {
   getQuote(quoteQuery: TransactionQuoteQueryDTO);
 
-  makeFundsAvailable(request: FundsAvailabilityRequest);
-  pollFundsAvailableStatus(id: string);
+  makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse>;
+  pollFundsAvailableStatus(id: string): Promise<FundsAvailabilityStatus>;
 
-  transferToConsumerAccount(request: ConsumerAccountTransferRequest);
-  pollAccountTransferStatus(id: string);
+  transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string>;
+  pollAssetTransferToConsumerStatus(id: string);
 
   transferToConsumerWallet(request: ConsumerWalletTransferRequest);
   pollConsumerWalletTransferStatus(id: string);

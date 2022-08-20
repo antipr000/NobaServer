@@ -5,6 +5,7 @@ import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { CommonModule } from "../../../modules/common/common.module";
 import { ConsumerModule } from "../../../modules/consumer/consumer.module";
 import { VerificationModule } from "../../../modules/verification/verification.module";
+import { AssetsModule } from "../assets/assets.module";
 import { TransactionPollerService } from "../crons/transaction.poller.cron";
 import { TransactionQueueName } from "../domain/Types";
 import { MongoDBTransactionRepo } from "../repo/MongoDBTransactionRepo";
@@ -20,7 +21,7 @@ import { TransactionFailedProcessor } from "./TransactionFailedProcessor";
 import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactionProcessor";
 
 @Module({
-  imports: [CommonModule, InfraProvidersModule, ConsumerModule, VerificationModule, getWinstonModule()],
+  imports: [CommonModule, AssetsModule, InfraProvidersModule, ConsumerModule, VerificationModule, getWinstonModule()],
   controllers: [],
   providers: [
     ZeroHashService,
@@ -78,4 +79,4 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
     },
   ],
 })
-export class AsyncTransactionProcessorModule {}
+export class AsyncTransactionProcessorModule { }
