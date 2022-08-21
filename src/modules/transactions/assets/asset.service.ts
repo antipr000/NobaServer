@@ -10,6 +10,6 @@ export interface AssetService {
   transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string>;
   pollAssetTransferToConsumerStatus(id: string): Promise<ConsumerAccountTransferStatus>;
 
-  transferToConsumerWallet(request: ConsumerWalletTransferRequest);
+  transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<string>;
   pollConsumerWalletTransferStatus(id: string);
 }

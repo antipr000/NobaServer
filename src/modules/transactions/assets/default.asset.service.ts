@@ -183,8 +183,17 @@ export class DefaultAssetService implements AssetService {
     }
   }
 
-  transferToConsumerWallet(request: ConsumerWalletTransferRequest) {
-    throw new Error("Method not implemented.");
+  // TODO(#): Make this implementation idempotent.
+  async transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<string> {
+    const withdrawalId: string = await this.zerohashService.requestWithdrawal(
+      request.walletAddress,
+      request.amount,
+      request.assetId,
+      request.consumer.zhParticipantCode,
+      this.zerohashService.getNobaPlatformCode(),
+    );
+
+    return withdrawalId;
   }
 
   pollConsumerWalletTransferStatus(id: string) {

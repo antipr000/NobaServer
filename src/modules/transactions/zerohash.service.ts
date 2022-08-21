@@ -291,11 +291,11 @@ export class ZeroHashService {
 
   async requestWithdrawal(
     cryptocurrencyAddress: string,
-    zhParticipantCode: string,
     amount: number,
     asset: string,
+    zhParticipantCode: string,
     accountGroup: string,
-  ) {
+  ): Promise<string> {
     const withdrawalRequest = await this.makeRequest("/withdrawals/requests", "POST", {
       address: cryptocurrencyAddress,
       participant_code: zhParticipantCode,
@@ -303,7 +303,7 @@ export class ZeroHashService {
       asset: asset,
       account_group: accountGroup,
     });
-    return withdrawalRequest;
+    return withdrawalRequest["message"]["id"];
   }
 
   async getWithdrawal(withdrawalID: string) {
@@ -375,6 +375,8 @@ export class ZeroHashService {
     }
   }
 
+  // [DEPRECATED]: Use AssetService interface instead of this.
+  // Will be removed once the transaction is working in staging/production.
   async moveCryptoToConsumerWallet(consumer: ConsumerProps, transaction: Transaction): Promise<string> {
     // If we already have a zhWithdrawalID then DO NOT make another request!
     let withdrawalID = transaction.props.zhWithdrawalID;

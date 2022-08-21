@@ -40,9 +40,9 @@ export interface ZerohashTradeResponse {
 
 export interface ZerohashTradeResponse {
   tradeId: string;
-  settledTimestamp: number;
-  tradeState: TradeState;
-  errorMessage: string;
+  settledTimestamp?: number;
+  tradeState?: TradeState;
+  errorMessage?: string;
 }
 
 export enum TradeState {

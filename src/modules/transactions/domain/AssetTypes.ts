@@ -54,6 +54,7 @@ export interface ConsumerAccountTransferStatus {
 export interface ConsumerWalletTransferRequest {
   walletAddress: string;
   amount: number;
+  assetId: string;
   consumer: ConsumerProps;
   transactionId: string;
 }

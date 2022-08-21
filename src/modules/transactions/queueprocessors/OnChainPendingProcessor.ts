@@ -11,6 +11,9 @@ import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
+import { AssetServiceFactory } from "../assets/asset.service.factory";
+import { AssetService } from "../assets/asset.service";
+import { ConsumerWalletTransferRequest } from "../domain/AssetTypes";
 
 export class OnChainPendingProcessor extends MessageProcessor {
   constructor(
@@ -22,6 +25,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     lockService: LockService,
     private readonly zerohashService: ZeroHashService,
     private readonly emailService: EmailService,
+    private readonly assetServiceFactory: AssetServiceFactory,
   ) {
     super(
       logger,
@@ -46,17 +50,22 @@ export class OnChainPendingProcessor extends MessageProcessor {
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     // Skip this if we already have a withdrawalID
     let withdrawalID = transaction.props.zhWithdrawalID;
     if (!withdrawalID) {
-      withdrawalID = await this.transactionService.moveCryptoToConsumerWallet(consumer, transaction);
-      if (withdrawalID) {
-        transaction = await this.transactionRepo.updateTransaction(
-          Transaction.createTransaction({ ...transaction.props, zhWithdrawalID: String(withdrawalID) }),
-        );
-        console.log("Set zhWithdrawalID on transaction to " + withdrawalID);
-      }
+      const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
+        amount: transaction.props.leg2Amount,
+        assetId: transaction.props.leg2,
+        walletAddress: transaction.props.destinationWalletAddress,
+        consumer: consumer.props,
+        transactionId: transaction.props._id,
+      };
+      withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
+      transaction.props.zhWithdrawalID = withdrawalID;
+      await this.transactionRepo.updateTransaction(transaction);
+      console.log("Set zhWithdrawalID on transaction to " + withdrawalID);
     }
 
     // No need to guard this with an intermediate Transaction state
