@@ -41,11 +41,12 @@ jobs:
           yarn install
           echo [SUCCESS] yarn install succeeded.
 
-      # Run all tests first to prevent broken builds
-      - name: Run tests
-        run: |
-          yarn run test
-          echo [SUCCESS] tests successfully passed
+#       # Run all tests first to prevent broken builds, 
+#       #commented as there is a separate workflow to run tests and it's fine to not run tests other than PR as all changes are supposed to go in main through a PR
+#       - name: Run tests
+#         run: |
+#           yarn run test
+#           echo [SUCCESS] tests successfully passed
 
       # Generates a build_info file which can be shown in buildInfo controller of the server
       - name: Generate build info file
