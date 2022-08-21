@@ -3,12 +3,12 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { AppService } from "../../../app.service";
-import { FundsAvailabilityRequest, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityStatus, PollStatus, FundsAvailabilityResponse } from "../domain/AssetTypes";
+import { FundsAvailabilityRequest, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityStatus, PollStatus, FundsAvailabilityResponse, ConsumerAccountTransferStatus } from "../domain/AssetTypes";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
 import { CurrencyType } from "../../common/domain/Types";
-import { ExecutedQuote, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer, ZerohashTransferStatus } from "../domain/ZerohashTypes";
+import { ExecutedQuote, TradeState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer, ZerohashTransferStatus } from "../domain/ZerohashTypes";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
@@ -152,8 +152,35 @@ export class DefaultAssetService implements AssetService {
     return tradeResponse.tradeId;
   }
 
-  pollAssetTransferToConsumerStatus(id: string) {
-    throw new Error("Method not implemented.");
+  async pollAssetTransferToConsumerStatus(id: string): Promise<ConsumerAccountTransferStatus> {
+    const tradeResponse: ZerohashTradeResponse = await this.zerohashService.checkTradeStatus(id);
+
+    try {
+      switch (tradeResponse.tradeState) {
+        case TradeState.PENDING:
+          return {
+            status: PollStatus.PENDING,
+            errorMessage: null,
+          };
+
+        case TradeState.SETTLED:
+          return {
+            status: PollStatus.SUCCESS,
+            errorMessage: null,
+          };
+
+        case TradeState.DEFAULTED:
+          return {
+            status: PollStatus.FAILURE,
+            errorMessage: tradeResponse.errorMessage,
+          };
+      };
+    } catch (err) {
+      return {
+        status: PollStatus.FATAL_ERROR,
+        errorMessage: JSON.stringify(err),
+      };
+    }
   }
 
   transferToConsumerWallet(request: ConsumerWalletTransferRequest) {

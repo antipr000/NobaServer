@@ -69,7 +69,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       // TODO(#): Rename the field to something genric.
       transaction.props.nobaTransferTradeID = fundAvailableResponse.id;
       transaction.props.exchangeRate = fundAvailableResponse.tradePrice;
-      transaction = await this.transactionRepo.updateTransaction(transaction);
+      await this.transactionRepo.updateTransaction(transaction);
     }
 
     // TODO(#): Move this to new processor.
@@ -80,7 +80,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       switch (fundsAvailabilityStatus.status) {
         case PollStatus.SUCCESS:
           transaction.props.nobaTransferSettlementId = fundsAvailabilityStatus.settledId;
-          transaction = await this.transactionRepo.updateTransaction(transaction);
+          await this.transactionRepo.updateTransaction(transaction);
 
         case PollStatus.PENDING:
           return;
@@ -108,8 +108,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     const tradeId: string = await assetService.transferAssetToConsumerAccount(assetTransferToConsumerAccountRequest);
 
     transaction.props.cryptoTransactionId = tradeId;
-    transaction =
-      await this.transactionRepo.updateTransactionStatus(transaction.props._id, TransactionStatus.CRYPTO_OUTGOING_INITIATED, transaction.props);
+    await this.transactionRepo.updateTransactionStatus(transaction.props._id, TransactionStatus.CRYPTO_OUTGOING_INITIATED, transaction.props);
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
     if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_INITIATED) {

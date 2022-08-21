@@ -132,9 +132,9 @@ export const allTransactionAttributes: TransactionStateAttributes[] = [
 ];
 
 export enum CryptoTransactionStatus {
-  INITIATED = "Initiated",
-  FAILED = "Failed",
-  COMPLETED = "Completed",
+  PENDING = "pending",
+  FAILED = "failed",
+  COMPLETED = "completed",
 }
 
 export enum CryptoTransactionRequestResultStatus {

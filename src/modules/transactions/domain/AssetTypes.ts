@@ -46,6 +46,11 @@ export interface ConsumerAccountTransferRequest {
   transactionCreationTimestamp: Date;
 }
 
+export interface ConsumerAccountTransferStatus {
+  status: PollStatus;
+  errorMessage: string;
+}
+
 export interface ConsumerWalletTransferRequest {
   walletAddress: string;
   amount: number;

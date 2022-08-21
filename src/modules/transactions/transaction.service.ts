@@ -366,9 +366,11 @@ export class TransactionService {
     return result;
   }
 
-  public async checkTradeStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
-    return await this.zeroHashService.checkTradeStatus(transaction);
-  }
+  // [DEPRECATED]: Use AssetService method instead.
+  // Will be removed once the AssetService changes is live in staging/production.
+  // public async checkTradeStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
+  //   return await this.zeroHashService.checkTradeStatus(transaction);
+  // }
 
   public async moveCryptoToConsumerWallet(consumer: Consumer, transaction: Transaction): Promise<string> {
     return await this.zeroHashService.moveCryptoToConsumerWallet(consumer.props, transaction);

@@ -37,3 +37,16 @@ export interface ZerohashTradeRquest {
 export interface ZerohashTradeResponse {
   tradeId: string;
 }
+
+export interface ZerohashTradeResponse {
+  tradeId: string;
+  settledTimestamp: number;
+  tradeState: TradeState;
+  errorMessage: string;
+}
+
+export enum TradeState {
+  SETTLED = "settled",
+  DEFAULTED = "defaulted",
+  PENDING = "pending",
+}

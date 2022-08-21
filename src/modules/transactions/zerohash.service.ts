@@ -19,9 +19,8 @@ import { Transaction } from "./domain/Transaction";
 import {
   CryptoTransactionRequestResult,
   CryptoTransactionRequestResultStatus,
-  CryptoTransactionStatus,
 } from "./domain/Types";
-import { ExecutedQuote, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer } from "./domain/ZerohashTypes";
+import { ExecutedQuote, TradeState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer } from "./domain/ZerohashTypes";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -321,10 +320,15 @@ export class ZeroHashService {
     return networkFee;
   }
 
-  async checkTradeStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
+  async checkTradeStatus(tradeId: string): Promise<ZerohashTradeResponse> {
     // Check trade_state every 3 seconds until it is terminated using setInterval
-    const tradeData = await this.getTrade(transaction.props.cryptoTransactionId);
+    const tradeData = await this.getTrade(tradeId);
+    this.logger.info(JSON.stringify(tradeData.message.parties));
+
     const tradeState = tradeData["message"]["trade_state"];
+    const settledTimestamp = tradeData.message.settled_timestamp;
+    // TODO(#): Update the index of "parties" after ZH discussion ends.
+    const settlementState = tradeData.message.parties[1].settlement_state;
 
     /* 
       From ZH docs:
@@ -333,14 +337,41 @@ export class ZeroHashService {
       - active means the trade is actively being settled.
       - terminated means the trade is in a terminal state, and has a settlement_state of either settled or defaulted.
     */
+    switch (tradeState) {
+      case "accepted":
+        return {
+          tradeId: tradeId,
+          tradeState: TradeState.PENDING,
+          settledTimestamp: null,
+          errorMessage: null,
+        };
 
-    if (tradeState === "accepted" || tradeState === "active") {
-      // These are non-final states so we just return Accepted and let the processor poll again until we get "terminated"
-      return CryptoTransactionStatus.INITIATED;
-    } else if (tradeState === "terminated") {
-      return CryptoTransactionStatus.COMPLETED;
-    } else {
-      // TODO: Unexpected state, throw error
+      case "active":
+        return {
+          tradeId: tradeId,
+          tradeState: TradeState.PENDING,
+          settledTimestamp: null,
+          errorMessage: null,
+        };
+
+      case "terminated":
+        if (settlementState === "settled") {
+          return {
+            tradeId: tradeId,
+            tradeState: TradeState.SETTLED,
+            settledTimestamp: settledTimestamp,
+            errorMessage: null,
+          };
+        }
+        return {
+          tradeId: tradeId,
+          tradeState: TradeState.DEFAULTED,
+          errorMessage: `Trade could not be settled by the expiry time`,
+          settledTimestamp: null,
+        };
+
+      default:
+        throw Error(`Unexpected trade state: '${tradeState}'`);
     }
   }
 
