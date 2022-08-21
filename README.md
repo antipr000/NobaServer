@@ -22,11 +22,15 @@ Noba server side code.
 
 #### Staging Environment (api-staging.noba.com/v1/health)
 
-- We have github actions setup that will automatically deploy changes in staging instance when pushed into master.
+- We have github actions setup that will automatically deploy changes in staging instance when tags with suffix -staging are created.
 
-#### AWS Development Environment (api-dev.noba.com/v1/health)
+#### Dev Environment (api-dev.noba.com/v1/health)
 
-- run ./aws-dev-deploy command in your local repository to deploy current branch to development environment. Make sure you commit your local changes in local branch first. This command basically pushes current branch to 'dev' tag and from there github action deploys to AWS 'Dev' Deployment group.
+We have github actions setup that will automatically deploy changes in staging instance whenever chagnes are pushed to master/main branch.
+
+#### AWS Sandbox Environment (api-sandbox.noba.com/v1/health)
+- either put 'deploy-sandbox' label on the pull request to deploy to this environment
+- or run ./aws-sandbox-deploy command in your local repository to deploy current branch to sandbox environment. Make sure you commit your local changes in local branch first. This command basically pushes current branch to 'dev' tag and from there github action deploys to AWS 'Dev' Deployment group.
 - Sometimes multiple developers may be trying to test their changes in AWS Dev environment so you may not see your changes deployed as they may be overridden by other developers so coordination is needed sometimes
 - you can directly create 'dev' tag from your branch in github ui to deploy to aws deployment environment
 

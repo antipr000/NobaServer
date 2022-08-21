@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "This command will deploy latest master branch to aws sandbox environment"
+
+if [ $# -lt 1 ]; then 
+  export tagName="sandbox"
+else
+  export tagName=$1
+fi
+
+echo  "pushing to tag ${tagName}"
+
+git fetch && git tag -af $tagName origin/master -m "Deploying to aws sandbox environment"
+
+git push origin tags/$tagName -f
+
+echo "You can check the status of the deployment here https://github.com/nobapay/NobaServer/actions"
