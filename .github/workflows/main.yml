@@ -8,7 +8,10 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
       - "*-partner"
       - "*-staging"
-    branches: [master]
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+    types: [ labeled ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -81,23 +84,20 @@ jobs:
       - name: Check If should deploy and Decide deployment type
         id: check-tag
         run: |
-          #TODO setup release and staging builds
-          echo ::set-output name=deploy::false
-          if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ ${GITHUB_REF:-noref} =~ master ]] || [[ ${GITHUB_REF:-noref} =~ dev ]]; then
-              echo ::set-output name=deploy::true
-          fi
-
-          #figure out AWS code deployment Group
-          ebEnvironment=dev
+          #figure out AWS ElasticBeanstalk Environment
+          ebEnvironment=none
           if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               ebEnvironment=production
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-partner$ ]]; then
               ebEnvironment=partner
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
               ebEnvironment=staging
-          elif [[ ${GITHUB_REF:-noref} =~ master ]]; then
+          elif [[ ${GITHUB_REF:-noref} =~ master ]] || [[ ${GITHUB_REF:-noref} =~ main ]]; then
               ebEnvironment=dev
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]] || [[ ${{github.event.label.name}} == 'deploy-sandbox' ]]; then
+              ebEnvironment=sandbox
           fi
+
           echo ::set-output name=deploy::true
 
           echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
@@ -105,7 +105,7 @@ jobs:
           echo ::set-output name=ebEnvironment::$ebEnvironment
 
       - name: Deploy to EB
-        if: steps.check-tag.outputs.deploy == 'true'
+        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')"  # run this job only if ebEnvironment is not none
         uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
