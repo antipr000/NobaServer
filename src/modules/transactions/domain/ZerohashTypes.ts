@@ -50,3 +50,25 @@ export enum TradeState {
   DEFAULTED = "defaulted",
   PENDING = "pending",
 }
+
+export interface ZerohashWithdrawalResponse {
+  requestedAmount: number;
+  settledAmount: number;
+  withdrawalStatus: WithdrawalState;
+  onChainStatus: OnChainState;
+  onChainTransactionId: string;
+  gasPrice: string;
+}
+
+export enum WithdrawalState {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  SETTLED = "settled",
+}
+
+export enum OnChainState {
+  PENDING = "pending",
+  CONFIRMED = "confirmed",
+  ERROR = "error",
+}

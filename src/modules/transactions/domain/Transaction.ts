@@ -42,6 +42,7 @@ export interface TransactionProps extends VersioningInfo {
   exchangeRate: number;
   diagnosis?: string;
   cryptoTransactionId?: string; // ZH ID
+  settledAmount?: number;
   blockchainTransactionId?: string; // Public chain ID
   transactionStatus: TransactionStatus;
   // TODO(#348): Evaluate if this timestamp is required.
@@ -70,6 +71,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
     .required(),
   leg1Amount: Joi.number().required(),
   leg2Amount: Joi.number().required(),
+  settledAmount: Joi.number().optional(),
   leg1: Joi.string().required(),
   leg2: Joi.string().required(),
   type: Joi.string()

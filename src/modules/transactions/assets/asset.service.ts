@@ -1,4 +1,4 @@
-import { ConsumerAccountTransferStatus, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityRequest, FundsAvailabilityResponse, FundsAvailabilityStatus } from "../domain/AssetTypes";
+import { ConsumerAccountTransferStatus, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityRequest, FundsAvailabilityResponse, FundsAvailabilityStatus, ConsumerWalletTransferStatus } from "../domain/AssetTypes";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 
 export interface AssetService {
@@ -11,5 +11,5 @@ export interface AssetService {
   pollAssetTransferToConsumerStatus(id: string): Promise<ConsumerAccountTransferStatus>;
 
   transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<string>;
-  pollConsumerWalletTransferStatus(id: string);
+  pollConsumerWalletTransferStatus(id: string): Promise<ConsumerWalletTransferStatus>;
 }

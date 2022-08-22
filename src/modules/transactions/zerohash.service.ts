@@ -20,7 +20,7 @@ import {
   CryptoTransactionRequestResult,
   CryptoTransactionRequestResultStatus,
 } from "./domain/Types";
-import { ExecutedQuote, TradeState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer } from "./domain/ZerohashTypes";
+import { ExecutedQuote, OnChainState, TradeState, WithdrawalState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer, ZerohashWithdrawalResponse } from "./domain/ZerohashTypes";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -306,9 +306,57 @@ export class ZeroHashService {
     return withdrawalRequest["message"]["id"];
   }
 
-  async getWithdrawal(withdrawalID: string) {
-    const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
-    return withdrawal;
+  async getWithdrawal(withdrawalID: string): Promise<ZerohashWithdrawalResponse> {
+    const withdrawal =
+      await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
+
+    const response: ZerohashWithdrawalResponse = {
+      gasPrice: withdrawal["message"][0]["gas_price"],
+      requestedAmount: withdrawal["message"][0]["requested_amount"],
+      settledAmount: withdrawal["message"][0]["settled_amount"],
+      onChainTransactionId: withdrawal["message"][0]["transaction_id"],
+
+      onChainStatus: OnChainState.PENDING,
+      withdrawalStatus: WithdrawalState.PENDING,
+    };
+
+    switch (String(withdrawal["message"][0]["status"])) {
+      case "PENDING":
+        response.withdrawalStatus = WithdrawalState.PENDING;
+        break;
+
+      case "APPROVED":
+        response.withdrawalStatus = WithdrawalState.APPROVED;
+        break;
+
+      case "REJECTED":
+        response.withdrawalStatus = WithdrawalState.REJECTED;
+        break;
+
+      case "SETTLED":
+        response.withdrawalStatus = WithdrawalState.SETTLED;
+        break;
+
+      default:
+        this.logger.error(`Unexpected withdrawal status: "${withdrawal["message"][0]["status"]}"`);
+        response.withdrawalStatus = WithdrawalState.REJECTED;
+    };
+
+    switch (withdrawal["message"][0]["on_chain_status"]) {
+      case "PENDING":
+        response.onChainStatus = OnChainState.PENDING;
+        break;
+
+      case "CONFIRMED":
+        response.onChainStatus = OnChainState.CONFIRMED;
+        break;
+
+      default:
+        this.logger.error(`Unexpected on-chain status: "${withdrawal["message"][0]["on_chain_status"]}"`);
+        response.onChainStatus = OnChainState.ERROR;
+    }
+
+    return response;
   }
 
   async estimateNetworkFee(underlyingCurrency: string, quotedCurrency: string) {

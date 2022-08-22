@@ -58,3 +58,12 @@ export interface ConsumerWalletTransferRequest {
   consumer: ConsumerProps;
   transactionId: string;
 }
+
+export interface ConsumerWalletTransferStatus {
+  status: PollStatus;
+  errorMessage: string;
+
+  requestedAmount: number;
+  settledAmount: number;
+  onChainTransactionId: string;
+}

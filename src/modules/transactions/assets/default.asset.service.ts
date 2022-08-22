@@ -3,12 +3,12 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { AppService } from "../../../app.service";
-import { FundsAvailabilityRequest, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityStatus, PollStatus, FundsAvailabilityResponse, ConsumerAccountTransferStatus } from "../domain/AssetTypes";
+import { FundsAvailabilityRequest, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityStatus, PollStatus, FundsAvailabilityResponse, ConsumerAccountTransferStatus, ConsumerWalletTransferStatus } from "../domain/AssetTypes";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
 import { CurrencyType } from "../../common/domain/Types";
-import { ExecutedQuote, TradeState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer, ZerohashTransferStatus } from "../domain/ZerohashTypes";
+import { ExecutedQuote, OnChainState, TradeState, WithdrawalState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer, ZerohashTransferStatus, ZerohashWithdrawalResponse } from "../domain/ZerohashTypes";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
@@ -196,7 +196,81 @@ export class DefaultAssetService implements AssetService {
     return withdrawalId;
   }
 
-  pollConsumerWalletTransferStatus(id: string) {
-    throw new Error("Method not implemented.");
+  async pollConsumerWalletTransferStatus(id: string): Promise<ConsumerWalletTransferStatus> {
+    const withdrawalResponse: ZerohashWithdrawalResponse =
+      await this.zerohashService.getWithdrawal(id);
+
+    try {
+      switch (withdrawalResponse.withdrawalStatus) {
+        case WithdrawalState.PENDING:
+          return {
+            status: PollStatus.PENDING,
+            errorMessage: null,
+            requestedAmount: null,
+            settledAmount: null,
+            onChainTransactionId: null,
+          };
+
+        case WithdrawalState.APPROVED:
+          return {
+            status: PollStatus.PENDING,
+            errorMessage: null,
+            requestedAmount: null,
+            settledAmount: null,
+            onChainTransactionId: null,
+          };
+
+        // TODO(#): Check with ZH if this error can be retried.
+        case WithdrawalState.REJECTED:
+          return {
+            status: PollStatus.FAILURE,
+            errorMessage: "Withdrawal request rejected.",
+            requestedAmount: null,
+            settledAmount: null,
+            onChainTransactionId: null,
+          };
+
+        case WithdrawalState.SETTLED:
+          switch (withdrawalResponse.onChainStatus) {
+            case OnChainState.PENDING:
+              return {
+                status: PollStatus.PENDING,
+                errorMessage: null,
+                requestedAmount: null,
+                settledAmount: null,
+                onChainTransactionId: null,
+              };
+
+            case OnChainState.CONFIRMED:
+              return {
+                status: PollStatus.SUCCESS,
+                errorMessage: null,
+                requestedAmount: withdrawalResponse.requestedAmount,
+                settledAmount: withdrawalResponse.settledAmount,
+                onChainTransactionId: withdrawalResponse.onChainTransactionId,
+              };
+
+            case OnChainState.ERROR:
+              return {
+                status: PollStatus.FAILURE,
+                errorMessage: "Transaction was failed to settled on the Blockchain n/w.",
+                requestedAmount: null,
+                settledAmount: null,
+                onChainTransactionId: null,
+              };
+          }
+      }
+    } catch (err) {
+      this.logger.error(`Get withdrawal failed for ID '${id}'.`);
+      this.logger.error(JSON.stringify(err));
+
+      return {
+        status: PollStatus.PENDING,
+        errorMessage: null,
+        requestedAmount: null,
+        settledAmount: null,
+        onChainTransactionId: null,
+      };
+    }
   }
 };
