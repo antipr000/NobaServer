@@ -231,11 +231,11 @@ export class ZeroHashService {
 
   async executeTrade(request: ZerohashTradeRquest): Promise<ZerohashTradeResponse> {
     const tradeData = {
-      symbol: request.broughtAssetId + "/" + request.soldAssetId,
+      symbol: request.boughtAssetID + "/" + request.soldAssetId,
 
       trade_price: String(request.tradePrice),
       trade_quantity: String(request.tradeAmount / request.tradePrice),
-      client_trade_id: request.idempotencyId,
+      client_trade_id: request.idempotencyID,
 
       trade_reporter: request.requestorEmail,
       platform_code: this.getNobaPlatformCode(),
@@ -249,7 +249,7 @@ export class ZeroHashService {
       parties: [
         {
           participant_code: request.buyerParticipantCode,
-          asset: request.broughtAssetId,
+          asset: request.boughtAssetID,
           amount: String(request.tradeAmount),
           side: "buy",
           settling: true,
@@ -271,7 +271,7 @@ export class ZeroHashService {
     }
 
     return {
-      tradeId: tradeRequest["message"].trade_id,
+      tradeID: tradeRequest["message"].trade_id,
     };
   }
 
@@ -291,7 +291,7 @@ export class ZeroHashService {
       updatedAt: new Date(response.message.updated_at),
       status: response.message.status,
       asset: response.message.asset,
-      movementId: response.message.movement_id,
+      movementID: response.message.movement_id,
     };
   }
 
@@ -319,7 +319,7 @@ export class ZeroHashService {
       gasPrice: withdrawal["message"][0]["gas_price"],
       requestedAmount: withdrawal["message"][0]["requested_amount"],
       settledAmount: withdrawal["message"][0]["settled_amount"],
-      onChainTransactionId: withdrawal["message"][0]["transaction_id"],
+      onChainTransactionID: withdrawal["message"][0]["transaction_id"],
 
       onChainStatus: OnChainState.PENDING,
       withdrawalStatus: WithdrawalState.PENDING,
@@ -393,7 +393,7 @@ export class ZeroHashService {
     switch (tradeState) {
       case "accepted":
         return {
-          tradeId: tradeId,
+          tradeID: tradeId,
           tradeState: TradeState.PENDING,
           settledTimestamp: null,
           errorMessage: null,
@@ -401,7 +401,7 @@ export class ZeroHashService {
 
       case "active":
         return {
-          tradeId: tradeId,
+          tradeID: tradeId,
           tradeState: TradeState.PENDING,
           settledTimestamp: null,
           errorMessage: null,
@@ -410,14 +410,14 @@ export class ZeroHashService {
       case "terminated":
         if (settlementState === "settled") {
           return {
-            tradeId: tradeId,
+            tradeID: tradeId,
             tradeState: TradeState.SETTLED,
             settledTimestamp: settledTimestamp,
             errorMessage: null,
           };
         }
         return {
-          tradeId: tradeId,
+          tradeID: tradeId,
           tradeState: TradeState.DEFAULTED,
           errorMessage: `Trade could not be settled by the expiry time`,
           settledTimestamp: null,
@@ -437,9 +437,9 @@ export class ZeroHashService {
     if (!withdrawalID) {
       const withdrawalRequest = await this.requestWithdrawal(
         transaction.props.destinationWalletAddress,
-        consumer.zhParticipantCode,
         transaction.props.leg2Amount,
         transaction.props.leg2,
+        consumer.zhParticipantCode,
         NOBA_PLATFORM_CODE,
       );
 
@@ -573,7 +573,7 @@ export class ZeroHashService {
     return {
       tradePrice: executedQuote["message"]["quote"].price,
       cryptoReceived: executedQuote["message"]["quote"].quantity,
-      quoteId: executedQuote["message"]["quote"].quote_id,
+      quoteID: executedQuote["message"]["quote"].quote_id,
     };
   }
 

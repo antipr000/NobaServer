@@ -16,7 +16,7 @@ export interface FundsAvailabilityRequest {
 
   slippage: number;
 
-  transactionId: string;
+  transactionID: string;
   transactionCreationTimestamp: Date;
 
   consumer: ConsumerProps;
@@ -42,7 +42,7 @@ export interface ConsumerAccountTransferRequest {
   cryptoAssetTradePrice: number;
   totalCryptoAmount: number;
 
-  transactionId: string;
+  transactionID: string;
   transactionCreationTimestamp: Date;
 }
 
@@ -56,7 +56,7 @@ export interface ConsumerWalletTransferRequest {
   amount: number;
   assetId: string;
   consumer: ConsumerProps;
-  transactionId: string;
+  transactionID: string;
 }
 
 export interface ConsumerWalletTransferStatus {
@@ -65,5 +65,5 @@ export interface ConsumerWalletTransferStatus {
 
   requestedAmount: number;
   settledAmount: number;
-  onChainTransactionId: string;
+  onChainTransactionID: string;
 }

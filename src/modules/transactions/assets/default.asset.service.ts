@@ -121,7 +121,7 @@ export class DefaultAssetService implements AssetService {
           return {
             status: PollStatus.SUCCESS,
             errorMessage: null,
-            settledId: zhTransfer.movementId,
+            settledId: zhTransfer.movementID,
           };
 
         case ZerohashTransferStatus.REJECTED:
@@ -160,7 +160,7 @@ export class DefaultAssetService implements AssetService {
 
     // TODO(#310) Confirm that the traded values comes out correctly
     const tradeRequest: ZerohashTradeRquest = {
-      broughtAssetId: request.cryptoCurrency,
+      boughtAssetID: request.cryptoCurrency,
       soldAssetId: request.fiatCurrency,
 
       tradeAmount: request.totalCryptoAmount,
@@ -169,12 +169,12 @@ export class DefaultAssetService implements AssetService {
       buyerParticipantCode: consumerParticipantCode,
       sellerParticipantCode: this.zerohashService.getNobaPlatformCode(),
 
-      idempotencyId: request.transactionId,
+      idempotencyID: request.transactionID,
       requestorEmail: request.consumer.email,
     };
     const tradeResponse: ZerohashTradeResponse = await this.zerohashService.executeTrade(tradeRequest);
 
-    return tradeResponse.tradeId;
+    return tradeResponse.tradeID;
   }
 
   async pollAssetTransferToConsumerStatus(id: string): Promise<ConsumerAccountTransferStatus> {
@@ -232,7 +232,7 @@ export class DefaultAssetService implements AssetService {
             errorMessage: null,
             requestedAmount: null,
             settledAmount: null,
-            onChainTransactionId: null,
+            onChainTransactionID: null,
           };
 
         case WithdrawalState.APPROVED:
@@ -241,7 +241,7 @@ export class DefaultAssetService implements AssetService {
             errorMessage: null,
             requestedAmount: null,
             settledAmount: null,
-            onChainTransactionId: null,
+            onChainTransactionID: null,
           };
 
         // TODO(#): Check with ZH if this error can be retried.
@@ -251,7 +251,7 @@ export class DefaultAssetService implements AssetService {
             errorMessage: "Withdrawal request rejected.",
             requestedAmount: null,
             settledAmount: null,
-            onChainTransactionId: null,
+            onChainTransactionID: null,
           };
 
         case WithdrawalState.SETTLED:
@@ -262,7 +262,7 @@ export class DefaultAssetService implements AssetService {
                 errorMessage: null,
                 requestedAmount: null,
                 settledAmount: null,
-                onChainTransactionId: null,
+                onChainTransactionID: null,
               };
 
             case OnChainState.CONFIRMED:
@@ -271,7 +271,7 @@ export class DefaultAssetService implements AssetService {
                 errorMessage: null,
                 requestedAmount: withdrawalResponse.requestedAmount,
                 settledAmount: withdrawalResponse.settledAmount,
-                onChainTransactionId: withdrawalResponse.onChainTransactionId,
+                onChainTransactionID: withdrawalResponse.onChainTransactionID,
               };
 
             case OnChainState.ERROR:
@@ -280,7 +280,7 @@ export class DefaultAssetService implements AssetService {
                 errorMessage: "Transaction was failed to settled on the Blockchain n/w.",
                 requestedAmount: null,
                 settledAmount: null,
-                onChainTransactionId: null,
+                onChainTransactionID: null,
               };
           }
       }
@@ -293,7 +293,7 @@ export class DefaultAssetService implements AssetService {
         errorMessage: null,
         requestedAmount: null,
         settledAmount: null,
-        onChainTransactionId: null,
+        onChainTransactionID: null,
       };
     }
   }

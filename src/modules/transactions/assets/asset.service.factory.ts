@@ -6,9 +6,8 @@ import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
 @Injectable()
 export class AssetServiceFactory {
   constructor(
-    private readonly defaultAssetService: DefaultAssetService,
-  ) // private readonly usdcPolygonAssetService: USDCPolygonAssetService,
-  {}
+    private readonly defaultAssetService: DefaultAssetService, // private readonly usdcPolygonAssetService: USDCPolygonAssetService,
+  ) {}
 
   getAssetService(ticker: string): AssetService {
     // if (ticker === "USDC.POLYGON") {

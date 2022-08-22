@@ -59,7 +59,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
         assetId: transaction.props.leg2,
         walletAddress: transaction.props.destinationWalletAddress,
         consumer: consumer.props,
-        transactionId: transaction.props._id,
+        transactionID: transaction.props._id,
       };
       withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
       transaction.props.zhWithdrawalID = withdrawalID;
@@ -85,7 +85,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
         // TODO(#): Understand if we need to put a check here for equality.
         transaction.props.leg2Amount = withdrawalStatus.requestedAmount;
         transaction.props.settledAmount = withdrawalStatus.settledAmount;
-        transaction.props.blockchainTransactionId = withdrawalStatus.onChainTransactionId;
+        transaction.props.blockchainTransactionId = withdrawalStatus.onChainTransactionID;
         await this.transactionRepo.updateTransactionStatus(
           transaction.props._id,
           TransactionStatus.COMPLETED,

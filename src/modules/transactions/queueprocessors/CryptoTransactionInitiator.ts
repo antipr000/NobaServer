@@ -66,27 +66,27 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         slippage: 0,
 
         transactionCreationTimestamp: transaction.props.transactionTimestamp,
-        transactionId: transaction.props._id,
+        transactionID: transaction.props._id,
       };
       const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
         makeFundsAvailableRequest,
       );
 
-      // TODO(#): Rename the field to something genric.
-      transaction.props.nobaTransferTradeID = fundAvailableResponse.id;
+      // TODO(#): Rename the field to something generic.
+      transaction.props.nobaTransferSettlementID = fundAvailableResponse.id;
       transaction.props.exchangeRate = fundAvailableResponse.tradePrice;
       await this.transactionRepo.updateTransaction(transaction);
     }
 
     // TODO(#): Move this to new processor.
-    if (!transaction.props.nobaTransferSettlementId) {
+    if (!transaction.props.nobaTransferSettlementID) {
       const fundsAvailabilityStatus: FundsAvailabilityStatus = await assetService.pollFundsAvailableStatus(
         transaction.props.nobaTransferTradeID,
       );
 
       switch (fundsAvailabilityStatus.status) {
         case PollStatus.SUCCESS:
-          transaction.props.nobaTransferSettlementId = fundsAvailabilityStatus.settledId;
+          transaction.props.nobaTransferSettlementID = fundsAvailabilityStatus.settledId;
           await this.transactionRepo.updateTransaction(transaction);
 
         case PollStatus.PENDING:
@@ -109,7 +109,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
       cryptoCurrency: transaction.props.leg2,
       fiatCurrency: transaction.props.leg1,
-      transactionId: transaction.props._id,
+      transactionID: transaction.props._id,
       transactionCreationTimestamp: transaction.props.transactionTimestamp,
     };
     const tradeId: string = await assetService.transferAssetToConsumerAccount(assetTransferToConsumerAccountRequest);

@@ -1,5 +1,5 @@
 export interface ExecutedQuote {
-  quoteId: string;
+  quoteID: string;
   tradePrice: number;
   cryptoReceived: number;
 }
@@ -10,7 +10,7 @@ export interface ZerohashTransfer {
   updatedAt: Date;
   status: ZerohashTransferStatus;
   asset: string;
-  movementId: string;
+  movementID: string;
 }
 
 export enum ZerohashTransferStatus {
@@ -22,7 +22,7 @@ export enum ZerohashTransferStatus {
 }
 
 export interface ZerohashTradeRquest {
-  idempotencyId: string;
+  idempotencyID: string;
   requestorEmail: string;
 
   buyerParticipantCode: string;
@@ -30,16 +30,16 @@ export interface ZerohashTradeRquest {
 
   tradePrice: number;
   tradeAmount: number;
-  broughtAssetId: string;
+  boughtAssetID: string;
   soldAssetId: string;
 }
 
 export interface ZerohashTradeResponse {
-  tradeId: string;
+  tradeID: string;
 }
 
 export interface ZerohashTradeResponse {
-  tradeId: string;
+  tradeID: string;
   settledTimestamp?: number;
   tradeState?: TradeState;
   errorMessage?: string;
@@ -56,7 +56,7 @@ export interface ZerohashWithdrawalResponse {
   settledAmount: number;
   withdrawalStatus: WithdrawalState;
   onChainStatus: OnChainState;
-  onChainTransactionId: string;
+  onChainTransactionID: string;
   gasPrice: string;
 }
 

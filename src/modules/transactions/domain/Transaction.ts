@@ -35,7 +35,7 @@ export interface TransactionProps extends VersioningInfo {
   type: TransactionType;
   tradeQuoteID: string;
   nobaTransferTradeID?: string;
-  nobaTransferSettlementId?: string;
+  nobaTransferSettlementID?: string;
   nobaFee: number;
   processingFee: number;
   networkFee: number;
@@ -79,7 +79,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
     .default(TransactionType.ONRAMP),
   tradeQuoteID: Joi.string().optional(), // Optional as it may get set after initial transaction record is created
   nobaTransferTradeID: Joi.string().optional(),
-  nobaTransferSettlementId: Joi.string().optional(),
+  nobaTransferSettlementID: Joi.string().optional(),
   nobaFee: Joi.number().optional(),
   processingFee: Joi.number().optional(),
   networkFee: Joi.number().optional(),
