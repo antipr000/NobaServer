@@ -94,6 +94,8 @@ import { CommonConfigs } from "./configtypes/CommonConfigs";
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
   [AppEnvironment.DEV]: "localdevelopment.yaml",
+  [AppEnvironment.PARTNER]: "partner.yaml",
+  [AppEnvironment.SANDBOX]: "sandbox.yaml",
   [AppEnvironment.PROD]: "production.yaml",
   [AppEnvironment.STAGING]: "staging.yaml",
   [AppEnvironment.E2E_TEST]: "e2e_test.yaml",

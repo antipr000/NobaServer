@@ -136,8 +136,8 @@ function getMorgan(winstonLogger) {
     const userID = ((req as any).user as any)?.props?._id;
 
     return [
-      userID ?? "noauth",
-      req.socket.remoteAddress, //TODO any privacy issue here?  as developers can see both uid and ip, best practice?
+      userID ?? "unauthenticated-request",
+      req.headers["x-forwarded-for"] || req.socket.remoteAddress, //TODO any privacy issue here?  as developers can see both uid and ip, best practice?
       tokens.method(req, res),
       tokens.url(req, res),
       tokens.status(req, res),

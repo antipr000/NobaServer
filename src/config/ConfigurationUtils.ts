@@ -3,6 +3,8 @@ import { SecretProvider } from "./SecretProvider";
 
 export enum AppEnvironment {
   DEV = "development",
+  SANDBOX = "sandbox",
+  PARTNER = "partner",
   PROD = "production",
   STAGING = "staging",
   E2E_TEST = "e2e_test",
