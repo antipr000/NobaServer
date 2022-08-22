@@ -60,6 +60,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
             TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
             transaction.props,
           );
+          // TODO: Check transaction completes here, should we not send transaction successful email?
           return;
 
         case PollStatus.FAILURE:
@@ -86,6 +87,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
         return;
       }
 
+      // TODO: Check, we are already sending email in TransactionFailedProcessor. Is it needed here?
       await this.emailService.sendCryptoFailedEmail(
         consumer.props.firstName,
         consumer.props.lastName,
