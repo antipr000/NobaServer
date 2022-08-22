@@ -45,7 +45,6 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
       return;
     }
 
-
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
     const consumerAccountTransferStatus: ConsumerAccountTransferStatus =
       await assetService.pollAssetTransferToConsumerStatus(transaction.props.cryptoTransactionId);

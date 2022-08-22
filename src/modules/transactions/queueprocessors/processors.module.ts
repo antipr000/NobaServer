@@ -79,4 +79,4 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
     },
   ],
 })
-export class AsyncTransactionProcessorModule { }
+export class AsyncTransactionProcessorModule {}

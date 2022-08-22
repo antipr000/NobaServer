@@ -3,12 +3,31 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { AppService } from "../../../app.service";
-import { FundsAvailabilityRequest, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityStatus, PollStatus, FundsAvailabilityResponse, ConsumerAccountTransferStatus, ConsumerWalletTransferStatus } from "../domain/AssetTypes";
+import {
+  FundsAvailabilityRequest,
+  ConsumerAccountTransferRequest,
+  ConsumerWalletTransferRequest,
+  FundsAvailabilityStatus,
+  PollStatus,
+  FundsAvailabilityResponse,
+  ConsumerAccountTransferStatus,
+  ConsumerWalletTransferStatus,
+} from "../domain/AssetTypes";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
 import { CurrencyType } from "../../common/domain/Types";
-import { ExecutedQuote, OnChainState, TradeState, WithdrawalState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer, ZerohashTransferStatus, ZerohashWithdrawalResponse } from "../domain/ZerohashTypes";
+import {
+  ExecutedQuote,
+  OnChainState,
+  TradeState,
+  WithdrawalState,
+  ZerohashTradeResponse,
+  ZerohashTradeRquest,
+  ZerohashTransfer,
+  ZerohashTransferStatus,
+  ZerohashWithdrawalResponse,
+} from "../domain/ZerohashTypes";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
@@ -16,8 +35,7 @@ export class DefaultAssetService implements AssetService {
     private readonly appService: AppService,
     private readonly zerohashService: ZeroHashService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
-  }
+  ) {}
 
   getQuote(quoteQuery: TransactionQuoteQueryDTO) {
     throw new Error("Method not implemented.");
@@ -25,12 +43,12 @@ export class DefaultAssetService implements AssetService {
 
   /**
    * Make the requested fund available for transfer to consumer wallet.
-   * 
+   *
    * @param request: Fiat and Crypto Asset details to be exchanged.
-   * @returns 
+   * @returns
    *   - If succeed, returns the ID which can be polled for completion using `pollFundsAvailableStatus` function.
    *   - If failed, throws the error.
-   * 
+   *
    * TODO(#): Make it idempotent by using 'transactionId'.
    * TODO(#): Fails gracefully with proper error messages.
    */
@@ -48,13 +66,19 @@ export class DefaultAssetService implements AssetService {
     }
 
     // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
-    const executedQuote: ExecutedQuote =
-      await this.zerohashService.requestAndExecuteQuote(request.cryptoCurrency, request.fiatCurrency, request.fiatAmount, CurrencyType.FIAT);
+    const executedQuote: ExecutedQuote = await this.zerohashService.requestAndExecuteQuote(
+      request.cryptoCurrency,
+      request.fiatCurrency,
+      request.fiatAmount,
+      CurrencyType.FIAT,
+    );
 
     // TODO(#) Check slippage.
 
-    const assetTransferId: string =
-      await this.zerohashService.transferAssetsToNoba(request.cryptoCurrency, executedQuote.cryptoReceived);
+    const assetTransferId: string = await this.zerohashService.transferAssetsToNoba(
+      request.cryptoCurrency,
+      executedQuote.cryptoReceived,
+    );
 
     this.logger.debug(`AssetTransferId: ${assetTransferId}`);
     return {
@@ -66,9 +90,9 @@ export class DefaultAssetService implements AssetService {
   /**
    * Polls the status for the funds available requests sent using `makeFundsAvailable()`.
    * This function is stateless and idempotent. Hence, can be called parallelly for same ID.
-   * 
+   *
    * @param id: ID returned from the `makeFundsAvailable()` function.
-   * @returns 
+   * @returns
    *   - If status = SUCCESS, returns unique ID for the specific account update in 'settledId'
    *   - If status = PENDING, all other fields will be null.
    *   - If status = FAILURE, the transfer request failed because of an expected reason & can be retried.
@@ -112,7 +136,7 @@ export class DefaultAssetService implements AssetService {
             status: PollStatus.FAILURE,
             errorMessage: `Liquidity transfer to Noba was cancelled for transferId '${id}'`,
             settledId: null,
-          }
+          };
 
         default:
           throw Error(`Unexpected Zerohash Transfer status: ${zhTransfer.status}`);
@@ -123,14 +147,16 @@ export class DefaultAssetService implements AssetService {
         status: PollStatus.FATAL_ERROR,
         errorMessage: `Liquidity transfer failed for '${id}': ${err.message}`,
         settledId: null,
-      }
+      };
     }
   }
 
   async transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string> {
     // Gets or creates participant code
-    const consumerParticipantCode: string =
-      await this.zerohashService.getParticipantCode(request.consumer, request.transactionCreationTimestamp);
+    const consumerParticipantCode: string = await this.zerohashService.getParticipantCode(
+      request.consumer,
+      request.transactionCreationTimestamp,
+    );
 
     // TODO(#310) Confirm that the traded values comes out correctly
     const tradeRequest: ZerohashTradeRquest = {
@@ -146,8 +172,7 @@ export class DefaultAssetService implements AssetService {
       idempotencyId: request.transactionId,
       requestorEmail: request.consumer.email,
     };
-    const tradeResponse: ZerohashTradeResponse =
-      await this.zerohashService.executeTrade(tradeRequest);
+    const tradeResponse: ZerohashTradeResponse = await this.zerohashService.executeTrade(tradeRequest);
 
     return tradeResponse.tradeId;
   }
@@ -174,7 +199,7 @@ export class DefaultAssetService implements AssetService {
             status: PollStatus.FAILURE,
             errorMessage: tradeResponse.errorMessage,
           };
-      };
+      }
     } catch (err) {
       return {
         status: PollStatus.FATAL_ERROR,
@@ -197,8 +222,7 @@ export class DefaultAssetService implements AssetService {
   }
 
   async pollConsumerWalletTransferStatus(id: string): Promise<ConsumerWalletTransferStatus> {
-    const withdrawalResponse: ZerohashWithdrawalResponse =
-      await this.zerohashService.getWithdrawal(id);
+    const withdrawalResponse: ZerohashWithdrawalResponse = await this.zerohashService.getWithdrawal(id);
 
     try {
       switch (withdrawalResponse.withdrawalStatus) {
@@ -273,4 +297,4 @@ export class DefaultAssetService implements AssetService {
       };
     }
   }
-};
+}

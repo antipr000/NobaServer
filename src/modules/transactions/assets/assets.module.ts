@@ -18,6 +18,6 @@ import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
     // USDCPolygonAssetService,
     AssetServiceFactory,
   ],
-  exports: [AssetServiceFactory, DefaultAssetService, /*USDCPolygonAssetService*/]
+  exports: [AssetServiceFactory, DefaultAssetService /*USDCPolygonAssetService*/],
 })
-export class AssetsModule { }
+export class AssetsModule {}

@@ -16,11 +16,17 @@ import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
 import { Transaction } from "./domain/Transaction";
+import { CryptoTransactionRequestResult, CryptoTransactionRequestResultStatus } from "./domain/Types";
 import {
-  CryptoTransactionRequestResult,
-  CryptoTransactionRequestResultStatus,
-} from "./domain/Types";
-import { ExecutedQuote, OnChainState, TradeState, WithdrawalState, ZerohashTradeResponse, ZerohashTradeRquest, ZerohashTransfer, ZerohashWithdrawalResponse } from "./domain/ZerohashTypes";
+  ExecutedQuote,
+  OnChainState,
+  TradeState,
+  WithdrawalState,
+  ZerohashTradeResponse,
+  ZerohashTradeRquest,
+  ZerohashTransfer,
+  ZerohashWithdrawalResponse,
+} from "./domain/ZerohashTypes";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -307,8 +313,7 @@ export class ZeroHashService {
   }
 
   async getWithdrawal(withdrawalID: string): Promise<ZerohashWithdrawalResponse> {
-    const withdrawal =
-      await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
+    const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
 
     const response: ZerohashWithdrawalResponse = {
       gasPrice: withdrawal["message"][0]["gas_price"],
@@ -340,7 +345,7 @@ export class ZeroHashService {
       default:
         this.logger.error(`Unexpected withdrawal status: "${withdrawal["message"][0]["status"]}"`);
         response.withdrawalStatus = WithdrawalState.REJECTED;
-    };
+    }
 
     switch (withdrawal["message"][0]["on_chain_status"]) {
       case "PENDING":
@@ -445,7 +450,7 @@ export class ZeroHashService {
     return withdrawalID;
   }
 
-  // [DEPRECATED]: Use AssetService interface instead. 
+  // [DEPRECATED]: Use AssetService interface instead.
   // Will be removed once everything works in staging.
   async initiateCryptoTransfer(
     consumer: ConsumerProps,

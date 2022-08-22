@@ -5,7 +5,7 @@ export enum PollStatus {
   PENDING = "pending",
   FAILURE = "failed",
   FATAL_ERROR = "internal_error",
-};
+}
 
 export interface FundsAvailabilityRequest {
   fiatAmount: number;
@@ -20,7 +20,7 @@ export interface FundsAvailabilityRequest {
   transactionCreationTimestamp: Date;
 
   consumer: ConsumerProps;
-};
+}
 
 export interface FundsAvailabilityResponse {
   id: string;
@@ -31,7 +31,7 @@ export interface FundsAvailabilityStatus {
   status: PollStatus;
   errorMessage: string;
   settledId: string;
-};
+}
 
 export interface ConsumerAccountTransferRequest {
   consumer: ConsumerProps;

@@ -1,4 +1,12 @@
-import { ConsumerAccountTransferStatus, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest, FundsAvailabilityRequest, FundsAvailabilityResponse, FundsAvailabilityStatus, ConsumerWalletTransferStatus } from "../domain/AssetTypes";
+import {
+  ConsumerAccountTransferStatus,
+  ConsumerAccountTransferRequest,
+  ConsumerWalletTransferRequest,
+  FundsAvailabilityRequest,
+  FundsAvailabilityResponse,
+  FundsAvailabilityStatus,
+  ConsumerWalletTransferStatus,
+} from "../domain/AssetTypes";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 
 export interface AssetService {

@@ -67,8 +67,9 @@ export class OnChainPendingProcessor extends MessageProcessor {
       console.log("Set zhWithdrawalID on transaction to " + withdrawalID);
     }
 
-    const withdrawalStatus: ConsumerWalletTransferStatus =
-      await assetService.pollConsumerWalletTransferStatus(withdrawalID);
+    const withdrawalStatus: ConsumerWalletTransferStatus = await assetService.pollConsumerWalletTransferStatus(
+      withdrawalID,
+    );
 
     switch (withdrawalStatus.status) {
       case PollStatus.PENDING:
@@ -85,7 +86,11 @@ export class OnChainPendingProcessor extends MessageProcessor {
         transaction.props.leg2Amount = withdrawalStatus.requestedAmount;
         transaction.props.settledAmount = withdrawalStatus.settledAmount;
         transaction.props.blockchainTransactionId = withdrawalStatus.onChainTransactionId;
-        await this.transactionRepo.updateTransactionStatus(transaction.props._id, TransactionStatus.COMPLETED, transaction);
+        await this.transactionRepo.updateTransactionStatus(
+          transaction.props._id,
+          TransactionStatus.COMPLETED,
+          transaction,
+        );
     }
 
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);

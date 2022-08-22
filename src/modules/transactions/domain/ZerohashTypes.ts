@@ -8,7 +8,7 @@ export interface ZerohashTransfer {
   id: string;
   createdAt: Date;
   updatedAt: Date;
-  status: ZerohashTransferStatus,
+  status: ZerohashTransferStatus;
   asset: string;
   movementId: string;
 }

@@ -7,8 +7,8 @@ import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
 export class AssetServiceFactory {
   constructor(
     private readonly defaultAssetService: DefaultAssetService,
-    // private readonly usdcPolygonAssetService: USDCPolygonAssetService,
-  ) { }
+  ) // private readonly usdcPolygonAssetService: USDCPolygonAssetService,
+  {}
 
   getAssetService(ticker: string): AssetService {
     // if (ticker === "USDC.POLYGON") {
@@ -16,4 +16,4 @@ export class AssetServiceFactory {
     // }
     return this.defaultAssetService;
   }
-};
+}

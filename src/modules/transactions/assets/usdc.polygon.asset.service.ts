@@ -1,5 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { FundsAvailabilityRequest, ConsumerAccountTransferRequest, ConsumerWalletTransferRequest } from "../domain/AssetTypes";
+import {
+  FundsAvailabilityRequest,
+  ConsumerAccountTransferRequest,
+  ConsumerWalletTransferRequest,
+} from "../domain/AssetTypes";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { AssetService } from "./asset.service";
 
@@ -32,4 +36,4 @@ export class USDCPolygonAssetService implements AssetService {
   pollConsumerWalletTransferStatus(id: string) {
     throw new Error("Method not implemented.");
   }
-};
+}

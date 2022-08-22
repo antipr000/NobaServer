@@ -10,7 +10,13 @@ import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { AssetService } from "../assets/asset.service";
-import { FundsAvailabilityRequest, FundsAvailabilityResponse, ConsumerAccountTransferRequest, FundsAvailabilityStatus, PollStatus } from "../domain/AssetTypes";
+import {
+  FundsAvailabilityRequest,
+  FundsAvailabilityResponse,
+  ConsumerAccountTransferRequest,
+  FundsAvailabilityStatus,
+  PollStatus,
+} from "../domain/AssetTypes";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
   constructor(
@@ -31,7 +37,6 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       TransactionQueueName.FiatTransactionCompleted,
       lockService,
     );
-
   }
 
   async processMessageInternal(transactionId: string) {
@@ -62,9 +67,10 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
         transactionCreationTimestamp: transaction.props.transactionTimestamp,
         transactionId: transaction.props._id,
-      }
-      const fundAvailableResponse: FundsAvailabilityResponse =
-        await assetService.makeFundsAvailable(makeFundsAvailableRequest);
+      };
+      const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
+        makeFundsAvailableRequest,
+      );
 
       // TODO(#): Rename the field to something genric.
       transaction.props.nobaTransferTradeID = fundAvailableResponse.id;
@@ -74,8 +80,9 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     // TODO(#): Move this to new processor.
     if (!transaction.props.nobaTransferSettlementId) {
-      const fundsAvailabilityStatus: FundsAvailabilityStatus =
-        await assetService.pollFundsAvailableStatus(transaction.props.nobaTransferTradeID);
+      const fundsAvailabilityStatus: FundsAvailabilityStatus = await assetService.pollFundsAvailableStatus(
+        transaction.props.nobaTransferTradeID,
+      );
 
       switch (fundsAvailabilityStatus.status) {
         case PollStatus.SUCCESS:
@@ -108,7 +115,11 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     const tradeId: string = await assetService.transferAssetToConsumerAccount(assetTransferToConsumerAccountRequest);
 
     transaction.props.cryptoTransactionId = tradeId;
-    await this.transactionRepo.updateTransactionStatus(transaction.props._id, TransactionStatus.CRYPTO_OUTGOING_INITIATED, transaction.props);
+    await this.transactionRepo.updateTransactionStatus(
+      transaction.props._id,
+      TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+      transaction.props,
+    );
 
     //Move to initiated crypto queue, poller will take delay as it's scheduled so we move it to the target queue directly from here
     if (transaction.props.transactionStatus === TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
