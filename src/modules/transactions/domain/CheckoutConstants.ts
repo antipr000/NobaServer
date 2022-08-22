@@ -28,6 +28,8 @@ export const REASON_CODE_SOFT_DECLINE_CARD_ERROR: string[] = [
   "20154",
 ];
 
+export const REASON_CODE_SOFT_DECLINE_NO_CRYPTO: string[] = ["20057", "20058", "20182"];
+
 export const REASON_CODE_SOFT_DECLINE_BANK_ERROR: string[] = [
   "20001",
   "20002",
@@ -59,8 +61,6 @@ export const REASON_CODE_SOFT_DECLINE_BANK_ERROR: string[] = [
   "20054",
   "20055",
   "20056",
-  "20057",
-  "20058",
   "20059",
   "20060",
   "20061",
@@ -118,7 +118,6 @@ export const REASON_CODE_SOFT_DECLINE_BANK_ERROR: string[] = [
   "20151",
   "20155",
   "20179",
-  "20182",
   "20183",
 ];
 

@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
+import { CheckoutConfigs } from "src/config/configtypes/CheckoutConfigs";
+import { CHECKOUT_CONFIG_KEY } from "src/config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Injectable()
@@ -7,16 +9,14 @@ export class CheckoutService {
   private readonly checkout: Checkout;
 
   constructor(private configService: CustomConfigService) {
-    // TODO: Add secret and private key for checkout to AWS Secret Manager and get from there like we do for stripe below
-    // const stripeSecretKey = this.configService.get<StripeConfigs>(STRIPE_CONFIG_KEY).secretKey;
-    const checkoutSecretKey = "sk_sbox_xdhkcai4bosm32intni46my5x4j";
-    const checkoutPrivatekey = "pk_sbox_m3756a5g3z4ootpdssqy3hxxemv";
+    const checkoutSecretKey = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).secretKey;
+    const checkoutPublicKey = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).publicKey;
     this.checkout = new Checkout(checkoutSecretKey, {
-      pk: checkoutPrivatekey,
+      pk: checkoutPublicKey,
     });
   }
 
-  public get checkoutApi() {
+  public get checkoutAPI() {
     return this.checkout;
   }
 }
