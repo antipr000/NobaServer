@@ -19,11 +19,17 @@ import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { PaymentMethod } from "./domain/PaymentMethod";
 import { PaymentProviders } from "./domain/PaymentProviderDetails";
-import { CardAddFailureExceptionText, FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
+import {
+  CardAddFailureExceptionText,
+  CheckoutPaymentStatus,
+  FiatTransactionStatus,
+  PaymentRequestResponse,
+} from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 
 class CheckoutResponseData {
   paymentMethodStatus: PaymentMethodStatus;

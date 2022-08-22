@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
-import { CheckoutConfigs } from "src/config/configtypes/CheckoutConfigs";
-import { CHECKOUT_CONFIG_KEY } from "src/config/ConfigurationUtils";
+import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
+import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Injectable()
