@@ -4,9 +4,9 @@ name: Run Tests
 
 # Controls when the workflow will run
 on:
-  # Triggers the tests on creating a pull request for master branch
+  # Triggers the tests on creating a pull request for main branch
   pull_request:
-    branches: [master]
+    branches: [main]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

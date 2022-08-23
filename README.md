@@ -26,7 +26,7 @@ Noba server side code.
 
 #### Dev Environment (api-dev.noba.com/v1/health)
 
-We have github actions setup that will automatically deploy changes in staging instance whenever chagnes are pushed to master/main branch.
+We have github actions setup that will automatically deploy changes in staging instance whenever chagnes are pushed to the main branch.
 
 #### AWS Sandbox Environment (api-sandbox.noba.com/v1/health)
 
