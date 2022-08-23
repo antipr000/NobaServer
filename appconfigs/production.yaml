@@ -84,10 +84,12 @@ zerohash:
   awsSecretNameForApiSecret: "PROD_ZEROHASH_API_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForPassPhrase: "PROD_ZEROHASH_PASS_PHRASE" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForHost: "PROD_ZEROHASH_HOST"
+  awsSecretNameForPlatformCode: "PROD_ZEROHASH_PLATFORM_CODE"
   apiKey: ""
   apiSecret: ""
   passPhrase: ""
   host: ""
+  platformCode: ""
 
 configuration:
   lowAmountThreshold: 50

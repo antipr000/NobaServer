@@ -90,10 +90,12 @@ export const ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameforApiKey"
 export const ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR = "awsSecretNameForApiSecret";
 export const ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR = "awsSecretNameForPassPhrase";
 export const ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR = "awsSecretNameForHost";
+export const ZEROHASH_AWS_SECRET_KEY_FOR_PLATFORM_CODE = "awsSecretNameForPlatformCode";
 export const ZEROHASH_API_KEY = "apiKey";
 export const ZEROHASH_API_SECRET = "apiSecret";
 export const ZEROHASH_PASS_PHRASE = "passPhrase";
 export const ZEROHASH_HOST = "host";
+export const ZEROHASH_PLATFORM_CODE = "platformCode";
 
 export const KMS_CONFIG_CONTEXT_KEY = "context";
 export const KMS_CONFIG_KEY = "kms";
