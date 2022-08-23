@@ -92,9 +92,13 @@ jobs:
               ebEnvironment=partner
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
               ebEnvironment=staging
-          elif [[ ${GITHUB_REF:-noref} =~ master ] || [ ${GITHUB_REF:-noref} =~ main ]]; then
+          elif [[ ${GITHUB_REF:-noref} =~ master ]]; then
+            ebEnvironment=dev
+          elif [[ ${GITHUB_REF:-noref} =~ main ]]; then
               ebEnvironment=dev
-          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ] || [ ${{github.event.label.name}} == 'deploy-sandbox' ]]; then
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]]; then
+              ebEnvironment=sandbox
+          elif [[ ${{github.event.label.name}} == 'deploy-sandbox' ]]; then
               ebEnvironment=sandbox
           fi
 
