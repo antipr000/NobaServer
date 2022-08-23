@@ -1,4 +1,4 @@
-name: CI 
+name: CI
 
 # Controls when the workflow will run
 on:
@@ -11,7 +11,7 @@ on:
     branches: [master, main]
   pull_request:
     branches: [master, main]
-    types: [ labeled, open ]
+    types: [labeled, open]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -44,12 +44,12 @@ jobs:
           yarn install
           echo [SUCCESS] yarn install succeeded.
 
-#       # Run all tests first to prevent broken builds, 
-#       #commented as there is a separate workflow to run tests and it's fine to not run tests other than PR as all changes are supposed to go in main through a PR
-#       - name: Run tests
-#         run: |
-#           yarn run test
-#           echo [SUCCESS] tests successfully passed
+      #       # Run all tests first to prevent broken builds,
+      #       #commented as there is a separate workflow to run tests and it's fine to not run tests other than PR as all changes are supposed to go in main through a PR
+      #       - name: Run tests
+      #         run: |
+      #           yarn run test
+      #           echo [SUCCESS] tests successfully passed
 
       # Generates a build_info file which can be shown in buildInfo controller of the server
       - name: Generate build info file
@@ -92,9 +92,9 @@ jobs:
               ebEnvironment=partner
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
               ebEnvironment=staging
-          elif [[ ${GITHUB_REF:-noref} =~ master ]] || [[ ${GITHUB_REF:-noref} =~ main ]]; then
+          elif [[ ${GITHUB_REF:-noref} =~ master ] || [ ${GITHUB_REF:-noref} =~ main ]]; then
               ebEnvironment=dev
-          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]] || [[ ${{github.event.label.name}} == 'deploy-sandbox' ]]; then
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ] || [ ${{github.event.label.name}} == 'deploy-sandbox' ]]; then
               ebEnvironment=sandbox
           fi
 
@@ -105,7 +105,7 @@ jobs:
           echo ::set-output name=ebEnvironment::$ebEnvironment
 
       - name: Deploy to EB
-        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')"  # run this job only if ebEnvironment is not none
+        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
         uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
