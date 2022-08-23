@@ -188,7 +188,7 @@ export class EmailService {
         user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
-        last_4_digits_of_card: last4Digits,
+        last_four: last4Digits,
         support_url: SUPPORT_URL,
       },
     };
@@ -211,7 +211,7 @@ export class EmailService {
         user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
-        last_4_digits_of_card: last4Digits,
+        last_four: last4Digits,
         support_url: SUPPORT_URL,
       },
     };
@@ -234,7 +234,7 @@ export class EmailService {
         user_email: email,
         username: this.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
-        last_4_digits_of_card: last4Digits,
+        last_four: last4Digits,
         support_url: SUPPORT_URL,
       },
     };
