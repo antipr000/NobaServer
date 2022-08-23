@@ -29,6 +29,11 @@ import {
   STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR,
   STRIPE_CONFIG_KEY,
   STRIPE_SECRET_KEY,
+  CHECKOUT_CONFIG_KEY,
+  CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY,
+  CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY,
+  CHECKOUT_PUBLIC_KEY,
+  CHECKOUT_SECRET_KEY,
   TWILIO_AUTH_TOKEN,
   TWILIO_AWS_SECRET_KEY_FOR_AUTH_TOKEN_ATTR,
   TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR,
@@ -90,6 +95,7 @@ import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 import { KmsConfigs } from "./configtypes/KmsConfigs";
 import { CommonConfigs } from "./configtypes/CommonConfigs";
+import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -227,6 +233,7 @@ async function configureAllVendorCredentials(
     configureSendgridCredentials,
     configureTwilioCredentials,
     configureStripeCredentials,
+    configureCheckoutCredentials,
     configureMongoCredentials,
     configureSardineCredentials,
     configureZerohashCredentials,
@@ -257,6 +264,34 @@ async function configureStripeCredentials(
   stripeConfigs.secretKey = await getParameterValue(stripeConfigs.awsSecretNameForSecretKey, stripeConfigs.secretKey);
 
   configs[STRIPE_CONFIG_KEY] = stripeConfigs;
+  return configs;
+}
+
+async function configureCheckoutCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const checkoutConfigs: CheckoutConfigs = configs[CHECKOUT_CONFIG_KEY];
+
+  if (checkoutConfigs === undefined) {
+    const errorMessage =
+      "\n'checkout' configurations are required. Please configure the checkout credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure ${CHECKOUT_CONFIG_KEY} with sub-values for ${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY} or ${CHECKOUT_PUBLIC_KEY}\n" ` +
+      `as well as either ${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY} or ${CHECKOUT_SECRET_KEY}.`;
+
+    throw Error(errorMessage);
+  }
+
+  checkoutConfigs.publicKey = await getParameterValue(
+    checkoutConfigs.awsSecretNameForPublicKey,
+    checkoutConfigs.publicKey,
+  );
+  checkoutConfigs.secretKey = await getParameterValue(
+    checkoutConfigs.awsSecretNameForSecretKey,
+    checkoutConfigs.secretKey,
+  );
+
+  configs[CHECKOUT_CONFIG_KEY] = checkoutConfigs;
   return configs;
 }
 

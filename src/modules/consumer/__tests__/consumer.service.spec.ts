@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getMockOtpRepoWithDefaults } from "../../../modules/auth/mocks/MockOtpRepo";
 import { IOTPRepo } from "../../../modules/auth/repo/OTPRepo";
 import { instance } from "ts-mockito";
-import { STRIPE_CONFIG_KEY, STRIPE_SECRET_KEY } from "../../../config/ConfigurationUtils";
+import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { CheckoutService } from "../../../modules/common/checkout.service";
@@ -33,12 +33,12 @@ describe("ConsumerService", () => {
       useFactory: () => instance(consumerRepo),
     };
 
-    // TODO: Add mock for 'StripeService'
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
-          [STRIPE_CONFIG_KEY]: {
-            [STRIPE_SECRET_KEY]: "Dummy Stripe Secret",
+          [CHECKOUT_CONFIG_KEY]: {
+            [CHECKOUT_PUBLIC_KEY]: "Dummy Checkout Public Key",
+            [CHECKOUT_SECRET_KEY]: "Dummy Checkout Secret Key",
           },
         }),
         getTestWinstonModule(),
@@ -73,7 +73,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.STRIPE,
+            providerID: PaymentProviders.CHECKOUT,
           },
         ],
         partners: [

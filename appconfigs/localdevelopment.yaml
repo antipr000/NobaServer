@@ -34,6 +34,12 @@ stripe:
   awsSecretNameForSecretKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   secretKey: "sk_test_51KZIlsEe2pZC45hcq7Tjpoi3M7nCc6A5ki95cA8UGF1Ei7b4mCUf6wnAgTJAPzVlpamVGUj7cjQMMhegPYgqELyx00yqpROABj"
 
+checkout:
+  awsSecretNameForPublicKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSecretKey: ""
+  publicKey: "pk_sbox_m3756a5g3z4ootpdssqy3hxxemv"
+  secretKey: "sk_sbox_xdhkcai4bosm32intni46my5x4j"
+
 twilio:
   awsSecretNameForSID: ""
   awsSecretNameForAuthToken: ""

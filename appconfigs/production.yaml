@@ -44,6 +44,12 @@ twilio:
   authToken: "bogus-value"
   fromPhoneNumber: "+19894557345"
 
+checkout:
+  awsSecretNameForPublicKey: "PROD_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSecretKey: "PROD_CHECKOUT_SECRET_KEY"
+  publicKey: "bogus-value"
+  secretKey: "bogus-value"
+
 mongo:
   awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"
   uri: "bogus-value"
