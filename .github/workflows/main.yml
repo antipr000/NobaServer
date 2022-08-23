@@ -98,7 +98,7 @@ jobs:
               ebEnvironment=dev
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]]; then
               ebEnvironment=sandbox
-          elif [[ ${{github.event.label.name}} == 'deploy-sandbox' ]]; then
+          elif [[ '${{github.event.label.name}}' == 'deploy-sandbox' ]]; then
               ebEnvironment=sandbox
           fi
 
