@@ -23,6 +23,7 @@ export type { DeviceGpsLocationDTO } from "./models/DeviceGpsLocationDTO";
 export type { DeviceIpLocationDTO } from "./models/DeviceIpLocationDTO";
 export type { DeviceVerificationResponseDTO } from "./models/DeviceVerificationResponseDTO";
 export type { DocumentVerificationDTO } from "./models/DocumentVerificationDTO";
+export type { DocumentVerificationResultDTO } from "./models/DocumentVerificationResultDTO";
 export type { IDVerificationRequestDTO } from "./models/IDVerificationRequestDTO";
 export type { KybStatusInfoDTO } from "./models/KybStatusInfoDTO";
 export type { KycVerificationDTO } from "./models/KycVerificationDTO";

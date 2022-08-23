@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DeviceVerificationResponseDTO } from "../models/DeviceVerificationResponseDTO";
+import type { DocumentVerificationResultDTO } from "../models/DocumentVerificationResultDTO";
 import type { IDVerificationRequestDTO } from "../models/IDVerificationRequestDTO";
 import type { VerificationResultDTO } from "../models/VerificationResultDTO";
 
@@ -148,7 +149,7 @@ export class VerificationService {
    * @param xNobaTimestamp
    * @param id
    * @param sessionKey
-   * @returns VerificationResultDTO Document verification result
+   * @returns DocumentVerificationResultDTO Document verification result
    * @throws ApiError
    */
   public static getDocumentVerificationResult(
@@ -157,7 +158,7 @@ export class VerificationService {
     xNobaTimestamp: string,
     id: string,
     sessionKey: string,
-  ): CancelablePromise<VerificationResultDTO> {
+  ): CancelablePromise<DocumentVerificationResultDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/verify/document/result/{id}",

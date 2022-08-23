@@ -160,7 +160,11 @@ export class VerificationController {
 
   @Get("/document/result/:id")
   @ApiOperation({ summary: "Gets result for a previously-submitted document verification" })
-  @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Document verification result" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: DocumentVerificationResultDTO,
+    description: "Document verification result",
+  })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   @ApiNotFoundResponse({ description: "Document verification request not found" })
   async getDocumentVerificationResult(
