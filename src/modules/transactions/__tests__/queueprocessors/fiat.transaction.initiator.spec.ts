@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { FiatTransactionInitiator } from "../../queueprocessors/FiatTransactionInitiator";
@@ -29,6 +29,13 @@ import { PaymentMethodStatus } from "../../../../modules/consumer/domain/Verific
 import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { ObjectType } from "../../../../modules/common/domain/ObjectType";
+import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
+import { BadRequestException } from "@nestjs/common";
+import {
+  CardFailureExceptionText,
+  CardProcessingException,
+} from "../../../../modules/consumer/CardProcessingException";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -49,7 +56,7 @@ const getAllRecordsInTransactionCollection = async (
 };
 
 describe("FiatTransactionInitiator", () => {
-  jest.setTimeout(10000);
+  jest.setTimeout(1000000);
 
   let consumerService: ConsumerService;
   let sqsClient: SqsClient;
@@ -138,35 +145,66 @@ describe("FiatTransactionInitiator", () => {
     await mongoServer.stop();
   });
 
-  it("should process the fiat transaction and put it in next queue", async () => {
+  const initiatedPaymentId = "CCCCCCCCCC";
+  const consumerID = "UUUUUUUUUU";
+  const paymentMethodID = "XXXXXXXXXX";
+  const transaction: Transaction = Transaction.createTransaction({
+    _id: "1111111111",
+    userId: consumerID,
+    transactionStatus: TransactionStatus.VALIDATION_PASSED,
+    paymentMethodID: paymentMethodID,
+    leg1Amount: 1000,
+    leg2Amount: 1,
+    leg1: "USD",
+    leg2: "ETH",
+    lastProcessingTimestamp: Date.now().valueOf(),
+    lastStatusUpdateTimestamp: Date.now().valueOf(),
+  });
+  const paymentMethod: PaymentMethod = {
+    status: PaymentMethodStatus.APPROVED,
+    first6Digits: "123456",
+    last4Digits: "4321",
+    imageUri: "...",
+    paymentToken: "XXXXXXXXXX",
+    paymentProviderID: PaymentProviders.CHECKOUT,
+  };
+  const consumer: Consumer = Consumer.createConsumer({
+    _id: consumerID,
+    email: "test@noba.com",
+    partners: [
+      {
+        partnerID: "partner-1",
+      },
+    ],
+    paymentMethods: [paymentMethod],
+  });
+
+  it("should not process a transaction that's not in VALIDATION_PASSED status", async () => {
     // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
     const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
     expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
     expect(processor).toBeInstanceOf(FiatTransactionInitiator);
 
-    const initiatedPaymentId = "CCCCCCCCCC";
-    const consumerID = "UUUUUUUUUU";
-    const transaction: Transaction = Transaction.createTransaction({
-      _id: "1111111111",
-      userId: consumerID,
-      transactionStatus: TransactionStatus.VALIDATION_PASSED,
-      paymentMethodID: "XXXXXXXXXX",
-      leg1Amount: 1000,
-      leg2Amount: 1,
-      leg1: "USD",
-      leg2: "ETH",
-      lastProcessingTimestamp: Date.now().valueOf(),
-      lastStatusUpdateTimestamp: Date.now().valueOf(),
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      transactionStatus: TransactionStatus.PENDING,
+      _id: transaction.props._id as any,
     });
-    const consumer: Consumer = Consumer.createConsumer({
-      _id: consumerID,
-      email: "test@noba.com",
-      partners: [
-        {
-          partnerID: "partner-1",
-        },
-      ],
-    });
+
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+
+    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+    expect(allTransactionsInDb).toHaveLength(1);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.PENDING);
+    expect(allTransactionsInDb[0].checkoutPaymentID).toBeUndefined();
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
+  });
+
+  it("should process the fiat transaction and put it in next queue", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
 
     await transactionCollection.insertOne({
       ...transaction.props,
@@ -196,4 +234,193 @@ describe("FiatTransactionInitiator", () => {
     expect(queueName).toBe(TransactionQueueName.FiatTransactionInitiated);
     expect(transactionId).toBe(transaction.props._id);
   });
+
+  it("should move REJECTED transactions to the failure queue", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+      status: PaymentMethodStatus.REJECTED,
+      paymentID: initiatedPaymentId,
+      responseCode: rejectCode,
+      responseSummary: rejectReason,
+    });
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
+
+  it("should move FLAGGED transactions to the failure queue", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+      status: PaymentMethodStatus.FLAGGED,
+      paymentID: initiatedPaymentId,
+      responseCode: rejectCode,
+      responseSummary: rejectReason,
+    });
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
+
+  it("should move UNKNOWN statuses to the failure queue", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+      status: undefined,
+      paymentID: initiatedPaymentId,
+      responseCode: rejectCode,
+      responseSummary: rejectReason,
+    });
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
+
+  it("should handle unknown exceptions from checkout", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestCheckoutPayment(consumer, anything())).thenThrow(new Error("Any error"));
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
+
+  it("should handle card processing ERROR exceptions from checkout", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestCheckoutPayment(consumer, anything())).thenThrow(
+      new CardProcessingException(CardFailureExceptionText.ERROR),
+    );
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
+
+  it("should handle card processing NO_CRYPTO exceptions from checkout", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestCheckoutPayment(consumer, anything())).thenThrow(
+      new CardProcessingException(CardFailureExceptionText.NO_CRYPTO, rejectCode, rejectReason),
+    );
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
 });
+
+function setupMocksandEnqueue(
+  sqsClient: SqsClient,
+  transaction: Transaction,
+  lockService: LockService,
+  verificationService: VerificationService,
+  consumerService: ConsumerService,
+  consumerID: string,
+) {
+  when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+  when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+  when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+  when(verificationService.provideTransactionFeedback(anything(), anything(), anything(), anyString())).thenResolve();
+  when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve();
+}
+
+async function performFailureAssertions(transactionCollection, sqsClient: SqsClient, transaction: Transaction) {
+  // TODO: assert that the paymentMethod was updated
+  /*expect(consumerService.updatePaymentMethod()).toHaveBeenCalledWith(
+      consumerID,
+      deepEqual({
+        ...paymentMethod,
+        status: PaymentMethodStatus.REJECTED,
+        authCode: rejectCode,
+        authReason: rejectReason,
+      }),
+    );*/
+
+  const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+  expect(allTransactionsInDb).toHaveLength(1);
+  expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
+  expect(allTransactionsInDb[0].checkoutPaymentID).toBeUndefined();
+
+  const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+  expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+  expect(transactionId).toBe(transaction.props._id);
+}

@@ -46,10 +46,3 @@ export type PaymentRequestResponse = {
   responseCode?: string;
   responseSummary?: string;
 };
-
-export enum CardAddFailureExceptionText {
-  NO_CRYPTO = "NO-CRYPTO",
-  SOFT_DECLINE = "SOFT-DECLINE",
-  DECLINE = "DECLINE",
-  ERROR = "ERROR",
-}
