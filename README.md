@@ -25,7 +25,8 @@ See also: [AWS Environments](https://www.notion.so/onenoba/Noba-AWS-Environment-
 
 ##### Staging Environment (api-staging.noba.com/v1/health)
 
-- We have github actions setup that will automatically deploy changes in the staging instance when tags with suffix -staging are created. 
+- We have github actions setup that will automatically deploy changes in the staging instance when tags with suffix -staging are created.
+
 ##### Partner Environment (api-partner.noba.com/v1/health)
 
 - We have github actions setup that will automatically deploy changes in the partner instance when tags with suffix -parter are created.
@@ -45,6 +46,7 @@ There are two options to get a build into this environment:
 - You can directly create the 'sandbox' tag from your branch in github UI to deploy to aws deployment environment.
 
 #### Notes
+
 - Check Github Actions to find the progress of build and deployment progress [here](https://github.com/nobapay/NobaServer/actions)
 - You can find documentation about our deployment process and environments [here](https://www.notion.so/onenoba/Noba-AWS-Environment-7728839e49f349aaa5a41c124c19ab06).
 
@@ -80,8 +82,10 @@ Also make sure to run prettier first and then eslint.
 - Follow best coding practices while writing code. You can find some examples around best practices in [this]() document.
 
 ### Viewing Test Coverage in VS Code
+
 Being able to view test coverage within VS Code is extremely important as you update code and write new tests so you have instant local feedback on the effectiveness of your tests. We are striving for at least 90% coverage across the entire codebase, so any new tests should cover 90%+ of the code within the scope of that test.
 To view coverage within VS Code:
+
 1. Ensure you have installed the Coverage Gutters extension as referenced above.
 2. With this extension installed, you will have a new option in the bottom bar in VS Code that says "Watch". Click on that.
 3. Run tests with `yarn test:cov` to collect coverage information during a test run.
