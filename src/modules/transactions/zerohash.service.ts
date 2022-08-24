@@ -390,7 +390,7 @@ export class ZeroHashService {
     const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
 
     const response: ZerohashWithdrawalResponse = {
-      gasPrice: Number(withdrawal["message"][0]["gas_price"]),
+      gasPrice: withdrawal["message"][0]["gas_price"],
       requestedAmount: Number(withdrawal["message"][0]["requested_amount"]),
       settledAmount: withdrawal["message"][0]["settled_amount"],
       onChainTransactionID: withdrawal["message"][0]["transaction_id"],
