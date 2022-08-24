@@ -10,9 +10,17 @@ import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 import { AppService } from "../../app.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
+import { AssetsModule } from "./assets/assets.module";
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule, AsyncTransactionProcessorModule],
+  imports: [
+    InfraProvidersModule,
+    CommonModule,
+    ConsumerModule,
+    VerificationModule,
+    AsyncTransactionProcessorModule,
+    AssetsModule,
+  ],
   controllers: [TransactionController],
   providers: [
     TransactionService,

@@ -69,7 +69,7 @@ export class TransactionController {
   @ApiBadRequestResponse({ description: "Invalid currency code (fiat or crypto)" })
   @ApiServiceUnavailableResponse({ description: "Unable to connect to underlying service provider" })
   async getTransactionQuote(@Query() transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
-    const transactionQuote = await this.transactionService.getTransactionQuote(transactionQuoteQuery);
+    const transactionQuote = await this.transactionService.requestTransactionQuote(transactionQuoteQuery);
     return transactionQuote;
   }
 

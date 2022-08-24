@@ -2,7 +2,13 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
 
-import { BadRequestException, Inject, Injectable, ServiceUnavailableException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "../../app.service";
@@ -22,6 +28,8 @@ import {
   OnChainState,
   TradeState,
   WithdrawalState,
+  ZerohashNetworkFee,
+  ZerohashQuote,
   ZerohashTradeResponse,
   ZerohashTradeRquest,
   ZerohashTransfer,
@@ -187,6 +195,10 @@ export class ZeroHashService {
     return participants;
   }
 
+  /**
+   * @deprecated: Use AssetService methods instead of this.
+   * This will be removed as soon as the changes are working in staging/production envs.
+   */
   async requestQuote(cryptocurrency: string, fiatCurrency: string, amount: number, fixedSide: CurrencyType) {
     // Set the endpoint URL based on whether we are placing an order based on FIAT amount or CRYPTO amount
     let route: string;
@@ -200,6 +212,68 @@ export class ZeroHashService {
 
     let quote = await this.makeRequest(route, "GET", {});
     return quote;
+  }
+
+  /**
+   * Returns quote worth the specified Fiat amount.
+   */
+  async requestQuoteForFixedFiatCurrency(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    fiatAmount: number,
+  ): Promise<ZerohashQuote> {
+    /**
+     * Either "quantity" or "total" parameters should be provided -
+     *
+     * quantity:  The amount of the "underlying" currency for the quote
+     * total:     The desired amount of the "quoted_currency" for the quote
+     */
+    const route = `/liquidity/rfq?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}&side=buy&total=${fiatAmount}`;
+    const quote = await this.makeRequest(route, "GET", {});
+
+    if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
+      this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
+      throw new InternalServerErrorException(`Inconsistencies in returned ZH quote.`);
+    }
+
+    return {
+      quoteID: quote["message"].quote_id,
+      expireTimestamp: quote["message"].expire_ts,
+      cryptoCurrency: quote["message"].underlying,
+      fiatCurrency: quote["message"].quoted_currency,
+      perUnitCryptoAssetCost: quote["message"].price,
+    };
+  }
+
+  /**
+   * Returns quote worth the specified Crypto quantity.
+   */
+  async requestQuoteForDesiredCryptoQuantity(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    cryptoQuantity: number,
+  ): Promise<ZerohashQuote> {
+    /**
+     * Either "quantity" or "total" parameters should be provided -
+     *
+     * quantity:  The amount of the "underlying" currency for the quote
+     * total:     The desired amount of the "quoted_currency" for the quote
+     */
+    const route = `/liquidity/rfq?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}&side=buy&quantity=${cryptoQuantity}`;
+    const quote = await this.makeRequest(route, "GET", {});
+
+    if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
+      this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
+      throw new InternalServerErrorException(`Inconsistencies in returned ZH quote.`);
+    }
+
+    return {
+      quoteID: quote["message"].quote_id,
+      expireTimestamp: quote["message"].expire_ts,
+      cryptoCurrency: quote["message"].underlying,
+      fiatCurrency: quote["message"].quoted_currency,
+      perUnitCryptoAssetCost: quote["message"].price,
+    };
   }
 
   // Execute a liquidity quote
@@ -316,8 +390,8 @@ export class ZeroHashService {
     const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
 
     const response: ZerohashWithdrawalResponse = {
-      gasPrice: withdrawal["message"][0]["gas_price"],
-      requestedAmount: withdrawal["message"][0]["requested_amount"],
+      gasPrice: Number(withdrawal["message"][0]["gas_price"]),
+      requestedAmount: Number(withdrawal["message"][0]["requested_amount"]),
       settledAmount: withdrawal["message"][0]["settled_amount"],
       onChainTransactionID: withdrawal["message"][0]["transaction_id"],
 
@@ -364,13 +438,20 @@ export class ZeroHashService {
     return response;
   }
 
-  async estimateNetworkFee(underlyingCurrency: string, quotedCurrency: string) {
+  async estimateNetworkFee(cryptoCurrency: string, fiatCurrency: string): Promise<ZerohashNetworkFee> {
     const networkFee = await this.makeRequest(
-      `/withdrawals/estimate_network_fee?underlying=${underlyingCurrency}&quoted_currency=${quotedCurrency}`,
+      `/withdrawals/estimate_network_fee?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}`,
       "GET",
       {},
     );
-    return networkFee;
+    return {
+      cryptoCurrency: cryptoCurrency,
+      // TODO(#): Check with ZH if this is actually fees in crypto.
+      feeInCrypto: Number(networkFee["message"]["network_fee_quantity"]),
+
+      fiatCurrency: fiatCurrency,
+      feeInFiat: Number(networkFee["message"]["total_notional"]),
+    };
   }
 
   async checkTradeStatus(tradeId: string): Promise<ZerohashTradeResponse> {

@@ -24,6 +24,9 @@ import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CryptoWallet } from "../consumer/domain/CryptoWallet";
 import { Consumer } from "../consumer/domain/Consumer";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
+import { AssetServiceFactory } from "./assets/asset.service.factory";
+import { AssetService } from "./assets/asset.service";
+import { NobaQuote } from "./domain/AssetTypes";
 
 @Injectable()
 export class TransactionService {
@@ -36,6 +39,7 @@ export class TransactionService {
     private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
     private readonly consumerService: ConsumerService,
+    private readonly assetServiceFactory: AssetServiceFactory,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     @Inject(EmailService) private readonly emailService: EmailService,
@@ -44,6 +48,46 @@ export class TransactionService {
     this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
   }
 
+  async requestTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
+    if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
+      throw new BadRequestException("Unsupported fixedSide value");
+    }
+
+    if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
+      throw new BadRequestException("Invalid amount");
+    }
+
+    const assetService: AssetService = this.assetServiceFactory.getAssetService(
+      transactionQuoteQuery.cryptoCurrencyCode,
+    );
+
+    if (transactionQuoteQuery.fixedSide === CurrencyType.FIAT) {
+      const nobaQuote: NobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+        fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+        fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+      });
+
+      return {
+        quoteID: nobaQuote.quoteID,
+        fiatCurrencyCode: nobaQuote.fiatCurrency,
+        cryptoCurrencyCode: nobaQuote.cryptoCurrency,
+        fixedSide: transactionQuoteQuery.fixedSide,
+        fixedAmount: transactionQuoteQuery.fixedAmount,
+        quotedAmount: nobaQuote.totalCryptoQuantity,
+        processingFee: nobaQuote.processingFeeInFiat,
+        networkFee: nobaQuote.networkFeeInFiat,
+        nobaFee: nobaQuote.nobaFeeInFiat,
+        exchangeRate: nobaQuote.perUnitCryptoPrice,
+      };
+    } else {
+      return this.getTransactionQuote(transactionQuoteQuery);
+    }
+  }
+
+  /**
+   * @deprecated: Use AssetService methods or the 'requestTransactionQuote' method below.
+   */
   async getTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
     if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
       throw new BadRequestException("Unsupported fixedSide value");
@@ -65,7 +109,7 @@ export class TransactionService {
     );
     this.logger.debug(estimatedNetworkFeeFromZeroHash);
 
-    const networkFeeInFiat = Number(estimatedNetworkFeeFromZeroHash["message"]["total_notional"]);
+    const networkFeeInFiat = estimatedNetworkFeeFromZeroHash.feeInFiat;
 
     if (transactionQuoteQuery.fixedSide == CurrencyType.FIAT) {
       const fixedAmountFiat = transactionQuoteQuery.fixedAmount;

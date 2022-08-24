@@ -67,3 +67,29 @@ export interface ConsumerWalletTransferStatus {
   settledAmount: number;
   onChainTransactionID: string;
 }
+
+export interface NobaQuote {
+  quoteID: string;
+  fiatCurrency: string;
+  cryptoCurrency: string;
+
+  processingFeeInFiat: number;
+  networkFeeInFiat: number;
+  nobaFeeInFiat: number;
+
+  totalFiatAmount: number;
+  totalCryptoQuantity: number;
+  perUnitCryptoPrice: number;
+}
+
+export interface QuoteRequestForFixedFiat {
+  cryptoCurrency: string;
+  fiatCurrency: string;
+  fiatAmount: number;
+}
+
+export interface QuoteRequestForFixedCrypto {
+  cryptoCurrency: string;
+  fiatCurrency: string;
+  cryptoQuantity: number;
+}

@@ -26,6 +26,7 @@ import { Consumer } from "../../consumer/domain/Consumer";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
 import { getMockVerificationServiceWithDefaults } from "../../verification/mocks/mock.verification.service";
 import { VerificationService } from "../../verification/verification.service";
+import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { UserLimits } from "../domain/Limits";
 import { Transaction } from "../domain/Transaction";
 import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
@@ -35,6 +36,7 @@ import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { LimitsService } from "../limits.service";
+import { getMockAssetServiceFactoryWithDefaultAssetService } from "../mocks/mock.asset.service";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.transactions.repo";
 import { getMockZerohashServiceWithDefaults } from "../mocks/mock.zerohash.service";
 import { ITransactionRepo } from "../repo/TransactionRepo";
@@ -62,6 +64,7 @@ describe("TransactionService", () => {
   let verificationService: VerificationService;
   let currencyService: CurrencyService;
   let emailService: EmailService;
+  let assetServiceFactory: AssetServiceFactory;
 
   const userId = "1234567890";
   const consumer: Consumer = Consumer.createConsumer({
@@ -81,6 +84,7 @@ describe("TransactionService", () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     verificationService = getMockVerificationServiceWithDefaults();
     emailService = getMockEmailServiceWithDefaults();
+    assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
@@ -111,6 +115,10 @@ describe("TransactionService", () => {
         {
           provide: EmailService,
           useFactory: () => instance(emailService),
+        },
+        {
+          provide: AssetServiceFactory,
+          useFactory: () => instance(assetServiceFactory),
         },
       ],
     }).compile();
@@ -296,13 +304,10 @@ describe("TransactionService", () => {
       const expectedPriceToQuoteUSD = 62.5;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        message: {
-          underlying: "ETH",
-          quoted_currency: "USD",
-          network_fee_asset: "ETH",
-          network_fee_quantity: 0,
-          total_notional: 0,
-        },
+        cryptoCurrency: "ETH",
+        feeInCrypto: 0,
+        fiatCurrency: "USD",
+        feeInFiat: 0,
       });
 
       when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
@@ -349,13 +354,10 @@ describe("TransactionService", () => {
       const expectedPriceToQuoteUSD = 90.5;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        message: {
-          underlying: "ETH",
-          quoted_currency: "USD",
-          network_fee_asset: "ETH",
-          network_fee_quantity: 0,
-          total_notional: 0,
-        },
+        cryptoCurrency: "ETH",
+        feeInCrypto: 0,
+        fiatCurrency: "USD",
+        feeInFiat: 0,
       });
       when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
@@ -402,13 +404,10 @@ describe("TransactionService", () => {
       const expectedPriceToQuoteUSD = 87.7;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        message: {
-          underlying: "ETH",
-          quoted_currency: "USD",
-          network_fee_asset: "ETH",
-          network_fee_quantity: 0,
-          total_notional: 0,
-        },
+        cryptoCurrency: "ETH",
+        feeInCrypto: 0,
+        fiatCurrency: "USD",
+        feeInFiat: 0,
       });
       when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
@@ -454,13 +453,10 @@ describe("TransactionService", () => {
       const expectedPriceToQuoteUSD = 99.5;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        message: {
-          underlying: "ETH",
-          quoted_currency: "USD",
-          network_fee_asset: "ETH",
-          network_fee_quantity: 0,
-          total_notional: 0,
-        },
+        cryptoCurrency: "ETH",
+        feeInCrypto: 0,
+        fiatCurrency: "USD",
+        feeInFiat: 0,
       });
       when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
@@ -506,13 +502,10 @@ describe("TransactionService", () => {
       const expectedPriceToQuoteUSD = 80.9;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        message: {
-          underlying: "ETH",
-          quoted_currency: "USD",
-          network_fee_asset: "ETH",
-          network_fee_quantity: 0,
-          total_notional: 0,
-        },
+        cryptoCurrency: "ETH",
+        feeInCrypto: 0,
+        fiatCurrency: "USD",
+        feeInFiat: 0,
       });
       when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
@@ -558,13 +551,10 @@ describe("TransactionService", () => {
       const expectedPriceToQuoteUSD = 40.25;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        message: {
-          underlying: "ETH",
-          quoted_currency: "USD",
-          network_fee_asset: "ETH",
-          network_fee_quantity: 0,
-          total_notional: 0,
-        },
+        cryptoCurrency: "ETH",
+        feeInCrypto: 0,
+        fiatCurrency: "USD",
+        feeInFiat: 0,
       });
       when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
@@ -610,13 +600,10 @@ describe("TransactionService", () => {
       const expectedPriceToQuoteUSD = 86.5;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        message: {
-          underlying: "ETH",
-          quoted_currency: "USD",
-          network_fee_asset: "ETH",
-          network_fee_quantity: 0,
-          total_notional: 0,
-        },
+        cryptoCurrency: "ETH",
+        feeInCrypto: 0,
+        fiatCurrency: "USD",
+        feeInFiat: 0,
       });
       when(zerohashService.requestQuote("ETH", "USD", expectedPriceToQuoteUSD, CurrencyType.FIAT)).thenResolve({
         message: { price: 10 },
