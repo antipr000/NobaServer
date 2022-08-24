@@ -310,7 +310,7 @@ export class Sardine implements IDVProvider {
   processDocumentVerificationResult(
     documentVerificationSardineResponse: DocumentVerificationSardineResponse,
   ): DocumentVerificationResult {
-    const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification.riskLevel;
+    const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification?.riskLevel;
     const status: SardineDocumentProcessingStatus = documentVerificationSardineResponse.status;
     const errorCodes: DocumentVerificationErrorCodes[] = documentVerificationSardineResponse.errorCodes;
 

@@ -47,6 +47,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { SARDINE_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import * as crypto_ts from "crypto";
+import { DocumentVerificationResultDTO } from "./dto/DocumentVerificationResultDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -159,14 +160,18 @@ export class VerificationController {
 
   @Get("/document/result/:id")
   @ApiOperation({ summary: "Gets result for a previously-submitted document verification" })
-  @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Document verification result" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: DocumentVerificationResultDTO,
+    description: "Document verification result",
+  })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   @ApiNotFoundResponse({ description: "Document verification request not found" })
   async getDocumentVerificationResult(
     @Param("id") id: string,
     @Query("sessionKey") sessionKey: string,
     @Request() request,
-  ): Promise<VerificationResultDTO> {
+  ): Promise<DocumentVerificationResultDTO> {
     const consumer: Consumer = request.user.entity;
     const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, sessionKey, id);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
@@ -206,7 +211,7 @@ export class VerificationWebhookController {
   async postDocumentVerificationResult(
     @Headers() headers,
     @Body() requestBody: DocumentVerificationWebhookRequest,
-  ): Promise<VerificationResultDTO> {
+  ): Promise<DocumentVerificationResultDTO> {
     const sardineSignature = headers["x-sardine-signature"];
     const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
     const data = hmac.update(JSON.stringify(requestBody));

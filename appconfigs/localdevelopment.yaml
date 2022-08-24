@@ -80,10 +80,12 @@ zerohash:
   awsSecretNameForApiSecret: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForPassPhrase: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForHost: ""
+  awsSecretNameForPlatformCode: ""
   apiKey: "uCeknMhWLfW4CBLQ6uT39k"
   apiSecret: "4jtj1kUm64LKiXE7i7DjpLqb2le/yJmLhcQlHzsSno8="
   passPhrase: "noba_zerohash_sandbox"
   host: "api.cert.zerohash.com"
+  platformCode: "6MWNG6"
 
 configuration:
   lowAmountThreshold: 50

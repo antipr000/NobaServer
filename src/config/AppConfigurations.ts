@@ -82,6 +82,8 @@ import {
   COMMON_CONFIG_FIAT_IMAGE_BASE_URL,
   COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY,
   COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY,
+  ZEROHASH_AWS_SECRET_KEY_FOR_PLATFORM_CODE,
+  ZEROHASH_PLATFORM_CODE,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 import * as os from "os";
@@ -483,7 +485,8 @@ async function configureZerohashCredentials(
       `("${ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR}" or "${ZEROHASH_API_KEY}"), ` +
       `("${ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR}" or "${ZEROHASH_HOST}"), ` +
       `("${ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR}" or "${ZEROHASH_API_SECRET}") AND ` +
-      `("${ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR}" or "${ZEROHASH_PASS_PHRASE}") ` +
+      `("${ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR}" or "${ZEROHASH_PASS_PHRASE}") AND ` +
+      `("${ZEROHASH_AWS_SECRET_KEY_FOR_PLATFORM_CODE}" or "${ZEROHASH_PLATFORM_CODE}") ` +
       "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
 
     throw Error(errorMessage);
@@ -501,6 +504,11 @@ async function configureZerohashCredentials(
   );
 
   zerohashConfigs.host = await getParameterValue(zerohashConfigs.awsSecretNameForHost, zerohashConfigs.host);
+
+  zerohashConfigs.platformCode = await getParameterValue(
+    zerohashConfigs.awsSecretNameForPlatformCode,
+    zerohashConfigs.platformCode,
+  );
 
   configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
   return configs;

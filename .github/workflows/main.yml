@@ -2,15 +2,15 @@ name: CI
 
 # Controls when the workflow will run
 on:
-  # Only deploy the changes on push to master branch
+  # Only deploy the changes on push to main branch
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
       - "*-partner"
       - "*-staging"
-    branches: [master, main]
+    branches: [main]
   pull_request:
-    branches: [master, main]
+    branches: [main]
     types: [labeled, open]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -92,8 +92,6 @@ jobs:
               ebEnvironment=partner
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
               ebEnvironment=staging
-          elif [[ ${GITHUB_REF:-noref} =~ master ]]; then
-            ebEnvironment=dev
           elif [[ ${GITHUB_REF:-noref} =~ main ]]; then
               ebEnvironment=dev
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]]; then

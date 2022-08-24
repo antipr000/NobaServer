@@ -12,7 +12,7 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "../../app.service";
-import { NOBA_PLATFORM_CODE, ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
+import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
@@ -73,7 +73,7 @@ export class ZeroHashService {
   }
 
   getNobaPlatformCode(): string {
-    return NOBA_PLATFORM_CODE;
+    return this.configs.platformCode;
   }
 
   // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
@@ -285,10 +285,10 @@ export class ZeroHashService {
   // Transfer assets from ZHLS to Noba account prior to trade
   async transferAssetsToNoba(asset: string, amount: number): Promise<string> {
     const transfer = await this.makeRequest("/transfers", "POST", {
-      from_participant_code: NOBA_PLATFORM_CODE,
+      from_participant_code: this.getNobaPlatformCode(),
       from_account_group: ZHLS_PLATFORM_CODE,
-      to_participant_code: NOBA_PLATFORM_CODE,
-      to_account_group: NOBA_PLATFORM_CODE,
+      to_participant_code: this.getNobaPlatformCode(),
+      to_account_group: this.getNobaPlatformCode(),
       asset: asset,
       amount: amount,
     });
@@ -521,7 +521,7 @@ export class ZeroHashService {
         transaction.props.leg2Amount,
         transaction.props.leg2,
         consumer.zhParticipantCode,
-        NOBA_PLATFORM_CODE,
+        this.getNobaPlatformCode(),
       );
 
       withdrawalID = withdrawalRequest["message"]["id"];
@@ -587,7 +587,7 @@ export class ZeroHashService {
       product_type: "spot",
       trade_type: "regular",
       trade_reporter: consumer.email,
-      platform_code: NOBA_PLATFORM_CODE,
+      platform_code: this.getNobaPlatformCode(),
       client_trade_id: transaction.props._id,
       physical_delivery: true,
       parties_anonymous: false,
@@ -601,7 +601,7 @@ export class ZeroHashService {
           settling: true,
         },
         {
-          participant_code: NOBA_PLATFORM_CODE,
+          participant_code: this.getNobaPlatformCode(),
           asset: fiatCurrency,
           side: "sell",
           settling: false,
