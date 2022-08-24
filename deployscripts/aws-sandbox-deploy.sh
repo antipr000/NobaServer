@@ -9,7 +9,7 @@ else
   export tagName=$1
 fi
 
-echo  "pushing to tag ${tagName}"
+echo  "Pushing to tag ${tagName}"
 
 git tag -af $tagName -m "Deploying to aws sandbox environment"
 
