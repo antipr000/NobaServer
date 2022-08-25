@@ -45,7 +45,6 @@ import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
-import { request } from "http";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")

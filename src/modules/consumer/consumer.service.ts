@@ -480,6 +480,16 @@ export class ConsumerService {
     return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
   }
 
+  getCryptoWallet(consumer: Consumer, address: string): CryptoWallet {
+    const cryptoWallets = consumer.props.cryptoWallets.filter(wallet => wallet.address === address);
+
+    if (cryptoWallets.length === 0) {
+      return null;
+    }
+
+    return cryptoWallets[0];
+  }
+
   async addOrUpdateCryptoWallet(consumer: Consumer, cryptoWallet: CryptoWallet): Promise<Consumer> {
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
@@ -490,10 +500,11 @@ export class ConsumerService {
       await this.sendWalletVerificationOTP(consumer, cryptoWallet.address);
     }
 
-    return await this.updateConsumer({
+    const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
       cryptoWallets: [...otherCryptoWallets, cryptoWallet],
     });
+    return updatedConsumer;
   }
 
   async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {
@@ -501,10 +512,11 @@ export class ConsumerService {
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWalletAddress,
     );
 
-    return await this.updateConsumer({
+    const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
       cryptoWallets: [...otherCryptoWallets],
     });
+    return updatedConsumer;
   }
 
   async removePaymentMethod(consumer: Consumer, paymentToken: string): Promise<Consumer> {

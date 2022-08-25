@@ -40,6 +40,9 @@ export class CryptoWalletsDTO {
 
   @ApiProperty({ enum: WalletStatus })
   status: WalletStatus;
+
+  // Keep from API as this should not be exposed to user
+  partnerID: string;
 }
 
 export class KycVerificationDTO {

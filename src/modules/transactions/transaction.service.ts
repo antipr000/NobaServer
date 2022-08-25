@@ -339,7 +339,17 @@ export class TransactionService {
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
 
     if (!paymentMethod) {
-      this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
+      this.logger.error(
+        `Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}, Transaction ID: ${transaction.props._id}`,
+      );
+      return PendingTransactionValidationStatus.FAIL;
+    }
+
+    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
+    if (cryptoWallet == null) {
+      this.logger.error(
+        `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
+      );
       return PendingTransactionValidationStatus.FAIL;
     }
 
@@ -366,13 +376,7 @@ export class TransactionService {
     }
 
     if (result.walletStatus) {
-      const cryptoWallet: CryptoWallet = {
-        //walletName: "",
-        address: transaction.props.destinationWalletAddress,
-        //chainType: "",
-        isEVMCompatible: false,
-        status: result.walletStatus,
-      };
+      cryptoWallet.status = result.walletStatus;
       await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
     }
 

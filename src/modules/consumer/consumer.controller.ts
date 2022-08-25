@@ -168,6 +168,7 @@ export class ConsumerController {
       chainType: requestBody.chainType,
       isEVMCompatible: requestBody.isEVMCompatible,
       status: WalletStatus.PENDING,
+      partnerID: request.user.partnerId,
     };
 
     const res = await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
