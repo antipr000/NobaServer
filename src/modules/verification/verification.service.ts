@@ -171,12 +171,8 @@ export class VerificationService {
     return id;
   }
 
-  async getDocumentVerificationResult(
-    consumerID: string,
-    sessionKey: string,
-    verificationID: string,
-  ): Promise<DocumentVerificationResult> {
-    const result = await this.idvProvider.getDocumentVerificationResult(sessionKey, verificationID, consumerID);
+  async getDocumentVerificationResult(consumerID: string, verificationID: string): Promise<DocumentVerificationResult> {
+    const result = await this.idvProvider.getDocumentVerificationResult(verificationID);
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
