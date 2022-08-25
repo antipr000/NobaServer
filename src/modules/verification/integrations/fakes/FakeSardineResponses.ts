@@ -2,6 +2,7 @@ import {
   CaseNotificationWebhookRequest,
   DocumentVerificationErrorCodes,
   DocumentVerificationSardineResponse,
+  SardineDeviceInformationResponse,
   SardineDocumentProcessingStatus,
   SardineRiskLevels,
 } from "../SardineTypeDefinitions";
@@ -631,5 +632,105 @@ export const FAKE_KYC_CASE_NOTIFICATION_IN_PROGRESS_STATE: CaseNotificationWebho
       checkpoint: "ssn",
       transactionID: "fake-transaction",
     },
+  },
+};
+
+export const FAKE_DOCUMENT_SUBMISSION_RESPONSE = {
+  data: {
+    sessionKey: "5f06c08e-0793-11eb-adc1-0242ac120002",
+    id: "string",
+  },
+};
+
+export const FAKE_DEVICE_INFORMATION_RESPONSE: SardineDeviceInformationResponse = {
+  id: "5d5e4327-af0f-4326-a91c-c02ec4be8dc8",
+  level: SardineRiskLevels.LOW,
+  attributes: {
+    Browser: ["Chrome"],
+    Model: [""],
+    OS: ["Mac OS X"],
+  },
+  signals: [
+    {
+      key: "TrueOS",
+      value: "Mac/iOS",
+    },
+    {
+      key: "DeviceAgeHours",
+      value: "5120",
+    },
+    {
+      key: "TrueIP",
+      value: "107.3.145.172",
+    },
+    {
+      key: "VPN",
+      value: "low",
+    },
+    {
+      key: "Proxy",
+      value: "low",
+    },
+    {
+      key: "RemoteSoftwareLevel",
+      value: "low",
+    },
+    {
+      key: "OSAnomaly",
+      value: "low",
+    },
+    {
+      key: "Emulator",
+      value: "false",
+    },
+    {
+      key: "IpType",
+      value: "Fixed Line ISP",
+    },
+  ],
+  sessionKey: "apidoc00-0e3a-47b3-9fea-ec72a5example",
+  fingerprint: "2473f843-13ab-40e0-abf9-32d5ffbf38a4",
+  fingerprintConfidenceScore: 93,
+  behaviorBiometricRiskLevel: "low",
+  deviceReputation: "unknown",
+  behaviorBiometrics: {
+    numDistractionEvents: 0,
+    fields: [
+      {
+        name: "p",
+        numCopyPasteEvents: 0,
+        numClipboardEvents: 0,
+        numAutoFillEvents: 0,
+        numExpertKeyEvents: 0,
+        hesitationPercentage: 0,
+        isLTM: true,
+        timeSpendInMsEvents: [914],
+      },
+      {
+        name: "u",
+        numCopyPasteEvents: 0,
+        numClipboardEvents: 0,
+        numAutoFillEvents: 0,
+        numExpertKeyEvents: 0,
+        hesitationPercentage: 0,
+        isLTM: true,
+        timeSpendInMsEvents: [900],
+      },
+    ],
+  },
+  ipLocation: {
+    city: "Palo Alto",
+    region: "California",
+    country: "US",
+    latitude: "37.44",
+    longitude: "-122.14",
+  },
+  gpsLocation: {
+    city: "Palo Alto",
+    region: "California",
+    country: "US",
+    latitude: "37.44",
+    longitude: "-122.14",
+    mockLevel: "high",
   },
 };

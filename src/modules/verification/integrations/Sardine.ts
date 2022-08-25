@@ -158,7 +158,7 @@ export class Sardine implements IDVProvider {
       const { data } = await axios.post(this.BASE_URI + "/v1/identity-documents/verifications", formData, config);
       return data.id;
     } catch (e) {
-      this.logger.error(`Sardine request failed for Document submit: ${e}`);
+      this.logger.error(`Sardine request failed for Document submit: ${JSON.stringify(e)}`);
       if (e.response) {
         if (e.response.status === 400) {
           return e.response.data.verification_id;
