@@ -154,6 +154,7 @@ describe("ValidatePendingTransaction", () => {
       leg2: "ETH",
       destinationWalletAddress: "12345",
       lastStatusUpdateTimestamp: Date.now().valueOf(),
+      partnerID: "12345",
     });
 
     const paymentMethod: PaymentMethod = {

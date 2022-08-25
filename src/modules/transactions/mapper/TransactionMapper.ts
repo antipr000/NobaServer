@@ -20,6 +20,7 @@ export class TransactionMapper implements Mapper<Transaction> {
       cryptoTransactionID: props.cryptoTransactionId,
       destinationWalletAddress: props.destinationWalletAddress,
       transactionTimestamp: props.transactionTimestamp,
+      partnerID: props.partnerID,
     };
   }
 

@@ -146,6 +146,7 @@ describe("FiatTransactionInitiator", () => {
       leg2: "ETH",
       checkoutPaymentID: initiatedPaymentId,
       lastStatusUpdateTimestamp: Date.now().valueOf(),
+      partnerID: "12345",
     });
 
     await transactionCollection.insertOne({
@@ -189,6 +190,7 @@ describe("FiatTransactionInitiator", () => {
       leg1: "USD",
       leg2: "ETH",
       lastStatusUpdateTimestamp: Date.now().valueOf(),
+      partnerID: "12345",
     });
 
     await transactionCollection.insertOne({
@@ -223,6 +225,7 @@ describe("FiatTransactionInitiator", () => {
       leg2: "ETH",
       checkoutPaymentID: initiatedPaymentId,
       lastStatusUpdateTimestamp: Date.now().valueOf(),
+      partnerID: "12345",
     });
 
     await transactionCollection.insertOne({
@@ -261,6 +264,7 @@ describe("FiatTransactionInitiator", () => {
       leg2: "ETH",
       checkoutPaymentID: initiatedPaymentId,
       lastStatusUpdateTimestamp: Date.now().valueOf(),
+      partnerID: "12345",
     });
 
     await transactionCollection.insertOne({

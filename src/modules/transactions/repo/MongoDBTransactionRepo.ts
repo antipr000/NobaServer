@@ -114,9 +114,13 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return this.transactionMapper.toDomain(updatedTransactionProps);
   }
 
-  async getUserTransactions(userId: string): Promise<Transaction[]> {
+  async getUserTransactions(userId: string, partnerID: string): Promise<Transaction[]> {
     const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: any = await transactionModel.find({ userId: userId }).exec();
+    const query = transactionModel.find({ userId: userId });
+    if (partnerID != undefined) {
+      query.and([{ partnerID: partnerID }]);
+    }
+    const result: any = query.sort({ transactionTimestamp: "desc" }).exec();
     const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
     return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
   }
@@ -151,7 +155,6 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       .exec();
     if (result.length === 0) return 0;
 
-    console.log(`Returning transactions totalling ${result[0].totalSum} since ${dateToCheck}`);
     return result[0].totalSum;
   }
 
@@ -190,7 +193,12 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return this.getPeriodicUserTransactionAmount(userId, 1);
   }
 
-  async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
+  async getUserTransactionInAnInterval(
+    userId: string,
+    partnerID: string,
+    fromDate: Date,
+    toDate: Date,
+  ): Promise<Transaction[]> {
     const transactionModel = await this.dbProvider.getTransactionModel();
 
     const query = transactionModel.find({ userId: userId });
@@ -214,7 +222,11 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       ]);
     }
 
-    const result: any = await query.sort({ transactionTimestamp: "asc" }).exec();
+    if (partnerID != undefined) {
+      query.and([{ partnerID: partnerID }]);
+    }
+
+    const result: any = await query.sort({ transactionTimestamp: "desc" }).exec();
     const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
     return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
   }

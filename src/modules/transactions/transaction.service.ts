@@ -49,6 +49,10 @@ export class TransactionService {
   }
 
   async requestTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
+    // TODO transactionQuoteQuery.partnerID can optionally be used to quote differently per partner.
+    // Note that that field is not required and will not be populated for unauthenticated users,
+    // so we can't depend on it being there.
+
     if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
       throw new BadRequestException("Unsupported fixedSide value");
     }
@@ -214,20 +218,25 @@ export class TransactionService {
     }
   }
 
-  async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {
-    const transaction = await this.transactionsRepo.getTransaction(transactionId);
+  async getTransactionStatus(transactionID: string): Promise<TransactionDTO> {
+    const transaction = await this.transactionsRepo.getTransaction(transactionID);
     return this.transactionsMapper.toDTO(transaction);
   }
 
-  async getUserTransactions(userId: string): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactions(userId)).map(transaction =>
+  async getUserTransactions(userID: string, partnerID: string): Promise<TransactionDTO[]> {
+    return (await this.transactionsRepo.getUserTransactions(userID, partnerID)).map(transaction =>
       this.transactionsMapper.toDTO(transaction),
     );
   }
 
-  async getTransactionsInInterval(userId: string, fromDate: Date, toDate: Date): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactionInAnInterval(userId, fromDate, toDate)).map(transaction =>
-      this.transactionsMapper.toDTO(transaction),
+  async getTransactionsInInterval(
+    userID: string,
+    partnerID: string,
+    fromDate: Date,
+    toDate: Date,
+  ): Promise<TransactionDTO[]> {
+    return (await this.transactionsRepo.getUserTransactionInAnInterval(userID, partnerID, fromDate, toDate)).map(
+      transaction => this.transactionsMapper.toDTO(transaction),
     );
   }
 
@@ -240,6 +249,7 @@ export class TransactionService {
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
   async initiateTransaction(
     consumerID: string,
+    partnerID: string,
     sessionKey: string,
     transactionRequest: CreateTransactionDTO,
   ): Promise<TransactionDTO> {
@@ -273,6 +283,7 @@ export class TransactionService {
       leg1: transactionRequest.leg1,
       leg2: transactionRequest.leg2,
       transactionStatus: TransactionStatus.PENDING,
+      partnerID: partnerID,
       destinationWalletAddress: transactionRequest.destinationWalletAddress,
     });
 

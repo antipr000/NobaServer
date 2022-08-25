@@ -157,6 +157,7 @@ describe("FiatTransactionInitiator", () => {
     leg2Amount: 1,
     leg1: "USD",
     leg2: "ETH",
+    partnerID: "12345",
     lastProcessingTimestamp: Date.now().valueOf(),
     lastStatusUpdateTimestamp: Date.now().valueOf(),
   });

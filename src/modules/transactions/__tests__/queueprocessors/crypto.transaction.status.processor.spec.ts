@@ -174,6 +174,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
+      partnerID: "12345",
       transactionExceptions: [],
     });
 
@@ -218,6 +219,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
+      partnerID: "12345",
       transactionExceptions: [],
     });
 
@@ -255,6 +257,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
+      partnerID: "12345",
       transactionExceptions: [],
     });
 
@@ -308,6 +311,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
+      partnerID: "12345",
       transactionExceptions: [],
     });
 

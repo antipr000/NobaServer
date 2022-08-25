@@ -51,4 +51,5 @@ export class TransactionDTO {
     description: "Destination wallet address to transfer crypto to in case of off ramp transaction",
   })
   destinationWalletAddress?: string;
+  partnerID?: string;
 }

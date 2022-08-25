@@ -646,6 +646,7 @@ describe("TransactionService", () => {
       leg1: "USD",
       leg2: "ETH",
       destinationWalletAddress: walletAddress,
+      partnerID: "12345",
     });
 
     const paymentMethod: PaymentMethod = {
