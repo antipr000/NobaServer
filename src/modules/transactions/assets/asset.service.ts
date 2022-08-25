@@ -10,7 +10,6 @@ import {
   QuoteRequestForFixedFiat,
   QuoteRequestForFixedCrypto,
 } from "../domain/AssetTypes";
-import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 
 export interface AssetService {
   getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote>;
