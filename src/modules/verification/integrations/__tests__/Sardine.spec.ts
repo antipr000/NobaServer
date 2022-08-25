@@ -254,11 +254,7 @@ describe("SardineTests", () => {
     });
 
     it("should return status APPROVED for valid documents", async () => {
-      const responsePromise = sardine.getDocumentVerificationResult(
-        "fake-session-key",
-        "fake-verification-id",
-        "fake-consumer-if",
-      );
+      const responsePromise = sardine.getDocumentVerificationResult("fake-verification-id");
 
       expect(mockAxios.get).toHaveBeenCalled();
 
@@ -272,11 +268,7 @@ describe("SardineTests", () => {
 
     it("should throw error if axios calls fail", async () => {
       mockAxios.get.mockRejectedValueOnce(new Error("Network Error"));
-      const responsePromise = sardine.getDocumentVerificationResult(
-        "fake-session-key",
-        "fake-verification-id",
-        "fake-consumer-if",
-      );
+      const responsePromise = sardine.getDocumentVerificationResult("fake-verification-id");
 
       expect(mockAxios.get).toHaveBeenCalled();
       try {

@@ -14,7 +14,7 @@ export interface IDVProvider {
 
   verifyDocument(sessionKey: string, documentInfo: DocumentInformation, consumer: Consumer): Promise<string>;
 
-  getDocumentVerificationResult(sessionKey: string, id: string, userID: string): Promise<DocumentVerificationResult>;
+  getDocumentVerificationResult(id: string): Promise<DocumentVerificationResult>;
 
   transactionVerification(
     sessionKey: string,
