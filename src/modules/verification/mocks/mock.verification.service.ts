@@ -11,7 +11,7 @@ export function getMockVerificationServiceWithDefaults(): VerificationService {
   when(mockVerificationService.verifyDocument(anyString(), anyString(), anything())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockVerificationService.getDocumentVerificationResult(anyString(), anyString(), anyString())).thenReject(
+  when(mockVerificationService.getDocumentVerificationResult(anyString(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
   when(
