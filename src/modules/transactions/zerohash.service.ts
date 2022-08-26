@@ -112,15 +112,16 @@ export class ZeroHashService {
     this.logger.debug(`Sending request: ${requestString}`);
 
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
-      this.logger.error(`Error in ZeroHash request: ${requestString}`);
-      this.logger.error(JSON.stringify(err));
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
         this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
         throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
       } else if (err.statusCode == 400) {
+        this.logger.error(`Error in ZeroHash request: ${requestString}`);
+        this.logger.error(JSON.stringify(err));
         throw new BadRequestException(err);
       } else {
+        // catch 404 in caller. This may be for known reasons (e.g. participant not created yet) so we don't want to log it here.
         throw err;
       }
     });
@@ -668,7 +669,7 @@ export class ZeroHashService {
         participant = await this.getParticipant(consumer.email);
       } catch (e) {
         // Generally just a 404 here, but log anyway.
-        this.logger.error(`Error looking up participant ${consumer.email} (passibly not created yet)`);
+        this.logger.info(`Error looking up participant ${consumer.email} (possibly not created yet, which is OK)`);
       }
       // If the user is not registered, register them
       if (participant == null) {

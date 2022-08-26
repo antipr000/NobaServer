@@ -123,7 +123,8 @@ describe("PartnerService", () => {
       });
 
       when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
-      when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
+      // Use anything() because we can't predict the values of webhookClientID and webhookSecret
+      when(partnerRepo.updatePartner(anything())).thenResolve(updatedPartner);
 
       const result = await partnerService.addOrReplaceWebhook(partner.props._id, webhookType, webhookURL);
       expect(result).toStrictEqual(updatedPartner);
