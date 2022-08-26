@@ -41,7 +41,7 @@ import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
-import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
+import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";

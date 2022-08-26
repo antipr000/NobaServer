@@ -34,7 +34,7 @@ import { TransactionStatus } from "../domain/Types";
 import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
 import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
-import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
+import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQueryDTO";
 import { LimitsService } from "../limits.service";
 import { getMockAssetServiceFactoryWithDefaultAssetService } from "../mocks/mock.asset.service";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.transactions.repo";

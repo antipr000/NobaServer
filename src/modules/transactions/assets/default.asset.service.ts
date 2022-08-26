@@ -16,7 +16,6 @@ import {
   QuoteRequestForFixedCrypto,
   QuoteRequestForFixedFiat,
 } from "../domain/AssetTypes";
-import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
 import { CurrencyType } from "../../common/domain/Types";

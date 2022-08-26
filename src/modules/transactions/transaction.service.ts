@@ -13,7 +13,7 @@ import { CryptoTransactionRequestResult, CryptoTransactionStatus, TransactionSta
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
-import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
+import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
