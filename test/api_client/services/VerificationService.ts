@@ -148,7 +148,6 @@ export class VerificationService {
    * @param xNobaSignature
    * @param xNobaTimestamp
    * @param id
-   * @param sessionKey
    * @returns DocumentVerificationResultDTO Document verification result
    * @throws ApiError
    */
@@ -157,7 +156,6 @@ export class VerificationService {
     xNobaSignature: string,
     xNobaTimestamp: string,
     id: string,
-    sessionKey: string,
   ): CancelablePromise<DocumentVerificationResultDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -169,9 +167,6 @@ export class VerificationService {
         "X-Noba-API-Key": xNobaApiKey,
         "X-Noba-Signature": xNobaSignature,
         "X-Noba-Timestamp": xNobaTimestamp,
-      },
-      query: {
-        sessionKey: sessionKey,
       },
       errors: {
         400: `Invalid request parameters`,

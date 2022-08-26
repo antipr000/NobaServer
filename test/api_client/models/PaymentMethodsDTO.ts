@@ -9,5 +9,5 @@ export type PaymentMethodsDTO = {
   paymentToken: string;
   first6Digits: string;
   last4Digits: string;
-  status: "Flagged" | "Rejected" | "Approved";
+  status: "Flagged" | "Rejected" | "Approved" | "Unsupported";
 };

@@ -20,6 +20,7 @@ export class TransactionsService {
    * @param cryptoCurrencyCode
    * @param fixedSide
    * @param fixedAmount
+   * @param partnerId
    * @returns TransactionQuoteDTO
    * @throws ApiError
    */
@@ -31,6 +32,7 @@ export class TransactionsService {
     cryptoCurrencyCode: string,
     fixedSide: "fiat" | "crypto",
     fixedAmount: number,
+    partnerId?: string,
   ): CancelablePromise<TransactionQuoteDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -45,6 +47,7 @@ export class TransactionsService {
         cryptoCurrencyCode: cryptoCurrencyCode,
         fixedSide: fixedSide,
         fixedAmount: fixedAmount,
+        partnerID: partnerId,
       },
       errors: {
         400: `Invalid currency code (fiat or crypto)`,
