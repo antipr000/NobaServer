@@ -13,6 +13,7 @@ import {
   Headers,
   ForbiddenException,
   HttpCode,
+  NotFoundException,
 } from "@nestjs/common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import {
@@ -169,11 +170,13 @@ export class VerificationController {
   @ApiNotFoundResponse({ description: "Document verification request not found" })
   async getDocumentVerificationResult(
     @Param("id") id: string,
-    @Query("sessionKey") sessionKey: string,
     @Request() request,
   ): Promise<DocumentVerificationResultDTO> {
     const consumer: Consumer = request.user.entity;
-    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, sessionKey, id);
+    if (id !== consumer.props.verificationData.documentVerificationTransactionID) {
+      throw new NotFoundException("No verification record is found for the user with the given id");
+    }
+    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 

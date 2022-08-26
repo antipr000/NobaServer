@@ -100,6 +100,20 @@ export class FiatTransactionInitiator extends MessageProcessor {
             `Error processing fiat transaction`,
             transaction,
           );
+        }
+        if (e.disposition === CardFailureExceptionText.NO_CRYPTO) {
+          this.logger.info(
+            `Transaction ${transactionId} failed fiat leg with code ${e.reasonCode}-${e.reasonSummary} as it doesn't support crypto`,
+          );
+
+          await this.handleCheckoutFailure(
+            e.reasonCode,
+            e.reasonSummary,
+            PaymentMethodStatus.UNSUPPORTED,
+            consumer,
+            transaction,
+            false,
+          );
         } else {
           // All others should have an error code & description
           // that get persisted to the database and updated in Sardine

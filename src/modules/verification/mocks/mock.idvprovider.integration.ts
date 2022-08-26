@@ -10,9 +10,7 @@ export function getMockIdvProviderIntegrationWithDefaults(): IDVProvider {
   when(mockIdvProvider.verifyDocument(anyString(), anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockIdvProvider.getDocumentVerificationResult(anyString(), anyString(), anyString())).thenReject(
-    new Error("Method not implemented"),
-  );
+  when(mockIdvProvider.getDocumentVerificationResult(anyString())).thenReject(new Error("Method not implemented"));
 
   return mockIdvProvider;
 }

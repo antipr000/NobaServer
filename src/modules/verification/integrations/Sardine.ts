@@ -168,11 +168,7 @@ export class Sardine implements IDVProvider {
     }
   }
 
-  async getDocumentVerificationResult(
-    sessionKey: string,
-    id: string,
-    userID: string,
-  ): Promise<DocumentVerificationResult> {
+  async getDocumentVerificationResult(id: string): Promise<DocumentVerificationResult> {
     try {
       const config = this.getAxiosConfig();
 
@@ -180,8 +176,6 @@ export class Sardine implements IDVProvider {
         ...config,
         params: {
           type: "custom",
-          sessionKey: sessionKey,
-          customerId: userID,
         },
       });
       return this.processDocumentVerificationResult(data as DocumentVerificationSardineResponse);
