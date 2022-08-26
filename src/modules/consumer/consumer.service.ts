@@ -193,6 +193,7 @@ export class ConsumerService {
     try {
       // Check if added payment method is valid
       checkoutResponse = await this.checkoutApi.payments.request({
+        amount: 100,
         currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
         source: {
           type: "id",
@@ -202,6 +203,7 @@ export class ConsumerService {
         metadata: {
           order_id: "test_order_1",
         },
+        capture: false,
       });
     } catch (err) {
       //pass
