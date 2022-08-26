@@ -26,7 +26,12 @@ import { Consumer } from "../consumer/domain/Consumer";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
 import { AssetService } from "./assets/asset.service";
+import { PartnerService } from "../partner/partner.service";
 import { NobaQuote } from "./domain/AssetTypes";
+import axios, { AxiosRequestConfig } from "axios";
+import { Partner, PartnerWebhook } from "../partner/domain/Partner";
+import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
+import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 
 @Injectable()
 export class TransactionService {
@@ -40,6 +45,7 @@ export class TransactionService {
     private readonly verificationService: VerificationService,
     private readonly consumerService: ConsumerService,
     private readonly assetServiceFactory: AssetServiceFactory,
+    private readonly partnerService: PartnerService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     @Inject(EmailService) private readonly emailService: EmailService,
@@ -457,5 +463,46 @@ export class TransactionService {
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
     // Will throw an error if the currency is unknown to the tool. We should catch this in the caller and ultimately display a warning to the user that the address could not be validated.
     return validate(destinationWalletAdress, curr);
+  }
+
+  private getAxiosConfig(partner: Partner): AxiosRequestConfig {
+    return {
+      auth: {
+        username: partner.props.webhookClientID,
+        password: partner.props.webhookSecret,
+      },
+    };
+  }
+
+  async callTransactionConfirmWebhook(consumer: Consumer, transaction: Transaction) {
+    const partnerID = transaction.props.partnerID;
+    if (!partnerID) {
+      return;
+    }
+
+    const partner = await this.partnerService.getPartner(partnerID);
+    const webhook = this.partnerService.getWebhook(partner, WebhookType.TRANSACTION_CONFIRM);
+
+    if (webhook == null) {
+      return; // Partner doesn't have a webhook callback
+    }
+
+    const payload: TransConfirmDTO = {
+      consumer: new ConsumerMapper().toSimpleDTO(consumer),
+      transaction: new TransactionMapper().toDTO(transaction),
+    };
+
+    try {
+      const { status, statusText } = await axios.post(webhook.url, payload, this.getAxiosConfig(partner));
+      if (status != 200) {
+        this.logger.error(
+          `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${status}-${statusText}`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${err.message}`,
+      );
+    }
   }
 }

@@ -3,7 +3,7 @@ import { Consumer } from "../domain/Consumer";
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
-import { ConsumerDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
+import { ConsumerDTO, ConsumerSimpleDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
 
 export class ConsumerMapper implements Mapper<Consumer> {
   public toDomain(raw: any): Consumer {
@@ -83,6 +83,17 @@ export class ConsumerMapper implements Mapper<Consumer> {
       paymentMethods: p.paymentMethods.map(paymentMethod => this.toPaymentMethodsDTO(paymentMethod)),
       paymentMethodStatus: this.getPaymentMethodStatus(consumer.props.paymentMethods),
       walletStatus: this.getWalletStatus(consumer.props.cryptoWallets),
+    };
+  }
+
+  public toSimpleDTO(consumer: Consumer): ConsumerSimpleDTO {
+    const p = consumer.props;
+    return {
+      _id: p._id,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      email: p.displayEmail ? p.displayEmail : p.email,
+      phone: p.phone,
     };
   }
 }

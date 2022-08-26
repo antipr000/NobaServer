@@ -12,6 +12,7 @@ import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { AssetService } from "../assets/asset.service";
+import { PartnerService } from "../../partner/partner.service";
 import { ConsumerWalletTransferRequest, ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
 
 export class OnChainPendingProcessor extends MessageProcessor {
@@ -22,7 +23,6 @@ export class OnChainPendingProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
     lockService: LockService,
-    private readonly zerohashService: ZeroHashService,
     private readonly emailService: EmailService,
     private readonly assetServiceFactory: AssetServiceFactory,
   ) {
@@ -99,6 +99,9 @@ export class OnChainPendingProcessor extends MessageProcessor {
       this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
       return;
     }
+
+    // Make webhook callback to partner
+    await this.transactionService.callTransactionConfirmWebhook(consumer, transaction);
 
     await this.emailService.sendOrderExecutedEmail(
       consumer.props.firstName,

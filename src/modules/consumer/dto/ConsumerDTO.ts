@@ -109,3 +109,20 @@ export class ConsumerDTO {
   @ApiPropertyOptional({ enum: WalletStatus })
   walletStatus?: WalletStatus;
 }
+
+export class ConsumerSimpleDTO {
+  @ApiProperty()
+  _id: string;
+
+  @ApiPropertyOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiPropertyOptional()
+  phone?: string;
+}

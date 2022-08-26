@@ -42,6 +42,8 @@ import { getMockZerohashServiceWithDefaults } from "../mocks/mock.zerohash.servi
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
+import { PartnerService } from "../../partner/partner.service";
+import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -64,6 +66,7 @@ describe("TransactionService", () => {
   let verificationService: VerificationService;
   let currencyService: CurrencyService;
   let emailService: EmailService;
+  let partnerService: PartnerService;
   let assetServiceFactory: AssetServiceFactory;
 
   const userId = "1234567890";
@@ -84,6 +87,7 @@ describe("TransactionService", () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     verificationService = getMockVerificationServiceWithDefaults();
     emailService = getMockEmailServiceWithDefaults();
+    partnerService = getMockPartnerServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
 
     const app: TestingModule = await Test.createTestingModule({
@@ -115,6 +119,10 @@ describe("TransactionService", () => {
         {
           provide: EmailService,
           useFactory: () => instance(emailService),
+        },
+        {
+          provide: PartnerService,
+          useFactory: () => instance(partnerService),
         },
         {
           provide: AssetServiceFactory,
