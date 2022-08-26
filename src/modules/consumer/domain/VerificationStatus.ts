@@ -29,6 +29,7 @@ export enum PaymentMethodStatus {
   FLAGGED = "Flagged",
   REJECTED = "Rejected",
   APPROVED = "Approved",
+  UNSUPPORTED = "Unsupported",
 }
 
 export enum RiskLevel {
