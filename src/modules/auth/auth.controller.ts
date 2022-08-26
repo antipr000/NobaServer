@@ -75,6 +75,8 @@ export class AuthController {
       JSON.stringify(requestBody),
     );
     const partnerId = (await this.partnerService.getPartnerFromApiKey(apiKey)).props._id;
+
+    // TODO: figure out how to get partner's user ID from request & pass as parameter 4 of this method:
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp, partnerId);
     return authService.generateAccessToken(userId, partnerId);
   }

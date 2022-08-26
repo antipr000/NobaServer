@@ -34,12 +34,12 @@ export class PartnerService {
 
   async updatePartner(partnerId: string, partialPartnerProps: Partial<PartnerProps>): Promise<Partner> {
     const partner = await this.getPartner(partnerId);
-    const updatedPatner = Partner.createPartner({
+    const updatedPartner = Partner.createPartner({
       ...partner.props,
       ...partialPartnerProps,
     });
-    console.log(`Updated partner: ${JSON.stringify(updatedPatner)}`);
-    const partnerResult: Partner = await this.partnerRepo.updatePartner(updatedPatner);
+
+    const partnerResult: Partner = await this.partnerRepo.updatePartner(updatedPartner);
     return partnerResult;
   }
 

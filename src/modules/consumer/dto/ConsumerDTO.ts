@@ -42,7 +42,7 @@ export class CryptoWalletsDTO {
   status: WalletStatus;
 
   // Keep from API as this should not be exposed to user
-  partnerID: string;
+  //partnerID: string;
 }
 
 export class KycVerificationDTO {

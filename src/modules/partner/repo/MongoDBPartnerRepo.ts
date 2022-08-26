@@ -57,7 +57,8 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
           },
         )
         .exec();
-      return await this.getPartner(partner.props._id);
+      const updatedPartner = await this.getPartner(partner.props._id);
+      return updatedPartner;
     } catch (e) {
       throw new BadRequestException(e.message);
     }

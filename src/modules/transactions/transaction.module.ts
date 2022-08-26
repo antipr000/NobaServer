@@ -5,7 +5,6 @@ import { ConsumerModule } from "../consumer/consumer.module";
 import { VerificationModule } from "../verification/verification.module";
 import { LimitsService } from "./limits.service";
 import { PartnerModule } from "../partner/partner.module";
-import { PartnerService } from "../partner/partner.service";
 import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
@@ -29,7 +28,6 @@ import { AssetsModule } from "./assets/assets.module";
     TransactionService,
     LimitsService,
     ZeroHashService,
-    PartnerService,
     AppService, // Replace with 'CurrencyService'
     {
       provide: "TransactionRepo",

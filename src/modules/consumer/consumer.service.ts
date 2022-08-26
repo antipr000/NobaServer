@@ -60,7 +60,11 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
-  async createConsumerIfFirstTimeLogin(emailOrPhone: string, partnerID: string): Promise<Consumer> {
+  async createConsumerIfFirstTimeLogin(
+    emailOrPhone: string,
+    partnerID: string,
+    partnerUserID?: string,
+  ): Promise<Consumer> {
     const isEmail = emailOrPhone.includes("@");
     const email = isEmail ? emailOrPhone : null;
     const phone = !isEmail ? emailOrPhone : null;
@@ -74,6 +78,7 @@ export class ConsumerService {
         partners: [
           {
             partnerID: partnerID,
+            partnerUserID: partnerUserID,
           },
         ],
       });
@@ -89,6 +94,7 @@ export class ConsumerService {
           ...consumerResult.getValue().props.partners,
           {
             partnerID: partnerID,
+            partnerUserID: partnerUserID,
           },
         ],
       });

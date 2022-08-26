@@ -40,7 +40,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       chainType: cryptoWallet.chainType,
       isEVMCompatible: cryptoWallet.isEVMCompatible,
       status: cryptoWallet.status,
-      partnerID: cryptoWallet.partnerID,
+      //partnerID: cryptoWallet.partnerID,
     };
   }
 

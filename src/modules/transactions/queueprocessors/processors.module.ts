@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { PartnerModule } from "../../../modules/partner/partner.module";
 import { AppService } from "../../../app.service";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
@@ -21,7 +22,15 @@ import { TransactionFailedProcessor } from "./TransactionFailedProcessor";
 import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactionProcessor";
 
 @Module({
-  imports: [CommonModule, AssetsModule, InfraProvidersModule, ConsumerModule, VerificationModule, getWinstonModule()],
+  imports: [
+    CommonModule,
+    AssetsModule,
+    InfraProvidersModule,
+    ConsumerModule,
+    VerificationModule,
+    PartnerModule,
+    getWinstonModule(),
+  ],
   controllers: [],
   providers: [
     ZeroHashService,
