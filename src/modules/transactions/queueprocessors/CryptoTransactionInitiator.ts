@@ -54,6 +54,8 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     if (!transaction.props.nobaTransferTradeID) {
+      this.logger.info(`Transferring funds to Noba.`);
+
       const makeFundsAvailableRequest: FundsAvailabilityRequest = {
         consumer: consumer.props,
         cryptoCurrency: transaction.props.leg2,
@@ -72,8 +74,9 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         makeFundsAvailableRequest,
       );
 
+      this.logger.info(`Transfer to Noba initiated with ID: "${fundAvailableResponse.id}".`);
       // TODO(#): Rename the field to something generic.
-      transaction.props.nobaTransferSettlementID = fundAvailableResponse.id;
+      transaction.props.nobaTransferTradeID = fundAvailableResponse.id;
       transaction.props.exchangeRate = fundAvailableResponse.tradePrice;
       await this.transactionRepo.updateTransaction(transaction);
     }

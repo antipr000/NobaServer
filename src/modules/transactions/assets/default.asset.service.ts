@@ -70,14 +70,6 @@ export class DefaultAssetService implements AssetService {
     const fiatAmountAfterAllChargesWithSpread: number =
       fiatAmountAfterAllChargesWithoutSpread / (1 + nobaSpreadPercent);
 
-    console.log(
-      nobaSpreadPercent,
-      fiatAmountAfterAllChargesWithSpread,
-      fiatAmountAfterAllChargesWithoutSpread,
-      request,
-      networkFee,
-    );
-
     const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForFixedFiatCurrency(
       request.cryptoCurrency,
       request.fiatCurrency,
@@ -110,10 +102,6 @@ export class DefaultAssetService implements AssetService {
     }
     `);
 
-    // const transactionQuote: TransactionQuoteDTO = {
-    //   quotedAmount: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
-    //   exchangeRate: perUnitCryptoCostWithSpread,
-    // };
     return {
       cryptoCurrency: request.cryptoCurrency,
       fiatCurrency: request.fiatCurrency,
