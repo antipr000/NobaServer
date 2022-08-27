@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "This command will deploy latest master branch to aws sandbox environment"
+echo "This command will deploy latest main branch to aws sandbox environment"
 
 if [ $# -lt 1 ]; then 
   export tagName="sandbox"
@@ -8,9 +8,9 @@ else
   export tagName=$1
 fi
 
-echo  "pushing to tag ${tagName}"
+echo  "Pushing to tag ${tagName}"
 
-git fetch && git tag -af $tagName origin/master -m "Deploying to aws sandbox environment"
+git fetch && git tag -af $tagName origin/main -m "Deploying to aws sandbox environment"
 
 git push origin tags/$tagName -f
 

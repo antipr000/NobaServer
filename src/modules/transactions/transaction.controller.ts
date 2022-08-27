@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   Response,
+  Request,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
@@ -40,7 +41,7 @@ import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
-import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
+import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -68,8 +69,15 @@ export class TransactionController {
   @ApiResponse({ status: HttpStatus.OK, type: TransactionQuoteDTO })
   @ApiBadRequestResponse({ description: "Invalid currency code (fiat or crypto)" })
   @ApiServiceUnavailableResponse({ description: "Unable to connect to underlying service provider" })
-  async getTransactionQuote(@Query() transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
-    const transactionQuote = await this.transactionService.getTransactionQuote(transactionQuoteQuery);
+  async getTransactionQuote(
+    @Request() request,
+    @Query() transactionQuoteQuery: TransactionQuoteQueryDTO,
+  ): Promise<TransactionQuoteDTO> {
+    if (transactionQuoteQuery.partnerID === undefined) {
+      // Set it if we have it, otherwise just don't use it
+      transactionQuoteQuery.partnerID = request.user?.partnerId;
+    }
+    const transactionQuote = await this.transactionService.requestTransactionQuote(transactionQuoteQuery);
     return transactionQuote;
   }
 
@@ -102,11 +110,12 @@ export class TransactionController {
   })
   @ApiNotFoundResponse({ description: "Transaction does not exist" })
   async getTransactionStatus(
+    @Request() request,
     @Param("transactionID") transactionID: string,
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO> {
     const dto = await this.transactionService.getTransactionStatus(transactionID);
-    if (dto.userID !== authUser.props._id) {
+    if (dto.userID !== authUser.props._id || dto.partnerID !== request.user.partnerId) {
       // We can't return forbidden, as that would tell the user there IS a transaction - they just can't see it. So "pretend" it's not found.
       throw new NotFoundException("Transaction does not exist");
     }
@@ -123,13 +132,21 @@ export class TransactionController {
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async transact(
+    @Request() request,
     @Query("sessionKey") sessionKey: string,
     @Body() orderDetails: CreateTransactionDTO,
     @AuthUser() user: Consumer,
   ): Promise<string> {
     this.logger.debug(`uid ${user.props._id}, transact input:`, orderDetails);
 
-    return (await this.transactionService.initiateTransaction(user.props._id, sessionKey, orderDetails))._id;
+    return (
+      await this.transactionService.initiateTransaction(
+        user.props._id,
+        request.user.partnerId,
+        sessionKey,
+        orderDetails,
+      )
+    )._id;
   }
 
   //TODO take filter options, pagination token etc?
@@ -143,6 +160,7 @@ export class TransactionController {
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getTransactions(
+    @Request() request,
     @Query() transactionFilters: TransactionFilterDTO,
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO[]> {
@@ -163,7 +181,12 @@ export class TransactionController {
         ? new Date(new Date(transactionFilters.endDate).toUTCString())
         : undefined;
 
-    return this.transactionService.getTransactionsInInterval(authUser.props._id, fromDateInUTC, toDateInUTC);
+    return this.transactionService.getTransactionsInInterval(
+      authUser.props._id,
+      request.user.partnerId,
+      fromDateInUTC,
+      toDateInUTC,
+    );
   }
 
   @Get("/consumers/limits/")
@@ -188,6 +211,7 @@ export class TransactionController {
     description: "A CSV or PDF file containing details of all the transactions made by the consumer",
   })
   async downloadTransactions(
+    @Request() request,
     @Query() downloadParames: DownloadTransactionsDTO,
     @AuthUser() authUser: Consumer,
     @Response() response,
@@ -198,6 +222,7 @@ export class TransactionController {
     let filePath = "";
     const transactions: TransactionDTO[] = await this.transactionService.getTransactionsInInterval(
       authUser.props._id,
+      request.user.partnerId,
       new Date(fromDateInUTC),
       new Date(toDateInUTC),
     );

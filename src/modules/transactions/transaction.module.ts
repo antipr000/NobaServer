@@ -4,15 +4,25 @@ import { CommonModule } from "../common/common.module";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { VerificationModule } from "../verification/verification.module";
 import { LimitsService } from "./limits.service";
+import { PartnerModule } from "../partner/partner.module";
 import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 import { AppService } from "../../app.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
+import { AssetsModule } from "./assets/assets.module";
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule, ConsumerModule, VerificationModule, AsyncTransactionProcessorModule],
+  imports: [
+    InfraProvidersModule,
+    CommonModule,
+    ConsumerModule,
+    VerificationModule,
+    PartnerModule,
+    AsyncTransactionProcessorModule,
+    AssetsModule,
+  ],
   controllers: [TransactionController],
   providers: [
     TransactionService,

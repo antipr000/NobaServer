@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { ConsumerService } from "../consumer/consumer.service";
 import { AuthService } from "./auth.service";
 import { consumerIdentityIdentifier } from "./domain/IdentityType";
@@ -17,7 +17,7 @@ export class UserAuthService extends AuthService {
 
   protected async getUserId(emailOrPhone: string, partnerID: string): Promise<string> {
     if (!partnerID || partnerID.length == 0) {
-      partnerID = this.nobaPartnerID;
+      throw new BadRequestException("PartnerID is required");
     }
     const consumer: Consumer = await this.consumerService.createConsumerIfFirstTimeLogin(emailOrPhone, partnerID);
     return consumer.props._id;

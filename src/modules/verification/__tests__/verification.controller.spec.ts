@@ -5,10 +5,12 @@ import { VerificationService } from "../verification.service";
 import { getMockVerificationServiceWithDefaults } from "../mocks/mock.verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
-import { KYCStatus } from "../../consumer/domain/VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus } from "../../consumer/domain/VerificationStatus";
 import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
+import { NotFoundException } from "@nestjs/common";
 
 describe("VerificationController", () => {
   let verificationController: VerificationController;
@@ -40,7 +42,7 @@ describe("VerificationController", () => {
     verificationController = app.get<VerificationController>(VerificationController);
   });
 
-  describe("verification controller tests", () => {
+  describe("POST /session", () => {
     it("should create session", async () => {
       when(verificationService.createSession()).thenResolve(
         VerificationData.createVerificationData({
@@ -52,153 +54,223 @@ describe("VerificationController", () => {
     });
   });
 
-  it("should return 'APPROVED' for consumer info verification when details are correct", async () => {
-    const consumerInfo: ConsumerInformation = {
-      userID: "testuser-1234",
-      firstName: "Test",
-      lastName: "User",
-      address: {
-        streetLine1: "Some random street",
-        countryCode: "US",
-        city: "Some random city",
-        regionCode: "AL",
-        postalCode: "123456",
-      },
-      phoneNumber: "+1234567890",
-      dateOfBirth: "1990-02-12",
-      email: "test@noba.com",
-    };
-
-    const consumer: ConsumerProps = {
-      _id: "testuser-1234",
-      email: "test@noba.com",
-      partners: [
-        {
-          partnerID: "partner-1",
+  describe("POST /consumerinfo", () => {
+    it("should return 'APPROVED' for consumer info verification when details are correct", async () => {
+      const consumerInfo: ConsumerInformation = {
+        userID: "testuser-1234",
+        firstName: "Test",
+        lastName: "User",
+        address: {
+          streetLine1: "Some random street",
+          countryCode: "US",
+          city: "Some random city",
+          regionCode: "AL",
+          postalCode: "123456",
         },
-      ],
-    };
+        phoneNumber: "+1234567890",
+        dateOfBirth: "1990-02-12",
+        email: "test@noba.com",
+      };
 
-    when(
-      verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
-    ).thenResolve({
-      status: KYCStatus.APPROVED,
+      const consumer: ConsumerProps = {
+        _id: "testuser-1234",
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      };
+
+      when(
+        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
+      ).thenResolve({
+        status: KYCStatus.APPROVED,
+      });
+
+      const result = await verificationController.verifyConsumer(
+        "test-session",
+        {
+          firstName: consumerInfo.firstName,
+          lastName: consumerInfo.lastName,
+          address: consumerInfo.address,
+          phoneNumber: consumerInfo.phoneNumber,
+          dateOfBirth: consumerInfo.dateOfBirth,
+        },
+        {
+          user: { entity: Consumer.createConsumer(consumer) },
+        },
+      );
+
+      expect(result.status).toBe("Approved");
     });
 
-    const result = await verificationController.verifyConsumer(
-      "test-session",
-      {
-        firstName: consumerInfo.firstName,
-        lastName: consumerInfo.lastName,
-        address: consumerInfo.address,
-        phoneNumber: consumerInfo.phoneNumber,
-        dateOfBirth: consumerInfo.dateOfBirth,
-      },
-      {
-        user: { entity: Consumer.createConsumer(consumer) },
-      },
-    );
+    it("should return 'NOT_APPROVED' for consumer info verification when details are not correct", async () => {
+      const consumerInfo: ConsumerInformation = {
+        userID: "testuser-1234",
+        firstName: "Fake",
+        lastName: "Name",
+        address: {
+          streetLine1: "Some random street",
+          countryCode: "US",
+          city: "Some random city",
+          regionCode: "AL",
+          postalCode: "123456",
+        },
+        phoneNumber: "+12222222222",
+        dateOfBirth: "1990-02-12",
+        email: "fake@noba.com",
+      };
 
-    expect(result.status).toBe("Approved");
+      const consumer: ConsumerProps = {
+        _id: "testuser-1234",
+        email: "fake@noba.com",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      };
+
+      when(
+        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
+      ).thenResolve({
+        status: KYCStatus.REJECTED,
+      });
+
+      const result = await verificationController.verifyConsumer(
+        "test-session",
+        {
+          firstName: consumerInfo.firstName,
+          lastName: consumerInfo.lastName,
+          address: consumerInfo.address,
+          phoneNumber: consumerInfo.phoneNumber,
+          dateOfBirth: consumerInfo.dateOfBirth,
+        },
+        {
+          user: { entity: Consumer.createConsumer(consumer) },
+        },
+      );
+
+      expect(result.status).toBe("NotApproved");
+    });
+
+    it("should return 'PENDING' for consumer info verification when user is flagged", async () => {
+      const consumerInfo: ConsumerInformation = {
+        userID: "testuser-1234",
+        firstName: "Test",
+        lastName: "User",
+        address: {
+          streetLine1: "Some random street",
+          countryCode: "US",
+          city: "Some random city",
+          regionCode: "AL",
+          postalCode: "123456",
+        },
+        phoneNumber: "+12222222222",
+        dateOfBirth: "1990-02-12",
+        email: "shadyemail@noba.com",
+      };
+
+      const consumer: ConsumerProps = {
+        _id: "testuser-1234",
+        email: "shadyemail@noba.com",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      };
+
+      when(
+        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
+      ).thenResolve({
+        status: KYCStatus.FLAGGED,
+      });
+
+      const result = await verificationController.verifyConsumer(
+        "test-session",
+        {
+          firstName: consumerInfo.firstName,
+          lastName: consumerInfo.lastName,
+          address: consumerInfo.address,
+          phoneNumber: consumerInfo.phoneNumber,
+          dateOfBirth: consumerInfo.dateOfBirth,
+        },
+        {
+          user: { entity: Consumer.createConsumer(consumer) },
+        },
+      );
+
+      expect(result.status).toBe("Pending");
+    });
   });
 
-  it("should return 'NOT_APPROVED' for consumer info verification when details are not correct", async () => {
-    const consumerInfo: ConsumerInformation = {
-      userID: "testuser-1234",
-      firstName: "Fake",
-      lastName: "Name",
-      address: {
-        streetLine1: "Some random street",
-        countryCode: "US",
-        city: "Some random city",
-        regionCode: "AL",
-        postalCode: "123456",
-      },
-      phoneNumber: "+12222222222",
-      dateOfBirth: "1990-02-12",
-      email: "fake@noba.com",
-    };
-
-    const consumer: ConsumerProps = {
-      _id: "testuser-1234",
-      email: "fake@noba.com",
-      partners: [
-        {
-          partnerID: "partner-1",
+  describe("GET /document/result/:id", () => {
+    it("should throw NotFoundException if id does not belong to consumer", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "fake-consumer",
+        firstName: "Fake",
+        lastName: "Consumer",
+        email: "fake+consumer@noba.com",
+        partners: [
+          {
+            partnerID: "fake-partner",
+          },
+        ],
+        verificationData: {
+          verificationProvider: VerificationProviders.SARDINE,
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.PENDING,
+          documentVerificationTransactionID: "fake-transaction-1",
         },
-      ],
-    };
+      });
 
-    when(
-      verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
-    ).thenResolve({
-      status: KYCStatus.REJECTED,
+      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
+        status: DocumentVerificationStatus.APPROVED,
+      });
+
+      try {
+        await verificationController.getDocumentVerificationResult("fake-transaction-2", {
+          user: {
+            entity: consumer,
+          },
+        });
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+      }
     });
 
-    const result = await verificationController.verifyConsumer(
-      "test-session",
-      {
-        firstName: consumerInfo.firstName,
-        lastName: consumerInfo.lastName,
-        address: consumerInfo.address,
-        phoneNumber: consumerInfo.phoneNumber,
-        dateOfBirth: consumerInfo.dateOfBirth,
-      },
-      {
-        user: { entity: Consumer.createConsumer(consumer) },
-      },
-    );
-
-    expect(result.status).toBe("NotApproved");
-  });
-
-  it("should return 'PENDING' for consumer info verification when user is flagged", async () => {
-    const consumerInfo: ConsumerInformation = {
-      userID: "testuser-1234",
-      firstName: "Test",
-      lastName: "User",
-      address: {
-        streetLine1: "Some random street",
-        countryCode: "US",
-        city: "Some random city",
-        regionCode: "AL",
-        postalCode: "123456",
-      },
-      phoneNumber: "+12222222222",
-      dateOfBirth: "1990-02-12",
-      email: "shadyemail@noba.com",
-    };
-
-    const consumer: ConsumerProps = {
-      _id: "testuser-1234",
-      email: "shadyemail@noba.com",
-      partners: [
-        {
-          partnerID: "partner-1",
+    it("should return verification response if id belongs to the consumer", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "fake-consumer",
+        firstName: "Fake",
+        lastName: "Consumer",
+        email: "fake+consumer@noba.com",
+        partners: [
+          {
+            partnerID: "fake-partner",
+          },
+        ],
+        verificationData: {
+          verificationProvider: VerificationProviders.SARDINE,
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.PENDING,
+          documentVerificationTransactionID: "fake-transaction-2",
         },
-      ],
-    };
+      });
 
-    when(
-      verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
-    ).thenResolve({
-      status: KYCStatus.FLAGGED,
+      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
+        status: DocumentVerificationStatus.APPROVED,
+      });
+
+      const result = await verificationController.getDocumentVerificationResult("fake-transaction-2", {
+        user: {
+          entity: consumer,
+        },
+      });
+      expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
     });
-
-    const result = await verificationController.verifyConsumer(
-      "test-session",
-      {
-        firstName: consumerInfo.firstName,
-        lastName: consumerInfo.lastName,
-        address: consumerInfo.address,
-        phoneNumber: consumerInfo.phoneNumber,
-        dateOfBirth: consumerInfo.dateOfBirth,
-      },
-      {
-        user: { entity: Consumer.createConsumer(consumer) },
-      },
-    );
-
-    expect(result.status).toBe("Pending");
   });
 });

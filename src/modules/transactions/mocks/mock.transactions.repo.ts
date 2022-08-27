@@ -10,8 +10,8 @@ export function getMockTransactionRepoWithDefaults(): ITransactionRepo {
   when(mockTransactionRepo.getTransaction(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.createTransaction(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.updateTransaction(anything())).thenReject(new Error("Method not implemented"));
-  when(mockTransactionRepo.getUserTransactions(anything())).thenReject(new Error("Method not implemented"));
-  when(mockTransactionRepo.getUserTransactionInAnInterval(anything(), anything(), anything())).thenReject(
+  when(mockTransactionRepo.getUserTransactions(anything(), anything())).thenReject(new Error("Method not implemented"));
+  when(mockTransactionRepo.getUserTransactionInAnInterval(anything(), anything(), anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockTransactionRepo.getTotalUserTransactionAmount(anything())).thenReject(new Error("Method not implemented"));
@@ -30,12 +30,14 @@ export function getMockTransactionServiceWithDefaults(): TransactionService {
 
   when(mockTransactionService.getTransactionQuote(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionService.getTransactionStatus(anything())).thenReject(new Error("Method not implemented"));
-  when(mockTransactionService.getUserTransactions(anything())).thenReject(new Error("Method not implemented"));
-  when(mockTransactionService.getTransactionsInInterval(anything(), anything(), anything())).thenReject(
+  when(mockTransactionService.getUserTransactions(anything(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockTransactionService.getTransactionsInInterval(anything(), anything(), anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockTransactionService.getAllTransactions()).thenReject(new Error("Method not implemented"));
-  when(mockTransactionService.initiateTransaction(anything(), anything(), anything())).thenReject(
+  when(mockTransactionService.initiateTransaction(anything(), anything(), anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockTransactionService.validatePendingTransaction(anything(), anything())).thenReject(

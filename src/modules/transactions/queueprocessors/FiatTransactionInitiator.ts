@@ -1,4 +1,4 @@
-import { Inject } from "@nestjs/common";
+import { BadRequestException, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../../consumer/consumer.service";
@@ -14,6 +14,7 @@ import { PaymentRequestResponse } from "../../../modules/consumer/domain/Types";
 import { PaymentMethodStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { LockService } from "../../../modules/common/lock.service";
+import { CardFailureExceptionText, CardProcessingException } from "../../../modules/consumer/CardProcessingException";
 
 export class FiatTransactionInitiator extends MessageProcessor {
   constructor(
@@ -83,27 +84,56 @@ export class FiatTransactionInitiator extends MessageProcessor {
         this.logger.error(
           `Invalid response received from consumerService.requestCheckoutPayment(): ${paymentResponse.status}`,
         );
+
+        await this.processFailure(
+          TransactionStatus.FIAT_INCOMING_FAILED,
+          `Unknown status code: ${paymentResponse.status}`,
+          transaction,
+        );
         return;
       }
     } catch (e) {
-      if (e.http_code === CHECKOUT_VALIDATION_ERROR_HTTP_CODE) {
-        const errorBody: CheckoutValidationError = e.body;
-        const errorDescription = errorBody.error_type;
-        const errorCode = errorBody.error_codes.join(",");
+      if (e instanceof CardProcessingException) {
+        if (e.disposition === CardFailureExceptionText.ERROR) {
+          await this.processFailure(
+            TransactionStatus.FIAT_INCOMING_FAILED,
+            `Error processing fiat transaction`,
+            transaction,
+          );
+        }
+        if (e.disposition === CardFailureExceptionText.NO_CRYPTO) {
+          this.logger.info(
+            `Transaction ${transactionId} failed fiat leg with code ${e.reasonCode}-${e.reasonSummary} as it doesn't support crypto`,
+          );
 
-        await this.handleCheckoutFailure(
-          errorCode,
-          errorDescription,
-          PaymentMethodStatus.REJECTED,
-          consumer,
-          transaction,
-          false,
-        );
+          await this.handleCheckoutFailure(
+            e.reasonCode,
+            e.reasonSummary,
+            PaymentMethodStatus.UNSUPPORTED,
+            consumer,
+            transaction,
+            false,
+          );
+        } else {
+          // All others should have an error code & description
+          // that get persisted to the database and updated in Sardine
+          this.logger.info(`Transaction ${transactionId} failed fiat leg with code ${e.reasonCode}-${e.reasonSummary}`);
 
-        return;
+          await this.handleCheckoutFailure(
+            e.reasonCode,
+            e.reasonSummary,
+            PaymentMethodStatus.REJECTED,
+            consumer,
+            transaction,
+            false,
+          );
+        }
       } else {
-        this.logger.error(`Fiat payment failed: ${JSON.stringify(e)}`);
-        // Will be retried later when DBPoller will poll the transaction.
+        await this.processFailure(
+          TransactionStatus.FIAT_INCOMING_FAILED,
+          `Error processing fiat transaction: ${e.message}`,
+          transaction,
+        );
       }
       return;
     }

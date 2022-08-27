@@ -4,6 +4,7 @@ import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
 import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
+import { WebhookType } from "./WebhookTypes";
 
 export interface PartnerProps extends VersioningInfo {
   _id: string;
@@ -12,7 +13,23 @@ export interface PartnerProps extends VersioningInfo {
   secretKey: string;
   verificationData?: KybStatusInfo;
   takeRate?: number;
+  allowPublicWallets?: boolean; // Can wallets added for this partner be shared with others?
+  webhookClientID?: string;
+  webhookSecret?: string;
+  webhooks?: PartnerWebhook[];
 }
+
+export type PartnerWebhook = {
+  type: WebhookType;
+  url: string;
+};
+
+const partnerWebhookJoiKeys: KeysRequired<PartnerWebhook> = {
+  type: Joi.string()
+    .valid(...Object.values(WebhookType))
+    .required(),
+  url: Joi.string().required(),
+};
 
 export const partnerKeys: KeysRequired<PartnerProps> = {
   ...versioningInfoJoiSchemaKeys,
@@ -22,6 +39,10 @@ export const partnerKeys: KeysRequired<PartnerProps> = {
   secretKey: Joi.string().required(),
   verificationData: Joi.object().optional(),
   takeRate: Joi.number().optional(),
+  allowPublicWallets: Joi.boolean().default(true),
+  webhookClientID: Joi.string().optional(),
+  webhookSecret: Joi.string().optional(),
+  webhooks: Joi.array().items(partnerWebhookJoiKeys).default([]),
 };
 
 export const partnerSchema = Joi.object(partnerKeys).options({ allowUnknown: true, stripUnknown: false });
@@ -38,14 +59,14 @@ export class Partner extends AggregateRoot<PartnerProps> {
     return new Partner(Joi.attempt(partnerProps, partnerSchema));
   }
 
-  private static generateAPIKey(): string {
+  public static generateAPIKey(): string {
     // 1. Generate UUID
     // 2. Convert to lowercase
     // 3. Remove all hyphens
     return randomUUID().toLowerCase().replace(/-/g, "");
   }
 
-  private static generateSecretKey(): string {
+  public static generateSecretKey(): string {
     // Base64-encoded 64 random bytes
     return randomBytes(64).toString("base64");
   }

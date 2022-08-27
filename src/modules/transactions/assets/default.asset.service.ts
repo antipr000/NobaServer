@@ -12,8 +12,10 @@ import {
   FundsAvailabilityResponse,
   ConsumerAccountTransferStatus,
   ConsumerWalletTransferStatus,
+  NobaQuote,
+  QuoteRequestForFixedCrypto,
+  QuoteRequestForFixedFiat,
 } from "../domain/AssetTypes";
-import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
 import { CurrencyType } from "../../common/domain/Types";
@@ -22,22 +24,111 @@ import {
   OnChainState,
   TradeState,
   WithdrawalState,
+  ZerohashNetworkFee,
+  ZerohashQuote,
   ZerohashTradeResponse,
   ZerohashTradeRquest,
   ZerohashTransfer,
   ZerohashTransferStatus,
   ZerohashWithdrawalResponse,
 } from "../domain/ZerohashTypes";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
+import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes/NobaConfigs";
+import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
+  private readonly nobaTransactionConfigs: NobaTransactionConfigs;
+
   constructor(
     private readonly appService: AppService,
     private readonly zerohashService: ZeroHashService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+    configService: CustomConfigService,
+  ) {
+    this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
+  }
 
-  getQuote(quoteQuery: TransactionQuoteQueryDTO) {
+  async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote> {
+    const nobaSpreadPercent = this.nobaTransactionConfigs.spreadPercentage;
+    const nobaFlatFeeInFiat = this.nobaTransactionConfigs.flatFeeDollars;
+    const creditCardFeePercent = this.nobaTransactionConfigs.dynamicCreditCardFeePercentage;
+    const fixedCreditCardFeeInFiat = this.nobaTransactionConfigs.fixedCreditCardFee;
+
+    // Get network / gas fees
+    const networkFee: ZerohashNetworkFee = await this.zerohashService.estimateNetworkFee(
+      request.cryptoCurrency,
+      request.fiatCurrency,
+    );
+    this.logger.debug(networkFee);
+
+    // TODO(#306): It says percentage, but not actually calculating percentage.
+    const totalCreditCardFeeInFiat: number = request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat;
+    const totalFee: number = networkFee.feeInFiat + totalCreditCardFeeInFiat + nobaFlatFeeInFiat;
+
+    const fiatAmountAfterAllChargesWithoutSpread: number = request.fiatAmount - totalFee;
+    const fiatAmountAfterAllChargesWithSpread: number =
+      fiatAmountAfterAllChargesWithoutSpread / (1 + nobaSpreadPercent);
+
+    console.log(
+      nobaSpreadPercent,
+      fiatAmountAfterAllChargesWithSpread,
+      fiatAmountAfterAllChargesWithoutSpread,
+      request,
+      networkFee,
+    );
+
+    const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForFixedFiatCurrency(
+      request.cryptoCurrency,
+      request.fiatCurrency,
+      fiatAmountAfterAllChargesWithSpread,
+    );
+    this.logger.debug(zhQuote);
+
+    const perUnitCryptoCostWithoutSpread: number = zhQuote.perUnitCryptoAssetCost;
+    const perUnitCryptoCostWithSpread: number = perUnitCryptoCostWithoutSpread * (1 + nobaSpreadPercent);
+
+    this.logger.debug(`
+      FIAT FIXED (${request.fiatCurrency}):\t\t${request.fiatAmount}
+      NETWORK FEE (${request.fiatCurrency}):\t${networkFee.feeInFiat}
+      PROCESSING FEES (${request.fiatCurrency}):\t${totalCreditCardFeeInFiat}
+      NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat}
+      PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread}
+      QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread}      
+      ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${
+      fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread
+    }
+      SPREAD REVENUE (${request.fiatCurrency}):\t${
+      fiatAmountAfterAllChargesWithoutSpread - fiatAmountAfterAllChargesWithSpread
+    }
+      ZERO HASH FEE (${request.fiatCurrency}):\t${request.fiatAmount * 0.007}
+      NOBA REVENUE (${request.fiatCurrency}):\t${
+      fiatAmountAfterAllChargesWithoutSpread -
+      fiatAmountAfterAllChargesWithSpread +
+      nobaFlatFeeInFiat -
+      request.fiatAmount * 0.007
+    }
+    `);
+
+    // const transactionQuote: TransactionQuoteDTO = {
+    //   quotedAmount: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
+    //   exchangeRate: perUnitCryptoCostWithSpread,
+    // };
+    return {
+      cryptoCurrency: request.cryptoCurrency,
+      fiatCurrency: request.fiatCurrency,
+      networkFeeInFiat: networkFee.feeInFiat,
+      nobaFeeInFiat: nobaFlatFeeInFiat,
+      processingFeeInFiat: totalCreditCardFeeInFiat,
+
+      totalCryptoQuantity: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
+      totalFiatAmount: request.fiatAmount,
+      perUnitCryptoPrice: perUnitCryptoCostWithSpread,
+      quoteID: zhQuote.quoteID,
+    };
+  }
+
+  async getQuoteByForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
     throw new Error("Method not implemented.");
   }
 

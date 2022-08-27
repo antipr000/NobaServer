@@ -1,4 +1,4 @@
-import { anyString, anything, mock, when } from "ts-mockito";
+import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
 import { ZeroHashService } from "../zerohash.service";
 
 export function getMockZerohashServiceWithDefaults(): ZeroHashService {
@@ -20,6 +20,26 @@ export function getMockZerohashServiceWithDefaults(): ZeroHashService {
     new Error("Method not implemented"),
   );
   when(mockZerohashService.requestTrade(anything())).thenReject(new Error("Method not implemented"));
-
+  when(mockZerohashService.requestQuoteForFixedFiatCurrency(anyString(), anyString(), anyNumber())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockZerohashService.requestQuoteForDesiredCryptoQuantity(anyString(), anyString(), anyNumber())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockZerohashService.transferAssetsToNoba(anyString(), anyNumber())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockZerohashService.executeTrade(anything())).thenReject(new Error("Method not implemented"));
+  when(mockZerohashService.getTransfer(anything())).thenReject(new Error("Method not implemented"));
+  when(
+    mockZerohashService.requestWithdrawal(anyString(), anyNumber(), anyString(), anyString(), anyString()),
+  ).thenReject(new Error("Method not implemented"));
+  when(mockZerohashService.checkTradeStatus(anything())).thenReject(new Error("Method not implemented"));
+  when(mockZerohashService.moveCryptoToConsumerWallet(anything(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockZerohashService.requestAndExecuteQuote(anyString(), anyString(), anyNumber(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
   return mockZerohashService;
 }

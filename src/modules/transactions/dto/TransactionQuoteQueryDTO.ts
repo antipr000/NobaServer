@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CurrencyType } from "../../common/domain/Types";
 
 export class TransactionQuoteQueryDTO {
@@ -13,4 +13,7 @@ export class TransactionQuoteQueryDTO {
 
   @ApiProperty()
   fixedAmount: number;
+
+  @ApiPropertyOptional() // If not supplied, it will be added in the controller
+  partnerID?: string;
 }

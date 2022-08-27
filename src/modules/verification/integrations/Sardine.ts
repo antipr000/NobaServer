@@ -158,7 +158,7 @@ export class Sardine implements IDVProvider {
       const { data } = await axios.post(this.BASE_URI + "/v1/identity-documents/verifications", formData, config);
       return data.id;
     } catch (e) {
-      this.logger.error(`Sardine request failed for Document submit: ${e}`);
+      this.logger.error(`Sardine request failed for Document submit: ${JSON.stringify(e)}`);
       if (e.response) {
         if (e.response.status === 400) {
           return e.response.data.verification_id;
@@ -168,11 +168,7 @@ export class Sardine implements IDVProvider {
     }
   }
 
-  async getDocumentVerificationResult(
-    sessionKey: string,
-    id: string,
-    userID: string,
-  ): Promise<DocumentVerificationResult> {
+  async getDocumentVerificationResult(id: string): Promise<DocumentVerificationResult> {
     try {
       const config = this.getAxiosConfig();
 
@@ -180,8 +176,6 @@ export class Sardine implements IDVProvider {
         ...config,
         params: {
           type: "custom",
-          sessionKey: sessionKey,
-          customerId: userID,
         },
       });
       return this.processDocumentVerificationResult(data as DocumentVerificationSardineResponse);
@@ -310,7 +304,7 @@ export class Sardine implements IDVProvider {
   processDocumentVerificationResult(
     documentVerificationSardineResponse: DocumentVerificationSardineResponse,
   ): DocumentVerificationResult {
-    const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification.riskLevel;
+    const riskLevel: SardineRiskLevels = documentVerificationSardineResponse.verification?.riskLevel;
     const status: SardineDocumentProcessingStatus = documentVerificationSardineResponse.status;
     const errorCodes: DocumentVerificationErrorCodes[] = documentVerificationSardineResponse.errorCodes;
 

@@ -19,17 +19,13 @@ import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { PaymentMethod } from "./domain/PaymentMethod";
 import { PaymentProviders } from "./domain/PaymentProviderDetails";
-import {
-  CardAddFailureExceptionText,
-  CheckoutPaymentStatus,
-  FiatTransactionStatus,
-  PaymentRequestResponse,
-} from "./domain/Types";
+import { CheckoutPaymentStatus, FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import { CardFailureExceptionText, CardProcessingException } from "./CardProcessingException";
 
 class CheckoutResponseData {
   paymentMethodStatus: PaymentMethodStatus;
@@ -64,7 +60,11 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
-  async createConsumerIfFirstTimeLogin(emailOrPhone: string, partnerID: string): Promise<Consumer> {
+  async createConsumerIfFirstTimeLogin(
+    emailOrPhone: string,
+    partnerID: string,
+    partnerUserID?: string,
+  ): Promise<Consumer> {
     const isEmail = emailOrPhone.includes("@");
     const email = isEmail ? emailOrPhone : null;
     const phone = !isEmail ? emailOrPhone : null;
@@ -78,6 +78,7 @@ export class ConsumerService {
         partners: [
           {
             partnerID: partnerID,
+            partnerUserID: partnerUserID,
           },
         ],
       });
@@ -93,6 +94,7 @@ export class ConsumerService {
           ...consumerResult.getValue().props.partners,
           {
             partnerID: partnerID,
+            partnerUserID: partnerUserID,
           },
         ],
       });
@@ -197,6 +199,7 @@ export class ConsumerService {
     try {
       // Check if added payment method is valid
       checkoutResponse = await this.checkoutApi.payments.request({
+        amount: 100,
         currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
         source: {
           type: "id",
@@ -206,6 +209,7 @@ export class ConsumerService {
         metadata: {
           order_id: "test_order_1",
         },
+        capture: false,
       });
     } catch (err) {
       //pass
@@ -213,13 +217,22 @@ export class ConsumerService {
       throw new BadRequestException("Card validation error");
     }
 
-    const response = await this.handleCheckoutResponse(
-      consumer,
-      checkoutResponse,
-      instrumentID,
-      "verification",
-      "verification",
-    );
+    let response;
+    try {
+      response = await this.handleCheckoutResponse(
+        consumer,
+        checkoutResponse,
+        instrumentID,
+        "verification",
+        "verification",
+      );
+    } catch (e) {
+      if (e instanceof CardProcessingException) {
+        throw new BadRequestException(e.message);
+      } else {
+        throw new BadRequestException("Unable to add card at this time");
+      }
+    }
 
     if (response.paymentMethodStatus === PaymentMethodStatus.REJECTED) {
       await this.emailService.sendCardAdditionFailedEmail(
@@ -229,7 +242,7 @@ export class ConsumerService {
         /* cardNetwork = */ "",
         paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       );
-      throw new BadRequestException(CardAddFailureExceptionText.DECLINE);
+      throw new BadRequestException(CardFailureExceptionText.DECLINE);
     } else if (response.paymentMethodStatus === PaymentMethodStatus.FLAGGED) {
       // TODO - we don't currently have a use case for FLAGGED
     } else {
@@ -301,7 +314,10 @@ export class ConsumerService {
         /*idempotencyKey=*/ transaction.props._id,
       );
     } catch (err) {
-      throw new BadRequestException(CardAddFailureExceptionText.ERROR);
+      this.logger.error(
+        `Exception while requesting checkout payment for transaction id ${transaction.props._id}: ${err.message}`,
+      );
+      throw err;
     }
 
     const response = await this.handleCheckoutResponse(
@@ -341,7 +357,7 @@ export class ConsumerService {
     try {
       if (!response.responseCode) {
         this.logger.error(`No response code received validating card instrument ${instrumentID}`);
-        throw new BadRequestException(CardAddFailureExceptionText.ERROR);
+        throw new CardProcessingException(CardFailureExceptionText.ERROR);
       } else if (response.responseCode.startsWith("10")) {
         // Accepted
         response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
@@ -349,14 +365,30 @@ export class ConsumerService {
         // Soft decline, with several categories
         if (REASON_CODE_SOFT_DECLINE_CARD_ERROR.indexOf(response.responseCode) > -1) {
           // Card error, possibly bad number, user should confirm details
-          throw new BadRequestException(CardAddFailureExceptionText.SOFT_DECLINE);
+          throw new CardProcessingException(
+            CardFailureExceptionText.SOFT_DECLINE,
+            response.responseCode,
+            response.responseSummary,
+          );
         } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR.indexOf(response.responseCode) > -1) {
-          throw new BadRequestException(CardAddFailureExceptionText.SOFT_DECLINE);
+          throw new CardProcessingException(
+            CardFailureExceptionText.SOFT_DECLINE,
+            response.responseCode,
+            response.responseSummary,
+          );
         } else if (REASON_CODE_SOFT_DECLINE_NO_CRYPTO.indexOf(response.responseCode)) {
-          throw new BadRequestException(CardAddFailureExceptionText.NO_CRYPTO);
+          throw new CardProcessingException(
+            CardFailureExceptionText.NO_CRYPTO,
+            response.responseCode,
+            response.responseSummary,
+          );
         } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(response.responseCode)) {
           sendNobaEmail = true;
-          throw new BadRequestException(CardAddFailureExceptionText.SOFT_DECLINE);
+          throw new CardProcessingException(
+            CardFailureExceptionText.SOFT_DECLINE,
+            response.responseCode,
+            response.responseSummary,
+          );
         }
       } else if (response.responseCode.startsWith("30")) {
         // Hard decline
@@ -371,7 +403,11 @@ export class ConsumerService {
         this.logger.error(
           `Unknown response code '${response.responseCode}' received when validating card instrument ${instrumentID}`,
         );
-        throw new BadRequestException(CardAddFailureExceptionText.ERROR);
+        throw new CardProcessingException(
+          CardFailureExceptionText.ERROR,
+          response.responseCode,
+          response.responseSummary,
+        );
       }
     } finally {
       if (sendNobaEmail) {
@@ -452,6 +488,16 @@ export class ConsumerService {
     return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
   }
 
+  getCryptoWallet(consumer: Consumer, address: string): CryptoWallet {
+    const cryptoWallets = consumer.props.cryptoWallets.filter(wallet => wallet.address === address);
+
+    if (cryptoWallets.length === 0) {
+      return null;
+    }
+
+    return cryptoWallets[0];
+  }
+
   async addOrUpdateCryptoWallet(consumer: Consumer, cryptoWallet: CryptoWallet): Promise<Consumer> {
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
@@ -462,10 +508,11 @@ export class ConsumerService {
       await this.sendWalletVerificationOTP(consumer, cryptoWallet.address);
     }
 
-    return await this.updateConsumer({
+    const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
       cryptoWallets: [...otherCryptoWallets, cryptoWallet],
     });
+    return updatedConsumer;
   }
 
   async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {
@@ -473,10 +520,11 @@ export class ConsumerService {
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWalletAddress,
     );
 
-    return await this.updateConsumer({
+    const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
       cryptoWallets: [...otherCryptoWallets],
     });
+    return updatedConsumer;
   }
 
   async removePaymentMethod(consumer: Consumer, paymentToken: string): Promise<Consumer> {

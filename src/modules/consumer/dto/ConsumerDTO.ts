@@ -40,6 +40,9 @@ export class CryptoWalletsDTO {
 
   @ApiProperty({ enum: WalletStatus })
   status: WalletStatus;
+
+  // Keep from API as this should not be exposed to user
+  //partnerID: string;
 }
 
 export class KycVerificationDTO {
@@ -105,4 +108,21 @@ export class ConsumerDTO {
 
   @ApiPropertyOptional({ enum: WalletStatus })
   walletStatus?: WalletStatus;
+}
+
+export class ConsumerSimpleDTO {
+  @ApiProperty()
+  _id: string;
+
+  @ApiPropertyOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiPropertyOptional()
+  phone?: string;
 }

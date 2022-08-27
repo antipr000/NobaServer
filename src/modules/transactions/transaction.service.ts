@@ -13,7 +13,7 @@ import { CryptoTransactionRequestResult, CryptoTransactionStatus, TransactionSta
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
-import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQuery.DTO";
+import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
@@ -24,6 +24,14 @@ import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CryptoWallet } from "../consumer/domain/CryptoWallet";
 import { Consumer } from "../consumer/domain/Consumer";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
+import { AssetServiceFactory } from "./assets/asset.service.factory";
+import { AssetService } from "./assets/asset.service";
+import { PartnerService } from "../partner/partner.service";
+import { NobaQuote } from "./domain/AssetTypes";
+import axios, { AxiosRequestConfig } from "axios";
+import { Partner, PartnerWebhook } from "../partner/domain/Partner";
+import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
+import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 
 @Injectable()
 export class TransactionService {
@@ -36,6 +44,8 @@ export class TransactionService {
     private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
     private readonly consumerService: ConsumerService,
+    private readonly assetServiceFactory: AssetServiceFactory,
+    private readonly partnerService: PartnerService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     @Inject(EmailService) private readonly emailService: EmailService,
@@ -44,6 +54,50 @@ export class TransactionService {
     this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
   }
 
+  async requestTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
+    // TODO transactionQuoteQuery.partnerID can optionally be used to quote differently per partner.
+    // Note that that field is not required and will not be populated for unauthenticated users,
+    // so we can't depend on it being there.
+
+    if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
+      throw new BadRequestException("Unsupported fixedSide value");
+    }
+
+    if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
+      throw new BadRequestException("Invalid amount");
+    }
+
+    const assetService: AssetService = this.assetServiceFactory.getAssetService(
+      transactionQuoteQuery.cryptoCurrencyCode,
+    );
+
+    if (transactionQuoteQuery.fixedSide === CurrencyType.FIAT) {
+      const nobaQuote: NobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+        fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+        fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+      });
+
+      return {
+        quoteID: nobaQuote.quoteID,
+        fiatCurrencyCode: nobaQuote.fiatCurrency,
+        cryptoCurrencyCode: nobaQuote.cryptoCurrency,
+        fixedSide: transactionQuoteQuery.fixedSide,
+        fixedAmount: transactionQuoteQuery.fixedAmount,
+        quotedAmount: nobaQuote.totalCryptoQuantity,
+        processingFee: nobaQuote.processingFeeInFiat,
+        networkFee: nobaQuote.networkFeeInFiat,
+        nobaFee: nobaQuote.nobaFeeInFiat,
+        exchangeRate: nobaQuote.perUnitCryptoPrice,
+      };
+    } else {
+      return this.getTransactionQuote(transactionQuoteQuery);
+    }
+  }
+
+  /**
+   * @deprecated: Use AssetService methods or the 'requestTransactionQuote' method below.
+   */
   async getTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
     if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
       throw new BadRequestException("Unsupported fixedSide value");
@@ -65,7 +119,7 @@ export class TransactionService {
     );
     this.logger.debug(estimatedNetworkFeeFromZeroHash);
 
-    const networkFeeInFiat = Number(estimatedNetworkFeeFromZeroHash["message"]["total_notional"]);
+    const networkFeeInFiat = estimatedNetworkFeeFromZeroHash.feeInFiat;
 
     if (transactionQuoteQuery.fixedSide == CurrencyType.FIAT) {
       const fixedAmountFiat = transactionQuoteQuery.fixedAmount;
@@ -170,20 +224,25 @@ export class TransactionService {
     }
   }
 
-  async getTransactionStatus(transactionId: string): Promise<TransactionDTO> {
-    const transaction = await this.transactionsRepo.getTransaction(transactionId);
+  async getTransactionStatus(transactionID: string): Promise<TransactionDTO> {
+    const transaction = await this.transactionsRepo.getTransaction(transactionID);
     return this.transactionsMapper.toDTO(transaction);
   }
 
-  async getUserTransactions(userId: string): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactions(userId)).map(transaction =>
+  async getUserTransactions(userID: string, partnerID: string): Promise<TransactionDTO[]> {
+    return (await this.transactionsRepo.getUserTransactions(userID, partnerID)).map(transaction =>
       this.transactionsMapper.toDTO(transaction),
     );
   }
 
-  async getTransactionsInInterval(userId: string, fromDate: Date, toDate: Date): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactionInAnInterval(userId, fromDate, toDate)).map(transaction =>
-      this.transactionsMapper.toDTO(transaction),
+  async getTransactionsInInterval(
+    userID: string,
+    partnerID: string,
+    fromDate: Date,
+    toDate: Date,
+  ): Promise<TransactionDTO[]> {
+    return (await this.transactionsRepo.getUserTransactionInAnInterval(userID, partnerID, fromDate, toDate)).map(
+      transaction => this.transactionsMapper.toDTO(transaction),
     );
   }
 
@@ -196,6 +255,7 @@ export class TransactionService {
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
   async initiateTransaction(
     consumerID: string,
+    partnerID: string,
     sessionKey: string,
     transactionRequest: CreateTransactionDTO,
   ): Promise<TransactionDTO> {
@@ -229,6 +289,7 @@ export class TransactionService {
       leg1: transactionRequest.leg1,
       leg2: transactionRequest.leg2,
       transactionStatus: TransactionStatus.PENDING,
+      partnerID: partnerID,
       destinationWalletAddress: transactionRequest.destinationWalletAddress,
     });
 
@@ -284,7 +345,17 @@ export class TransactionService {
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
 
     if (!paymentMethod) {
-      this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
+      this.logger.error(
+        `Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}, Transaction ID: ${transaction.props._id}`,
+      );
+      return PendingTransactionValidationStatus.FAIL;
+    }
+
+    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
+    if (cryptoWallet == null) {
+      this.logger.error(
+        `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
+      );
       return PendingTransactionValidationStatus.FAIL;
     }
 
@@ -311,13 +382,7 @@ export class TransactionService {
     }
 
     if (result.walletStatus) {
-      const cryptoWallet: CryptoWallet = {
-        //walletName: "",
-        address: transaction.props.destinationWalletAddress,
-        //chainType: "",
-        isEVMCompatible: false,
-        status: result.walletStatus,
-      };
+      cryptoWallet.status = result.walletStatus;
       await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
     }
 
@@ -398,5 +463,46 @@ export class TransactionService {
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
     // Will throw an error if the currency is unknown to the tool. We should catch this in the caller and ultimately display a warning to the user that the address could not be validated.
     return validate(destinationWalletAdress, curr);
+  }
+
+  private getAxiosConfig(partner: Partner): AxiosRequestConfig {
+    return {
+      auth: {
+        username: partner.props.webhookClientID,
+        password: partner.props.webhookSecret,
+      },
+    };
+  }
+
+  async callTransactionConfirmWebhook(consumer: Consumer, transaction: Transaction) {
+    const partnerID = transaction.props.partnerID;
+    if (!partnerID) {
+      return;
+    }
+
+    const partner = await this.partnerService.getPartner(partnerID);
+    const webhook = this.partnerService.getWebhook(partner, WebhookType.TRANSACTION_CONFIRM);
+
+    if (webhook == null) {
+      return; // Partner doesn't have a webhook callback
+    }
+
+    const payload: TransConfirmDTO = {
+      consumer: new ConsumerMapper().toSimpleDTO(consumer),
+      transaction: new TransactionMapper().toDTO(transaction),
+    };
+
+    try {
+      const { status, statusText } = await axios.post(webhook.url, payload, this.getAxiosConfig(partner));
+      if (status != 200) {
+        this.logger.error(
+          `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${status}-${statusText}`,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${err.message}`,
+      );
+    }
   }
 }

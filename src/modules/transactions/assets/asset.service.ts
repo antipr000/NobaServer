@@ -6,11 +6,14 @@ import {
   FundsAvailabilityResponse,
   FundsAvailabilityStatus,
   ConsumerWalletTransferStatus,
+  NobaQuote,
+  QuoteRequestForFixedFiat,
+  QuoteRequestForFixedCrypto,
 } from "../domain/AssetTypes";
-import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQuery.DTO";
 
 export interface AssetService {
-  getQuote(quoteQuery: TransactionQuoteQueryDTO);
+  getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote>;
+  getQuoteByForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote>;
 
   makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse>;
   pollFundsAvailableStatus(id: string): Promise<FundsAvailabilityStatus>;

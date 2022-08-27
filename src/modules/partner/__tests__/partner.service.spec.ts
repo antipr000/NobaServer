@@ -5,6 +5,7 @@ import { getMockPartnerRepoWithDefaults } from "../mocks/mock.partner.repo";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Partner } from "../domain/Partner";
+import { WebhookType } from "../domain/WebhookTypes";
 
 describe("PartnerService", () => {
   let partnerService: PartnerService;
@@ -94,12 +95,90 @@ describe("PartnerService", () => {
         takeRate: newTakeRate,
       });
 
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
       when(partnerRepo.updatePartner(deepEqual(updatePartner))).thenResolve(updatePartner);
 
       const result = await partnerService.updatePartner(partner.props._id, {
         takeRate: newTakeRate,
       });
       expect(result).toStrictEqual(updatePartner);
+    });
+
+    it("should populate the webhook Client ID and secret if null when adding a webhook", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      const webhookType = WebhookType.TRANSACTION_CONFIRM;
+      const webhookURL = "http://partner.com/path";
+
+      const updatedPartner = Partner.createPartner({
+        ...partner.props,
+        webhookClientID: "12345",
+        webhookSecret: "67890",
+        webhooks: [{ type: webhookType, url: webhookURL }],
+      });
+
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+      // Use anything() because we can't predict the values of webhookClientID and webhookSecret
+      when(partnerRepo.updatePartner(anything())).thenResolve(updatedPartner);
+
+      const result = await partnerService.addOrReplaceWebhook(partner.props._id, webhookType, webhookURL);
+      expect(result).toStrictEqual(updatedPartner);
+    });
+
+    it("should add a new webhook", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        webhookClientID: "mockClientID",
+        webhookSecret: "mockWebhookSecret",
+      });
+
+      const webhookType = WebhookType.TRANSACTION_CONFIRM;
+      const webhookURL = "http://partner.com/path";
+
+      const updatedPartner = Partner.createPartner({
+        ...partner.props,
+        webhooks: [{ type: webhookType, url: webhookURL }],
+      });
+
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+      when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
+
+      const result = await partnerService.addOrReplaceWebhook(partner.props._id, webhookType, webhookURL);
+      expect(result).toStrictEqual(updatedPartner);
+    });
+
+    it("should overwrite an existing webhook", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        webhookClientID: "mockClientID",
+        webhookSecret: "mockWebhookSecret",
+        webhooks: [{ type: WebhookType.TRANSACTION_CONFIRM, url: "OldURL" }],
+      });
+
+      const webhookType = WebhookType.TRANSACTION_CONFIRM;
+      const webhookURL = "http://partner.com/path";
+
+      const updatedPartner = Partner.createPartner({
+        ...partner.props,
+        webhooks: [{ type: webhookType, url: webhookURL }],
+      });
+
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+      when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
+
+      const result = await partnerService.addOrReplaceWebhook(partner.props._id, webhookType, webhookURL);
+      expect(result).toStrictEqual(updatedPartner);
     });
   });
 });

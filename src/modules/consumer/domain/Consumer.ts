@@ -39,6 +39,7 @@ export interface ConsumerProps extends VersioningInfo {
 
 const partnerValidationJoiKeys: KeysRequired<PartnerDetails> = {
   partnerID: Joi.string().required(),
+  partnerUserID: Joi.string().optional(),
 };
 
 const paymentProviderValidationJoiKeys: KeysRequired<PaymentProviderDetails> = {
@@ -76,6 +77,7 @@ const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
   chainType: Joi.string().optional(),
   isEVMCompatible: Joi.boolean().optional(),
   status: Joi.string().optional(),
+  partnerID: Joi.string().optional(), // TODO(#466) - Make required
 };
 
 const addressValidationJoiKeys: KeysRequired<Address> = {

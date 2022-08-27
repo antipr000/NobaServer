@@ -2,11 +2,17 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
 
-import { BadRequestException, Inject, Injectable, ServiceUnavailableException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { AppService } from "../../app.service";
-import { NOBA_PLATFORM_CODE, ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
+import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
@@ -22,6 +28,8 @@ import {
   OnChainState,
   TradeState,
   WithdrawalState,
+  ZerohashNetworkFee,
+  ZerohashQuote,
   ZerohashTradeResponse,
   ZerohashTradeRquest,
   ZerohashTransfer,
@@ -65,7 +73,7 @@ export class ZeroHashService {
   }
 
   getNobaPlatformCode(): string {
-    return NOBA_PLATFORM_CODE;
+    return this.configs.platformCode;
   }
 
   // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
@@ -104,15 +112,16 @@ export class ZeroHashService {
     this.logger.debug(`Sending request: ${requestString}`);
 
     const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
-      this.logger.error(`Error in ZeroHash request: ${requestString}`);
-      this.logger.error(JSON.stringify(err));
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
         this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
         throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
       } else if (err.statusCode == 400) {
+        this.logger.error(`Error in ZeroHash request: ${requestString}`);
+        this.logger.error(JSON.stringify(err));
         throw new BadRequestException(err);
       } else {
+        // catch 404 in caller. This may be for known reasons (e.g. participant not created yet) so we don't want to log it here.
         throw err;
       }
     });
@@ -187,6 +196,10 @@ export class ZeroHashService {
     return participants;
   }
 
+  /**
+   * @deprecated: Use AssetService methods instead of this.
+   * This will be removed as soon as the changes are working in staging/production envs.
+   */
   async requestQuote(cryptocurrency: string, fiatCurrency: string, amount: number, fixedSide: CurrencyType) {
     // Set the endpoint URL based on whether we are placing an order based on FIAT amount or CRYPTO amount
     let route: string;
@@ -202,6 +215,68 @@ export class ZeroHashService {
     return quote;
   }
 
+  /**
+   * Returns quote worth the specified Fiat amount.
+   */
+  async requestQuoteForFixedFiatCurrency(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    fiatAmount: number,
+  ): Promise<ZerohashQuote> {
+    /**
+     * Either "quantity" or "total" parameters should be provided -
+     *
+     * quantity:  The amount of the "underlying" currency for the quote
+     * total:     The desired amount of the "quoted_currency" for the quote
+     */
+    const route = `/liquidity/rfq?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}&side=buy&total=${fiatAmount}`;
+    const quote = await this.makeRequest(route, "GET", {});
+
+    if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
+      this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
+      throw new InternalServerErrorException(`Inconsistencies in returned ZH quote.`);
+    }
+
+    return {
+      quoteID: quote["message"].quote_id,
+      expireTimestamp: quote["message"].expire_ts,
+      cryptoCurrency: quote["message"].underlying,
+      fiatCurrency: quote["message"].quoted_currency,
+      perUnitCryptoAssetCost: quote["message"].price,
+    };
+  }
+
+  /**
+   * Returns quote worth the specified Crypto quantity.
+   */
+  async requestQuoteForDesiredCryptoQuantity(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    cryptoQuantity: number,
+  ): Promise<ZerohashQuote> {
+    /**
+     * Either "quantity" or "total" parameters should be provided -
+     *
+     * quantity:  The amount of the "underlying" currency for the quote
+     * total:     The desired amount of the "quoted_currency" for the quote
+     */
+    const route = `/liquidity/rfq?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}&side=buy&quantity=${cryptoQuantity}`;
+    const quote = await this.makeRequest(route, "GET", {});
+
+    if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
+      this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
+      throw new InternalServerErrorException(`Inconsistencies in returned ZH quote.`);
+    }
+
+    return {
+      quoteID: quote["message"].quote_id,
+      expireTimestamp: quote["message"].expire_ts,
+      cryptoCurrency: quote["message"].underlying,
+      fiatCurrency: quote["message"].quoted_currency,
+      perUnitCryptoAssetCost: quote["message"].price,
+    };
+  }
+
   // Execute a liquidity quote
   async executeQuote(quote_id) {
     const executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
@@ -211,12 +286,12 @@ export class ZeroHashService {
   // Transfer assets from ZHLS to Noba account prior to trade
   async transferAssetsToNoba(asset: string, amount: number): Promise<string> {
     const transfer = await this.makeRequest("/transfers", "POST", {
-      from_participant_code: NOBA_PLATFORM_CODE,
+      from_participant_code: this.getNobaPlatformCode(),
       from_account_group: ZHLS_PLATFORM_CODE,
-      to_participant_code: NOBA_PLATFORM_CODE,
-      to_account_group: NOBA_PLATFORM_CODE,
       from_account_label: "general",
       to_account_label: "general",
+      to_participant_code: this.getNobaPlatformCode(),
+      to_account_group: this.getNobaPlatformCode(),
       asset: asset,
       amount: amount,
     });
@@ -319,7 +394,7 @@ export class ZeroHashService {
 
     const response: ZerohashWithdrawalResponse = {
       gasPrice: withdrawal["message"][0]["gas_price"],
-      requestedAmount: withdrawal["message"][0]["requested_amount"],
+      requestedAmount: Number(withdrawal["message"][0]["requested_amount"]),
       settledAmount: withdrawal["message"][0]["settled_amount"],
       onChainTransactionID: withdrawal["message"][0]["transaction_id"],
 
@@ -366,13 +441,20 @@ export class ZeroHashService {
     return response;
   }
 
-  async estimateNetworkFee(underlyingCurrency: string, quotedCurrency: string) {
+  async estimateNetworkFee(cryptoCurrency: string, fiatCurrency: string): Promise<ZerohashNetworkFee> {
     const networkFee = await this.makeRequest(
-      `/withdrawals/estimate_network_fee?underlying=${underlyingCurrency}&quoted_currency=${quotedCurrency}`,
+      `/withdrawals/estimate_network_fee?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}`,
       "GET",
       {},
     );
-    return networkFee;
+    return {
+      cryptoCurrency: cryptoCurrency,
+      // TODO(#): Check with ZH if this is actually fees in crypto.
+      feeInCrypto: Number(networkFee["message"]["network_fee_quantity"]),
+
+      fiatCurrency: fiatCurrency,
+      feeInFiat: Number(networkFee["message"]["total_notional"]),
+    };
   }
 
   async checkTradeStatus(tradeId: string): Promise<ZerohashTradeResponse> {
@@ -442,7 +524,7 @@ export class ZeroHashService {
         transaction.props.leg2Amount,
         transaction.props.leg2,
         consumer.zhParticipantCode,
-        NOBA_PLATFORM_CODE,
+        this.getNobaPlatformCode(),
       );
 
       withdrawalID = withdrawalRequest["message"]["id"];
@@ -508,7 +590,7 @@ export class ZeroHashService {
       product_type: "spot",
       trade_type: "regular",
       trade_reporter: consumer.email,
-      platform_code: NOBA_PLATFORM_CODE,
+      platform_code: this.getNobaPlatformCode(),
       client_trade_id: transaction.props._id,
       physical_delivery: true,
       parties_anonymous: false,
@@ -522,7 +604,7 @@ export class ZeroHashService {
           settling: true,
         },
         {
-          participant_code: NOBA_PLATFORM_CODE,
+          participant_code: this.getNobaPlatformCode(),
           asset: fiatCurrency,
           side: "sell",
           settling: false,
@@ -589,7 +671,7 @@ export class ZeroHashService {
         participant = await this.getParticipant(consumer.email);
       } catch (e) {
         // Generally just a 404 here, but log anyway.
-        this.logger.error(`Error looking up participant ${consumer.email} (passibly not created yet)`);
+        this.logger.info(`Error looking up participant ${consumer.email} (possibly not created yet, which is OK)`);
       }
       // If the user is not registered, register them
       if (participant == null) {

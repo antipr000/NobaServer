@@ -72,3 +72,19 @@ export enum OnChainState {
   CONFIRMED = "confirmed",
   ERROR = "error",
 }
+
+export interface ZerohashQuote {
+  quoteID: string;
+  expireTimestamp: number;
+  fiatCurrency: string;
+  cryptoCurrency: string;
+  perUnitCryptoAssetCost: number;
+}
+
+export interface ZerohashNetworkFee {
+  cryptoCurrency: string;
+  fiatCurrency: string;
+
+  feeInFiat: number;
+  feeInCrypto: number;
+}

@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IOTPRepo } from "./repo/OTPRepo";
@@ -31,16 +31,17 @@ export abstract class AuthService {
   @Inject()
   private readonly partnerService: PartnerService;
 
-  readonly nobaPartnerID: string;
-
-  constructor(private readonly configService: CustomConfigService) {
-    this.nobaPartnerID = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).partnerID;
-  }
+  constructor(private readonly configService: CustomConfigService) {}
 
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
-  async validateAndGetUserId(emailOrPhone: string, enteredOtp: number, partnerID?: string): Promise<string> {
+  async validateAndGetUserId(
+    emailOrPhone: string,
+    enteredOtp: number,
+    partnerID: string,
+    partnerUserID?: string,
+  ): Promise<string> {
     if (!partnerID || partnerID.length == 0) {
-      partnerID = this.nobaPartnerID;
+      throw new BadRequestException("Partner ID is required");
     }
     const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType(), partnerID);
     const currentDateTime: number = new Date().getTime();
@@ -49,7 +50,7 @@ export abstract class AuthService {
       throw new UnauthorizedException();
     } else {
       await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
-      return this.getUserId(emailOrPhone, actualOtp.props.partnerID);
+      return this.getUserId(emailOrPhone, actualOtp.props.partnerID, partnerUserID);
     }
   }
 
@@ -71,7 +72,7 @@ export abstract class AuthService {
 
   async saveOtp(emailOrPhone: string, otp: number, partnerID?: string): Promise<void> {
     if (!partnerID || partnerID.length == 0) {
-      partnerID = this.nobaPartnerID;
+      throw new BadRequestException("Partner ID is required");
     }
 
     await this.otpRepo.saveOTP(emailOrPhone, otp, this.getIdentityType(), partnerID);
@@ -101,6 +102,6 @@ export abstract class AuthService {
 
   protected abstract getIdentityType();
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
-  protected abstract getUserId(emailOrPhone: string, partnerID?: string): Promise<string>;
+  protected abstract getUserId(emailOrPhone: string, partnerID: string, partnerUserID?: string): Promise<string>;
   protected abstract isUserSignedUp(emailOrPhone: string): Promise<boolean>;
 }
