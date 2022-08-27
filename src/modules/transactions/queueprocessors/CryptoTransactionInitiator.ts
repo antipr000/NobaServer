@@ -83,14 +83,19 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     // TODO(#): Move this to new processor.
     if (!transaction.props.nobaTransferSettlementID) {
+      this.logger.info(`Checking for the settlement of Noba Transfer.`);
+
       const fundsAvailabilityStatus: FundsAvailabilityStatus = await assetService.pollFundsAvailableStatus(
         transaction.props.nobaTransferTradeID,
       );
+
+      this.logger.info(`Noba Transfer settlement response: ${JSON.stringify(fundsAvailabilityStatus)}`);
 
       switch (fundsAvailabilityStatus.status) {
         case PollStatus.SUCCESS:
           transaction.props.nobaTransferSettlementID = fundsAvailabilityStatus.settledId;
           await this.transactionRepo.updateTransaction(transaction);
+          break;
 
         case PollStatus.PENDING:
           return;
@@ -105,6 +110,8 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       }
     }
 
+    this.logger.info(`Starting the trade to transfer to consumer ZH account.`);
+
     const assetTransferToConsumerAccountRequest: ConsumerAccountTransferRequest = {
       consumer: consumer.props,
       cryptoAssetTradePrice: transaction.props.exchangeRate,
@@ -116,6 +123,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       transactionCreationTimestamp: transaction.props.transactionTimestamp,
     };
     const tradeId: string = await assetService.transferAssetToConsumerAccount(assetTransferToConsumerAccountRequest);
+    this.logger.info(`Trade initiated to transfer to consumer ZH account with tradeID: "${tradeId}"`);
 
     transaction.props.cryptoTransactionId = tradeId;
     await this.transactionRepo.updateTransactionStatus(
