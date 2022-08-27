@@ -87,19 +87,16 @@ export class DefaultAssetService implements AssetService {
       NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat}
       PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread}
       QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread}      
-      ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${
-      fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread
-    }
-      SPREAD REVENUE (${request.fiatCurrency}):\t${
-      fiatAmountAfterAllChargesWithoutSpread - fiatAmountAfterAllChargesWithSpread
-    }
+      ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread
+      }
+      SPREAD REVENUE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithoutSpread - fiatAmountAfterAllChargesWithSpread
+      }
       ZERO HASH FEE (${request.fiatCurrency}):\t${request.fiatAmount * 0.007}
-      NOBA REVENUE (${request.fiatCurrency}):\t${
-      fiatAmountAfterAllChargesWithoutSpread -
+      NOBA REVENUE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithoutSpread -
       fiatAmountAfterAllChargesWithSpread +
       nobaFlatFeeInFiat -
       request.fiatAmount * 0.007
-    }
+      }
     `);
 
     return {
@@ -117,7 +114,68 @@ export class DefaultAssetService implements AssetService {
   }
 
   async getQuoteByForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
-    throw new Error("Method not implemented.");
+    const nobaSpreadPercent = this.nobaTransactionConfigs.spreadPercentage;
+    const nobaFlatFeeInFiat = this.nobaTransactionConfigs.flatFeeDollars;
+    const creditCardFeePercent = this.nobaTransactionConfigs.dynamicCreditCardFeePercentage;
+    const fixedCreditCardFeeInFiat = this.nobaTransactionConfigs.fixedCreditCardFee;
+
+    // Get network / gas fees
+    const networkFee: ZerohashNetworkFee = await this.zerohashService.estimateNetworkFee(
+      request.cryptoCurrency,
+      request.fiatCurrency,
+    );
+    this.logger.debug(networkFee);
+
+    const networkFeeInFiat = networkFee.feeInFiat;
+
+    const fixedAmountCrypto = transactionQuoteQuery.fixedAmount;
+
+    const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForDesiredCryptoQuantity(
+      request.cryptoCurrency,
+      request.fiatCurrency,
+      request.cryptoQuantity
+    );
+    this.logger.debug(`Fixed crypto ZH quote: ${JSON.stringify(zhQuote)}`);
+
+    const perUnitCryptoCostWithoutSpread: number = zhQuote.perUnitCryptoAssetCost;
+    const perUnitCryptoCostWithSpread: number = perUnitCryptoCostWithoutSpread * (1 + nobaSpreadPercent);
+
+    const rateWithSpread = costPerUnit * (1 + nobaSpreadPercent);
+    const rawFiatAmountForRequestedCryptoPostSpread = fixedAmountCrypto * rateWithSpread;
+    const costBeforeCCFee = rawFiatAmountForRequestedCryptoPostSpread + nobaFlatFeeInFiat + networkFeeInFiat;
+    const creditCardCharge = (costBeforeCCFee + fixedCreditCardFeeInFiat) / (1 - creditCardFeePercent);
+    const processingFees = creditCardCharge - costBeforeCCFee;
+
+    this.logger.debug(`
+      CRYPTO FIXED (${transactionQuoteQuery.cryptoCurrencyCode}):\t${fixedAmountCrypto}
+      POST-SPREAD (${transactionQuoteQuery.fiatCurrencyCode}):\t${rawFiatAmountForRequestedCryptoPostSpread}
+      NETWORK FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${networkFeeInFiat}
+      NOBA FLAT FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeInFiat}
+      COST BEFORE CC FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${costBeforeCCFee}
+      CREDIT CARD CHARGE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge}
+      PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${processingFees}
+      NOBA COST (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${costPerUnit * fixedAmountCrypto}
+      ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge * 0.007}
+      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeInFiat + rawFiatAmountForRequestedCryptoPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
+      }
+      `);
+
+    const transactionQuote: TransactionQuoteDTO = {
+      quoteID: quote["message"].quote_id,
+      fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
+      cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
+      fixedSide: transactionQuoteQuery.fixedSide,
+      fixedAmount: transactionQuoteQuery.fixedAmount,
+      quotedAmount: creditCardCharge,
+      processingFee: processingFees,
+      networkFee: networkFeeInFiat,
+      nobaFee: nobaFlatFeeInFiat,
+      exchangeRate: rateWithSpread,
+    };
+
+    this.logger.debug("Transaction quote: " + JSON.stringify(transactionQuote));
+
+    return transactionQuote;
   }
 
   /**
