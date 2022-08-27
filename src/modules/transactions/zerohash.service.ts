@@ -288,6 +288,8 @@ export class ZeroHashService {
     const transfer = await this.makeRequest("/transfers", "POST", {
       from_participant_code: this.getNobaPlatformCode(),
       from_account_group: ZHLS_PLATFORM_CODE,
+      from_account_label: "general",
+      to_account_label: "general",
       to_participant_code: this.getNobaPlatformCode(),
       to_account_group: this.getNobaPlatformCode(),
       asset: asset,
