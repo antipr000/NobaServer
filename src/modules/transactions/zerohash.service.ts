@@ -215,6 +215,8 @@ export class ZeroHashService {
       from_account_group: ZHLS_PLATFORM_CODE,
       to_participant_code: NOBA_PLATFORM_CODE,
       to_account_group: NOBA_PLATFORM_CODE,
+      from_account_label: "general",
+      to_account_label: "general",
       asset: asset,
       amount: amount,
     });
