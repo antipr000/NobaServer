@@ -8,6 +8,10 @@ export const getMockPartnerServiceWithDefaults = () => {
   when(mockPartnerService.getPartner(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerService.getPartnerFromApiKey(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerService.updatePartner(anyString(), anything())).thenReject(new Error("Not implemented!"));
+  when(mockPartnerService.getWebhook(anything(), anything())).thenReject(new Error("Not implemented!"));
+  when(mockPartnerService.addOrReplaceWebhook(anyString(), anything(), anyString())).thenReject(
+    new Error("Method not implemented!"),
+  );
 
   return mockPartnerService;
 };

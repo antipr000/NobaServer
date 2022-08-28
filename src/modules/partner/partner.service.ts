@@ -44,7 +44,7 @@ export class PartnerService {
   }
 
   getWebhook(partner: Partner, type: WebhookType): PartnerWebhook {
-    let webhookArray = partner.props.webhooks.filter(webhook => webhook.type === type);
+    const webhookArray = partner.props.webhooks.filter(webhook => webhook.type === type);
     if (webhookArray.length == 0) {
       return null;
     }

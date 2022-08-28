@@ -1,4 +1,14 @@
+const FAKE_VALID_WALLET = "fake-valid-wallet";
+
+jest.mock("multicoin-address-validator", () => ({
+  validate: jest.fn((walletAddress, _) => {
+    if (walletAddress === FAKE_VALID_WALLET) return true;
+    return false;
+  }),
+}));
+
 import { Test, TestingModule } from "@nestjs/testing";
+import mockAxios from "jest-mock-axios";
 import { anyString, anything, deepEqual, instance, reset, verify, when } from "ts-mockito";
 import {
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
@@ -30,13 +40,16 @@ import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { UserLimits } from "../domain/Limits";
 import { Transaction } from "../domain/Transaction";
 import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
-import { TransactionStatus } from "../domain/Types";
+import { TransactionStatus, TransactionType } from "../domain/Types";
 import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
 import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQueryDTO";
 import { LimitsService } from "../limits.service";
-import { getMockAssetServiceFactoryWithDefaultAssetService } from "../mocks/mock.asset.service";
+import {
+  getMockAssetServiceFactoryWithDefaultAssetService,
+  getMockAssetServiceWithDefaults,
+} from "../mocks/mock.asset.service";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.transactions.repo";
 import { getMockZerohashServiceWithDefaults } from "../mocks/mock.zerohash.service";
 import { ITransactionRepo } from "../repo/TransactionRepo";
@@ -44,6 +57,13 @@ import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
 import { PartnerService } from "../../partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
+import { BadRequestException } from "@nestjs/common";
+import { AssetService } from "../assets/asset.service";
+import { NobaQuote } from "../domain/AssetTypes";
+import { Partner } from "../../../modules/partner/domain/Partner";
+import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
+import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
+import { TransactionMapper } from "../mapper/TransactionMapper";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -68,6 +88,8 @@ describe("TransactionService", () => {
   let emailService: EmailService;
   let partnerService: PartnerService;
   let assetServiceFactory: AssetServiceFactory;
+  let assetService: AssetService;
+  let transactionMapper: TransactionMapper;
 
   const userId = "1234567890";
   const consumer: Consumer = Consumer.createConsumer({
@@ -89,6 +111,7 @@ describe("TransactionService", () => {
     emailService = getMockEmailServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
+    transactionMapper = new TransactionMapper();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
@@ -133,6 +156,9 @@ describe("TransactionService", () => {
 
     limitsService = app.get<LimitsService>(LimitsService);
     transactionService = app.get<TransactionService>(TransactionService);
+
+    assetService = getMockAssetServiceWithDefaults();
+    when(assetServiceFactory.getAssetService(anyString())).thenReturn(instance(assetService));
   };
 
   // it("Should return transaction quote", async () => {
@@ -291,7 +317,7 @@ describe("TransactionService", () => {
     });
   });
 
-  describe("getTransactionQuote() - FIAT side fixed:", () => {
+  /*describe("getTransactionQuote() - FIAT side fixed:", () => {
     it("Noba spread percentage is taken into account correctly", async () => {
       const environmentVariables = {
         [NOBA_CONFIG_KEY]: {
@@ -636,7 +662,7 @@ describe("TransactionService", () => {
         exchangeRate: 10,
       });
     });
-  });
+  }); */
 
   describe("validatePendingTransaction()", () => {
     const consumerID = "2222222222";
@@ -993,4 +1019,624 @@ describe("TransactionService", () => {
       verify(consumerService.addOrUpdateCryptoWallet(consumer, deepEqual(updatedWallet))).times(1);
     });
   });
+
+  describe("requestTransactionQuote", () => {
+    it("throws 'BadRequestException' if amount is not valid", async () => {
+      const transactionQuoteQuery: TransactionQuoteQueryDTO = {
+        fiatCurrencyCode: "USD",
+        cryptoCurrencyCode: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        fixedAmount: -1,
+      };
+
+      try {
+        await transactionService.requestTransactionQuote(transactionQuoteQuery);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("should return correct quote for 'FIAT' fixed side", async () => {
+      const transactionQuoteQuery: TransactionQuoteQueryDTO = {
+        fiatCurrencyCode: "USD",
+        cryptoCurrencyCode: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        fixedAmount: 10,
+      };
+
+      const nobaQuote: NobaQuote = {
+        quoteID: "fake-quote",
+        fiatCurrency: "USD",
+        cryptoCurrency: "ETH",
+
+        processingFeeInFiat: 1,
+        networkFeeInFiat: 1,
+        nobaFeeInFiat: 1,
+
+        totalFiatAmount: 13,
+        totalCryptoQuantity: 0.0001,
+        perUnitCryptoPrice: 100,
+      };
+
+      when(
+        assetService.getQuoteForSpecifiedFiatAmount(
+          deepEqual({
+            cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+            fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+            fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+          }),
+        ),
+      ).thenResolve(nobaQuote);
+
+      const response = await transactionService.requestTransactionQuote(transactionQuoteQuery);
+      assertOnRequestTransactionQuoteResponse(response, nobaQuote, transactionQuoteQuery);
+    });
+
+    it("should return correct quote for 'CRYPTO' fixed side", async () => {
+      const transactionQuoteQuery: TransactionQuoteQueryDTO = {
+        fiatCurrencyCode: "USD",
+        cryptoCurrencyCode: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        fixedAmount: 0.1,
+      };
+
+      const nobaQuote: NobaQuote = {
+        quoteID: "fake-quote",
+        fiatCurrency: "USD",
+        cryptoCurrency: "ETH",
+
+        processingFeeInFiat: 0.01,
+        networkFeeInFiat: 0.01,
+        nobaFeeInFiat: 0.01,
+
+        totalFiatAmount: 1000,
+        totalCryptoQuantity: 0.1,
+        perUnitCryptoPrice: 100,
+      };
+
+      when(
+        assetService.getQuoteByForSpecifiedCryptoQuantity(
+          deepEqual({
+            cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+            fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+            cryptoQuantity: Number(transactionQuoteQuery.fixedAmount),
+          }),
+        ),
+      ).thenResolve(nobaQuote);
+
+      const response = await transactionService.requestTransactionQuote(transactionQuoteQuery);
+      assertOnRequestTransactionQuoteResponse(response, nobaQuote, transactionQuoteQuery);
+    });
+  });
+
+  describe("callTransactionConfirmationWebhook", () => {
+    afterEach(() => {
+      mockAxios.reset();
+    });
+
+    it("should do nothing if partner id is null", async () => {
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumer.props._id,
+        sessionKey: "fake-session",
+        transactionStatus: TransactionStatus.PENDING,
+        paymentMethodID: "fake-payment-method-id",
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        destinationWalletAddress: "fake-wallet-address",
+      });
+      await transactionService.callTransactionConfirmWebhook(consumer, transaction);
+      expect(mockAxios.post).toHaveBeenCalledTimes(0);
+    });
+
+    it("should call webhook if partner webhook is available", async () => {
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumer.props._id,
+        sessionKey: "fake-session",
+        transactionStatus: TransactionStatus.PENDING,
+        paymentMethodID: "fake-payment-method-id",
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        destinationWalletAddress: "fake-wallet-address",
+        partnerID: "fake-partner-id",
+      });
+
+      const partner = Partner.createPartner({
+        _id: transaction.props.partnerID,
+        name: "Fake Partner",
+        apiKey: "FakeApiKey",
+        secretKey: "FakeSecret",
+        allowPublicWallets: true, // Can wallets added for this partner be shared with others?
+        webhookClientID: "fake-webhook-cid",
+        webhookSecret: "fake-webhook-secret",
+        webhooks: [
+          {
+            type: WebhookType.TRANSACTION_CONFIRM,
+            url: "https://localhost:8080/fakeurl",
+          },
+        ],
+      });
+
+      when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
+      when(partnerService.getWebhook(deepEqual(partner), WebhookType.TRANSACTION_CONFIRM)).thenReturn(
+        partner.props.webhooks[0],
+      );
+
+      // const responsePromise = transactionService.callTransactionConfirmWebhook(consumer, transaction);
+      // expect(mockAxios.post).toHaveBeenCalled();
+      // mockAxios.mockResponse({
+      //   status: 200,
+      //   statusText: "Successful",
+      //   data: {},
+      // });
+      // await responsePromise;
+      // expect(true).toBe(true);
+    });
+  });
+
+  describe("initiateTransaction", () => {
+    it("throws BadRequestException when destination wallet address is invalid", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: "fake-wallet-1234",
+      };
+
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("throws BadRequestException when leg2 is invalid", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ABC",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([]);
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe(`Unknown cryptocurrency: ${transactionRequest.leg2}`);
+      }
+    });
+
+    it("throws BadRequestException when leg1 is invalid", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "ABC",
+        leg2: "ETH",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          _id: "ethereum",
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([]);
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe(`Unknown fiat currency: ${transactionRequest.leg1}`);
+      }
+    });
+
+    it("should throw BadRequestException when the amount exceeds slippage", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      const nobaQuote: NobaQuote = {
+        quoteID: "fake-quote",
+        fiatCurrency: "USD",
+        cryptoCurrency: "ETH",
+
+        processingFeeInFiat: 0.01,
+        networkFeeInFiat: 0.01,
+        nobaFeeInFiat: 0.01,
+
+        totalFiatAmount: 1000,
+        totalCryptoQuantity: 0.3,
+        perUnitCryptoPrice: 100,
+      };
+
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          _id: "ethereum",
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          _id: "usd",
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+        },
+      ]);
+
+      when(
+        assetService.getQuoteForSpecifiedFiatAmount(
+          deepEqual({
+            fiatCurrency: "USD",
+            cryptoCurrency: "ETH",
+            fiatAmount: transactionRequest.leg1Amount,
+          }),
+        ),
+      ).thenResolve(nobaQuote);
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.response.messageForClient).toBe("Bid price is not within slippage allowed of 2%");
+      }
+    });
+
+    it("should create transaction entry in DB with fixed FIAT side", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      const nobaQuote: NobaQuote = {
+        quoteID: "fake-quote",
+        fiatCurrency: "USD",
+        cryptoCurrency: "ETH",
+
+        processingFeeInFiat: 0.01,
+        networkFeeInFiat: 0.01,
+        nobaFeeInFiat: 0.01,
+
+        totalFiatAmount: 100,
+        totalCryptoQuantity: 0.1,
+        perUnitCryptoPrice: 100,
+      };
+
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          _id: "ethereum",
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          _id: "usd",
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+        },
+      ]);
+
+      when(
+        assetService.getQuoteForSpecifiedFiatAmount(
+          deepEqual({
+            fiatCurrency: "USD",
+            cryptoCurrency: "ETH",
+            fiatAmount: transactionRequest.leg1Amount,
+          }),
+        ),
+      ).thenResolve(nobaQuote);
+
+      const responseTransaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: consumerId,
+        sessionKey: sessionKey,
+        paymentMethodID: transactionRequest.paymentToken,
+        leg1Amount: transactionRequest.leg1Amount,
+        leg2Amount: transactionRequest.leg2Amount,
+        leg1: transactionRequest.leg1,
+        leg2: transactionRequest.leg2,
+        transactionStatus: TransactionStatus.PENDING,
+        partnerID: partnerId,
+        destinationWalletAddress: transactionRequest.destinationWalletAddress,
+      });
+
+      const responseTransactionDTO = transactionMapper.toDTO(responseTransaction);
+      delete responseTransactionDTO._id; // Delete id as it would be autogenerated so cannot be compared
+      delete responseTransactionDTO.transactionTimestamp;
+
+      when(transactionRepo.createTransaction(anything())).thenResolve(responseTransaction);
+
+      const response = await transactionService.initiateTransaction(
+        consumerId,
+        partnerId,
+        sessionKey,
+        transactionRequest,
+      );
+      delete response._id;
+      delete response.transactionTimestamp;
+      expect(response).toStrictEqual(responseTransactionDTO);
+    });
+
+    it("should create transaction entry in DB with fixed CRYPTO side", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.CRYPTO,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      const nobaQuote: NobaQuote = {
+        quoteID: "fake-quote",
+        fiatCurrency: "USD",
+        cryptoCurrency: "ETH",
+
+        processingFeeInFiat: 0.01,
+        networkFeeInFiat: 0.01,
+        nobaFeeInFiat: 0.01,
+
+        totalFiatAmount: 100,
+        totalCryptoQuantity: 0.1,
+        perUnitCryptoPrice: 100,
+      };
+
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          _id: "ethereum",
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          _id: "usd",
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+        },
+      ]);
+
+      when(
+        assetService.getQuoteByForSpecifiedCryptoQuantity(
+          deepEqual({
+            fiatCurrency: "USD",
+            cryptoCurrency: "ETH",
+            cryptoQuantity: 0.1,
+          }),
+        ),
+      ).thenResolve(nobaQuote);
+
+      const responseTransaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: consumerId,
+        sessionKey: sessionKey,
+        paymentMethodID: transactionRequest.paymentToken,
+        leg1Amount: transactionRequest.leg1Amount,
+        leg2Amount: transactionRequest.leg2Amount,
+        leg1: transactionRequest.leg1,
+        leg2: transactionRequest.leg2,
+        transactionStatus: TransactionStatus.PENDING,
+        partnerID: partnerId,
+        destinationWalletAddress: transactionRequest.destinationWalletAddress,
+      });
+
+      const responseTransactionDTO = transactionMapper.toDTO(responseTransaction);
+      delete responseTransactionDTO._id; // Delete id as it would be autogenerated so cannot be compared
+      delete responseTransactionDTO.transactionTimestamp; // Delete timestamp as it makes tests flaky
+
+      when(transactionRepo.createTransaction(anything())).thenResolve(responseTransaction);
+
+      const response = await transactionService.initiateTransaction(
+        consumerId,
+        partnerId,
+        sessionKey,
+        transactionRequest,
+      );
+      delete response._id;
+      delete response.transactionTimestamp;
+      expect(response).toStrictEqual(responseTransactionDTO);
+    });
+  });
+
+  describe("getTransactionStatus", () => {
+    it("should get transaction with given id from database", async () => {
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: consumer.props._id,
+        sessionKey: "fake-session-key",
+        paymentMethodID: "fake-payment-token",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        partnerID: "fake-partner",
+        destinationWalletAddress: FAKE_VALID_WALLET,
+        transactionTimestamp: new Date(),
+      });
+
+      const transactionDTO = transactionMapper.toDTO(transaction);
+
+      when(transactionRepo.getTransaction(transaction.props._id)).thenResolve(transaction);
+
+      const response = await transactionService.getTransactionStatus(transaction.props._id);
+      expect(response).toStrictEqual(transactionDTO);
+    });
+  });
+
+  describe("getUserTransactions", () => {
+    it("should return all user transactions from database", async () => {
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: consumer.props._id,
+        sessionKey: "fake-session-key",
+        paymentMethodID: "fake-payment-token",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        partnerID: "fake-partner",
+        destinationWalletAddress: FAKE_VALID_WALLET,
+        transactionTimestamp: new Date(),
+      });
+
+      const transactionDTO = transactionMapper.toDTO(transaction);
+
+      when(transactionRepo.getUserTransactions(transaction.props.userId, transaction.props.partnerID)).thenResolve([
+        transaction,
+      ]);
+
+      const response = await transactionService.getUserTransactions(
+        transaction.props.userId,
+        transaction.props.partnerID,
+      );
+      expect(response.length).toBe(1);
+      expect(response).toStrictEqual([transactionDTO]);
+    });
+  });
+
+  describe("getAllTransactions", () => {
+    it("should return all transactions from database", async () => {
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: consumer.props._id,
+        sessionKey: "fake-session-key",
+        paymentMethodID: "fake-payment-token",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        partnerID: "fake-partner",
+        destinationWalletAddress: FAKE_VALID_WALLET,
+        transactionTimestamp: new Date(),
+      });
+      when(transactionRepo.getAll()).thenResolve([transaction]);
+
+      const response = await transactionService.getAllTransactions();
+      expect(response.length).toBe(1);
+      expect(response).toStrictEqual([transactionMapper.toDTO(transaction)]);
+    });
+  });
+
+  describe("getTransactionsInInterval", () => {
+    it("should return all user transactions from database for an interval", async () => {
+      const fromDate = new Date("2020-01-01");
+      const toDate = new Date("2020-03-03");
+
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: consumer.props._id,
+        sessionKey: "fake-session-key",
+        paymentMethodID: "fake-payment-token",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        partnerID: "fake-partner",
+        destinationWalletAddress: FAKE_VALID_WALLET,
+        transactionTimestamp: fromDate,
+      });
+
+      when(
+        transactionRepo.getUserTransactionInAnInterval(
+          transaction.props.userId,
+          transaction.props.partnerID,
+          fromDate,
+          toDate,
+        ),
+      ).thenResolve([transaction]);
+
+      const response = await transactionService.getTransactionsInInterval(
+        transaction.props.userId,
+        transaction.props.partnerID,
+        fromDate,
+        toDate,
+      );
+      expect(response.length).toBe(1);
+      expect(response).toStrictEqual([transactionMapper.toDTO(transaction)]);
+    });
+  });
 });
+
+function assertOnRequestTransactionQuoteResponse(
+  response: TransactionQuoteDTO,
+  nobaQuote: NobaQuote,
+  transactionQuoteQuery: TransactionQuoteQueryDTO,
+) {
+  expect(response.quoteID).toBe(nobaQuote.quoteID);
+  expect(response.fiatCurrencyCode).toBe(nobaQuote.fiatCurrency);
+  expect(response.cryptoCurrencyCode).toBe(nobaQuote.cryptoCurrency);
+  expect(response.fixedSide).toBe(transactionQuoteQuery.fixedSide);
+  expect(response.fixedAmount).toBe(transactionQuoteQuery.fixedAmount);
+  expect(response.quotedAmount).toBe(nobaQuote.totalCryptoQuantity);
+  expect(response.processingFee).toBe(nobaQuote.processingFeeInFiat);
+  expect(response.networkFee).toBe(nobaQuote.networkFeeInFiat);
+  expect(response.nobaFee).toBe(nobaQuote.nobaFeeInFiat);
+  expect(response.exchangeRate).toBe(nobaQuote.perUnitCryptoPrice);
+}

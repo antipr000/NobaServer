@@ -9,7 +9,7 @@ import { KYCStatus } from "../consumer/domain/VerificationStatus";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { Transaction } from "./domain/Transaction";
-import { CryptoTransactionRequestResult, CryptoTransactionStatus, TransactionStatus } from "./domain/Types";
+import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
@@ -21,7 +21,6 @@ import { EmailService } from "../common/email.service";
 import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { CryptoWallet } from "../consumer/domain/CryptoWallet";
 import { Consumer } from "../consumer/domain/Consumer";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
@@ -29,7 +28,7 @@ import { AssetService } from "./assets/asset.service";
 import { PartnerService } from "../partner/partner.service";
 import { NobaQuote } from "./domain/AssetTypes";
 import axios, { AxiosRequestConfig } from "axios";
-import { Partner, PartnerWebhook } from "../partner/domain/Partner";
+import { Partner } from "../partner/domain/Partner";
 import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 
@@ -107,135 +106,6 @@ export class TransactionService {
     };
   }
 
-  /**
-   * @deprecated: Use AssetService methods or the 'requestTransactionQuote' method below.
-   */
-  async getTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
-    if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
-      throw new BadRequestException("Unsupported fixedSide value");
-    }
-
-    if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
-      throw new BadRequestException("Invalid amount");
-    }
-
-    const nobaSpreadPercent = this.nobaTransactionConfigs.spreadPercentage;
-    const nobaFlatFeeDollars = this.nobaTransactionConfigs.flatFeeDollars;
-    const creditCardFeePercent = this.nobaTransactionConfigs.dynamicCreditCardFeePercentage;
-    const creditCardFeeDollars = this.nobaTransactionConfigs.fixedCreditCardFee;
-
-    // Get network / gas fees
-    const estimatedNetworkFeeFromZeroHash = await this.zeroHashService.estimateNetworkFee(
-      transactionQuoteQuery.cryptoCurrencyCode,
-      transactionQuoteQuery.fiatCurrencyCode,
-    );
-    this.logger.debug(estimatedNetworkFeeFromZeroHash);
-
-    const networkFeeInFiat = estimatedNetworkFeeFromZeroHash.feeInFiat;
-
-    if (transactionQuoteQuery.fixedSide == CurrencyType.FIAT) {
-      const fixedAmountFiat = transactionQuoteQuery.fixedAmount;
-      // TODO(#306): It says percentage, but not actually calculating percentage.
-      const creditCardFees = fixedAmountFiat * creditCardFeePercent + creditCardFeeDollars;
-      const feeSubtotal = networkFeeInFiat + creditCardFees + nobaFlatFeeDollars;
-      const preSpreadAmount = fixedAmountFiat - feeSubtotal;
-      const priceToQuoteUSD = preSpreadAmount / (1 + nobaSpreadPercent);
-
-      const quote = await this.zeroHashService.requestQuote(
-        transactionQuoteQuery.cryptoCurrencyCode,
-        transactionQuoteQuery.fiatCurrencyCode,
-        priceToQuoteUSD,
-        CurrencyType.FIAT,
-      );
-      this.logger.debug(quote);
-      const costPerUnit = Number(quote["message"]["price"]);
-      const rateWithSpread = costPerUnit * (1 + nobaSpreadPercent);
-
-      this.logger.debug(`
-      FIAT FIXED (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${fixedAmountFiat}
-      NETWORK FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${networkFeeInFiat}
-      PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardFees}
-      NOBA FLAT FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeDollars}
-      PRE-SPREAD (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${preSpreadAmount}
-      QUOTE PRICE (${transactionQuoteQuery.fiatCurrencyCode}):\t${priceToQuoteUSD}      
-      ESTIMATED CRYPTO (${transactionQuoteQuery.cryptoCurrencyCode}):\t${priceToQuoteUSD / costPerUnit}
-      SPREAD REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${preSpreadAmount - priceToQuoteUSD}
-      ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${fixedAmountFiat * 0.007}
-      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        preSpreadAmount - priceToQuoteUSD + nobaFlatFeeDollars - fixedAmountFiat * 0.007
-      }
-      `);
-
-      const transactionQuote: TransactionQuoteDTO = {
-        quoteID: quote["message"].quote_id,
-        fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
-        cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
-        fixedSide: transactionQuoteQuery.fixedSide,
-        fixedAmount: transactionQuoteQuery.fixedAmount,
-        quotedAmount: priceToQuoteUSD / costPerUnit,
-        processingFee: creditCardFees,
-        networkFee: networkFeeInFiat,
-        nobaFee: nobaFlatFeeDollars,
-        exchangeRate: rateWithSpread,
-      };
-
-      this.logger.debug("Transaction quote: " + JSON.stringify(transactionQuote));
-
-      return transactionQuote;
-    } else if (transactionQuoteQuery.fixedSide == CurrencyType.CRYPTO) {
-      const fixedAmountCrypto = transactionQuoteQuery.fixedAmount;
-
-      const quote = await this.zeroHashService.requestQuote(
-        transactionQuoteQuery.cryptoCurrencyCode,
-        transactionQuoteQuery.fiatCurrencyCode,
-        fixedAmountCrypto,
-        CurrencyType.CRYPTO,
-      );
-      const costPerUnit = Number(quote["message"]["price"]);
-
-      const rateWithSpread = costPerUnit * (1 + nobaSpreadPercent);
-      const fiatCostPostSpread = fixedAmountCrypto * rateWithSpread;
-      const costBeforeCCFee = fiatCostPostSpread + nobaFlatFeeDollars + networkFeeInFiat;
-      const creditCardCharge = (costBeforeCCFee + creditCardFeeDollars) / (1 - creditCardFeePercent);
-      const processingFees = creditCardCharge - costBeforeCCFee;
-
-      this.logger.debug(`
-      CRYPTO FIXED (${transactionQuoteQuery.cryptoCurrencyCode}):\t${fixedAmountCrypto}
-      POST-SPREAD (${transactionQuoteQuery.fiatCurrencyCode}):\t${fiatCostPostSpread}
-      NETWORK FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${networkFeeInFiat}
-      NOBA FLAT FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${nobaFlatFeeDollars}
-      COST BEFORE CC FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${costBeforeCCFee}
-      CREDIT CARD CHARGE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge}
-      PROCESSING FEES (${transactionQuoteQuery.fiatCurrencyCode}):\t${processingFees}
-      NOBA COST (${transactionQuoteQuery.fiatCurrencyCode}):\t\t${costPerUnit * fixedAmountCrypto}
-      ZERO HASH FEE (${transactionQuoteQuery.fiatCurrencyCode}):\t${creditCardCharge * 0.007}
-      NOBA REVENUE (${transactionQuoteQuery.fiatCurrencyCode}):\t${
-        nobaFlatFeeDollars + fiatCostPostSpread - costPerUnit * fixedAmountCrypto - creditCardCharge * 0.007
-      }
-      `);
-
-      const transactionQuote: TransactionQuoteDTO = {
-        quoteID: quote["message"].quote_id,
-        fiatCurrencyCode: transactionQuoteQuery.fiatCurrencyCode,
-        cryptoCurrencyCode: transactionQuoteQuery.cryptoCurrencyCode,
-        fixedSide: transactionQuoteQuery.fixedSide,
-        fixedAmount: transactionQuoteQuery.fixedAmount,
-        quotedAmount: creditCardCharge,
-        processingFee: processingFees,
-        networkFee: networkFeeInFiat,
-        nobaFee: nobaFlatFeeDollars,
-        exchangeRate: rateWithSpread,
-      };
-
-      this.logger.debug("Transaction quote: " + JSON.stringify(transactionQuote));
-
-      return transactionQuote;
-    } else {
-      // Should never get here because of check at top of method, but we have to return or throw something
-      throw new BadRequestException("Unsupported fixedSide value");
-    }
-  }
-
   async getTransactionStatus(transactionID: string): Promise<TransactionDTO> {
     const transaction = await this.transactionsRepo.getTransaction(transactionID);
     return this.transactionsMapper.toDTO(transaction);
@@ -305,21 +175,29 @@ export class TransactionService {
       destinationWalletAddress: transactionRequest.destinationWalletAddress,
     });
 
+    const assetService: AssetService = this.assetServiceFactory.getAssetService(transactionRequest.leg2);
+
     const fixedAmount =
       transactionRequest.fixedSide == CurrencyType.FIAT ? transactionRequest.leg1Amount : transactionRequest.leg2Amount;
-    const quote = await this.getTransactionQuote({
-      cryptoCurrencyCode: transactionRequest.leg2,
-      fiatCurrencyCode: transactionRequest.leg1,
-      fixedAmount: fixedAmount,
-      fixedSide: transactionRequest.fixedSide,
-    });
+    const quote =
+      transactionRequest.fixedSide === CurrencyType.FIAT
+        ? await assetService.getQuoteForSpecifiedFiatAmount({
+            fiatCurrency: transactionRequest.leg1,
+            cryptoCurrency: transactionRequest.leg2,
+            fiatAmount: Number(fixedAmount),
+          })
+        : await assetService.getQuoteByForSpecifiedCryptoQuantity({
+            fiatCurrency: transactionRequest.leg1,
+            cryptoCurrency: transactionRequest.leg2,
+            cryptoQuantity: Number(fixedAmount),
+          });
 
     // Check slippage between the original quoted transaction that the user confirmed and the quote we just received above against the non-fixed side
     // quote.quotedAmount will always be the in the currency opposite of the fixed side
     const withinSlippage =
       transactionRequest.fixedSide == CurrencyType.FIAT
-        ? this.withinSlippage(transactionRequest.leg2Amount, quote.quotedAmount)
-        : this.withinSlippage(transactionRequest.leg1Amount, quote.quotedAmount);
+        ? this.withinSlippage(transactionRequest.leg2Amount, quote.totalCryptoQuantity)
+        : this.withinSlippage(transactionRequest.leg1Amount, quote.totalFiatAmount);
     if (!withinSlippage) {
       throw new BadRequestException({
         messageForClient: `Bid price is not within slippage allowed of ${
@@ -330,16 +208,16 @@ export class TransactionService {
 
     // Add quote information to new transaction
     newTransaction.props.tradeQuoteID = quote.quoteID;
-    newTransaction.props.nobaFee = quote.nobaFee;
-    newTransaction.props.networkFee = quote.networkFee;
-    newTransaction.props.processingFee = quote.processingFee;
-    newTransaction.props.exchangeRate = quote.exchangeRate;
+    newTransaction.props.nobaFee = quote.nobaFeeInFiat;
+    newTransaction.props.networkFee = quote.networkFeeInFiat;
+    newTransaction.props.processingFee = quote.processingFeeInFiat;
+    newTransaction.props.exchangeRate = quote.perUnitCryptoPrice;
 
     // Set the amount that wasn't fixed based on the quote received
     if (transactionRequest.fixedSide == CurrencyType.FIAT) {
-      newTransaction.props.leg2Amount = quote.quotedAmount;
+      newTransaction.props.leg2Amount = quote.totalCryptoQuantity;
     } else {
-      newTransaction.props.leg1Amount = quote.quotedAmount;
+      newTransaction.props.leg1Amount = quote.totalFiatAmount;
     }
 
     this.logger.debug(`Transaction: ${JSON.stringify(newTransaction.props)}`);
@@ -434,28 +312,6 @@ export class TransactionService {
     return PendingTransactionValidationStatus.PASS;
   }
 
-  // [DEPRECATED]: Use AssetService interface instead.
-  // Will be removed once everything works in staging.
-  public async initiateCryptoTransaction(
-    consumer: Consumer,
-    transaction: Transaction,
-  ): Promise<CryptoTransactionRequestResult> {
-    // Call ZeroHash to execute crypto transaction
-    const result = await this.zeroHashService.initiateCryptoTransfer(consumer.props, transaction);
-
-    return result;
-  }
-
-  // [DEPRECATED]: Use AssetService method instead.
-  // Will be removed once the AssetService changes is live in staging/production.
-  // public async checkTradeStatus(transaction: Transaction): Promise<CryptoTransactionStatus> {
-  //   return await this.zeroHashService.checkTradeStatus(transaction);
-  // }
-
-  public async moveCryptoToConsumerWallet(consumer: Consumer, transaction: Transaction): Promise<string> {
-    return await this.zeroHashService.moveCryptoToConsumerWallet(consumer.props, transaction);
-  }
-
   /**
    * Slippage is calculated as the absolute value of quoted price (that the user confirmed) - current price (quote just received). If this is < slippageAllowed * quoted price, we're good.
    */
@@ -494,7 +350,6 @@ export class TransactionService {
 
     const partner = await this.partnerService.getPartner(partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.TRANSACTION_CONFIRM);
-
     if (webhook == null) {
       return; // Partner doesn't have a webhook callback
     }

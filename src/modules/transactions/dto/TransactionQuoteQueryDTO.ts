@@ -3,17 +3,17 @@ import { CurrencyType } from "../../common/domain/Types";
 
 export class TransactionQuoteQueryDTO {
   @ApiProperty()
-  fiatCurrencyCode: string;
+    fiatCurrencyCode: string;
 
   @ApiProperty()
-  cryptoCurrencyCode: string;
+    cryptoCurrencyCode: string;
 
   @ApiProperty({ enum: Object.values(CurrencyType) })
-  fixedSide: CurrencyType;
+    fixedSide: CurrencyType;
 
   @ApiProperty()
-  fixedAmount: number;
+    fixedAmount: number;
 
   @ApiPropertyOptional() // If not supplied, it will be added in the controller
-  partnerID?: string;
+    partnerID?: string;
 }
