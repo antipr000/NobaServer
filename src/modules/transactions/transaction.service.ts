@@ -70,29 +70,41 @@ export class TransactionService {
     const assetService: AssetService = this.assetServiceFactory.getAssetService(
       transactionQuoteQuery.cryptoCurrencyCode,
     );
+    let nobaQuote: NobaQuote;
 
-    if (transactionQuoteQuery.fixedSide === CurrencyType.FIAT) {
-      const nobaQuote: NobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
-        cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
-        fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-        fiatAmount: Number(transactionQuoteQuery.fixedAmount),
-      });
+    switch (transactionQuoteQuery.fixedSide) {
+      case CurrencyType.FIAT:
+        nobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
+          cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+          fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+          fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+        });
+        break;
 
-      return {
-        quoteID: nobaQuote.quoteID,
-        fiatCurrencyCode: nobaQuote.fiatCurrency,
-        cryptoCurrencyCode: nobaQuote.cryptoCurrency,
-        fixedSide: transactionQuoteQuery.fixedSide,
-        fixedAmount: transactionQuoteQuery.fixedAmount,
-        quotedAmount: nobaQuote.totalCryptoQuantity,
-        processingFee: nobaQuote.processingFeeInFiat,
-        networkFee: nobaQuote.networkFeeInFiat,
-        nobaFee: nobaQuote.nobaFeeInFiat,
-        exchangeRate: nobaQuote.perUnitCryptoPrice,
-      };
-    } else {
-      return this.getTransactionQuote(transactionQuoteQuery);
+      case CurrencyType.CRYPTO:
+        nobaQuote = await assetService.getQuoteByForSpecifiedCryptoQuantity({
+          cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+          fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+          cryptoQuantity: Number(transactionQuoteQuery.fixedAmount),
+        });
+        break;
+
+      default:
+        throw new BadRequestException("Unsupported fixedSide value");
     }
+
+    return {
+      quoteID: nobaQuote.quoteID,
+      fiatCurrencyCode: nobaQuote.fiatCurrency,
+      cryptoCurrencyCode: nobaQuote.cryptoCurrency,
+      fixedSide: transactionQuoteQuery.fixedSide,
+      fixedAmount: transactionQuoteQuery.fixedAmount,
+      quotedAmount: nobaQuote.totalCryptoQuantity,
+      processingFee: nobaQuote.processingFeeInFiat,
+      networkFee: nobaQuote.networkFeeInFiat,
+      nobaFee: nobaQuote.nobaFeeInFiat,
+      exchangeRate: nobaQuote.perUnitCryptoPrice,
+    };
   }
 
   /**
