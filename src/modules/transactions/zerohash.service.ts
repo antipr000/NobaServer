@@ -109,9 +109,9 @@ export class ZeroHashService {
     };
 
     const requestString = `[${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
-    this.logger.debug(`Sending request: ${requestString}`);
+    this.logger.info(`Sending ZeroHash request: ${requestString}`);
 
-    const response = request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
+    const response = await request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
       if (err.statusCode == 403) {
         // Generally means we are not using a whitelisted IP to ZH
         this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
@@ -311,6 +311,7 @@ export class ZeroHashService {
       symbol: request.boughtAssetID + "/" + request.soldAssetId,
 
       trade_price: String(request.tradePrice),
+      // Jared to respond if we should use trade_quantity or amount in parties
       trade_quantity: String(request.tradeAmount / request.tradePrice),
       client_trade_id: request.idempotencyID,
 
@@ -386,7 +387,7 @@ export class ZeroHashService {
       asset: asset,
       account_group: accountGroup,
     });
-    return withdrawalRequest["message"]["id"];
+    return String(withdrawalRequest["message"]["id"]);
   }
 
   async getWithdrawal(withdrawalID: string): Promise<ZerohashWithdrawalResponse> {
