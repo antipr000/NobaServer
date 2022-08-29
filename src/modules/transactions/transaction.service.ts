@@ -58,10 +58,6 @@ export class TransactionService {
     // Note that that field is not required and will not be populated for unauthenticated users,
     // so we can't depend on it being there.
 
-    if (Object.values(CurrencyType).indexOf(transactionQuoteQuery.fixedSide) == -1) {
-      throw new BadRequestException("Unsupported fixedSide value");
-    }
-
     if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
       throw new BadRequestException("Invalid amount");
     }
