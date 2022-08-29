@@ -37,12 +37,8 @@ import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.co
 import { getMockVerificationServiceWithDefaults } from "../../verification/mocks/mock.verification.service";
 import { VerificationService } from "../../verification/verification.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { UserLimits } from "../domain/Limits";
 import { Transaction } from "../domain/Transaction";
-import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
 import { TransactionStatus, TransactionType } from "../domain/Types";
-import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
-import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQueryDTO";
 import { LimitsService } from "../limits.service";
@@ -79,7 +75,6 @@ const defaultEnvironmentVariables = {
 
 describe("TransactionService", () => {
   let transactionRepo: ITransactionRepo;
-  let limitsService: LimitsService;
   let consumerService: ConsumerService;
   let transactionService: TransactionService;
   let zerohashService: ZeroHashService;
@@ -153,117 +148,11 @@ describe("TransactionService", () => {
         },
       ],
     }).compile();
-
-    limitsService = app.get<LimitsService>(LimitsService);
     transactionService = app.get<TransactionService>(TransactionService);
 
     assetService = getMockAssetServiceWithDefaults();
     when(assetServiceFactory.getAssetService(anyString())).thenReturn(instance(assetService));
   };
-
-  // it("Should return transaction quote", async () => {
-  //   await setupTestModule(defaultEnvironmentVariables);
-
-  //   const result: TransactionQuoteDTO = await transactionService.getTransactionQuote({
-  //     fiatCurrencyCode: "USD",
-  //     cryptoCurrencyCode: "ETH",
-  //     fixedSide: CurrencyType.FIAT,
-  //     fixedAmount: 100,
-  //   });
-
-  //   // TODO Ask in code review on how to mock exactly, right now the result is giving me undefined
-  //   // expect(result.fiatCurrencyCode).toBe("USD");
-  //   // expect(result.cryptoCurrencyCode).toBe("ETH");
-  //   // expect(result.fixedSide).toBe("fiat");
-  //   // expect(result.fixedAmount).toBe(100);
-  //   // expect(result.quotedAmount).toBeInstanceOf(number);
-  //   // expect(result.processingFee).toBeInstanceOf(number);
-  // });
-
-  const limits: UserLimits = {
-    dailyLimit: 200,
-    monthlyLimit: 2000,
-    weeklyLimit: 1000,
-    transactionLimit: 0,
-    totalLimit: 10000,
-    minTransaction: 50,
-    maxTransaction: 500,
-  };
-
-  it("Should not be below the minimum", async () => {
-    await setupTestModule(defaultEnvironmentVariables);
-
-    const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 49, limits);
-    expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_SMALL);
-    expect(result.rangeMin).toBe(50);
-    expect(result.rangeMax).toBe(500);
-  });
-
-  it("Should not be above the maximum", async () => {
-    await setupTestModule(defaultEnvironmentVariables);
-
-    const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 501, limits);
-    expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_LARGE);
-    expect(result.rangeMin).toBe(50);
-    expect(result.rangeMax).toBe(500);
-  });
-
-  it("Should not exceed the exact monthly maximum", async () => {
-    await setupTestModule(defaultEnvironmentVariables);
-
-    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(2000);
-
-    const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 50, limits);
-    expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
-    expect(result.rangeMin).toBe(50);
-    expect(result.rangeMax).toBe(0);
-  });
-
-  it("Should not exceed the monthly maximum even when some is left", async () => {
-    await setupTestModule(defaultEnvironmentVariables);
-
-    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(1985);
-
-    const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 50, limits);
-    expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
-    expect(result.rangeMin).toBe(50);
-    expect(result.rangeMax).toBe(15);
-  });
-
-  it("Should not exceed the monthly maximum if maximum is negative", async () => {
-    await setupTestModule(defaultEnvironmentVariables);
-
-    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(2015);
-
-    const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 50, limits);
-    expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
-    expect(result.rangeMin).toBe(50);
-    expect(result.rangeMax).toBe(0);
-  });
-
-  it("Is within range so should be allowed", async () => {
-    await setupTestModule(defaultEnvironmentVariables);
-
-    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(1000);
-
-    const result: CheckTransactionDTO = await limitsService.canMakeTransaction(consumer, 200, limits);
-    expect(result.status).toBe(TransactionAllowedStatus.ALLOWED);
-    expect(result.rangeMin).toBe(50);
-    expect(result.rangeMax).toBe(500);
-  });
-
-  it("Returns limits for the user", async () => {
-    await setupTestModule(defaultEnvironmentVariables);
-
-    when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(1000);
-
-    const result: ConsumerLimitsDTO = await limitsService.getConsumerLimits(consumer, limits);
-    expect(result.minTransaction).toBe(50);
-    expect(result.maxTransaction).toBe(500);
-    expect(result.monthly.max).toBe(2000);
-    expect(result.monthly.used).toBe(1000);
-    expect(result.monthly.period).toBe(30);
-  });
 
   describe("withinSlippage()", () => {
     const paymentAmount = 500;
