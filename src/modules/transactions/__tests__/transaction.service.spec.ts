@@ -60,6 +60,10 @@ import { Partner } from "../../../modules/partner/domain/Partner";
 import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
 import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { TransactionMapper } from "../mapper/TransactionMapper";
+import {
+  TransactionSubmissionException,
+  TransactionSubmissionFailureExceptionText,
+} from "../exceptions/TransactionSubmissionException";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -1072,7 +1076,7 @@ describe("TransactionService", () => {
   });
 
   describe("initiateTransaction", () => {
-    it("throws BadRequestException when destination wallet address is invalid", async () => {
+    it("throws TransactionSubmissionException when destination wallet address is invalid", async () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
@@ -1090,11 +1094,13 @@ describe("TransactionService", () => {
       try {
         await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
       } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
       }
     });
 
-    it("throws BadRequestException when leg2 is invalid", async () => {
+    it("throws TransactionSubmissionException when leg2 is invalid", async () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
@@ -1113,12 +1119,13 @@ describe("TransactionService", () => {
       try {
         await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
       } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.message).toBe(`Unknown cryptocurrency: ${transactionRequest.leg2}`);
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
       }
     });
 
-    it("throws BadRequestException when leg1 is invalid", async () => {
+    it("throws TransactionSubmissionException when leg1 is invalid", async () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
@@ -1146,8 +1153,9 @@ describe("TransactionService", () => {
       try {
         await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
       } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.message).toBe(`Unknown fiat currency: ${transactionRequest.leg1}`);
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.UNKNOWN_FIAT);
       }
     });
 
@@ -1211,8 +1219,9 @@ describe("TransactionService", () => {
       try {
         await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
       } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.response.messageForClient).toBe("Bid price is not within slippage allowed of 2%");
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.SLIPPAGE);
       }
     });
 

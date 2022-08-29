@@ -16,7 +16,6 @@ import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
-import { ZeroHashService } from "./zerohash.service";
 import { EmailService } from "../common/email.service";
 import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
@@ -31,6 +30,10 @@ import axios, { AxiosRequestConfig } from "axios";
 import { Partner } from "../partner/domain/Partner";
 import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
+import {
+  TransactionSubmissionException,
+  TransactionSubmissionFailureExceptionText,
+} from "./exceptions/TransactionSubmissionException";
 
 @Injectable()
 export class TransactionService {
@@ -40,7 +43,6 @@ export class TransactionService {
   constructor(
     private readonly configService: CustomConfigService,
     private readonly currencyService: CurrencyService,
-    private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
     private readonly consumerService: ConsumerService,
     private readonly assetServiceFactory: AssetServiceFactory,
@@ -142,23 +144,17 @@ export class TransactionService {
   ): Promise<TransactionDTO> {
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
-      throw new BadRequestException({
-        messageForClient:
-          "Invalid destination wallet address " +
-          transactionRequest.destinationWalletAddress +
-          " for " +
-          transactionRequest.leg2,
-      });
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
     }
 
     const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
     if (cryptoCurrencies.filter(curr => curr.ticker === transactionRequest.leg2).length == 0) {
-      throw new BadRequestException(`Unknown cryptocurrency: ${transactionRequest.leg2}`);
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
 
     const fiatCurrencies = await this.currencyService.getSupportedFiatCurrencies();
     if (fiatCurrencies.filter(curr => curr.ticker === transactionRequest.leg1).length == 0) {
-      throw new BadRequestException(`Unknown fiat currency: ${transactionRequest.leg1}`);
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_FIAT);
     }
 
     const newTransaction: Transaction = Transaction.createTransaction({
@@ -199,11 +195,11 @@ export class TransactionService {
         ? this.withinSlippage(transactionRequest.leg2Amount, quote.totalCryptoQuantity)
         : this.withinSlippage(transactionRequest.leg1Amount, quote.totalFiatAmount);
     if (!withinSlippage) {
-      throw new BadRequestException({
-        messageForClient: `Bid price is not within slippage allowed of ${
-          this.nobaTransactionConfigs.slippageAllowedPercentage * 100
-        }%`,
-      });
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.SLIPPAGE,
+        "",
+        `Bid price is not within slippage allowed of ${this.nobaTransactionConfigs.slippageAllowedPercentage * 100}%`,
+      );
     }
 
     // Add quote information to new transaction
