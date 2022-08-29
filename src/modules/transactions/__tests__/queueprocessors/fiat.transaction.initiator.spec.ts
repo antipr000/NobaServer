@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { DBProvider } from "../../../../infraproviders/DBProvider";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
-import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
+import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { FiatTransactionInitiator } from "../../queueprocessors/FiatTransactionInitiator";
@@ -31,7 +31,6 @@ import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks
 import { ObjectType } from "../../../../modules/common/domain/ObjectType";
 import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
 import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
-import { BadRequestException } from "@nestjs/common";
 import {
   CardFailureExceptionText,
   CardProcessingException,

@@ -1,13 +1,27 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import axios, { AxiosRequestConfig } from "axios";
 import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { NobaConfigs, NobaTransactionConfigs } from "../../config/configtypes/NobaConfigs";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyService } from "../common/currency.service";
 import { CurrencyType } from "../common/domain/Types";
+import { EmailService } from "../common/email.service";
 import { ConsumerService } from "../consumer/consumer.service";
+import { Consumer } from "../consumer/domain/Consumer";
+import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { KYCStatus } from "../consumer/domain/VerificationStatus";
+import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
+import { Partner } from "../partner/domain/Partner";
+import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
+import { PartnerService } from "../partner/partner.service";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
+import { AssetService } from "./assets/asset.service";
+import { AssetServiceFactory } from "./assets/asset.service.factory";
+import { NobaQuote } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -17,20 +31,6 @@ import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { ZeroHashService } from "./zerohash.service";
-import { EmailService } from "../common/email.service";
-import { NobaTransactionConfigs, NobaConfigs } from "../../config/configtypes/NobaConfigs";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { Consumer } from "../consumer/domain/Consumer";
-import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
-import { AssetServiceFactory } from "./assets/asset.service.factory";
-import { AssetService } from "./assets/asset.service";
-import { PartnerService } from "../partner/partner.service";
-import { NobaQuote } from "./domain/AssetTypes";
-import axios, { AxiosRequestConfig } from "axios";
-import { Partner } from "../partner/domain/Partner";
-import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
-import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 
 @Injectable()
 export class TransactionService {

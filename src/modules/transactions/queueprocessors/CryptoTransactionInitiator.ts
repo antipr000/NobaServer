@@ -40,7 +40,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
   }
 
   async processMessageInternal(transactionId: string) {
-    let transaction = await this.transactionRepo.getTransaction(transactionId);
+    const transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.FIAT_INCOMING_COMPLETED && status != TransactionStatus.CRYPTO_OUTGOING_INITIATING) {
@@ -54,7 +54,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     if (!transaction.props.nobaTransferTradeID) {
-      this.logger.info(`Transferring funds to Noba.`);
+      this.logger.info("Transferring funds to Noba.");
 
       const makeFundsAvailableRequest: FundsAvailabilityRequest = {
         consumer: consumer.props,
@@ -83,7 +83,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     // TODO(#): Move this to new processor.
     if (!transaction.props.nobaTransferSettlementID) {
-      this.logger.info(`Checking for the settlement of Noba Transfer.`);
+      this.logger.info("Checking for the settlement of Noba Transfer.");
 
       const fundsAvailabilityStatus: FundsAvailabilityStatus = await assetService.pollFundsAvailableStatus(
         transaction.props.nobaTransferTradeID,
@@ -110,7 +110,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       }
     }
 
-    this.logger.info(`Starting the trade to transfer to consumer ZH account.`);
+    this.logger.info("Starting the trade to transfer to consumer ZH account.");
 
     const assetTransferToConsumerAccountRequest: ConsumerAccountTransferRequest = {
       consumer: consumer.props,

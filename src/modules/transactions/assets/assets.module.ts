@@ -6,7 +6,6 @@ import { ConsumerModule } from "../../../modules/consumer/consumer.module";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetServiceFactory } from "./asset.service.factory";
 import { DefaultAssetService } from "./default.asset.service";
-import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
 
 @Module({
   imports: [CommonModule, ConsumerModule, getWinstonModule()],

@@ -1,7 +1,6 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { AssetService } from "./asset.service";
 import { DefaultAssetService } from "./default.asset.service";
-import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
 
 @Injectable()
 export class AssetServiceFactory {

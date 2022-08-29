@@ -234,7 +234,7 @@ export class ZeroHashService {
 
     if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
       this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
-      throw new InternalServerErrorException(`Inconsistencies in returned ZH quote.`);
+      throw new InternalServerErrorException("Inconsistencies in returned ZH quote.");
     }
 
     return {
@@ -265,7 +265,7 @@ export class ZeroHashService {
 
     if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
       this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
-      throw new InternalServerErrorException(`Inconsistencies in returned ZH quote.`);
+      throw new InternalServerErrorException("Inconsistencies in returned ZH quote.");
     }
 
     return {
@@ -504,7 +504,7 @@ export class ZeroHashService {
         return {
           tradeID: tradeId,
           tradeState: TradeState.DEFAULTED,
-          errorMessage: `Trade could not be settled by the expiry time`,
+          errorMessage: "Trade could not be settled by the expiry time",
           settledTimestamp: null,
         };
 

@@ -3,7 +3,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionStatus, TransactionQueueName } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
-import { ZeroHashService } from "../zerohash.service";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { EmailService } from "../../common/email.service";
 import { TransactionService } from "../transaction.service";
@@ -12,7 +11,6 @@ import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { AssetService } from "../assets/asset.service";
-import { PartnerService } from "../../partner/partner.service";
 import { ConsumerWalletTransferRequest, ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
 
 export class OnChainPendingProcessor extends MessageProcessor {
@@ -38,7 +36,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
   }
 
   async processMessageInternal(transactionId: string) {
-    let transaction = await this.transactionRepo.getTransaction(transactionId);
+    const transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {

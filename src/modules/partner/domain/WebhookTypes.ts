@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { ConsumerSimpleDTO } from "../../../modules/consumer/dto/ConsumerDTO";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
 

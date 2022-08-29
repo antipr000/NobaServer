@@ -1,11 +1,10 @@
-import { BadRequestException, Inject } from "@nestjs/common";
+import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Transaction } from "../domain/Transaction";
 import { TransactionQueueName, TransactionStatus } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
-import { CheckoutValidationError, CHECKOUT_VALIDATION_ERROR_HTTP_CODE } from "../domain/CheckoutConstants";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
@@ -97,7 +96,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
         if (e.disposition === CardFailureExceptionText.ERROR) {
           await this.processFailure(
             TransactionStatus.FIAT_INCOMING_FAILED,
-            `Error processing fiat transaction`,
+            "Error processing fiat transaction",
             transaction,
           );
         }

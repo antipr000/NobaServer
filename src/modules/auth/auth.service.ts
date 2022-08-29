@@ -7,8 +7,6 @@ import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { EmailService } from "../common/email.service";
 import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
-import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { PartnerService } from "../partner/partner.service";
 
 @Injectable()
