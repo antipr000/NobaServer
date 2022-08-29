@@ -2,6 +2,7 @@ import * as winston from "winston";
 import { utilities as nestWinstonModuleUtilities, WinstonModule } from "nest-winston";
 import { SERVER_LOG_FILE_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "./AppConfigModule";
+import { isLocalDevEnvironment } from "../../config/ConfigurationUtils";
 
 export function getWinstonModule() {
   return WinstonModule.forRootAsync({
@@ -16,14 +17,14 @@ export function getWinstonModule() {
         winston.format.timestamp({
           format: () => new Date().toISOString() + " ",
         }),
-        nestWinstonModuleUtilities.format.nestLike("NobaServer"),
+        nestWinstonModuleUtilities.format.nestLike("NobaServer", { colors: isLocalDevEnvironment() }),
       );
 
       return {
         transports: [
           new winston.transports.File({
             filename: logFilePath,
-            level: "debug",
+            level: "info",
           }),
           new winston.transports.Console({
             format: winstonFormat,

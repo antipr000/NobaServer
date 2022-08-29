@@ -130,6 +130,10 @@ export function getEnvironmentName(): AppEnvironment {
   return envType as AppEnvironment;
 }
 
+export function isLocalDevEnvironment(): boolean {
+  return getEnvironmentName() == AppEnvironment.DEV;
+}
+
 export function getPropertyFromEnvironment(key: string) {
   return process.env[key];
 }
