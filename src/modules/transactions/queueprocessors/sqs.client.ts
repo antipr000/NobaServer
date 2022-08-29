@@ -10,17 +10,13 @@ import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { MessageProcessor } from "./message.processor";
 import { TransactionQueueName } from "../domain/Types";
-import { LockService } from "../../../modules/common/lock.service";
 
 @Injectable()
 export class SqsClient {
   private static readonly SELECTOR_ATTRIBUTE = "hostname";
   private readonly queueProducers: Record<TransactionQueueName, Producer>;
 
-  constructor(
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    @Inject(LockService) private readonly lockService: LockService,
-  ) {
+  constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     this.queueProducers = this.getTransactionQueueProducers();
   }
 
