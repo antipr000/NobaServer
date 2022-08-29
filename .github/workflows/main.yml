@@ -79,7 +79,7 @@ jobs:
           yarn build
           ls -l
           echo [SUCCESS] yarn build succeeded.
-          zip -r artifacts.zip ./ -x "./src/*"
+          zip -r artifacts.zip ./ -x "./src/*" "./node_modules/*"
 
       - name: Check If should deploy and Decide deployment type
         id: check-tag
