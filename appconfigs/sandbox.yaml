@@ -1,4 +1,4 @@
-envType: "awsdev"
+envType: "sandbox"
 
 # ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE,
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
@@ -44,7 +44,7 @@ twilio:
   fromPhoneNumber: "+19894557345"
 
 mongo:
-  awsSecretNameForUri: "DEV_DOCUMENT_DB_URI"
+  awsSecretNameForUri: "SANDBOX_DOCUMENT_DB_URI"
   uri: "bogus-value"
   sslEnabled: true
   sslCAPath: rds-combined-ca-bundle.pem # bootstrapped in deploy scripts
@@ -73,9 +73,9 @@ noba:
     awsSecretKeyForSlippageAllowedPercentage: "TEST_NOBA_SLIPPAGE_ALLOWED_PERCENTAGE"
 
 zerohash:
-  awsSecretNameforApiKey: "TEST_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForApiSecret: "TEST_ZEROHASH_API_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForPassPhrase: "TEST_ZEROHASH_PASS_PHRASE" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameforApiKey: "TEST_ZEROHASH_API_KEY"
+  awsSecretNameForApiSecret: "TEST_ZEROHASH_API_SECRET"
+  awsSecretNameForPassPhrase: "TEST_ZEROHASH_PASS_PHRASE"
   awsSecretNameForHost: "TEST_ZEROHASH_HOST"
   awsSecretNameForPlatformCode: "TEST_ZEROHASH_PLATFORM_CODE"
   apiKey: ""
