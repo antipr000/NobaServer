@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Inject, Param, Query } from "@nestjs/common";
+import { Controller, Get, HttpStatus, Inject, NotFoundException, Param, Query } from "@nestjs/common";
 import { ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -7,9 +7,11 @@ import { getCommonHeaders } from "./core/utils/CommonHeaders";
 import { IsNoApiKeyNeeded, Public } from "./modules/auth/public.decorator";
 import { ConfigurationProviderService } from "./modules/common/configuration.provider.service";
 import { ConfigurationsDTO } from "./modules/common/dto/ConfigurationsDTO";
+import { BINValidity, CreditCardDTO } from "./modules/common/dto/CreditCardDTO";
 import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
 import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
+import { CreditCardService } from "./modules/common/creditcard.service";
 
 @Controller()
 @ApiHeaders(getCommonHeaders())
@@ -17,6 +19,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly locationService: LocationService,
+    private readonly creditCardService: CreditCardService,
     private readonly configurationsProviderService: ConfigurationProviderService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -92,5 +95,20 @@ export class AppController {
   @ApiNotFoundResponse({ description: "Configurations not found" })
   async getCommonConfigurations(): Promise<ConfigurationsDTO> {
     return this.configurationsProviderService.getConfigurations();
+  }
+
+  @Public()
+  @Get("creditcardmetadata/:bin")
+  @ApiOperation({ summary: "Returns credit card structure metadata for the provided BIN" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Card metadata", type: CreditCardDTO })
+  @ApiTags("Assets")
+  @ApiNotFoundResponse({ description: "Credit card information not found" })
+  async getCreditCardBIN(@Param("bin") bin: string): Promise<CreditCardDTO> {
+    console.log(`Received BIN: ${bin}`);
+    const binDetails = await this.creditCardService.getBINDetails(bin);
+    if (binDetails == null) {
+      throw new NotFoundException("Unknown BIN");
+    }
+    return binDetails;
   }
 }

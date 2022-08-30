@@ -24,6 +24,8 @@ export const SUPPORTED_CRYPTO_TOKENS_FILE_NAME = "supportedCryptoFileName";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_PATH = "SUPPORTED_CRYPTO_TOKENS_FILE_PATH";
 export const LOCATION_DATA_FILE_NAME = "locationDataFileName";
 export const LOCATION_DATA_FILE_PATH = "LOCATION_DATA_FILE_PATH";
+export const CCBIN_DATA_FILE_NAME_MASK = "ccBINDataFileNameMask";
+export const CCBIN_DATA_FILE_PATH = "CCBIN_DATA_FILE_PATH";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
 export const AWS_SECRET_ACCESS_KEY_ATTR = "awsSecretAccessKey";

@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import {} from "aws-sdk";
 import { CheckoutService } from "./checkout.service";
 import { CsvService } from "./csv.service";
+import { CreditCardService } from "./creditcard.service";
 import { CurrencyService } from "./currency.service";
 import { LocationService } from "./location.service";
 import { EmailService } from "./email.service";
@@ -23,6 +24,7 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
     SMSService,
     KmsService,
     CurrencyService,
+    CreditCardService,
     LocationService,
     ConfigurationProviderService,
     {
@@ -38,6 +40,7 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
     SMSService,
     KmsService,
     CurrencyService,
+    CreditCardService,
     LocationService,
     ConfigurationProviderService,
     LockService,

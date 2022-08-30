@@ -103,3 +103,4 @@ configuration:
 
 supportedCryptoFileName: "supported_tokens.csv"
 locationDataFileName: "countries+states.json"
+ccBINDataFileNameMask: "all_bins.csv"

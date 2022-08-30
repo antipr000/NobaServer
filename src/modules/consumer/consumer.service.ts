@@ -26,6 +26,8 @@ import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { CardFailureExceptionText, CardProcessingException } from "./CardProcessingException";
+import { CreditCardService } from "../common/creditcard.service";
+import { BINValidity } from "../common/dto/CreditCardDTO";
 
 class CheckoutResponseData {
   paymentMethodStatus: PaymentMethodStatus;
@@ -45,6 +47,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly kmsService: KmsService;
+
+  @Inject()
+  private readonly creditCardService: CreditCardService;
 
   @Inject("OTPRepo")
   private readonly otpRepo: IOTPRepo;
@@ -160,8 +165,8 @@ export class ConsumerService {
       checkoutCustomerID = checkoutCustomerData[0].providerCustomerID;
     }
 
-    let instrumentID;
-    let cardType;
+    let instrumentID: string;
+    let cardType: string;
     let checkoutResponse;
     try {
       // To add payment method, we first need to tokenize the card
@@ -223,6 +228,7 @@ export class ConsumerService {
         consumer,
         checkoutResponse,
         instrumentID,
+        paymentMethod.cardNumber,
         "verification",
         "verification",
       );
@@ -328,6 +334,7 @@ export class ConsumerService {
       consumer,
       checkoutResponse,
       transaction.props.paymentMethodID,
+      null,
       transaction.props.sessionKey,
       transaction.props._id,
     );
@@ -348,9 +355,10 @@ export class ConsumerService {
 
   async handleCheckoutResponse(
     consumer: Consumer,
-    checkoutResponse,
+    checkoutResponse: string,
     instrumentID: string,
-    sessionID,
+    cardNumber: string,
+    sessionID: string,
     transactionID: string,
   ): Promise<CheckoutResponseData> {
     const response: CheckoutResponseData = new CheckoutResponseData();
@@ -363,8 +371,25 @@ export class ConsumerService {
         this.logger.error(`No response code received validating card instrument ${instrumentID}`);
         throw new CardProcessingException(CardFailureExceptionText.ERROR);
       } else if (response.responseCode.startsWith("10")) {
-        // Accepted
-        response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
+        // If all else was good, we must also check against the list of cards which we know
+        // don't accept crypto as that may change *OUR* decision as to whether or not to
+        // accept the card.
+        if (cardNumber != null) {
+          // Don't know it at transaction time
+          const validity: BINValidity = await this.creditCardService.isBINSupported(cardNumber);
+          if (validity === BINValidity.NOT_SUPPORTED) {
+            throw new CardProcessingException(
+              CardFailureExceptionText.NO_CRYPTO,
+              response.responseCode,
+              response.responseSummary,
+            );
+          } else {
+            // supported or unknown
+            response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
+          }
+        } else {
+          response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
+        }
       } else if (response.responseCode.startsWith("20")) {
         // Soft decline, with several categories
         if (REASON_CODE_SOFT_DECLINE_CARD_ERROR.indexOf(response.responseCode) > -1) {

@@ -14,6 +14,7 @@ export type { ConfirmWalletUpdateDTO } from "./models/ConfirmWalletUpdateDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
 export type { ConsumerLimitsDTO } from "./models/ConsumerLimitsDTO";
 export type { CreateTransactionDTO } from "./models/CreateTransactionDTO";
+export type { CreditCardDTO } from "./models/CreditCardDTO";
 export type { CryptoWalletsDTO } from "./models/CryptoWalletsDTO";
 export type { CurrencyDTO } from "./models/CurrencyDTO";
 export type { DeleteNobaAdminDTO } from "./models/DeleteNobaAdminDTO";
