@@ -80,13 +80,15 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
         };
         withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
         transaction.props.zhWithdrawalID = withdrawalID;
-        transaction = await this.transactionRepo.updateTransactionStatus(
-          transaction.props._id,
-          TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
-          transaction.props,
-        );
       }
-      return;
+
+      // We either had a withdrawal ID from a prior run but failed to set the status
+      // Or we got a withdrawal ID above and need to set the status.
+      transaction = await this.transactionRepo.updateTransactionStatus(
+        transaction.props._id,
+        TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        transaction.props,
+      );
     } catch (err) {
       this.logger.error("Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.", err);
       await this.processFailure(
