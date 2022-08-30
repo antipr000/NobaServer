@@ -12,16 +12,38 @@ import {
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { getMockAppServiceWithDefaults } from "../../../../mocks/mock.app.service";
-import { instance, when } from "ts-mockito";
+import { anything, deepEqual, instance, when } from "ts-mockito";
 import { DefaultAssetService } from "../../assets/default.asset.service";
-import { NobaQuote } from "../../domain/AssetTypes";
+import {
+  ConsumerAccountTransferRequest,
+  ConsumerAccountTransferStatus,
+  ConsumerWalletTransferRequest,
+  ExecutedQuote,
+  ExecuteQuoteRequest,
+  FundsAvailabilityRequest,
+  FundsAvailabilityResponse,
+  NobaQuote,
+  PollStatus,
+} from "../../domain/AssetTypes";
 import { getMockZerohashServiceWithDefaults } from "../../mocks/mock.zerohash.service";
 import { ZeroHashService } from "../../zerohash.service";
+import {
+  OnChainState,
+  TradeState,
+  WithdrawalState,
+  ZerohashTradeRequest,
+  ZerohashTradeResponse,
+  ZerohashTransferResponse,
+  ZerohashTransferStatus,
+} from "../../domain/ZerohashTypes";
+import { Consumer } from "../../../../modules/consumer/domain/Consumer";
+import { BadRequestError } from "../../../../core/exception/CommonAppException";
 
 describe("DefaultAssetService", () => {
   let zerohashService: ZeroHashService;
   let appService: AppService;
   let defaultAssetService: DefaultAssetService;
+  const nobaPlatformCode = "ABCDE";
 
   const setupTestModule = async (environmentVariables: Record<string, any>): Promise<void> => {
     zerohashService = getMockZerohashServiceWithDefaults();
@@ -60,6 +82,8 @@ describe("DefaultAssetService", () => {
         _id: "USD",
       },
     ]);
+
+    when(zerohashService.getNobaPlatformCode()).thenReturn(nobaPlatformCode);
   };
 
   describe("getQuoteForSpecifiedFiatAmount()", () => {
@@ -680,6 +704,600 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
+    });
+  });
+
+  describe("executeQuoteForFundsAvailability()", () => {
+    it("returns a quote", async () => {
+      const quoteID = "123456";
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "1234567890",
+        email: "test@noba.com",
+        zhParticipantCode: "12345",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const request: ExecuteQuoteRequest = {
+        consumer: consumer.props,
+        cryptoCurrency: "ETH",
+        cryptoQuantity: 12345.6789,
+        fiatAmount: 2,
+        fiatCurrency: "USD",
+        slippage: 0,
+        transactionCreationTimestamp: new Date(),
+        transactionID: "123456",
+      };
+
+      const quote: ExecutedQuote = {
+        cryptocurrency: request.cryptoCurrency,
+        cryptoReceived: request.cryptoQuantity,
+        quoteID: quoteID,
+        tradeID: "12345",
+        tradePrice: 23423,
+      };
+
+      const nobaQuote: NobaQuote = {
+        quoteID: quoteID,
+        fiatCurrency: "USD",
+        cryptoCurrency: request.cryptoCurrency,
+        processingFeeInFiat: 2,
+        amountPreSpread: 1234,
+        networkFeeInFiat: 1,
+        nobaFeeInFiat: 1.99,
+        totalFiatAmount: 50,
+        totalCryptoQuantity: request.cryptoQuantity,
+        perUnitCryptoPrice: 1000,
+      };
+
+      defaultAssetService.getQuoteForSpecifiedFiatAmount = jest.fn().mockReturnValue(nobaQuote);
+      when(zerohashService.executeQuote(quoteID)).thenResolve(quote);
+
+      const quoteResponse = await defaultAssetService.executeQuoteForFundsAvailability(request);
+      expect(quoteResponse).toEqual(quote);
+    });
+
+    it("throws a BadRequestError if unknown cryptocurrency is requested", async () => {
+      const quoteID = "123456";
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "1234567890",
+        email: "test@noba.com",
+        zhParticipantCode: "12345",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const request: ExecuteQuoteRequest = {
+        consumer: consumer.props,
+        cryptoCurrency: "UNKNOWN",
+        cryptoQuantity: 12345.6789,
+        fiatAmount: 2,
+        fiatCurrency: "USD",
+        slippage: 0,
+        transactionCreationTimestamp: new Date(),
+        transactionID: "123456",
+      };
+
+      expect(async () => {
+        await defaultAssetService.executeQuoteForFundsAvailability(request);
+      }).rejects.toThrowError(BadRequestError);
+    });
+
+    it("throws a BadRequestError if unknown fiat currency is requested", async () => {
+      const quoteID = "123456";
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "1234567890",
+        email: "test@noba.com",
+        zhParticipantCode: "12345",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const request: ExecuteQuoteRequest = {
+        consumer: consumer.props,
+        cryptoCurrency: "ETH",
+        cryptoQuantity: 12345.6789,
+        fiatAmount: 2,
+        fiatCurrency: "UNKNOWN",
+        slippage: 0,
+        transactionCreationTimestamp: new Date(),
+        transactionID: "123456",
+      };
+
+      expect(async () => {
+        await defaultAssetService.executeQuoteForFundsAvailability(request);
+      }).rejects.toThrowError(BadRequestError);
+    });
+  });
+
+  describe("makeFundsAvailable()", () => {
+    it("returns funds availability response", async () => {
+      const request: FundsAvailabilityRequest = {
+        cryptoAmount: 12345.68783829,
+        cryptocurrency: "ETH",
+      };
+
+      const transferID = "12345";
+      const response: ZerohashTransferResponse = {
+        cryptoAmount: request.cryptoAmount,
+        cryptocurrency: request.cryptocurrency,
+        transferID: transferID,
+      };
+
+      const expectedResponse: FundsAvailabilityResponse = {
+        transferID: transferID,
+        transferredCrypto: request.cryptoAmount,
+        cryptocurrency: request.cryptocurrency,
+      };
+
+      when(zerohashService.transferAssetsToNoba(request.cryptocurrency, request.cryptoAmount)).thenResolve(response);
+
+      const fundsAvailabilityResponse = await defaultAssetService.makeFundsAvailable(request);
+
+      expect(fundsAvailabilityResponse).toEqual(expectedResponse);
+    });
+  });
+
+  describe("pollFundsAvailableStatus()", () => {
+    it("returns PENDING status if transfer is in APPROVED status", async () => {
+      const transferID = "1234";
+
+      when(zerohashService.getTransfer(transferID)).thenResolve({
+        status: ZerohashTransferStatus.APPROVED,
+        id: null,
+        createdAt: null,
+        updatedAt: null,
+        asset: null,
+        movementID: null,
+      });
+
+      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+
+      expect(FundsAvailabilityStatus).toEqual({ status: PollStatus.PENDING, errorMessage: null, settledId: null });
+    });
+
+    it("returns PENDING status if transfer is in PENDING status", async () => {
+      const transferID = "1234";
+
+      when(zerohashService.getTransfer(transferID)).thenResolve({
+        status: ZerohashTransferStatus.PENDING,
+        id: null,
+        createdAt: null,
+        updatedAt: null,
+        asset: null,
+        movementID: null,
+      });
+
+      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+
+      expect(FundsAvailabilityStatus).toEqual({ status: PollStatus.PENDING, errorMessage: null, settledId: null });
+    });
+
+    it("returns SUCCESS status if transfer is in SETTLED status", async () => {
+      const transferID = "1234";
+
+      when(zerohashService.getTransfer(transferID)).thenResolve({
+        status: ZerohashTransferStatus.SETTLED,
+        id: null,
+        createdAt: null,
+        updatedAt: null,
+        asset: null,
+        movementID: "1111",
+      });
+
+      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+
+      expect(FundsAvailabilityStatus).toEqual({ status: PollStatus.SUCCESS, errorMessage: null, settledId: "1111" });
+    });
+
+    it("returns FATAL_ERROR status if transfer is in REJECTED status", async () => {
+      const transferID = "1234";
+
+      when(zerohashService.getTransfer(transferID)).thenResolve({
+        status: ZerohashTransferStatus.REJECTED,
+        id: null,
+        createdAt: null,
+        updatedAt: null,
+        asset: null,
+        movementID: null,
+      });
+
+      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+
+      expect(FundsAvailabilityStatus).toEqual({
+        status: PollStatus.FATAL_ERROR,
+        errorMessage: `Liquidity transfer to Noba was rejected for transferId '${transferID}'`,
+        settledId: null,
+      });
+    });
+
+    it("returns FAILURE status if transfer is in CANCELLED status", async () => {
+      const transferID = "1234";
+
+      when(zerohashService.getTransfer(transferID)).thenResolve({
+        status: ZerohashTransferStatus.CANCELLED,
+        id: null,
+        createdAt: null,
+        updatedAt: null,
+        asset: null,
+        movementID: null,
+      });
+
+      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+
+      expect(FundsAvailabilityStatus).toEqual({
+        status: PollStatus.FAILURE,
+        errorMessage: `Liquidity transfer to Noba was cancelled for transferId '${transferID}'`,
+        settledId: null,
+      });
+    });
+
+    it("throws an error transfer is in an unknown status", async () => {
+      const transferID = "1234";
+
+      when(zerohashService.getTransfer(transferID)).thenResolve({
+        status: undefined,
+        id: null,
+        createdAt: null,
+        updatedAt: null,
+        asset: null,
+        movementID: null,
+      });
+
+      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+
+      expect(FundsAvailabilityStatus).toEqual({
+        status: PollStatus.FATAL_ERROR,
+        errorMessage: `Liquidity transfer failed for '${transferID}': Unexpected Zerohash Transfer status: undefined`,
+        settledId: null,
+      });
+    });
+  });
+
+  describe("transferAssetToConsumerAccount()", () => {
+    it("executes a trade from the request", async () => {
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "1234567890",
+        email: "test@noba.com",
+        zhParticipantCode: "12345",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const request: ConsumerAccountTransferRequest = {
+        consumer: consumer.props,
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        cryptoAssetTradePrice: 1234,
+        totalCryptoAmount: 1234,
+        totalFiatAmount: 1234,
+        fiatAmountPreSpread: 1234,
+        transactionID: "ABCD1234",
+        transactionCreationTimestamp: new Date(),
+      };
+
+      when(zerohashService.getParticipantCode(request.consumer, request.transactionCreationTimestamp)).thenResolve(
+        consumer.props.zhParticipantCode,
+      );
+
+      const tradeRequest: ZerohashTradeRequest = {
+        boughtAssetID: request.cryptoCurrency,
+        soldAssetID: request.fiatCurrency,
+        buyAmount: request.totalCryptoAmount,
+        tradePrice: request.cryptoAssetTradePrice,
+        sellAmount: request.fiatAmountPreSpread,
+        totalFiatAmount: request.totalFiatAmount,
+        buyerParticipantCode: consumer.props.zhParticipantCode,
+        sellerParticipantCode: nobaPlatformCode,
+        idempotencyID: request.transactionID,
+        requestorEmail: request.consumer.email,
+      };
+
+      const response: ZerohashTradeResponse = {
+        tradeID: "1234",
+      };
+
+      when(zerohashService.executeTrade(deepEqual(tradeRequest))).thenResolve(response);
+
+      const tradeID = await defaultAssetService.transferAssetToConsumerAccount(request);
+
+      expect(tradeID).toEqual(response.tradeID);
+    });
+  });
+
+  describe("pollAssetTransferToConsumerStatus()", () => {
+    it("returns PENDING status if trade state is PENDING", async () => {
+      const tradeID = "1234";
+      const settledTimestamp = Date.now();
+      const tradeResponse: ZerohashTradeResponse = {
+        tradeID: tradeID,
+        settledTimestamp: settledTimestamp,
+        tradeState: TradeState.PENDING,
+        errorMessage: null,
+      };
+
+      const expectedConsumerAccountTransferStatus: ConsumerAccountTransferStatus = {
+        status: PollStatus.PENDING,
+        errorMessage: null,
+      };
+
+      when(zerohashService.checkTradeStatus(tradeID)).thenResolve(tradeResponse);
+
+      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+
+      expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
+    });
+
+    it("returns SUCCESS status if trade state is SETTLED", async () => {
+      const tradeID = "1234";
+      const settledTimestamp = Date.now();
+      const tradeResponse: ZerohashTradeResponse = {
+        tradeID: tradeID,
+        settledTimestamp: settledTimestamp,
+        tradeState: TradeState.SETTLED,
+        errorMessage: null,
+      };
+
+      const expectedConsumerAccountTransferStatus: ConsumerAccountTransferStatus = {
+        status: PollStatus.SUCCESS,
+        errorMessage: null,
+      };
+
+      when(zerohashService.checkTradeStatus(tradeID)).thenResolve(tradeResponse);
+
+      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+
+      expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
+    });
+
+    it("returns FAILURE status if trade state is DEFAULTED", async () => {
+      const tradeID = "1234";
+      const settledTimestamp = Date.now();
+      const errorMessage = "General error";
+      const tradeResponse: ZerohashTradeResponse = {
+        tradeID: tradeID,
+        settledTimestamp: settledTimestamp,
+        tradeState: TradeState.DEFAULTED,
+        errorMessage: errorMessage,
+      };
+
+      const expectedConsumerAccountTransferStatus: ConsumerAccountTransferStatus = {
+        status: PollStatus.FAILURE,
+        errorMessage: errorMessage,
+      };
+
+      when(zerohashService.checkTradeStatus(tradeID)).thenResolve(tradeResponse);
+
+      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+
+      expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
+    });
+
+    it("returns FATAL_ERROR if trade an exception is thrown", async () => {
+      const tradeID = "1234";
+      const errorMessage = "General error";
+      const expectedConsumerAccountTransferStatus: ConsumerAccountTransferStatus = {
+        status: PollStatus.FATAL_ERROR,
+        errorMessage: JSON.stringify(errorMessage),
+      };
+
+      when(zerohashService.checkTradeStatus(tradeID)).thenThrow(new Error(errorMessage));
+
+      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+
+      expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
+    });
+  });
+
+  describe("transferToConsumerWallet()", () => {
+    // Not really much to do here!
+    it("returns the withdrawal ID", async () => {
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "1234567890",
+        email: "test@noba.com",
+        zhParticipantCode: "12345",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const request: ConsumerWalletTransferRequest = {
+        amount: 1234,
+        assetId: "1111",
+        transactionID: "XXXX",
+        walletAddress: "YYYY",
+        consumer: consumer.props,
+      };
+
+      const withdrawalID = "12345";
+
+      when(
+        zerohashService.requestWithdrawal(
+          request.walletAddress,
+          request.amount,
+          request.assetId,
+          request.consumer.zhParticipantCode,
+          nobaPlatformCode,
+        ),
+      ).thenResolve(withdrawalID);
+
+      const returnedWithdrawalID = await defaultAssetService.transferToConsumerWallet(request);
+      expect(returnedWithdrawalID).toEqual(withdrawalID);
+    });
+  });
+
+  describe("pollConsumerWalletTransferStatus()", () => {
+    it("returns PENDING status if withdrawal is in PENDING status", async () => {
+      const withdrawalID = "1234";
+
+      when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
+        requestedAmount: 1234,
+        settledAmount: 1234,
+        withdrawalStatus: WithdrawalState.PENDING,
+        onChainStatus: null,
+        onChainTransactionID: null,
+        gasPrice: null,
+      });
+
+      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+
+      expect(transferStatus).toEqual({
+        status: PollStatus.PENDING,
+        errorMessage: null,
+        requestedAmount: null,
+        settledAmount: null,
+        onChainTransactionID: null,
+      });
+    });
+
+    it("returns PENDING status if withdrawal is in APPROVED status", async () => {
+      const withdrawalID = "1234";
+
+      when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
+        requestedAmount: 1234,
+        settledAmount: 1234,
+        withdrawalStatus: WithdrawalState.APPROVED,
+        onChainStatus: null,
+        onChainTransactionID: null,
+        gasPrice: null,
+      });
+
+      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+
+      expect(transferStatus).toEqual({
+        status: PollStatus.PENDING,
+        errorMessage: null,
+        requestedAmount: null,
+        settledAmount: null,
+        onChainTransactionID: null,
+      });
+    });
+    it("returns FAILURE status if withdrawal is in REJECTED status", async () => {
+      const withdrawalID = "1234";
+
+      when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
+        requestedAmount: 1234,
+        settledAmount: 1234,
+        withdrawalStatus: WithdrawalState.REJECTED,
+        onChainStatus: null,
+        onChainTransactionID: null,
+        gasPrice: null,
+      });
+
+      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+
+      expect(transferStatus).toEqual({
+        status: PollStatus.FAILURE,
+        errorMessage: "Withdrawal request rejected.",
+        requestedAmount: null,
+        settledAmount: null,
+        onChainTransactionID: null,
+      });
+    });
+
+    it("returns PENDING status if withdrawal is SETTLED and on-chain status is PENDING", async () => {
+      const withdrawalID = "1234";
+
+      when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
+        requestedAmount: 1234,
+        settledAmount: 1234,
+        withdrawalStatus: WithdrawalState.SETTLED,
+        onChainStatus: OnChainState.PENDING,
+        onChainTransactionID: null,
+        gasPrice: null,
+      });
+
+      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+
+      expect(transferStatus).toEqual({
+        status: PollStatus.PENDING,
+        errorMessage: null,
+        requestedAmount: null,
+        settledAmount: null,
+        onChainTransactionID: null,
+      });
+    });
+
+    it("returns SUCCESS status if withdrawal is SETTLED and on-chain status is CONFIRMED", async () => {
+      const withdrawalID = "1234";
+      const requestedAmount = 1111;
+      const settledAmount = 1111;
+      const onChainTransactionID = "2222";
+
+      when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
+        requestedAmount: requestedAmount,
+        settledAmount: settledAmount,
+        withdrawalStatus: WithdrawalState.SETTLED,
+        onChainStatus: OnChainState.CONFIRMED,
+        onChainTransactionID: onChainTransactionID,
+        gasPrice: null,
+      });
+
+      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+
+      expect(transferStatus).toEqual({
+        status: PollStatus.SUCCESS,
+        errorMessage: null,
+        requestedAmount: requestedAmount,
+        settledAmount: settledAmount,
+        onChainTransactionID: onChainTransactionID,
+      });
+    });
+
+    it("returns FAILURE status if withdrawal is SETTLED and on-chain status is ERROR", async () => {
+      const withdrawalID = "1234";
+      const requestedAmount = 1111;
+      const settledAmount = 1111;
+      const onChainTransactionID = "2222";
+
+      when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
+        requestedAmount: requestedAmount,
+        settledAmount: settledAmount,
+        withdrawalStatus: WithdrawalState.SETTLED,
+        onChainStatus: OnChainState.ERROR,
+        onChainTransactionID: onChainTransactionID,
+        gasPrice: null,
+      });
+
+      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+
+      expect(transferStatus).toEqual({
+        status: PollStatus.FAILURE,
+        errorMessage: "Transaction failed to settled on the blockchain",
+        requestedAmount: null,
+        settledAmount: null,
+        onChainTransactionID: null,
+      });
+    });
+
+    it("returns PENDING status if an exception is thrown", async () => {
+      const withdrawalID = "1234";
+
+      when(zerohashService.getWithdrawal(withdrawalID)).thenThrow(new Error("Processing error"));
+
+      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+
+      expect(transferStatus).toEqual({
+        status: PollStatus.PENDING,
+        errorMessage: `Error checking status of withdrawal '${withdrawalID}'`,
+        requestedAmount: null,
+        settledAmount: null,
+        onChainTransactionID: null,
+      });
     });
   });
 });

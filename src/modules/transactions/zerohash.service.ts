@@ -370,7 +370,6 @@ export class ZeroHashService {
   }
 
   async getTransfer(transferId: string): Promise<ZerohashTransfer> {
-    console.log(transferId);
     const response = await this.makeRequest(`/transfers/${transferId}`, "GET", {});
     return {
       id: response.message.id,
