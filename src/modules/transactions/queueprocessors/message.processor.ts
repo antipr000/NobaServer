@@ -55,7 +55,7 @@ export abstract class MessageProcessor {
     // TODO (#332) Improve population of details (internal details, not to be viewed by consumer)
     const error: TransactionEvent = { timestamp: new Date(), message: reason, details: reason };
 
-    await this.transactionRepo.updateTransaction(
+    transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({
         ...transaction.props,
         transactionStatus: status,

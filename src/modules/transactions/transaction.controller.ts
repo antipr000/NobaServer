@@ -45,6 +45,7 @@ import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import { TransactionSubmissionException } from "./exceptions/TransactionSubmissionException";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -139,14 +140,23 @@ export class TransactionController {
   ): Promise<string> {
     this.logger.debug(`uid ${user.props._id}, transact input:`, orderDetails);
 
-    return (
-      await this.transactionService.initiateTransaction(
-        user.props._id,
-        request.user.partnerId,
-        sessionKey,
-        orderDetails,
-      )
-    )._id;
+    try {
+      return (
+        await this.transactionService.initiateTransaction(
+          user.props._id,
+          request.user.partnerId,
+          sessionKey,
+          orderDetails,
+        )
+      )._id;
+    } catch (e) {
+      if (e instanceof TransactionSubmissionException) {
+        throw new BadRequestException(e.disposition, e.message);
+      } else {
+        this.logger.error(`Unknown error in initiatePurchase: ${JSON.stringify(e)}`);
+        throw new BadRequestException("Failed to make the payment");
+      }
+    }
   }
 
   //TODO take filter options, pagination token etc?

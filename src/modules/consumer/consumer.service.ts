@@ -295,12 +295,16 @@ export class ConsumerService {
     }
   }
 
+  private roundTo2DecimalNumber(num: number): number {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  }
+
   async requestCheckoutPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
     let checkoutResponse;
     try {
       checkoutResponse = await this.checkoutApi.payments.request(
         {
-          amount: transaction.props.leg1Amount * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
+          amount: this.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
           currency: transaction.props.leg1,
           source: {
             type: "id",

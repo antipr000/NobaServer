@@ -9,7 +9,6 @@ export class SecretProvider {
   // Ref - https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SecretsManager.html#getSecretValue-property
   static async fetchSecretFromAWSSecretManager(secretName: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      console.log("Fetching secret: '", secretName, "' ...");
       new SecretsManager().getSecretValue({ SecretId: secretName }, function (err, data) {
         if (err) {
           console.log(

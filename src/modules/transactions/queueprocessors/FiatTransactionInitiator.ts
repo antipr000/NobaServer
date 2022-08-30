@@ -37,7 +37,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
   }
 
   async processMessageInternal(transactionId: string) {
-    const transaction = await this.transactionRepo.getTransaction(transactionId);
+    let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.VALIDATION_PASSED) {
@@ -66,7 +66,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
           true,
         );
       } else if (paymentResponse.status === PaymentMethodStatus.APPROVED) {
-        await this.transactionRepo.updateTransactionStatus(
+        transaction = await this.transactionRepo.updateTransactionStatus(
           transaction.props._id,
           TransactionStatus.FIAT_INCOMING_INITIATED,
           {

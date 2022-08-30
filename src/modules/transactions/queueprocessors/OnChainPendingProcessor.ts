@@ -36,7 +36,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
   }
 
   async processMessageInternal(transactionId: string) {
-    const transaction = await this.transactionRepo.getTransaction(transactionId);
+    let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
@@ -48,25 +48,8 @@ export class OnChainPendingProcessor extends MessageProcessor {
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
-
-    // Skip this if we already have a withdrawalID
-    let withdrawalID = transaction.props.zhWithdrawalID;
-    if (!withdrawalID) {
-      const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
-        amount: transaction.props.leg2Amount,
-        assetId: transaction.props.leg2,
-        walletAddress: transaction.props.destinationWalletAddress,
-        consumer: consumer.props,
-        transactionID: transaction.props._id,
-      };
-      withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
-      transaction.props.zhWithdrawalID = withdrawalID;
-      await this.transactionRepo.updateTransaction(transaction);
-      console.log("Set zhWithdrawalID on transaction to " + withdrawalID);
-    }
-
     const withdrawalStatus: ConsumerWalletTransferStatus = await assetService.pollConsumerWalletTransferStatus(
-      withdrawalID,
+      transaction.props.zhWithdrawalID,
     );
 
     switch (withdrawalStatus.status) {
@@ -84,10 +67,10 @@ export class OnChainPendingProcessor extends MessageProcessor {
         transaction.props.leg2Amount = withdrawalStatus.requestedAmount;
         transaction.props.settledAmount = withdrawalStatus.settledAmount;
         transaction.props.blockchainTransactionId = withdrawalStatus.onChainTransactionID;
-        await this.transactionRepo.updateTransactionStatus(
+        transaction = await this.transactionRepo.updateTransactionStatus(
           transaction.props._id,
           TransactionStatus.COMPLETED,
-          transaction,
+          transaction.props,
         );
     }
 
@@ -118,8 +101,8 @@ export class OnChainPendingProcessor extends MessageProcessor {
         networkFee: transaction.props.networkFee,
         nobaFee: transaction.props.nobaFee,
         totalPrice: transaction.props.leg1Amount,
-        cryptoAmount: transaction.props.leg2Amount,
-        cryptoCurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
+        cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+        cryptoCurrency: transaction.props.leg2,
         cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
         // TODO(#): Evaluate if we need to send "settledAmount" as well :)
       },

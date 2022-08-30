@@ -42,10 +42,11 @@ export class DBProvider {
 
     const mongoConfigs: MongoConfigs = this.configService.get<MongoConfigs>(MONGO_CONFIG_KEY);
     const mongoUri = mongoConfigs.uri;
-    await Mongoose.connect(mongoUri, {
+    const mongoose = await Mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 2000,
       ...(mongoConfigs.sslEnabled && { sslCA: path.join(__dirname, "../", mongoConfigs.sslCAPath) }), // we bootstrap sslCafile in root project directory in code deploy and this file will eventually end up in /dist/main.js
     });
+    mongoose.set("returnOriginal", false);
     this.isConnectedToDb = true;
   }
 

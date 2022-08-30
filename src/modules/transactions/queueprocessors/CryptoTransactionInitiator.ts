@@ -11,11 +11,13 @@ import { LockService } from "../../../modules/common/lock.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { AssetService } from "../assets/asset.service";
 import {
-  FundsAvailabilityRequest,
+  ExecuteQuoteRequest,
   FundsAvailabilityResponse,
   ConsumerAccountTransferRequest,
   FundsAvailabilityStatus,
   PollStatus,
+  ExecutedQuote,
+  FundsAvailabilityRequest,
 } from "../domain/AssetTypes";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
@@ -40,7 +42,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
   }
 
   async processMessageInternal(transactionId: string) {
-    const transaction = await this.transactionRepo.getTransaction(transactionId);
+    let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.FIAT_INCOMING_COMPLETED && status != TransactionStatus.CRYPTO_OUTGOING_INITIATING) {
@@ -53,10 +55,11 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
-    if (!transaction.props.nobaTransferTradeID) {
-      this.logger.info("Transferring funds to Noba.");
+    // Did we already execute the trade?
+    if (!transaction.props.cryptoTradeID) {
+      this.logger.info(`Executing trade to Noba`);
 
-      const makeFundsAvailableRequest: FundsAvailabilityRequest = {
+      const executeQuoteRequest: ExecuteQuoteRequest = {
         consumer: consumer.props,
         cryptoCurrency: transaction.props.leg2,
         fiatCurrency: transaction.props.leg1,
@@ -70,18 +73,56 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         transactionCreationTimestamp: transaction.props.transactionTimestamp,
         transactionID: transaction.props._id,
       };
-      const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
-        makeFundsAvailableRequest,
-      );
 
-      this.logger.info(`Transfer to Noba initiated with ID: "${fundAvailableResponse.id}".`);
-      // TODO(#): Rename the field to something generic.
-      transaction.props.nobaTransferTradeID = fundAvailableResponse.id;
-      transaction.props.exchangeRate = fundAvailableResponse.tradePrice;
-      await this.transactionRepo.updateTransaction(transaction);
+      try {
+        const executedQuote: ExecutedQuote = await assetService.executeQuoteForFundsAvailability(executeQuoteRequest);
+
+        transaction.props.executedCrypto = executedQuote.cryptoReceived;
+        transaction.props.cryptoTradeID = executedQuote.tradeID;
+        transaction.props.exchangeRate = executedQuote.tradePrice;
+
+        transaction = await this.transactionRepo.updateTransaction(transaction);
+      } catch (e) {
+        this.logger.error(`Exception while attempting to execute quote: ${e.message}. Will retry.`);
+        return;
+      }
+    }
+
+    // Did we already complete the transfer?
+    if (!transaction.props.nobaTransferTradeID) {
+      this.logger.debug("Transferring funds to Noba");
+      const fundsAvailabilityRequest: FundsAvailabilityRequest = {
+        cryptoAmount: transaction.props.executedCrypto,
+        cryptocurrency: transaction.props.leg2,
+      };
+      const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
+        fundsAvailabilityRequest,
+      );
+      this.logger.info(`Transfer to Noba initiated with ID: "${fundAvailableResponse.transferID}".`);
+
+      let inconsistentTransfer: boolean = false;
+      // Ensure here that we transferred the correct amount of the correct crypto
+      if (
+        fundAvailableResponse.transferredCrypto != fundsAvailabilityRequest.cryptoAmount ||
+        fundAvailableResponse.cryptocurrency != fundsAvailabilityRequest.cryptocurrency
+      ) {
+        // If this happens, still save the transfer ID to the transaction but then abort processing with a failure.
+        inconsistentTransfer = true;
+        this.logger.error(
+          `Transaction ID: ${transactionId} - Crypto traded to noba != crypto transfer! Traded: ${fundsAvailabilityRequest.cryptoAmount} ${fundsAvailabilityRequest.cryptocurrency}, transferred: ${fundAvailableResponse.transferredCrypto} ${fundAvailableResponse.cryptocurrency}. Trade ID: ${transaction.props.cryptoTradeID}, TransferID: ${fundAvailableResponse.transferID}`,
+        );
+      }
+
+      transaction.props.nobaTransferTradeID = fundAvailableResponse.transferID;
+      transaction = await this.transactionRepo.updateTransaction(transaction);
+
+      if (inconsistentTransfer) {
+        return this.processFailure(TransactionStatus.FAILED, "Inconsistent transfer of crypto", transaction);
+      }
     }
 
     // TODO(#): Move this to new processor.
+    // Have we already settled?
     if (!transaction.props.nobaTransferSettlementID) {
       this.logger.info("Checking for the settlement of Noba Transfer.");
 
@@ -89,15 +130,19 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         transaction.props.nobaTransferTradeID,
       );
 
+      // TODO: Check if the ZH amount coming back from status == executedCrypto on transaction
+      // TODO: Assert also that leg2 == executedCrypto for crypto fixed txn
+
       this.logger.info(`Noba Transfer settlement response: ${JSON.stringify(fundsAvailabilityStatus)}`);
 
       switch (fundsAvailabilityStatus.status) {
         case PollStatus.SUCCESS:
           transaction.props.nobaTransferSettlementID = fundsAvailabilityStatus.settledId;
-          await this.transactionRepo.updateTransaction(transaction);
+          transaction = await this.transactionRepo.updateTransaction(transaction);
           break;
 
         case PollStatus.PENDING:
+          this.logger.debug(`Waiting for transaction ${transaction.props._id} to settle.`);
           return;
 
         case PollStatus.FAILURE:
@@ -115,8 +160,9 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     const assetTransferToConsumerAccountRequest: ConsumerAccountTransferRequest = {
       consumer: consumer.props,
       cryptoAssetTradePrice: transaction.props.exchangeRate,
-      totalCryptoAmount: transaction.props.leg2Amount,
-
+      totalCryptoAmount: transaction.props.executedCrypto,
+      fiatAmountPreSpread: transaction.props.amountPreSpread,
+      totalFiatAmount: transaction.props.leg1Amount,
       cryptoCurrency: transaction.props.leg2,
       fiatCurrency: transaction.props.leg1,
       transactionID: transaction.props._id,
@@ -126,7 +172,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     this.logger.info(`Trade initiated to transfer to consumer ZH account with tradeID: "${tradeId}"`);
 
     transaction.props.cryptoTransactionId = tradeId;
-    await this.transactionRepo.updateTransactionStatus(
+    transaction = await this.transactionRepo.updateTransactionStatus(
       transaction.props._id,
       TransactionStatus.CRYPTO_OUTGOING_INITIATED,
       transaction.props,

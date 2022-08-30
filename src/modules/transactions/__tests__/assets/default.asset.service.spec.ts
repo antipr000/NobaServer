@@ -76,6 +76,7 @@ describe("DefaultAssetService", () => {
       expectedNetworkFee: number;
       quotedCostPerUnit: number;
       expectedPriceAfterFeeAndSpread: number;
+      amountPreSpread: number;
     }
 
     const setupTestAndGetQuoteResponse = async (
@@ -118,7 +119,7 @@ describe("DefaultAssetService", () => {
         quoteID: "id-1",
         fiatCurrency: "USD",
         cryptoCurrency: "ETH",
-
+        amountPreSpread: output.amountPreSpread,
         processingFeeInFiat: output.expectedProcessingFee,
         networkFeeInFiat: output.expectedNetworkFee,
         nobaFeeInFiat: output.expectedNobaFee,
@@ -146,6 +147,7 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
+          amountPreSpread: 100,
           expectedPriceAfterFeeAndSpread: 62.5,
         },
       );
@@ -176,6 +178,7 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          amountPreSpread: 90.5,
           expectedPriceAfterFeeAndSpread: 90.5,
         },
       );
@@ -206,6 +209,7 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 12.3,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          amountPreSpread: 87.7,
           expectedPriceAfterFeeAndSpread: 87.7,
         },
       );
@@ -236,6 +240,7 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 0.5,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          amountPreSpread: 99.5,
           expectedPriceAfterFeeAndSpread: 99.5,
         },
       );
@@ -266,6 +271,7 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 12,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          amountPreSpread: 80.9,
           expectedPriceAfterFeeAndSpread: 80.9,
         },
       );
@@ -296,6 +302,7 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 12,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 20,
+          amountPreSpread: 80.5,
           expectedPriceAfterFeeAndSpread: 40.25,
         },
       );
@@ -326,6 +333,7 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 13.5,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          amountPreSpread: 86.5,
           expectedPriceAfterFeeAndSpread: 86.5,
         },
       );
@@ -339,7 +347,7 @@ describe("DefaultAssetService", () => {
     });
   });
 
-  describe("getQuoteByForSpecifiedCryptoQuantity()", () => {
+  describe("getQuoteForSpecifiedCryptoQuantity()", () => {
     interface QuoteInputs {
       spreadPercentage: number;
       fiatFeeDollars: number;
@@ -352,6 +360,7 @@ describe("DefaultAssetService", () => {
       expectedProcessingFee: number;
       expectedNetworkFee: number;
       quotedCostPerUnit: number;
+      expectedAmountPreSpread: number;
     }
 
     const setupTestAndGetQuoteResponse = async (
@@ -392,7 +401,7 @@ describe("DefaultAssetService", () => {
         quoteID: "id-1",
         fiatCurrency: "USD",
         cryptoCurrency: "ETH",
-
+        amountPreSpread: output.expectedAmountPreSpread,
         processingFeeInFiat: output.expectedProcessingFee,
         networkFeeInFiat: output.expectedNetworkFee,
         nobaFeeInFiat: output.expectedNobaFee,
@@ -421,10 +430,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
+          expectedAmountPreSpread: 160,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -450,10 +460,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          expectedAmountPreSpread: 100,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -479,10 +490,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 56.25,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          expectedAmountPreSpread: 100,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -508,10 +520,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 20,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          expectedAmountPreSpread: 100,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -537,10 +550,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 87.5,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
+          expectedAmountPreSpread: 100,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -566,10 +580,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
+          expectedAmountPreSpread: 160,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -595,10 +610,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 94.5,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
+          expectedAmountPreSpread: 160,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -624,10 +640,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 20,
           quotedCostPerUnit: 10,
+          expectedAmountPreSpread: 100,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -653,10 +670,11 @@ describe("DefaultAssetService", () => {
           expectedProcessingFee: 128,
           expectedNetworkFee: 4,
           quotedCostPerUnit: 16,
+          expectedAmountPreSpread: 160,
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteByForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,

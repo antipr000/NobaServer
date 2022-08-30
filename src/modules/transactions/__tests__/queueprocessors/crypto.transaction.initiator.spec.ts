@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Collection, MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anyString, anything, capture, instance, when } from "ts-mockito";
 import {
   MONGO_CONFIG_KEY,
   MONGO_URI,
@@ -157,6 +157,8 @@ describe("CryptoTransactionInitiator", () => {
     await mongoServer.stop();
   });
 
+  const cryptoAmount = 1970;
+  const cryptocurrency = "ETH";
   const initiatedPaymentId = "CCCCCCCCCC";
   const consumerID = "UUUUUUUUUU";
   const paymentMethodID = "XXXXXXXXXX";
@@ -166,9 +168,9 @@ describe("CryptoTransactionInitiator", () => {
     transactionStatus: TransactionStatus.VALIDATION_PASSED,
     paymentMethodID: paymentMethodID,
     leg1Amount: 1000,
-    leg2Amount: 1,
+    leg2Amount: cryptoAmount,
     leg1: "USD",
-    leg2: "ETH",
+    leg2: cryptocurrency,
     partnerID: "12345",
     lastProcessingTimestamp: Date.now().valueOf(),
     lastStatusUpdateTimestamp: Date.now().valueOf(),
@@ -193,8 +195,9 @@ describe("CryptoTransactionInitiator", () => {
   });
 
   const fundsAvailabilityResponse: FundsAvailabilityResponse = {
-    id: "123",
-    tradePrice: 1970,
+    transferID: "123",
+    transferredCrypto: cryptoAmount,
+    cryptocurrency: cryptocurrency,
   };
 
   it("should not process a transaction that's not in FIAT_INCOMING_COMPLETED or CRYPTO_OUTGOING_INITIATING status", async () => {
@@ -229,7 +232,7 @@ describe("CryptoTransactionInitiator", () => {
       _id: transaction.props._id as any,
     });
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-    when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
+    when(sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transaction.props._id)).thenResolve("");
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
@@ -241,7 +244,14 @@ describe("CryptoTransactionInitiator", () => {
       errorMessage: "",
       settledId: "123",
     });
-    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("");
+    when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
+      quoteID: "12345",
+      tradePrice: 12345,
+      cryptoReceived: cryptoAmount,
+      cryptocurrency: cryptocurrency,
+      tradeID: "12345",
+    });
+    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("12345");
 
     await cryptoTransactionInitiator.processMessageInternal(transaction.props._id);
 
@@ -265,7 +275,7 @@ describe("CryptoTransactionInitiator", () => {
       _id: transaction.props._id as any,
     });
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-    when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
+    when(sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transaction.props._id)).thenResolve("");
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
@@ -277,7 +287,14 @@ describe("CryptoTransactionInitiator", () => {
       errorMessage: "",
       settledId: "123",
     });
-    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("");
+    when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
+      quoteID: "12345",
+      tradePrice: 12345,
+      cryptoReceived: cryptoAmount,
+      cryptocurrency: cryptocurrency,
+      tradeID: "12345",
+    });
+    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("12345");
 
     await cryptoTransactionInitiator.processMessageInternal(transaction.props._id);
 
@@ -312,7 +329,14 @@ describe("CryptoTransactionInitiator", () => {
       errorMessage: "test error msg",
       settledId: "123",
     });
-    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("");
+    when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
+      quoteID: "12345",
+      tradePrice: 12345,
+      cryptoReceived: cryptoAmount,
+      cryptocurrency: cryptocurrency,
+      tradeID: "12345",
+    });
+    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("12345");
 
     await cryptoTransactionInitiator.processMessageInternal(transaction.props._id);
 
@@ -347,7 +371,98 @@ describe("CryptoTransactionInitiator", () => {
       errorMessage: "test error msg",
       settledId: "123",
     });
-    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("");
+    when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
+      quoteID: "12345",
+      tradePrice: 12345,
+      cryptoReceived: cryptoAmount,
+      cryptocurrency: cryptocurrency,
+      tradeID: "12345",
+    });
+    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("12345");
+
+    await cryptoTransactionInitiator.processMessageInternal(transaction.props._id);
+
+    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+    expect(allTransactionsInDb).toHaveLength(1);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FAILED);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
+  });
+
+  it("should process a transaction in FIAT_INCOMING_COMPLETED status but throw exception if transfer crypto amount != trade crypto amount", async () => {
+    // expect that 'CryptoTransactionInitiator' actually subscribed to 'FiatTransactionCompleted' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionCompleted);
+    expect(processor).toBeInstanceOf(CryptoTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
+      _id: transaction.props._id as any,
+    });
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+    when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
+    when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+    const assetServiceInstance = instance(assetService);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetService.makeFundsAvailable(anything())).thenResolve(fundsAvailabilityResponse);
+    when(assetService.pollFundsAvailableStatus(anything())).thenResolve({
+      status: PollStatus.FATAL_ERROR,
+      errorMessage: "test error msg",
+      settledId: "123",
+    });
+    when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
+      quoteID: "12345",
+      tradePrice: 12345,
+      cryptoReceived: cryptoAmount * 2,
+      cryptocurrency: cryptocurrency,
+      tradeID: "12345",
+    });
+    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("12345");
+
+    await cryptoTransactionInitiator.processMessageInternal(transaction.props._id);
+
+    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+    expect(allTransactionsInDb).toHaveLength(1);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FAILED);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
+  });
+
+  it("should process a transaction in FIAT_INCOMING_COMPLETED status but throw exception if transfer cryptocurrency != trade cryptocurrency", async () => {
+    // expect that 'CryptoTransactionInitiator' actually subscribed to 'FiatTransactionCompleted' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionCompleted);
+    expect(processor).toBeInstanceOf(CryptoTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
+      _id: transaction.props._id as any,
+    });
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+    when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
+    when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+    const assetServiceInstance = instance(assetService);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetService.makeFundsAvailable(anything())).thenResolve(fundsAvailabilityResponse);
+    when(assetService.pollFundsAvailableStatus(anything())).thenResolve({
+      status: PollStatus.FATAL_ERROR,
+      errorMessage: "test error msg",
+      settledId: "123",
+    });
+    when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
+      quoteID: "12345",
+      tradePrice: 12345,
+      cryptoReceived: cryptoAmount,
+      cryptocurrency: "BTC",
+      tradeID: "12345",
+    });
+    when(assetService.transferAssetToConsumerAccount(anything())).thenResolve("12345");
 
     await cryptoTransactionInitiator.processMessageInternal(transaction.props._id);
 

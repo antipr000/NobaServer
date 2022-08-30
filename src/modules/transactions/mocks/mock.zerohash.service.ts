@@ -38,8 +38,5 @@ export function getMockZerohashServiceWithDefaults(): ZeroHashService {
   when(mockZerohashService.moveCryptoToConsumerWallet(anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockZerohashService.requestAndExecuteQuote(anyString(), anyString(), anyNumber(), anything())).thenReject(
-    new Error("Method not implemented"),
-  );
   return mockZerohashService;
 }

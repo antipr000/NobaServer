@@ -1,9 +1,3 @@
-export interface ExecutedQuote {
-  quoteID: string;
-  tradePrice: number;
-  cryptoReceived: number;
-}
-
 export interface ZerohashTransfer {
   id: string;
   createdAt: Date;
@@ -21,7 +15,7 @@ export enum ZerohashTransferStatus {
   SETTLED = "settled",
 }
 
-export interface ZerohashTradeRquest {
+export interface ZerohashTradeRequest {
   idempotencyID: string;
   requestorEmail: string;
 
@@ -29,9 +23,11 @@ export interface ZerohashTradeRquest {
   sellerParticipantCode: string;
 
   tradePrice: number;
-  tradeAmount: number;
+  buyAmount: number;
   boughtAssetID: string;
-  soldAssetId: string;
+  sellAmount: number;
+  totalFiatAmount: number;
+  soldAssetID: string;
 }
 
 export interface ZerohashTradeResponse {
@@ -43,6 +39,12 @@ export interface ZerohashTradeResponse {
   settledTimestamp?: number;
   tradeState?: TradeState;
   errorMessage?: string;
+}
+
+export interface ZerohashTransferResponse {
+  transferID: string;
+  cryptoAmount: number;
+  cryptocurrency: string;
 }
 
 export enum TradeState {

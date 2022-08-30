@@ -30,7 +30,10 @@ import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
-import { ZeroHashService } from "./zerohash.service";
+import {
+  TransactionSubmissionException,
+  TransactionSubmissionFailureExceptionText,
+} from "./exceptions/TransactionSubmissionException";
 
 @Injectable()
 export class TransactionService {
@@ -40,7 +43,6 @@ export class TransactionService {
   constructor(
     private readonly configService: CustomConfigService,
     private readonly currencyService: CurrencyService,
-    private readonly zeroHashService: ZeroHashService,
     private readonly verificationService: VerificationService,
     private readonly consumerService: ConsumerService,
     private readonly assetServiceFactory: AssetServiceFactory,
@@ -77,7 +79,7 @@ export class TransactionService {
         break;
 
       case CurrencyType.CRYPTO:
-        nobaQuote = await assetService.getQuoteByForSpecifiedCryptoQuantity({
+        nobaQuote = await assetService.getQuoteForSpecifiedCryptoQuantity({
           cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
           fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
           cryptoQuantity: Number(transactionQuoteQuery.fixedAmount),
@@ -94,7 +96,10 @@ export class TransactionService {
       cryptoCurrencyCode: nobaQuote.cryptoCurrency,
       fixedSide: transactionQuoteQuery.fixedSide,
       fixedAmount: transactionQuoteQuery.fixedAmount,
-      quotedAmount: nobaQuote.totalCryptoQuantity,
+      quotedAmount:
+        transactionQuoteQuery.fixedSide == CurrencyType.FIAT
+          ? nobaQuote.totalCryptoQuantity
+          : nobaQuote.totalFiatAmount,
       processingFee: nobaQuote.processingFeeInFiat,
       networkFee: nobaQuote.networkFeeInFiat,
       nobaFee: nobaQuote.nobaFeeInFiat,
@@ -139,23 +144,17 @@ export class TransactionService {
   ): Promise<TransactionDTO> {
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
-      throw new BadRequestException({
-        messageForClient:
-          "Invalid destination wallet address " +
-          transactionRequest.destinationWalletAddress +
-          " for " +
-          transactionRequest.leg2,
-      });
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
     }
 
     const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
     if (cryptoCurrencies.filter(curr => curr.ticker === transactionRequest.leg2).length == 0) {
-      throw new BadRequestException(`Unknown cryptocurrency: ${transactionRequest.leg2}`);
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
 
     const fiatCurrencies = await this.currencyService.getSupportedFiatCurrencies();
     if (fiatCurrencies.filter(curr => curr.ticker === transactionRequest.leg1).length == 0) {
-      throw new BadRequestException(`Unknown fiat currency: ${transactionRequest.leg1}`);
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_FIAT);
     }
 
     const newTransaction: Transaction = Transaction.createTransaction({
@@ -163,7 +162,8 @@ export class TransactionService {
       sessionKey: sessionKey,
       paymentMethodID: transactionRequest.paymentToken,
       leg1Amount: transactionRequest.leg1Amount,
-      leg2Amount: transactionRequest.leg2Amount,
+      // We must round the fiat amount to 2 decimals, as that is all Checkout supports
+      leg2Amount: this.roundTo2DecimalNumber(transactionRequest.leg2Amount),
       leg1: transactionRequest.leg1,
       leg2: transactionRequest.leg2,
       transactionStatus: TransactionStatus.PENDING,
@@ -182,7 +182,7 @@ export class TransactionService {
             cryptoCurrency: transactionRequest.leg2,
             fiatAmount: Number(fixedAmount),
           })
-        : await assetService.getQuoteByForSpecifiedCryptoQuantity({
+        : await assetService.getQuoteForSpecifiedCryptoQuantity({
             fiatCurrency: transactionRequest.leg1,
             cryptoCurrency: transactionRequest.leg2,
             cryptoQuantity: Number(fixedAmount),
@@ -195,11 +195,11 @@ export class TransactionService {
         ? this.withinSlippage(transactionRequest.leg2Amount, quote.totalCryptoQuantity)
         : this.withinSlippage(transactionRequest.leg1Amount, quote.totalFiatAmount);
     if (!withinSlippage) {
-      throw new BadRequestException({
-        messageForClient: `Bid price is not within slippage allowed of ${
-          this.nobaTransactionConfigs.slippageAllowedPercentage * 100
-        }%`,
-      });
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.SLIPPAGE,
+        "",
+        `Bid price is not within slippage allowed of ${this.nobaTransactionConfigs.slippageAllowedPercentage * 100}%`,
+      );
     }
 
     // Add quote information to new transaction
@@ -208,6 +208,7 @@ export class TransactionService {
     newTransaction.props.networkFee = quote.networkFeeInFiat;
     newTransaction.props.processingFee = quote.processingFeeInFiat;
     newTransaction.props.exchangeRate = quote.perUnitCryptoPrice;
+    newTransaction.props.amountPreSpread = quote.amountPreSpread;
 
     // Set the amount that wasn't fixed based on the quote received
     if (transactionRequest.fixedSide == CurrencyType.FIAT) {
@@ -367,5 +368,9 @@ export class TransactionService {
         `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${err.message}`,
       );
     }
+  }
+
+  private roundTo2DecimalNumber(num: number): number {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 }
