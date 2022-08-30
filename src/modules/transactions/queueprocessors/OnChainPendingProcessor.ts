@@ -55,7 +55,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     let withdrawalID = transaction.props.zhWithdrawalID;
     if (!withdrawalID) {
       const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
-        amount: transaction.props.leg2Amount,
+        amount: transaction.props.executedCrypto,
         assetId: transaction.props.leg2,
         walletAddress: transaction.props.destinationWalletAddress,
         consumer: consumer.props,
@@ -63,8 +63,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
       };
       withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
       transaction.props.zhWithdrawalID = withdrawalID;
-      await this.transactionRepo.updateTransaction(transaction);
-      console.log("Set zhWithdrawalID on transaction to " + withdrawalID);
+      transaction = await this.transactionRepo.updateTransaction(transaction);
     }
 
     const withdrawalStatus: ConsumerWalletTransferStatus = await assetService.pollConsumerWalletTransferStatus(
@@ -86,10 +85,10 @@ export class OnChainPendingProcessor extends MessageProcessor {
         transaction.props.leg2Amount = withdrawalStatus.requestedAmount;
         transaction.props.settledAmount = withdrawalStatus.settledAmount;
         transaction.props.blockchainTransactionId = withdrawalStatus.onChainTransactionID;
-        await this.transactionRepo.updateTransactionStatus(
+        transaction = await this.transactionRepo.updateTransactionStatus(
           transaction.props._id,
           TransactionStatus.COMPLETED,
-          transaction,
+          transaction.props,
         );
     }
 
@@ -120,8 +119,8 @@ export class OnChainPendingProcessor extends MessageProcessor {
         networkFee: transaction.props.networkFee,
         nobaFee: transaction.props.nobaFee,
         totalPrice: transaction.props.leg1Amount,
-        cryptoAmount: transaction.props.leg2Amount,
-        cryptoCurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
+        cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+        cryptoCurrency: transaction.props.leg2,
         cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
         // TODO(#): Evaluate if we need to send "settledAmount" as well :)
       },

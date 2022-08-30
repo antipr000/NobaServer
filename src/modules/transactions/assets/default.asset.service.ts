@@ -4,7 +4,7 @@ import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { AppService } from "../../../app.service";
 import {
-  FundsAvailabilityRequest,
+  ExecuteQuoteRequest,
   ConsumerAccountTransferRequest,
   ConsumerWalletTransferRequest,
   FundsAvailabilityStatus,
@@ -15,22 +15,23 @@ import {
   NobaQuote,
   QuoteRequestForFixedCrypto,
   QuoteRequestForFixedFiat,
+  ExecutedQuote,
+  FundsAvailabilityRequest,
 } from "../domain/AssetTypes";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
-import { CurrencyType } from "../../common/domain/Types";
 import {
-  ExecutedQuote,
   OnChainState,
   TradeState,
   WithdrawalState,
   ZerohashNetworkFee,
   ZerohashQuote,
   ZerohashTradeResponse,
-  ZerohashTradeRquest,
+  ZerohashTradeRequest,
   ZerohashTransfer,
   ZerohashTransferStatus,
   ZerohashWithdrawalResponse,
+  ZerohashTransferResponse,
 } from "../domain/ZerohashTypes";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes/NobaConfigs";
@@ -60,7 +61,7 @@ export class DefaultAssetService implements AssetService {
       request.cryptoCurrency,
       request.fiatCurrency,
     );
-    this.logger.debug(networkFee);
+    this.logger.debug(`Network fee: ${JSON.stringify(networkFee)}`);
 
     // TODO(#306): It says percentage, but not actually calculating percentage.
     const totalCreditCardFeeInFiat: number = request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat;
@@ -75,7 +76,6 @@ export class DefaultAssetService implements AssetService {
       request.fiatCurrency,
       fiatAmountAfterAllChargesWithSpread,
     );
-    this.logger.debug(zhQuote);
 
     const perUnitCryptoCostWithoutSpread: number = zhQuote.perUnitCryptoAssetCost;
     const perUnitCryptoCostWithSpread: number = perUnitCryptoCostWithoutSpread * (1 + nobaSpreadPercent);
@@ -86,7 +86,7 @@ export class DefaultAssetService implements AssetService {
       PROCESSING FEES (${request.fiatCurrency}):\t${totalCreditCardFeeInFiat}
       NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat}
       PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread}
-      QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread}      
+      QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread}
       ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${
       fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread
     }
@@ -108,7 +108,7 @@ export class DefaultAssetService implements AssetService {
       networkFeeInFiat: networkFee.feeInFiat,
       nobaFeeInFiat: nobaFlatFeeInFiat,
       processingFeeInFiat: totalCreditCardFeeInFiat,
-
+      amountPreSpread: fiatAmountAfterAllChargesWithoutSpread,
       totalCryptoQuantity: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
       totalFiatAmount: request.fiatAmount,
       perUnitCryptoPrice: perUnitCryptoCostWithSpread,
@@ -116,7 +116,7 @@ export class DefaultAssetService implements AssetService {
     };
   }
 
-  async getQuoteByForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
+  async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
     const nobaSpreadPercent = this.nobaTransactionConfigs.spreadPercentage;
     const nobaFlatFeeInFiat = this.nobaTransactionConfigs.flatFeeDollars;
     const creditCardFeePercent = this.nobaTransactionConfigs.dynamicCreditCardFeePercentage;
@@ -127,19 +127,18 @@ export class DefaultAssetService implements AssetService {
       request.cryptoCurrency,
       request.fiatCurrency,
     );
-    this.logger.debug(JSON.stringify(networkFee));
+    this.logger.debug(`Network fee: ${JSON.stringify(networkFee)}`);
 
     const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForDesiredCryptoQuantity(
       request.cryptoCurrency,
       request.fiatCurrency,
       request.cryptoQuantity,
     );
-    this.logger.debug(`Fixed crypto ZH quote: ${JSON.stringify(zhQuote)}`);
 
     const perUnitCryptoCostWithoutSpread: number = zhQuote.perUnitCryptoAssetCost;
     const perUnitCryptoCostWithSpread: number = perUnitCryptoCostWithoutSpread * (1 + nobaSpreadPercent);
 
-    const rawFiatAmountForRequestedCryptoPostSpread = request.cryptoQuantity * perUnitCryptoCostWithSpread;
+    const rawFiatAmountForRequestedCryptoPreSpread = request.cryptoQuantity * perUnitCryptoCostWithSpread;
 
     /**
      * Credit card charges are applied on the actual amount deducted on fiat side.
@@ -153,7 +152,7 @@ export class DefaultAssetService implements AssetService {
      * => X = (....) / (1 - creditCardFeePercentage)
      */
     const fiatAmountAfterAllChargesExceptCreditCard =
-      rawFiatAmountForRequestedCryptoPostSpread + nobaFlatFeeInFiat + networkFee.feeInFiat;
+      rawFiatAmountForRequestedCryptoPreSpread + nobaFlatFeeInFiat + networkFee.feeInFiat;
     const finalFiatAmount =
       (fiatAmountAfterAllChargesExceptCreditCard + fixedCreditCardFeeInFiat) / (1 - creditCardFeePercent);
 
@@ -161,7 +160,7 @@ export class DefaultAssetService implements AssetService {
 
     this.logger.debug(`
       CRYPTO FIXED (${request.cryptoCurrency}):\t${request.cryptoQuantity}
-      POST-SPREAD (${request.fiatCurrency}):\t${rawFiatAmountForRequestedCryptoPostSpread}
+      POST-SPREAD (${request.fiatCurrency}):\t${rawFiatAmountForRequestedCryptoPreSpread}
       NETWORK FEE (${request.fiatCurrency}):\t${networkFee.feeInFiat}
       NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat}
       COST BEFORE CC FEE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesExceptCreditCard}
@@ -171,7 +170,7 @@ export class DefaultAssetService implements AssetService {
       ZERO HASH FEE (${request.fiatCurrency}):\t${finalFiatAmount * 0.007}
       NOBA REVENUE (${request.fiatCurrency}):\t${
       nobaFlatFeeInFiat +
-      (rawFiatAmountForRequestedCryptoPostSpread - perUnitCryptoCostWithoutSpread * request.cryptoQuantity) -
+      (rawFiatAmountForRequestedCryptoPreSpread - perUnitCryptoCostWithoutSpread * request.cryptoQuantity) -
       finalFiatAmount * 0.007
     }
       `);
@@ -182,7 +181,7 @@ export class DefaultAssetService implements AssetService {
       networkFeeInFiat: networkFee.feeInFiat,
       nobaFeeInFiat: nobaFlatFeeInFiat,
       processingFeeInFiat: totalCreditCardFeeInFiat,
-
+      amountPreSpread: rawFiatAmountForRequestedCryptoPreSpread,
       totalCryptoQuantity: request.cryptoQuantity,
       totalFiatAmount: finalFiatAmount,
       perUnitCryptoPrice: perUnitCryptoCostWithSpread,
@@ -201,7 +200,7 @@ export class DefaultAssetService implements AssetService {
    * TODO(#): Make it idempotent by using 'transactionId'.
    * TODO(#): Fails gracefully with proper error messages.
    */
-  async makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse> {
+  async executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote> {
     const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
     if (supportedCryptocurrencies.filter(curr => curr.ticker === request.cryptoCurrency).length == 0) {
       throw new BadRequestError({
@@ -215,24 +214,26 @@ export class DefaultAssetService implements AssetService {
     }
 
     // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
-    const executedQuote: ExecutedQuote = await this.zerohashService.requestAndExecuteQuote(
-      request.cryptoCurrency,
-      request.fiatCurrency,
-      request.fiatAmount,
-      CurrencyType.FIAT,
+    const nobaQuote: NobaQuote = await this.getQuoteForSpecifiedFiatAmount({
+      cryptoCurrency: request.cryptoCurrency,
+      fiatAmount: request.fiatAmount,
+      fiatCurrency: request.fiatCurrency,
+    });
+
+    const executedQuote: ExecutedQuote = await this.zerohashService.executeQuote(nobaQuote.quoteID);
+    return executedQuote;
+  }
+
+  async makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse> {
+    const assetTransfer: ZerohashTransferResponse = await this.zerohashService.transferAssetsToNoba(
+      request.cryptocurrency,
+      request.cryptoAmount,
     );
 
-    // TODO(#) Check slippage.
-
-    const assetTransferId: string = await this.zerohashService.transferAssetsToNoba(
-      request.cryptoCurrency,
-      executedQuote.cryptoReceived,
-    );
-
-    this.logger.debug(`AssetTransferId: ${assetTransferId}`);
     return {
-      id: assetTransferId,
-      tradePrice: executedQuote.tradePrice,
+      transferID: assetTransfer.transferID,
+      transferredCrypto: assetTransfer.cryptoAmount,
+      cryptocurrency: assetTransfer.cryptocurrency,
     };
   }
 
@@ -308,12 +309,15 @@ export class DefaultAssetService implements AssetService {
     );
 
     // TODO(#310) Confirm that the traded values comes out correctly
-    const tradeRequest: ZerohashTradeRquest = {
+    const tradeRequest: ZerohashTradeRequest = {
       boughtAssetID: request.cryptoCurrency,
-      soldAssetId: request.fiatCurrency,
+      soldAssetID: request.fiatCurrency,
 
-      tradeAmount: request.totalCryptoAmount,
+      buyAmount: request.totalCryptoAmount,
       tradePrice: request.cryptoAssetTradePrice,
+
+      sellAmount: request.fiatAmountPreSpread,
+      totalFiatAmount: request.totalFiatAmount,
 
       buyerParticipantCode: consumerParticipantCode,
       sellerParticipantCode: this.zerohashService.getNobaPlatformCode(),

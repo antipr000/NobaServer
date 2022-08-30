@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import {
-  FundsAvailabilityRequest,
+  ExecuteQuoteRequest,
   ConsumerAccountTransferRequest,
   ConsumerWalletTransferRequest,
   FundsAvailabilityStatus,
@@ -10,6 +10,8 @@ import {
   QuoteRequestForFixedCrypto,
   NobaQuote,
   ConsumerAccountTransferStatus,
+  FundsAvailabilityRequest,
+  ExecutedQuote,
 } from "../domain/AssetTypes";
 import { AssetService } from "./asset.service";
 
@@ -18,7 +20,10 @@ export class USDCPolygonAssetService implements AssetService {
   getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote> {
     throw new Error("Method not implemented.");
   }
-  getQuoteByForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
+  getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
+    throw new Error("Method not implemented.");
+  }
+  executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote> {
     throw new Error("Method not implemented.");
   }
 

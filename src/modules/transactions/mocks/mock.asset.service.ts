@@ -6,10 +6,9 @@ import { DefaultAssetService } from "../assets/default.asset.service";
 export function getMockAssetServiceWithDefaults(): AssetService {
   const mockAssetService = mock(DefaultAssetService);
 
-  when(mockAssetService.getQuoteByForSpecifiedCryptoQuantity(anything())).thenReject(
-    new Error("Method not implemented"),
-  );
+  when(mockAssetService.getQuoteForSpecifiedCryptoQuantity(anything())).thenReject(new Error("Method not implemented"));
   when(mockAssetService.getQuoteForSpecifiedFiatAmount(anything())).thenReject(new Error("Method not implemented"));
+  when(mockAssetService.executeQuoteForFundsAvailability(anything())).thenReject(new Error("Method not implemented"));
   when(mockAssetService.makeFundsAvailable(anything())).thenReject(new Error("Method not implemented"));
   when(mockAssetService.pollAssetTransferToConsumerStatus(anyString())).thenReject(new Error("Method not implemented"));
   when(mockAssetService.pollConsumerWalletTransferStatus(anyString())).thenReject(new Error("Method not implemented"));

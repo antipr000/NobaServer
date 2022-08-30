@@ -7,7 +7,15 @@ export enum PollStatus {
   FATAL_ERROR = "internal_error",
 }
 
-export interface FundsAvailabilityRequest {
+export interface ExecutedQuote {
+  quoteID: string;
+  tradePrice: number;
+  cryptoReceived: number;
+  cryptocurrency: string;
+  tradeID: string;
+}
+
+export interface ExecuteQuoteRequest {
   fiatAmount: number;
   fiatCurrency: string;
 
@@ -22,9 +30,15 @@ export interface FundsAvailabilityRequest {
   consumer: ConsumerProps;
 }
 
+export interface FundsAvailabilityRequest {
+  cryptocurrency: string;
+  cryptoAmount: number;
+}
+
 export interface FundsAvailabilityResponse {
-  id: string;
-  tradePrice: number;
+  transferID: string;
+  transferredCrypto: number;
+  cryptocurrency: string;
 }
 
 export interface FundsAvailabilityStatus {
@@ -41,6 +55,8 @@ export interface ConsumerAccountTransferRequest {
 
   cryptoAssetTradePrice: number;
   totalCryptoAmount: number;
+  totalFiatAmount: number;
+  fiatAmountPreSpread: number;
 
   transactionID: string;
   transactionCreationTimestamp: Date;
@@ -74,6 +90,7 @@ export interface NobaQuote {
   cryptoCurrency: string;
 
   processingFeeInFiat: number;
+  amountPreSpread: number; // Amount in fiat before spread calculation
   networkFeeInFiat: number;
   nobaFeeInFiat: number;
 

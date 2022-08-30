@@ -24,17 +24,18 @@ import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/do
 import { Transaction } from "./domain/Transaction";
 import { CryptoTransactionRequestResult, CryptoTransactionRequestResultStatus } from "./domain/Types";
 import {
-  ExecutedQuote,
   OnChainState,
   TradeState,
   WithdrawalState,
   ZerohashNetworkFee,
   ZerohashQuote,
   ZerohashTradeResponse,
-  ZerohashTradeRquest,
+  ZerohashTradeRequest,
   ZerohashTransfer,
   ZerohashWithdrawalResponse,
+  ZerohashTransferResponse,
 } from "./domain/ZerohashTypes";
+import { ExecutedQuote } from "./domain/AssetTypes";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -278,13 +279,20 @@ export class ZeroHashService {
   }
 
   // Execute a liquidity quote
-  async executeQuote(quote_id) {
-    const executed_trade = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quote_id });
-    return executed_trade;
+  async executeQuote(quoteID: string): Promise<ExecutedQuote> {
+    const executedQuote = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quoteID });
+
+    return {
+      tradePrice: executedQuote["message"]["quote"].price,
+      cryptoReceived: executedQuote["message"]["quote"].quantity,
+      quoteID: executedQuote["message"]["quote"].quote_id,
+      tradeID: executedQuote["message"].trade_id,
+      cryptocurrency: executedQuote["message"]["quote"].underlying,
+    };
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
-  async transferAssetsToNoba(asset: string, amount: number): Promise<string> {
+  async transferAssetsToNoba(asset: string, amount: number): Promise<ZerohashTransferResponse> {
     const transfer = await this.makeRequest("/transfers", "POST", {
       from_participant_code: this.getNobaPlatformCode(),
       from_account_group: ZHLS_PLATFORM_CODE,
@@ -293,11 +301,14 @@ export class ZeroHashService {
       to_participant_code: this.getNobaPlatformCode(),
       to_account_group: this.getNobaPlatformCode(),
       asset: asset,
-      amount: amount,
+      amount: String(amount),
     });
 
-    console.log(transfer);
-    return transfer.message.id;
+    return {
+      transferID: transfer.message.id,
+      cryptoAmount: transfer.message.amount,
+      cryptocurrency: transfer.message.asset,
+    };
   }
 
   // Trade the crypto from Noba to Custom
@@ -306,35 +317,34 @@ export class ZeroHashService {
     return tradeRequest;
   }
 
-  async executeTrade(request: ZerohashTradeRquest): Promise<ZerohashTradeResponse> {
+  async executeTrade(request: ZerohashTradeRequest): Promise<ZerohashTradeResponse> {
     const tradeData = {
-      symbol: request.boughtAssetID + "/" + request.soldAssetId,
+      symbol: request.boughtAssetID + "/" + request.soldAssetID,
 
-      trade_price: String(request.tradePrice),
-      // Jared to respond if we should use trade_quantity or amount in parties
-      trade_quantity: String(request.tradeAmount / request.tradePrice),
+      //trade_price = buy / (sell-network-noba-processing)
+
+      trade_price: String(request.sellAmount / request.buyAmount), // Must be sell / buy
       client_trade_id: request.idempotencyID,
-
       trade_reporter: request.requestorEmail,
       platform_code: this.getNobaPlatformCode(),
-
       product_type: "spot",
       trade_type: "regular",
       physical_delivery: true,
       parties_anonymous: false,
       transaction_timestamp: Date.now(),
-
+      bank_fee: String(request.totalFiatAmount - request.sellAmount),
       parties: [
         {
           participant_code: request.buyerParticipantCode,
           asset: request.boughtAssetID,
-          amount: String(request.tradeAmount),
+          amount: String(request.buyAmount),
           side: "buy",
           settling: true,
         },
         {
           participant_code: request.sellerParticipantCode,
-          asset: request.soldAssetId,
+          asset: request.soldAssetID,
+          amount: String(request.sellAmount),
           side: "sell",
           settling: false,
         },
@@ -344,7 +354,7 @@ export class ZeroHashService {
     const tradeRequest = await this.requestTrade(tradeData);
     if (tradeRequest == null) {
       throw new BadRequestError({
-        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
+        messageForClient: "Unable to obtain quote. Please try again in several minutes.",
       });
     }
 
@@ -432,6 +442,10 @@ export class ZeroHashService {
 
       case "CONFIRMED":
         response.onChainStatus = OnChainState.CONFIRMED;
+        break;
+
+      case null:
+        response.onChainStatus = OnChainState.PENDING;
         break;
 
       default:
@@ -533,133 +547,6 @@ export class ZeroHashService {
     }
 
     return withdrawalID;
-  }
-
-  // [DEPRECATED]: Use AssetService interface instead.
-  // Will be removed once everything works in staging.
-  async initiateCryptoTransfer(
-    consumer: ConsumerProps,
-    transaction: Transaction,
-  ): Promise<CryptoTransactionRequestResult> {
-    let returnStatus = CryptoTransactionRequestResultStatus.FAILED;
-
-    const fiatCurrency = transaction.props.leg1;
-    const cryptocurrency = transaction.props.leg2;
-    const amount = transaction.props.leg1Amount;
-
-    const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
-    const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
-    if (supportedCryptocurrencies.filter(curr => curr.ticker === cryptocurrency).length == 0) {
-      throw new BadRequestError({
-        messageForClient: `Unsupported cryptocurrency: ${cryptocurrency}`,
-      });
-    }
-
-    if (supportedFiatCurrencies.filter(curr => curr.ticker === fiatCurrency).length == 0) {
-      throw new Error(`${fiatCurrency} is not supported by ZHLS`);
-    }
-
-    // Gets or creates participant code
-    let participantCode: string = await this.getParticipantCode(consumer, transaction.props.transactionTimestamp);
-
-    // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
-    const executedQuote = await this.requestAndExecuteQuote(cryptocurrency, fiatCurrency, amount, CurrencyType.FIAT);
-
-    // TODO(#310) Final slippage check here or already too deep?
-
-    const amountReceived = executedQuote["message"]["quote"].quantity;
-    const tradePrice = executedQuote["message"]["quote"].price;
-    const quoteID = executedQuote["message"]["quote"].quote_id;
-
-    const assetTransfer = await this.transferAssetsToNoba(cryptocurrency, amountReceived);
-    if (assetTransfer == null) {
-      throw new BadRequestError({
-        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
-      });
-    }
-
-    this.logger.debug(`Asset transfer: ${JSON.stringify(assetTransfer)}`);
-    // TODO(#310) - movement_id will be null. Need to do polling until settled
-    const nobaTransferID = "1234"; // assetTransfer["message"]["movement_id"];
-    this.logger.debug(`Movement id: ${nobaTransferID}`);
-
-    //Set trade data for next function
-    const tradeData = {
-      symbol: cryptocurrency + "/" + fiatCurrency,
-      trade_price: tradePrice, // TODO(#310) Confirm this comes out correctly
-      trade_quantity: String(amount / tradePrice), // TODO(#310) Confirm this comes out correctly
-      product_type: "spot",
-      trade_type: "regular",
-      trade_reporter: consumer.email,
-      platform_code: this.getNobaPlatformCode(),
-      client_trade_id: transaction.props._id,
-      physical_delivery: true,
-      parties_anonymous: false,
-      transaction_timestamp: Date.now(),
-      parties: [
-        {
-          participant_code: participantCode,
-          asset: cryptocurrency,
-          amount: String(amount),
-          side: "buy",
-          settling: true,
-        },
-        {
-          participant_code: this.getNobaPlatformCode(),
-          asset: fiatCurrency,
-          side: "sell",
-          settling: false,
-        },
-      ],
-    };
-
-    const tradeRequest = await this.requestTrade(tradeData);
-    if (tradeRequest == null) {
-      throw new BadRequestError({
-        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
-      });
-    }
-
-    const tradeID = tradeRequest["message"].trade_id;
-
-    returnStatus = CryptoTransactionRequestResultStatus.INITIATED;
-
-    return {
-      status: returnStatus,
-      amountReceived,
-      exchangeRate: tradePrice,
-      quoteID,
-      nobaTransferID: nobaTransferID,
-      tradeID,
-    };
-  }
-
-  async requestAndExecuteQuote(
-    cryptocurrency: string,
-    fiatCurrency: string,
-    amount: number,
-    fixedSide: CurrencyType,
-  ): Promise<ExecutedQuote> {
-    const quote = await this.requestQuote(cryptocurrency, fiatCurrency, amount, fixedSide);
-    if (quote == null) {
-      throw new BadRequestError({
-        messageForClient: "Could not get a valid quote! Contact noba support for resolution!",
-      });
-    }
-    const quoteID = quote["message"].quote_id;
-
-    const executedQuote = await this.executeQuote(quoteID);
-    if (executedQuote == null) {
-      throw new BadRequestError({
-        messageForClient: "Something went wrong! Contact noba support for immediate resolution!",
-      });
-    }
-
-    return {
-      tradePrice: executedQuote["message"]["quote"].price,
-      cryptoReceived: executedQuote["message"]["quote"].quantity,
-      quoteID: executedQuote["message"]["quote"].quote_id,
-    };
   }
 
   async getParticipantCode(consumer: ConsumerProps, transactionTimestamp: Date) {

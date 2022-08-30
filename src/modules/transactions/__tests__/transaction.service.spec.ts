@@ -942,6 +942,7 @@ describe("TransactionService", () => {
         processingFeeInFiat: 1,
         networkFeeInFiat: 1,
         nobaFeeInFiat: 1,
+        amountPreSpread: 1,
 
         totalFiatAmount: 13,
         totalCryptoQuantity: 0.0001,
@@ -978,14 +979,15 @@ describe("TransactionService", () => {
         processingFeeInFiat: 0.01,
         networkFeeInFiat: 0.01,
         nobaFeeInFiat: 0.01,
+        amountPreSpread: 1000,
 
         totalFiatAmount: 1000,
-        totalCryptoQuantity: 0.1,
+        totalCryptoQuantity: 1000,
         perUnitCryptoPrice: 100,
       };
 
       when(
-        assetService.getQuoteByForSpecifiedCryptoQuantity(
+        assetService.getQuoteForSpecifiedCryptoQuantity(
           deepEqual({
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
@@ -1172,6 +1174,7 @@ describe("TransactionService", () => {
         processingFeeInFiat: 0.01,
         networkFeeInFiat: 0.01,
         nobaFeeInFiat: 0.01,
+        amountPreSpread: 0.01,
 
         totalFiatAmount: 1000,
         totalCryptoQuantity: 0.3,
@@ -1236,6 +1239,7 @@ describe("TransactionService", () => {
         processingFeeInFiat: 0.01,
         networkFeeInFiat: 0.01,
         nobaFeeInFiat: 0.01,
+        amountPreSpread: 0.01,
 
         totalFiatAmount: 100,
         totalCryptoQuantity: 0.1,
@@ -1324,6 +1328,7 @@ describe("TransactionService", () => {
         processingFeeInFiat: 0.01,
         networkFeeInFiat: 0.01,
         nobaFeeInFiat: 0.01,
+        amountPreSpread: 0.01,
 
         totalFiatAmount: 100,
         totalCryptoQuantity: 0.1,
@@ -1349,7 +1354,7 @@ describe("TransactionService", () => {
       ]);
 
       when(
-        assetService.getQuoteByForSpecifiedCryptoQuantity(
+        assetService.getQuoteForSpecifiedCryptoQuantity(
           deepEqual({
             fiatCurrency: "USD",
             cryptoCurrency: "ETH",

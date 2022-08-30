@@ -36,7 +36,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
   }
 
   async processMessageInternal(transactionId: string) {
-    const transaction = await this.transactionRepo.getTransaction(transactionId);
+    let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
       this.logger.info(
@@ -55,7 +55,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           return;
 
         case PollStatus.SUCCESS:
-          await this.transactionRepo.updateTransactionStatus(
+          transaction = await this.transactionRepo.updateTransactionStatus(
             transaction.props._id,
             TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
             transaction.props,
@@ -102,8 +102,8 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           networkFee: transaction.props.networkFee,
           nobaFee: transaction.props.nobaFee,
           totalPrice: transaction.props.leg1Amount,
-          cryptoAmount: transaction.props.leg2Amount,
-          cryptoCurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
+          cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+          cryptoCurrency: transaction.props.leg2,
           failureReason: "Failed to settle crypto transaction", // TODO: Better message
         },
       );

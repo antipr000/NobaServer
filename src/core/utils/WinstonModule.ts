@@ -24,7 +24,7 @@ export function getWinstonModule() {
         transports: [
           new winston.transports.File({
             filename: logFilePath,
-            level: "info",
+            level: "debug",
           }),
           new winston.transports.Console({
             format: winstonFormat,
