@@ -11,7 +11,7 @@ import { EmailService } from "../../../modules/common/email.service";
 import { LockService } from "../../../modules/common/lock.service";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { ConsumerAccountTransferStatus, PollStatus } from "../domain/AssetTypes";
+import { ConsumerAccountTransferStatus, ConsumerWalletTransferRequest, PollStatus } from "../domain/AssetTypes";
 
 export class CryptoTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -55,12 +55,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           return;
 
         case PollStatus.SUCCESS:
-          transaction = await this.transactionRepo.updateTransactionStatus(
-            transaction.props._id,
-            TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
-            transaction.props,
-          );
-          return;
+          break;
 
         case PollStatus.FAILURE:
           throw Error(consumerAccountTransferStatus.errorMessage);
@@ -70,6 +65,28 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           this.logger.error(`Error while checking Asset Transfer state: ${consumerAccountTransferStatus.errorMessage}`);
           throw Error(consumerAccountTransferStatus.errorMessage);
       }
+
+      const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+
+      // Skip this if we already have a withdrawalID
+      let withdrawalID = transaction.props.zhWithdrawalID;
+      if (!withdrawalID) {
+        const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
+          amount: transaction.props.executedCrypto,
+          assetId: transaction.props.leg2,
+          walletAddress: transaction.props.destinationWalletAddress,
+          consumer: consumer.props,
+          transactionID: transaction.props._id,
+        };
+        withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
+        transaction.props.zhWithdrawalID = withdrawalID;
+        transaction = await this.transactionRepo.updateTransactionStatus(
+          transaction.props._id,
+          TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+          transaction.props,
+        );
+      }
+      return;
     } catch (err) {
       this.logger.error("Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.", err);
       await this.processFailure(

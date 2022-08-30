@@ -74,13 +74,18 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         transactionID: transaction.props._id,
       };
 
-      const executedQuote: ExecutedQuote = await assetService.executeQuoteForFundsAvailability(executeQuoteRequest);
+      try {
+        const executedQuote: ExecutedQuote = await assetService.executeQuoteForFundsAvailability(executeQuoteRequest);
 
-      transaction.props.executedCrypto = executedQuote.cryptoReceived;
-      transaction.props.cryptoTradeID = executedQuote.tradeID;
-      transaction.props.exchangeRate = executedQuote.tradePrice;
+        transaction.props.executedCrypto = executedQuote.cryptoReceived;
+        transaction.props.cryptoTradeID = executedQuote.tradeID;
+        transaction.props.exchangeRate = executedQuote.tradePrice;
 
-      transaction = await this.transactionRepo.updateTransaction(transaction);
+        transaction = await this.transactionRepo.updateTransaction(transaction);
+      } catch (e) {
+        this.logger.error(`Exception while attempting to execute quote: ${e.message}. Will retry.`);
+        return;
+      }
     }
 
     // Did we already complete the transfer?

@@ -50,24 +50,8 @@ export class OnChainPendingProcessor extends MessageProcessor {
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
-
-    // Skip this if we already have a withdrawalID
-    let withdrawalID = transaction.props.zhWithdrawalID;
-    if (!withdrawalID) {
-      const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
-        amount: transaction.props.executedCrypto,
-        assetId: transaction.props.leg2,
-        walletAddress: transaction.props.destinationWalletAddress,
-        consumer: consumer.props,
-        transactionID: transaction.props._id,
-      };
-      withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
-      transaction.props.zhWithdrawalID = withdrawalID;
-      transaction = await this.transactionRepo.updateTransaction(transaction);
-    }
-
     const withdrawalStatus: ConsumerWalletTransferStatus = await assetService.pollConsumerWalletTransferStatus(
-      withdrawalID,
+      transaction.props.zhWithdrawalID,
     );
 
     switch (withdrawalStatus.status) {

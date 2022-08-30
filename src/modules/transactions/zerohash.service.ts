@@ -332,7 +332,7 @@ export class ZeroHashService {
       physical_delivery: true,
       parties_anonymous: false,
       transaction_timestamp: Date.now(),
-      bank_fee: String(request.totalFiatAmount - request.sellAmount),
+      bank_fee: this.roundTo2DecimalString(request.totalFiatAmount - request.sellAmount),
       parties: [
         {
           participant_code: request.buyerParticipantCode,
@@ -580,5 +580,9 @@ export class ZeroHashService {
     }
 
     return participantCode;
+  }
+
+  private roundTo2DecimalString(num: number): string {
+    return num.toFixed(2);
   }
 }
