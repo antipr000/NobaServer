@@ -12,5 +12,7 @@ export function getMockIdvProviderIntegrationWithDefaults(): IDVProvider {
   );
   when(mockIdvProvider.getDocumentVerificationResult(anyString())).thenReject(new Error("Method not implemented"));
 
+  when(mockIdvProvider.postConsumerFeedback(anyString(), anything())).thenReject(new Error("Method not implemented"));
+
   return mockIdvProvider;
 }
