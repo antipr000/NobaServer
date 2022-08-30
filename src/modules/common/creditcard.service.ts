@@ -4,7 +4,7 @@ import { createReadStream } from "fs";
 import * as path from "path";
 import { CCBIN_DATA_FILE_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { unsupportedIssuers, CreditCardDTO, BINValidity, CardType } from "./dto/CreditCardDTO";
+import { unsupportedIssuers, CreditCardDTO, BINValidity, CardType, BINReportDetails } from "./dto/CreditCardDTO";
 
 @Injectable()
 export class CreditCardService {
@@ -29,11 +29,14 @@ export class CreditCardService {
           const type = `${data["Type"]}`.trim();
           const network = `${data["Scheme"]}`;
           const mask = `${data["Format"]}`.trim();
-          const supported =
-            unsupportedIssuers.indexOf(issuer) == -1 ? BINValidity.SUPPORTED : BINValidity.NOT_SUPPORTED;
-          const digits = mask.replace(/ /g, "").length;
           const cardType = Object.values(CardType).filter(enumType => enumType.toUpperCase() === type.toUpperCase())[0];
-          const cvvDigits = network === "Amex" ? 4 : 3;
+          // A card BIN is supported if it's a debit card or not on the unsupportedIssuers list
+          const supported =
+            unsupportedIssuers.indexOf(issuer) == -1 || cardType == CardType.DEBIT
+              ? BINValidity.SUPPORTED
+              : BINValidity.NOT_SUPPORTED;
+          const digits = mask.replace(/ /g, "").length; // Replace all spaces and count the characters
+          const cvvDigits = network === "Amex" ? 4 : 3; // TODO: are there others?
 
           // Handle ranges
           if (iin.indexOf("-") > 0) {
@@ -79,6 +82,19 @@ export class CreditCardService {
     this.ccBINS = await this.loadCreditCardBINFile();
     this.isCCBINSLoaded = true;
     return this.ccBINS;
+  }
+
+  async getBINReport(): Promise<BINReportDetails> {
+    const bins = await this.getAllKnownBINs();
+    let supported = 0;
+    let unsupported = 0;
+
+    bins.forEach(x => (x.supported === BINValidity.SUPPORTED ? supported++ : unsupported++));
+
+    return {
+      supported: supported,
+      unsupported: unsupported,
+    };
   }
 
   async getBINDetails(requestedBIN: string): Promise<CreditCardDTO> {

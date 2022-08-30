@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { CreditCardService } from "../creditcard.service";
-import { BINValidity } from "../dto/CreditCardDTO";
+import { BINValidity, unsupportedIssuers } from "../dto/CreditCardDTO";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
@@ -32,6 +32,17 @@ describe("CreditCardService", () => {
     creditCardService = app.get<CreditCardService>(CreditCardService);
   });
 
+  describe("getBINReport()", () => {
+    it("Should return the correct number of supported and unsupported BINs", async () => {
+      const reportDetails = await creditCardService.getBINReport();
+
+      // These assertions should change every time we update CreditCardDTO.unsupportedIssuers or all_bins.csv
+      expect(unsupportedIssuers.length).toEqual(45);
+      expect(reportDetails.supported).toEqual(10733);
+      expect(reportDetails.unsupported).toEqual(659);
+    });
+  });
+
   describe("isBINSupported", () => {
     it("BIN 401795 should be supported", async () => {
       const isSupported = await creditCardService.isBINSupported("401795");
@@ -53,14 +64,14 @@ describe("CreditCardService", () => {
       expect(isSupported).toEqual(BINValidity.NOT_SUPPORTED);
     });
 
-    it("BIN 441103 should not be supported", async () => {
-      const isSupported = await creditCardService.isBINSupported("441103");
+    it("BIN 438857 should not be supported", async () => {
+      const isSupported = await creditCardService.isBINSupported("438857");
       expect(isSupported).toEqual(BINValidity.NOT_SUPPORTED);
     });
 
-    it("BIN 441104 should not be supported", async () => {
+    it("BIN 441104 should be supported", async () => {
       const isSupported = await creditCardService.isBINSupported("441104");
-      expect(isSupported).toEqual(BINValidity.NOT_SUPPORTED);
+      expect(isSupported).toEqual(BINValidity.SUPPORTED);
     });
 
     it("BIN 99999999 should be unknown", async () => {
