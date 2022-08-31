@@ -112,7 +112,7 @@ jobs:
           echo ::set-output name=ebEnvironment::sandbox
 
       - name: Deploy to EB
-        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
+        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none') || contains(steps.check-deploy-sandbox.outputs.ebEnvironment, 'sandbox')" # run this job only if ebEnvironment is not none
         uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
