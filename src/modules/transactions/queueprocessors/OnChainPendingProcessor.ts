@@ -11,7 +11,7 @@ import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { AssetService } from "../assets/asset.service";
-import { ConsumerWalletTransferRequest, ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
+import { ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
 
 export class OnChainPendingProcessor extends MessageProcessor {
   constructor(

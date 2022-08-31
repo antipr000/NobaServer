@@ -57,7 +57,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     // Did we already execute the trade?
     if (!transaction.props.cryptoTradeID) {
-      this.logger.info(`Executing trade to Noba`);
+      this.logger.info("Executing trade to Noba");
 
       const executeQuoteRequest: ExecuteQuoteRequest = {
         consumer: consumer.props,
@@ -100,7 +100,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       );
       this.logger.info(`Transfer to Noba initiated with ID: "${fundAvailableResponse.transferID}".`);
 
-      let inconsistentTransfer: boolean = false;
+      let inconsistentTransfer = false;
       // Ensure here that we transferred the correct amount of the correct crypto
       if (
         fundAvailableResponse.transferredCrypto != fundsAvailabilityRequest.cryptoAmount ||

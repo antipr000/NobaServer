@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Collection, MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import { anyString, anything, capture, instance, when } from "ts-mockito";
+import { anything, capture, instance, when } from "ts-mockito";
 import {
   MONGO_CONFIG_KEY,
   MONGO_URI,
