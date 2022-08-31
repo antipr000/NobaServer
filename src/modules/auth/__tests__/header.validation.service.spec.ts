@@ -195,25 +195,6 @@ describe("HeaderValidationService", () => {
       }
     });
 
-    it("should validate signature and throw error when values are provided and API Key is not found", async () => {
-      const apiKey = "fake-api-key";
-
-      when(partnerService.getPartnerFromApiKey(apiKey)).thenReject(new NotFoundException("Not found"));
-
-      try {
-        await headerValidationService.validateApiKeyAndSignature(
-          /* apiKey= */ apiKey,
-          /* timestamp= */ "fake-timestamp",
-          /* signature= */ "fake-signature",
-          /* requestMethod= */ "POST",
-          /* requestPath= */ "/v1/auth/login",
-          /* requestBody= */ "fake-body",
-        );
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-      }
-    });
-
     it("should validate when values are provided and return true if signature matches", async () => {
       const apiKey = "fake-api-key";
       const timestamp = "fake-timestamp";
