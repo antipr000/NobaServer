@@ -12,7 +12,7 @@ import {
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { getMockAppServiceWithDefaults } from "../../../../mocks/mock.app.service";
-import { anything, deepEqual, instance, when } from "ts-mockito";
+import { deepEqual, instance, when } from "ts-mockito";
 import { DefaultAssetService } from "../../assets/default.asset.service";
 import {
   ConsumerAccountTransferRequest,
