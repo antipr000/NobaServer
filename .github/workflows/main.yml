@@ -112,13 +112,26 @@ jobs:
           echo ::set-output name=ebEnvironment::sandbox
 
       - name: Deploy to EB
-        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none') || contains(steps.check-deploy-sandbox.outputs.ebEnvironment, 'sandbox')" # run this job only if ebEnvironment is not none
+        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
         uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: nobaserver
           environment_name: nobaserver-${{steps.check-tag.outputs.ebEnvironment}}
+          version_label: ${{steps.build_info.outputs.version_label}}
+          use_existing_version_if_available: "true"
+          region: us-east-1
+          deployment_package: artifacts.zip
+
+      - name: Deploy to EB Sandbox
+        if: "contains(steps.check-deploy-sandbox.outputs.ebEnvironment, 'sandbox')" # run this job only if ebEnvironment is sandbox
+        uses: einaregilsson/beanstalk-deploy@v20
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: nobaserver
+          environment_name: nobaserver-${{steps.check-deploy-sandbox.outputs.ebEnvironment}}
           version_label: ${{steps.build_info.outputs.version_label}}
           use_existing_version_if_available: "true"
           region: us-east-1
