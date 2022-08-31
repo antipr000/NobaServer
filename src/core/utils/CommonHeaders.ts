@@ -12,17 +12,11 @@ export function getCommonHeaders(): ApiHeaderOptions[] {
     },
     {
       name: X_NOBA_SIGNATURE,
-      required:
-        appEnvironment === AppEnvironment.PROD ||
-        appEnvironment === AppEnvironment.STAGING ||
-        appEnvironment === AppEnvironment.PARTNER,
+      required: appEnvironment === AppEnvironment.PROD,
     },
     {
       name: X_NOBA_TIMESTAMP,
-      required:
-        appEnvironment === AppEnvironment.PROD ||
-        appEnvironment === AppEnvironment.STAGING ||
-        appEnvironment === AppEnvironment.PARTNER,
+      required: appEnvironment === AppEnvironment.PROD,
     },
   ];
 }
