@@ -472,8 +472,13 @@ export class ZeroHashService {
 
       const tradeState = tradeData["message"]["trade_state"];
       const settledTimestamp = tradeData.message.settled_timestamp;
-      // TODO(#): Update the index of "parties" after ZH discussion ends.
-      const settlementState = tradeData.message.parties[1].settlement_state;
+
+      let settlementState: string;
+      tradeData.message.parties.forEach(party => {
+        if (party.side === "sell") {
+          settlementState = tradeData.message.parties[1].settlement_state;
+        }
+      });
 
       /* 
         From ZH docs:
@@ -519,6 +524,7 @@ export class ZeroHashService {
           throw Error(`Unexpected trade state: '${tradeState}'`);
       }
     } catch (err) {
+      this.logger.error(`Error while checking trade status: ${JSON.stringify(err)}`);
       // TODO(#): Only send "pending" state if there is an "INTERNAL_ERROR"
       //          as NOT_FOUND status can't be retried.
       return {
