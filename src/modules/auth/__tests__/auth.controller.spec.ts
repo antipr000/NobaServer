@@ -35,9 +35,6 @@ describe("AdminService", () => {
 
   const apiKey = "test-api-key";
   const partnerId = "test-partner-1";
-  const signature = "test-signature";
-  const timestamp = "test-timestamp";
-  const secretKey = "test-secret";
 
   beforeEach(async () => {
     mockAdminAuthService = getMockAdminAuthServiceWithDefaults();
@@ -96,20 +93,6 @@ describe("AdminService", () => {
 
       when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, partnerId)).thenResolve(adminId);
       when(mockAdminAuthService.generateAccessToken(adminId, partnerId)).thenResolve(generateAccessTokenResponse);
-      when(
-        mockHeaderValidationService.validateApiKeyAndSignature(
-          apiKey,
-          timestamp,
-          signature,
-          "POST",
-          "/v1/auth/verifyotp",
-          JSON.stringify({
-            emailOrPhone: adminEmail,
-            identityType: identityType,
-            otp: otp,
-          }),
-        ),
-      ).thenResolve(true);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
         {
@@ -117,9 +100,9 @@ describe("AdminService", () => {
           identityType: identityType,
           otp: otp,
         },
-        apiKey,
-        timestamp,
-        signature,
+        {
+          "x-noba-api-key": apiKey,
+        },
       );
 
       expect(result).toEqual(generateAccessTokenResponse);
@@ -137,20 +120,6 @@ describe("AdminService", () => {
 
       when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, partnerId)).thenResolve(consumerId);
       when(mockConsumerAuthService.generateAccessToken(consumerId, partnerId)).thenResolve(generateAccessTokenResponse);
-      when(
-        mockHeaderValidationService.validateApiKeyAndSignature(
-          apiKey,
-          timestamp,
-          signature,
-          "POST",
-          "/v1/auth/verifyotp",
-          JSON.stringify({
-            emailOrPhone: consumerEmail,
-            identityType: identityType,
-            otp: otp,
-          }),
-        ),
-      ).thenResolve(true);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
         {
@@ -158,9 +127,9 @@ describe("AdminService", () => {
           identityType: identityType,
           otp: otp,
         },
-        apiKey,
-        timestamp,
-        signature,
+        {
+          "x-noba-api-key": apiKey,
+        },
       );
 
       expect(result).toEqual(generateAccessTokenResponse);
@@ -177,28 +146,15 @@ describe("AdminService", () => {
       when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
       when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
-      when(
-        mockHeaderValidationService.validateApiKeyAndSignature(
-          apiKey,
-          timestamp,
-          signature,
-          "POST",
-          "/v1/auth/login",
-          JSON.stringify({
-            email: adminEmail,
-            identityType: identityType,
-          }),
-        ),
-      ).thenResolve(true);
 
       await authController.loginUser(
         {
           email: adminEmail,
           identityType: identityType,
         },
-        apiKey,
-        timestamp,
-        signature,
+        {
+          "x-noba-api-key": apiKey,
+        },
       );
     });
 
@@ -211,28 +167,15 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-      when(
-        mockHeaderValidationService.validateApiKeyAndSignature(
-          apiKey,
-          timestamp,
-          signature,
-          "POST",
-          "/v1/auth/login",
-          JSON.stringify({
-            email: consumerEmail,
-            identityType: identityType,
-          }),
-        ),
-      ).thenResolve(true);
 
       await authController.loginUser(
         {
           email: consumerEmail,
           identityType: identityType,
         },
-        apiKey,
-        timestamp,
-        signature,
+        {
+          "x-noba-api-key": apiKey,
+        },
       );
     });
 
@@ -245,28 +188,15 @@ describe("AdminService", () => {
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-      when(
-        mockHeaderValidationService.validateApiKeyAndSignature(
-          apiKey,
-          timestamp,
-          signature,
-          "POST",
-          "/v1/auth/login",
-          JSON.stringify({
-            email: consumerEmail,
-            identityType: identityType,
-          }),
-        ),
-      ).thenResolve(true);
 
       await authController.loginUser(
         {
           email: consumerEmail,
           identityType: identityType,
         },
-        apiKey,
-        timestamp,
-        signature,
+        {
+          "x-noba-api-key": apiKey,
+        },
       );
 
       try {
@@ -276,9 +206,9 @@ describe("AdminService", () => {
             email: consumerEmail,
             identityType: identityType,
           },
-          apiKey,
-          timestamp,
-          signature,
+          {
+            "x-noba-api-key": apiKey,
+          },
         );
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
@@ -294,28 +224,15 @@ describe("AdminService", () => {
       when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp)).thenResolve();
       when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString())).thenResolve();
       when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-      when(
-        mockHeaderValidationService.validateApiKeyAndSignature(
-          apiKey,
-          timestamp,
-          signature,
-          "POST",
-          "/v1/auth/login",
-          JSON.stringify({
-            email: partnerAdminEmail,
-            identityType: identityType,
-          }),
-        ),
-      ).thenResolve(true);
 
       await authController.loginUser(
         {
           email: partnerAdminEmail,
           identityType: identityType,
         },
-        apiKey,
-        timestamp,
-        signature,
+        {
+          "x-noba-api-key": apiKey,
+        },
       );
     });
 
@@ -331,9 +248,9 @@ describe("AdminService", () => {
             email: unregisteredAdminEmail,
             identityType: identityType,
           },
-          apiKey,
-          timestamp,
-          signature,
+          {
+            "x-noba-api-key": apiKey,
+          },
         );
         expect(true).toBe(false);
       } catch (err) {
@@ -353,9 +270,9 @@ describe("AdminService", () => {
             email: unregisteredPartnerAdminEmail,
             identityType: identityType,
           },
-          apiKey,
-          timestamp,
-          signature,
+          {
+            "x-noba-api-key": apiKey,
+          },
         );
         expect(true).toBe(false);
       } catch (err) {
