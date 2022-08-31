@@ -142,7 +142,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       );
       this.logger.info(`Transfer to Noba initiated with ID: "${fundAvailableResponse.transferID}".`);
 
-      let inconsistentTransfer: boolean = false;
+      let inconsistentTransfer = false;
       // Ensure here that we transferred the correct amount of the correct crypto
       if (
         fundAvailableResponse.transferredCrypto != fundsAvailabilityRequest.cryptoAmount ||

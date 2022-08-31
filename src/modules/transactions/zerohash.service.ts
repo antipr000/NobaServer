@@ -22,7 +22,6 @@ import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
 import { Transaction } from "./domain/Transaction";
-import { CryptoTransactionRequestResult, CryptoTransactionRequestResultStatus } from "./domain/Types";
 import {
   OnChainState,
   TradeState,
@@ -365,7 +364,6 @@ export class ZeroHashService {
   }
 
   async getTransfer(transferId: string): Promise<ZerohashTransfer> {
-    console.log(transferId);
     const response = await this.makeRequest(`/transfers/${transferId}`, "GET", {});
     return {
       id: response.message.id,

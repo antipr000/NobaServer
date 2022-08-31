@@ -62,7 +62,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
 
     // Get latest error
     let errorMessage: string;
-    if (transaction.props.transactionExceptions.length > 0) {
+    if (transaction.props.transactionExceptions.length == 0) {
       // Should ALWAYS be, but if it's not, populate a generic error message
       switch (status) {
         case TransactionStatus.FIAT_INCOMING_FAILED:

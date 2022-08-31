@@ -35,6 +35,9 @@ import {
   getMockAssetServiceWithDefaults,
 } from "../../mocks/mock.asset.service";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
+import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
+import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -156,7 +159,7 @@ describe("CryptoTransactionStatusProcessor", () => {
   });
 
   it("should process crypto transaction status", async () => {
-    /*const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
     expect(subscribedQueueName).toBe(TransactionQueueName.CryptoTransactionInitiated);
     expect(processor).toBeInstanceOf(CryptoTransactionStatusProcessor);
 
@@ -176,7 +179,6 @@ describe("CryptoTransactionStatusProcessor", () => {
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
       partnerID: "12345",
-      zhWithdrawalID: withdrawalID,
       transactionExceptions: [],
     });
 
@@ -184,6 +186,18 @@ describe("CryptoTransactionStatusProcessor", () => {
       ...transaction.props,
       _id: transaction.props._id as any,
     });
+
+    when(consumerService.getConsumer(transaction.props.userId)).thenResolve(
+      Consumer.createConsumer({
+        _id: transaction.props._id,
+        email: "test+consumer@noba.com",
+        partners: [
+          {
+            partnerID: "testpartner",
+          },
+        ],
+      }),
+    );
 
     when(assetService.transferToConsumerWallet(anything())).thenResolve(withdrawalID);
     when(assetService.pollAssetTransferToConsumerStatus(initiatedPaymentId)).thenResolve({
@@ -193,14 +207,14 @@ describe("CryptoTransactionStatusProcessor", () => {
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
-    await cryptoTransactionStatusProcessor.processMessage(transaction.props._id);
+    await cryptoTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.CRYPTO_OUTGOING_COMPLETED);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
       transaction.props.lastStatusUpdateTimestamp,
-    );*/
+    );
   });
 
   it("should exit flow if transaction status is not 'CRYPTO_OUTGOING_INITIATED'", async () => {
@@ -233,7 +247,7 @@ describe("CryptoTransactionStatusProcessor", () => {
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
-    await cryptoTransactionStatusProcessor.processMessage(transaction.props._id);
+    await cryptoTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
@@ -288,6 +302,135 @@ describe("CryptoTransactionStatusProcessor", () => {
 
     await cryptoTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 
+    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+    expect(allTransactionsInDb).toHaveLength(1);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.CRYPTO_OUTGOING_FAILED);
+    expect(allTransactionsInDb[0].cryptoTransactionId).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
+
+    const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+    expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+    expect(transactionId).toBe(transaction.props._id);
+  });
+
+  it("should throw an error and move into failed queue if we got an error on polling asset transfer status and null payment method", async () => {
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.CryptoTransactionInitiated);
+    expect(processor).toBeInstanceOf(CryptoTransactionStatusProcessor);
+
+    const initiatedPaymentId = "crypto-payment-id";
+    const transaction: Transaction = Transaction.createTransaction({
+      _id: "1111111111",
+      userId: "UUUUUUUUU",
+      transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+      paymentMethodID: "XXXXXXXXXX",
+      leg1Amount: 1000,
+      leg2Amount: 1,
+      leg1: "USD",
+      leg2: "ETH",
+      checkoutPaymentID: "checkout-id",
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
+      cryptoTransactionId: initiatedPaymentId,
+      type: TransactionType.ONRAMP,
+      partnerID: "12345",
+      transactionExceptions: [],
+    });
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(assetService.pollAssetTransferToConsumerStatus(initiatedPaymentId)).thenResolve({
+      status: PollStatus.FATAL_ERROR,
+      errorMessage: "Test error",
+    });
+    when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+    when(consumerService.getConsumer(transaction.props.userId)).thenResolve(
+      Consumer.createConsumer({
+        _id: transaction.props._id,
+        email: "test+consumer@noba.com",
+        partners: [
+          {
+            partnerID: "testpartner",
+          },
+        ],
+      }),
+    );
+
+    await cryptoTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+    expect(allTransactionsInDb).toHaveLength(1);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.CRYPTO_OUTGOING_FAILED);
+    expect(allTransactionsInDb[0].cryptoTransactionId).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
+
+    const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+    expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+    expect(transactionId).toBe(transaction.props._id);
+  });
+
+  it("should throw an error and move into failed queue if we got an error on polling asset transfer status", async () => {
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.CryptoTransactionInitiated);
+    expect(processor).toBeInstanceOf(CryptoTransactionStatusProcessor);
+
+    const initiatedPaymentId = "crypto-payment-id";
+    const transaction: Transaction = Transaction.createTransaction({
+      _id: "1111111111",
+      userId: "UUUUUUUUU",
+      transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+      paymentMethodID: "XXXXXXXXXX",
+      leg1Amount: 1000,
+      leg2Amount: 1,
+      leg1: "USD",
+      leg2: "ETH",
+      checkoutPaymentID: "checkout-id",
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
+      cryptoTransactionId: initiatedPaymentId,
+      type: TransactionType.ONRAMP,
+      partnerID: "12345",
+      transactionExceptions: [],
+    });
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(assetService.pollAssetTransferToConsumerStatus(initiatedPaymentId)).thenResolve({
+      status: PollStatus.FATAL_ERROR,
+      errorMessage: "Test error",
+    });
+    when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+    const paymentMethod: PaymentMethod = {
+      status: PaymentMethodStatus.APPROVED,
+      first6Digits: "123456",
+      last4Digits: "4321",
+      imageUri: "...",
+      paymentToken: "XXXXXXXXXX",
+      paymentProviderID: PaymentProviders.CHECKOUT,
+    };
+    when(consumerService.getConsumer(transaction.props.userId)).thenResolve(
+      Consumer.createConsumer({
+        _id: transaction.props._id,
+        email: "test+consumer@noba.com",
+        partners: [
+          {
+            partnerID: "testpartner",
+          },
+        ],
+        paymentMethods: [paymentMethod],
+      }),
+    );
+
+    when(emailService.sendCryptoFailedEmail(anything(), anything(), anything(), anything())).thenResolve();
+
+    await cryptoTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+    // TODO: Why doesn't this work?
+    //expect(emailService.sendCryptoFailedEmail).toHaveBeenCalledTimes(1);
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.CRYPTO_OUTGOING_FAILED);
