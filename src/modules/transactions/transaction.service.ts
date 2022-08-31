@@ -161,11 +161,12 @@ export class TransactionService {
       userId: consumerID,
       sessionKey: sessionKey,
       paymentMethodID: transactionRequest.paymentToken,
-      leg1Amount: transactionRequest.leg1Amount,
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
-      leg2Amount: this.roundTo2DecimalNumber(transactionRequest.leg2Amount),
+      leg1Amount: this.roundTo2DecimalNumber(transactionRequest.leg1Amount),
+      leg2Amount: transactionRequest.leg2Amount,
       leg1: transactionRequest.leg1,
       leg2: transactionRequest.leg2,
+      fixedSide: transactionRequest.fixedSide,
       transactionStatus: TransactionStatus.PENDING,
       partnerID: partnerID,
       destinationWalletAddress: transactionRequest.destinationWalletAddress,
@@ -202,6 +203,7 @@ export class TransactionService {
       );
     }
 
+    // TODO(#): Remove all these settings here and move it to AssetService 'executeQuoteForFundsAvailability'
     // Add quote information to new transaction
     newTransaction.props.tradeQuoteID = quote.quoteID;
     newTransaction.props.nobaFee = quote.nobaFeeInFiat;

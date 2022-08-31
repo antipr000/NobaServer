@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
@@ -17,6 +17,7 @@ import {
   QuoteRequestForFixedFiat,
   ExecutedQuote,
   FundsAvailabilityRequest,
+  ExecutedQuoteStatus,
 } from "../domain/AssetTypes";
 import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
@@ -32,10 +33,12 @@ import {
   ZerohashTransferStatus,
   ZerohashWithdrawalResponse,
   ZerohashTransferResponse,
+  ZerohashExecutedQuote,
 } from "../domain/ZerohashTypes";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { CurrencyType } from "../../../modules/common/domain/Types";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
@@ -214,14 +217,73 @@ export class DefaultAssetService implements AssetService {
     }
 
     // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
-    const nobaQuote: NobaQuote = await this.getQuoteForSpecifiedFiatAmount({
-      cryptoCurrency: request.cryptoCurrency,
-      fiatAmount: request.fiatAmount,
-      fiatCurrency: request.fiatCurrency,
-    });
+    let nobaQuote: NobaQuote;
 
-    const executedQuote: ExecutedQuote = await this.zerohashService.executeQuote(nobaQuote.quoteID);
-    return executedQuote;
+    switch (request.fixedSide) {
+      case CurrencyType.FIAT:
+        nobaQuote = await this.getQuoteForSpecifiedFiatAmount({
+          cryptoCurrency: request.cryptoCurrency,
+          fiatAmount: request.fiatAmount,
+          fiatCurrency: request.fiatCurrency,
+        });
+        break;
+
+      case CurrencyType.CRYPTO:
+        nobaQuote = await this.getQuoteForSpecifiedCryptoQuantity({
+          cryptoCurrency: request.cryptoCurrency,
+          cryptoQuantity: request.cryptoQuantity,
+          fiatCurrency: request.fiatCurrency,
+        });
+        break;
+
+      default:
+        throw new BadRequestException(`Unknown 'fixedSide' of the transaction: '${request.fixedSide}'`);
+    }
+
+    // TODO(#): Slippage calculations.
+
+    const executedQuote: ZerohashExecutedQuote = await this.zerohashService.executeQuote(nobaQuote.quoteID);
+    return {
+      quote: nobaQuote,
+      tradeID: executedQuote.tradeID,
+      tradePrice: executedQuote.tradePrice,
+      cryptoReceived: executedQuote.cryptoReceived,
+    };
+  }
+
+  async pollEecuteQuoteForFundsAvailabilityStatus(id: string): Promise<ExecutedQuoteStatus> {
+    const tradeResponse: ZerohashTradeResponse = await this.zerohashService.checkTradeStatus(id);
+
+    try {
+      switch (tradeResponse.tradeState) {
+        case TradeState.PENDING:
+          return {
+            status: PollStatus.PENDING,
+            errorMessage: null,
+            settledTimestamp: null,
+          };
+
+        case TradeState.SETTLED:
+          return {
+            status: PollStatus.SUCCESS,
+            settledTimestamp: tradeResponse.settledTimestamp,
+            errorMessage: null,
+          };
+
+        case TradeState.DEFAULTED:
+          return {
+            status: PollStatus.FAILURE,
+            errorMessage: tradeResponse.errorMessage,
+            settledTimestamp: null,
+          };
+      }
+    } catch (err) {
+      return {
+        status: PollStatus.FATAL_ERROR,
+        errorMessage: JSON.stringify(err),
+        settledTimestamp: null,
+      };
+    }
   }
 
   async makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse> {

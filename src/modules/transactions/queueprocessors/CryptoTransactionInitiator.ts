@@ -18,6 +18,7 @@ import {
   PollStatus,
   ExecutedQuote,
   FundsAvailabilityRequest,
+  ExecutedQuoteStatus,
 } from "../domain/AssetTypes";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
@@ -56,7 +57,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     // Did we already execute the trade?
-    if (!transaction.props.cryptoTradeID) {
+    if (!transaction.props.executedQuoteTradeID) {
       this.logger.info(`Executing trade to Noba`);
 
       const executeQuoteRequest: ExecuteQuoteRequest = {
@@ -69,6 +70,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
         // TODO(#): Populate slippage correctly using 'AssetService'
         slippage: 0,
+        fixedSide: transaction.props.fixedSide,
 
         transactionCreationTimestamp: transaction.props.transactionTimestamp,
         transactionID: transaction.props._id,
@@ -78,13 +80,53 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         const executedQuote: ExecutedQuote = await assetService.executeQuoteForFundsAvailability(executeQuoteRequest);
 
         transaction.props.executedCrypto = executedQuote.cryptoReceived;
-        transaction.props.cryptoTradeID = executedQuote.tradeID;
+        transaction.props.executedQuoteTradeID = executedQuote.tradeID;
         transaction.props.exchangeRate = executedQuote.tradePrice;
+
+        // TODO(#): Verify if this needs to be changed.
+        // transaction.props.tradeQuoteID = executedQuote.quote.quoteID;
+        // transaction.props.nobaFee = executedQuote.quote.nobaFeeInFiat;
+        // transaction.props.networkFee = executedQuote.quote.networkFeeInFiat;
+        // transaction.props.processingFee = executedQuote.quote.processingFeeInFiat;
+        // transaction.props.exchangeRate = executedQuote.quote.perUnitCryptoPrice;
+        // transaction.props.amountPreSpread = executedQuote.quote.amountPreSpread;
 
         transaction = await this.transactionRepo.updateTransaction(transaction);
       } catch (e) {
         this.logger.error(`Exception while attempting to execute quote: ${e.message}. Will retry.`);
         return;
+      }
+    }
+
+    if (!transaction.props.executedQuoteSettledTimestamp) {
+      const executedQuoteTradeStatus: ExecutedQuoteStatus =
+        await assetService.pollEecuteQuoteForFundsAvailabilityStatus(transaction.props.executedQuoteTradeID);
+
+      switch (executedQuoteTradeStatus.status) {
+        case PollStatus.SUCCESS:
+          transaction.props.executedQuoteSettledTimestamp = executedQuoteTradeStatus.settledTimestamp;
+          transaction = await this.transactionRepo.updateTransaction(transaction);
+          break;
+
+        case PollStatus.PENDING:
+          this.logger.debug(`Waiting for quote trade with ID '${transaction.props.executedQuoteTradeID}' to settle.`);
+          return;
+
+        case PollStatus.FAILURE:
+          // TODO(#): Limit the # of retries.
+          this.logger.error(
+            `Quote trade failed with ID '${transaction.props.executedQuoteTradeID}'. Re-executing the quote.`,
+          );
+
+          // Retry the quote execution from the beginning.
+          transaction.props.executedQuoteTradeID = undefined;
+          transaction = await this.transactionRepo.updateTransaction(transaction);
+          return;
+
+        case PollStatus.FATAL_ERROR:
+          // TODO(#): Add an alarm here.
+          this.logger.error(`Unexpected error occured: "${executedQuoteTradeStatus.errorMessage}"`);
+          return this.processFailure(TransactionStatus.FAILED, executedQuoteTradeStatus.errorMessage, transaction);
       }
     }
 
@@ -109,7 +151,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         // If this happens, still save the transfer ID to the transaction but then abort processing with a failure.
         inconsistentTransfer = true;
         this.logger.error(
-          `Transaction ID: ${transactionId} - Crypto traded to noba != crypto transfer! Traded: ${fundsAvailabilityRequest.cryptoAmount} ${fundsAvailabilityRequest.cryptocurrency}, transferred: ${fundAvailableResponse.transferredCrypto} ${fundAvailableResponse.cryptocurrency}. Trade ID: ${transaction.props.cryptoTradeID}, TransferID: ${fundAvailableResponse.transferID}`,
+          `Transaction ID: ${transactionId} - Crypto traded to noba != crypto transfer! Traded: ${fundsAvailabilityRequest.cryptoAmount} ${fundsAvailabilityRequest.cryptocurrency}, transferred: ${fundAvailableResponse.transferredCrypto} ${fundAvailableResponse.cryptocurrency}. Trade ID: ${transaction.props.executedQuoteTradeID}, TransferID: ${fundAvailableResponse.transferID}`,
         );
       }
 
