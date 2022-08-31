@@ -28,6 +28,8 @@ jobs:
         run: yarn install
 
       - name: Test and coverage
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
         run: yarn jest --verbose --silent --coverage --runInBand
 
       - uses: sonarsource/sonarqube-scan-action@master
