@@ -8,7 +8,14 @@ import {
   Inject,
   Post,
 } from "@nestjs/common";
-import { ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags, ApiUnauthorizedResponse } from "@nestjs/swagger";
+import {
+  ApiForbiddenResponse,
+  ApiHeaders,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from "@nestjs/swagger";
 import { AdminAuthService } from "./admin.auth.service";
 import { AuthService } from "./auth.service";
 import {
@@ -23,12 +30,13 @@ import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { PartnerAuthService } from "./partner.auth.service";
 import { Public } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
-import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "./domain/HeaderConstants";
-import { HeaderValidationService } from "./header.validation.service";
 import { PartnerService } from "../partner/partner.service";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import { X_NOBA_API_KEY } from "./domain/HeaderConstants";
 
 @Controller("auth")
 @ApiTags("Authentication")
+@ApiHeaders(getCommonHeaders())
 export class AuthController {
   @Inject()
   private readonly consumerAuthService: UserAuthService;
@@ -38,8 +46,6 @@ export class AuthController {
   private readonly partnerAuthService: PartnerAuthService;
   @Inject()
   private readonly partnerService: PartnerService;
-  @Inject()
-  private readonly headerValidationService: HeaderValidationService;
 
   private getAuthService(identityType: string): AuthService {
     switch (identityType) {
@@ -59,22 +65,9 @@ export class AuthController {
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "API access token" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
-  async verifyOtp(
-    @Body() requestBody: VerifyOtpRequestDTO,
-    @Headers(X_NOBA_API_KEY) apiKey: string,
-    @Headers(X_NOBA_TIMESTAMP) timestamp: string,
-    @Headers(X_NOBA_SIGNATURE) signature: string,
-  ): Promise<VerifyOtpResponseDTO> {
+  async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO, @Headers() headers): Promise<VerifyOtpResponseDTO> {
     const authService: AuthService = this.getAuthService(requestBody.identityType);
-    await this.headerValidationService.validateApiKeyAndSignature(
-      apiKey,
-      timestamp,
-      signature,
-      /*requestMethod = */ "POST",
-      /*requestPath = */ "/v1/auth/verifyotp",
-      JSON.stringify(requestBody),
-    );
-    const partnerId = (await this.partnerService.getPartnerFromApiKey(apiKey)).props._id;
+    const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
 
     // TODO: figure out how to get partner's user ID from request & pass as parameter 4 of this method:
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp, partnerId);
@@ -86,12 +79,7 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, description: "Email successfully sent" })
   @ApiForbiddenResponse({ description: "Account does not exist" })
   @Post("/login")
-  async loginUser(
-    @Body() requestBody: LoginRequestDTO,
-    @Headers(X_NOBA_API_KEY) apiKey: string,
-    @Headers(X_NOBA_TIMESTAMP) timestamp: string,
-    @Headers(X_NOBA_SIGNATURE) signature: string,
-  ) {
+  async loginUser(@Body() requestBody: LoginRequestDTO, @Headers() headers) {
     const authService: AuthService = this.getAuthService(requestBody.identityType);
 
     const isLoginAllowed = await authService.verifyUserExistence(requestBody.email);
@@ -101,17 +89,7 @@ export class AuthController {
           "Please contact support team, if you think this is an error.",
       );
     }
-
-    await this.headerValidationService.validateApiKeyAndSignature(
-      apiKey,
-      timestamp,
-      signature,
-      /*requestMethod = */ "POST",
-      /*requestPath = */ "/v1/auth/login",
-      JSON.stringify(requestBody),
-    );
-
-    const partnerId = (await this.partnerService.getPartnerFromApiKey(apiKey)).props._id;
+    const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
     const otp = authService.createOtp();
     await authService.deleteAnyExistingOTP(requestBody.email);
     await authService.saveOtp(requestBody.email, otp, partnerId);

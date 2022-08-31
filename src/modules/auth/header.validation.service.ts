@@ -4,6 +4,7 @@ import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";
 import * as CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
+import { AppEnvironment, getEnvironmentName } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class HeaderValidationService {
@@ -20,6 +21,7 @@ export class HeaderValidationService {
     requestPath: string,
     requestBody: string,
   ): Promise<boolean> {
+    if (!this.shouldValidateHeaders(apiKey, timestamp, signature)) return true;
     try {
       const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
       const secretKey = CryptoJS.enc.Utf8.parse(partner.props.secretKey);
@@ -37,5 +39,21 @@ export class HeaderValidationService {
       this.logger.error(e);
       throw new BadRequestException("Failed to validate headers. Reason: " + e.message);
     }
+  }
+
+  private shouldValidateHeaders(apiKey: string, timestamp: string, signature: string) {
+    const appEnvironment: AppEnvironment = getEnvironmentName();
+
+    if (
+      appEnvironment === AppEnvironment.PROD ||
+      appEnvironment === AppEnvironment.STAGING ||
+      appEnvironment === AppEnvironment.PARTNER
+    ) {
+      return true;
+    } else if (apiKey && timestamp && signature) {
+      return true;
+    }
+
+    return false;
   }
 }

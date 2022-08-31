@@ -1,7 +1,7 @@
 import * as Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
-import { KeysRequired } from "../../common/domain/Types";
+import { CurrencyType, KeysRequired } from "../../common/domain/Types";
 import { TransactionStatus, TransactionType } from "./Types";
 
 export class TransactionEvent {
@@ -32,6 +32,7 @@ export interface TransactionProps extends VersioningInfo {
   leg2Amount: number;
   leg1: string;
   leg2: string;
+  fixedSide: CurrencyType;
   type: TransactionType;
   partnerID: string;
   tradeQuoteID: string;
@@ -50,7 +51,8 @@ export interface TransactionProps extends VersioningInfo {
   transactionTimestamp?: Date;
   settledTimestamp?: Date;
   zhWithdrawalID: string; // WithdrawalId after transaction is settled.
-  cryptoTradeID: string; //From ZHLS executed quote
+  executedQuoteTradeID: string; //From ZHLS executed quote
+  executedQuoteSettledTimestamp: number;
   executedCrypto: number; // From ZHLS executed quote
   amountPreSpread: number; // Fiat amount before spread calculation
 
@@ -78,6 +80,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   settledAmount: Joi.number().optional(),
   leg1: Joi.string().required(),
   leg2: Joi.string().required(),
+  fixedSide: Joi.string().valid(...Object.values(CurrencyType)),
   type: Joi.string()
     .valid(...Object.values(TransactionType))
     .default(TransactionType.ONRAMP),
@@ -98,7 +101,8 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   transactionTimestamp: Joi.date().optional(),
   settledTimestamp: Joi.date().optional(),
   zhWithdrawalID: Joi.string().optional(),
-  cryptoTradeID: Joi.string().optional(),
+  executedQuoteTradeID: Joi.string().optional(),
+  executedQuoteSettledTimestamp: Joi.number().optional(),
   executedCrypto: Joi.number().optional(),
   amountPreSpread: Joi.number().optional(),
   lastProcessingTimestamp: Joi.number().optional(),
