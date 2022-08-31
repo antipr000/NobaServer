@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, deepEqual, instance, when, verify, anyString } from "ts-mockito";
+import { anything, deepEqual, instance, when, verify, anyString, capture } from "ts-mockito";
 import { VerificationService } from "../verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { IVerificationDataRepo } from "../repos/IVerificationDataRepo";
@@ -30,6 +30,12 @@ import {
   FAKE_DOCUMENT_VERIFiCATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
 } from "../integrations/fakes/FakeSardineResponses";
 import { TransactionInformation } from "../domain/TransactionInformation";
+import { Express } from "express";
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Multer } from "multer";
+import { Readable } from "stream";
+import { DocumentInformation } from "../domain/DocumentInformation";
+import { DocumentTypes } from "../domain/DocumentTypes";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -741,6 +747,47 @@ describe("VerificationService", () => {
       ).once();
     });
   });
+
+  describe("verifyDocument", () => {
+    it("should start processing documents and return PENDING state", async () => {
+      const consumer = getFakeConsumer();
+      const sessionKey = "fake-session-key";
+      const documentInformation = getFakeDocumentInformation(consumer);
+      const verificationId = "fake-id";
+
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        verificationData: {
+          ...consumer.props.verificationData,
+          documentVerificationStatus: DocumentVerificationStatus.PENDING,
+          documentVerificationTimestamp: new Date().getTime(),
+          documentVerificationTransactionID: verificationId,
+        },
+      };
+
+      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(idvProvider.verifyDocument(sessionKey, deepEqual(documentInformation), deepEqual(consumer))).thenResolve(
+        verificationId,
+      );
+      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
+      when(emailService.sendKycPendingOrFlaggedEmail(anyString(), anyString(), anyString())).thenResolve();
+
+      const result = await verificationService.verifyDocument(consumer.props._id, sessionKey, documentInformation);
+      const updateUserArgs = capture(consumerService.updateConsumer).first()[0];
+
+      expect(result).toBe(verificationId);
+      verify(
+        emailService.sendKycPendingOrFlaggedEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.displayEmail,
+        ),
+      ).once();
+
+      expect(updateUserArgs.verificationData.documentVerificationStatus).toBe(DocumentVerificationStatus.PENDING);
+      expect(updateUserArgs.verificationData.documentVerificationTransactionID).toBe(verificationId);
+    });
+  });
 });
 
 function getFakeConsumer(): Consumer {
@@ -881,5 +928,26 @@ function getFakeCaseNotificationWebhookRequest(
         transactionID: "fake-transaction",
       },
     },
+  };
+}
+
+function getFakeDocumentInformation(consumer: Consumer): DocumentInformation {
+  const fileData: Express.Multer.File = {
+    fieldname: "fake-field",
+    originalname: "fake-name",
+    encoding: "base64",
+    mimetype: ".jpg",
+    size: 1024,
+    stream: new Readable(),
+    destination: "fake-destination",
+    filename: "fake-filename.jpg",
+    path: "fake-path",
+    buffer: Buffer.from("fake-data"),
+  };
+
+  return {
+    userID: consumer.props._id,
+    documentType: DocumentTypes.DRIVER_LICENSE,
+    documentFrontImage: fileData,
   };
 }
