@@ -44,11 +44,7 @@ export class HeaderValidationService {
   private shouldValidateHeaders(apiKey: string, timestamp: string, signature: string) {
     const appEnvironment: AppEnvironment = getEnvironmentName();
 
-    if (
-      appEnvironment === AppEnvironment.PROD ||
-      appEnvironment === AppEnvironment.STAGING ||
-      appEnvironment === AppEnvironment.PARTNER
-    ) {
+    if (appEnvironment === AppEnvironment.PROD) {
       return true;
     } else if (apiKey && timestamp && signature) {
       return true;

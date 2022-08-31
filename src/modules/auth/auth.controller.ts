@@ -11,6 +11,7 @@ import {
 import {
   ApiForbiddenResponse,
   ApiHeaders,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -77,7 +78,7 @@ export class AuthController {
   @Public()
   @ApiOperation({ summary: "Logs user in and sends one-time passcode (OTP) to the provided email address" })
   @ApiResponse({ status: HttpStatus.OK, description: "Email successfully sent" })
-  @ApiForbiddenResponse({ description: "Account does not exist" })
+  @ApiForbiddenResponse({ description: "Access denied" })
   @Post("/login")
   async loginUser(@Body() requestBody: LoginRequestDTO, @Headers() headers) {
     const authService: AuthService = this.getAuthService(requestBody.identityType);
