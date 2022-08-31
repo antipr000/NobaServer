@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, deepEqual, instance, when } from "ts-mockito";
+import { anything, deepEqual, instance, when, verify, anyString } from "ts-mockito";
 import { VerificationService } from "../verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { IVerificationDataRepo } from "../repos/IVerificationDataRepo";
@@ -19,11 +19,17 @@ import { DocumentVerificationStatus, KYCStatus } from "../../../modules/consumer
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { NationalIDTypes } from "../domain/NationalIDTypes";
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
-import { DocumentVerificationWebhookRequest } from "../integrations/SardineTypeDefinitions";
+import {
+  CaseAction,
+  CaseNotificationWebhookRequest,
+  CaseStatus,
+  DocumentVerificationWebhookRequest,
+} from "../integrations/SardineTypeDefinitions";
 import {
   FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
   FAKE_DOCUMENT_VERIFiCATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
 } from "../integrations/fakes/FakeSardineResponses";
+import { TransactionInformation } from "../domain/TransactionInformation";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -274,7 +280,7 @@ describe("VerificationService", () => {
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
       when(
-        emailService.sendKycApprovedUSEmail(
+        emailService.sendKycApprovedNonUSEmail(
           consumerInformation.firstName,
           consumerInformation.lastName,
           consumer.props.email,
@@ -327,7 +333,7 @@ describe("VerificationService", () => {
         emailService.sendKycDeniedEmail(
           consumerInformation.firstName,
           consumerInformation.lastName,
-          consumer.props.email,
+          consumer.props.displayEmail,
         ),
       ).thenResolve();
 
@@ -376,7 +382,7 @@ describe("VerificationService", () => {
         emailService.sendKycPendingOrFlaggedEmail(
           consumerInformation.firstName,
           consumerInformation.lastName,
-          consumer.props.email,
+          consumer.props.displayEmail,
         ),
       ).thenResolve();
 
@@ -495,8 +501,12 @@ describe("VerificationService", () => {
         ),
       ).thenResolve();
       when(
-        emailService.sendKycApprovedUSEmail(consumer.props.firstName, consumer.props.lastName, consumer.props.email),
-      );
+        emailService.sendKycApprovedUSEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.displayEmail,
+        ),
+      ).thenResolve();
 
       const result = await verificationService.processDocumentVerificationWebhookResult(
         documentVerificationWebhookRequest,
@@ -544,14 +554,191 @@ describe("VerificationService", () => {
         emailService.sendDocVerificationRejectedEmail(
           consumer.props.firstName,
           consumer.props.lastName,
-          consumer.props.email,
+          consumer.props.displayEmail,
         ),
-      );
+      ).thenResolve();
 
       const result = await verificationService.processDocumentVerificationWebhookResult(
         documentVerificationWebhookRequest,
       );
       expect(result).toStrictEqual(documentVerificationResult);
+    });
+  });
+
+  describe("transactionVerification", () => {
+    it("verify transaction parameters and return ACCEPTED if Sardine doesn't flag the transaction", async () => {
+      const consumer = getFakeConsumer();
+      const transactionInformation = getFakeTransactionInformation();
+      const sessionKey = "fake-session-key";
+
+      const transactionVerificationResult: ConsumerVerificationResult = {
+        status: KYCStatus.APPROVED,
+        idvProviderRiskLevel: "fake-risk-level",
+      };
+
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        verificationData: {
+          ...consumer.props.verificationData,
+          kycVerificationStatus: KYCStatus.APPROVED,
+        },
+      };
+
+      const verificationData = VerificationData.createVerificationData({
+        _id: sessionKey,
+        transactionID: transactionInformation.transactionID,
+      });
+
+      when(
+        idvProvider.transactionVerification(sessionKey, deepEqual(consumer), deepEqual(transactionInformation)),
+      ).thenResolve(transactionVerificationResult);
+
+      when(consumerService.updateConsumer(deepEqual(newConsumerData))).thenResolve(
+        Consumer.createConsumer(newConsumerData),
+      );
+
+      when(verificationRepo.updateVerificationData(deepEqual(verificationData))).thenResolve(verificationData);
+
+      const result = await verificationService.transactionVerification(sessionKey, consumer, transactionInformation);
+
+      expect(result).toStrictEqual(transactionVerificationResult);
+    });
+  });
+
+  describe("provideTransactionFeedback", () => {
+    it("should post transaction feedback with appropriate parameters", async () => {
+      const errorCode = "fake-error";
+      const errorDescription = "Fake Error";
+      const transactionID = "fake-transaction";
+      const sessionKey = "fake-session";
+      const processor = "checkout";
+
+      when(verificationRepo.getSessionKeyFromFilters(deepEqual({ transactionID: transactionID }))).thenResolve(
+        sessionKey,
+      );
+
+      await verificationService.provideTransactionFeedback(errorCode, errorDescription, transactionID, processor);
+      verify(
+        idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionID, processor),
+      ).once();
+    });
+  });
+
+  describe("processKycVerificationWebhookRequest", () => {
+    it("sets user verification status as APPROVED when case status is RESOLVED and action is APPROVED for US consumer", async () => {
+      const consumer = getFakeConsumerWithCountryCode("US");
+      const sessionKey = "fake-session";
+      const caseNotificationRequest = getFakeCaseNotificationWebhookRequest(
+        consumer.props.email,
+        KYCStatus.APPROVED,
+        sessionKey,
+        consumer.props._id,
+      );
+
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        verificationData: {
+          ...consumer.props.verificationData,
+          kycVerificationStatus: KYCStatus.APPROVED,
+        },
+      };
+
+      const result: ConsumerVerificationResult = {
+        status: KYCStatus.APPROVED,
+        idvProviderRiskLevel: "fake-risk-level",
+      };
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
+      when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
+      when(emailService.sendKycApprovedUSEmail(anyString(), anyString(), anyString())).thenResolve();
+
+      await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
+
+      verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
+      verify(
+        emailService.sendKycApprovedUSEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.displayEmail,
+        ),
+      ).once();
+    });
+
+    it("sets user verification status as APPROVED when case status is RESOLVED and action is APPROVED for non-US consumer", async () => {
+      const consumer = getFakeConsumerWithCountryCode("IN");
+      const sessionKey = "fake-session";
+      const caseNotificationRequest = getFakeCaseNotificationWebhookRequest(
+        consumer.props.email,
+        KYCStatus.APPROVED,
+        sessionKey,
+        consumer.props._id,
+      );
+
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        verificationData: {
+          ...consumer.props.verificationData,
+          kycVerificationStatus: KYCStatus.APPROVED,
+        },
+      };
+
+      const result: ConsumerVerificationResult = {
+        status: KYCStatus.APPROVED,
+        idvProviderRiskLevel: "fake-risk-level",
+      };
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
+      when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
+      when(emailService.sendKycApprovedNonUSEmail(anyString(), anyString(), anyString())).thenResolve();
+
+      await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
+
+      verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
+      verify(
+        emailService.sendKycApprovedNonUSEmail(
+          consumer.props.firstName,
+          consumer.props.lastName,
+          consumer.props.displayEmail,
+        ),
+      ).once();
+    });
+
+    it("sets user verification status as REJECTED when case status is RESOLVED and action is DECLINED", async () => {
+      const consumer = getFakeConsumer();
+      const sessionKey = "fake-session";
+      const caseNotificationRequest = getFakeCaseNotificationWebhookRequest(
+        consumer.props.email,
+        KYCStatus.REJECTED,
+        sessionKey,
+        consumer.props._id,
+      );
+
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        verificationData: {
+          ...consumer.props.verificationData,
+          kycVerificationStatus: KYCStatus.REJECTED,
+        },
+      };
+
+      const result: ConsumerVerificationResult = {
+        status: KYCStatus.REJECTED,
+        idvProviderRiskLevel: "fake-risk-level",
+      };
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
+      when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
+      when(emailService.sendKycDeniedEmail(anyString(), anyString(), anyString())).thenResolve();
+
+      await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
+
+      verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
+      verify(
+        emailService.sendKycDeniedEmail(consumer.props.firstName, consumer.props.lastName, consumer.props.displayEmail),
+      ).once();
     });
   });
 });
@@ -562,6 +749,7 @@ function getFakeConsumer(): Consumer {
     firstName: "Fake",
     lastName: "Consumer",
     email: "fake+consumer@noba.com",
+    displayEmail: "fake+consumer@noba.com",
     partners: [
       {
         partnerID: "fake-partner",
@@ -571,6 +759,21 @@ function getFakeConsumer(): Consumer {
       verificationProvider: VerificationProviders.SARDINE,
       kycVerificationStatus: KYCStatus.NOT_SUBMITTED,
       documentVerificationStatus: DocumentVerificationStatus.REQUIRED,
+    },
+  });
+}
+
+function getFakeConsumerWithCountryCode(countryCode: string): Consumer {
+  const consumer = getFakeConsumer();
+
+  return Consumer.createConsumer({
+    ...consumer.props,
+    address: {
+      countryCode: countryCode,
+      city: "Fake City",
+      regionCode: "FR",
+      postalCode: "123456",
+      streetLine1: "Test street",
     },
   });
 }
@@ -639,4 +842,44 @@ function getDocumentVerificationWebhookRequest(
         },
       };
   }
+}
+
+function getFakeTransactionInformation(): TransactionInformation {
+  return {
+    transactionID: "fake-transaction-id",
+    amount: 100,
+    currencyCode: "USD",
+    first6DigitsOfCard: "1234",
+    last4DigitsOfCard: "5678",
+    cardID: "fake-card",
+    cryptoCurrencyCode: "ETH",
+    walletAddress: "fake-wallet-address",
+  };
+}
+
+function getFakeCaseNotificationWebhookRequest(
+  emailID: string,
+  status: KYCStatus,
+  sessionKey: string,
+  consumerID: string,
+): CaseNotificationWebhookRequest {
+  return {
+    id: "fake-case",
+    type: "ssn",
+    timestamp: new Date().toUTCString(),
+    data: {
+      action: {
+        source: "Fake Source",
+        user_email: emailID,
+        value: status === KYCStatus.APPROVED ? CaseAction.APPROVE : CaseAction.DECLINE,
+      },
+      case: {
+        sessionKey: sessionKey,
+        customerID: consumerID,
+        status: CaseStatus.RESOLVED,
+        checkpoint: "ssn",
+        transactionID: "fake-transaction",
+      },
+    },
+  };
 }

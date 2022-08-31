@@ -120,11 +120,19 @@ export class VerificationService {
       await this.consumerService.updateConsumer(newConsumerData);
 
       if (result.status === KYCStatus.APPROVED) {
-        await this.emailService.sendKycApprovedUSEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.displayEmail,
-        );
+        if (consumer.props.address.countryCode.toLocaleLowerCase() === "us") {
+          await this.emailService.sendKycApprovedUSEmail(
+            consumer.props.firstName,
+            consumer.props.lastName,
+            consumer.props.displayEmail,
+          );
+        } else {
+          await this.emailService.sendKycApprovedNonUSEmail(
+            consumer.props.firstName,
+            consumer.props.lastName,
+            consumer.props.displayEmail,
+          );
+        }
       } else if (result.status === KYCStatus.REJECTED) {
         await this.emailService.sendKycDeniedEmail(
           consumer.props.firstName,
