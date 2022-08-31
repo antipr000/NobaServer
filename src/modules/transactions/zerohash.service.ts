@@ -33,6 +33,7 @@ import {
   ZerohashTransfer,
   ZerohashWithdrawalResponse,
   ZerohashTransferResponse,
+  ZerohashExecutedQuote,
 } from "./domain/ZerohashTypes";
 import { ExecutedQuote } from "./domain/AssetTypes";
 
@@ -278,12 +279,12 @@ export class ZeroHashService {
   }
 
   // Execute a liquidity quote
-  async executeQuote(quoteID: string): Promise<ExecutedQuote> {
+  async executeQuote(quoteID: string): Promise<ZerohashExecutedQuote> {
     const executedQuote = await this.makeRequest("/liquidity/execute", "POST", { quote_id: quoteID });
 
     return {
-      tradePrice: executedQuote["message"]["quote"].price,
-      cryptoReceived: executedQuote["message"]["quote"].quantity,
+      tradePrice: Number(executedQuote["message"]["quote"].price),
+      cryptoReceived: Number(executedQuote["message"]["quote"].quantity),
       quoteID: executedQuote["message"]["quote"].quote_id,
       tradeID: executedQuote["message"].trade_id,
       cryptocurrency: executedQuote["message"]["quote"].underlying,
@@ -360,13 +361,6 @@ export class ZeroHashService {
     return {
       tradeID: tradeRequest["message"].trade_id,
     };
-  }
-
-  // Get trade and check status
-  // Initiate a withdrawal if trade_status is terminated
-  async getTrade(tradeID: string) {
-    const tradeData = await this.makeRequest(`/trades/${tradeID}`, "GET", {});
-    return tradeData;
   }
 
   async getTransfer(transferId: string): Promise<ZerohashTransfer> {
@@ -471,57 +465,74 @@ export class ZeroHashService {
   }
 
   async checkTradeStatus(tradeId: string): Promise<ZerohashTradeResponse> {
-    // Check trade_state every 3 seconds until it is terminated using setInterval
-    const tradeData = await this.getTrade(tradeId);
-    this.logger.info(JSON.stringify(tradeData.message.parties));
+    try {
+      // Check trade_state every 3 seconds until it is terminated using setInterval
+      const tradeData = await this.makeRequest(`/trades/${tradeId}`, "GET", {});
+      this.logger.info(JSON.stringify(tradeData.message.parties));
 
-    const tradeState = tradeData["message"]["trade_state"];
-    const settledTimestamp = tradeData.message.settled_timestamp;
-    // TODO(#): Update the index of "parties" after ZH discussion ends.
-    const settlementState = tradeData.message.parties[1].settlement_state;
+      const tradeState = tradeData["message"]["trade_state"];
+      const settledTimestamp = tradeData.message.settled_timestamp;
 
-    /* 
-      From ZH docs:
-      Trade State
-      - accepted means the trade has been accepted by Zero Hash for settlement.
-      - active means the trade is actively being settled.
-      - terminated means the trade is in a terminal state, and has a settlement_state of either settled or defaulted.
-    */
-    switch (tradeState) {
-      case "accepted":
-        return {
-          tradeID: tradeId,
-          tradeState: TradeState.PENDING,
-          settledTimestamp: null,
-          errorMessage: null,
-        };
+      let settlementState: string;
+      tradeData.message.parties.forEach(party => {
+        if (party.side === "sell") {
+          settlementState = tradeData.message.parties[1].settlement_state;
+        }
+      });
 
-      case "active":
-        return {
-          tradeID: tradeId,
-          tradeState: TradeState.PENDING,
-          settledTimestamp: null,
-          errorMessage: null,
-        };
-
-      case "terminated":
-        if (settlementState === "settled") {
+      /* 
+        From ZH docs:
+        Trade State
+        - accepted means the trade has been accepted by Zero Hash for settlement.
+        - active means the trade is actively being settled.
+        - terminated means the trade is in a terminal state, and has a settlement_state of either settled or defaulted.
+      */
+      switch (tradeState) {
+        case "accepted":
           return {
             tradeID: tradeId,
-            tradeState: TradeState.SETTLED,
-            settledTimestamp: settledTimestamp,
+            tradeState: TradeState.PENDING,
+            settledTimestamp: null,
             errorMessage: null,
           };
-        }
-        return {
-          tradeID: tradeId,
-          tradeState: TradeState.DEFAULTED,
-          errorMessage: "Trade could not be settled by the expiry time",
-          settledTimestamp: null,
-        };
 
-      default:
-        throw Error(`Unexpected trade state: '${tradeState}'`);
+        case "active":
+          return {
+            tradeID: tradeId,
+            tradeState: TradeState.PENDING,
+            settledTimestamp: null,
+            errorMessage: null,
+          };
+
+        case "terminated":
+          if (settlementState === "settled") {
+            return {
+              tradeID: tradeId,
+              tradeState: TradeState.SETTLED,
+              settledTimestamp: settledTimestamp,
+              errorMessage: null,
+            };
+          }
+          return {
+            tradeID: tradeId,
+            tradeState: TradeState.DEFAULTED,
+            errorMessage: "Trade could not be settled by the expiry time",
+            settledTimestamp: null,
+          };
+
+        default:
+          throw Error(`Unexpected trade state: '${tradeState}'`);
+      }
+    } catch (err) {
+      this.logger.error(`Error while checking trade status: ${JSON.stringify(err)}`);
+      // TODO(#): Only send "pending" state if there is an "INTERNAL_ERROR"
+      //          as NOT_FOUND status can't be retried.
+      return {
+        tradeID: tradeId,
+        tradeState: TradeState.PENDING,
+        settledTimestamp: null,
+        errorMessage: null,
+      };
     }
   }
 

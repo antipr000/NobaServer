@@ -90,3 +90,11 @@ export interface ZerohashNetworkFee {
   feeInFiat: number;
   feeInCrypto: number;
 }
+
+export interface ZerohashExecutedQuote {
+  tradePrice: number;
+  cryptoReceived: number;
+  quoteID: string;
+  tradeID: string;
+  cryptocurrency: string;
+}

@@ -38,6 +38,7 @@ import {
 } from "../../domain/ZerohashTypes";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { BadRequestError } from "../../../../core/exception/CommonAppException";
+import { CurrencyType } from "../../../../modules/common/domain/Types";
 
 describe("DefaultAssetService", () => {
   let zerohashService: ZeroHashService;
@@ -709,7 +710,7 @@ describe("DefaultAssetService", () => {
 
   describe("executeQuoteForFundsAvailability()", () => {
     it("returns a quote", async () => {
-      const quoteID = "123456";
+      const quoteID = "quote_id";
       const consumer: Consumer = Consumer.createConsumer({
         _id: "1234567890",
         email: "test@noba.com",
@@ -730,14 +731,25 @@ describe("DefaultAssetService", () => {
         slippage: 0,
         transactionCreationTimestamp: new Date(),
         transactionID: "123456",
+        fixedSide: CurrencyType.FIAT,
       };
 
       const quote: ExecutedQuote = {
-        cryptocurrency: request.cryptoCurrency,
         cryptoReceived: request.cryptoQuantity,
-        quoteID: quoteID,
         tradeID: "12345",
         tradePrice: 23423,
+        quote: {
+          quoteID: "quote_id",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread: 1234,
+          processingFeeInFiat: 2,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1.99,
+          totalFiatAmount: 50,
+          totalCryptoQuantity: 12345.6789,
+          perUnitCryptoPrice: 1000,
+        },
       };
 
       const nobaQuote: NobaQuote = {
@@ -754,7 +766,13 @@ describe("DefaultAssetService", () => {
       };
 
       defaultAssetService.getQuoteForSpecifiedFiatAmount = jest.fn().mockReturnValue(nobaQuote);
-      when(zerohashService.executeQuote(quoteID)).thenResolve(quote);
+      when(zerohashService.executeQuote(quoteID)).thenResolve({
+        tradePrice: 23423,
+        cryptoReceived: request.cryptoQuantity,
+        quoteID: "quote_id",
+        tradeID: "12345",
+        cryptocurrency: "ETH",
+      });
 
       const quoteResponse = await defaultAssetService.executeQuoteForFundsAvailability(request);
       expect(quoteResponse).toEqual(quote);
@@ -782,6 +800,7 @@ describe("DefaultAssetService", () => {
         slippage: 0,
         transactionCreationTimestamp: new Date(),
         transactionID: "123456",
+        fixedSide: CurrencyType.FIAT,
       };
 
       expect(async () => {
@@ -811,6 +830,7 @@ describe("DefaultAssetService", () => {
         slippage: 0,
         transactionCreationTimestamp: new Date(),
         transactionID: "123456",
+        fixedSide: CurrencyType.FIAT,
       };
 
       expect(async () => {

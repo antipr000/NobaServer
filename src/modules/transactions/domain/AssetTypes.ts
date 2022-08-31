@@ -1,3 +1,4 @@
+import { CurrencyType } from "../../../modules/common/domain/Types";
 import { ConsumerProps } from "../../consumer/domain/Consumer";
 
 export enum PollStatus {
@@ -8,11 +9,10 @@ export enum PollStatus {
 }
 
 export interface ExecutedQuote {
-  quoteID: string;
+  tradeID: string;
   tradePrice: number;
   cryptoReceived: number;
-  cryptocurrency: string;
-  tradeID: string;
+  quote: NobaQuote;
 }
 
 export interface ExecuteQuoteRequest {
@@ -22,6 +22,7 @@ export interface ExecuteQuoteRequest {
   cryptoQuantity: number;
   cryptoCurrency: string;
 
+  fixedSide: CurrencyType;
   slippage: number;
 
   transactionID: string;
@@ -109,4 +110,10 @@ export interface QuoteRequestForFixedCrypto {
   cryptoCurrency: string;
   fiatCurrency: string;
   cryptoQuantity: number;
+}
+
+export interface ExecutedQuoteStatus {
+  status: PollStatus;
+  errorMessage: string;
+  settledTimestamp: number;
 }
