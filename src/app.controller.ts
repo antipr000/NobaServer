@@ -104,7 +104,6 @@ export class AppController {
   @ApiTags("Assets")
   @ApiNotFoundResponse({ description: "Credit card information not found" })
   async getCreditCardBIN(@Param("bin") bin: string): Promise<CreditCardDTO> {
-    console.log(`Received BIN: ${bin}`);
     const binDetails = await this.creditCardService.getBINDetails(bin);
     if (binDetails == null) {
       throw new NotFoundException("Unknown BIN");
