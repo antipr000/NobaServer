@@ -222,7 +222,7 @@ export class ConsumerService {
       throw new BadRequestException("Card validation error");
     }
 
-    let response;
+    let response: CheckoutResponseData;
     try {
       response = await this.handleCheckoutResponse(
         consumer,
@@ -289,6 +289,13 @@ export class ConsumerService {
       }
 
       const result = await this.consumerRepo.updateConsumer(Consumer.createConsumer(updatedConsumerProps));
+
+      if (response.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
+        // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
+        // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
+        // we may want to let the user know some day when their bank allows crypto.
+        throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+      }
 
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
@@ -378,11 +385,7 @@ export class ConsumerService {
           // Don't know it at transaction time
           const validity: BINValidity = await this.creditCardService.isBINSupported(cardNumber);
           if (validity === BINValidity.NOT_SUPPORTED) {
-            throw new CardProcessingException(
-              CardFailureExceptionText.NO_CRYPTO,
-              response.responseCode,
-              response.responseSummary,
-            );
+            response.paymentMethodStatus = PaymentMethodStatus.UNSUPPORTED;
           } else {
             // supported or unknown
             response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
