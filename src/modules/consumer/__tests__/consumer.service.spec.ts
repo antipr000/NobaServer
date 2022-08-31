@@ -14,11 +14,14 @@ import { Consumer } from "../domain/Consumer";
 import { PaymentProviders } from "../domain/PaymentProviderDetails";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
+import { getMockCreditCardServiceWithDefaults } from "../../../modules/common/mocks/mock.creditcard.service";
+import { CreditCardService } from "../../../modules/common/creditcard.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
   let consumerRepo: IConsumerRepo;
   let emailService: EmailService;
+  let creditCardService: CreditCardService;
   let mockOtpRepo: IOTPRepo;
 
   jest.setTimeout(30000);
@@ -27,6 +30,7 @@ describe("ConsumerService", () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
     emailService = getMockEmailServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
+    creditCardService = getMockCreditCardServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -50,6 +54,10 @@ describe("ConsumerService", () => {
         {
           provide: EmailService,
           useFactory: () => instance(emailService),
+        },
+        {
+          provide: CreditCardService,
+          useFactory: () => instance(creditCardService),
         },
         {
           provide: "OTPRepo",
