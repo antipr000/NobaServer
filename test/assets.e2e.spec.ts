@@ -106,24 +106,6 @@ describe("CryptoCurrencies & Locations", () => {
 
   describe("GET /cryptocurrencies", () => {
     it("should work even if no credentials are passed", async () => {
-      const timestamp = new Date();
-      timestamp.setMinutes(timestamp.getMinutes() - 6);
-      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
-      try {
-        (await AssetsService.supportedCryptocurrencies(
-          TEST_API_KEY,
-          signature,
-          timestamp.toISOString(),
-        )) as CurrencyDTO[] & ResponseStatus;
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.message).toBe("Timestamp is more than 5 minutes older");
-      }
-    });
-
-    it("should throw error when timestamp is beyond 5 minutes", async () => {
-      const timestamp = new Date();
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
       const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
         TEST_API_KEY,
@@ -132,6 +114,24 @@ describe("CryptoCurrencies & Locations", () => {
       )) as CurrencyDTO[] & ResponseStatus;
 
       expect(getCryptoCurrencyResponse.__status).toBe(200);
+    });
+
+    it("should throw error when timestamp is beyond 5 minutes", async () => {
+      const timestamp = new Date();
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
+
+      timestamp.setMinutes(timestamp.getMinutes() - 6);
+
+      try {
+        const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
+          TEST_API_KEY,
+          signature,
+          timestamp.toISOString(),
+        )) as CurrencyDTO[] & ResponseStatus;
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e).toBe("Timestamp is more than 5 minutes older");
+      }
     });
 
     it("should work even if credentials are passed", async () => {
