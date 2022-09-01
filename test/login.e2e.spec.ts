@@ -38,7 +38,7 @@ describe("Authentication", () => {
   let mongoUri: string;
   let app: INestApplication;
   const partnerId = "dummy-partner";
-  const timestamp = "testtimestamp";
+  const timestamp = new Date().toISOString();
 
   beforeEach(async () => {
     const port = process.env.PORT;

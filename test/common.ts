@@ -87,7 +87,7 @@ export const loginAndGetResponse = async (
     email: email,
     identityType: identityType as any,
   };
-  const TEST_TIMESTAMP = "testtimestamp";
+  const TEST_TIMESTAMP = new Date().toISOString();
   const loginSignature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/auth/login", JSON.stringify(requestBody));
   await AuthenticationService.loginUser(TEST_API_KEY, TEST_TIMESTAMP, loginSignature, requestBody);
 

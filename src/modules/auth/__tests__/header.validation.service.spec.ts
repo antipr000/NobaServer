@@ -72,12 +72,13 @@ describe("HeaderValidationService", () => {
       try {
         await headerValidationService.validateApiKeyAndSignature(
           /* apiKey= */ apiKey,
-          /* timestamp= */ "fake-timestamp",
+          /* timestamp= */ new Date().toISOString(),
           /* signature= */ "fake-signature",
           /* requestMethod= */ "POST",
           /* requestPath= */ "/v1/auth/login",
           /* requestBody= */ "fake-body",
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
       }
@@ -85,7 +86,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and return true if signature matches", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = "fake-timestamp";
+      const timestamp = new Date().toISOString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";
@@ -115,7 +116,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and throw error if signature does not match", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = "fake-timestamp";
+      const timestamp = new Date().toISOString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";
@@ -140,13 +141,83 @@ describe("HeaderValidationService", () => {
           url,
           body,
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
       }
     });
+
+    it("should throw error if timestamp is not proper", async () => {
+      const apiKey = "fake-api-key";
+      const timestamp = "fake-timestamp";
+      const secretKey = "fake-secret-key";
+      const method = "GET";
+      const url = "/v1/fake/path";
+      const body = JSON.stringify({});
+      const partner = Partner.createPartner({
+        _id: "fake-id-1234",
+        apiKey: apiKey,
+        secretKey: secretKey,
+        name: "Fake Partner",
+      });
+      const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
+      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
+      const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, utf8Secret));
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+
+      try {
+        await headerValidationService.validateApiKeyAndSignature(
+          apiKey,
+          timestamp,
+          hmacSignatureString,
+          method,
+          url,
+          body,
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("Timestamp is not a correct timestamp");
+      }
+    });
+
+    it("should throw error if timestamp is older than 5 minutes", async () => {
+      const apiKey = "fake-api-key";
+      const timestamp = new Date();
+      timestamp.setMinutes(timestamp.getMinutes() - 6);
+      const secretKey = "fake-secret-key";
+      const method = "GET";
+      const url = "/v1/fake/path";
+      const body = JSON.stringify({});
+      const partner = Partner.createPartner({
+        _id: "fake-id-1234",
+        apiKey: apiKey,
+        secretKey: secretKey,
+        name: "Fake Partner",
+      });
+      const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
+      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
+      const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, utf8Secret));
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+
+      try {
+        await headerValidationService.validateApiKeyAndSignature(
+          apiKey,
+          timestamp.toISOString(),
+          hmacSignatureString,
+          method,
+          url,
+          body,
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("Timestamp is more than 5 minutes older");
+      }
+    });
   });
 
-  describe("staging/prod environment tests", () => {
+  describe("prod environment tests", () => {
     partnerService = getMockPartnerServiceWithDefaults();
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
@@ -160,7 +231,7 @@ describe("HeaderValidationService", () => {
      *
      **/
     const appConfigurations = {
-      [NODE_ENV_CONFIG_KEY]: AppEnvironment.STAGING,
+      [NODE_ENV_CONFIG_KEY]: AppEnvironment.PROD,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -197,7 +268,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and return true if signature matches", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = "fake-timestamp";
+      const timestamp = new Date().toISOString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";
@@ -227,7 +298,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and throw error if signature does not match", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = "fake-timestamp";
+      const timestamp = new Date().toISOString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";
@@ -252,6 +323,7 @@ describe("HeaderValidationService", () => {
           url,
           body,
         );
+        expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
       }

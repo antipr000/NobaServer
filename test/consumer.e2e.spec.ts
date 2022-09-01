@@ -36,7 +36,7 @@ describe("Consumers", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  const TEST_TIMESTAMP = "test_timestamp";
+  const TEST_TIMESTAMP = new Date().toISOString();
 
   beforeEach(async () => {
     const port = process.env.PORT;
