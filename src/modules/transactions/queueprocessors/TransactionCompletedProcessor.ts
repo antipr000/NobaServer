@@ -35,7 +35,7 @@ export class TransactionCompletedProcessor extends MessageProcessor {
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
       this.logger.info(
-        `Transaction with status ${status} should not be in queue ${TransactionQueueName.CryptoTransactionCompleted}`,
+        `${transactionId}: Transaction with status ${status} should not be in queue ${TransactionQueueName.CryptoTransactionCompleted}`,
       );
       return;
     }

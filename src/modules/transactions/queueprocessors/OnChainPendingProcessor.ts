@@ -41,17 +41,19 @@ export class OnChainPendingProcessor extends MessageProcessor {
 
     if (status != TransactionStatus.CRYPTO_OUTGOING_COMPLETED) {
       this.logger.info(
-        `Transaction ${transactionId} is not in ${TransactionStatus.CRYPTO_OUTGOING_COMPLETED} status, skipping, current status: ${status}`,
+        `${transactionId}: Transaction is not in ${TransactionStatus.CRYPTO_OUTGOING_COMPLETED} status, skipping, current status: ${status}`,
       );
       return;
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
+
+    this.logger.info(`${transactionId}: Polling the withdrawal status of "${transaction.props.zhWithdrawalID}"`);
+
     const withdrawalStatus: ConsumerWalletTransferStatus = await assetService.pollConsumerWalletTransferStatus(
       transaction.props.zhWithdrawalID,
     );
-
     switch (withdrawalStatus.status) {
       case PollStatus.PENDING:
         return;
@@ -77,7 +79,9 @@ export class OnChainPendingProcessor extends MessageProcessor {
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
     if (paymentMethod == null) {
       // Should never happen if we got this far
-      this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
+      this.logger.error(
+        `${transactionId}: Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`,
+      );
       return;
     }
 

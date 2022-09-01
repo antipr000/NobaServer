@@ -42,14 +42,16 @@ export class TransactionFailedProcessor extends MessageProcessor {
       status != TransactionStatus.CRYPTO_OUTGOING_FAILED &&
       status != TransactionStatus.VALIDATION_FAILED
     ) {
-      this.logger.info(`Transaction ${transactionId} is not in the correct status, skipping, status: ${status}`);
+      this.logger.info(`${transactionId}: Transaction is not in the correct status, skipping, status: ${status}`);
       return;
     }
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
     if (paymentMethod == null) {
       // Should never happen if we got this far
-      this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
+      this.logger.error(
+        `${transactionId}: Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`,
+      );
       return;
     }
 
@@ -79,7 +81,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
           break;
         default:
           errorMessage = "Failed to complete transaction.";
-          this.logger.error(`Unknown status in TransactionFailedProcessor: ${status}`);
+          this.logger.error(`${transactionId}: Unknown status in TransactionFailedProcessor: ${status}`);
       }
     } else {
       errorMessage =

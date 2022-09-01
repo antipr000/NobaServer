@@ -41,7 +41,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.VALIDATION_PASSED) {
-      this.logger.info(`Transaction ${transactionId} is not in validate passed state, skipping, status: ${status}`);
+      this.logger.info(`${transactionId}: Transaction is not in validate passed state, skipping, status: ${status}`);
       return;
     }
 
@@ -81,7 +81,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
       } else {
         // Should not be any other response
         this.logger.error(
-          `Invalid response received from consumerService.requestCheckoutPayment(): ${paymentResponse.status}`,
+          `${transactionId}: Invalid response received from consumerService.requestCheckoutPayment(): ${paymentResponse.status}`,
         );
 
         await this.processFailure(
@@ -102,7 +102,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
         }
         if (e.disposition === CardFailureExceptionText.NO_CRYPTO) {
           this.logger.info(
-            `Transaction ${transactionId} failed fiat leg with code ${e.reasonCode}-${e.reasonSummary} as it doesn't support crypto`,
+            `${transactionId}: Transaction failed fiat leg with code ${e.reasonCode}-${e.reasonSummary} as it doesn't support crypto`,
           );
 
           await this.handleCheckoutFailure(
@@ -116,7 +116,9 @@ export class FiatTransactionInitiator extends MessageProcessor {
         } else {
           // All others should have an error code & description
           // that get persisted to the database and updated in Sardine
-          this.logger.info(`Transaction ${transactionId} failed fiat leg with code ${e.reasonCode}-${e.reasonSummary}`);
+          this.logger.info(
+            `${transactionId}: Transaction failed fiat leg with code ${e.reasonCode}-${e.reasonSummary}`,
+          );
 
           await this.handleCheckoutFailure(
             e.reasonCode,
@@ -146,7 +148,9 @@ export class FiatTransactionInitiator extends MessageProcessor {
     transaction: Transaction,
     updateSardine: boolean,
   ) {
-    this.logger.error(`Fiat payment failed with error code: ${errorCode}, error description: ${errorDescription}`);
+    this.logger.error(
+      `${transaction.props._id}: Fiat payment failed with error code: ${errorCode}, error description: ${errorDescription}`,
+    );
 
     // Send to failure queue
     await this.processFailure(

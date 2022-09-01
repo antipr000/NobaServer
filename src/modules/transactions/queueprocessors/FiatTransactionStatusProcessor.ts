@@ -35,7 +35,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.FIAT_INCOMING_INITIATED) {
-      this.logger.info(`Transaction ${transactionId} is not in initiated state, skipping ${status}`);
+      this.logger.info(`${transactionId}: Transaction is not in initiated state, skipping ${status}`);
       return;
     }
 
@@ -48,17 +48,17 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
 
     if (paymentStatus === FiatTransactionStatus.CAPTURED || paymentStatus === FiatTransactionStatus.AUTHORIZED) {
       this.logger.info(
-        `Transaction ${transactionId} is ${paymentStatus} with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_COMPLETED}`,
+        `${transactionId}: Transaction is ${paymentStatus} with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_COMPLETED}`,
       );
       newStatus = TransactionStatus.FIAT_INCOMING_COMPLETED; // update transaction status
     } else if (paymentStatus === FiatTransactionStatus.PENDING) {
       this.logger.info(
-        `Transaction ${transactionId} is stilling Pending paymentID ${transaction.props.checkoutPaymentID}`,
+        `${transactionId}: Transaction is stilling Pending paymentID ${transaction.props.checkoutPaymentID}`,
       );
       return;
     } else if (paymentStatus === FiatTransactionStatus.FAILED) {
       this.logger.info(
-        `Transaction ${transactionId} failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
+        `${transactionId}: Transaction failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
       );
       await this.processFailure(
         TransactionStatus.FIAT_INCOMING_FAILED,
