@@ -198,25 +198,6 @@ export class ZeroHashService {
   }
 
   /**
-   * @deprecated: Use AssetService methods instead of this.
-   * This will be removed as soon as the changes are working in staging/production envs.
-   */
-  async requestQuote(cryptocurrency: string, fiatCurrency: string, amount: number, fixedSide: CurrencyType) {
-    // Set the endpoint URL based on whether we are placing an order based on FIAT amount or CRYPTO amount
-    let route: string;
-    if (fixedSide === CurrencyType.CRYPTO) {
-      this.logger.debug(`Quoting ${amount} ${fiatCurrency} to ${cryptocurrency}`);
-      route = `/liquidity/rfq?underlying=${cryptocurrency}&quoted_currency=${fiatCurrency}&side=buy&quantity=${amount}`;
-    } else {
-      this.logger.debug(`Quoting ${amount} ${cryptocurrency} to ${fiatCurrency}`);
-      route = `/liquidity/rfq?underlying=${cryptocurrency}&quoted_currency=${fiatCurrency}&side=buy&total=${amount}`;
-    }
-
-    let quote = await this.makeRequest(route, "GET", {});
-    return quote;
-  }
-
-  /**
    * Returns quote worth the specified Fiat amount.
    */
   async requestQuoteForFixedFiatCurrency(
@@ -320,8 +301,6 @@ export class ZeroHashService {
   async executeTrade(request: ZerohashTradeRequest): Promise<ZerohashTradeResponse> {
     const tradeData = {
       symbol: request.boughtAssetID + "/" + request.soldAssetID,
-
-      //trade_price = buy / (sell-network-noba-processing)
 
       trade_price: String(request.sellAmount / request.buyAmount), // Must be sell / buy
       client_trade_id: request.idempotencyID,
@@ -534,28 +513,6 @@ export class ZeroHashService {
         errorMessage: null,
       };
     }
-  }
-
-  // [DEPRECATED]: Use AssetService interface instead of this.
-  // Will be removed once the transaction is working in staging/production.
-  async moveCryptoToConsumerWallet(consumer: ConsumerProps, transaction: Transaction): Promise<string> {
-    // If we already have a zhWithdrawalID then DO NOT make another request!
-    let withdrawalID = transaction.props.zhWithdrawalID;
-    this.logger.info("Existing withdrawal ID: " + withdrawalID);
-    if (!withdrawalID) {
-      const withdrawalRequest = await this.requestWithdrawal(
-        transaction.props.destinationWalletAddress,
-        transaction.props.leg2Amount,
-        transaction.props.leg2,
-        consumer.zhParticipantCode,
-        this.getNobaPlatformCode(),
-      );
-
-      withdrawalID = withdrawalRequest["message"]["id"];
-      this.logger.info("New withdrawal ID: " + withdrawalID);
-    }
-
-    return withdrawalID;
   }
 
   async getParticipantCode(consumer: ConsumerProps, transactionTimestamp: Date) {

@@ -15,9 +15,6 @@ export function getMockZerohashServiceWithDefaults(): ZeroHashService {
   when(mockZerohashService.makeRequest(anything(), anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockZerohashService.requestQuote(anyString(), anyString(), anything(), anything())).thenReject(
-    new Error("Method not implemented"),
-  );
   when(mockZerohashService.requestTrade(anything())).thenReject(new Error("Method not implemented"));
   when(mockZerohashService.requestQuoteForFixedFiatCurrency(anyString(), anyString(), anyNumber())).thenReject(
     new Error("Method not implemented"),
@@ -34,8 +31,5 @@ export function getMockZerohashServiceWithDefaults(): ZeroHashService {
     mockZerohashService.requestWithdrawal(anyString(), anyNumber(), anyString(), anyString(), anyString()),
   ).thenReject(new Error("Method not implemented"));
   when(mockZerohashService.checkTradeStatus(anything())).thenReject(new Error("Method not implemented"));
-  when(mockZerohashService.moveCryptoToConsumerWallet(anything(), anything())).thenReject(
-    new Error("Method not implemented"),
-  );
   return mockZerohashService;
 }
