@@ -24,6 +24,8 @@ export const SUPPORTED_CRYPTO_TOKENS_FILE_NAME = "supportedCryptoFileName";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_PATH = "SUPPORTED_CRYPTO_TOKENS_FILE_PATH";
 export const LOCATION_DATA_FILE_NAME = "locationDataFileName";
 export const LOCATION_DATA_FILE_PATH = "LOCATION_DATA_FILE_PATH";
+export const CCBIN_DATA_FILE_NAME_MASK = "ccBINDataFileNameMask";
+export const CCBIN_DATA_FILE_PATH = "CCBIN_DATA_FILE_PATH";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
 export const AWS_SECRET_ACCESS_KEY_ATTR = "awsSecretAccessKey";
@@ -122,10 +124,11 @@ export const appConfigsJoiValidationSchema = Joi.object({
 }).options({ allowUnknown: true });
 
 export function getEnvironmentName(): AppEnvironment {
-  const envType: any = getPropertyFromEnvironment(NODE_ENV_CONFIG_KEY);
+  let envType: any = getPropertyFromEnvironment(NODE_ENV_CONFIG_KEY);
   if (!envType) throw new Error("Expect NODE_ENV environment variable to be present in the environment");
   if (!Object.values(AppEnvironment).includes(envType)) {
-    throw new Error("NODE_ENV should be one of " + Object.values(AppEnvironment).join(","));
+    // for tests sometimes we might not set environments. So set this to E2E_TEST
+    envType = AppEnvironment.E2E_TEST;
   }
   return envType as AppEnvironment;
 }

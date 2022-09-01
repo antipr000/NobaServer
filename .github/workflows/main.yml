@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15 # we expect it to complete much before 15 minutes
 
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -105,6 +104,13 @@ jobs:
 
           echo ::set-output name=ebEnvironment::$ebEnvironment
 
+      - name: Check If should deploy to sandbox environment based on pull request labels
+        id: check-deploy-sandbox
+        if: "contains(github.event.pull_request.labels.*.name, 'deploy-sandbox')"
+        run: |
+          ebEnvironment=sandbox
+          echo ::set-output name=ebEnvironment::sandbox
+
       - name: Deploy to EB
         if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
         uses: einaregilsson/beanstalk-deploy@v20
@@ -117,23 +123,16 @@ jobs:
           use_existing_version_if_available: "true"
           region: us-east-1
           deployment_package: artifacts.zip
-          
-      - name: Check If should deploy to sandbox environment based on pull request labels
-        id: check-deploy-sandbox
-        if: "contains(github.event.pull_request.labels.*.name, 'deploy-sandbox')"  
-        run: |
-          echo ::set-output name=ebEnvironment::sandbox
-          
-      - name: Deploy to EB Sandbox environment
-        if: "!contains(steps.check-deploy-sandbox.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
+
+      - name: Deploy to EB Sandbox
+        if: "contains(steps.check-deploy-sandbox.outputs.ebEnvironment, 'sandbox')" # run this job only if ebEnvironment is sandbox
         uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: nobaserver
-          environment_name: nobaserver-sandbox
+          environment_name: nobaserver-${{steps.check-deploy-sandbox.outputs.ebEnvironment}}
           version_label: ${{steps.build_info.outputs.version_label}}
           use_existing_version_if_available: "true"
           region: us-east-1
           deployment_package: artifacts.zip
-          

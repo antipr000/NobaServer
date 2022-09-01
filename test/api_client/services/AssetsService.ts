@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ConfigurationsDTO } from "../models/ConfigurationsDTO";
+import type { CreditCardDTO } from "../models/CreditCardDTO";
 import type { CurrencyDTO } from "../models/CurrencyDTO";
 import type { LocationDTO } from "../models/LocationDTO";
 
@@ -142,6 +143,38 @@ export class AssetsService {
       },
       errors: {
         404: `Configurations not found`,
+      },
+    });
+  }
+
+  /**
+   * Returns credit card structure metadata for the provided BIN
+   * @param xNobaApiKey
+   * @param xNobaSignature
+   * @param xNobaTimestamp
+   * @param bin
+   * @returns CreditCardDTO Card metadata
+   * @throws ApiError
+   */
+  public static getCreditCardBin(
+    xNobaApiKey: string,
+    xNobaSignature: string,
+    xNobaTimestamp: string,
+    bin: string,
+  ): CancelablePromise<CreditCardDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/creditcardbin/{bin}",
+      path: {
+        bin: bin,
+      },
+      headers: {
+        "X-Noba-API-Key": xNobaApiKey,
+        "X-Noba-Signature": xNobaSignature,
+        "X-Noba-Timestamp": xNobaTimestamp,
+      },
+      errors: {
+        404: `Credit card information not found`,
       },
     });
   }

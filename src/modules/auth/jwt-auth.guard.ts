@@ -40,12 +40,12 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       context.getClass(),
     ]);
 
-    const isAdmin = this.reflector.getAllAndOverride<boolean>(IS_NO_API_KEY_NEEDED_KEY, [
+    const doesNotNeedApiKey = this.reflector.getAllAndOverride<boolean>(IS_NO_API_KEY_NEEDED_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (isAdmin) {
+    if (doesNotNeedApiKey) {
       return true;
     }
 

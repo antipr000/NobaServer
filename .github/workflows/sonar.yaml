@@ -28,12 +28,15 @@ jobs:
         run: yarn install
 
       - name: Test and coverage
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
         run: yarn jest --verbose --silent --coverage --runInBand
 
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SCANNER_OPTIONS: "-Xmx3000m"
       # If you wish to fail your job when the Quality Gate is red, uncomment the
       # following lines. This would typically be used to fail a deployment.
       # - uses: sonarsource/sonarqube-quality-gate-action@master

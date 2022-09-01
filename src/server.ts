@@ -54,7 +54,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   // Config and doc generation options for PUBLIC-facing APIs
   const publicConfig = new DocumentBuilder()
     .setTitle("Noba Server")
-    .setDescription("Noba Server API " + `(${appEnvType.toUpperCase()})`)
+    .setDescription(`Noba Server API (${appEnvType.toUpperCase()})`)
     .setVersion("1.0")
     .addBearerAuth(
       {
@@ -76,7 +76,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   // Config and doc generation options for all APIs, which includes public & private
   const privateConfig = new DocumentBuilder()
     .setTitle("Noba Server")
-    .setDescription("Noba Server API (Internal) " + `(${appEnvType.toUpperCase()})`)
+    .setDescription(`Noba Server API (Internal) (${appEnvType.toUpperCase()})`)
     .setVersion("1.0")
     .addBearerAuth(
       {
