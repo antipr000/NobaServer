@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
-import * as axios from 'axios';
+import * as axios from "axios";
 
 import {
   BadRequestException,
