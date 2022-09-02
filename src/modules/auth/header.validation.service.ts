@@ -28,7 +28,7 @@ export class HeaderValidationService {
     if (isNaN(timestampDate.getTime()) || !timestamp) {
       throw new BadRequestException("Timestamp is not a correct timestamp");
     }
-    const minutes = Math.floor((dateNow.getTime() - timestampDate.getTime()) / 60000);
+    const minutes = Math.abs((dateNow.getTime() - timestampDate.getTime()) / 60000);
     if (minutes > 5) {
       throw new BadRequestException("Timestamp is more than 5 minutes older");
     }
