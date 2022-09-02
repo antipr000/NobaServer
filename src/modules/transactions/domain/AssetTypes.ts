@@ -97,7 +97,8 @@ export interface NobaQuote {
 
   totalFiatAmount: number;
   totalCryptoQuantity: number;
-  perUnitCryptoPrice: number;
+  perUnitCryptoPriceWithSpread: number; // Sell rate - this is what the consumer sees
+  perUnitCryptoPriceWithoutSpread: number; // Buy rate - this is what Noba pays
 }
 
 export interface QuoteRequestForFixedFiat {

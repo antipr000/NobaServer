@@ -65,7 +65,9 @@ export class DefaultAssetService implements AssetService {
       request.fiatCurrency,
     );
 
-    const totalCreditCardFeeInFiat: number = request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat;
+    const totalCreditCardFeeInFiat: number = this.roundTo2DecimalNumber(
+      request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat,
+    );
     const totalFee: number = networkFee.feeInFiat + totalCreditCardFeeInFiat + nobaFlatFeeInFiat;
 
     const fiatAmountAfterAllChargesWithoutSpread: number = request.fiatAmount - totalFee;
@@ -112,7 +114,8 @@ export class DefaultAssetService implements AssetService {
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread,
       totalCryptoQuantity: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
       totalFiatAmount: request.fiatAmount,
-      perUnitCryptoPrice: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
       quoteID: zhQuote.quoteID,
     };
   }
@@ -157,7 +160,9 @@ export class DefaultAssetService implements AssetService {
     const finalFiatAmount =
       (fiatAmountAfterAllChargesExceptCreditCard + fixedCreditCardFeeInFiat) / (1 - creditCardFeePercent);
 
-    const totalCreditCardFeeInFiat = finalFiatAmount - fiatAmountAfterAllChargesExceptCreditCard;
+    const totalCreditCardFeeInFiat = this.roundTo2DecimalNumber(
+      finalFiatAmount - fiatAmountAfterAllChargesExceptCreditCard,
+    );
 
     this.logger.debug(`
       CRYPTO FIXED (${request.cryptoCurrency}):\t${request.cryptoQuantity}
@@ -185,7 +190,8 @@ export class DefaultAssetService implements AssetService {
       amountPreSpread: rawFiatAmountForRequestedCryptoPreSpread,
       totalCryptoQuantity: request.cryptoQuantity,
       totalFiatAmount: finalFiatAmount,
-      perUnitCryptoPrice: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
       quoteID: zhQuote.quoteID,
     };
   }
@@ -512,5 +518,9 @@ export class DefaultAssetService implements AssetService {
         onChainTransactionID: null,
       };
     }
+  }
+
+  private roundTo2DecimalNumber(num: number): number {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 }

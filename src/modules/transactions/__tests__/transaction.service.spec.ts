@@ -603,7 +603,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 13,
         totalCryptoQuantity: 0.0001,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(
@@ -640,7 +641,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 1000,
         totalCryptoQuantity: 1000,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(
@@ -822,7 +824,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 1000,
         totalCryptoQuantity: 0.3,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -888,7 +891,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 100,
         totalCryptoQuantity: 0.1,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -977,7 +981,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 100,
         totalCryptoQuantity: 0.1,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -1177,5 +1182,5 @@ function assertOnRequestTransactionQuoteResponse(
   expect(response.processingFee).toBe(nobaQuote.processingFeeInFiat);
   expect(response.networkFee).toBe(nobaQuote.networkFeeInFiat);
   expect(response.nobaFee).toBe(nobaQuote.nobaFeeInFiat);
-  expect(response.exchangeRate).toBe(nobaQuote.perUnitCryptoPrice);
+  expect(response.exchangeRate).toBe(nobaQuote.perUnitCryptoPriceWithSpread);
 }
