@@ -84,7 +84,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   type: Joi.string()
     .valid(...Object.values(TransactionType))
     .default(TransactionType.ONRAMP),
-  partnerID: Joi.string().optional(), // TODO(#466) - Make required
+  partnerID: Joi.string().required(),
   tradeQuoteID: Joi.string().optional(), // Optional as it may get set after initial transaction record is created
   nobaTransferTradeID: Joi.string().optional(),
   nobaTransferSettlementID: Joi.string().optional(),

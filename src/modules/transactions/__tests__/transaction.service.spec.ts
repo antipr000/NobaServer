@@ -663,23 +663,6 @@ describe("TransactionService", () => {
       mockAxios.reset();
     });
 
-    it("should do nothing if partner id is null", async () => {
-      const transaction: Transaction = Transaction.createTransaction({
-        _id: "1111111111",
-        userId: consumer.props._id,
-        sessionKey: "fake-session",
-        transactionStatus: TransactionStatus.PENDING,
-        paymentMethodID: "fake-payment-method-id",
-        leg1Amount: 1000,
-        leg2Amount: 1,
-        leg1: "USD",
-        leg2: "ETH",
-        destinationWalletAddress: "fake-wallet-address",
-      });
-      await transactionService.callTransactionConfirmWebhook(consumer, transaction);
-      expect(mockAxios.post).toHaveBeenCalledTimes(0);
-    });
-
     it("should call webhook if partner webhook is available", async () => {
       const transaction: Transaction = Transaction.createTransaction({
         _id: "1111111111",
