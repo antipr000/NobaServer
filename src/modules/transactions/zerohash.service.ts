@@ -1,6 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
+import * as axios from 'axios';
 
 import {
   BadRequestException,
@@ -17,11 +18,9 @@ import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
-import { CurrencyType } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
-import { Transaction } from "./domain/Transaction";
 import {
   OnChainState,
   TradeState,
@@ -35,10 +34,8 @@ import {
   ZerohashTransferResponse,
   ZerohashExecutedQuote,
 } from "./domain/ZerohashTypes";
-import { ExecutedQuote } from "./domain/AssetTypes";
 
 const crypto_ts = require("crypto");
-const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
 
 @Injectable()
 export class ZeroHashService {
@@ -112,22 +109,25 @@ export class ZeroHashService {
     const requestString = `[${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
     this.logger.info(`Sending ZeroHash request: ${requestString}`);
 
-    const response = await request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
-      if (err.statusCode == 403) {
-        // Generally means we are not using a whitelisted IP to ZH
-        this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
-        throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
-      } else if (err.statusCode == 400) {
-        this.logger.error(`Error in ZeroHash request: ${requestString}`);
-        this.logger.error(JSON.stringify(err));
-        throw new BadRequestException(err);
-      } else {
-        // catch 404 in caller. This may be for known reasons (e.g. participant not created yet) so we don't want to log it here.
-        throw err;
+    try {
+      const response = await axios.default[derivedMethod](`https://${this.configs.host}${route}`, options);
+      this.logger.debug(`Received response: ${JSON.stringify(response.data)}`);
+      return response.data;
+    } catch (err) {
+      this.logger.error("Error in ZeroHash Request: " + JSON.stringify(err));
+
+      if (err.response) {
+        if (err.response.status === 403) {
+          // Generally means we are not using a whitelisted IP to ZH
+          this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
+          throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
+        }
+        if (err.response.status === 400) {
+          throw new BadRequestException(err);
+        }
       }
-    });
-    this.logger.debug(`Received response: ${JSON.stringify(response)}`);
-    return response;
+      throw err;
+    }
   }
 
   async getPrice(underlying, quoted_currency) {
