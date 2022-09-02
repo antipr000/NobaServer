@@ -40,15 +40,19 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.CRYPTO_OUTGOING_INITIATED) {
       this.logger.info(
-        `Transaction with status ${status} should not be in queue ${TransactionQueueName.CryptoTransactionInitiated}`,
+        `${transactionId}: Transaction with status ${status} should not be in queue ${TransactionQueueName.CryptoTransactionInitiated}`,
       );
       return;
     }
 
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
+
+    this.logger.info(
+      `${transactionId}: Checking the Consumer Account Transfer status for TransferID: "${transaction.props.cryptoTransactionId}"`,
+    );
+
     const consumerAccountTransferStatus: ConsumerAccountTransferStatus =
       await assetService.pollAssetTransferToConsumerStatus(transaction.props.cryptoTransactionId);
-
     try {
       switch (consumerAccountTransferStatus.status) {
         case PollStatus.PENDING:
@@ -62,15 +66,18 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
 
         case PollStatus.FATAL_ERROR:
           // TODO(#): Add alert here.
-          this.logger.error(`Error while checking Asset Transfer state: ${consumerAccountTransferStatus.errorMessage}`);
+          this.logger.error(
+            `${transactionId}: Error while checking Asset Transfer state: ${consumerAccountTransferStatus.errorMessage}`,
+          );
           throw Error(consumerAccountTransferStatus.errorMessage);
       }
 
       const consumer = await this.consumerService.getConsumer(transaction.props.userId);
 
       // Skip this if we already have a withdrawalID
-      let withdrawalID = transaction.props.zhWithdrawalID;
-      if (!withdrawalID) {
+      if (!transaction.props.zhWithdrawalID) {
+        this.logger.info(`${transactionId}: Initiating the transfer to consumer wallet.`);
+
         const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
           amount: transaction.props.executedCrypto,
           assetId: transaction.props.leg2,
@@ -78,8 +85,12 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           consumer: consumer.props,
           transactionID: transaction.props._id,
         };
-        withdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
-        transaction.props.zhWithdrawalID = withdrawalID;
+        transaction.props.zhWithdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
+
+        this.logger.info(
+          `${transactionId}: Initiated the transfer to consumer wallet with Withdrawal ID: "${transaction.props.zhWithdrawalID}"`,
+        );
+        transaction = await this.transactionRepo.updateTransaction(transaction);
       }
 
       // We either had a withdrawal ID from a prior run but failed to set the status
@@ -90,7 +101,10 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
         transaction.props,
       );
     } catch (err) {
-      this.logger.error("Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.", err);
+      this.logger.error(
+        `${transactionId}: Caught exception in CryptoTransactionStatusProcessor. Moving to failed queue.`,
+        err,
+      );
       await this.processFailure(
         TransactionStatus.CRYPTO_OUTGOING_FAILED,
         "Failed to settle crypto transaction.", // TODO(#342): Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
@@ -101,7 +115,9 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
       const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
       if (paymentMethod == null) {
         // Should never happen if we got this far
-        this.logger.error(`Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`);
+        this.logger.error(
+          `${transactionId}: Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}`,
+        );
         return;
       }
 

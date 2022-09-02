@@ -33,7 +33,7 @@ export abstract class MessageProcessor {
       await this.processMessageInternal(transactionId);
       await this.lockService.releaseLockForKey(transactionId, ObjectType.TRANSACTION);
     } else {
-      this.logger.debug(`Transaction ${transactionId} being processed by another worker`);
+      this.logger.debug(`${transactionId}: Transaction is  being processed by another worker`);
     }
   }
 

@@ -34,7 +34,7 @@ export class FiatReversalInitiator extends MessageProcessor {
     let transaction = await this.transactionRepo.getTransaction(transactionId);
     const status = transaction.props.transactionStatus;
     if (status != TransactionStatus.FIAT_INCOMING_INITIATED) {
-      this.logger.info(`Transaction is not initiated yet, skipping ${status}`);
+      this.logger.info(`${transactionId}: Transaction is not initiated yet, skipping ${status}`);
       return;
     }
 

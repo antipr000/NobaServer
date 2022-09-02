@@ -37,7 +37,7 @@ export class ValidatePendingTransactionProcessor extends MessageProcessor {
     const status = transaction.props.transactionStatus;
 
     if (status != TransactionStatus.PENDING) {
-      this.logger.info(`Transaction ${transactionId} is not in pending state, skipping, status: ${status}`);
+      this.logger.info(`${transactionId}: Transaction is not in pending state, skipping, status: ${status}`);
       return;
     }
 

@@ -48,7 +48,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     if (status != TransactionStatus.FIAT_INCOMING_COMPLETED && status != TransactionStatus.CRYPTO_OUTGOING_INITIATING) {
       this.logger.info(
-        `Transaction ${transactionId} is not in ${TransactionStatus.FIAT_INCOMING_COMPLETED} status, skipping, current status: ${status}`,
+        `${transactionId}: Transaction is not in ${TransactionStatus.FIAT_INCOMING_COMPLETED} status, skipping, current status: ${status}`,
       );
       return;
     }
@@ -58,7 +58,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
     // Did we already execute the trade?
     if (!transaction.props.executedQuoteTradeID) {
-      this.logger.info(`Executing trade to Noba`);
+      this.logger.info(`${transactionId}: Executing trade to Noba`);
 
       const executeQuoteRequest: ExecuteQuoteRequest = {
         consumer: consumer.props,
@@ -93,7 +93,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
         transaction = await this.transactionRepo.updateTransaction(transaction);
       } catch (e) {
-        this.logger.error(`Exception while attempting to execute quote: ${e.message}. Will retry.`);
+        this.logger.error(`${transactionId}: Exception while attempting to execute quote: ${e.message}. Will retry.`);
         return;
       }
     }
@@ -109,13 +109,15 @@ export class CryptoTransactionInitiator extends MessageProcessor {
           break;
 
         case PollStatus.PENDING:
-          this.logger.debug(`Waiting for quote trade with ID '${transaction.props.executedQuoteTradeID}' to settle.`);
+          this.logger.debug(
+            `${transactionId}: Waiting for quote trade with ID '${transaction.props.executedQuoteTradeID}' to settle.`,
+          );
           return;
 
         case PollStatus.FAILURE:
           // TODO(#): Limit the # of retries.
           this.logger.error(
-            `Quote trade failed with ID '${transaction.props.executedQuoteTradeID}'. Re-executing the quote.`,
+            `${transactionId}: Quote trade failed with ID '${transaction.props.executedQuoteTradeID}'. Re-executing the quote.`,
           );
 
           // Retry the quote execution from the beginning.
@@ -125,14 +127,14 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
         case PollStatus.FATAL_ERROR:
           // TODO(#): Add an alarm here.
-          this.logger.error(`Unexpected error occured: "${executedQuoteTradeStatus.errorMessage}"`);
+          this.logger.error(`${transactionId}: Unexpected error occured: "${executedQuoteTradeStatus.errorMessage}"`);
           return this.processFailure(TransactionStatus.FAILED, executedQuoteTradeStatus.errorMessage, transaction);
       }
     }
 
     // Did we already complete the transfer?
     if (!transaction.props.nobaTransferTradeID) {
-      this.logger.debug("Transferring funds to Noba");
+      this.logger.debug(`${transactionId}: Transferring funds to Noba`);
       const fundsAvailabilityRequest: FundsAvailabilityRequest = {
         cryptoAmount: transaction.props.executedCrypto,
         cryptocurrency: transaction.props.leg2,
@@ -140,7 +142,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
         fundsAvailabilityRequest,
       );
-      this.logger.info(`Transfer to Noba initiated with ID: "${fundAvailableResponse.transferID}".`);
+      this.logger.info(`${transactionId}: Transfer to Noba initiated with ID: "${fundAvailableResponse.transferID}".`);
 
       let inconsistentTransfer = false;
       // Ensure here that we transferred the correct amount of the correct crypto
@@ -151,7 +153,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         // If this happens, still save the transfer ID to the transaction but then abort processing with a failure.
         inconsistentTransfer = true;
         this.logger.error(
-          `Transaction ID: ${transactionId} - Crypto traded to noba != crypto transfer! Traded: ${fundsAvailabilityRequest.cryptoAmount} ${fundsAvailabilityRequest.cryptocurrency}, transferred: ${fundAvailableResponse.transferredCrypto} ${fundAvailableResponse.cryptocurrency}. Trade ID: ${transaction.props.executedQuoteTradeID}, TransferID: ${fundAvailableResponse.transferID}`,
+          `${transactionId}: Crypto traded to noba != crypto transfer! Traded: ${fundsAvailabilityRequest.cryptoAmount} ${fundsAvailabilityRequest.cryptocurrency}, transferred: ${fundAvailableResponse.transferredCrypto} ${fundAvailableResponse.cryptocurrency}. Trade ID: ${transaction.props.executedQuoteTradeID}, TransferID: ${fundAvailableResponse.transferID}`,
         );
       }
 
@@ -166,7 +168,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     // TODO(#): Move this to new processor.
     // Have we already settled?
     if (!transaction.props.nobaTransferSettlementID) {
-      this.logger.info("Checking for the settlement of Noba Transfer.");
+      this.logger.info(`${transactionId}: Checking for the settlement of Noba Transfer.`);
 
       const fundsAvailabilityStatus: FundsAvailabilityStatus = await assetService.pollFundsAvailableStatus(
         transaction.props.nobaTransferTradeID,
@@ -175,7 +177,9 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       // TODO: Check if the ZH amount coming back from status == executedCrypto on transaction
       // TODO: Assert also that leg2 == executedCrypto for crypto fixed txn
 
-      this.logger.info(`Noba Transfer settlement response: ${JSON.stringify(fundsAvailabilityStatus)}`);
+      this.logger.info(
+        `${transactionId}: Noba Transfer settlement response: ${JSON.stringify(fundsAvailabilityStatus)}`,
+      );
 
       switch (fundsAvailabilityStatus.status) {
         case PollStatus.SUCCESS:
@@ -184,7 +188,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
           break;
 
         case PollStatus.PENDING:
-          this.logger.debug(`Waiting for transaction ${transaction.props._id} to settle.`);
+          this.logger.debug(`${transactionId}: Waiting for transaction ${transaction.props._id} to settle.`);
           return;
 
         case PollStatus.FAILURE:
@@ -192,12 +196,12 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
         case PollStatus.FATAL_ERROR:
           // TODO(#): Add an alarm here.
-          this.logger.error(`Unexpected error occured: "${fundsAvailabilityStatus.errorMessage}"`);
+          this.logger.error(`${transactionId}: Unexpected error occured: "${fundsAvailabilityStatus.errorMessage}"`);
           return this.processFailure(TransactionStatus.FAILED, fundsAvailabilityStatus.errorMessage, transaction);
       }
     }
 
-    this.logger.info("Starting the trade to transfer to consumer ZH account.");
+    this.logger.info(`${transactionId}: Starting the trade to transfer to consumer ZH account.`);
 
     const assetTransferToConsumerAccountRequest: ConsumerAccountTransferRequest = {
       consumer: consumer.props,
@@ -211,7 +215,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       transactionCreationTimestamp: transaction.props.transactionTimestamp,
     };
     const tradeId: string = await assetService.transferAssetToConsumerAccount(assetTransferToConsumerAccountRequest);
-    this.logger.info(`Trade initiated to transfer to consumer ZH account with tradeID: "${tradeId}"`);
+    this.logger.info(`${transactionId}: Trade initiated to transfer to consumer ZH account with tradeID: "${tradeId}"`);
 
     transaction.props.cryptoTransactionId = tradeId;
     transaction = await this.transactionRepo.updateTransactionStatus(
