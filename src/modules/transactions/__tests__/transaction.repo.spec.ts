@@ -66,7 +66,7 @@ describe("MongoDBTransactionRepoTests", () => {
     // Setup a mongodb client for interacting with "admins" collection.
     mongoClient = new MongoClient(mongoUri);
     await mongoClient.connect();
-    transactionCollection = mongoClient.db("").collection("transactions");
+    transactionCollection = mongoClient.db("").collection("transaction");
 
     // adding two initial transactions for testing purposes.
     await transactionRepo.createTransaction(getRandomTransaction("1"));
@@ -86,9 +86,8 @@ describe("MongoDBTransactionRepoTests", () => {
       await transactionRepo.createTransaction(getRandomTransaction("4"));
 
       const ts: Transaction[] = await transactionRepo.getAll();
-      const allTransactions = await getAllRecordsInTransactionsCollection(transactionCollection);
 
-      expect(allTransactions).toHaveLength(4);
+      expect(ts).toHaveLength(4);
     });
   });
 
@@ -198,13 +197,6 @@ describe("MongoDBTransactionRepoTests", () => {
     });
   });
 
-  /**
-   *  getTotalUserTransactionAmount(userId: string): Promise<number>;
-  getMonthlyUserTransactionAmount(userId: string): Promise<number>;
-  getWeeklyUserTransactionAmount(userId: string): Promise<number>;
-  getDailyUserTransactionAmount(userId: string): Promise<number>;
-   */
-
   describe("getTotalUserTransactionAmount", () => {
     it("should get the total amount of a user's transactions", async () => {
       const totalAmount: number = await transactionRepo.getTotalUserTransactionAmount(DEFAULT_USER_ID);
@@ -233,24 +225,6 @@ describe("MongoDBTransactionRepoTests", () => {
     });
   });
 });
-
-const getAllRecordsInTransactionsCollection = async (
-  transactionCollection: Collection,
-): Promise<Array<Transaction>> => {
-  // const adminDocumentsCursor = adminCollection.find({});
-  const transactionDocumentsCursor = transactionCollection.find({});
-  const allRecords: Transaction[] = [];
-
-  while (await transactionDocumentsCursor.hasNext()) {
-    const doc = await transactionDocumentsCursor.next();
-
-    const currentRecord: Transaction = new TransactionMapper().toDomain(doc);
-
-    allRecords.push(currentRecord);
-  }
-
-  return allRecords;
-};
 
 const getRandomTransaction = (
   id: string,
