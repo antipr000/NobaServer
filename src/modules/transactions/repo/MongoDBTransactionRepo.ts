@@ -120,7 +120,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     if (partnerID != undefined) {
       query.and([{ partnerID: partnerID }]);
     }
-    const result: any = query.sort({ transactionTimestamp: "desc" }).exec();
+    const result: any = await query.sort({ transactionTimestamp: "desc" }).exec();
     const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
     return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
   }
