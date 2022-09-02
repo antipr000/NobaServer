@@ -72,7 +72,7 @@ describe("HeaderValidationService", () => {
       try {
         await headerValidationService.validateApiKeyAndSignature(
           /* apiKey= */ apiKey,
-          /* timestamp= */ new Date().toISOString(),
+          /* timestamp= */ new Date().getTime().toString(),
           /* signature= */ "fake-signature",
           /* requestMethod= */ "POST",
           /* requestPath= */ "/v1/auth/login",
@@ -86,7 +86,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and return true if signature matches", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = new Date().toISOString();
+      const timestamp = new Date().getTime().toString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";
@@ -116,7 +116,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and throw error if signature does not match", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = new Date().toISOString();
+      const timestamp = new Date().getTime().toString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";
@@ -203,7 +203,7 @@ describe("HeaderValidationService", () => {
       try {
         await headerValidationService.validateApiKeyAndSignature(
           apiKey,
-          timestamp.toISOString(),
+          timestamp.getTime().toString(),
           hmacSignatureString,
           method,
           url,
@@ -212,7 +212,7 @@ describe("HeaderValidationService", () => {
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.message).toBe("Timestamp is more than 5 minutes older");
+        expect(e.message).toBe("Timestamp is more than 5 minutes different than expected");
       }
     });
   });
@@ -268,7 +268,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and return true if signature matches", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = new Date().toISOString();
+      const timestamp = new Date().getTime().toString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";
@@ -298,7 +298,7 @@ describe("HeaderValidationService", () => {
 
     it("should validate when values are provided and throw error if signature does not match", async () => {
       const apiKey = "fake-api-key";
-      const timestamp = new Date().toISOString();
+      const timestamp = new Date().getTime().toString();
       const secretKey = "fake-secret-key";
       const method = "GET";
       const url = "/v1/fake/path";

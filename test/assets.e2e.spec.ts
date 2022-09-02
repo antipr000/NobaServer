@@ -80,7 +80,7 @@ describe("CryptoCurrencies & Locations", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  const TEST_TIMESTAMP = new Date().toISOString();
+  let TEST_TIMESTAMP;
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -95,6 +95,7 @@ describe("CryptoCurrencies & Locations", () => {
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
+    TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterEach(async () => {
@@ -123,14 +124,14 @@ describe("CryptoCurrencies & Locations", () => {
       timestamp.setMinutes(timestamp.getMinutes() - 6);
 
       try {
-        const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
+        (await AssetsService.supportedCryptocurrencies(
           TEST_API_KEY,
           signature,
-          timestamp.toISOString(),
+          timestamp.getTime().toString(),
         )) as CurrencyDTO[] & ResponseStatus;
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
-        expect(e).toBe("Timestamp is more than 5 minutes older");
+        expect(e).toBe("Timestamp is more than 5 minutes different than expected");
       }
     });
 
