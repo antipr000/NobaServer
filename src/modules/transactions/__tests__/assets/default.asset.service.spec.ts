@@ -73,6 +73,7 @@ describe("DefaultAssetService", () => {
         name: "ETH",
         ticker: "ETH",
         _id: "ETH",
+        precision: 8,
       },
     ]);
     when(appService.getSupportedFiatCurrencies()).thenResolve([
@@ -81,6 +82,7 @@ describe("DefaultAssetService", () => {
         name: "USD",
         ticker: "USD",
         _id: "USD",
+        precision: 2,
       },
     ]);
 

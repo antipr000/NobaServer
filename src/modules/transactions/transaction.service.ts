@@ -34,6 +34,7 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "./exceptions/TransactionSubmissionException";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class TransactionService {
@@ -134,6 +135,26 @@ export class TransactionService {
     return (await this.transactionsRepo.getAll()).map(transaction => this.transactionsMapper.toDTO(transaction));
   }
 
+  async roundToProperDecimalsForCryptocurrency(cryptocurrency: string, cryptoAmount: number): Promise<number> {
+    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
+    const cryptoCurrencyArray = cryptoCurrencies.filter(curr => curr.ticker === cryptocurrency);
+    if (cryptoCurrencyArray.length == 0) {
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
+    }
+    const currencyDTO = cryptoCurrencyArray[0];
+    return Utils.roundToXDecimalNumber(cryptoAmount, currencyDTO.precision);
+  }
+
+  async roundToProperDecimalsForFiatCurrency(fiatCurrency: string, fiatAmount: number): Promise<number> {
+    const fiatCurrencies = await this.currencyService.getSupportedFiatCurrencies();
+    const fiatCurrencyArray = fiatCurrencies.filter(curr => curr.ticker === fiatCurrency);
+    if (fiatCurrencyArray.length == 0) {
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_FIAT);
+    }
+    const currencyDTO = fiatCurrencyArray[0];
+    return Utils.roundToXDecimalNumber(fiatAmount, currencyDTO.precision);
+  }
+
   //TODO add proper logs without leaking sensitive information
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
   async initiateTransaction(
@@ -147,23 +168,24 @@ export class TransactionService {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
     }
 
-    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
-    if (cryptoCurrencies.filter(curr => curr.ticker === transactionRequest.leg2).length == 0) {
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
-    }
+    // Validate & round to proper precision
+    const cryptoAmount = await this.roundToProperDecimalsForCryptocurrency(
+      transactionRequest.leg2,
+      transactionRequest.leg2Amount,
+    );
 
-    const fiatCurrencies = await this.currencyService.getSupportedFiatCurrencies();
-    if (fiatCurrencies.filter(curr => curr.ticker === transactionRequest.leg1).length == 0) {
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_FIAT);
-    }
+    const fiatAmount = await this.roundToProperDecimalsForFiatCurrency(
+      transactionRequest.leg1,
+      transactionRequest.leg1Amount,
+    );
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
       sessionKey: sessionKey,
       paymentMethodID: transactionRequest.paymentToken,
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
-      leg1Amount: this.roundTo2DecimalNumber(transactionRequest.leg1Amount),
-      leg2Amount: transactionRequest.leg2Amount,
+      leg1Amount: fiatAmount,
+      leg2Amount: cryptoAmount,
       leg1: transactionRequest.leg1,
       leg2: transactionRequest.leg2,
       fixedSide: transactionRequest.fixedSide,
@@ -174,8 +196,7 @@ export class TransactionService {
 
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transactionRequest.leg2);
 
-    const fixedAmount =
-      transactionRequest.fixedSide == CurrencyType.FIAT ? transactionRequest.leg1Amount : transactionRequest.leg2Amount;
+    const fixedAmount = transactionRequest.fixedSide == CurrencyType.FIAT ? fiatAmount : cryptoAmount;
     const quote =
       transactionRequest.fixedSide === CurrencyType.FIAT
         ? await assetService.getQuoteForSpecifiedFiatAmount({
@@ -189,12 +210,14 @@ export class TransactionService {
             cryptoQuantity: Number(fixedAmount),
           });
 
+    // Perform rounding
+
     // Check slippage between the original quoted transaction that the user confirmed and the quote we just received above against the non-fixed side
     // quote.quotedAmount will always be the in the currency opposite of the fixed side
     const withinSlippage =
       transactionRequest.fixedSide == CurrencyType.FIAT
-        ? this.withinSlippage(transactionRequest.leg2Amount, quote.totalCryptoQuantity)
-        : this.withinSlippage(transactionRequest.leg1Amount, quote.totalFiatAmount);
+        ? this.withinSlippage(cryptoAmount, quote.totalCryptoQuantity)
+        : this.withinSlippage(fiatAmount, quote.totalFiatAmount);
     if (!withinSlippage) {
       throw new TransactionSubmissionException(
         TransactionSubmissionFailureExceptionText.SLIPPAGE,
@@ -215,9 +238,15 @@ export class TransactionService {
 
     // Set the amount that wasn't fixed based on the quote received
     if (transactionRequest.fixedSide == CurrencyType.FIAT) {
-      newTransaction.props.leg2Amount = quote.totalCryptoQuantity;
+      newTransaction.props.leg2Amount = await this.roundToProperDecimalsForCryptocurrency(
+        transactionRequest.leg2,
+        quote.totalCryptoQuantity,
+      );
     } else {
-      newTransaction.props.leg1Amount = quote.totalFiatAmount;
+      newTransaction.props.leg1Amount = await this.roundToProperDecimalsForFiatCurrency(
+        transactionRequest.leg1,
+        quote.totalFiatAmount,
+      );
     }
 
     this.logger.debug(`Transaction: ${JSON.stringify(newTransaction.props)}`);
@@ -371,9 +400,5 @@ export class TransactionService {
         `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${err.message}`,
       );
     }
-  }
-
-  private roundTo2DecimalNumber(num: number): number {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 }
