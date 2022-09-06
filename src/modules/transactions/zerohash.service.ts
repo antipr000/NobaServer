@@ -123,6 +123,7 @@ export class ZeroHashService {
           throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
         }
         if (err.response.status === 400) {
+          this.logger.error(`Error in ZeroHash request: \n ${JSON.stringify(err)}`);
           throw new BadRequestException(err);
         }
       }
