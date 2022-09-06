@@ -25,7 +25,7 @@ Ethereum (Solana),ETH.SOL,ETH.SOL/USD,Yes,No,Prod,Account,1,8,Yes,Yes,6,8
 Fantom,FTM,FTM/USD,Yes,Yes,Prod,Base,1,18,Yes*,No,9,8
 The Graph,GRT.ETH,GRT/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No,8,8
 GMO Yen,GYEN.ETH,GYEN/USD,Yes,No,Prod/Cert,ERC20,1,6,Yes,Yes,,
-Hedera,HBAR,HBAR/USD,Yes,Yes,Prod/Cert,Tag,1,8,Yes,No,,
+Hedera,HBAR,HBAR/USD,Yes,Yes,Prod/Cert,Tag,1,8,Yes,No,8,8
 Kyber Network,KNC.ETH,KNC/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No,8,8
 Chainlink,LINK.ETH,LINK/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,Yes,9,8
 Litecoin,LTC,LTC/USD,Yes,Yes,Prod/Cert,Base,1,8,Yes,Yes,6,8
