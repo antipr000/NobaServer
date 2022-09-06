@@ -32,7 +32,7 @@ Litecoin,LTC,LTC/USD,Yes,Yes,Prod/Cert,Base,1,8,Yes,Yes,6,8
 Terra Luna,LUNA,LUNA/USD,Yes,No,Prod/Cert,Base,1,6,Yes,No,,
 Decentraland,MANA.ETH,MANA/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No,8,8
 Polygon (ERC20),MATIC.ETH,MATIC/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No,9,8
-Polygon (MATIC),MATIC.POLYGON,MATIC.POLYGON/USD,Yes,No,Prod/Cert,Base,1,18,Yes,No,9,8
+Polygon (MATIC),MATIC.POLYGON,MATIC.POLYGON/USD,Yes,Yes,Prod/Cert,Base,1,18,Yes,No,9,8
 Maker,MKR.ETH,MKR/USD,Yes,Yes,Prod/Cert,ERC20,1,18,Yes,No,6,8
 MobileCoin,MOB,MOB/USD,Yes,No,Prod,Base,1,12,Yes*,No,,
 OMG Network,OMG.ETH,OMG/USD,Yes,Yes,Prod,ERC20,1,18,Yes,No,8,8
