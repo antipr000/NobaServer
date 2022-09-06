@@ -4,6 +4,7 @@ import { ConsumerProps } from "../../consumer/domain/Consumer";
 export enum PollStatus {
   SUCCESS = "success",
   PENDING = "pending",
+  RETRYABLE_FAILURE = "retryable_failure",
   FAILURE = "failed",
   FATAL_ERROR = "internal_error",
 }

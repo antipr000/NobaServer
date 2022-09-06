@@ -1206,7 +1206,8 @@ describe("DefaultAssetService", () => {
         onChainTransactionID: null,
       });
     });
-    it("returns FAILURE status if withdrawal is in REJECTED status", async () => {
+
+    it("returns RETRYABLE_FAILURE status if withdrawal is in REJECTED status", async () => {
       const withdrawalID = "1234";
 
       when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
@@ -1221,7 +1222,7 @@ describe("DefaultAssetService", () => {
       const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
-        status: PollStatus.FAILURE,
+        status: PollStatus.RETRYABLE_FAILURE,
         errorMessage: "Withdrawal request rejected.",
         requestedAmount: null,
         settledAmount: null,

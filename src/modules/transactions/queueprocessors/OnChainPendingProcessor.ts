@@ -58,10 +58,6 @@ export class OnChainPendingProcessor extends MessageProcessor {
       case PollStatus.PENDING:
         return;
 
-      case PollStatus.FAILURE:
-        await this.processFailure(TransactionStatus.FAILED, withdrawalStatus.errorMessage, transaction);
-        return;
-
       case PollStatus.SUCCESS:
         // TODO(#): Understand what should go in 'settledTimestamp'.
         // transaction.props.settledTimestamp = ??
@@ -74,6 +70,21 @@ export class OnChainPendingProcessor extends MessageProcessor {
           TransactionStatus.COMPLETED,
           transaction.props,
         );
+        break;
+
+      case PollStatus.RETRYABLE_FAILURE:
+        transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
+        transaction.props.zhWithdrawalID = undefined;
+        await this.transactionRepo.updateTransactionStatusWithExactState(
+          transactionId,
+          TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+          transaction.props,
+        );
+        return;
+
+      case PollStatus.FAILURE:
+        await this.processFailure(TransactionStatus.FAILED, withdrawalStatus.errorMessage, transaction);
+        return;
     }
 
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
