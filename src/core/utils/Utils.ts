@@ -5,18 +5,18 @@ export class Utils {
   }
 
   static roundTo2DecimalNumber(num: number): number {
-    return this.roundToXDecimalNumber(num, 2);
+    return this.roundToSpecifiedDecimalNumber(num, 2);
   }
 
   static roundTo2DecimalString(num: number): string {
-    return this.roundToXDecimalString(num, 2);
+    return this.roundToSpecifiedDecimalString(num, 2);
   }
 
-  static roundToXDecimalNumber(num: number, decimals: number): number {
-    return parseFloat(this.roundToXDecimalString(num, decimals));
+  static roundToSpecifiedDecimalNumber(num: number, decimals: number): number {
+    return parseFloat(this.roundToSpecifiedDecimalString(num, decimals));
   }
 
-  static roundToXDecimalString(num: number, decimals: number): string {
+  static roundToSpecifiedDecimalString(num: number, decimals: number): string {
     return num.toFixed(decimals);
   }
 }

@@ -142,7 +142,7 @@ export class TransactionService {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
     const currencyDTO = cryptoCurrencyArray[0];
-    return Utils.roundToXDecimalNumber(cryptoAmount, currencyDTO.precision);
+    return Utils.roundToSpecifiedDecimalNumber(cryptoAmount, currencyDTO.precision);
   }
 
   async roundToProperDecimalsForFiatCurrency(fiatCurrency: string, fiatAmount: number): Promise<number> {
@@ -152,7 +152,7 @@ export class TransactionService {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_FIAT);
     }
     const currencyDTO = fiatCurrencyArray[0];
-    return Utils.roundToXDecimalNumber(fiatAmount, currencyDTO.precision);
+    return Utils.roundToSpecifiedDecimalNumber(fiatAmount, currencyDTO.precision);
   }
 
   //TODO add proper logs without leaking sensitive information

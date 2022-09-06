@@ -9,13 +9,13 @@ describe("Utils", () => {
     });
   });
 
-  describe("roundToXDecimalNumber()", () => {
+  describe("roundToSpecifiedDecimalNumber()", () => {
     it("It should round to 10 decimals", () => {
-      expect(Utils.roundToXDecimalNumber(50.123456789123456, 10)).toEqual(50.1234567891);
+      expect(Utils.roundToSpecifiedDecimalNumber(50.123456789123456, 10)).toEqual(50.1234567891);
     });
   });
 
-  describe("roundToXDecimalNumber() and roundToXDecimalString()", () => {
+  describe("roundToSpecifiedDecimalNumber() and roundToSpecifiedDecimalString()", () => {
     class TestScenario {
       inputNumber: number;
       precision: number;
@@ -66,6 +66,12 @@ describe("Utils", () => {
         expectedString: "50.123",
       },
       {
+        inputNumber: 50.123556,
+        precision: 3,
+        expectedNumber: 50.124,
+        expectedString: "50.124",
+      },
+      {
         inputNumber: 50.123456,
         precision: 0,
         expectedNumber: 50,
@@ -81,8 +87,12 @@ describe("Utils", () => {
 
     it("Should round to the expected number of decimals with 5 rounding up", () => {
       testScenarios.forEach(scenario => {
-        expect(Utils.roundToXDecimalNumber(scenario.inputNumber, scenario.precision)).toEqual(scenario.expectedNumber);
-        expect(Utils.roundToXDecimalString(scenario.inputNumber, scenario.precision)).toEqual(scenario.expectedString);
+        expect(Utils.roundToSpecifiedDecimalNumber(scenario.inputNumber, scenario.precision)).toEqual(
+          scenario.expectedNumber,
+        );
+        expect(Utils.roundToSpecifiedDecimalString(scenario.inputNumber, scenario.precision)).toEqual(
+          scenario.expectedString,
+        );
       });
     });
   });
@@ -101,25 +111,25 @@ describe("Utils", () => {
     });
   });
 
-  describe("roundToXDecimalString()", () => {
+  describe("roundToSpecifiedDecimalString()", () => {
     it("It should round to 10 decimals", () => {
-      expect(Utils.roundToXDecimalString(50.123456789123456, 10)).toEqual("50.1234567891");
+      expect(Utils.roundToSpecifiedDecimalString(50.123456789123456, 10)).toEqual("50.1234567891");
     });
 
     it("It should round to 10 decimals including insignificant zeroes", () => {
-      expect(Utils.roundToXDecimalString(50.123456789012345, 10)).toEqual("50.1234567890");
+      expect(Utils.roundToSpecifiedDecimalString(50.123456789012345, 10)).toEqual("50.1234567890");
     });
 
     it("It should round to 1 decimal", () => {
-      expect(Utils.roundToXDecimalString(50.123456789123456, 1)).toEqual("50.1");
+      expect(Utils.roundToSpecifiedDecimalString(50.123456789123456, 1)).toEqual("50.1");
     });
 
     it("It should round down to 0 decimals", () => {
-      expect(Utils.roundToXDecimalString(50.123456789012345, 0)).toEqual("50");
+      expect(Utils.roundToSpecifiedDecimalString(50.123456789012345, 0)).toEqual("50");
     });
 
     it("It should round up to 0 decimals", () => {
-      expect(Utils.roundToXDecimalString(50.999, 0)).toEqual("51");
+      expect(Utils.roundToSpecifiedDecimalString(50.999, 0)).toEqual("51");
     });
   });
 
