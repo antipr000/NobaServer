@@ -132,7 +132,7 @@ describe("ConsumerController", () => {
         email: "mock@noba.com",
       });
 
-      when(consumerService.addCheckoutPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
+      when(consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
           paymentMethods: [

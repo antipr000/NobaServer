@@ -9,6 +9,7 @@ import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
+import { PaymentProviders } from "../../../modules/consumer/domain/PaymentProviderDetails";
 
 export class FiatTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -39,11 +40,16 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       return;
     }
 
+    const paymentProvider: PaymentProviders = await this.consumerService.getPaymentMethodProvider(
+      transaction.props.userId,
+      transaction.props.paymentMethodID,
+    );
+
     let newStatus: TransactionStatus;
     // check transaction status here
     const paymentStatus = await this.consumerService.getFiatPaymentStatus(
       transaction.props.checkoutPaymentID,
-      null, // TODO add payment method provider in the transaction itself
+      paymentProvider, // TODO add payment method provider in the transaction itself
     );
 
     if (paymentStatus === FiatTransactionStatus.CAPTURED || paymentStatus === FiatTransactionStatus.AUTHORIZED) {

@@ -47,11 +47,8 @@ export class FiatTransactionInitiator extends MessageProcessor {
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     try {
-      // `requestCheckoutPayment` is idempotent. So, it is safe to call it multiple times.
-      const paymentResponse: PaymentRequestResponse = await this.consumerService.requestCheckoutPayment(
-        consumer,
-        transaction,
-      );
+      // `requestPayment` is idempotent. So, it is safe to call it multiple times.
+      const paymentResponse: PaymentRequestResponse = await this.consumerService.requestPayment(consumer, transaction);
 
       if (
         paymentResponse.status === PaymentMethodStatus.REJECTED ||
@@ -81,7 +78,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
       } else {
         // Should not be any other response
         this.logger.error(
-          `${transactionId}: Invalid response received from consumerService.requestCheckoutPayment(): ${paymentResponse.status}`,
+          `${transactionId}: Invalid response received from consumerService.requestPayment(): ${paymentResponse.status}`,
         );
 
         await this.processFailure(

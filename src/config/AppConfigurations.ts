@@ -296,6 +296,9 @@ async function configureCheckoutCredentials(
     checkoutConfigs.secretKey,
   );
 
+  checkoutConfigs.couponCode = await getParameterValue(null, checkoutConfigs.couponCode);
+  checkoutConfigs.partnerId = parseInt(await getParameterValue(null, checkoutConfigs.partnerId.toString()));
+
   configs[CHECKOUT_CONFIG_KEY] = checkoutConfigs;
   return configs;
 }

@@ -35,6 +35,8 @@ checkout:
   awsSecretNameForSecretKey: "TEST_CHECKOUT_SECRET_KEY"
   publicKey: "bogus-value"
   secretKey: "bogus-value"
+  couponCode: "NY2018"
+  partnerId: 123989
 
 twilio:
   awsSecretNameForSID: ""
