@@ -41,7 +41,8 @@ export interface TransactionProps extends VersioningInfo {
   nobaFee: number;
   processingFee: number;
   networkFee: number;
-  exchangeRate: number;
+  exchangeRate: number; // This is the rate the consumer pays, including spread (aka sell rate)
+  buyRate: number; // This is the rate Noba pays, NOT including spread
   diagnosis?: string;
   cryptoTransactionId?: string; // ZH ID
   settledAmount?: number;
@@ -84,7 +85,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   type: Joi.string()
     .valid(...Object.values(TransactionType))
     .default(TransactionType.ONRAMP),
-  partnerID: Joi.string().optional(), // TODO(#466) - Make required
+  partnerID: Joi.string().required(),
   tradeQuoteID: Joi.string().optional(), // Optional as it may get set after initial transaction record is created
   nobaTransferTradeID: Joi.string().optional(),
   nobaTransferSettlementID: Joi.string().optional(),
@@ -92,6 +93,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   processingFee: Joi.number().optional(),
   networkFee: Joi.number().optional(),
   exchangeRate: Joi.number().unsafe().optional(), // TODO(#310) - exchangeRate can have many decimals. Should we round or keep with unsafe()?
+  buyRate: Joi.number().unsafe().optional(), // TODO(#310) - buyRate can have many decimals. Should we round or keep with unsafe()?
   diagnosis: Joi.string().optional(),
   sourceWalletAddress: Joi.string().optional(),
   destinationWalletAddress: Joi.string().optional(),

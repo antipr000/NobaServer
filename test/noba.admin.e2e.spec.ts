@@ -36,7 +36,7 @@ describe("Noba Admin", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  const TEST_TIMESTAMP = "test_timestamp";
+  let TEST_TIMESTAMP;
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -51,6 +51,7 @@ describe("Noba Admin", () => {
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
+    TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterEach(async () => {

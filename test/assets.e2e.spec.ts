@@ -12,7 +12,7 @@
 import { setUp } from "./setup";
 setUp();
 
-import { INestApplication } from "@nestjs/common";
+import { BadRequestException, INestApplication } from "@nestjs/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
@@ -80,7 +80,7 @@ describe("CryptoCurrencies & Locations", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  const TEST_TIMESTAMP = "test-timestamp";
+  let TEST_TIMESTAMP;
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -95,6 +95,7 @@ describe("CryptoCurrencies & Locations", () => {
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
+    TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterEach(async () => {
@@ -114,6 +115,24 @@ describe("CryptoCurrencies & Locations", () => {
       )) as CurrencyDTO[] & ResponseStatus;
 
       expect(getCryptoCurrencyResponse.__status).toBe(200);
+    });
+
+    it("should throw error when timestamp is beyond 5 minutes", async () => {
+      const timestamp = new Date();
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
+
+      timestamp.setMinutes(timestamp.getMinutes() - 6);
+
+      try {
+        (await AssetsService.supportedCryptocurrencies(
+          TEST_API_KEY,
+          signature,
+          timestamp.getTime().toString(),
+        )) as CurrencyDTO[] & ResponseStatus;
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e).toBe("Timestamp is more than 5 minutes different than expected");
+      }
     });
 
     it("should work even if credentials are passed", async () => {

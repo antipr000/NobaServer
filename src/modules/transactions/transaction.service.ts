@@ -103,7 +103,7 @@ export class TransactionService {
       processingFee: nobaQuote.processingFeeInFiat,
       networkFee: nobaQuote.networkFeeInFiat,
       nobaFee: nobaQuote.nobaFeeInFiat,
-      exchangeRate: nobaQuote.perUnitCryptoPrice,
+      exchangeRate: nobaQuote.perUnitCryptoPriceWithSpread,
     };
   }
 
@@ -209,7 +209,8 @@ export class TransactionService {
     newTransaction.props.nobaFee = quote.nobaFeeInFiat;
     newTransaction.props.networkFee = quote.networkFeeInFiat;
     newTransaction.props.processingFee = quote.processingFeeInFiat;
-    newTransaction.props.exchangeRate = quote.perUnitCryptoPrice;
+    newTransaction.props.exchangeRate = quote.perUnitCryptoPriceWithSpread;
+    newTransaction.props.buyRate = quote.perUnitCryptoPriceWithoutSpread;
     newTransaction.props.amountPreSpread = quote.amountPreSpread;
 
     // Set the amount that wasn't fixed based on the quote received

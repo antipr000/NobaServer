@@ -81,7 +81,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
         transaction.props.executedCrypto = executedQuote.cryptoReceived;
         transaction.props.executedQuoteTradeID = executedQuote.tradeID;
-        transaction.props.exchangeRate = executedQuote.tradePrice;
+        transaction.props.buyRate = executedQuote.tradePrice;
 
         // TODO(#): Verify if this needs to be changed.
         // transaction.props.tradeQuoteID = executedQuote.quote.quoteID;
