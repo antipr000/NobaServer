@@ -264,6 +264,15 @@ export class ConsumerService {
     const cryptoWallet: CryptoWallet = consumer.props.cryptoWallets.filter(
       existingCryptoWallet => existingCryptoWallet.address == walletAddress,
     )[0];
+
+    if (SANCTIONED_WALLETS.includes(cryptoWallet.address)) {
+      // Flag the wallet if it is a sanctioned wallet address.
+      cryptoWallet.status = WalletStatus.FLAGGED;
+      this.logger.error(
+        `Failed to add a sanctioned wallet: ${cryptoWallet.address} for consumer: ${consumer.props._id}`,
+      );
+      throw new BadRequestException({ message: "Failed to add wallet: sanctioned wallet" });
+    }
     cryptoWallet.status = WalletStatus.APPROVED;
 
     return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
@@ -283,16 +292,6 @@ export class ConsumerService {
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
     );
-
-    if (SANCTIONED_WALLETS.includes(cryptoWallet.address)) {
-      // TODO: Check with Justin/Gal in code review if we should do this only for the approved wallets, i.e. after the OTP check.
-      // Right now, we check before the OTP check, so someone else can add the wallet too (if they have access to the logged in machine)
-      // Also, earlier Gal said, we wanted to suspend the user also if OTP check passes with a sanctioned wallet
-      this.logger.error(
-        `Failed to add a sanctioned wallet: ${cryptoWallet.address} for consumer: ${consumer.props._id}`,
-      );
-      throw new BadRequestException({ message: "Failed to add wallet: sanctioned wallet" });
-    }
 
     // Send the verification OTP to the user
     if (cryptoWallet.status == WalletStatus.PENDING) {
