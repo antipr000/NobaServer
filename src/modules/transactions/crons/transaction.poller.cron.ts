@@ -64,12 +64,12 @@ export class TransactionPollerService {
         transactionAttributes.maxAllowedMilliSecondsInThisStatus
       ) {
         const skippedTransactionInfo = {
+          description: "Skipping transaction as it is in the same status for a long time",
           id: transaction.props._id,
           status: transaction.props.transactionStatus,
           timeTillStuck: Date.now().valueOf() - transaction.props.lastStatusUpdateTimestamp,
           maxAllowedMilliSecondsInThisStatus: transactionAttributes.maxAllowedMilliSecondsInThisStatus,
         };
-        this.logger.error(`Skipping transaction with details: `);
         this.logger.error(`${JSON.stringify(skippedTransactionInfo)}`);
         return;
       }
