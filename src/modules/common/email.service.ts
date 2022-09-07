@@ -11,6 +11,7 @@ import {
   TransactionInitiatedEmailParameters,
 } from "./domain/EmailParameters";
 import { EmailTemplates } from "./domain/EmailTemplates";
+import { Utils } from "../../core/utils/Utils";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -63,7 +64,7 @@ export class EmailService {
       templateId: EmailTemplates.WELCOME_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -77,7 +78,7 @@ export class EmailService {
       templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -91,7 +92,7 @@ export class EmailService {
       templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -105,7 +106,7 @@ export class EmailService {
       templateId: EmailTemplates.KYC_DENIED_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         duration: 2, // TODO: Remove hardcoded duration
       },
     };
@@ -123,7 +124,7 @@ export class EmailService {
       templateId: EmailTemplates.KYC_FLAGGED_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         datetimestamp: futureDate,
       },
     };
@@ -138,7 +139,7 @@ export class EmailService {
       templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -152,7 +153,7 @@ export class EmailService {
       templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -166,7 +167,7 @@ export class EmailService {
       templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
       },
     };
 
@@ -186,7 +187,7 @@ export class EmailService {
       templateId: EmailTemplates.CARD_ADDED_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_four: last4Digits,
         support_url: SUPPORT_URL,
@@ -209,7 +210,7 @@ export class EmailService {
       templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_four: last4Digits,
         support_url: SUPPORT_URL,
@@ -232,7 +233,7 @@ export class EmailService {
       templateId: EmailTemplates.CARD_DELETED_EMAIL,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         card_network: cardNetwork,
         last_four: last4Digits,
         support_url: SUPPORT_URL,
@@ -249,17 +250,17 @@ export class EmailService {
     params: TransactionInitiatedEmailParameters,
   ) {
     const subtotal =
-      this.roundTo2DecimalNumber(params.totalPrice) -
-      this.roundTo2DecimalNumber(params.processingFee) -
-      this.roundTo2DecimalNumber(params.networkFee) -
-      this.roundTo2DecimalNumber(params.nobaFee);
+      Utils.roundTo2DecimalNumber(params.totalPrice) -
+      Utils.roundTo2DecimalNumber(params.processingFee) -
+      Utils.roundTo2DecimalNumber(params.networkFee) -
+      Utils.roundTo2DecimalNumber(params.nobaFee);
 
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL,
       dynamicTemplateData: {
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
         user_email: email,
         user_id: email,
@@ -267,12 +268,12 @@ export class EmailService {
         card_network: params.paymentMethod,
         last_four: params.last4Digits,
         order_date: params.transactionTimestamp.toLocaleString(),
-        subtotal: this.roundTo2DecimalString(subtotal),
+        subtotal: Utils.roundTo2DecimalString(subtotal),
         conversion_rate: params.conversionRate,
-        processing_fees: this.roundTo2DecimalString(params.processingFee),
-        network_fees: this.roundTo2DecimalString(params.networkFee),
-        noba_fee: this.roundTo2DecimalString(params.nobaFee),
-        total_price: this.roundTo2DecimalString(params.totalPrice),
+        processing_fees: Utils.roundTo2DecimalString(params.processingFee),
+        network_fees: Utils.roundTo2DecimalString(params.networkFee),
+        noba_fee: Utils.roundTo2DecimalString(params.nobaFee),
+        total_price: Utils.roundTo2DecimalString(params.totalPrice),
         cryptocurrency_code: params.cryptoCurrency,
         cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
         crypto_expected: params.cryptoAmount,
@@ -289,17 +290,17 @@ export class EmailService {
     params: CryptoFailedEmailParameters,
   ) {
     const subtotal =
-      this.roundTo2DecimalNumber(params.totalPrice) -
-      this.roundTo2DecimalNumber(params.processingFee) -
-      this.roundTo2DecimalNumber(params.networkFee) -
-      this.roundTo2DecimalNumber(params.nobaFee);
+      Utils.roundTo2DecimalNumber(params.totalPrice) -
+      Utils.roundTo2DecimalNumber(params.processingFee) -
+      Utils.roundTo2DecimalNumber(params.networkFee) -
+      Utils.roundTo2DecimalNumber(params.nobaFee);
 
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CRYPTO_FAILED_EMAIL,
       dynamicTemplateData: {
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
         user_email: email,
         user_id: email,
@@ -310,11 +311,11 @@ export class EmailService {
         cryptocurrency_code: params.cryptoCurrency,
         conversion_rate: params.conversionRate,
         crypto_expected: params.cryptoAmount,
-        subtotal: this.roundTo2DecimalString(subtotal),
-        processing_fees: this.roundTo2DecimalString(params.processingFee),
-        network_fees: this.roundTo2DecimalString(params.networkFee),
-        noba_fee: this.roundTo2DecimalString(params.nobaFee),
-        total_price: this.roundTo2DecimalString(params.totalPrice),
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processing_fees: Utils.roundTo2DecimalString(params.processingFee),
+        network_fees: Utils.roundTo2DecimalString(params.networkFee),
+        noba_fee: Utils.roundTo2DecimalString(params.nobaFee),
+        total_price: Utils.roundTo2DecimalString(params.totalPrice),
         reason_failed: params.failureReason,
         cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
       },
@@ -330,17 +331,17 @@ export class EmailService {
     params: OrderExecutedEmailParameters,
   ) {
     const subtotal =
-      this.roundTo2DecimalNumber(params.totalPrice) -
-      this.roundTo2DecimalNumber(params.processingFee) -
-      this.roundTo2DecimalNumber(params.networkFee) -
-      this.roundTo2DecimalNumber(params.nobaFee);
+      Utils.roundTo2DecimalNumber(params.totalPrice) -
+      Utils.roundTo2DecimalNumber(params.processingFee) -
+      Utils.roundTo2DecimalNumber(params.networkFee) -
+      Utils.roundTo2DecimalNumber(params.nobaFee);
 
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ORDER_EXECUTED_EMAIL,
       dynamicTemplateData: {
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
         user_email: email,
         user_id: email,
@@ -350,12 +351,12 @@ export class EmailService {
         last_four: params.last4Digits,
         order_date: params.transactionTimestamp.toLocaleString(),
         settled_timestamp: params.settledTimestamp.toLocaleString(),
-        subtotal: this.roundTo2DecimalString(subtotal),
+        subtotal: Utils.roundTo2DecimalString(subtotal),
         conversion_rate: params.conversionRate,
-        processing_fees: this.roundTo2DecimalString(params.processingFee),
-        network_fees: this.roundTo2DecimalString(params.networkFee),
-        noba_fee: this.roundTo2DecimalString(params.nobaFee),
-        total_price: this.roundTo2DecimalString(params.totalPrice),
+        processing_fees: Utils.roundTo2DecimalString(params.processingFee),
+        network_fees: Utils.roundTo2DecimalString(params.networkFee),
+        noba_fee: Utils.roundTo2DecimalString(params.nobaFee),
+        total_price: Utils.roundTo2DecimalString(params.totalPrice),
         cryptocurrency_code: params.cryptoCurrency,
         cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
         crypto_received: params.cryptoAmount,
@@ -373,17 +374,17 @@ export class EmailService {
     params: OrderFailedEmailParameters,
   ) {
     const subtotal =
-      this.roundTo2DecimalNumber(params.totalPrice) -
-      this.roundTo2DecimalNumber(params.processingFee) -
-      this.roundTo2DecimalNumber(params.networkFee) -
-      this.roundTo2DecimalNumber(params.nobaFee);
+      Utils.roundTo2DecimalNumber(params.totalPrice) -
+      Utils.roundTo2DecimalNumber(params.processingFee) -
+      Utils.roundTo2DecimalNumber(params.networkFee) -
+      Utils.roundTo2DecimalNumber(params.nobaFee);
 
     const msg = {
       to: email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ORDER_FAILED_EMAIL,
       dynamicTemplateData: {
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         transaction_id: params.transactionID,
         user_id: email,
         user_email: email,
@@ -391,12 +392,12 @@ export class EmailService {
         card_network: params.paymentMethod,
         last_four: params.last4Digits,
         order_date: params.transactionTimestamp.toLocaleString(),
-        subtotal: this.roundTo2DecimalString(subtotal),
+        subtotal: Utils.roundTo2DecimalString(subtotal),
         conversion_rate: params.conversionRate,
-        processing_fees: this.roundTo2DecimalString(params.processingFee),
-        network_fees: this.roundTo2DecimalString(params.networkFee),
-        noba_fee: this.roundTo2DecimalString(params.nobaFee),
-        total_price: this.roundTo2DecimalString(params.totalPrice),
+        processing_fees: Utils.roundTo2DecimalString(params.processingFee),
+        network_fees: Utils.roundTo2DecimalString(params.networkFee),
+        noba_fee: Utils.roundTo2DecimalString(params.nobaFee),
+        total_price: Utils.roundTo2DecimalString(params.totalPrice),
         cryptocurrency_code: params.cryptoCurrency,
         cryptocurrency: await this.getCryptocurrencyNameFromTicker(params.cryptoCurrency),
         crypto_expected: params.cryptoAmount,
@@ -424,7 +425,7 @@ export class EmailService {
       templateId: EmailTemplates.NOBA_INTERNAL_HARD_DECLINE,
       dynamicTemplateData: {
         user_email: email,
-        username: this.getUsernameFromNameParts(firstName, lastName),
+        username: Utils.getUsernameFromNameParts(firstName, lastName),
         session_id: sessionID,
         transaction_id: transactionID,
         payment_token: paymentToken,
@@ -441,17 +442,5 @@ export class EmailService {
   private async getCryptocurrencyNameFromTicker(ticker: string): Promise<string> {
     const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
     return cryptoCurrencies.find(curr => curr.ticker === ticker).name;
-  }
-
-  private getUsernameFromNameParts(firstName: string, lastName: string): string {
-    return `${firstName ?? ""} ${lastName ?? ""}` ?? "";
-  }
-
-  private roundTo2DecimalNumber(num: number): number {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
-  }
-
-  private roundTo2DecimalString(num: number): string {
-    return num.toFixed(2);
   }
 }

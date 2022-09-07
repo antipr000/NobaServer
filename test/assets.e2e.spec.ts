@@ -59,6 +59,7 @@ const supportedCurrenciesTicker = [
   "PAXG.ETH",
   "DOT",
   "MATIC.ETH",
+  "MATIC.POLYGON",
   "SAND.ETH",
   "SHIB.ETH",
   "SOL",
@@ -149,7 +150,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
-    it("should return 42 currencies list", async () => {
+    it("should return 43 currencies list", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
       const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
         TEST_API_KEY,
@@ -167,7 +168,7 @@ describe("CryptoCurrencies & Locations", () => {
       expect(allTickers.sort()).toEqual(supportedCurrenciesTicker.sort());
     });
 
-    it("returned 41 currencies list should have proper iconPath", async () => {
+    it("returned currencies list should have proper iconPath", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
       const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
         TEST_API_KEY,

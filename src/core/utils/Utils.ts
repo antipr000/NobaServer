@@ -1,25 +1,22 @@
-export const HASH_SEPARATOR = "#"; //AttributeSeparator
-export const DEFAULT_SEPARATOR = HASH_SEPARATOR;
+export class Utils {
+  static getUsernameFromNameParts(firstName: string, lastName: string): string {
+    // Only add a space if first & last name are both present
+    return `${firstName ?? ""}${firstName && lastName ? " " : ""}${lastName ?? ""}` ?? "";
+  }
 
-export function mergeAttributes(...args: string[]): string {
-  return args.join(HASH_SEPARATOR);
-}
+  static roundTo2DecimalNumber(num: number): number {
+    return this.roundToSpecifiedDecimalNumber(num, 2);
+  }
 
-export function splitAttributes(str): string[] {
-  return str.split(HASH_SEPARATOR);
-}
+  static roundTo2DecimalString(num: number): string {
+    return this.roundToSpecifiedDecimalString(num, 2);
+  }
 
-export function trimAndRemoveNewLine(s: string): string {
-  if (s) return s.trim().replace(/\r?\n|\r/g, " ");
-  return s;
-}
+  static roundToSpecifiedDecimalNumber(num: number, decimals: number): number {
+    return parseFloat(this.roundToSpecifiedDecimalString(num, decimals));
+  }
 
-export function delay(delayTimeInMilliseconds: number): Promise<void> {
-  return new Promise((resolve, reject) => {
-    setTimeout(resolve, delayTimeInMilliseconds);
-  });
-}
-
-export function generateRandomNumber(): number {
-  return Math.floor(100000 + Math.random() * 900000);
+  static roundToSpecifiedDecimalString(num: number, decimals: number): string {
+    return num.toFixed(decimals);
+  }
 }

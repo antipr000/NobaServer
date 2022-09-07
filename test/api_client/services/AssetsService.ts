@@ -164,7 +164,7 @@ export class AssetsService {
   ): CancelablePromise<CreditCardDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/creditcardbin/{bin}",
+      url: "/v1/creditcardmetadata/{bin}",
       path: {
         bin: bin,
       },

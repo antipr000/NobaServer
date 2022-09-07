@@ -39,6 +39,7 @@ import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { CurrencyType } from "../../../modules/common/domain/Types";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
@@ -65,7 +66,7 @@ export class DefaultAssetService implements AssetService {
       request.fiatCurrency,
     );
 
-    const totalCreditCardFeeInFiat: number = this.roundTo2DecimalNumber(
+    const totalCreditCardFeeInFiat: number = Utils.roundTo2DecimalNumber(
       request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat,
     );
     const totalFee: number = networkFee.feeInFiat + totalCreditCardFeeInFiat + nobaFlatFeeInFiat;
@@ -131,7 +132,6 @@ export class DefaultAssetService implements AssetService {
       request.cryptoCurrency,
       request.fiatCurrency,
     );
-    this.logger.debug(`Network fee: ${JSON.stringify(networkFee)}`);
 
     const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForDesiredCryptoQuantity(
       request.cryptoCurrency,
@@ -160,7 +160,7 @@ export class DefaultAssetService implements AssetService {
     const finalFiatAmount =
       (fiatAmountAfterAllChargesExceptCreditCard + fixedCreditCardFeeInFiat) / (1 - creditCardFeePercent);
 
-    const totalCreditCardFeeInFiat = this.roundTo2DecimalNumber(
+    const totalCreditCardFeeInFiat = Utils.roundTo2DecimalNumber(
       finalFiatAmount - fiatAmountAfterAllChargesExceptCreditCard,
     );
 
@@ -518,9 +518,5 @@ export class DefaultAssetService implements AssetService {
         onChainTransactionID: null,
       };
     }
-  }
-
-  private roundTo2DecimalNumber(num: number): number {
-    return Math.round((num + Number.EPSILON) * 100) / 100;
   }
 }

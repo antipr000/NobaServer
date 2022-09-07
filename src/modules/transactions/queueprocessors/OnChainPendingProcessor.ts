@@ -75,7 +75,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
       case PollStatus.RETRYABLE_FAILURE:
         transaction.props.transactionStatus = TransactionStatus.CRYPTO_OUTGOING_INITIATED;
         transaction.props.zhWithdrawalID = undefined;
-        await this.transactionRepo.updateTransactionStatusWithExactState(
+        transaction = await this.transactionRepo.updateStatusWithExactTransactionProps(
           transactionId,
           TransactionStatus.CRYPTO_OUTGOING_INITIATED,
           transaction.props,

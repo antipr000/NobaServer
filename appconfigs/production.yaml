@@ -49,6 +49,8 @@ checkout:
   awsSecretNameForSecretKey: "PROD_CHECKOUT_SECRET_KEY"
   publicKey: "bogus-value"
   secretKey: "bogus-value"
+  couponCode: "NY2018"
+  partnerId: 123989
 
 mongo:
   awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"

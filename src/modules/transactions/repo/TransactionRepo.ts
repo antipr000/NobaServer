@@ -24,7 +24,7 @@ export interface ITransactionRepo {
   getWeeklyUserTransactionAmount(userId: string): Promise<number>;
   getDailyUserTransactionAmount(userId: string): Promise<number>;
   getTransactionsBeforeTime(time: number, status: TransactionStatus): Promise<Transaction[]>;
-  updateTransactionStatusWithExactState(
+  updateStatusWithExactTransactionProps(
     transactionId: string,
     newStatus: TransactionStatus,
     transactionState: TransactionProps,

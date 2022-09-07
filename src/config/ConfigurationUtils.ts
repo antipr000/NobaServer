@@ -46,6 +46,8 @@ export const CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY = "awsSecretNameFo
 export const CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY = "awsSecretNameForSecretKey";
 export const CHECKOUT_PUBLIC_KEY = "publicKey";
 export const CHECKOUT_SECRET_KEY = "secretKey";
+export const CHECKOUT_COUPON_CODE = "couponCode";
+export const CHECKOUT_PARTNER_ID = "partnerId";
 
 export const TWILIO_CONFIG_KEY = "twilio";
 export const TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR = "awsSecretNameForSID";

@@ -112,7 +112,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return this.transactionMapper.toDomain(updatedTransactionProps);
   }
 
-  async updateTransactionStatusWithExactState(
+  async updateStatusWithExactTransactionProps(
     transactionId: string,
     newStatus: TransactionStatus,
     targetState: Partial<TransactionProps>,

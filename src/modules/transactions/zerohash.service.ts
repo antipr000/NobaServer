@@ -17,11 +17,9 @@ import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
-import { CurrencyType } from "../common/domain/Types";
 import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
-import { Transaction } from "./domain/Transaction";
 import {
   OnChainState,
   TradeState,
@@ -35,7 +33,7 @@ import {
   ZerohashTransferResponse,
   ZerohashExecutedQuote,
 } from "./domain/ZerohashTypes";
-import { ExecutedQuote } from "./domain/AssetTypes";
+import { Utils } from "../../core/utils/Utils";
 
 const crypto_ts = require("crypto");
 const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
@@ -311,7 +309,7 @@ export class ZeroHashService {
       physical_delivery: true,
       parties_anonymous: false,
       transaction_timestamp: Date.now(),
-      bank_fee: this.roundTo2DecimalString(request.totalFiatAmount - request.sellAmount),
+      bank_fee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.sellAmount),
       parties: [
         {
           participant_code: request.buyerParticipantCode,
@@ -546,9 +544,5 @@ export class ZeroHashService {
     }
 
     return participantCode;
-  }
-
-  private roundTo2DecimalString(num: number): string {
-    return num.toFixed(2);
   }
 }

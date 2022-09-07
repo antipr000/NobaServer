@@ -784,6 +784,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -834,6 +835,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -843,6 +845,7 @@ describe("TransactionService", () => {
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -901,6 +904,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -910,6 +914,7 @@ describe("TransactionService", () => {
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -991,6 +996,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -1000,6 +1006,7 @@ describe("TransactionService", () => {
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
