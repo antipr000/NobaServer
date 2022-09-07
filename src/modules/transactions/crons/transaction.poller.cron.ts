@@ -63,11 +63,14 @@ export class TransactionPollerService {
         Date.now().valueOf() - transaction.props.lastStatusUpdateTimestamp >=
         transactionAttributes.maxAllowedMilliSecondsInThisStatus
       ) {
-        this.logger.info(
-          `Skipping transaction with ID: "${transaction.props._id}" ` +
-            `as it is stuck on "${transaction.props.transactionStatus}" for more than ` +
-            `${transactionAttributes.maxAllowedMilliSecondsInThisStatus} milliseconds.`,
-        );
+        const skippedTransactionInfo = {
+          id: transaction.props._id,
+          status: transaction.props.transactionStatus,
+          timeTillStuck: Date.now().valueOf() - transaction.props.lastStatusUpdateTimestamp,
+          maxAllowedMilliSecondsInThisStatus: transactionAttributes.maxAllowedMilliSecondsInThisStatus,
+        };
+        this.logger.error(`Skipping transaction with details: `);
+        this.logger.error(`${JSON.stringify(skippedTransactionInfo)}`);
         return;
       }
       allEnqueueOperations.push(this.sqsClient.enqueue(transactionAttributes.processingQueue, transaction.props._id));
