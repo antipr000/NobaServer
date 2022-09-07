@@ -15,17 +15,21 @@ import { request as __request } from "../core/request";
 export class ConsumerService {
   /**
    * Gets details of logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns ConsumerDTO Details of logged-in consumer
    * @throws ApiError
    */
-  public static getConsumer(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-  ): CancelablePromise<ConsumerDTO> {
+  public static getConsumer({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/consumers",
@@ -43,19 +47,23 @@ export class ConsumerService {
 
   /**
    * Updates details of logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param requestBody
    * @returns ConsumerDTO Updated consumer record
    * @throws ApiError
    */
-  public static updateConsumer(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    requestBody: UpdateConsumerRequestDTO,
-  ): CancelablePromise<ConsumerDTO> {
+  public static updateConsumer({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: UpdateConsumerRequestDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/consumers",
@@ -75,19 +83,23 @@ export class ConsumerService {
 
   /**
    * Adds a payment method for the logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param requestBody
    * @returns ConsumerDTO Updated consumer record
    * @throws ApiError
    */
-  public static addPaymentMethod(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    requestBody: AddPaymentMethodDTO,
-  ): CancelablePromise<ConsumerDTO> {
+  public static addPaymentMethod({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: AddPaymentMethodDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/consumers/paymentmethods",
@@ -107,19 +119,23 @@ export class ConsumerService {
 
   /**
    * Deletes a payment method for the logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param paymentToken
    * @returns ConsumerDTO Deleted consumer record
    * @throws ApiError
    */
-  public static deletePaymentMethod(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    paymentToken: string,
-  ): CancelablePromise<ConsumerDTO> {
+  public static deletePaymentMethod({
+    xNobaApiKey,
+    paymentToken,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    paymentToken: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/v1/consumers/paymentmethods/{paymentToken}",
@@ -140,19 +156,23 @@ export class ConsumerService {
 
   /**
    * Adds a crypto wallet for the logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param requestBody
    * @returns ConsumerDTO Updated consumer record with the crypto wallet
    * @throws ApiError
    */
-  public static addCryptoWallet(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    requestBody: AddCryptoWalletDTO,
-  ): CancelablePromise<ConsumerDTO> {
+  public static addCryptoWallet({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: AddCryptoWalletDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/consumers/wallets",
@@ -172,19 +192,23 @@ export class ConsumerService {
 
   /**
    * Deletes a saved wallet for the logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param walletAddress
    * @returns ConsumerDTO Deleted wallet for consumer
    * @throws ApiError
    */
-  public static deleteCryptoWallet(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    walletAddress: string,
-  ): CancelablePromise<ConsumerDTO> {
+  public static deleteCryptoWallet({
+    xNobaApiKey,
+    walletAddress,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    walletAddress: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/v1/consumers/wallets/{walletAddress}",
@@ -205,19 +229,23 @@ export class ConsumerService {
 
   /**
    * Submits the one-time passcode (OTP) to confirm wallet add or update
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param requestBody
    * @returns ConsumerDTO Verified wallet for consumer
    * @throws ApiError
    */
-  public static confirmWalletUpdate(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    requestBody: ConfirmWalletUpdateDTO,
-  ): CancelablePromise<ConsumerDTO> {
+  public static confirmWalletUpdate({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: ConfirmWalletUpdateDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/consumers/wallets/confirm",
@@ -236,17 +264,21 @@ export class ConsumerService {
 
   /**
    * Gets transaction limit details for logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns ConsumerLimitsDTO Consumer limit details
    * @throws ApiError
    */
-  public static getConsumerLimits(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-  ): CancelablePromise<ConsumerLimitsDTO> {
+  public static getConsumerLimits({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerLimitsDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/consumers/limits",

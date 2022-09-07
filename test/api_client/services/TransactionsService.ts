@@ -13,27 +13,31 @@ import { request as __request } from "../core/request";
 export class TransactionsService {
   /**
    * Get transaction quote (exchange rate, provider fees, network fees etc.)
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param fiatCurrencyCode
-   * @param cryptoCurrencyCode
-   * @param fixedSide
-   * @param fixedAmount
-   * @param partnerId
    * @returns TransactionQuoteDTO
    * @throws ApiError
    */
-  public static getTransactionQuote(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    fiatCurrencyCode: string,
-    cryptoCurrencyCode: string,
-    fixedSide: "fiat" | "crypto",
-    fixedAmount: number,
-    partnerId?: string,
-  ): CancelablePromise<TransactionQuoteDTO> {
+  public static getTransactionQuote({
+    xNobaApiKey,
+    fiatCurrencyCode,
+    cryptoCurrencyCode,
+    fixedSide,
+    fixedAmount,
+    xNobaSignature,
+    xNobaTimestamp,
+    partnerId,
+  }: {
+    xNobaApiKey: string;
+    fiatCurrencyCode: string;
+    cryptoCurrencyCode: string;
+    fixedSide: "fiat" | "crypto";
+    fixedAmount: number;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    partnerId?: string;
+  }): CancelablePromise<TransactionQuoteDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/quote",
@@ -58,23 +62,27 @@ export class TransactionsService {
 
   /**
    * Checks if the transaction parameters are valid
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param type
-   * @param transactionAmount
-   * @param baseCurrency
    * @returns CheckTransactionDTO
    * @throws ApiError
    */
-  public static checkIfTransactionPossible(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    type: "onramp" | "offramp" | "swap",
-    transactionAmount: number,
-    baseCurrency: string,
-  ): CancelablePromise<CheckTransactionDTO> {
+  public static checkIfTransactionPossible({
+    xNobaApiKey,
+    type,
+    transactionAmount,
+    baseCurrency,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    type: "onramp" | "offramp" | "swap";
+    transactionAmount: number;
+    baseCurrency: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<CheckTransactionDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/check",
@@ -93,19 +101,23 @@ export class TransactionsService {
 
   /**
    * Gets details of a transaction
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param transactionId
    * @returns TransactionDTO Details of a transaction
    * @throws ApiError
    */
-  public static getTransactionStatus(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    transactionId: string,
-  ): CancelablePromise<TransactionDTO> {
+  public static getTransactionStatus({
+    xNobaApiKey,
+    transactionId,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    transactionId: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/{transactionID}",
@@ -125,21 +137,25 @@ export class TransactionsService {
 
   /**
    * Submits a new transaction
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param sessionKey
-   * @param requestBody
    * @returns any Transaction ID
    * @throws ApiError
    */
-  public static transact(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    sessionKey: string,
-    requestBody: CreateTransactionDTO,
-  ): CancelablePromise<any> {
+  public static transact({
+    xNobaApiKey,
+    sessionKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    sessionKey: string;
+    requestBody: CreateTransactionDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/transactions",
@@ -161,21 +177,31 @@ export class TransactionsService {
 
   /**
    * Gets all transactions for the logged-in consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
-   * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
    * @returns TransactionDTO List of all transactions
    * @throws ApiError
    */
-  public static getTransactions(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    startDate?: string,
-    endDate?: string,
-  ): CancelablePromise<Array<TransactionDTO>> {
+  public static getTransactions({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+    startDate,
+    endDate,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    /**
+     * Format: YYYY-MM-DD, example: 2010-04-27
+     */
+    startDate?: string;
+    /**
+     * Format: YYYY-MM-DD, example: 2010-04-27
+     */
+    endDate?: string;
+  }): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions",
@@ -196,23 +222,36 @@ export class TransactionsService {
 
   /**
    * Downloads all the transactions of a particular consumer
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param reportFormat Format in which you want the transactions report. Current 'CSV' is supported.
-   * @param startDate Format: YYYY-MM-DD, example: 2010-04-27
-   * @param endDate Format: YYYY-MM-DD, example: 2010-04-27
    * @returns TransactionDTO A CSV or PDF file containing details of all the transactions made by the consumer
    * @throws ApiError
    */
-  public static downloadTransactions(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    reportFormat: "csv" | "pdf",
-    startDate?: string,
-    endDate?: string,
-  ): CancelablePromise<Array<TransactionDTO>> {
+  public static downloadTransactions({
+    xNobaApiKey,
+    reportFormat,
+    xNobaSignature,
+    xNobaTimestamp,
+    startDate,
+    endDate,
+  }: {
+    xNobaApiKey: string;
+    /**
+     * Format in which you want the transactions report. Current 'CSV' is supported.
+     */
+    reportFormat: "csv" | "pdf";
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    /**
+     * Format: YYYY-MM-DD, example: 2010-04-27
+     */
+    startDate?: string;
+    /**
+     * Format: YYYY-MM-DD, example: 2010-04-27
+     */
+    endDate?: string;
+  }): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions/download",
