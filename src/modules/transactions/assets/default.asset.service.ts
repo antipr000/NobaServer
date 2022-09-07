@@ -469,7 +469,7 @@ export class DefaultAssetService implements AssetService {
         // TODO(#): Check with ZH if this error can be retried.
         case WithdrawalState.REJECTED:
           return {
-            status: PollStatus.FAILURE,
+            status: PollStatus.RETRYABLE_FAILURE,
             errorMessage: "Withdrawal request rejected.",
             requestedAmount: null,
             settledAmount: null,
