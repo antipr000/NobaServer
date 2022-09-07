@@ -11,8 +11,9 @@ import { CurrencyType } from "../common/domain/Types";
 import { EmailService } from "../common/email.service";
 import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
+import { SANCTIONED_WALLETS } from "../consumer/domain/CryptoWallet";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
-import { KYCStatus } from "../consumer/domain/VerificationStatus";
+import { KYCStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { Partner } from "../partner/domain/Partner";
 import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
@@ -28,13 +29,13 @@ import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
-import { TransactionMapper } from "./mapper/TransactionMapper";
-import { ITransactionRepo } from "./repo/TransactionRepo";
 import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "./exceptions/TransactionSubmissionException";
 import { Utils } from "../../core/utils/Utils";
+import { TransactionMapper } from "./mapper/TransactionMapper";
+import { ITransactionRepo } from "./repo/TransactionRepo";
 
 @Injectable()
 export class TransactionService {
@@ -173,6 +174,21 @@ export class TransactionService {
       transactionRequest.leg2,
       transactionRequest.leg2Amount,
     );
+
+    // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as flagged
+    if (SANCTIONED_WALLETS.includes(transactionRequest.destinationWalletAddress)) {
+      const consumer = await this.consumerService.getConsumer(consumerID);
+      const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transactionRequest.destinationWalletAddress);
+      cryptoWallet.address = WalletStatus.FLAGGED;
+      await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+      this.logger.error("Failed to transact to a sanctioned wallet");
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
+    }
+
+    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
+    if (cryptoCurrencies.filter(curr => curr.ticker === transactionRequest.leg2).length == 0) {
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
+    }
 
     const fiatAmount = await this.roundToProperDecimalsForFiatCurrency(
       transactionRequest.leg1,

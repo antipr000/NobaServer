@@ -271,6 +271,7 @@ export class ConsumerService {
       this.logger.error(
         `Failed to add a sanctioned wallet: ${cryptoWallet.address} for consumer: ${consumer.props._id}`,
       );
+      await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
       throw new BadRequestException({ message: "Failed to add wallet: sanctioned wallet" });
     }
     cryptoWallet.status = WalletStatus.APPROVED;
