@@ -1,5 +1,4 @@
 export enum PaymentProviders {
-  STRIPE = "Stripe",
   CHECKOUT = "Checkout",
 }
 

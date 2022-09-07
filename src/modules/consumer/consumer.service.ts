@@ -1,26 +1,25 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Result } from "../../core/logic/Result";
-import Stripe from "stripe";
 import { Logger } from "winston";
+import { Result } from "../../core/logic/Result";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
 import { CheckoutService } from "../common/checkout.service";
 import { EmailService } from "../common/email.service";
 import { KmsService } from "../common/kms.service";
 
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
+import { Transaction } from "../transactions/domain/Transaction";
+import { CardFailureExceptionText } from "./CardProcessingException";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { CryptoWallet, SANCTIONED_WALLETS } from "./domain/CryptoWallet";
 import { PaymentMethod } from "./domain/PaymentMethod";
 import { PaymentProviders } from "./domain/PaymentProviderDetails";
+import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
-import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
-import { CardFailureExceptionText } from "./CardProcessingException";
-import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
-import { Transaction } from "../transactions/domain/Transaction";
-import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 @Injectable()
 export class ConsumerService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -40,8 +39,6 @@ export class ConsumerService {
 
   @Inject("OTPRepo")
   private readonly otpRepo: IOTPRepo;
-
-  private readonly stripeApi: Stripe;
 
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
@@ -164,9 +161,7 @@ export class ConsumerService {
 
     const paymentProviderID = paymentMethod[0].paymentProviderID;
 
-    if (paymentProviderID === PaymentProviders.STRIPE) {
-      await this.stripeApi.paymentMethods.detach(paymentToken);
-    } else if (paymentProviderID === PaymentProviders.CHECKOUT) {
+    if (paymentProviderID === PaymentProviders.CHECKOUT) {
       await this.checkoutService.removePaymentMethod(paymentToken);
     } else {
       throw new NotFoundException("Payment provider not found");

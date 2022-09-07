@@ -64,7 +64,6 @@
     "rxjs": "^7",
     "sqs-consumer": "^5.7.0",
     "sqs-producer": "^2.1.0",
-    "stripe": "^8.210.0",
     "swagger-ui-express": "^4.5.0",
     "ts-mockito": "^2.6.1",
     "twilio": "^3.80.1",
