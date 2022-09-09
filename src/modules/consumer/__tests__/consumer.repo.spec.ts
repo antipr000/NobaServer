@@ -10,8 +10,8 @@ import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { MongoDBConsumerRepo } from "../repos/MongoDBConsumerRepo";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
-import { NotFoundException } from "@nestjs/common";
 import { KmsService } from "../../../../src/modules/common/kms.service";
+import { NotFoundException } from "@nestjs/common";
 
 const CONSUMER_ID_PREFIX = "consumer_id_prefix";
 const TEST_NUMBER = 5;
@@ -74,32 +74,52 @@ describe("MongoDBConsumerRepoTests", () => {
     await mongoServer.stop();
   });
 
-  describe("createAndGetConsumer", () => {
-    it("should create and find a user", async () => {
+  describe("createConsumer", () => {
+    it("should create a consumer", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-      let thrown1 = false;
-      try {
-        const noUser = await consumerRepo.getConsumer("notExistingID");
-      } catch (e) {
-        if (e instanceof NotFoundException) thrown1 = true;
-      }
-      expect(thrown1).toBe(true);
-
-      const resultNotFound = await consumerRepo.getConsumerIfExists("notExistingID");
-      expect(resultNotFound.isFailure).toBe(true);
-
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props._id);
       expect(savedResult.props._id).toBe(result.props._id);
       expect(savedResult.props.email).toBe(consumer.props.email);
 
-      let thrown = false; //  should throw as email already exists
       try {
-        const result2 = await consumerRepo.createConsumer(consumer);
+        await consumerRepo.createConsumer(consumer);
+        expect(true).toBe(false);
       } catch (e) {
-        if (e.message.includes("already exists")) thrown = true;
+        expect(e.message).toContain("already exists");
       }
-      expect(thrown).toBe(true);
+    });
+  });
+
+  describe("getConsumer", () => {
+    it("should get a consumer", async () => {
+      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
+
+      try {
+        await consumerRepo.getConsumer(consumer.props._id);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+      }
+
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumer(result.props._id);
+      expect(savedResult.props._id).toBe(result.props._id);
+      expect(savedResult.props.email).toBe(consumer.props.email);
+    });
+  });
+
+  describe("getConsumerIfExists", () => {
+    it("should get a consumer if exists", async () => {
+      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
+
+      const resultNotFound = await consumerRepo.getConsumerIfExists("notExistingEmailID");
+      expect(resultNotFound.isFailure).toBe(true);
+
+      await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumerIfExists(consumer.props.email);
+      expect(savedResult.isSuccess).toBe(true);
+      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
     });
   });
 
@@ -118,10 +138,11 @@ describe("MongoDBConsumerRepoTests", () => {
   describe("getUserByEmail", () => {
     it("get a user by email", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-      const consumer2 = getRandomUser("user2@noba.com");
+
+      const resultNotFound = await consumerRepo.getConsumerByEmail(DEFAULT_EMAIL_ID);
+      expect(resultNotFound.isFailure).toBe(true);
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
-      const savedConsumer2 = await consumerRepo.createConsumer(consumer2);
 
       const result = await consumerRepo.getConsumerByEmail(savedConsumer.props.email);
       expect(result.getValue().props.email).toBe(consumer.props.email);
