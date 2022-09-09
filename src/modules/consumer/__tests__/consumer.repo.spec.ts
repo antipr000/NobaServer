@@ -92,6 +92,14 @@ describe("MongoDBConsumerRepoTests", () => {
       const savedResult = await consumerRepo.getConsumer(result.props._id);
       expect(savedResult.props._id).toBe(result.props._id);
       expect(savedResult.props.email).toBe(consumer.props.email);
+
+      let thrown = false; //  should throw as email already exists
+      try{
+        const result2 = await consumerRepo.createConsumer(consumer);
+      }catch (e) {
+        if (e.message.includes("already exists")) thrown = true;
+      }
+      expect(thrown).toBe(true);
     });
   });
 
@@ -136,17 +144,21 @@ describe("MongoDBConsumerRepoTests", () => {
   });
 
   describe("updateConsumer", () => {
-    it("get a user by phone", async () => {
-      const phone = "8242525124";
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
+    it("update a consumer", async () => {
+      
+      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
-      const result = await consumerRepo.getConsumerByPhone(savedConsumer.props.phone);
-      expect(result.getValue().props.phone).toBe(consumer.props.phone);
+      const result = await consumerRepo.getConsumer(savedConsumer.props._id);
+      expect(result.props.phone).toBe(undefined);
 
-      const result1 = await consumerRepo.getConsumerByPhone("randomphonenumber");
-      expect(result1.isFailure).toBe(true);
+      const phone = "134242424"
+      const updatedConsumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
+      await consumerRepo.updateConsumer(updatedConsumer);
+
+      const result1 = await consumerRepo.getConsumer(result.props._id);
+      expect(result1.props.phone).toBe(phone);
     });
   });
 });

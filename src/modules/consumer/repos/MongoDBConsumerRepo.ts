@@ -54,16 +54,12 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
   }
 
   async getConsumerIfExists(email: string): Promise<Result<Consumer>> {
-    try {
-      const userModel = await this.dbProvider.getUserModel();
-      const result = await userModel.findOne({ email: email }).exec();
-      if (result) {
-        const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-        return Result.ok(this.consumerMapper.toDomain(consumerProps));
-      } else {
-        return Result.fail("Couldn't find consumer in the db");
-      }
-    } catch (err) {
+    const userModel = await this.dbProvider.getUserModel();
+    const result = await userModel.findOne({ email: email }).exec();
+    if (result) {
+      const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
+      return Result.ok(this.consumerMapper.toDomain(consumerProps));
+    } else {
       return Result.fail("Couldn't find consumer in the db");
     }
   }
@@ -73,16 +69,12 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
   }
 
   async getConsumerByPhone(phone: string): Promise<Result<Consumer>> {
-    try {
-      const userModel = await this.dbProvider.getUserModel();
-      const result = await userModel.findOne({ phone: phone }).exec();
-      if (result) {
-        const consumer: ConsumerProps = convertDBResponseToJsObject(result);
-        return Result.ok(this.consumerMapper.toDomain(consumer));
-      } else {
-        return Result.fail("Couldn't find consumer in the db");
-      }
-    } catch (err) {
+    const userModel = await this.dbProvider.getUserModel();
+    const result = await userModel.findOne({ phone: phone }).exec();
+    if (result) {
+      const consumer: ConsumerProps = convertDBResponseToJsObject(result);
+      return Result.ok(this.consumerMapper.toDomain(consumer));
+    } else {
       return Result.fail("Couldn't find consumer in the db");
     }
   }
