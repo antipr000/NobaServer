@@ -12,8 +12,9 @@ import {
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { AppService } from "../../app.service";
 import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
-import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { AppEnvironment, getEnvironmentName, ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
@@ -40,6 +41,7 @@ const crypto_ts = require("crypto");
 @Injectable()
 export class ZeroHashService {
   private readonly configs: ZerohashConfigs;
+  private readonly appService: AppService;
   @Inject()
   private readonly locationService: LocationService;
 
@@ -60,8 +62,13 @@ export class ZeroHashService {
     "non_us_other",
   ];
 
-  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+  constructor(
+    configService: CustomConfigService,
+    appService: AppService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) {
     this.configs = configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
+    this.appService = appService;
   }
 
   getNobaPlatformCode(): string {
@@ -77,6 +84,11 @@ export class ZeroHashService {
     // Don't forget to base 64 encode your digest
     const signedPayload = hmac.update(payload).digest("base64");
 
+    const proxy =
+      getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
+        ? null
+        : { protocol: "http", host: "172.31.8.170", port: 3128 };
+
     const axiosInstance = axios.create({
       baseURL: `https://${this.configs.host}`,
       headers: {
@@ -86,6 +98,7 @@ export class ZeroHashService {
         "X-SCX-PASSPHRASE": this.configs.passPhrase,
       },
       method: method,
+      proxy: proxy,
     });
 
     const requestString = `[${method} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
