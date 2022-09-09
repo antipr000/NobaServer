@@ -94,9 +94,9 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(savedResult.props.email).toBe(consumer.props.email);
 
       let thrown = false; //  should throw as email already exists
-      try{
+      try {
         const result2 = await consumerRepo.createConsumer(consumer);
-      }catch (e) {
+      } catch (e) {
         if (e.message.includes("already exists")) thrown = true;
       }
       expect(thrown).toBe(true);
@@ -145,7 +145,6 @@ describe("MongoDBConsumerRepoTests", () => {
 
   describe("updateConsumer", () => {
     it("update a consumer", async () => {
-      
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
@@ -153,7 +152,7 @@ describe("MongoDBConsumerRepoTests", () => {
       const result = await consumerRepo.getConsumer(savedConsumer.props._id);
       expect(result.props.phone).toBe(undefined);
 
-      const phone = "134242424"
+      const phone = "134242424";
       const updatedConsumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
       await consumerRepo.updateConsumer(updatedConsumer);
 
