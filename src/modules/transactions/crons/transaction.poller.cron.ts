@@ -39,15 +39,26 @@ export class TransactionPollerService {
     for (let i = 0; i < allTransactionAttributes.length; i += 1) {
       const transactionAttr: TransactionStateAttributes = allTransactionAttributes[i];
       // The idea is to not poll a transaction which have not been updated since
-      // `transactionAttr.waitTimeInMilliSecondsBeforeRequeue` seconds.
+      // `transactionAttr.waitTimeInMilliSecondsBeforeRequeue` milli-seconds.
       //
       // => CURRENT_TIME - LAST_UPDATED_TIME >= waitTimeInMilliSecondsBeforeRequeue
       // => LAST_UPDATED_TIME <= CURRENT_TIME - waitTimeInMilliSecondsBeforeRequeue
       //
-      const allowedTransactionTime: number = Date.now().valueOf() - transactionAttr.waitTimeInMilliSecondsBeforeRequeue;
+      const maxAllowedTransactionUpdateTime: number =
+        Date.now().valueOf() - transactionAttr.waitTimeInMilliSecondsBeforeRequeue;
 
-      const pendingTransactionsWithCurrentAttr = await this.transactionRepo.getTransactionsBeforeTime(
-        allowedTransactionTime,
+      // The idea is to NOT poll a transaction for which transaction-state haven't been
+      // updated since `transactionAttr.maxAllowedMilliSecondsInThisStatus` milli-seconds.
+      //
+      // => CURRENT_TIME - LAST_STATUS_UPDATE_TIME <= maxAllowedMilliSecondsInThisStatus
+      // => LAST_STATUS_UPDATE_TIME >= CURRENT_TIME - maxAllowedMilliSecondsInThisStatus
+      //
+      const minAllowedLastStatusUpdateTime: number =
+        Date.now().valueOf() - transactionAttr.maxAllowedMilliSecondsInThisStatus;
+
+      const pendingTransactionsWithCurrentAttr = await this.transactionRepo.getTransactionsToProcess(
+        maxAllowedTransactionUpdateTime,
+        minAllowedLastStatusUpdateTime,
         transactionAttr.transactionStatus,
       );
       allAsyncOperations.push(this.enqueueTransactions(pendingTransactionsWithCurrentAttr, transactionAttr));
@@ -59,10 +70,9 @@ export class TransactionPollerService {
   private async enqueueTransactions(transactions: Transaction[], transactionAttributes: TransactionStateAttributes) {
     const allEnqueueOperations = [];
     transactions.forEach(transaction => {
-      if (
-        Date.now().valueOf() - transaction.props.lastStatusUpdateTimestamp >=
-        transactionAttributes.maxAllowedMilliSecondsInThisStatus
-      ) {
+      const timeElapsedTillLastStatusUpdate = Date.now().valueOf() - transaction.props.lastStatusUpdateTimestamp;
+      // TODO(#): This condition will never occur. Move it to new poller.
+      if (timeElapsedTillLastStatusUpdate >= transactionAttributes.maxAllowedMilliSecondsInThisStatus) {
         const skippedTransactionInfo = {
           description: "Skipping transaction as it is in the same status for a long time",
           id: transaction.props._id,

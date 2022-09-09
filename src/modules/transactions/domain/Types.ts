@@ -103,7 +103,7 @@ export const allTransactionAttributes: TransactionStateAttributes[] = [
     transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
     processingQueue: TransactionQueueName.OnChainPendingTransaction,
     waitTimeInMilliSecondsBeforeRequeue: 2 * 60 * 1000, // 2 mins.
-    maxAllowedMilliSecondsInThisStatus: 15 * 60 * 1000, // 15 mins.
+    maxAllowedMilliSecondsInThisStatus: 2 * 60 * 60 * 1000, // 2 hrs.
   },
 
   // **************************************************************
