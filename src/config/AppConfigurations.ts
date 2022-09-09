@@ -411,7 +411,7 @@ async function configureMongoCredentials(
   mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
 
   if (environment === AppEnvironment.DEV) {
-    const hostname = os.userInfo().username.split(".").join("").split(" ").join("");
+    const hostname = os.hostname().replace(".", "_");
     mongoConfigs.uri += `_${hostname}`;
   }
 

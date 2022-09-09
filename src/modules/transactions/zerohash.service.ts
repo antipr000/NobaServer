@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
-import * as axios from "axios";
+import axios, { Method } from "axios";
 
 import {
   BadRequestException,
@@ -74,9 +74,7 @@ export class ZeroHashService {
     return this.configs.platformCode;
   }
 
-  // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
-  // TODO: For some reason Gal said that we have to use the deprecated make-request package for now. Change this later!
-  async makeRequest(route, method, body) {
+  async makeRequest(route: string, method: Method, body: any) {
     // CREATE SIGNATURE
     const timestamp = Math.round(Date.now() / 1000);
     const payload = timestamp + method + route + JSON.stringify(body);
@@ -85,32 +83,22 @@ export class ZeroHashService {
     // Don't forget to base 64 encode your digest
     const signedPayload = hmac.update(payload).digest("base64");
 
-    // SET HEADERS
-    const headers = {
-      "X-SCX-API-KEY": this.configs.apiKey,
-      "X-SCX-SIGNED": signedPayload,
-      "X-SCX-TIMESTAMP": timestamp,
-      "X-SCX-PASSPHRASE": this.configs.passPhrase,
-    };
+    const axiosInstance = axios.create({
+      baseURL: `https://${this.configs.host}`,
+      headers: {
+        "X-SCX-API-KEY": this.configs.apiKey,
+        "X-SCX-SIGNED": signedPayload,
+        "X-SCX-TIMESTAMP": timestamp,
+        "X-SCX-PASSPHRASE": this.configs.passPhrase,
+      },
+      method: method,
+    });
 
-    const derivedMethod = {
-      POST: "post",
-      PUT: "put",
-      GET: "get",
-    }[method];
-
-    const options = {
-      methods: derivedMethod,
-      headers,
-      body,
-      json: true,
-    };
-
-    const requestString = `[${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
+    const requestString = `[${method} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
     this.logger.info(`Sending ZeroHash request: ${requestString}`);
 
     try {
-      const response = await axios.default[derivedMethod](`https://${this.configs.host}${route}`, options);
+      const response = await axiosInstance({ url: `${route}`, data: body });
       this.logger.debug(`Received response: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (err) {
@@ -131,7 +119,7 @@ export class ZeroHashService {
     }
   }
 
-  async getPrice(underlying, quoted_currency) {
+  async getPrice(underlying: string, quoted_currency: string) {
     let price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET", {});
     return price;
   }
