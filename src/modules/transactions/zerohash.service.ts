@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
 import axios, { Method } from "axios";
-
+import * as tunnel from "tunnel";
 import {
   BadRequestException,
   Inject,
@@ -71,16 +71,16 @@ export class ZeroHashService {
   async makeRequest(route: string, method: Method, body?: any) {
     // CREATE SIGNATURE
     const timestamp = Math.round(Date.now() / 1000);
-    const payload = timestamp + method + route + JSON.stringify(body);
+    const payload = timestamp + method + route + JSON.stringify(body ? body : {}); // The empty {} is important when there is no body
     const decodedSecret = Buffer.from(this.configs.apiSecret, "base64");
     const hmac = crypto_ts.createHmac("sha256", decodedSecret);
     // Don't forget to base 64 encode your digest
     const signedPayload = hmac.update(payload).digest("base64");
 
-    const proxy =
+    const agent =
       getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
         ? null
-        : { protocol: "http", host: "172.31.8.170", port: 3128 };
+        : tunnel.httpsOverHttp({ proxy: { protocol: "http", host: "172.31.8.170", port: 3128 } });
 
     const axiosInstance = axios.create({
       baseURL: `https://${this.configs.host}`,
@@ -91,7 +91,7 @@ export class ZeroHashService {
         "X-SCX-PASSPHRASE": this.configs.passPhrase,
       },
       method: method,
-      proxy: proxy,
+      httpsAgent: agent,
       data: body,
     });
 
