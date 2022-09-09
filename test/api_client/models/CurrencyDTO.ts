@@ -6,4 +6,5 @@ export type CurrencyDTO = {
   name: string;
   ticker: string;
   iconPath: string;
+  precision: number;
 };

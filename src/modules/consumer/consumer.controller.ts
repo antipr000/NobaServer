@@ -109,7 +109,7 @@ export class ConsumerController {
       throw new ForbiddenException();
     }
 
-    const res = await this.consumerService.addCheckoutPaymentMethod(consumer, requestBody);
+    const res = await this.consumerService.addPaymentMethod(consumer, requestBody);
     return this.consumerMapper.toDTO(res);
   }
 

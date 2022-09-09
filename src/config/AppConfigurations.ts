@@ -26,9 +26,6 @@ import {
   SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
   SENDGRID_CONFIG_KEY,
   setEnvironmentProperty,
-  STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR,
-  STRIPE_CONFIG_KEY,
-  STRIPE_SECRET_KEY,
   CHECKOUT_CONFIG_KEY,
   CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY,
   CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY,
@@ -92,7 +89,6 @@ import * as os from "os";
 
 import { TwilioConfigs } from "./configtypes/TwilioConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";
-import { StripeConfigs } from "./configtypes/StripeConfigs";
 import { MongoConfigs } from "./configtypes/MongoConfigs";
 import { SardineConfigs } from "./configtypes/SardineConfigs";
 import { NobaConfigs } from "./configtypes/NobaConfigs";
@@ -237,7 +233,6 @@ async function configureAllVendorCredentials(
     configureNobaParameters,
     configureSendgridCredentials,
     configureTwilioCredentials,
-    configureStripeCredentials,
     configureCheckoutCredentials,
     configureMongoCredentials,
     configureSardineCredentials,
@@ -248,27 +243,6 @@ async function configureAllVendorCredentials(
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
   }
-  return configs;
-}
-
-async function configureStripeCredentials(
-  environment: AppEnvironment,
-  configs: Record<string, any>,
-): Promise<Record<string, any>> {
-  const stripeConfigs: StripeConfigs = configs[STRIPE_CONFIG_KEY];
-
-  if (stripeConfigs === undefined) {
-    const errorMessage =
-      "\n'stripe' configurations are required. Please configure the stripe credentials in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${STRIPE_CONFIG_KEY}" and populate "${STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR}" or "${STRIPE_SECRET_KEY}" ` +
-      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
-
-    throw Error(errorMessage);
-  }
-
-  stripeConfigs.secretKey = await getParameterValue(stripeConfigs.awsSecretNameForSecretKey, stripeConfigs.secretKey);
-
-  configs[STRIPE_CONFIG_KEY] = stripeConfigs;
   return configs;
 }
 
@@ -295,6 +269,9 @@ async function configureCheckoutCredentials(
     checkoutConfigs.awsSecretNameForSecretKey,
     checkoutConfigs.secretKey,
   );
+
+  checkoutConfigs.couponCode = await getParameterValue(null, checkoutConfigs.couponCode);
+  checkoutConfigs.partnerId = parseInt(await getParameterValue(null, checkoutConfigs.partnerId.toString()));
 
   configs[CHECKOUT_CONFIG_KEY] = checkoutConfigs;
   return configs;

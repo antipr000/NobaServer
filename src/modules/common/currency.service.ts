@@ -26,16 +26,18 @@ export class CurrencyService {
         .on("data", data => {
           const name = `${data["Name"]}`.trim();
           const symbol = `${data["Symbol (Prod)"]}`.trim();
-          const liq = `${data["Liquidity**"]}`.trim();
+          const liq = `${data["Liquidity"]}`.trim();
+          const precision = Number(`${data["Price Precision"]}`.trim());
 
           // Include only records for which ZH provides liquidity services (Liquidity=Yes)
           // Exclude XRP
           if ((liq === "Yes" && symbol !== "XRP") || symbol === "USDC.POLYGON") {
             // TODO: Move this path to config
             const curr = new CurrencyDTO();
-            curr.name = `${name}`;
-            curr.ticker = `${symbol}`;
+            curr.name = name;
+            curr.ticker = symbol;
             curr.iconPath = `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`;
+            curr.precision = precision;
             results.push(curr);
           }
         })
@@ -53,6 +55,7 @@ export class CurrencyService {
 
     this.currencies = await this.loadCurrenciesFromFile();
     this.isCurrenciesLoaded = true;
+
     return this.currencies;
   }
 
@@ -68,6 +71,7 @@ export class CurrencyService {
         name: "US Dollar",
         ticker: "USD",
         iconPath: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat/usd.svg",
+        precision: 2,
       },
     ];
   }

@@ -102,14 +102,47 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     // Such a timestamp, rather a point in time, does not depend on timezones.
     const lastStatusUpdateTimestamp = Date.now().valueOf();
 
-    const transactionProps = {
-      ...(otherProps ?? {}),
-      transactionStatus: newStatus,
-      lastStatusUpdateTimestamp: lastStatusUpdateTimestamp,
-    };
+    const transactionProps = otherProps;
+    transactionProps.transactionStatus = newStatus;
+    transactionProps.lastStatusUpdateTimestamp = lastStatusUpdateTimestamp;
 
     const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: any = await transactionModel.findByIdAndUpdate(transactionId, transactionProps).exec();
+    const result: any = await transactionModel.findByIdAndUpdate(transactionId, { $set: transactionProps }).exec();
+    const updatedTransactionProps: TransactionProps = convertDBResponseToJsObject(result);
+    return this.transactionMapper.toDomain(updatedTransactionProps);
+  }
+
+  async updateStatusWithExactTransactionProps(
+    transactionId: string,
+    newStatus: TransactionStatus,
+    targetState: Partial<TransactionProps>,
+  ): Promise<Transaction> {
+    // Date.now() will give you the same UTC timestamp independent of your current timezone.
+    // Such a timestamp, rather a point in time, does not depend on timezones.
+    const lastStatusUpdateTimestamp = Date.now().valueOf();
+
+    const transactionProps = targetState;
+    transactionProps.transactionStatus = newStatus;
+    transactionProps.lastStatusUpdateTimestamp = lastStatusUpdateTimestamp;
+
+    const unsetFields = [];
+    const allFields = Object.keys(transactionProps);
+    allFields.forEach(field => {
+      if (!transactionProps[field]) {
+        unsetFields.push(field);
+      }
+    });
+    const unsetFieldsWithEmptyValue = {};
+    unsetFields.forEach(field => {
+      unsetFieldsWithEmptyValue[field] = "";
+    });
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    await transactionModel
+      .updateOne({ _id: transactionId }, { $set: transactionProps, $unset: unsetFieldsWithEmptyValue })
+      .exec();
+    const result: any = await transactionModel.findById(transactionId).exec();
+
     const updatedTransactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(updatedTransactionProps);
   }

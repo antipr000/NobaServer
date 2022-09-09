@@ -36,7 +36,7 @@ describe("Consumers", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  const TEST_TIMESTAMP = "test_timestamp";
+  let TEST_TIMESTAMP;
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -51,6 +51,7 @@ describe("Consumers", () => {
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
+    TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterEach(async () => {
@@ -63,11 +64,11 @@ describe("Consumers", () => {
   describe("GET /consumers", () => {
     it("should return 401 if not logged in as any identity", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(401);
     });
@@ -79,11 +80,11 @@ describe("Consumers", () => {
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
       expect(getConsumerResponse.__status).toBe(403);
     });
 
@@ -97,11 +98,11 @@ describe("Consumers", () => {
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
       expect(getConsumerResponse.__status).toBe(403);
     });
 
@@ -112,11 +113,11 @@ describe("Consumers", () => {
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -137,11 +138,11 @@ describe("Consumers", () => {
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers?param1=12345", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -159,12 +160,12 @@ describe("Consumers", () => {
   describe("PATCH /consumers", () => {
     it("should return 401 if not logged in as any identity", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {},
-      )) as ConsumerDTO & ResponseStatus;
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {},
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(updateConsumerResponse.__status).toBe(401);
     });
@@ -177,12 +178,12 @@ describe("Consumers", () => {
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {},
-      )) as ConsumerDTO & ResponseStatus;
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {},
+      })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(403);
     });
 
@@ -196,12 +197,12 @@ describe("Consumers", () => {
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {},
-      )) as ConsumerDTO & ResponseStatus;
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {},
+      })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(403);
     });
 
@@ -218,17 +219,22 @@ describe("Consumers", () => {
           firstName: "FIRSTNAME",
         }),
       );
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        firstName: "FIRSTNAME",
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          firstName: "FIRSTNAME",
+        },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
       signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -255,17 +261,22 @@ describe("Consumers", () => {
           lastName: "LASTNAME",
         }),
       );
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        lastName: "LASTNAME",
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          lastName: "LASTNAME",
+        },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
       signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -292,17 +303,22 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
         }),
       );
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        dateOfBirth: "1980-02-29",
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          dateOfBirth: "1980-02-29",
+        },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
       signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -329,8 +345,13 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-30",
         }),
       );
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        dateOfBirth: "1980-02-30",
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          dateOfBirth: "1980-02-30",
+        },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(400);
     });
@@ -350,19 +371,24 @@ describe("Consumers", () => {
           firstName: "FIRSTNAME",
         }),
       );
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        dateOfBirth: "1980-02-29",
-        lastName: "LASTNAME",
-        firstName: "FIRSTNAME",
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          dateOfBirth: "1980-02-29",
+          lastName: "LASTNAME",
+          firstName: "FIRSTNAME",
+        },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
       signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -394,22 +420,27 @@ describe("Consumers", () => {
           },
         }),
       );
-      const updateConsumerResponse = (await ConsumerService.updateConsumer(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        address: {
-          streetLine1: "Street Line 1",
-          streetLine2: "Street Line 2",
-          countryCode: "US",
-          postalCode: "712356",
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          address: {
+            streetLine1: "Street Line 1",
+            streetLine2: "Street Line 2",
+            countryCode: "US",
+            postalCode: "712356",
+          },
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
 
       signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -432,12 +463,12 @@ describe("Consumers", () => {
   describe("POST /consumers/paymentmethods", () => {
     it("should return 401 if not logged in as any identity", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {} as any,
-      )) as ConsumerDTO & ResponseStatus;
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {} as any,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(addPaymentMethodResponse.__status).toBe(401);
     });
@@ -450,12 +481,12 @@ describe("Consumers", () => {
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {} as any,
-      )) as ConsumerDTO & ResponseStatus;
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {} as any,
+      })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(403);
     });
 
@@ -469,12 +500,12 @@ describe("Consumers", () => {
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {} as any,
-      )) as ConsumerDTO & ResponseStatus;
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {} as any,
+      })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(403);
     });
 
@@ -514,26 +545,26 @@ describe("Consumers", () => {
           cvv: "737",
         }),
       );
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
           cardName: "Tester",
           cardNumber: "2222400070000005",
           expiryMonth: 3,
           expiryYear: 2030,
           cvv: "737",
         },
-      )) as ConsumerDTO & ResponseStatus;
+      })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);
 
       signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
@@ -570,25 +601,25 @@ describe("Consumers", () => {
           cvv: "737",
         }),
       );
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        {
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
           cardNumber: "2222400070000005",
           expiryMonth: 3,
           expiryYear: 2030,
           cvv: "737",
         },
-      )) as ConsumerDTO & ResponseStatus;
+      })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);
 
       signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConsumerDTO & ResponseStatus;
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
 

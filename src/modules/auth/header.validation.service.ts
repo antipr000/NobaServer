@@ -22,6 +22,15 @@ export class HeaderValidationService {
     requestBody: string,
   ): Promise<boolean> {
     if (!this.shouldValidateHeaders(apiKey, timestamp, signature)) return true;
+    const dateNow = new Date();
+    const timestampDate = new Date(parseInt(timestamp));
+    if (isNaN(timestampDate.getTime()) || !timestamp) {
+      throw new BadRequestException("Timestamp is not a correct timestamp");
+    }
+    const minutes = Math.abs(dateNow.getTime() - timestampDate.getTime()) / 60000;
+    if (minutes > 5.0) {
+      throw new BadRequestException("Timestamp is more than 5 minutes different than expected");
+    }
     try {
       const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
       const secretKey = CryptoJS.enc.Utf8.parse(partner.props.secretKey);

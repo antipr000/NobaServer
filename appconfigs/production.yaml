@@ -33,10 +33,6 @@ sendgrid:
   awsSecretNameForApiKey: "PROD_SENDGRID_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "bogus-value"
 
-stripe:
-  awsSecretNameForSecretKey: "PROD_STRIPE_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  secretKey: "bogus-value"
-
 twilio:
   awsSecretNameForSID: "PROD_TWILIO_SID"
   awsSecretNameForAuthToken: "PROD_TWILIO_SECRET"
@@ -49,6 +45,8 @@ checkout:
   awsSecretNameForSecretKey: "PROD_CHECKOUT_SECRET_KEY"
   publicKey: "bogus-value"
   secretKey: "bogus-value"
+  couponCode: "NY2018"
+  partnerId: 123989
 
 mongo:
   awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"

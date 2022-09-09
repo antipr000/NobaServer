@@ -4,6 +4,7 @@ import { ConsumerProps } from "../../consumer/domain/Consumer";
 export enum PollStatus {
   SUCCESS = "success",
   PENDING = "pending",
+  RETRYABLE_FAILURE = "retryable_failure",
   FAILURE = "failed",
   FATAL_ERROR = "internal_error",
 }
@@ -97,7 +98,8 @@ export interface NobaQuote {
 
   totalFiatAmount: number;
   totalCryptoQuantity: number;
-  perUnitCryptoPrice: number;
+  perUnitCryptoPriceWithSpread: number; // Sell rate - this is what the consumer sees
+  perUnitCryptoPriceWithoutSpread: number; // Buy rate - this is what Noba pays
 }
 
 export interface QuoteRequestForFixedFiat {

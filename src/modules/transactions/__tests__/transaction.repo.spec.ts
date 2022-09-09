@@ -252,6 +252,7 @@ const getRandomTransaction = (
     processingFee: TEST_NUMBER,
     networkFee: TEST_NUMBER,
     exchangeRate: TEST_NUMBER,
+    buyRate: TEST_NUMBER,
     zhWithdrawalID: mkid(id),
     executedQuoteTradeID: mkid(id),
     executedQuoteSettledTimestamp: TEST_NUMBER,

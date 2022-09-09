@@ -39,6 +39,7 @@ import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { CurrencyType } from "../../../modules/common/domain/Types";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
@@ -65,7 +66,9 @@ export class DefaultAssetService implements AssetService {
       request.fiatCurrency,
     );
 
-    const totalCreditCardFeeInFiat: number = request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat;
+    const totalCreditCardFeeInFiat: number = Utils.roundTo2DecimalNumber(
+      request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat,
+    );
     const totalFee: number = networkFee.feeInFiat + totalCreditCardFeeInFiat + nobaFlatFeeInFiat;
 
     const fiatAmountAfterAllChargesWithoutSpread: number = request.fiatAmount - totalFee;
@@ -112,7 +115,8 @@ export class DefaultAssetService implements AssetService {
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread,
       totalCryptoQuantity: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
       totalFiatAmount: request.fiatAmount,
-      perUnitCryptoPrice: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
       quoteID: zhQuote.quoteID,
     };
   }
@@ -128,7 +132,6 @@ export class DefaultAssetService implements AssetService {
       request.cryptoCurrency,
       request.fiatCurrency,
     );
-    this.logger.debug(`Network fee: ${JSON.stringify(networkFee)}`);
 
     const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForDesiredCryptoQuantity(
       request.cryptoCurrency,
@@ -157,7 +160,9 @@ export class DefaultAssetService implements AssetService {
     const finalFiatAmount =
       (fiatAmountAfterAllChargesExceptCreditCard + fixedCreditCardFeeInFiat) / (1 - creditCardFeePercent);
 
-    const totalCreditCardFeeInFiat = finalFiatAmount - fiatAmountAfterAllChargesExceptCreditCard;
+    const totalCreditCardFeeInFiat = Utils.roundTo2DecimalNumber(
+      finalFiatAmount - fiatAmountAfterAllChargesExceptCreditCard,
+    );
 
     this.logger.debug(`
       CRYPTO FIXED (${request.cryptoCurrency}):\t${request.cryptoQuantity}
@@ -185,7 +190,8 @@ export class DefaultAssetService implements AssetService {
       amountPreSpread: rawFiatAmountForRequestedCryptoPreSpread,
       totalCryptoQuantity: request.cryptoQuantity,
       totalFiatAmount: finalFiatAmount,
-      perUnitCryptoPrice: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
       quoteID: zhQuote.quoteID,
     };
   }
@@ -463,7 +469,7 @@ export class DefaultAssetService implements AssetService {
         // TODO(#): Check with ZH if this error can be retried.
         case WithdrawalState.REJECTED:
           return {
-            status: PollStatus.FAILURE,
+            status: PollStatus.RETRYABLE_FAILURE,
             errorMessage: "Withdrawal request rejected.",
             requestedAmount: null,
             settledAmount: null,

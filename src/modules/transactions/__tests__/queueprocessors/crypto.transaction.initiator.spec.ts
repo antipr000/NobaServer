@@ -164,7 +164,8 @@ describe("CryptoTransactionInitiator", () => {
   const nobaFeeInFiat = 0;
   const totalFiatAmount = 0;
   const totalCryptoQuantity = 0;
-  const perUnitCryptoPrice = 0;
+  const perUnitCryptoPriceWithoutSpread = 0;
+  const perUnitCryptoPriceWithSpread = 0;
 
   const cryptocurrency = "ETH";
   const initiatedPaymentId = "CCCCCCCCCC";
@@ -268,7 +269,8 @@ describe("CryptoTransactionInitiator", () => {
         nobaFeeInFiat,
         totalFiatAmount,
         totalCryptoQuantity,
-        perUnitCryptoPrice,
+        perUnitCryptoPriceWithoutSpread,
+        perUnitCryptoPriceWithSpread,
       },
     });
     when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
@@ -323,7 +325,8 @@ describe("CryptoTransactionInitiator", () => {
         nobaFeeInFiat,
         totalFiatAmount,
         totalCryptoQuantity,
-        perUnitCryptoPrice,
+        perUnitCryptoPriceWithoutSpread,
+        perUnitCryptoPriceWithSpread,
       },
     });
     when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
@@ -467,7 +470,8 @@ describe("CryptoTransactionInitiator", () => {
         nobaFeeInFiat,
         totalFiatAmount,
         totalCryptoQuantity,
-        perUnitCryptoPrice,
+        perUnitCryptoPriceWithoutSpread,
+        perUnitCryptoPriceWithSpread,
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,
@@ -524,7 +528,8 @@ describe("CryptoTransactionInitiator", () => {
         nobaFeeInFiat,
         totalFiatAmount,
         totalCryptoQuantity,
-        perUnitCryptoPrice,
+        perUnitCryptoPriceWithoutSpread,
+        perUnitCryptoPriceWithSpread,
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,
@@ -585,7 +590,8 @@ describe("CryptoTransactionInitiator", () => {
         nobaFeeInFiat,
         totalFiatAmount,
         totalCryptoQuantity,
-        perUnitCryptoPrice,
+        perUnitCryptoPriceWithoutSpread,
+        perUnitCryptoPriceWithSpread,
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount * 2,
@@ -646,7 +652,8 @@ describe("CryptoTransactionInitiator", () => {
         nobaFeeInFiat,
         totalFiatAmount,
         totalCryptoQuantity,
-        perUnitCryptoPrice,
+        perUnitCryptoPriceWithoutSpread,
+        perUnitCryptoPriceWithSpread,
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,

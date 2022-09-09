@@ -603,7 +603,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 13,
         totalCryptoQuantity: 0.0001,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(
@@ -640,7 +641,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 1000,
         totalCryptoQuantity: 1000,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(
@@ -661,23 +663,6 @@ describe("TransactionService", () => {
   describe("callTransactionConfirmationWebhook", () => {
     afterEach(() => {
       mockAxios.reset();
-    });
-
-    it("should do nothing if partner id is null", async () => {
-      const transaction: Transaction = Transaction.createTransaction({
-        _id: "1111111111",
-        userId: consumer.props._id,
-        sessionKey: "fake-session",
-        transactionStatus: TransactionStatus.PENDING,
-        paymentMethodID: "fake-payment-method-id",
-        leg1Amount: 1000,
-        leg2Amount: 1,
-        leg1: "USD",
-        leg2: "ETH",
-        destinationWalletAddress: "fake-wallet-address",
-      });
-      await transactionService.callTransactionConfirmWebhook(consumer, transaction);
-      expect(mockAxios.post).toHaveBeenCalledTimes(0);
     });
 
     it("should call webhook if partner webhook is available", async () => {
@@ -799,6 +784,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -839,7 +825,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 1000,
         totalCryptoQuantity: 0.3,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -848,6 +835,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -857,6 +845,7 @@ describe("TransactionService", () => {
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -905,7 +894,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 100,
         totalCryptoQuantity: 0.1,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -914,6 +904,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -923,6 +914,7 @@ describe("TransactionService", () => {
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -994,7 +986,8 @@ describe("TransactionService", () => {
 
         totalFiatAmount: 100,
         totalCryptoQuantity: 0.1,
-        perUnitCryptoPrice: 100,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -1003,6 +996,7 @@ describe("TransactionService", () => {
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -1012,6 +1006,7 @@ describe("TransactionService", () => {
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
+          precision: 8,
         },
       ]);
 
@@ -1194,5 +1189,5 @@ function assertOnRequestTransactionQuoteResponse(
   expect(response.processingFee).toBe(nobaQuote.processingFeeInFiat);
   expect(response.networkFee).toBe(nobaQuote.networkFeeInFiat);
   expect(response.nobaFee).toBe(nobaQuote.nobaFeeInFiat);
-  expect(response.exchangeRate).toBe(nobaQuote.perUnitCryptoPrice);
+  expect(response.exchangeRate).toBe(nobaQuote.perUnitCryptoPriceWithSpread);
 }

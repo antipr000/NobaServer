@@ -3,6 +3,7 @@ export enum TransactionSubmissionFailureExceptionText {
   UNKNOWN_CRYPTO = "UNKNOWN-CRYPTO",
   UNKNOWN_FIAT = "UNKNOWN-FIAT",
   SLIPPAGE = "SLIPPAGE",
+  SANCTIONED_WALLET = "SANCTIONED-WALLET",
 }
 
 export class TransactionSubmissionException extends Error {

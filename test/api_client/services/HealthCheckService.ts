@@ -8,13 +8,21 @@ import { request as __request } from "../core/request";
 export class HealthCheckService {
   /**
    * Checks if the Noba service is up and running
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns any Health status of the Noba service
    * @throws ApiError
    */
-  public static appHealth(xNobaApiKey: string, xNobaSignature: string, xNobaTimestamp: string): CancelablePromise<any> {
+  public static appHealth({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/health",

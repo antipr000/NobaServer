@@ -17,6 +17,7 @@ export function getCommonHeaders(): ApiHeaderOptions[] {
     {
       name: X_NOBA_TIMESTAMP,
       required: appEnvironment === AppEnvironment.PROD,
+      description: "Timestamp in milliseconds, use: new Date().getTime().toString()",
     },
   ];
 }

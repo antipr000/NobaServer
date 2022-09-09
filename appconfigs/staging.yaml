@@ -26,15 +26,13 @@ sendgrid:
   awsSecretNameForApiKey: "TEST_SENDGRID_SECRET" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "bogus-value"
 
-stripe:
-  awsSecretNameForSecretKey: "TEST_STRIPE_SECRET" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  secretKey: "bogus-value"
-
 checkout:
   awsSecretNameForPublicKey: "TEST_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSecretKey: "TEST_CHECKOUT_SECRET_KEY"
   publicKey: "bogus-value"
   secretKey: "bogus-value"
+  couponCode: "NY2018"
+  partnerId: 123989
 
 twilio:
   awsSecretNameForSID: ""
@@ -85,7 +83,7 @@ zerohash:
   platformCode: ""
 
 configuration:
-  lowAmountThreshold: 50
+  lowAmountThreshold: 10
   highAmountThreshold: 200
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"

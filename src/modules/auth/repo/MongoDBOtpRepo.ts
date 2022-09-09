@@ -30,7 +30,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
     }
     const result = await otpModel.findOne(queryParams).exec();
     if (result === undefined || result === null) {
-      throw new NotFoundException(`"${emailOrPhone}" is not registered. Please register!`);
+      throw new NotFoundException(`"No OTP found for ${emailOrPhone}"!`);
     }
     const otpProps: OtpProps = convertDBResponseToJsObject(result);
     return this.otpMapper.toDomain(otpProps);
@@ -43,8 +43,14 @@ export class MongoDBOtpRepo implements IOTPRepo {
     return otpProps.map(otpResult => this.otpMapper.toDomain(otpResult));
   }
 
-  async saveOTP(emailID: string, otp: number, identityType: string, partnerID?: string): Promise<void> {
-    const expiryTime = new Date(new Date().getTime() + otpConstants.EXPIRY_TIME_IN_MINUTES * 60000);
+  async saveOTP(
+    emailID: string,
+    otp: number,
+    identityType: string,
+    partnerID?: string,
+    expiryTimeInMs?: number,
+  ): Promise<void> {
+    const expiryTime = new Date(new Date().getTime() + (expiryTimeInMs ?? otpConstants.EXPIRY_TIME_IN_MINUTES * 60000));
     let otpInstance;
     if (identityType === consumerIdentityIdentifier) {
       otpInstance = Otp.createOtp({

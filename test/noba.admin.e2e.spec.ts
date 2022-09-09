@@ -36,7 +36,7 @@ describe("Noba Admin", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  const TEST_TIMESTAMP = "test_timestamp";
+  let TEST_TIMESTAMP;
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -51,6 +51,7 @@ describe("Noba Admin", () => {
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
+    TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterEach(async () => {
@@ -63,11 +64,11 @@ describe("Noba Admin", () => {
   describe("GET /admins", () => {
     it("Should return 401 if not logged in", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/admins", JSON.stringify({}));
-      const getNobaAdminResponse = (await AdminService.getNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as NobaAdminDTO & ResponseStatus;
+      const getNobaAdminResponse = (await AdminService.getNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(getNobaAdminResponse.__status).toBe(401);
     });
@@ -81,11 +82,11 @@ describe("Noba Admin", () => {
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/admins", JSON.stringify({}));
-      const getNobaAdminResponse = (await AdminService.getNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as NobaAdminDTO & ResponseStatus;
+      const getNobaAdminResponse = (await AdminService.getNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as NobaAdminDTO & ResponseStatus;
       expect(getNobaAdminResponse.__status).toBe(403);
     });
 
@@ -96,11 +97,11 @@ describe("Noba Admin", () => {
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/admins", JSON.stringify({}));
-      const getNobaAdminResponse = (await AdminService.getNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as NobaAdminDTO & ResponseStatus;
+      const getNobaAdminResponse = (await AdminService.getNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as NobaAdminDTO & ResponseStatus;
       expect(getNobaAdminResponse.__status).toBe(403);
     });
 
@@ -116,11 +117,11 @@ describe("Noba Admin", () => {
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/admins", JSON.stringify({}));
-      const getNobaAdminResponse = (await AdminService.getNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as NobaAdminDTO & ResponseStatus;
+      const getNobaAdminResponse = (await AdminService.getNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(getNobaAdminResponse.__status).toBe(200);
       expect(getNobaAdminResponse._id).toBe(nobaAdminId);
@@ -149,11 +150,16 @@ describe("Noba Admin", () => {
           role: "BASIC",
         }),
       );
-      const createNobaAdminResponse = (await AdminService.createNobaAdmin(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        _id: "AAAAAAAAAA",
-        email: "test.noba.admin@noba.com",
-        name: "Test Admin",
-        role: "BASIC",
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          _id: "AAAAAAAAAA",
+          email: "test.noba.admin@noba.com",
+          name: "Test Admin",
+          role: "BASIC",
+        },
       })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
@@ -178,11 +184,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const createNobaAdminResponse = (await AdminService.createNobaAdmin(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        _id: "AAAAAAAAAA",
-        email: "test.noba.admin@noba.com",
-        name: "Test Admin",
-        role: "BASIC",
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          _id: "AAAAAAAAAA",
+          email: "test.noba.admin@noba.com",
+          name: "Test Admin",
+          role: "BASIC",
+        },
       })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
@@ -208,11 +219,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const createNobaAdminResponse = (await AdminService.createNobaAdmin(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        _id: "AAAAAAAAAA",
-        email: "test.noba.admin.2@noba.com",
-        name: "Test Admin 2",
-        role: "BASIC",
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          _id: "AAAAAAAAAA",
+          email: "test.noba.admin.2@noba.com",
+          name: "Test Admin 2",
+          role: "BASIC",
+        },
       })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
@@ -238,11 +254,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const createNobaAdminResponse = (await AdminService.createNobaAdmin(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        _id: "AAAAAAAAAA",
-        email: "test.noba.admin.2@noba.com",
-        name: "Test Admin 2",
-        role: "BASIC",
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          _id: "AAAAAAAAAA",
+          email: "test.noba.admin.2@noba.com",
+          name: "Test Admin 2",
+          role: "BASIC",
+        },
       })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(403);
@@ -273,11 +294,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const createNobaAdminResponse = (await AdminService.createNobaAdmin(TEST_API_KEY, signature, TEST_TIMESTAMP, {
-        _id: "A2A2A2A2A2A2",
-        email: newNobaAdminEmail,
-        name: newNobaAdminName,
-        role: newNobaAdminRole,
+      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          _id: "A2A2A2A2A2A2",
+          email: newNobaAdminEmail,
+          name: newNobaAdminName,
+          role: newNobaAdminRole,
+        },
       })) as NobaAdminDTO & ResponseStatus;
 
       expect(createNobaAdminResponse.__status).toBe(201);
@@ -314,16 +340,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        nobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: nobaAdminId,
+        requestBody: {
           name: "Updated Test Admin",
           role: "ADMIN",
         },
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -348,16 +374,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        nobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: nobaAdminId,
+        requestBody: {
           name: "Updated Test Admin",
           role: "ADMIN",
         },
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -392,16 +418,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toUpdateNobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toUpdateNobaAdminId,
+        requestBody: {
           name: "Updated Test Admin",
           role: toUpdateNobaAdminUpdatedRole,
         },
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -436,16 +462,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toUpdateNobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toUpdateNobaAdminId,
+        requestBody: {
           name: "Updated Test Admin",
           role: toUpdateNobaAdminUpdatedRole,
         },
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -471,15 +497,15 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        loggedInNobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: loggedInNobaAdminId,
+        requestBody: {
           name: "Updated Test Admin",
         } as any,
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(403);
     });
@@ -511,16 +537,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toUpdateNobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toUpdateNobaAdminId,
+        requestBody: {
           name: "Updated Test Admin",
           role: toUpdateNobaAdminUpdatedRole,
         },
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(404);
     });
@@ -555,15 +581,15 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toUpdateNobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toUpdateNobaAdminId,
+        requestBody: {
           role: toUpdateNobaAdminUpdatedRole,
         } as any,
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(200);
       expect(updateNobaAdminResponse._id).toBe(toUpdateNobaAdminId);
@@ -602,15 +628,15 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toUpdateNobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toUpdateNobaAdminId,
+        requestBody: {
           name: toUpdateNobaAdminUpdatedName,
         } as any,
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(200);
       expect(updateNobaAdminResponse._id).toBe(toUpdateNobaAdminId);
@@ -650,16 +676,16 @@ describe("Noba Admin", () => {
         }),
       );
 
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toUpdateNobaAdminId,
-        {
+      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toUpdateNobaAdminId,
+        requestBody: {
           name: toUpdateNobaAdminUpdatedName,
           role: toUpdateNobaAdminUpdatedRole,
         },
-      )) as NobaAdminDTO & ResponseStatus;
+      })) as NobaAdminDTO & ResponseStatus;
 
       expect(updateNobaAdminResponse.__status).toBe(200);
       expect(updateNobaAdminResponse._id).toBe(toUpdateNobaAdminId);
@@ -683,12 +709,12 @@ describe("Noba Admin", () => {
 
       const signature = computeSignature(TEST_TIMESTAMP, "DELETE", `/v1/admins/${nobaAdminId}`, JSON.stringify({}));
 
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        nobaAdminId,
-      )) as DeleteNobaAdminDTO & ResponseStatus;
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: nobaAdminId,
+      })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(403);
     });
@@ -704,12 +730,12 @@ describe("Noba Admin", () => {
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "DELETE", `/v1/admins/${nobaAdminId}`, JSON.stringify({}));
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        nobaAdminId,
-      )) as DeleteNobaAdminDTO & ResponseStatus;
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: nobaAdminId,
+      })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(403);
     });
@@ -732,12 +758,12 @@ describe("Noba Admin", () => {
         JSON.stringify({}),
       );
 
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toDeleteNobaAdminId,
-      )) as DeleteNobaAdminDTO & ResponseStatus;
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toDeleteNobaAdminId,
+      })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(403);
     });
@@ -759,12 +785,12 @@ describe("Noba Admin", () => {
         `/v1/admins/${toDeleteNobaAdminId}`,
         JSON.stringify({}),
       );
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toDeleteNobaAdminId,
-      )) as DeleteNobaAdminDTO & ResponseStatus;
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toDeleteNobaAdminId,
+      })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(403);
     });
@@ -785,12 +811,12 @@ describe("Noba Admin", () => {
         `/v1/admins/${toDeleteNobaAdminId}`,
         JSON.stringify({}),
       );
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toDeleteNobaAdminId,
-      )) as DeleteNobaAdminDTO & ResponseStatus;
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toDeleteNobaAdminId,
+      })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(404);
     });
@@ -813,12 +839,12 @@ describe("Noba Admin", () => {
         JSON.stringify({}),
       );
 
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        toDeleteNobaAdminId,
-      )) as DeleteNobaAdminDTO & ResponseStatus;
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: toDeleteNobaAdminId,
+      })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(200);
     });
@@ -837,12 +863,12 @@ describe("Noba Admin", () => {
         `/v1/admins/${loggedInNobaAdminId}`,
         JSON.stringify({}),
       );
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        loggedInNobaAdminId,
-      )) as DeleteNobaAdminDTO & ResponseStatus;
+      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        adminId: loggedInNobaAdminId,
+      })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(403);
     });

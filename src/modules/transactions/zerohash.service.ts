@@ -34,6 +34,7 @@ import {
   ZerohashTransferResponse,
   ZerohashExecutedQuote,
 } from "./domain/ZerohashTypes";
+import { Utils } from "../../core/utils/Utils";
 
 const crypto_ts = require("crypto");
 
@@ -300,7 +301,7 @@ export class ZeroHashService {
       physical_delivery: true,
       parties_anonymous: false,
       transaction_timestamp: Date.now(),
-      bank_fee: this.roundTo2DecimalString(request.totalFiatAmount - request.sellAmount),
+      bank_fee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.sellAmount),
       parties: [
         {
           participant_code: request.buyerParticipantCode,
@@ -535,9 +536,5 @@ export class ZeroHashService {
     }
 
     return participantCode;
-  }
-
-  private roundTo2DecimalString(num: number): string {
-    return num.toFixed(2);
   }
 }

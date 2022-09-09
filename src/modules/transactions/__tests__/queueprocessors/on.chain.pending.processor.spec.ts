@@ -327,6 +327,46 @@ describe("OnChainPendingProcessor", () => {
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
   });
 
+  it("should resets the transaction to CRYPTO_OUTGOING_INITIATED if POLL status is RETRYABLE_FAILURE", async () => {
+    // expect that 'OnChainPendingProcessor' actually subscribed to 'OnChainPendingTransaction' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.OnChainPendingTransaction);
+    expect(processor).toBeInstanceOf(OnChainPendingProcessor);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+      _id: transaction.props._id as any,
+    });
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+    when(sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transaction.props._id)).thenResolve("");
+    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+    const consumerWalletTransferStatus: ConsumerWalletTransferStatus = {
+      status: PollStatus.RETRYABLE_FAILURE,
+      errorMessage: "withdrawal failed",
+      requestedAmount: null,
+      settledAmount: null,
+      onChainTransactionID: null,
+    };
+    const assetServiceInstance = instance(assetService);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
+      consumerWalletTransferStatus,
+    );
+
+    await onChainPendingProcessor.processMessageInternal(transaction.props._id);
+
+    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+    expect(allTransactionsInDb).toHaveLength(1);
+    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.CRYPTO_OUTGOING_INITIATED);
+    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+      transaction.props.lastStatusUpdateTimestamp,
+    );
+    expect(allTransactionsInDb[0].zhWithdrawalID).toBeUndefined();
+  });
+
   it("should fail transaction that's in CRYPTO_OUTGOING_COMPLETED status if POLL status is FAILED", async () => {
     // expect that 'OnChainPendingProcessor' actually subscribed to 'OnChainPendingTransaction' queue.
     const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();

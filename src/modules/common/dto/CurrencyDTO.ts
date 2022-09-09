@@ -13,4 +13,7 @@ export class CurrencyDTO {
 
   @ApiProperty()
   iconPath: string;
+
+  @ApiProperty()
+  precision: number;
 }

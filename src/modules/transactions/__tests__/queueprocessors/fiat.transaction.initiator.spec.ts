@@ -212,7 +212,7 @@ describe("FiatTransactionInitiator", () => {
     });
 
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+    when(consumerService.requestPayment(consumer, anything())).thenResolve({
       status: PaymentMethodStatus.APPROVED,
       paymentID: initiatedPaymentId,
     });
@@ -250,7 +250,7 @@ describe("FiatTransactionInitiator", () => {
 
     const rejectCode = "1234";
     const rejectReason = "Bad payment";
-    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+    when(consumerService.requestPayment(consumer, anything())).thenResolve({
       status: PaymentMethodStatus.REJECTED,
       paymentID: initiatedPaymentId,
       responseCode: rejectCode,
@@ -277,7 +277,7 @@ describe("FiatTransactionInitiator", () => {
 
     const rejectCode = "1234";
     const rejectReason = "Bad payment";
-    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+    when(consumerService.requestPayment(consumer, anything())).thenResolve({
       status: PaymentMethodStatus.FLAGGED,
       paymentID: initiatedPaymentId,
       responseCode: rejectCode,
@@ -304,7 +304,7 @@ describe("FiatTransactionInitiator", () => {
 
     const rejectCode = "1234";
     const rejectReason = "Bad payment";
-    when(consumerService.requestCheckoutPayment(consumer, anything())).thenResolve({
+    when(consumerService.requestPayment(consumer, anything())).thenResolve({
       status: undefined,
       paymentID: initiatedPaymentId,
       responseCode: rejectCode,
@@ -331,7 +331,7 @@ describe("FiatTransactionInitiator", () => {
 
     const rejectCode = "1234";
     const rejectReason = "Bad payment";
-    when(consumerService.requestCheckoutPayment(consumer, anything())).thenThrow(new Error("Any error"));
+    when(consumerService.requestPayment(consumer, anything())).thenThrow(new Error("Any error"));
 
     setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
     await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
@@ -353,7 +353,7 @@ describe("FiatTransactionInitiator", () => {
 
     const rejectCode = "1234";
     const rejectReason = "Bad payment";
-    when(consumerService.requestCheckoutPayment(consumer, anything())).thenThrow(
+    when(consumerService.requestPayment(consumer, anything())).thenThrow(
       new CardProcessingException(CardFailureExceptionText.ERROR),
     );
 
@@ -377,7 +377,7 @@ describe("FiatTransactionInitiator", () => {
 
     const rejectCode = "1234";
     const rejectReason = "Bad payment";
-    when(consumerService.requestCheckoutPayment(consumer, anything())).thenThrow(
+    when(consumerService.requestPayment(consumer, anything())).thenThrow(
       new CardProcessingException(CardFailureExceptionText.NO_CRYPTO, rejectCode, rejectReason),
     );
 

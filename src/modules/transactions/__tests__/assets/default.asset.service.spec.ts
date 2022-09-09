@@ -73,6 +73,7 @@ describe("DefaultAssetService", () => {
         name: "ETH",
         ticker: "ETH",
         _id: "ETH",
+        precision: 8,
       },
     ]);
     when(appService.getSupportedFiatCurrencies()).thenResolve([
@@ -81,6 +82,7 @@ describe("DefaultAssetService", () => {
         name: "USD",
         ticker: "USD",
         _id: "USD",
+        precision: 2,
       },
     ]);
 
@@ -150,7 +152,8 @@ describe("DefaultAssetService", () => {
         nobaFeeInFiat: output.expectedNobaFee,
         totalFiatAmount: requestedFiatAmount,
         totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
-        perUnitCryptoPrice: output.quotedCostPerUnit,
+        perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+        perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
       };
     };
 
@@ -386,6 +389,7 @@ describe("DefaultAssetService", () => {
       expectedNetworkFee: number;
       quotedCostPerUnit: number;
       expectedAmountPreSpread: number;
+      expectedAmountPostSpread: number;
     }
 
     const setupTestAndGetQuoteResponse = async (
@@ -433,7 +437,8 @@ describe("DefaultAssetService", () => {
         // (X - fees)/perUnitCost = cryptoQuantity
         totalFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,
         totalCryptoQuantity: requestedCryptoQuantity,
-        perUnitCryptoPrice: output.quotedCostPerUnit,
+        perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+        perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
       };
     };
 
@@ -456,6 +461,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
           expectedAmountPreSpread: 160,
+          expectedAmountPostSpread: 160 * (1 + 0.6),
         },
       );
 
@@ -486,6 +492,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
+          expectedAmountPostSpread: 160 * (1 + 0),
         },
       );
 
@@ -516,6 +523,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
+          expectedAmountPostSpread: 160 * (1 + 0),
         },
       );
 
@@ -546,6 +554,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
+          expectedAmountPostSpread: 160 * (1 + 0),
         },
       );
 
@@ -576,6 +585,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
+          expectedAmountPostSpread: 160 * (1 + 0),
         },
       );
 
@@ -606,6 +616,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
           expectedAmountPreSpread: 160,
+          expectedAmountPostSpread: 160 * (1 + 0.6),
         },
       );
 
@@ -636,6 +647,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
           expectedAmountPreSpread: 160,
+          expectedAmountPostSpread: 160 * (1 + 0.6),
         },
       );
 
@@ -666,6 +678,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 20,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
+          expectedAmountPostSpread: 160 * (1 + 0),
         },
       );
 
@@ -696,6 +709,7 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 4,
           quotedCostPerUnit: 16,
           expectedAmountPreSpread: 160,
+          expectedAmountPostSpread: 160 * (1 + 0.6),
         },
       );
 
@@ -748,7 +762,8 @@ describe("DefaultAssetService", () => {
           nobaFeeInFiat: 1.99,
           totalFiatAmount: 50,
           totalCryptoQuantity: 12345.6789,
-          perUnitCryptoPrice: 1000,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
         },
       };
 
@@ -762,7 +777,8 @@ describe("DefaultAssetService", () => {
         nobaFeeInFiat: 1.99,
         totalFiatAmount: 50,
         totalCryptoQuantity: request.cryptoQuantity,
-        perUnitCryptoPrice: 1000,
+        perUnitCryptoPriceWithoutSpread: 1000,
+        perUnitCryptoPriceWithSpread: 1000,
       };
 
       defaultAssetService.getQuoteForSpecifiedFiatAmount = jest.fn().mockReturnValue(nobaQuote);
@@ -1206,7 +1222,8 @@ describe("DefaultAssetService", () => {
         onChainTransactionID: null,
       });
     });
-    it("returns FAILURE status if withdrawal is in REJECTED status", async () => {
+
+    it("returns RETRYABLE_FAILURE status if withdrawal is in REJECTED status", async () => {
       const withdrawalID = "1234";
 
       when(zerohashService.getWithdrawal(withdrawalID)).thenResolve({
@@ -1221,7 +1238,7 @@ describe("DefaultAssetService", () => {
       const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
-        status: PollStatus.FAILURE,
+        status: PollStatus.RETRYABLE_FAILURE,
         errorMessage: "Withdrawal request rejected.",
         requestedAmount: null,
         settledAmount: null,

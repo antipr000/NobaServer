@@ -12,7 +12,7 @@
 import { setUp } from "./setup";
 setUp();
 
-import { INestApplication } from "@nestjs/common";
+import { BadRequestException, INestApplication } from "@nestjs/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
@@ -59,6 +59,7 @@ const supportedCurrenciesTicker = [
   "PAXG.ETH",
   "DOT",
   "MATIC.ETH",
+  "MATIC.POLYGON",
   "SAND.ETH",
   "SHIB.ETH",
   "SOL",
@@ -80,7 +81,7 @@ describe("CryptoCurrencies & Locations", () => {
   let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  const TEST_TIMESTAMP = "test-timestamp";
+  let TEST_TIMESTAMP;
 
   beforeEach(async () => {
     const port = process.env.PORT;
@@ -95,6 +96,7 @@ describe("CryptoCurrencies & Locations", () => {
     };
     app = await bootstrap(environmentVaraibles);
     await app.listen(port);
+    TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterEach(async () => {
@@ -107,13 +109,31 @@ describe("CryptoCurrencies & Locations", () => {
   describe("GET /cryptocurrencies", () => {
     it("should work even if no credentials are passed", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
 
       expect(getCryptoCurrencyResponse.__status).toBe(200);
+    });
+
+    it("should throw error when timestamp is beyond 5 minutes", async () => {
+      const timestamp = new Date();
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
+
+      timestamp.setMinutes(timestamp.getMinutes() - 6);
+
+      try {
+        (await AssetsService.supportedCryptocurrencies({
+          xNobaApiKey: TEST_API_KEY,
+          xNobaSignature: signature,
+          xNobaTimestamp: timestamp.getTime().toString(),
+        })) as CurrencyDTO[] & ResponseStatus;
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e).toBe("Timestamp is more than 5 minutes different than expected");
+      }
     });
 
     it("should work even if credentials are passed", async () => {
@@ -122,21 +142,21 @@ describe("CryptoCurrencies & Locations", () => {
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
     });
 
-    it("should return 42 currencies list", async () => {
+    it("should return 43 currencies list", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
 
       const allTickers = [];
@@ -148,13 +168,13 @@ describe("CryptoCurrencies & Locations", () => {
       expect(allTickers.sort()).toEqual(supportedCurrenciesTicker.sort());
     });
 
-    it("returned 41 currencies list should have proper iconPath", async () => {
+    it("returned currencies list should have proper iconPath", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(200);
 
       const receivedIconPaths = [];
@@ -171,11 +191,11 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("should return 403 status code if signature is wrong", async () => {
       const signature = "some-random-signature";
-      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getCryptoCurrencyResponse = (await AssetsService.supportedCryptocurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getCryptoCurrencyResponse.__status).toBe(403);
     });
   });
@@ -183,11 +203,11 @@ describe("CryptoCurrencies & Locations", () => {
   describe("GET /fiatcurrencies", () => {
     it("should work even if no credentials are passed", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
 
       expect(getFiatCurrencyResponse.__status).toBe(200);
     });
@@ -198,21 +218,21 @@ describe("CryptoCurrencies & Locations", () => {
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getFiatCurrencyResponse.__status).toBe(200);
     });
 
     it("should return only 'US' currency", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getFiatCurrencyResponse.__status).toBe(200);
 
       const allTickers = [];
@@ -226,11 +246,11 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("returned currencies list should have proper iconPath", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getFiatCurrencyResponse.__status).toBe(200);
 
       const receivedIconPaths = [];
@@ -246,11 +266,11 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("should return 403 status code if signature is wrong", async () => {
       const signature = "some-random-signature";
-      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as CurrencyDTO[] & ResponseStatus;
+      const getFiatCurrencyResponse = (await AssetsService.supportedFiatCurrencies({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as CurrencyDTO[] & ResponseStatus;
       expect(getFiatCurrencyResponse.__status).toBe(403);
     });
   });
@@ -258,22 +278,22 @@ describe("CryptoCurrencies & Locations", () => {
   describe("GET /countries", () => {
     it("should work even if no credentials are passed", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries", JSON.stringify({}));
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as LocationDTO[] & ResponseStatus;
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as LocationDTO[] & ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
     });
 
     it("should obtain 205 countries without subdivisions", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries", JSON.stringify({}));
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as LocationDTO[] & ResponseStatus;
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as LocationDTO[] & ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
 
@@ -297,12 +317,12 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("should obtain 205 countries with subdivisions", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries", JSON.stringify({}));
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        true,
-      )) as LocationDTO[] & ResponseStatus;
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        includeSubdivisions: true,
+      })) as LocationDTO[] & ResponseStatus;
 
       expect(getSupportedCountriesResponse.__status).toBe(200);
 
@@ -328,23 +348,23 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("should return 403 status code if signature is wrong", async () => {
       const signature = "some-random-signature";
-      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        true,
-      )) as LocationDTO[] & ResponseStatus;
+      const getSupportedCountriesResponse = (await AssetsService.getSupportedCountries({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        includeSubdivisions: true,
+      })) as LocationDTO[] & ResponseStatus;
       expect(getSupportedCountriesResponse.__status).toBe(403);
     });
 
     it("should return the deatils of a single country with subdivisions", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/countries/US", JSON.stringify({}));
-      const us = (await AssetsService.getSupportedCountry(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-        "US",
-      )) as LocationDTO & ResponseStatus;
+      const us = (await AssetsService.getSupportedCountry({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        countryCode: "US",
+      })) as LocationDTO & ResponseStatus;
       expect(us.__status).toBe(200);
 
       expect(us.countryISOCode).toBe("US");
@@ -359,11 +379,11 @@ describe("CryptoCurrencies & Locations", () => {
   describe("GET /config", () => {
     it("should return all api configurations", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/config", JSON.stringify({}));
-      const config = (await AssetsService.getCommonConfigurations(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConfigurationsDTO & ResponseStatus;
+      const config = (await AssetsService.getCommonConfigurations({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConfigurationsDTO & ResponseStatus;
       expect(config.__status).toBe(200);
 
       expect(config.lowAmountThreshold).toBe(50);
@@ -376,11 +396,11 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("should return 403 if signature is incorrect", async () => {
       const signature = "some-random-signature";
-      const config = (await AssetsService.getCommonConfigurations(
-        TEST_API_KEY,
-        signature,
-        TEST_TIMESTAMP,
-      )) as ConfigurationsDTO & ResponseStatus;
+      const config = (await AssetsService.getCommonConfigurations({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConfigurationsDTO & ResponseStatus;
       expect(config.__status).toBe(403);
     });
   });
