@@ -39,16 +39,15 @@ import { Public } from "../auth/public.decorator";
 import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
 import { Consumer } from "../consumer/domain/Consumer";
 import { DeviceVerificationResponseDTO } from "./dto/DeviceVerificationResponseDTO";
-import {
-  CaseNotificationWebhookRequest,
-  DocumentVerificationWebhookRequest,
-} from "./integrations/SardineTypeDefinitions";
 import { SardineConfigs } from "../../config/configtypes/SardineConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { SARDINE_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import * as crypto_ts from "crypto";
 import { DocumentVerificationResultDTO } from "./dto/DocumentVerificationResultDTO";
+import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificationWebhookRequestDTO";
+import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
+import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -212,8 +211,8 @@ export class VerificationWebhookController {
   @Post("/document/result")
   @HttpCode(200)
   async postDocumentVerificationResult(
-    @Headers() headers,
-    @Body() requestBody: DocumentVerificationWebhookRequest,
+    @Headers() headers: WebhookHeadersDTO,
+    @Body() requestBody: DocumentVerificationWebhookRequestDTO,
   ): Promise<DocumentVerificationResultDTO> {
     const sardineSignature = headers["x-sardine-signature"];
     const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
@@ -229,7 +228,10 @@ export class VerificationWebhookController {
   @Public()
   @Post("/case/notification")
   @HttpCode(200)
-  async postCaseNotification(@Headers() headers, @Body() requestBody: CaseNotificationWebhookRequest): Promise<string> {
+  async postCaseNotification(
+    @Headers() headers: WebhookHeadersDTO,
+    @Body() requestBody: CaseNotificationWebhookRequestDTO,
+  ): Promise<string> {
     const sardineSignature = headers["x-sardine-signature"];
     const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
     const data = hmac.update(JSON.stringify(requestBody));

@@ -297,7 +297,7 @@ export class Sardine implements IDVProvider {
       return data;
     } catch (e) {
       this.logger.error(`Sardine request failed for get device verification result: ${e}`);
-      throw new BadRequestException(e.message);
+      throw new NotFoundException(e.message);
     }
   }
 

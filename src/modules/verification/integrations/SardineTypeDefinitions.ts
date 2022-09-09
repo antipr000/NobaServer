@@ -189,15 +189,15 @@ export type CaseNotificationWebhookRequest = {
   data: {
     action: {
       source: string;
-      user_email: string;
-      value: string;
+      user_email?: string;
+      value?: string;
     };
     case: {
       sessionKey: string;
       customerID: string;
-      status: string;
-      checkpoint: string;
-      transactionID: string;
+      status?: string;
+      checkpoint?: string;
+      transactionID?: string;
     };
   };
 };

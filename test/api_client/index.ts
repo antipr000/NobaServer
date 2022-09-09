@@ -2,12 +2,16 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export type { ActionDTO } from "./models/ActionDTO";
 export type { AddCryptoWalletDTO } from "./models/AddCryptoWalletDTO";
 export type { AddPartnerAdminRequestDTO } from "./models/AddPartnerAdminRequestDTO";
 export type { AddPartnerRequestDTO } from "./models/AddPartnerRequestDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
+export type { CaseDTO } from "./models/CaseDTO";
+export type { CaseNotificationDataDTO } from "./models/CaseNotificationDataDTO";
+export type { CaseNotificationWebhookRequestDTO } from "./models/CaseNotificationWebhookRequestDTO";
 export type { CheckTransactionDTO } from "./models/CheckTransactionDTO";
 export type { ConfigurationsDTO } from "./models/ConfigurationsDTO";
 export type { ConfirmWalletUpdateDTO } from "./models/ConfirmWalletUpdateDTO";
@@ -17,6 +21,7 @@ export type { CreateTransactionDTO } from "./models/CreateTransactionDTO";
 export type { CreditCardDTO } from "./models/CreditCardDTO";
 export type { CryptoWalletsDTO } from "./models/CryptoWalletsDTO";
 export type { CurrencyDTO } from "./models/CurrencyDTO";
+export type { DataDTO } from "./models/DataDTO";
 export type { DeleteNobaAdminDTO } from "./models/DeleteNobaAdminDTO";
 export type { DeviceAttributesDTO } from "./models/DeviceAttributesDTO";
 export type { DeviceBehaviorBiometricsDTO } from "./models/DeviceBehaviorBiometricsDTO";
@@ -25,6 +30,7 @@ export type { DeviceIpLocationDTO } from "./models/DeviceIpLocationDTO";
 export type { DeviceVerificationResponseDTO } from "./models/DeviceVerificationResponseDTO";
 export type { DocumentVerificationDTO } from "./models/DocumentVerificationDTO";
 export type { DocumentVerificationResultDTO } from "./models/DocumentVerificationResultDTO";
+export type { DocumentVerificationWebhookRequestDTO } from "./models/DocumentVerificationWebhookRequestDTO";
 export type { IDVerificationRequestDTO } from "./models/IDVerificationRequestDTO";
 export type { KybStatusInfoDTO } from "./models/KybStatusInfoDTO";
 export type { KycVerificationDTO } from "./models/KycVerificationDTO";
