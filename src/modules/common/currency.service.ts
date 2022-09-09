@@ -64,6 +64,15 @@ export class CurrencyService {
     return this.getCurrencies();
   }
 
+  async getCryptocurrency(ticker: string): Promise<CurrencyDTO> {
+    const cryptoCurrencies = await this.getSupportedCryptocurrencies();
+    const cryptoCurrencyArray = cryptoCurrencies.filter(curr => curr.ticker === ticker);
+    if (cryptoCurrencyArray.length == 0) {
+      return null;
+    }
+    return cryptoCurrencyArray[0];
+  }
+
   async getSupportedFiatCurrencies(): Promise<CurrencyDTO[]> {
     // TODO(#235): Pull from database post-MVP
     return [
@@ -74,5 +83,14 @@ export class CurrencyService {
         precision: 2,
       },
     ];
+  }
+
+  async getFiatCurrency(ticker: string): Promise<CurrencyDTO> {
+    const fiatCurrencies = await this.getSupportedFiatCurrencies();
+    const fiatCurrencyArray = fiatCurrencies.filter(curr => curr.ticker === ticker);
+    if (fiatCurrencyArray.length == 0) {
+      return null;
+    }
+    return fiatCurrencyArray[0];
   }
 }

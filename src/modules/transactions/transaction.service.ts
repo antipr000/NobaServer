@@ -76,7 +76,10 @@ export class TransactionService {
         nobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
           cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
           fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-          fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+          fiatAmount: await this.roundToProperDecimalsForFiatCurrency(
+            transactionQuoteQuery.fiatCurrencyCode,
+            transactionQuoteQuery.fixedAmount,
+          ),
         });
         break;
 
@@ -84,13 +87,18 @@ export class TransactionService {
         nobaQuote = await assetService.getQuoteForSpecifiedCryptoQuantity({
           cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
           fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-          cryptoQuantity: Number(transactionQuoteQuery.fixedAmount),
+          cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(
+            transactionQuoteQuery.cryptoCurrencyCode,
+            transactionQuoteQuery.fixedAmount,
+          ),
         });
         break;
 
       default:
         throw new BadRequestException("Unsupported fixedSide value");
     }
+
+    // Ensure that in the response we're properly rounding the quote
 
     return {
       quoteID: nobaQuote.quoteID,
@@ -100,8 +108,8 @@ export class TransactionService {
       fixedAmount: transactionQuoteQuery.fixedAmount,
       quotedAmount:
         transactionQuoteQuery.fixedSide == CurrencyType.FIAT
-          ? nobaQuote.totalCryptoQuantity
-          : nobaQuote.totalFiatAmount,
+          ? await this.roundToProperDecimalsForCryptocurrency(nobaQuote.cryptoCurrency, nobaQuote.totalCryptoQuantity)
+          : await this.roundToProperDecimalsForFiatCurrency(nobaQuote.fiatCurrency, nobaQuote.totalFiatAmount),
       processingFee: nobaQuote.processingFeeInFiat,
       networkFee: nobaQuote.networkFeeInFiat,
       nobaFee: nobaQuote.nobaFeeInFiat,
@@ -137,22 +145,19 @@ export class TransactionService {
   }
 
   async roundToProperDecimalsForCryptocurrency(cryptocurrency: string, cryptoAmount: number): Promise<number> {
-    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
-    const cryptoCurrencyArray = cryptoCurrencies.filter(curr => curr.ticker === cryptocurrency);
-    if (cryptoCurrencyArray.length == 0) {
+    const currencyDTO = await this.currencyService.getCryptocurrency(cryptocurrency);
+    if (currencyDTO == null) {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
-    const currencyDTO = cryptoCurrencyArray[0];
     return Utils.roundToSpecifiedDecimalNumber(cryptoAmount, currencyDTO.precision);
   }
 
   async roundToProperDecimalsForFiatCurrency(fiatCurrency: string, fiatAmount: number): Promise<number> {
-    const fiatCurrencies = await this.currencyService.getSupportedFiatCurrencies();
-    const fiatCurrencyArray = fiatCurrencies.filter(curr => curr.ticker === fiatCurrency);
-    if (fiatCurrencyArray.length == 0) {
+    const currencyDTO = await this.currencyService.getFiatCurrency(fiatCurrency);
+    if (currencyDTO == null) {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_FIAT);
     }
-    const currencyDTO = fiatCurrencyArray[0];
+
     return Utils.roundToSpecifiedDecimalNumber(fiatAmount, currencyDTO.precision);
   }
 
@@ -212,18 +217,17 @@ export class TransactionService {
 
     const assetService: AssetService = this.assetServiceFactory.getAssetService(transactionRequest.leg2);
 
-    const fixedAmount = transactionRequest.fixedSide == CurrencyType.FIAT ? fiatAmount : cryptoAmount;
     const quote =
       transactionRequest.fixedSide === CurrencyType.FIAT
         ? await assetService.getQuoteForSpecifiedFiatAmount({
             fiatCurrency: transactionRequest.leg1,
             cryptoCurrency: transactionRequest.leg2,
-            fiatAmount: Number(fixedAmount),
+            fiatAmount: await this.roundToProperDecimalsForFiatCurrency(transactionRequest.leg1, fiatAmount),
           })
         : await assetService.getQuoteForSpecifiedCryptoQuantity({
             fiatCurrency: transactionRequest.leg1,
             cryptoCurrency: transactionRequest.leg2,
-            cryptoQuantity: Number(fixedAmount),
+            cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(transactionRequest.leg2, cryptoAmount),
           });
 
     // Perform rounding

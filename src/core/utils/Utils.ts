@@ -13,10 +13,19 @@ export class Utils {
   }
 
   static roundToSpecifiedDecimalNumber(num: number, decimals: number): number {
-    return parseFloat(this.roundToSpecifiedDecimalString(num, decimals));
+    return Number(this.roundToSpecifiedDecimalString(num, decimals));
   }
 
   static roundToSpecifiedDecimalString(num: number, decimals: number): string {
-    return num.toFixed(decimals);
+    return this.round(num, decimals);
+  }
+
+  private static round(num, decimalPlaces: number): string {
+    var shift = function (value, exponent: number) {
+      value = (value + "e").split("e");
+      return +(value[0] + "e" + (+value[1] + (exponent || 0)));
+    };
+    var n = shift(num, +decimalPlaces);
+    return shift(Math.round(n), -decimalPlaces).toFixed(decimalPlaces);
   }
 }

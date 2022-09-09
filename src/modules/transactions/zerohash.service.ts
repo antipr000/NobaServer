@@ -12,7 +12,6 @@ import {
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AppService } from "../../app.service";
 import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
@@ -41,7 +40,6 @@ const crypto_ts = require("crypto");
 @Injectable()
 export class ZeroHashService {
   private readonly configs: ZerohashConfigs;
-  private readonly appService: AppService;
   @Inject()
   private readonly locationService: LocationService;
 
@@ -62,13 +60,8 @@ export class ZeroHashService {
     "non_us_other",
   ];
 
-  constructor(
-    configService: CustomConfigService,
-    appService: AppService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
+  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     this.configs = configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
-    this.appService = appService;
   }
 
   getNobaPlatformCode(): string {

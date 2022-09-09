@@ -66,6 +66,18 @@ describe("Utils", () => {
         expectedString: "50.123",
       },
       {
+        inputNumber: 13.555,
+        precision: 2,
+        expectedNumber: 13.56,
+        expectedString: "13.56",
+      },
+      {
+        inputNumber: 13.5551,
+        precision: 2,
+        expectedNumber: 13.56,
+        expectedString: "13.56",
+      },
+      {
         inputNumber: 50.123556,
         precision: 3,
         expectedNumber: 50.124,

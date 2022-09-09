@@ -1,5 +1,4 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { AppService } from "../../../../app.service";
 import {
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
   FIXED_CREDIT_CARD_FEE,
@@ -11,7 +10,6 @@ import {
 } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { getMockAppServiceWithDefaults } from "../../../../mocks/mock.app.service";
 import { deepEqual, instance, when } from "ts-mockito";
 import { DefaultAssetService } from "../../assets/default.asset.service";
 import {
@@ -39,16 +37,18 @@ import {
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { BadRequestError } from "../../../../core/exception/CommonAppException";
 import { CurrencyType } from "../../../../modules/common/domain/Types";
+import { getMockCurrencyServiceWithDefaults } from "../../../../modules/common/mocks/mock.currency.service";
+import { CurrencyService } from "../../../../modules/common/currency.service";
 
 describe("DefaultAssetService", () => {
   let zerohashService: ZeroHashService;
-  let appService: AppService;
+  let currencyService: CurrencyService;
   let defaultAssetService: DefaultAssetService;
   const nobaPlatformCode = "ABCDE";
 
   const setupTestModule = async (environmentVariables: Record<string, any>): Promise<void> => {
     zerohashService = getMockZerohashServiceWithDefaults();
-    appService = getMockAppServiceWithDefaults();
+    currencyService = getMockCurrencyServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
@@ -58,8 +58,8 @@ describe("DefaultAssetService", () => {
           useFactory: () => instance(zerohashService),
         },
         {
-          provide: AppService,
-          useFactory: () => instance(appService),
+          provide: CurrencyService,
+          useFactory: () => instance(currencyService),
         },
         DefaultAssetService,
       ],
@@ -67,7 +67,7 @@ describe("DefaultAssetService", () => {
 
     defaultAssetService = app.get<DefaultAssetService>(DefaultAssetService);
 
-    when(appService.getSupportedCryptocurrencies()).thenResolve([
+    when(currencyService.getSupportedCryptocurrencies()).thenResolve([
       {
         iconPath: "dummy/path",
         name: "ETH",
@@ -76,7 +76,16 @@ describe("DefaultAssetService", () => {
         precision: 8,
       },
     ]);
-    when(appService.getSupportedFiatCurrencies()).thenResolve([
+
+    when(currencyService.getCryptocurrency("ETH")).thenResolve({
+      iconPath: "dummy/path",
+      name: "ETH",
+      ticker: "ETH",
+      _id: "ETH",
+      precision: 8,
+    });
+
+    when(currencyService.getSupportedFiatCurrencies()).thenResolve([
       {
         iconPath: "dummy/path",
         name: "USD",
@@ -85,6 +94,14 @@ describe("DefaultAssetService", () => {
         precision: 2,
       },
     ]);
+
+    when(currencyService.getFiatCurrency("USD")).thenResolve({
+      iconPath: "dummy/path",
+      name: "USD",
+      ticker: "USD",
+      _id: "USD",
+      precision: 2,
+    });
 
     when(zerohashService.getNobaPlatformCode()).thenReturn(nobaPlatformCode);
   };
@@ -819,6 +836,8 @@ describe("DefaultAssetService", () => {
         fixedSide: CurrencyType.FIAT,
       };
 
+      when(currencyService.getCryptocurrency("UNKNOWN")).thenResolve(null);
+
       expect(async () => {
         await defaultAssetService.executeQuoteForFundsAvailability(request);
       }).rejects.toThrowError(BadRequestError);
@@ -848,6 +867,8 @@ describe("DefaultAssetService", () => {
         transactionID: "123456",
         fixedSide: CurrencyType.FIAT,
       };
+
+      when(currencyService.getFiatCurrency("UNKNOWN")).thenResolve(null);
 
       expect(async () => {
         await defaultAssetService.executeQuoteForFundsAvailability(request);
