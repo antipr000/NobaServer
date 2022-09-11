@@ -34,7 +34,7 @@ export class TransactionPollerService {
   }
 
   //every 5 mins for now, we should be using db streams actually but it's fine for now
-  @Cron("*/5 * * * * *", { name: "StaleTransactionsPoller" })
+  @Cron("0 */5 * * * *", { name: "StaleTransactionsPoller" })
   async invalidTransactionCron() {
     if (this.isInvalidTransactionPollerRunning) return;
     // prevents rescheduling of this cron job if previous run is still running
