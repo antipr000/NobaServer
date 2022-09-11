@@ -434,6 +434,66 @@ export const FAKE_GOOD_TRANSACTION = {
   },
 };
 
+export const FAKE_HIGH_RISK_TRANSACTION = {
+  data: {
+    sessionKey: "aml-123",
+    level: "high",
+    status: "Success",
+    customer: {
+      score: 27,
+      level: "high",
+      signals: [
+        {
+          key: "adverseMediaLevel",
+          value: "low",
+        },
+        {
+          key: "amlRiskLevel",
+          value: "low",
+        },
+        {
+          key: "bankLevel",
+          value: "low",
+        },
+        {
+          key: "emailDomainLevel",
+          value: "low",
+        },
+        {
+          key: "emailLevel",
+          value: "low",
+        },
+        {
+          key: "nsfLevel",
+          value: "low",
+          reasonCodes: ["D"],
+        },
+        {
+          key: "pepLevel",
+          value: "medium",
+        },
+        {
+          key: "phoneLevel",
+          value: "low",
+        },
+        {
+          key: "sanctionLevel",
+          value: "medium",
+        },
+        {
+          key: "taxIdLevel",
+          value: "",
+          reasonCodes: ["HST"],
+        },
+        {
+          key: "cryptoAddressLevel",
+          value: "high",
+        },
+      ],
+    },
+  },
+};
+
 export const FAKE_FRAUDULENT_TRANSACTION = {
   data: {
     sessionKey: "aml-123",

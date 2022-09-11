@@ -2,7 +2,6 @@ import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
-import { AppService } from "../../../app.service";
 import {
   ExecuteQuoteRequest,
   ConsumerAccountTransferRequest,
@@ -40,13 +39,14 @@ import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { CurrencyType } from "../../../modules/common/domain/Types";
 import { Utils } from "../../../core/utils/Utils";
+import { CurrencyService } from "../../../modules/common/currency.service";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
   private readonly nobaTransactionConfigs: NobaTransactionConfigs;
 
   constructor(
-    private readonly appService: AppService,
+    private readonly currencyService: CurrencyService,
     private readonly zerohashService: ZeroHashService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     configService: CustomConfigService,
@@ -208,15 +208,15 @@ export class DefaultAssetService implements AssetService {
    * TODO(#): Fails gracefully with proper error messages.
    */
   async executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote> {
-    const supportedCryptocurrencies = await this.appService.getSupportedCryptocurrencies();
-    if (supportedCryptocurrencies.filter(curr => curr.ticker === request.cryptoCurrency).length == 0) {
+    const cryptocurrency = await this.currencyService.getCryptocurrency(request.cryptoCurrency);
+    if (cryptocurrency == null) {
       throw new BadRequestError({
         messageForClient: `Unsupported cryptocurrency: ${request.cryptoCurrency}`,
       });
     }
 
-    const supportedFiatCurrencies = await this.appService.getSupportedFiatCurrencies();
-    if (supportedFiatCurrencies.filter(curr => curr.ticker === request.fiatCurrency).length == 0) {
+    const fiatCurrency = await this.currencyService.getFiatCurrency(request.fiatCurrency);
+    if (fiatCurrency == null) {
       throw new BadRequestError({
         messageForClient: `Unsupported fiat currency: ${request.fiatCurrency}`,
       });
@@ -229,15 +229,16 @@ export class DefaultAssetService implements AssetService {
       case CurrencyType.FIAT:
         nobaQuote = await this.getQuoteForSpecifiedFiatAmount({
           cryptoCurrency: request.cryptoCurrency,
-          fiatAmount: request.fiatAmount,
+          fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
           fiatCurrency: request.fiatCurrency,
         });
+
         break;
 
       case CurrencyType.CRYPTO:
         nobaQuote = await this.getQuoteForSpecifiedCryptoQuantity({
           cryptoCurrency: request.cryptoCurrency,
-          cryptoQuantity: request.cryptoQuantity,
+          cryptoQuantity: Utils.roundToSpecifiedDecimalNumber(request.cryptoQuantity, cryptocurrency.precision),
           fiatCurrency: request.fiatCurrency,
         });
         break;
@@ -469,7 +470,7 @@ export class DefaultAssetService implements AssetService {
         // TODO(#): Check with ZH if this error can be retried.
         case WithdrawalState.REJECTED:
           return {
-            status: PollStatus.FAILURE,
+            status: PollStatus.RETRYABLE_FAILURE,
             errorMessage: "Withdrawal request rejected.",
             requestedAmount: null,
             settledAmount: null,

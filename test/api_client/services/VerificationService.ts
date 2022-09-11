@@ -13,17 +13,21 @@ import { request as __request } from "../core/request";
 export class VerificationService {
   /**
    * Checks if verification service is up
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns any Service is up
    * @throws ApiError
    */
-  public static getVerificationStatus(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-  ): CancelablePromise<any> {
+  public static getVerificationStatus({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/verify",
@@ -37,17 +41,21 @@ export class VerificationService {
 
   /**
    * Creates a new session for verification
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns string New session token
    * @throws ApiError
    */
-  public static createSession(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-  ): CancelablePromise<string> {
+  public static createSession({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/verify/session",
@@ -64,21 +72,25 @@ export class VerificationService {
 
   /**
    * Verifies consumer-provided information
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param sessionKey
-   * @param requestBody
    * @returns VerificationResultDTO Verification result
    * @throws ApiError
    */
-  public static verifyConsumer(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    sessionKey: string,
-    requestBody: IDVerificationRequestDTO,
-  ): CancelablePromise<VerificationResultDTO> {
+  public static verifyConsumer({
+    xNobaApiKey,
+    sessionKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    sessionKey: string;
+    requestBody: IDVerificationRequestDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<VerificationResultDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/verify/consumerinfo",
@@ -100,19 +112,18 @@ export class VerificationService {
 
   /**
    * Verifies consumer uploaded identification documents
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param sessionKey
-   * @param formData
    * @returns string Document upload result
    * @throws ApiError
    */
-  public static verifyDocument(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    sessionKey: string,
+  public static verifyDocument({
+    xNobaApiKey,
+    sessionKey,
+    formData,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    sessionKey: string;
     formData: {
       /**
        * Supported values: passport, national_identity_card, driver_license, other, unknown
@@ -121,8 +132,13 @@ export class VerificationService {
       frontImage?: Blob;
       backImage?: Blob;
       photoImage?: Blob;
-    },
-  ): CancelablePromise<string> {
+    };
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/verify/document",
@@ -144,19 +160,23 @@ export class VerificationService {
 
   /**
    * Gets result for a previously-submitted document verification
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param id
    * @returns DocumentVerificationResultDTO Document verification result
    * @throws ApiError
    */
-  public static getDocumentVerificationResult(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    id: string,
-  ): CancelablePromise<DocumentVerificationResultDTO> {
+  public static getDocumentVerificationResult({
+    xNobaApiKey,
+    id,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    id: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<DocumentVerificationResultDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/verify/document/result/{id}",
@@ -177,19 +197,23 @@ export class VerificationService {
 
   /**
    * Gets device verification result
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param sessionKey
    * @returns DeviceVerificationResponseDTO Device verification result
    * @throws ApiError
    */
-  public static getDeviceVerificationResult(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    sessionKey: string,
-  ): CancelablePromise<DeviceVerificationResponseDTO> {
+  public static getDeviceVerificationResult({
+    xNobaApiKey,
+    sessionKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    sessionKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<DeviceVerificationResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/verify/device/result",

@@ -19,7 +19,7 @@ class MockSqsProducer {
 class MockSqsConsumer {
   public static intializers: Array<any> = [];
   public static onCalls: Array<any> = [];
-  public static startCallsCount: number = 0;
+  public static startCallsCount = 0;
 
   static reset() {
     MockSqsConsumer.intializers = [];

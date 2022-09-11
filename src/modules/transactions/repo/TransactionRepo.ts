@@ -34,4 +34,10 @@ export interface ITransactionRepo {
     minStatusUpdateTime: number,
     status: TransactionStatus,
   ): Promise<Transaction[]>;
+
+  updateStatusWithExactTransactionProps(
+    transactionId: string,
+    newStatus: TransactionStatus,
+    transactionState: TransactionProps,
+  ): Promise<Transaction>;
 }

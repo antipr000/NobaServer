@@ -156,6 +156,21 @@ describe("TransactionService", () => {
 
     assetService = getMockAssetServiceWithDefaults();
     when(assetServiceFactory.getAssetService(anyString())).thenReturn(instance(assetService));
+    when(currencyService.getCryptocurrency("ETH")).thenResolve({
+      _id: "ethereum",
+      ticker: "ETH",
+      name: "Ethereum",
+      iconPath: "",
+      precision: 8,
+    });
+
+    when(currencyService.getFiatCurrency("USD")).thenResolve({
+      _id: "usd",
+      ticker: "USD",
+      name: "US Dollar",
+      iconPath: "",
+      precision: 8,
+    });
   };
 
   describe("withinSlippage()", () => {
@@ -739,6 +754,8 @@ describe("TransactionService", () => {
     });
 
     it("throws TransactionSubmissionException when leg2 is invalid", async () => {
+      when(currencyService.getCryptocurrency("ABC")).thenResolve(null);
+
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
@@ -764,6 +781,8 @@ describe("TransactionService", () => {
     });
 
     it("throws TransactionSubmissionException when leg1 is invalid", async () => {
+      when(currencyService.getFiatCurrency("ABC")).thenResolve(null);
+
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";

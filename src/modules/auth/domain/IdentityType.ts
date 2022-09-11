@@ -1,4 +1,4 @@
-const IdentityType = {
+export const IdentityType = {
   consumer: "CONSUMER",
   partnerAdmin: "PARTNER_ADMIN",
   nobaAdmin: "NOBA_ADMIN",

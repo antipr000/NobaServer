@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { PartnerModule } from "../../../modules/partner/partner.module";
-import { AppService } from "../../../app.service";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { CommonModule } from "../../../modules/common/common.module";
@@ -35,7 +34,6 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
   providers: [
     ZeroHashService,
     TransactionService,
-    AppService,
     SqsClient,
     TransactionPollerService,
     {

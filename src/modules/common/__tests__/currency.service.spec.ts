@@ -57,6 +57,25 @@ describe("CurrencyService", () => {
     });
   });
 
+  describe("getCryptoCurrency()", () => {
+    it("Should return ETH DTO", async () => {
+      const eth = await currencyService.getCryptocurrency("ETH");
+
+      // These assertions should change every time we update CreditCardDTO.unsupportedIssuers or all_bins.csv
+      expect(eth).toEqual({
+        name: "Ethereum",
+        ticker: "ETH",
+        iconPath: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/eth.svg",
+        precision: 6,
+      });
+    });
+
+    it("Should return null", async () => {
+      const nullCurrency = await currencyService.getCryptocurrency("NONEXISTENT");
+      expect(nullCurrency).toBeNull();
+    });
+  });
+
   describe("getSupportedFiatCurrencies()", () => {
     it("Validate number of supported fiat currencies", async () => {
       const fiatCurrencies = await currencyService.getSupportedFiatCurrencies();
@@ -76,6 +95,25 @@ describe("CurrencyService", () => {
           precision: 2,
         },
       ]);
+    });
+  });
+
+  describe("getFiatCurrency()", () => {
+    it("Should return USD DTO", async () => {
+      const usd = await currencyService.getFiatCurrency("USD");
+
+      // These assertions should change every time we update CreditCardDTO.unsupportedIssuers or all_bins.csv
+      expect(usd).toEqual({
+        name: "US Dollar",
+        ticker: "USD",
+        iconPath: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat/usd.svg",
+        precision: 2,
+      });
+    });
+
+    it("Should return null", async () => {
+      const nullCurrency = await currencyService.getFiatCurrency("NONEXISTENT");
+      expect(nullCurrency).toBeNull();
     });
   });
 });

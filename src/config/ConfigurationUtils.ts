@@ -37,10 +37,6 @@ export const AWS_SECRET_ACCESS_KEY_ENV_VARIABLE = "AWS_SECRET_ACCESS_KEY";
 export const AWS_REGION_ENV_VARIABLE = "AWS_REGION";
 export const AWS_DEFAULT_REGION_ENV_VARIABLE = "AWS_DEFAULT_REGION";
 
-export const STRIPE_CONFIG_KEY = "stripe";
-export const STRIPE_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR = "awsSecretNameForSecretKey";
-export const STRIPE_SECRET_KEY = "secretKey";
-
 export const CHECKOUT_CONFIG_KEY = "checkout";
 export const CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY = "awsSecretNameForPublicKey";
 export const CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY = "awsSecretNameForSecretKey";

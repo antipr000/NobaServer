@@ -107,7 +107,6 @@ export class VerificationService {
     const consumerID = requestBody.data.case.customerID;
     const result: ConsumerVerificationResult = this.idvProvider.processKycVerificationWebhookResult(requestBody);
     if (result.status === KYCStatus.APPROVED || result.status === KYCStatus.REJECTED) {
-      await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, result);
       const consumer = await this.consumerService.getConsumer(consumerID);
       const newConsumerData: ConsumerProps = {
         ...consumer.props,
@@ -118,6 +117,8 @@ export class VerificationService {
       };
 
       await this.consumerService.updateConsumer(newConsumerData);
+
+      await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, result);
 
       if (result.status === KYCStatus.APPROVED) {
         if (consumer.props.address.countryCode.toLocaleLowerCase() === "us") {

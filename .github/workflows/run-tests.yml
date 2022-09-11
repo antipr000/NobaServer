@@ -48,10 +48,7 @@ jobs:
           yarn install
           echo [SUCCESS] yarn install succeeded.
 
-      # Run all tests first to prevent broken builds
-      - name: Run tests
+      - name: Test and coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
-        run: |
-          yarn run test
-          echo [SUCCESS] tests successfully passed
+        run: yarn jest --verbose --silent --coverage --runInBand

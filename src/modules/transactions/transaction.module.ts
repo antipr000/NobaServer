@@ -9,7 +9,6 @@ import { MongoDBTransactionRepo } from "./repo/MongoDBTransactionRepo";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
-import { AppService } from "../../app.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
 import { AssetsModule } from "./assets/assets.module";
 
@@ -28,7 +27,6 @@ import { AssetsModule } from "./assets/assets.module";
     TransactionService,
     LimitsService,
     ZeroHashService,
-    AppService, // Replace with 'CurrencyService'
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,

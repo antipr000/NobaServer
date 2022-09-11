@@ -30,10 +30,6 @@ sendgrid:
   awsSecretNameForApiKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "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"
 
-stripe:
-  awsSecretNameForSecretKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  secretKey: "sk_test_51KZIlsEe2pZC45hcq7Tjpoi3M7nCc6A5ki95cA8UGF1Ei7b4mCUf6wnAgTJAPzVlpamVGUj7cjQMMhegPYgqELyx00yqpROABj"
-
 checkout:
   awsSecretNameForPublicKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSecretKey: ""

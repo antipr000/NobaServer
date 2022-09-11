@@ -89,7 +89,12 @@ export const loginAndGetResponse = async (
   };
   const TEST_TIMESTAMP = new Date().getTime().toString();
   const loginSignature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/auth/login", JSON.stringify(requestBody));
-  await AuthenticationService.loginUser(TEST_API_KEY, TEST_TIMESTAMP, loginSignature, requestBody);
+  await AuthenticationService.loginUser({
+    xNobaApiKey: TEST_API_KEY,
+    xNobaSignature: loginSignature,
+    xNobaTimestamp: TEST_TIMESTAMP,
+    requestBody: requestBody,
+  });
   const verifyOtpRequestBody = {
     emailOrPhone: email,
     otp: await fetchOtpFromDb(mongoUri, email, identityType),
@@ -102,12 +107,12 @@ export const loginAndGetResponse = async (
     "/v1/auth/verifyotp",
     JSON.stringify(verifyOtpRequestBody),
   );
-  return (await AuthenticationService.verifyOtp(
-    TEST_API_KEY,
-    TEST_TIMESTAMP,
-    verifyOtpSignature,
-    verifyOtpRequestBody,
-  )) as VerifyOtpResponseDTO & ResponseStatus;
+  return (await AuthenticationService.verifyOtp({
+    xNobaApiKey: TEST_API_KEY,
+    xNobaSignature: verifyOtpSignature,
+    xNobaTimestamp: TEST_TIMESTAMP,
+    requestBody: verifyOtpRequestBody,
+  })) as VerifyOtpResponseDTO & ResponseStatus;
 };
 
 export const setupPartner = async (mongoUri: string, partnerId: string) => {

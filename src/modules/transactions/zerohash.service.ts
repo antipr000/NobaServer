@@ -1,7 +1,6 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
-
 import {
   BadRequestException,
   Inject,
@@ -11,7 +10,6 @@ import {
 } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AppService } from "../../app.service";
 import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
 import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
@@ -41,7 +39,6 @@ const request = require("request-promise"); // TODO(#125) This library is deprec
 @Injectable()
 export class ZeroHashService {
   private readonly configs: ZerohashConfigs;
-  private readonly appService: AppService;
   @Inject()
   private readonly locationService: LocationService;
 
@@ -62,31 +59,23 @@ export class ZeroHashService {
     "non_us_other",
   ];
 
-  constructor(
-    configService: CustomConfigService,
-    appService: AppService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
+  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     this.configs = configService.get<ZerohashConfigs>(ZEROHASH_CONFIG_KEY);
-    this.appService = appService;
   }
 
   getNobaPlatformCode(): string {
     return this.configs.platformCode;
   }
 
-  // THIS IS THE FUNCTION TO CREATE AN AUTHENTICATED AND SIGNED REQUEST
-  // TODO: For some reason Gal said that we have to use the deprecated make-request package for now. Change this later!
-  async makeRequest(route, method, body) {
+  async makeRequest(route: string, method: string, body?: any) {
     // CREATE SIGNATURE
     const timestamp = Math.round(Date.now() / 1000);
-    const payload = timestamp + method + route + JSON.stringify(body);
+    const payload = timestamp + method + route + JSON.stringify(body ? body : {}); // The empty {} is important when there is no body
     const decodedSecret = Buffer.from(this.configs.apiSecret, "base64");
     const hmac = crypto_ts.createHmac("sha256", decodedSecret);
     // Don't forget to base 64 encode your digest
     const signedPayload = hmac.update(payload).digest("base64");
 
-    // SET HEADERS
     const headers = {
       "X-SCX-API-KEY": this.configs.apiKey,
       "X-SCX-SIGNED": signedPayload,
@@ -128,13 +117,13 @@ export class ZeroHashService {
     return response;
   }
 
-  async getPrice(underlying, quoted_currency) {
-    let price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET", {});
+  async getPrice(underlying: string, quoted_currency: string) {
+    let price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET");
     return price;
   }
 
   async getAccounts() {
-    const accounts = await this.makeRequest("/accounts", "GET", {});
+    const accounts = await this.makeRequest("/accounts", "GET");
     return accounts;
   }
 
@@ -185,13 +174,13 @@ export class ZeroHashService {
   }
 
   async getParticipant(email) {
-    let participant = await this.makeRequest(`/participants/${email}`, "GET", {});
+    let participant = await this.makeRequest(`/participants/${email}`, "GET");
     this.logger.debug("Returning participant: " + participant);
     return participant;
   }
 
   async getAllParticipants() {
-    const participants = await this.makeRequest("/participants", "GET", {});
+    const participants = await this.makeRequest("/participants", "GET");
     return participants;
   }
 
@@ -210,7 +199,7 @@ export class ZeroHashService {
      * total:     The desired amount of the "quoted_currency" for the quote
      */
     const route = `/liquidity/rfq?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}&side=buy&total=${fiatAmount}`;
-    const quote = await this.makeRequest(route, "GET", {});
+    const quote = await this.makeRequest(route, "GET");
 
     if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
       this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
@@ -241,7 +230,7 @@ export class ZeroHashService {
      * total:     The desired amount of the "quoted_currency" for the quote
      */
     const route = `/liquidity/rfq?underlying=${cryptoCurrency}&quoted_currency=${fiatCurrency}&side=buy&quantity=${cryptoQuantity}`;
-    const quote = await this.makeRequest(route, "GET", {});
+    const quote = await this.makeRequest(route, "GET");
 
     if (quote["message"].underlying !== cryptoCurrency || quote["message"].quoted_currency !== fiatCurrency) {
       this.logger.error(`Returned quote for route "${route}": "${JSON.stringify(quote)}"`);
@@ -341,7 +330,7 @@ export class ZeroHashService {
   }
 
   async getTransfer(transferId: string): Promise<ZerohashTransfer> {
-    const response = await this.makeRequest(`/transfers/${transferId}`, "GET", {});
+    const response = await this.makeRequest(`/transfers/${transferId}`, "GET");
     return {
       id: response.message.id,
       createdAt: new Date(response.message.created_at),
@@ -370,7 +359,7 @@ export class ZeroHashService {
   }
 
   async getWithdrawal(withdrawalID: string): Promise<ZerohashWithdrawalResponse> {
-    const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET", {});
+    const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET");
 
     const response: ZerohashWithdrawalResponse = {
       gasPrice: withdrawal["message"][0]["gas_price"],
@@ -444,7 +433,7 @@ export class ZeroHashService {
   async checkTradeStatus(tradeId: string): Promise<ZerohashTradeResponse> {
     try {
       // Check trade_state every 3 seconds until it is terminated using setInterval
-      const tradeData = await this.makeRequest(`/trades/${tradeId}`, "GET", {});
+      const tradeData = await this.makeRequest(`/trades/${tradeId}`, "GET");
       this.logger.info(JSON.stringify(tradeData.message.parties));
 
       const tradeState = tradeData["message"]["trade_state"];

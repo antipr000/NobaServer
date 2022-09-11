@@ -13,17 +13,21 @@ import { request as __request } from "../core/request";
 export class AssetsService {
   /**
    * Returns a list of all cryptocurrencies supported by Noba Onramp
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns CurrencyDTO List of all supported cryptocurrencies
    * @throws ApiError
    */
-  public static supportedCryptocurrencies(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-  ): CancelablePromise<Array<CurrencyDTO>> {
+  public static supportedCryptocurrencies({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<CurrencyDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/cryptocurrencies",
@@ -37,17 +41,21 @@ export class AssetsService {
 
   /**
    * Returns a list of all fiat currencies supported by Noba Onramp
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns CurrencyDTO List of all supported fiat currencies
    * @throws ApiError
    */
-  public static supportedFiatCurrencies(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-  ): CancelablePromise<Array<CurrencyDTO>> {
+  public static supportedFiatCurrencies({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<CurrencyDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/fiatcurrencies",
@@ -61,19 +69,26 @@ export class AssetsService {
 
   /**
    * Returns a list of all countries supported by Noba Onramp
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param includeSubdivisions Include subdivision data
    * @returns LocationDTO Location details of supported countries, optionally including subdivision data
    * @throws ApiError
    */
-  public static getSupportedCountries(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    includeSubdivisions?: boolean,
-  ): CancelablePromise<Array<LocationDTO>> {
+  public static getSupportedCountries({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+    includeSubdivisions,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    /**
+     * Include subdivision data
+     */
+    includeSubdivisions?: boolean;
+  }): CancelablePromise<Array<LocationDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/countries",
@@ -90,19 +105,23 @@ export class AssetsService {
 
   /**
    * Returns details of a country and its subdivisions supported by Noba Onramp
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param countryCode
    * @returns LocationDTO Location details of requested country
    * @throws ApiError
    */
-  public static getSupportedCountry(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    countryCode: string,
-  ): CancelablePromise<LocationDTO> {
+  public static getSupportedCountry({
+    xNobaApiKey,
+    countryCode,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    countryCode: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<LocationDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/countries/{countryCode}",
@@ -122,17 +141,21 @@ export class AssetsService {
 
   /**
    * Returns common api configurations
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
    * @returns ConfigurationsDTO Common api configurations
    * @throws ApiError
    */
-  public static getCommonConfigurations(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-  ): CancelablePromise<ConfigurationsDTO> {
+  public static getCommonConfigurations({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConfigurationsDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/config",
@@ -149,19 +172,23 @@ export class AssetsService {
 
   /**
    * Returns credit card structure metadata for the provided BIN
-   * @param xNobaApiKey
-   * @param xNobaSignature
-   * @param xNobaTimestamp
-   * @param bin
    * @returns CreditCardDTO Card metadata
    * @throws ApiError
    */
-  public static getCreditCardBin(
-    xNobaApiKey: string,
-    xNobaSignature: string,
-    xNobaTimestamp: string,
-    bin: string,
-  ): CancelablePromise<CreditCardDTO> {
+  public static getCreditCardBin({
+    xNobaApiKey,
+    bin,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    bin: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<CreditCardDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/creditcardmetadata/{bin}",

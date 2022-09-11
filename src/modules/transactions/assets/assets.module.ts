@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { AppService } from "../../../app.service";
+import { CurrencyService } from "../../../modules/common/currency.service";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { CommonModule } from "../../../modules/common/common.module";
 import { ConsumerModule } from "../../../modules/consumer/consumer.module";
@@ -11,7 +11,7 @@ import { DefaultAssetService } from "./default.asset.service";
   imports: [CommonModule, ConsumerModule, getWinstonModule()],
   controllers: [],
   providers: [
-    AppService,
+    CurrencyService,
     ZeroHashService,
     DefaultAssetService,
     // USDCPolygonAssetService,

@@ -2,15 +2,15 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { deepEqual, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { getMockConsumerServiceWithDefaults } from "../mocks/mock.consumer.service";
 import { ConsumerController } from "../consumer.controller";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
-import { ConsumerDTO } from "../dto/ConsumerDTO";
-import { ConsumerMapper } from "../mappers/ConsumerMapper";
-import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
-import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
 import { PaymentProviders } from "../domain/PaymentProviderDetails";
+import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
+import { ConsumerDTO } from "../dto/ConsumerDTO";
+import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
+import { ConsumerMapper } from "../mappers/ConsumerMapper";
+import { getMockConsumerServiceWithDefaults } from "../mocks/mock.consumer.service";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -137,7 +137,7 @@ describe("ConsumerController", () => {
           ...consumer.props,
           paymentMethods: [
             {
-              paymentProviderID: PaymentProviders.STRIPE,
+              paymentProviderID: PaymentProviders.CHECKOUT,
               paymentToken: "faketoken1234",
               cardName: paymentMethodRequest.cardName,
               cardType: "VISA",

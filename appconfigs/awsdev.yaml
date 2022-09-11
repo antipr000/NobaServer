@@ -26,10 +26,6 @@ sendgrid:
   awsSecretNameForApiKey: "TEST_SENDGRID_SECRET" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "bogus-value"
 
-stripe:
-  awsSecretNameForSecretKey: "TEST_STRIPE_SECRET" #if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  secretKey: "bogus-value"
-
 checkout:
   awsSecretNameForPublicKey: "TEST_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSecretKey: "TEST_CHECKOUT_SECRET_KEY"
