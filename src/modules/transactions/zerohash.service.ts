@@ -67,7 +67,7 @@ export class ZeroHashService {
     return this.configs.platformCode;
   }
 
-  async makeRequest(route: string, method: Method, body?: any) {
+  async makeRequest(route, method, body?) {
     // CREATE SIGNATURE
     const timestamp = Math.round(Date.now() / 1000);
     const payload = timestamp + method + route + JSON.stringify(body ? body : {}); // The empty {} is important when there is no body
