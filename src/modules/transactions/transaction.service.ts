@@ -287,7 +287,11 @@ export class TransactionService {
       this.logger.error(
         `Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}, Transaction ID: ${transaction.props._id}`,
       );
-      return PendingTransactionValidationStatus.FAIL;
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.UNKNOWN_PAYMENT_METHOD,
+        "UnknownPaymentMethod",
+        "Payment method does not exist for user",
+      );
     }
 
     const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
@@ -295,7 +299,11 @@ export class TransactionService {
       this.logger.error(
         `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
       );
-      return PendingTransactionValidationStatus.FAIL;
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.WALLET_DOES_NOT_EXIST,
+        "WalletNotFound",
+        "Requested wallet address does not exist for user",
+      );
     }
 
     // Check Sardine for AML
@@ -308,17 +316,13 @@ export class TransactionService {
       cardID: paymentMethod.paymentToken,
       cryptoCurrencyCode: transaction.props.leg2,
       walletAddress: transaction.props.destinationWalletAddress,
+      walletStatus: cryptoWallet.status,
     };
     const result = await this.verificationService.transactionVerification(
       transaction.props.sessionKey,
       consumer,
       sardineTransactionInformation,
     );
-
-    if (result.status !== KYCStatus.APPROVED) {
-      // TODO(#310) Log the details to the transaction (transactionExceptions[])
-      return PendingTransactionValidationStatus.FAIL;
-    }
 
     if (result.walletStatus) {
       cryptoWallet.status = result.walletStatus;
@@ -330,6 +334,25 @@ export class TransactionService {
         ...paymentMethod,
         status: result.paymentMethodStatus,
       });
+    }
+
+    if (result.status !== KYCStatus.APPROVED) {
+      // TODO(#310) Log the details to the transaction (transactionExceptions[])
+      this.logger.debug(`Failed to make transaction. Reason: Sardine risk level is high, ${JSON.stringify(result)}`);
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.SANCTIONED_TRANSACTION,
+        "AmlDetected",
+        "Transaction has been detected to be high risk",
+      );
+    }
+
+    if (result.walletStatus !== WalletStatus.APPROVED) {
+      this.logger.debug(`Failed to make transaction. Reason: Wallet is not approved, ${JSON.stringify(result)}`);
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET,
+        "WalletNotApproved",
+        "Wallet status is not approved yet",
+      );
     }
 
     try {

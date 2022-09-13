@@ -31,6 +31,10 @@ import { PendingTransactionValidationStatus } from "../../../../modules/consumer
 import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { ObjectType } from "../../../../modules/common/domain/ObjectType";
+import {
+  TransactionSubmissionException,
+  TransactionSubmissionFailureExceptionText,
+} from "../../exceptions/TransactionSubmissionException";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -248,6 +252,43 @@ describe("ValidatePendingTransaction", () => {
 
       when(transactionService.validatePendingTransaction(anything(), anything())).thenResolve(
         PendingTransactionValidationStatus.FAIL,
+      );
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(sqsClient.enqueue(anything(), anything())).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+      await validatePendingTransaction.processMessage(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.VALIDATION_FAILED);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+      expect(transactionId).toBe(transaction.props._id);
+    });
+
+    it("should put it in failure queue when validation service throws error", async () => {
+      transaction.props.transactionStatus = TransactionStatus.PENDING;
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      // expect that 'ValidatePendingTransactionProcessor' actually subscribed to 'PendingTransactionValidation' queue.
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.PendingTransactionValidation);
+      expect(processor).toBeInstanceOf(ValidatePendingTransactionProcessor);
+
+      when(transactionService.validatePendingTransaction(anything(), anything())).thenReject(
+        new TransactionSubmissionException(
+          TransactionSubmissionFailureExceptionText.INVALID_WALLET,
+          "Invalid wallet",
+          "Wallet not sanctioned",
+        ),
       );
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);

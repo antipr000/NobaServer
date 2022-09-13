@@ -7,7 +7,6 @@ import mockAxios from "jest-mock-axios";
 import {
   DocumentVerificationStatus,
   KYCStatus,
-  RiskLevel,
   WalletStatus,
 } from "../../../../modules/consumer/domain/VerificationStatus";
 import {
@@ -257,7 +256,7 @@ describe("SardineTests", () => {
       mockAxios.reset();
     });
 
-    it("Should return status APPROVED and proper levels for sanction and pep level when transaction is low risk", async () => {
+    it("Should return status APPROVED when transaction is low risk", async () => {
       const transactionInformation: TransactionInformation = {
         transactionID: "transaction-1",
         amount: 100,
@@ -298,12 +297,12 @@ describe("SardineTests", () => {
 
       expect(response.status).toBe(KYCStatus.APPROVED);
       expect(response.idvProviderRiskLevel).toBe("low");
-      expect(response.pepLevel).toBe(RiskLevel.LOW);
-      expect(response.sanctionLevel).toBe(RiskLevel.LOW);
+      expect(response.pepLevel).toBeFalsy();
+      expect(response.sanctionLevel).toBeFalsy();
       expect(response.walletStatus).toBe(WalletStatus.APPROVED);
     });
 
-    it("Should return status PENDING and proper levels for sanction and pep level when transaction is high risk", async () => {
+    it("Should return status PENDING when transaction is high risk", async () => {
       const transactionInformation: TransactionInformation = {
         transactionID: "transaction-1",
         amount: 100,
@@ -344,12 +343,12 @@ describe("SardineTests", () => {
 
       expect(response.status).toBe(KYCStatus.PENDING);
       expect(response.idvProviderRiskLevel).toBe("high");
-      expect(response.pepLevel).toBe(RiskLevel.MEDIUM);
-      expect(response.sanctionLevel).toBe(RiskLevel.MEDIUM);
+      expect(response.pepLevel).toBeFalsy();
+      expect(response.sanctionLevel).toBeFalsy();
       expect(response.walletStatus).toBe(WalletStatus.REJECTED);
     });
 
-    it("should return status REJECTED with appropriate pep, sanction and wallet status for fraudulent transaction", async () => {
+    it("should return status REJECTED with appropriate wallet status for fraudulent transaction", async () => {
       const transactionInformation: TransactionInformation = {
         transactionID: "transaction-1",
         amount: 100,
@@ -390,8 +389,8 @@ describe("SardineTests", () => {
 
       expect(response.status).toBe(KYCStatus.REJECTED);
       expect(response.idvProviderRiskLevel).toBe("very_high");
-      expect(response.pepLevel).toBe(RiskLevel.HIGH);
-      expect(response.sanctionLevel).toBe(RiskLevel.HIGH);
+      expect(response.pepLevel).toBeFalsy();
+      expect(response.sanctionLevel).toBeFalsy();
       expect(response.walletStatus).toBe(WalletStatus.REJECTED);
     });
 

@@ -233,17 +233,11 @@ export class Sardine implements IDVProvider {
         this.getAxiosConfig(),
       );
 
-      let sanctionLevel: RiskLevel = RiskLevel.HIGH;
-      let pepLevel: RiskLevel = RiskLevel.HIGH;
-      let walletStatus: WalletStatus = WalletStatus.REJECTED;
+      let walletStatus: WalletStatus = transactionInformation.walletStatus;
       let verificationStatus: KYCStatus = KYCStatus.REJECTED;
 
       for (const signal of data["customer"]["signals"]) {
-        if (signal["key"] === "sanctionLevel") {
-          sanctionLevel = this.mapSardineRiskLevelToNobaRiskLevel(signal["value"]);
-        } else if (signal["key"] === "pepLevel") {
-          pepLevel = this.mapSardineRiskLevelToNobaRiskLevel(signal["value"]);
-        } else if (signal["key"] === "cryptoAddressLevel") {
+        if (signal["key"] === "cryptoAddressLevel") {
           signal["value"] === SardineRiskLevels.HIGH
             ? (walletStatus = WalletStatus.REJECTED)
             : (walletStatus = WalletStatus.APPROVED);
@@ -259,8 +253,6 @@ export class Sardine implements IDVProvider {
       }
 
       return {
-        sanctionLevel: sanctionLevel,
-        pepLevel: pepLevel,
         walletStatus: walletStatus,
         status: verificationStatus,
         idvProviderRiskLevel: data.level,

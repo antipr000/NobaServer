@@ -41,26 +41,34 @@ export class ValidatePendingTransactionProcessor extends MessageProcessor {
       return;
     }
 
-    // This logic should be idempotent so we don't need to check whether we failed between here and transaction update
-    const validationStatus = await this.transactionService.validatePendingTransaction(consumer, transaction);
-    const updatedStatus =
-      validationStatus === PendingTransactionValidationStatus.PASS
-        ? TransactionStatus.VALIDATION_PASSED
-        : TransactionStatus.VALIDATION_FAILED;
+    try {
+      const validationStatus = await this.transactionService.validatePendingTransaction(consumer, transaction);
+      const updatedStatus =
+        validationStatus === PendingTransactionValidationStatus.PASS
+          ? TransactionStatus.VALIDATION_PASSED
+          : TransactionStatus.VALIDATION_FAILED;
 
-    if (updatedStatus === TransactionStatus.VALIDATION_FAILED) {
+      if (updatedStatus === TransactionStatus.VALIDATION_FAILED) {
+        await this.processFailure(
+          updatedStatus,
+          "Transaction validation failure.", // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+          transaction,
+        );
+      } else {
+        transaction = await this.transactionRepo.updateTransactionStatus(
+          transaction.props._id,
+          updatedStatus,
+          transaction.props,
+        );
+        await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, transactionId);
+      }
+    } catch (e) {
       await this.processFailure(
-        updatedStatus,
-        "Transaction validation failure.", // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+        TransactionStatus.VALIDATION_FAILED,
+        e.reasonSummary, // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
         transaction,
       );
-    } else {
-      transaction = await this.transactionRepo.updateTransactionStatus(
-        transaction.props._id,
-        updatedStatus,
-        transaction.props,
-      );
-      await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, transactionId);
     }
+    // This logic should be idempotent so we don't need to check whether we failed between here and transaction update
   }
 }
