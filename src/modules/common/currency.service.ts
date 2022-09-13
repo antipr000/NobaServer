@@ -72,13 +72,17 @@ export class CurrencyService {
         .pipe(parser)
         .on("data", data => {
           const name = `${data["Name"]}`.trim();
-          const symbol = `${data["Symbol (Prod)"]}`.trim();
-          const precision = Number(`${data["Price Precision"]}`.trim());
+          const symbol = `${data["Symbol"]}`.trim();
+          const precision = Number(`${data["Precision"]}`.trim());
+          const provider = `${data["Provider"]}`.trim();
+          const type = `${data["Type"]}`.trim();
           // Include only records for which ZH provides liquidity services (Liquidity=Yes)
           // Exclude XRP
           const curr = new CurrencyDTO();
           curr.name = name;
           curr.ticker = symbol;
+          curr.type = type;
+          curr.provider = provider;
           curr.iconPath = `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`;
           curr.precision = precision;
           results.push(curr);
