@@ -125,7 +125,7 @@ export default async function loadAppConfigs() {
    *    configuration of the 'assets' rule in 'nest-cli.json' file.
    *
    */
-  const configsDir = process.env["CONFIGS_DIR"] ?? join(__dirname, "appconfigs");
+  const configsDir = process.env["CONFIG_DIR"] ?? join(__dirname, "appconfigs");
   const mainPropertyFile = join(configsDir, configFileName);
   setEnvironmentProperty(MASTER_CONFIG_DIRECTORY, configsDir);
 

@@ -49,6 +49,9 @@ jobs:
           echo [SUCCESS] yarn install succeeded.
 
       - name: Test and coverage
+        with: # We will need creds to connect to S3
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
         run: yarn jest --verbose --silent --coverage --runInBand
