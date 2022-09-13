@@ -72,7 +72,6 @@ describe("DefaultAssetService", () => {
         iconPath: "dummy/path",
         name: "ETH",
         ticker: "ETH",
-        _id: "ETH",
         precision: 8,
       },
     ]);
@@ -81,7 +80,6 @@ describe("DefaultAssetService", () => {
       iconPath: "dummy/path",
       name: "ETH",
       ticker: "ETH",
-      _id: "ETH",
       precision: 8,
     });
 
@@ -90,7 +88,6 @@ describe("DefaultAssetService", () => {
         iconPath: "dummy/path",
         name: "USD",
         ticker: "USD",
-        _id: "USD",
         precision: 2,
       },
     ]);
@@ -99,7 +96,6 @@ describe("DefaultAssetService", () => {
       iconPath: "dummy/path",
       name: "USD",
       ticker: "USD",
-      _id: "USD",
       precision: 2,
     });
 
