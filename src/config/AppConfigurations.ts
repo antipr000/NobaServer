@@ -115,9 +115,9 @@ export default async function loadAppConfigs() {
   const configFileName = envNameToPropertyFileNameMap[environment];
 
   /**
-   * "CONFIG_DIR" environment variable denotes the 'path to the YAML configuration file'.
+   * "CONFIGS_DIR" environment variable denotes the 'path to the YAML configuration file'.
    *
-   * If "CONFIG_DIR" environment variable is not set,
+   * If "CONFIGS_DIR" environment variable is not set,
    *    Assumption is that the code is getting executed from the COMPILED 'dist/' filder.
    *
    *    Hence, '__dirname' will resolve to 'dist/' folder and as 'appconfigs/' directory
@@ -125,7 +125,7 @@ export default async function loadAppConfigs() {
    *    configuration of the 'assets' rule in 'nest-cli.json' file.
    *
    */
-  const configsDir = process.env["CONFIG_DIR"] ?? join(__dirname, "appconfigs");
+  const configsDir = process.env["CONFIGS_DIR"] ?? join(__dirname, "appconfigs");
   const mainPropertyFile = join(configsDir, configFileName);
   setEnvironmentProperty(MASTER_CONFIG_DIRECTORY, configsDir);
 
