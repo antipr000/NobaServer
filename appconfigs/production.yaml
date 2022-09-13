@@ -98,3 +98,5 @@ configuration:
 supportedCryptoFileName: "supported_tokens.csv"
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"
+supportedCryptoBucketName: "prod-noba-assets"
+supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens_prod.csv"
