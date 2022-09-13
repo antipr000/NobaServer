@@ -66,12 +66,12 @@ const supportedCurrenciesTicker = [
   "TUSD.ETH",
   "UNI.ETH",
   "USDC.ETH",
-  "USDC.POLYGON",
   "USDP.ETH",
   "USDT.ETH",
   "XTZ",
   "WBTC.ETH",
   "XLM",
+  "XRP",
 ];
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 

@@ -20,8 +20,6 @@ export const MASTER_CONFIG_DIRECTORY = "masterConfigDirectory"; // Set programma
 export const SERVER_LOG_FILE_PATH = "logFilePath";
 
 // It is assumed that the every dependent files are present in 'appconfigs/' folder itself.
-export const SUPPORTED_CRYPTO_TOKENS_FILE_NAME = "supportedCryptoFileName";
-export const SUPPORTED_CRYPTO_TOKENS_FILE_PATH = "SUPPORTED_CRYPTO_TOKENS_FILE_PATH";
 export const LOCATION_DATA_FILE_NAME = "locationDataFileName";
 export const LOCATION_DATA_FILE_PATH = "LOCATION_DATA_FILE_PATH";
 export const CCBIN_DATA_FILE_NAME_MASK = "ccBINDataFileNameMask";

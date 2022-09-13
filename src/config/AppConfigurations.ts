@@ -56,8 +56,6 @@ import {
   KMS_CONTEXT_STAGE,
   KMS_CONTEXT_ORIGIN,
   KMS_CONTEXT_PURPOSE,
-  SUPPORTED_CRYPTO_TOKENS_FILE_NAME,
-  SUPPORTED_CRYPTO_TOKENS_FILE_PATH,
   LOCATION_DATA_FILE_NAME,
   LOCATION_DATA_FILE_PATH,
   CCBIN_DATA_FILE_NAME_MASK,
@@ -156,7 +154,6 @@ export default async function loadAppConfigs() {
   }
 
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
-  configs[SUPPORTED_CRYPTO_TOKENS_FILE_PATH] = join(configsDir, configs[SUPPORTED_CRYPTO_TOKENS_FILE_NAME]);
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
   configs[CCBIN_DATA_FILE_PATH] = join(configsDir, configs[CCBIN_DATA_FILE_NAME_MASK]);
   configs[SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME] = configs[SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME];
@@ -172,7 +169,7 @@ export default async function loadAppConfigs() {
 }
 
 function configureAwsCredentials(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
-  if (environment === AppEnvironment.DEV) {
+  if (environment === AppEnvironment.DEV || environment === AppEnvironment.E2E_TEST) {
     // 'DEV' is for local development and hence AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY environment variables are required.
     const awsAccessKeyId = configs[AWS_ACCESS_KEY_ID_ATTR];
     const awsSecretAccessKey = configs[AWS_SECRET_ACCESS_KEY_ATTR];
