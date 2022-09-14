@@ -157,7 +157,6 @@ describe("TransactionService", () => {
     assetService = getMockAssetServiceWithDefaults();
     when(assetServiceFactory.getAssetService(anyString())).thenReturn(instance(assetService));
     when(currencyService.getCryptocurrency("ETH")).thenResolve({
-      _id: "ethereum",
       ticker: "ETH",
       name: "Ethereum",
       iconPath: "",
@@ -165,7 +164,6 @@ describe("TransactionService", () => {
     });
 
     when(currencyService.getFiatCurrency("USD")).thenResolve({
-      _id: "usd",
       ticker: "USD",
       name: "US Dollar",
       iconPath: "",
@@ -799,7 +797,6 @@ describe("TransactionService", () => {
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
         {
-          _id: "ethereum",
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
@@ -850,7 +847,6 @@ describe("TransactionService", () => {
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
         {
-          _id: "ethereum",
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
@@ -860,7 +856,6 @@ describe("TransactionService", () => {
 
       when(currencyService.getSupportedFiatCurrencies()).thenResolve([
         {
-          _id: "usd",
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
@@ -919,7 +914,6 @@ describe("TransactionService", () => {
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
         {
-          _id: "ethereum",
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
@@ -929,7 +923,6 @@ describe("TransactionService", () => {
 
       when(currencyService.getSupportedFiatCurrencies()).thenResolve([
         {
-          _id: "usd",
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",
@@ -1011,7 +1004,6 @@ describe("TransactionService", () => {
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
         {
-          _id: "ethereum",
           ticker: "ETH",
           name: "Ethereum",
           iconPath: "",
@@ -1021,7 +1013,6 @@ describe("TransactionService", () => {
 
       when(currencyService.getSupportedFiatCurrencies()).thenResolve([
         {
-          _id: "usd",
           ticker: "USD",
           name: "US Dollar",
           iconPath: "",

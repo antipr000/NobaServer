@@ -2,22 +2,22 @@ import { Controller, Get, HttpStatus, Inject, NotFoundException, Param, Query } 
 import { ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AppService } from "./app.service";
 import { getCommonHeaders } from "./core/utils/CommonHeaders";
 import { IsNoApiKeyNeeded, Public } from "./modules/auth/public.decorator";
 import { ConfigurationProviderService } from "./modules/common/configuration.provider.service";
 import { ConfigurationsDTO } from "./modules/common/dto/ConfigurationsDTO";
-import { BINValidity, CreditCardDTO } from "./modules/common/dto/CreditCardDTO";
+import { CreditCardDTO } from "./modules/common/dto/CreditCardDTO";
 import { CurrencyDTO } from "./modules/common/dto/CurrencyDTO";
 import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
+import { CurrencyService } from "./modules/common/currency.service";
 
 @Controller()
 @ApiHeaders(getCommonHeaders())
 export class AppController {
   constructor(
-    private readonly appService: AppService,
+    private readonly currencyService: CurrencyService,
     private readonly locationService: LocationService,
     private readonly creditCardService: CreditCardService,
     private readonly configurationsProviderService: ConfigurationProviderService,
@@ -43,8 +43,7 @@ export class AppController {
   })
   @ApiTags("Assets")
   async supportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
-    // TODO(#235): Pull from database post-MVP
-    return this.appService.getSupportedCryptocurrencies();
+    return this.currencyService.getSupportedCryptocurrencies();
   }
 
   @Public()
@@ -57,8 +56,7 @@ export class AppController {
   })
   @ApiTags("Assets")
   async supportedFiatCurrencies(): Promise<CurrencyDTO[]> {
-    // TODO(#235): Pull from database post-MVP
-    return this.appService.getSupportedFiatCurrencies();
+    return this.currencyService.getSupportedFiatCurrencies();
   }
 
   @Public()
@@ -83,7 +81,7 @@ export class AppController {
   @ApiResponse({ status: HttpStatus.OK, description: "Location details of requested country", type: LocationDTO })
   @ApiTags("Assets")
   @ApiNotFoundResponse({ description: "Country code not found" })
-  async getSupportedCountry(@Param("countryCode") countryCode?: string): Promise<LocationDTO> {
+  async getSupportedCountry(@Param("countryCode") countryCode: string): Promise<LocationDTO> {
     return this.locationService.getLocationDetails(countryCode);
   }
 

@@ -1,9 +1,11 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class CurrencyDTO {
-  _id?: string; // TODO(#235): Will be populated when currencies are stored in the database
+  @ApiPropertyOptional()
+  type?: string;
 
-  type?: string; // TODO(#235): Will be populated when currencies are stored in the database
+  @ApiPropertyOptional()
+  provider?: string;
 
   @ApiProperty()
   name: string; // AAVE.ETH, for example
