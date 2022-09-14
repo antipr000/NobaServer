@@ -10,7 +10,6 @@ import {
   WeeklyLimitBuyOnly,
   MonthlyLimitBuyOnly,
   LifetimeLimitBuyOnly,
-  TransactionLimit,
   UserLimits,
 } from "./domain/Limits";
 import { ITransactionRepo } from "./repo/TransactionRepo";
@@ -18,9 +17,13 @@ import { TransactionMapper } from "./mapper/TransactionMapper";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { COMMON_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { CommonConfigs } from "../../config/configtypes/CommonConfigs";
 
 @Injectable()
 export class LimitsService {
+  private readonly configs: CommonConfigs;
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
@@ -28,8 +31,9 @@ export class LimitsService {
   private readonly transactionsRepo: ITransactionRepo;
   private readonly transactionsMapper: TransactionMapper;
 
-  constructor(private userService: ConsumerService) {
+  constructor(private userService: ConsumerService, configService: CustomConfigService) {
     this.transactionsMapper = new TransactionMapper();
+    this.configs = configService.get<CommonConfigs>(COMMON_CONFIG_KEY);
     return this;
   }
 
@@ -41,8 +45,8 @@ export class LimitsService {
         weeklyLimit: WeeklyLimitBuyOnly.no_kyc_max_amount_limit,
         transactionLimit: TransactionLimitBuyOnly.no_kyc_max_amount_limit,
         totalLimit: LifetimeLimitBuyOnly.no_kyc_max_amount_limit,
-        minTransaction: TransactionLimit.min_transaction,
-        maxTransaction: TransactionLimit.max_transaction,
+        minTransaction: this.configs.lowAmountThreshold,
+        maxTransaction: this.configs.highAmountThreshold,
       };
     } else if (userVerificationStatus === UserVerificationStatus.PARTIALLY_VERIFIED) {
       return {
@@ -51,8 +55,8 @@ export class LimitsService {
         weeklyLimit: WeeklyLimitBuyOnly.partial_kyc_max_amount_limit,
         transactionLimit: TransactionLimitBuyOnly.partial_kyc_max_amount_limit,
         totalLimit: LifetimeLimitBuyOnly.partial_kyc_max_amount_limit,
-        minTransaction: TransactionLimit.min_transaction,
-        maxTransaction: TransactionLimit.max_transaction,
+        minTransaction: this.configs.lowAmountThreshold,
+        maxTransaction: this.configs.highAmountThreshold,
       };
     } else {
       return {
@@ -61,8 +65,8 @@ export class LimitsService {
         weeklyLimit: WeeklyLimitBuyOnly.max_amount_limit,
         transactionLimit: TransactionLimitBuyOnly.max_amount_limit,
         totalLimit: LifetimeLimitBuyOnly.max_amount_limit,
-        minTransaction: TransactionLimit.min_transaction,
-        maxTransaction: TransactionLimit.max_transaction,
+        minTransaction: this.configs.lowAmountThreshold,
+        maxTransaction: this.configs.highAmountThreshold,
       };
     }
   }

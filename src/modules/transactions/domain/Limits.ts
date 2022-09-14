@@ -18,11 +18,6 @@ export interface Limit {
   partial_kyc_max_amount_limit: number; // Maximum amount limit with id verification only
 }
 
-export const TransactionLimit = {
-  min_transaction: 50,
-  max_transaction: 500,
-};
-
 export const DailyLimitBuyOnly: KeysRequired<Limit> = {
   max_amount_limit: 100,
   max_usage_limit: 0,

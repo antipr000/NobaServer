@@ -84,7 +84,7 @@ zerohash:
 
 configuration:
   lowAmountThreshold: 1
-  highAmountThreshold: 1000
+  highAmountThreshold: 200
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
 

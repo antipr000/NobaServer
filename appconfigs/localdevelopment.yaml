@@ -86,7 +86,7 @@ zerohash:
   platformCode: "6MWNG6"
 
 configuration:
-  lowAmountThreshold: 50
+  lowAmountThreshold: 1
   highAmountThreshold: 200
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
@@ -94,4 +94,4 @@ configuration:
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"
 supportedCryptoBucketName: "prod-noba-assets"
-supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens_lowers.csv"
+supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens_test.csv"

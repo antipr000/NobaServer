@@ -2,6 +2,9 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { UserVerificationStatus } from "../../../modules/consumer/domain/UserVerificationStatus";
 import { instance, when } from "ts-mockito";
 import {
+  COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY,
+  COMMON_CONFIG_KEY,
+  COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY,
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
   FIXED_CREDIT_CARD_FEE,
   FLAT_FEE_DOLLARS,
@@ -27,7 +30,6 @@ import {
   WeeklyLimitBuyOnly,
   MonthlyLimitBuyOnly,
   LifetimeLimitBuyOnly,
-  TransactionLimit,
   UserLimits,
 } from "../domain/Limits";
 
@@ -40,6 +42,10 @@ const defaultEnvironmentVariables = {
       [FIXED_CREDIT_CARD_FEE]: 0,
       [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
     },
+  },
+  [COMMON_CONFIG_KEY]: {
+    [COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY]: 35,
+    [COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY]: 350,
   },
 };
 
@@ -175,8 +181,8 @@ describe("LimitsService", () => {
         weeklyLimit: WeeklyLimitBuyOnly.no_kyc_max_amount_limit,
         transactionLimit: TransactionLimitBuyOnly.no_kyc_max_amount_limit,
         totalLimit: LifetimeLimitBuyOnly.no_kyc_max_amount_limit,
-        minTransaction: TransactionLimit.min_transaction,
-        maxTransaction: TransactionLimit.max_transaction,
+        minTransaction: 35,
+        maxTransaction: 350,
       };
 
       expect(limits).toStrictEqual(expectedLimits);
@@ -190,8 +196,8 @@ describe("LimitsService", () => {
         weeklyLimit: WeeklyLimitBuyOnly.partial_kyc_max_amount_limit,
         transactionLimit: TransactionLimitBuyOnly.partial_kyc_max_amount_limit,
         totalLimit: LifetimeLimitBuyOnly.partial_kyc_max_amount_limit,
-        minTransaction: TransactionLimit.min_transaction,
-        maxTransaction: TransactionLimit.max_transaction,
+        minTransaction: 35,
+        maxTransaction: 350,
       };
       expect(limits).toStrictEqual(expectedLimits);
     });
@@ -204,8 +210,8 @@ describe("LimitsService", () => {
         weeklyLimit: WeeklyLimitBuyOnly.max_amount_limit,
         transactionLimit: TransactionLimitBuyOnly.max_amount_limit,
         totalLimit: LifetimeLimitBuyOnly.max_amount_limit,
-        minTransaction: TransactionLimit.min_transaction,
-        maxTransaction: TransactionLimit.max_transaction,
+        minTransaction: 35,
+        maxTransaction: 350,
       };
 
       expect(limits).toStrictEqual(expectedLimits);
