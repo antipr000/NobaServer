@@ -23,7 +23,18 @@ export interface ITransactionRepo {
   getMonthlyUserTransactionAmount(userId: string): Promise<number>;
   getWeeklyUserTransactionAmount(userId: string): Promise<number>;
   getDailyUserTransactionAmount(userId: string): Promise<number>;
-  getTransactionsBeforeTime(time: number, status: TransactionStatus): Promise<Transaction[]>;
+
+  getValidTransactionsToProcess(
+    maxLastUpdateTime: number,
+    minStatusUpdateTime: number,
+    status: TransactionStatus,
+  ): Promise<Transaction[]>;
+  getStaleTransactionsToProcess(
+    maxLastUpdateTime: number,
+    minStatusUpdateTime: number,
+    status: TransactionStatus,
+  ): Promise<Transaction[]>;
+
   updateStatusWithExactTransactionProps(
     transactionId: string,
     newStatus: TransactionStatus,

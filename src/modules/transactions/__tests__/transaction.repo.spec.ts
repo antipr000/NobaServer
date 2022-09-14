@@ -22,6 +22,23 @@ const mkid = (id: string): string => {
   return TRANSACTION_ID_PREFIX + id;
 };
 
+const getAllRecordsInTransactionCollection = async (transactionCollection: Collection): Promise<Array<Transaction>> => {
+  const adminDocumentsCursor = transactionCollection.find({});
+  const allRecords: Transaction[] = [];
+
+  while (await adminDocumentsCursor.hasNext()) {
+    const adminDocument = await adminDocumentsCursor.next();
+
+    const currentRecord: Transaction = Transaction.createTransaction({
+      ...adminDocument,
+      _id: adminDocument._id.toString(),
+    });
+    allRecords.push(currentRecord);
+  }
+
+  return allRecords;
+};
+
 describe("MongoDBTransactionRepoTests", () => {
   jest.setTimeout(20000);
 
@@ -66,7 +83,7 @@ describe("MongoDBTransactionRepoTests", () => {
     // Setup a mongodb client for interacting with "admins" collection.
     mongoClient = new MongoClient(mongoUri);
     await mongoClient.connect();
-    transactionCollection = mongoClient.db("").collection("transaction");
+    transactionCollection = mongoClient.db("").collection("transactions");
 
     // adding two initial transactions for testing purposes.
     await transactionRepo.createTransaction(getRandomTransaction("1"));
@@ -176,24 +193,223 @@ describe("MongoDBTransactionRepoTests", () => {
     });
   });
 
-  describe("getTransactionsBeforeTime", () => {
-    it("should get all transactions before a time", async () => {
-      const ts: Transaction[] = await transactionRepo.getTransactionsBeforeTime(
-        Date.now().valueOf(),
+  describe("getValidTransactionsToProcess()", () => {
+    it("should properly filter based on transaction status", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 15,
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 15,
+      });
+
+      const pendingTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 15,
         TransactionStatus.PENDING,
       );
-      expect(ts).toHaveLength(2);
-      await transactionRepo.updateTransactionStatus(mkid("1"), TransactionStatus.COMPLETED, {});
-      const pendingTransactions: Transaction[] = await transactionRepo.getTransactionsBeforeTime(
-        Date.now().valueOf(),
+      const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 15,
+        TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+      );
+
+      expect(pendingTransactions).toHaveLength(0);
+      expect(cryptoOutgoingCompletedTransactions).toHaveLength(1);
+      expect(cryptoOutgoingCompletedTransactions[0].props._id).toBe("1111111111");
+    });
+
+    it("should not pick transaction which have been updated a while ago", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 15,
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 30, // have been updated recently
+        lastStatusUpdateTimestamp: 15,
+      });
+
+      const pendingTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 27,
+        /*minStatusUpdateTime=*/ 15,
         TransactionStatus.PENDING,
       );
-      expect(pendingTransactions).toHaveLength(1);
-      const completedTransactions: Transaction[] = await transactionRepo.getTransactionsBeforeTime(
-        Date.now().valueOf(),
-        TransactionStatus.COMPLETED,
+      const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 27,
+        /*minStatusUpdateTime=*/ 15,
+        TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
       );
-      expect(completedTransactions).toHaveLength(1);
+
+      expect(pendingTransactions).toHaveLength(0);
+      expect(cryptoOutgoingCompletedTransactions).toHaveLength(1);
+      expect(cryptoOutgoingCompletedTransactions[0].props._id).toBe("1111111111");
+    });
+
+    it("should not pick transaction whose status has not been updated in recent past", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 15,
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 20, // have been updated recently
+      });
+
+      const pendingTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 17,
+        TransactionStatus.PENDING,
+      );
+      const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 17,
+        TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+      );
+
+      expect(pendingTransactions).toHaveLength(0);
+      expect(cryptoOutgoingCompletedTransactions).toHaveLength(1);
+      expect(cryptoOutgoingCompletedTransactions[0].props._id).toBe("1111111112");
+    });
+  });
+
+  describe("getStaleTransactionsToProcess()", () => {
+    it("should properly filter based on transaction status", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 1,
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 1,
+      });
+
+      const pendingTransactions: Transaction[] = await transactionRepo.getStaleTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 15,
+        TransactionStatus.PENDING,
+      );
+      const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getStaleTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 15,
+        TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+      );
+
+      expect(pendingTransactions).toHaveLength(0);
+      expect(cryptoOutgoingCompletedTransactions).toHaveLength(1);
+      expect(cryptoOutgoingCompletedTransactions[0].props._id).toBe("1111111111");
+    });
+
+    it("should not pick transaction which have been updated a while ago", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 1,
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 30, // have been updated recently
+        lastStatusUpdateTimestamp: 1,
+      });
+
+      const pendingTransactions: Transaction[] = await transactionRepo.getStaleTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 27,
+        /*minStatusUpdateTime=*/ 15,
+        TransactionStatus.PENDING,
+      );
+      const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getStaleTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 27,
+        /*minStatusUpdateTime=*/ 15,
+        TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+      );
+
+      expect(pendingTransactions).toHaveLength(0);
+      expect(cryptoOutgoingCompletedTransactions).toHaveLength(1);
+      expect(cryptoOutgoingCompletedTransactions[0].props._id).toBe("1111111111");
+    });
+
+    it("should pick transaction whose status has not been updated in recent past", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 1,
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        lastProcessingTimestamp: 25,
+        lastStatusUpdateTimestamp: 17, // have been updated recently
+      });
+
+      const pendingTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 17,
+        TransactionStatus.PENDING,
+      );
+      const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
+        /*maxLastUpdateTime=*/ 25,
+        /*minStatusUpdateTime=*/ 17,
+        TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+      );
+
+      expect(pendingTransactions).toHaveLength(0);
+      expect(cryptoOutgoingCompletedTransactions).toHaveLength(1);
+      expect(cryptoOutgoingCompletedTransactions[0].props._id).toBe("1111111112");
     });
   });
 

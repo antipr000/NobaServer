@@ -25,23 +25,64 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   constructor(private readonly dbProvider: DBProvider) {}
 
   // TODO(#349): Migrate the "sync" Transaction fetching logic to "cursor" based logic.
-  async getTransactionsBeforeTime(time: number, status: TransactionStatus): Promise<Transaction[]> {
+  async getValidTransactionsToProcess(
+    maxLastUpdateTime: number,
+    minStatusUpdateTime: number,
+    status: TransactionStatus,
+  ): Promise<Transaction[]> {
     this.logger.debug(
       `Fetching all pending transaction with status "${status}" which are updated ` +
-        ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
+        ` before "${maxLastUpdateTime}" (i.e. ${(Date.now().valueOf() - maxLastUpdateTime) / 1000} seconds ago) ` +
+        `and the status has been updated after "${minStatusUpdateTime}" (isn't stalled).`,
     );
 
     const transactionModel = await this.dbProvider.getTransactionModel();
     const results = await transactionModel.find({
       transactionStatus: status,
       lastProcessingTimestamp: {
-        $lte: time,
+        $lte: maxLastUpdateTime,
+      },
+      lastStatusUpdateTimestamp: {
+        $gte: minStatusUpdateTime,
       },
     });
 
     this.logger.debug(
       `Fetched ${results.length} transactions with status "${status}" which are updated ` +
-        ` before "${time}" (i.e. ${(Date.now().valueOf() - time) / 1000} seconds ago).`,
+        ` before "${maxLastUpdateTime}" (i.e. ${(Date.now().valueOf() - maxLastUpdateTime) / 1000} seconds ago) ` +
+        `and the status has been updated after "${minStatusUpdateTime}" (isn't stalled).`,
+    );
+
+    return results.map(x => this.transactionMapper.toDomain(convertDBResponseToJsObject(x)));
+  }
+
+  // TODO(#349): Migrate the "sync" Transaction fetching logic to "cursor" based logic.
+  async getStaleTransactionsToProcess(
+    maxLastUpdateTime: number,
+    minStatusUpdateTime: number,
+    status: TransactionStatus,
+  ): Promise<Transaction[]> {
+    this.logger.debug(
+      `Fetching all stale transaction with status "${status}" which are updated ` +
+        ` before "${maxLastUpdateTime}" (i.e. ${(Date.now().valueOf() - maxLastUpdateTime) / 1000} seconds ago) ` +
+        `and the status has been updated after "${minStatusUpdateTime}" (isn't stalled).`,
+    );
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const results = await transactionModel.find({
+      transactionStatus: status,
+      lastProcessingTimestamp: {
+        $lte: maxLastUpdateTime,
+      },
+      lastStatusUpdateTimestamp: {
+        $lt: minStatusUpdateTime,
+      },
+    });
+
+    this.logger.debug(
+      `Fetched ${results.length} transactions with status "${status}" which are updated ` +
+        ` before "${maxLastUpdateTime}" (i.e. ${(Date.now().valueOf() - maxLastUpdateTime) / 1000} seconds ago) ` +
+        `and the status has been updated after "${minStatusUpdateTime}" (isn't stalled).`,
     );
 
     return results.map(x => this.transactionMapper.toDomain(convertDBResponseToJsObject(x)));
