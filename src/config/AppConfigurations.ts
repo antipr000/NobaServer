@@ -83,6 +83,10 @@ import {
   ZEROHASH_PLATFORM_CODE,
   SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME,
   SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH,
+  ELLIPTIC_CONFIG_KEY,
+  ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
+  ELLIPTIC_API_KEY,
+  ELLIPTIC_BASE_URL,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 import * as os from "os";
@@ -96,6 +100,7 @@ import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
 import { KmsConfigs } from "./configtypes/KmsConfigs";
 import { CommonConfigs } from "./configtypes/CommonConfigs";
 import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
+import { EllipticConfigs } from "./configtypes/EllipticConfig";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -240,6 +245,7 @@ async function configureAllVendorCredentials(
     configureZerohashCredentials,
     configureAwsKmsCredentials,
     configureCommonConfigurations,
+    configureEllipticCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -492,6 +498,29 @@ async function configureZerohashCredentials(
   );
 
   configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
+  return configs;
+}
+
+async function configureEllipticCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const ellipticConfigs: EllipticConfigs = configs[ELLIPTIC_CONFIG_KEY];
+
+  if (ellipticConfigs === undefined) {
+    const errorMessage =
+      "\n'Elliptic' configurations are required. Please configure the Elliptic credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${ELLIPTIC_CONFIG_KEY}" and populate ` +
+      `("${ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR}" or "${ELLIPTIC_API_KEY}"), ` +
+      `"${ELLIPTIC_BASE_URL}"), ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  ellipticConfigs.apiKey = await getParameterValue(ellipticConfigs.awsSecretNameforApiKey, ellipticConfigs.apiKey);
+  ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
+  configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
   return configs;
 }
 

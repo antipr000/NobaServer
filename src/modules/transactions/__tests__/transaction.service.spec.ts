@@ -64,6 +64,8 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "../exceptions/TransactionSubmissionException";
+import { EllipticService } from "../../../modules/common/elliptic.service";
+import { getMockEllipticServiceWithDefaults } from "../../../modules/common/mocks/mock.elliptic.service";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -89,6 +91,7 @@ describe("TransactionService", () => {
   let assetServiceFactory: AssetServiceFactory;
   let assetService: AssetService;
   let transactionMapper: TransactionMapper;
+  let ellipticService: EllipticService;
 
   const userId = "1234567890";
   const consumer: Consumer = Consumer.createConsumer({
@@ -110,6 +113,7 @@ describe("TransactionService", () => {
     emailService = getMockEmailServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
+    ellipticService = getMockEllipticServiceWithDefaults();
     transactionMapper = new TransactionMapper();
 
     const app: TestingModule = await Test.createTestingModule({
@@ -149,6 +153,10 @@ describe("TransactionService", () => {
         {
           provide: AssetServiceFactory,
           useFactory: () => instance(assetServiceFactory),
+        },
+        {
+          provide: EllipticService,
+          useFactory: () => instance(ellipticService),
         },
       ],
     }).compile();
@@ -1227,6 +1235,33 @@ describe("TransactionService", () => {
       );
       expect(response.length).toBe(1);
       expect(response).toStrictEqual([transactionMapper.toDTO(transaction)]);
+    });
+  });
+
+  describe("analyzeTransactionWalletExposure", () => {
+    it("should return wallet exposure response after querying elliptic", async () => {
+      const transactionID = "fake-transaction-id";
+      const transaction = Transaction.createTransaction({
+        _id: transactionID,
+        userId: "fake-consumer",
+        sessionKey: "fake-session",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+        paymentMethodID: "fake-payment-method",
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        destinationWalletAddress: "fake-wallet",
+        partnerID: "12345",
+        blockchainTransactionId: "fake-crypto-transaction-id",
+      });
+
+      when(transactionRepo.getTransaction(transactionID)).thenResolve(transaction);
+      when(ellipticService.transactionAnalysis(anything())).thenResolve({ riskScore: 10 });
+
+      const result = await transactionService.analyzeTransactionWalletExposure(transactionID);
+      expect(result.riskScore).toBe(10);
+      verify(ellipticService.transactionAnalysis(deepEqual(transaction))).once();
     });
   });
 });

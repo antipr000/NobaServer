@@ -97,6 +97,11 @@ export const ZEROHASH_PASS_PHRASE = "passPhrase";
 export const ZEROHASH_HOST = "host";
 export const ZEROHASH_PLATFORM_CODE = "platformCode";
 
+export const ELLIPTIC_CONFIG_KEY = "elliptic";
+export const ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameforApiKey";
+export const ELLIPTIC_API_KEY = "apiKey";
+export const ELLIPTIC_BASE_URL = "baseUrl";
+
 export const KMS_CONFIG_CONTEXT_KEY = "context";
 export const KMS_CONFIG_KEY = "kms";
 export const KMS_CONTEXT_STAGE = "stage";

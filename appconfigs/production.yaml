@@ -89,6 +89,11 @@ zerohash:
   host: ""
   platformCode: ""
 
+elliptic:
+  awsSecretNameForApiKey: "PROD_ELLIPTIC_API_KEY"
+  apiKey: ""
+  baseUrl: "https://aml-api.elliptic.co/v2"
+
 configuration:
   lowAmountThreshold: 50
   highAmountThreshold: 200

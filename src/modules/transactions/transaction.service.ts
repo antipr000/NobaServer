@@ -36,6 +36,8 @@ import {
 import { Utils } from "../../core/utils/Utils";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
+import { WalletExposureResponse } from "../common/domain/WalletExposureResponse";
+import { EllipticService } from "../common/elliptic.service";
 
 @Injectable()
 export class TransactionService {
@@ -49,6 +51,7 @@ export class TransactionService {
     private readonly consumerService: ConsumerService,
     private readonly assetServiceFactory: AssetServiceFactory,
     private readonly partnerService: PartnerService,
+    private readonly ellipticService: EllipticService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     @Inject(EmailService) private readonly emailService: EmailService,
@@ -338,10 +341,14 @@ export class TransactionService {
 
     if (result.status !== KYCStatus.APPROVED) {
       // TODO(#310) Log the details to the transaction (transactionExceptions[])
-      this.logger.debug(`Failed to make transaction. Reason: Sardine risk level is high, ${JSON.stringify(result)}`);
+      this.logger.debug(
+        `Failed to make transaction. Reason: KYC Provider has tagged the transaction as high risk. ${JSON.stringify(
+          result,
+        )}`,
+      );
       throw new TransactionSubmissionException(
         TransactionSubmissionFailureExceptionText.SANCTIONED_TRANSACTION,
-        "AmlDetected",
+        "HighRiskTransaction",
         "Transaction has been detected to be high risk",
       );
     }
@@ -398,6 +405,11 @@ export class TransactionService {
     );
 
     return withinSlippage;
+  }
+
+  async analyzeTransactionWalletExposure(transactionID: string): Promise<WalletExposureResponse> {
+    const transaction = await this.transactionsRepo.getTransaction(transactionID);
+    return this.ellipticService.transactionAnalysis(transaction);
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
