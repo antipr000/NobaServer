@@ -1,9 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class CurrencyDTO {
-  type?: string;
+  @ApiProperty()
+  type: string;
 
-  provider?: string;
+  @ApiProperty()
+  provider: string;
 
   @ApiProperty()
   name: string; // AAVE.ETH, for example
