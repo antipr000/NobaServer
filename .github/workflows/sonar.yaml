@@ -30,6 +30,8 @@ jobs:
       - name: Test and coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: yarn jest --verbose --silent --coverage --runInBand
 
       - uses: sonarsource/sonarqube-scan-action@master
