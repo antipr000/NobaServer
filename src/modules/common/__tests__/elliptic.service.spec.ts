@@ -10,6 +10,7 @@ import {
   EllipticTransactionAnalysisResponse,
 } from "../domain/EllipticTransactionAnalysisTypes";
 import { BadRequestException } from "@nestjs/common";
+import { createHmac } from "crypto";
 
 describe("Elliptic Tests", () => {
   jest.setTimeout(10000);
@@ -23,6 +24,7 @@ describe("Elliptic Tests", () => {
         TestConfigModule.registerAsync({
           elliptic: {
             apiKey: "fake-api-key",
+            secretKey: "fake-secret-key",
             baseUrl: "fake-base-url",
           },
         }),
@@ -153,5 +155,6 @@ describe("Elliptic Tests", () => {
 });
 
 function computeSignature(requestBody: string, timestamp: number, requestUrl: string, requestMethod: string) {
-  return `${timestamp}${requestMethod}${requestUrl}${requestBody}`;
+  const plainText = `${timestamp}${requestMethod}${requestUrl}${requestBody}`;
+  return createHmac("sha256", Buffer.from("fake-secret-key", "base64")).update(plainText).digest("base64");
 }

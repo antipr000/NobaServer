@@ -13,6 +13,7 @@ import { MongoDBLockRepo } from "./repo/MongoDBLockRepo";
 import { LockService } from "./lock.service";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
+import { EllipticService } from "./elliptic.service";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -32,6 +33,7 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
       useClass: MongoDBLockRepo,
     },
     LockService,
+    EllipticService,
   ],
   exports: [
     CsvService,
@@ -44,6 +46,7 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
     LocationService,
     ConfigurationProviderService,
     LockService,
+    EllipticService,
   ],
 })
 export class CommonModule {}

@@ -87,6 +87,8 @@ import {
   ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
   ELLIPTIC_API_KEY,
   ELLIPTIC_BASE_URL,
+  ELLIPTIC_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR,
+  ELLIPTIC_SECRET_KEY,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 import * as os from "os";
@@ -512,6 +514,7 @@ async function configureEllipticCredentials(
       "\n'Elliptic' configurations are required. Please configure the Elliptic credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${ELLIPTIC_CONFIG_KEY}" and populate ` +
       `("${ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR}" or "${ELLIPTIC_API_KEY}"), ` +
+      `("${ELLIPTIC_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR}" or "${ELLIPTIC_SECRET_KEY}"), ` +
       `"${ELLIPTIC_BASE_URL}"), ` +
       "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
 
@@ -519,6 +522,10 @@ async function configureEllipticCredentials(
   }
 
   ellipticConfigs.apiKey = await getParameterValue(ellipticConfigs.awsSecretNameforApiKey, ellipticConfigs.apiKey);
+  ellipticConfigs.secretKey = await getParameterValue(
+    ellipticConfigs.awsSecretNameForSecretKey,
+    ellipticConfigs.secretKey,
+  );
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
   return configs;

@@ -95,7 +95,9 @@ zerohash:
 
 elliptic:
   awsSecretNameForApiKey: ""
-  apiKey: ""
+  awsSecretNameForSecretKey: ""
+  apiKey: "test-api-key"
+  secretKey: "test-secret-key"
   baseUrl: "https://aml-api.elliptic.co/v2"
 
 configuration:

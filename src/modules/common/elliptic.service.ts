@@ -11,16 +11,19 @@ import {
   EllipticTransactionAnalysisRequest,
   EllipticTransactionAnalysisResponse,
 } from "./domain/EllipticTransactionAnalysisTypes";
+import { createHmac } from "crypto";
 
 @Injectable()
 export class EllipticService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
 
   private apiKey: string;
+  private secretKey: string;
   private baseUrl: string;
 
   constructor(private readonly configService: CustomConfigService) {
     this.apiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).apiKey;
+    this.secretKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).secretKey;
     this.baseUrl = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).baseUrl;
   }
 
@@ -29,7 +32,11 @@ export class EllipticService {
 
     const timestamp = Date.now(); // Same as new Date().getTime() but makes mocking easier
 
-    const signature = `${timestamp}${requestMethod}${requestPath}${JSON.stringify(requestBody)}`;
+    const signaturePlainText = `${timestamp}${requestMethod}${requestPath}${JSON.stringify(requestBody)}`;
+
+    const signature = createHmac("sha256", Buffer.from(this.secretKey, "base64"))
+      .update(signaturePlainText)
+      .digest("base64");
 
     if (requestMethod === "POST") {
       try {
