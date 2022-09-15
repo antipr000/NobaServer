@@ -94,7 +94,7 @@ elliptic:
   awsSecretNameForSecretKey: "PROD_ELLIPTIC_SECRET"
   apiKey: ""
   secretKey: ""
-  baseUrl: "https://app.elliptic.co/navigator/"
+  baseUrl: "https://aml-api.elliptic.co/v2"
 
 configuration:
   lowAmountThreshold: 50
