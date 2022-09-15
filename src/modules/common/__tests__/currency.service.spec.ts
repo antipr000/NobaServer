@@ -65,8 +65,7 @@ describe("CurrencyService", () => {
     it("Should return the full set of cryptocurrencies", async () => {
       const cryptoCurrencies = await currencyService.getSupportedCryptocurrencies();
 
-      // These assertions should change every time we update CreditCardDTO.unsupportedIssuers or all_bins.csv
-      expect(cryptoCurrencies.length).toEqual(43);
+      expect(cryptoCurrencies.length).toBeGreaterThan(40);
     });
 
     it("Contains Ethereum", async () => {
