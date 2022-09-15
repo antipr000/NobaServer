@@ -43,12 +43,12 @@ import { CurrencyService } from "../../../modules/common/currency.service";
 
 @Injectable()
 export class DefaultAssetService implements AssetService {
-  private readonly nobaTransactionConfigs: NobaTransactionConfigs;
+  protected readonly nobaTransactionConfigs: NobaTransactionConfigs;
 
   constructor(
-    private readonly currencyService: CurrencyService,
-    private readonly zerohashService: ZeroHashService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    protected readonly currencyService: CurrencyService,
+    protected readonly zerohashService: ZeroHashService,
+    @Inject(WINSTON_MODULE_PROVIDER) protected readonly logger: Logger,
     configService: CustomConfigService,
   ) {
     this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
@@ -75,7 +75,7 @@ export class DefaultAssetService implements AssetService {
     const fiatAmountAfterAllChargesWithSpread: number =
       fiatAmountAfterAllChargesWithoutSpread / (1 + nobaSpreadPercent);
 
-    const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForFixedFiatCurrency(
+    const zhQuote: ZerohashQuote = await this.getQuoteFromLiquidityProviderFiatFixed(
       request.cryptoCurrency,
       request.fiatCurrency,
       fiatAmountAfterAllChargesWithSpread,
@@ -114,7 +114,7 @@ export class DefaultAssetService implements AssetService {
       processingFeeInFiat: totalCreditCardFeeInFiat,
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread,
       totalCryptoQuantity: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
-      totalFiatAmount: request.fiatAmount,
+      totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
       perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
       perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
       quoteID: zhQuote.quoteID,
@@ -133,7 +133,7 @@ export class DefaultAssetService implements AssetService {
       request.fiatCurrency,
     );
 
-    const zhQuote: ZerohashQuote = await this.zerohashService.requestQuoteForDesiredCryptoQuantity(
+    const zhQuote: ZerohashQuote = await this.getQuoteFromLiquidityProviderCryptoFixed(
       request.cryptoCurrency,
       request.fiatCurrency,
       request.cryptoQuantity,
@@ -189,11 +189,31 @@ export class DefaultAssetService implements AssetService {
       processingFeeInFiat: totalCreditCardFeeInFiat,
       amountPreSpread: rawFiatAmountForRequestedCryptoPreSpread,
       totalCryptoQuantity: request.cryptoQuantity,
-      totalFiatAmount: finalFiatAmount,
+      totalFiatAmount: Utils.roundTo2DecimalNumber(finalFiatAmount),
       perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
       perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
       quoteID: zhQuote.quoteID,
     };
+  }
+
+  protected async getQuoteFromLiquidityProviderFiatFixed(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    fiatAmount: number,
+  ): Promise<ZerohashQuote> {
+    return await this.zerohashService.requestQuoteForFixedFiatCurrency(cryptoCurrency, fiatCurrency, fiatAmount);
+  }
+
+  protected async getQuoteFromLiquidityProviderCryptoFixed(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    cryptoQuantity: number,
+  ): Promise<ZerohashQuote> {
+    return await this.zerohashService.requestQuoteForDesiredCryptoQuantity(
+      cryptoCurrency,
+      fiatCurrency,
+      cryptoQuantity,
+    );
   }
 
   /**
@@ -258,7 +278,7 @@ export class DefaultAssetService implements AssetService {
     };
   }
 
-  async pollEecuteQuoteForFundsAvailabilityStatus(id: string): Promise<ExecutedQuoteStatus> {
+  async pollExecuteQuoteForFundsAvailabilityStatus(id: string): Promise<ExecutedQuoteStatus> {
     const tradeResponse: ZerohashTradeResponse = await this.zerohashService.checkTradeStatus(id);
 
     try {

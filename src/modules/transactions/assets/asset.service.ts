@@ -19,7 +19,7 @@ export interface AssetService {
   getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote>;
 
   executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote>;
-  pollEecuteQuoteForFundsAvailabilityStatus(id: string): Promise<ExecutedQuoteStatus>;
+  pollExecuteQuoteForFundsAvailabilityStatus(id: string): Promise<ExecutedQuoteStatus>;
 
   makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse>;
   pollFundsAvailableStatus(id: string): Promise<FundsAvailabilityStatus>;

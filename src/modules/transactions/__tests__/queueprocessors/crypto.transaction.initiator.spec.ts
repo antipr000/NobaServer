@@ -273,7 +273,7 @@ describe("CryptoTransactionInitiator", () => {
         perUnitCryptoPriceWithSpread,
       },
     });
-    when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
+    when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,
@@ -329,7 +329,7 @@ describe("CryptoTransactionInitiator", () => {
         perUnitCryptoPriceWithSpread,
       },
     });
-    when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
+    when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,
@@ -369,7 +369,7 @@ describe("CryptoTransactionInitiator", () => {
 
     const assetServiceInstance = instance(assetService);
     when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
-    when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
+    when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,
@@ -477,7 +477,7 @@ describe("CryptoTransactionInitiator", () => {
       cryptoReceived: cryptoAmount,
       tradeID: "exectued_quote_trade_id",
     });
-    when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
+    when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,
@@ -535,7 +535,7 @@ describe("CryptoTransactionInitiator", () => {
       cryptoReceived: cryptoAmount,
       tradeID: "exectued_quote_trade_id",
     });
-    when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
+    when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,
@@ -597,7 +597,7 @@ describe("CryptoTransactionInitiator", () => {
       cryptoReceived: cryptoAmount * 2,
       tradeID: "exectued_quote_trade_id",
     });
-    when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
+    when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,
@@ -659,7 +659,7 @@ describe("CryptoTransactionInitiator", () => {
       cryptoReceived: cryptoAmount,
       tradeID: "exectued_quote_trade_id",
     });
-    when(assetService.pollEecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
+    when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("exectued_quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,

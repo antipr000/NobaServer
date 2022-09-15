@@ -9,6 +9,8 @@ export enum PollStatus {
   FATAL_ERROR = "internal_error",
 }
 
+export const TRADE_TYPE_FIXED = "FIXED";
+
 export interface ExecutedQuote {
   tradeID: string;
   tradePrice: number;
