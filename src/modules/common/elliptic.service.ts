@@ -15,26 +15,42 @@ import {
 @Injectable()
 export class EllipticService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
-  @Inject(CustomConfigService) private readonly configService: CustomConfigService;
+
+  private apiKey: string;
+  private baseUrl: string;
+
+  constructor(private readonly configService: CustomConfigService) {
+    this.apiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).apiKey;
+    this.baseUrl = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).baseUrl;
+  }
 
   private async makeRequest(requestMethod: string, requestPath: string, requestBody: any): Promise<AxiosResponse<any>> {
-    const apiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).apiKey;
-    const baseUrl = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).baseUrl;
-
-    const url = `${baseUrl}${requestPath}`;
+    const url = `${this.baseUrl}${requestPath}`;
 
     const timestamp = Date.now(); // Same as new Date().getTime() but makes mocking easier
 
     const signature = `${timestamp}${requestMethod}${requestPath}${JSON.stringify(requestBody)}`;
 
     if (requestMethod === "POST") {
-      return axios.post(url, requestBody, {
-        headers: {
-          "x-access-key": apiKey,
-          "x-access-sign": signature,
-          "x-access-timestamp": timestamp,
-        },
-      });
+      try {
+        const response = await axios.post(url, requestBody, {
+          headers: {
+            "x-access-key": this.apiKey,
+            "x-access-sign": signature,
+            "x-access-timestamp": timestamp,
+          },
+        });
+        return response;
+      } catch (e) {
+        this.logger.error(
+          `Error with Elliptic ${requestMethod} ${requestPath} API call with payload ${JSON.stringify(
+            requestBody,
+          )}. ${JSON.stringify(e)}`,
+        );
+        throw e;
+      }
+    } else {
+      throw new Error("Not supported!");
     }
   }
 

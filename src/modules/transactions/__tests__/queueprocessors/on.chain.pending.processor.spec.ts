@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Collection, MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anything, capture, instance, when, verify, deepEqual } from "ts-mockito";
 import {
   MONGO_CONFIG_KEY,
   MONGO_URI,
@@ -224,6 +224,7 @@ describe("OnChainPendingProcessor", () => {
     when(sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transaction.props._id)).thenResolve("");
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+    when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve({ riskScore: 10 });
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);
 
@@ -231,6 +232,11 @@ describe("OnChainPendingProcessor", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.PENDING);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
+    verify(
+      transactionService.analyzeTransactionWalletExposure(
+        deepEqual(Transaction.createTransaction(allTransactionsInDb[0])),
+      ),
+    ).never();
   });
 
   it("should process a transaction that's in CRYPTO_OUTGOING_COMPLETED status", async () => {
@@ -270,6 +276,7 @@ describe("OnChainPendingProcessor", () => {
       ),
     ).thenResolve();
     when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
+    when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve();
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);
 
@@ -279,6 +286,11 @@ describe("OnChainPendingProcessor", () => {
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
       transaction.props.lastStatusUpdateTimestamp,
     );
+    verify(
+      transactionService.analyzeTransactionWalletExposure(
+        deepEqual(Transaction.createTransaction(allTransactionsInDb[0])),
+      ),
+    ).never();
   });
 
   it("should not process a transaction that's in CRYPTO_OUTGOING_COMPLETED status if POLL status is PENDING", async () => {
@@ -325,6 +337,11 @@ describe("OnChainPendingProcessor", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.CRYPTO_OUTGOING_COMPLETED);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
+    verify(
+      transactionService.analyzeTransactionWalletExposure(
+        deepEqual(Transaction.createTransaction(allTransactionsInDb[0])),
+      ),
+    ).never();
   });
 
   it("should resets the transaction to CRYPTO_OUTGOING_INITIATED if POLL status is RETRYABLE_FAILURE", async () => {
@@ -365,6 +382,11 @@ describe("OnChainPendingProcessor", () => {
       transaction.props.lastStatusUpdateTimestamp,
     );
     expect(allTransactionsInDb[0].zhWithdrawalID).toBeUndefined();
+    verify(
+      transactionService.analyzeTransactionWalletExposure(
+        deepEqual(Transaction.createTransaction(allTransactionsInDb[0])),
+      ),
+    ).never();
   });
 
   it("should fail transaction that's in CRYPTO_OUTGOING_COMPLETED status if POLL status is FAILED", async () => {
@@ -405,6 +427,7 @@ describe("OnChainPendingProcessor", () => {
       ),
     ).thenResolve();
     when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
+    when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve();
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);
 
@@ -412,5 +435,10 @@ describe("OnChainPendingProcessor", () => {
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FAILED);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
+    verify(
+      transactionService.analyzeTransactionWalletExposure(
+        deepEqual(Transaction.createTransaction(allTransactionsInDb[0])),
+      ),
+    ).never();
   });
 });

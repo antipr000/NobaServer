@@ -1,3 +1,4 @@
+import mockAxios from "jest-mock-axios";
 const FAKE_VALID_WALLET = "fake-valid-wallet";
 
 jest.mock("multicoin-address-validator", () => ({
@@ -8,7 +9,6 @@ jest.mock("multicoin-address-validator", () => ({
 }));
 
 import { Test, TestingModule } from "@nestjs/testing";
-import mockAxios from "jest-mock-axios";
 import { anyString, anything, deepEqual, instance, reset, verify, when } from "ts-mockito";
 import {
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
@@ -768,7 +768,7 @@ describe("TransactionService", () => {
         partner.props.webhooks[0],
       );
 
-      // const responsePromise = transactionService.callTransactionConfirmWebhook(consumer, transaction);
+      const responsePromise = transactionService.callTransactionConfirmWebhook(consumer, transaction);
       // expect(mockAxios.post).toHaveBeenCalled();
       // mockAxios.mockResponse({
       //   status: 200,
@@ -1256,10 +1256,9 @@ describe("TransactionService", () => {
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
-      when(transactionRepo.getTransaction(transactionID)).thenResolve(transaction);
       when(ellipticService.transactionAnalysis(anything())).thenResolve({ riskScore: 10 });
 
-      const result = await transactionService.analyzeTransactionWalletExposure(transactionID);
+      const result = await transactionService.analyzeTransactionWalletExposure(transaction);
       expect(result.riskScore).toBe(10);
       verify(ellipticService.transactionAnalysis(deepEqual(transaction))).once();
     });

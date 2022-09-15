@@ -96,6 +96,13 @@ export class OnChainPendingProcessor extends MessageProcessor {
       return;
     }
 
+    // TODO: Figure out what to do with response
+    try {
+      console.log("Transaction is", transaction);
+      const walletExposureResponse = await this.transactionService.analyzeTransactionWalletExposure(transaction);
+    } catch (e) {
+      // pass
+    }
     // Make webhook callback to partner
     await this.transactionService.callTransactionConfirmWebhook(consumer, transaction);
 

@@ -340,7 +340,6 @@ export class TransactionService {
     }
 
     if (result.status !== KYCStatus.APPROVED) {
-      // TODO(#310) Log the details to the transaction (transactionExceptions[])
       this.logger.debug(
         `Failed to make transaction. Reason: KYC Provider has tagged the transaction as high risk. ${JSON.stringify(
           result,
@@ -407,8 +406,7 @@ export class TransactionService {
     return withinSlippage;
   }
 
-  async analyzeTransactionWalletExposure(transactionID: string): Promise<WalletExposureResponse> {
-    const transaction = await this.transactionsRepo.getTransaction(transactionID);
+  async analyzeTransactionWalletExposure(transaction: Transaction): Promise<WalletExposureResponse> {
     return this.ellipticService.transactionAnalysis(transaction);
   }
 
@@ -444,12 +442,8 @@ export class TransactionService {
     };
 
     try {
-      const { status, statusText } = await axios.post(webhook.url, payload, this.getAxiosConfig(partner));
-      if (status != 200) {
-        this.logger.error(
-          `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${status}-${statusText}`,
-        );
-      }
+      const config = this.getAxiosConfig(partner);
+      await axios.post(webhook.url, payload, config);
     } catch (err) {
       this.logger.error(
         `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${err.message}`,
