@@ -83,8 +83,8 @@ zerohash:
   platformCode: ""
 
 elliptic:
-  awsSecretNameForApiKey: "TEST_ELLIPTIC_API_KEY"
-  awsSecretNameForSecretKey: "TEST_ELLIPTIC_SECRET_KEY"
+  awsSecretNameForApiKey: "TEST_ELLIPTIC_KEY"
+  awsSecretNameForSecretKey: "TEST_ELLIPTIC_SECRET"
   apiKey: ""
   secretKey: ""
   baseUrl: "https://aml-api.elliptic.co/v2"

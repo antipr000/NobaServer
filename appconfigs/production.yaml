@@ -90,11 +90,11 @@ zerohash:
   platformCode: ""
 
 elliptic:
-  awsSecretNameForApiKey: "PROD_ELLIPTIC_API_KEY"
-  awsSecretNameForSecretKey: "PROD_ELLIPTIC_SECRET_KEY"
+  awsSecretNameForApiKey: "PROD_ELLIPTIC_KEY"
+  awsSecretNameForSecretKey: "PROD_ELLIPTIC_SECRET"
   apiKey: ""
   secretKey: ""
-  baseUrl: "https://aml-api.elliptic.co/v2"
+  baseUrl: "https://app.elliptic.co/navigator/"
 
 configuration:
   lowAmountThreshold: 50
