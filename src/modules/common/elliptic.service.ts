@@ -57,7 +57,7 @@ export class EllipticService {
         throw e;
       }
     } else {
-      throw new Error("Not supported!");
+      throw new Error(`${requestMethod} is not valid for calling Elliptic.`);
     }
   }
 
