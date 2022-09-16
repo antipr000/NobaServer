@@ -477,7 +477,7 @@ async function configureZerohashCredentials(
     throw Error(errorMessage);
   }
 
-  zerohashConfigs.apiKey = await getParameterValue(zerohashConfigs.awsSecretNameforApiKey, zerohashConfigs.apiKey);
+  zerohashConfigs.apiKey = await getParameterValue(zerohashConfigs.awsSecretNameForApiKey, zerohashConfigs.apiKey);
   zerohashConfigs.apiSecret = await getParameterValue(
     zerohashConfigs.awsSecretNameForApiSecret,
     zerohashConfigs.apiSecret,
@@ -505,7 +505,7 @@ async function configureEllipticCredentials(
   configs: Record<string, any>,
 ): Promise<Record<string, any>> {
   const ellipticConfigs: EllipticConfigs = configs[ELLIPTIC_CONFIG_KEY];
-
+  console.log(`Elliptic configs: ${ellipticConfigs}`);
   if (ellipticConfigs === undefined) {
     const errorMessage =
       "\n'Elliptic' configurations are required. Please configure the Elliptic credentials in 'appconfigs/<ENV>.yaml' file.\n" +
@@ -525,6 +525,7 @@ async function configureEllipticCredentials(
   );
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
+
   return configs;
 }
 
