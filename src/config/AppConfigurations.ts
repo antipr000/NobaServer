@@ -517,7 +517,7 @@ async function configureEllipticCredentials(
     throw Error(errorMessage);
   }
 
-  ellipticConfigs.apiKey = await getParameterValue(ellipticConfigs.awsSecretNameforApiKey, ellipticConfigs.apiKey);
+  ellipticConfigs.apiKey = await getParameterValue(ellipticConfigs.awsSecretNameForApiKey, ellipticConfigs.apiKey);
   ellipticConfigs.secretKey = await getParameterValue(
     ellipticConfigs.awsSecretNameForSecretKey,
     ellipticConfigs.secretKey,
