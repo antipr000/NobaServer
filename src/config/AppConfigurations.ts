@@ -247,7 +247,6 @@ async function configureAllVendorCredentials(
     configureZerohashCredentials,
     configureAwsKmsCredentials,
     configureCommonConfigurations,
-    configureEllipticCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
