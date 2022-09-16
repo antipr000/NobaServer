@@ -84,6 +84,8 @@ zerohash:
   passPhrase: "noba_zerohash_sandbox"
   host: "api.cert.zerohash.com"
   platformCode: "6MWNG6"
+  proxyServerIP: ""
+  proxyServerPort:
 
 elliptic:
   awsSecretNameForApiKey: ""
