@@ -51,8 +51,6 @@ import {
   ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR,
   ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR,
   ZEROHASH_HOST,
-  ZEROHASH_PROXY_SERVER_ID,
-  ZEROHASH_PROXY_SERVER_PORT,
   KMS_CONFIG_KEY,
   KMS_CONFIG_CONTEXT_KEY,
   KMS_CONTEXT_STAGE,
@@ -245,6 +243,7 @@ async function configureAllVendorCredentials(
     configureZerohashCredentials,
     configureAwsKmsCredentials,
     configureCommonConfigurations,
+    configureEllipticCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -496,6 +495,7 @@ async function configureZerohashCredentials(
     zerohashConfigs.platformCode,
   );
 
+  console.log(`Zerohash config: ${zerohashConfigs}`);
   configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
   return configs;
 }
