@@ -82,7 +82,7 @@ export class ZeroHashService {
         ? null
         : tunnel.httpsOverHttp({ proxy: { host: this.configs.proxyServerIP, port: this.configs.proxyServerPort } });
 
-    const axiosInstance = axios.create({
+    const axiosConfig = {
       baseURL: `https://${this.configs.host}`,
       headers: {
         "X-SCX-API-KEY": this.configs.apiKey,
@@ -93,7 +93,9 @@ export class ZeroHashService {
       method: method,
       httpsAgent: agent,
       data: body,
-    });
+    };
+    this.logger.info(`Axios: ${axiosConfig}`);
+    const axiosInstance = axios.create(axiosConfig);
 
     const requestString = `[${method} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
     this.logger.info(`Sending ZeroHash request: ${requestString}`);
