@@ -462,7 +462,6 @@ async function configureZerohashCredentials(
   configs: Record<string, any>,
 ): Promise<Record<string, any>> {
   const zerohashConfigs: ZerohashConfigs = configs[ZEROHASH_CONFIG_KEY];
-  console.log(`Zerohash configs before: ${JSON.stringify(zerohashConfigs)}`);
   if (zerohashConfigs === undefined) {
     const errorMessage =
       "\n'Zerohash' configurations are required. Please configure the Zerohash credentials in 'appconfigs/<ENV>.yaml' file.\n" +
@@ -495,7 +494,6 @@ async function configureZerohashCredentials(
     zerohashConfigs.platformCode,
   );
 
-  console.log(`Zerohash configs after: ${JSON.stringify(zerohashConfigs)}`);
   configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
   return configs;
 }
@@ -505,7 +503,7 @@ async function configureEllipticCredentials(
   configs: Record<string, any>,
 ): Promise<Record<string, any>> {
   const ellipticConfigs: EllipticConfigs = configs[ELLIPTIC_CONFIG_KEY];
-  console.log(`Elliptic configs before: ${JSON.stringify(ellipticConfigs)}`);
+
   if (ellipticConfigs === undefined) {
     const errorMessage =
       "\n'Elliptic' configurations are required. Please configure the Elliptic credentials in 'appconfigs/<ENV>.yaml' file.\n" +
@@ -524,7 +522,7 @@ async function configureEllipticCredentials(
     ellipticConfigs.secretKey,
   );
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
-  console.log(`Elliptic configs after: ${JSON.stringify(ellipticConfigs)}`);
+
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
 
   return configs;
