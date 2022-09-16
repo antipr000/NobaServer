@@ -80,7 +80,7 @@ export class ZeroHashService {
     const agent =
       getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
         ? null
-        : tunnel.httpsOverHttp({ proxy: { protocol: "http", host: "172.31.8.170", port: 3128 } });
+        : tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: 3128 } });
 
     const axiosInstance = axios.create({
       baseURL: `https://${this.configs.host}:443`,
