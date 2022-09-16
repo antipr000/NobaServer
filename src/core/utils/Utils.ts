@@ -21,11 +21,11 @@ export class Utils {
   }
 
   private static round(num, decimalPlaces: number): string {
-    var shift = function (value, exponent: number) {
+    const shift = function (value, exponent: number) {
       value = (value + "e").split("e");
       return +(value[0] + "e" + (+value[1] + (exponent || 0)));
     };
-    var n = shift(num, +decimalPlaces);
+    const n = shift(num, +decimalPlaces);
     return shift(Math.round(n), -decimalPlaces).toFixed(decimalPlaces);
   }
 }

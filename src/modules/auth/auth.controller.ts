@@ -11,7 +11,6 @@ import {
 import {
   ApiForbiddenResponse,
   ApiHeaders,
-  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,

@@ -21,7 +21,7 @@ describe("CreditCardService", () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
-          CCBIN_DATA_FILE_PATH: `./appconfigs/all_bins.csv`,
+          CCBIN_DATA_FILE_PATH: "./appconfigs/all_bins.csv",
         }),
         getTestWinstonModule(),
       ],

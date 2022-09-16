@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { AppController } from "../app.controller";
 import { AppService } from "../app.service";
-import { anything, deepEqual, instance, when } from "ts-mockito";
+import { anything, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../core/utils/WinstonModule";
 import { getMockAppServiceWithDefaults } from "../mocks/mock.app.service";

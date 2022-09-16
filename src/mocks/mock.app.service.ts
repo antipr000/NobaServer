@@ -1,5 +1,5 @@
 import { AppService } from "../app.service";
-import { mock, when } from "ts-mockito";
+import { mock } from "ts-mockito";
 
 export function getMockAppServiceWithDefaults(): AppService {
   const mockAppService = mock(AppService);

@@ -26,6 +26,8 @@ export const CCBIN_DATA_FILE_NAME_MASK = "ccBINDataFileNameMask";
 export const CCBIN_DATA_FILE_PATH = "CCBIN_DATA_FILE_PATH";
 export const SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME = "supportedCryptoBucketName";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH = "supportedCryptoFileBucketPath";
+export const SANCTIONED_CRYPTO_WALLETS_BUCKET_NAME = "sanctionedCryptoWalletsBucketName";
+export const SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH = "sanctionedCryptoWalletsFileBucketPath";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
 export const AWS_SECRET_ACCESS_KEY_ATTR = "awsSecretAccessKey";
