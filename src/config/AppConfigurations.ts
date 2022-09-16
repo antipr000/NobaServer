@@ -476,24 +476,44 @@ async function configureZerohashCredentials(
 
     throw Error(errorMessage);
   }
+  try {
+    zerohashConfigs.apiKey = await getParameterValue(zerohashConfigs.awsSecretNameForApiKey, zerohashConfigs.apiKey);
+  } catch (e) {
+    console.log("Zerohash: API Key Error");
+  }
 
-  zerohashConfigs.apiKey = await getParameterValue(zerohashConfigs.awsSecretNameForApiKey, zerohashConfigs.apiKey);
-  zerohashConfigs.apiSecret = await getParameterValue(
-    zerohashConfigs.awsSecretNameForApiSecret,
-    zerohashConfigs.apiSecret,
-  );
+  try {
+    zerohashConfigs.apiSecret = await getParameterValue(
+      zerohashConfigs.awsSecretNameForApiSecret,
+      zerohashConfigs.apiSecret,
+    );
+  } catch (e) {
+    console.log("Zerohash: API Secret Error");
+  }
 
-  zerohashConfigs.passPhrase = await getParameterValue(
-    zerohashConfigs.awsSecretNameForPassPhrase,
-    zerohashConfigs.passPhrase,
-  );
+  try {
+    zerohashConfigs.passPhrase = await getParameterValue(
+      zerohashConfigs.awsSecretNameForPassPhrase,
+      zerohashConfigs.passPhrase,
+    );
+  } catch (e) {
+    console.log("Zerohash: Passphrase Error");
+  }
 
-  zerohashConfigs.host = await getParameterValue(zerohashConfigs.awsSecretNameForHost, zerohashConfigs.host);
+  try {
+    zerohashConfigs.host = await getParameterValue(zerohashConfigs.awsSecretNameForHost, zerohashConfigs.host);
+  } catch (e) {
+    console.log("Zerohash: Host Error");
+  }
 
-  zerohashConfigs.platformCode = await getParameterValue(
-    zerohashConfigs.awsSecretNameForPlatformCode,
-    zerohashConfigs.platformCode,
-  );
+  try {
+    zerohashConfigs.platformCode = await getParameterValue(
+      zerohashConfigs.awsSecretNameForPlatformCode,
+      zerohashConfigs.platformCode,
+    );
+  } catch (e) {
+    console.log("Zerohash: Platform Code Error");
+  }
 
   console.log(`Zerohash configs after: ${JSON.stringify(zerohashConfigs)}`);
   configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
