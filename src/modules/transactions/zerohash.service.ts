@@ -98,8 +98,11 @@ export class ZeroHashService {
 
     const axiosInstance = axios.create(axiosConfig);
 
-    const requestString = `[${method} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
+    const requestString = `[${method} ${this.configs.host}${route}]`;
     this.logger.info(`Sending ZeroHash request: ${requestString}`);
+    if (method !== "GET") {
+      this.logger.debug(`Body: ${JSON.stringify(body)}`);
+    }
 
     try {
       const { data } = await axiosInstance.request(axiosConfig);

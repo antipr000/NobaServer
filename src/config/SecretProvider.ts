@@ -12,7 +12,7 @@ export class SecretProvider {
       new SecretsManager().getSecretValue({ SecretId: secretName }, function (err, data) {
         if (err) {
           console.log(
-            `Error while fetching secret "${secretName}" from secrets manager. Will return null.\nError ${err}\nData ${data}`,
+            `Error while fetching secret "${secretName}" from secrets manager. Will return null.\nError ${err}`,
           );
           resolve(null);
         } else {
