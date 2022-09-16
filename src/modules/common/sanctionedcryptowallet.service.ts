@@ -5,7 +5,7 @@ import { ASSETS_BUCKET_NAME, SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH } from "
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Injectable()
-export class CryptoWalletService {
+export class SanctionedCryptoWalletService {
   private cryptoWallets: string[];
   private isCryptoWalletLoaded: boolean;
 

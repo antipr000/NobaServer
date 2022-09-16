@@ -4,10 +4,10 @@ import { AWS_ACCESS_KEY_ID_ATTR, AWS_SECRET_ACCESS_KEY_ATTR } from "../../../con
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { readConfigsFromYamlFiles } from "../../../core/utils/YamlJsonUtils";
-import { CryptoWalletService } from "../cryptowallet.service";
+import { SanctionedCryptoWalletService } from "../sanctionedcryptowallet.service";
 
-describe("CryptoWalletService", () => {
-  let cryptoWalletService: CryptoWalletService;
+describe("SanctionedCryptoWalletService", () => {
+  let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
 
   jest.setTimeout(30000);
 
@@ -52,21 +52,21 @@ describe("CryptoWalletService", () => {
         getTestWinstonModule(),
       ],
       controllers: [],
-      providers: [CryptoWalletService],
+      providers: [SanctionedCryptoWalletService],
     }).compile();
 
-    cryptoWalletService = app.get<CryptoWalletService>(CryptoWalletService);
+    sanctionedCryptoWalletService = app.get<SanctionedCryptoWalletService>(SanctionedCryptoWalletService);
   });
 
   describe("isSanctionedWallet", () => {
     it("Should return false for a wallet that is not sanctioned", async () => {
-      const isWalletSanctioned = await cryptoWalletService.isWalletSanctioned("12345");
+      const isWalletSanctioned = await sanctionedCryptoWalletService.isWalletSanctioned("12345");
 
       expect(isWalletSanctioned).toBeFalsy();
     });
 
     it("Should return true for a wallet that is sanctioned", async () => {
-      const isWalletSanctioned = await cryptoWalletService.isWalletSanctioned("3QJyT8nThEQakbfqgX86YjCK1Sp9hfNCUW");
+      const isWalletSanctioned = await sanctionedCryptoWalletService.isWalletSanctioned("3QJyT8nThEQakbfqgX86YjCK1Sp9hfNCUW");
 
       expect(isWalletSanctioned).toBeTruthy();
     });
