@@ -60,7 +60,6 @@
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
-    "request-promise": "^4.2.6",
     "rxjs": "^7",
     "sqs-consumer": "^5.7.0",
     "sqs-producer": "^2.1.0",

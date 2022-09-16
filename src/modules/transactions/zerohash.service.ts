@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
-import axios, { Method } from "axios";
+import axios, { AxiosRequestConfig, Method } from "axios";
 import * as tunnel from "tunnel";
 import {
   BadRequestException,
@@ -82,7 +82,7 @@ export class ZeroHashService {
         ? null
         : tunnel.httpsOverHttp({ proxy: { host: this.configs.proxyServerIP, port: this.configs.proxyServerPort } });
 
-    const axiosConfig = {
+    const axiosConfig: AxiosRequestConfig = {
       baseURL: `https://${this.configs.host}`,
       headers: {
         "X-SCX-API-KEY": this.configs.apiKey,
@@ -93,20 +93,20 @@ export class ZeroHashService {
       method: method,
       httpsAgent: agent,
       data: body,
+      url: route,
     };
-    this.logger.info(`Axios: ${JSON.stringify(axiosConfig)}`);
+
     const axiosInstance = axios.create(axiosConfig);
 
     const requestString = `[${method} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
     this.logger.info(`Sending ZeroHash request: ${requestString}`);
 
     try {
-      const { data } = await axiosInstance({ url: `${route}` });
-      //this.logger.info(`Received response: ${JSON.stringify(data)}`);
+      const { data } = await axiosInstance.request(axiosConfig);
+      this.logger.debug(`Received response: ${JSON.stringify(data)}`);
       return data;
     } catch (err) {
       this.logger.error("Error in ZeroHash Request: " + err);
-      this.logger.error("Error in ZeroHash Request: " + JSON.stringify(err));
 
       if (err.response) {
         if (err.response.status === 403) {
