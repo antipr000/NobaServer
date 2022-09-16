@@ -411,8 +411,12 @@ export class TransactionService {
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
-    // Will throw an error if the currency is unknown to the tool. We should catch this in the caller and ultimately display a warning to the user that the address could not be validated.
-    return validate(destinationWalletAdress, curr);
+    // Throws an exception saying "Missing validator for currency {currency}" if it doesn't know of the currency.
+    // We should catch this in the caller and ultimately display a warning to the user that the address could not be validated.
+
+    // Strip anything from the first period onward
+    const checkCurr = curr.split(".")[0];
+    return validate(destinationWalletAdress, checkCurr);
   }
 
   private getAxiosConfig(partner: Partner): AxiosRequestConfig {
