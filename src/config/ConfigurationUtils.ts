@@ -163,11 +163,12 @@ export function setEnvironmentProperty(key: string, value: string): void {
 }
 
 export async function getParameterValue(awsSecretKey: string, customValue: string): Promise<string> {
-  if (awsSecretKey === undefined || awsSecretKey === "") {
+  if (awsSecretKey === undefined || awsSecretKey == null || awsSecretKey === "") {
     if (customValue === undefined || customValue === "") {
       throw Error(`Neither ${awsSecretKey} nor ${customValue} is set.`);
     }
     return customValue;
   }
+  console.log(`Getting parameter ${awsSecretKey} - custom value ${customValue}`);
   return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
 }
