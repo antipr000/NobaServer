@@ -1,6 +1,8 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
+import axios, { Method } from "axios";
+import * as tunnel from "tunnel";
 import {
   BadRequestException,
   Inject,
@@ -11,7 +13,7 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
-import { ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { AppEnvironment, getEnvironmentName, ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
@@ -34,7 +36,6 @@ import {
 import { Utils } from "../../core/utils/Utils";
 
 const crypto_ts = require("crypto");
-const request = require("request-promise"); // TODO(#125) This library is deprecated. We need to switch to Axios.
 
 @Injectable()
 export class ZeroHashService {
@@ -67,7 +68,7 @@ export class ZeroHashService {
     return this.configs.platformCode;
   }
 
-  async makeRequest(route, method, body?) {
+  async makeRequest(route: string, method: Method, body?: any) {
     // CREATE SIGNATURE
     const timestamp = Math.round(Date.now() / 1000);
     const payload = timestamp + method + route + JSON.stringify(body ? body : {}); // The empty {} is important when there is no body
@@ -76,45 +77,47 @@ export class ZeroHashService {
     // Don't forget to base 64 encode your digest
     const signedPayload = hmac.update(payload).digest("base64");
 
-    const headers = {
-      "X-SCX-API-KEY": this.configs.apiKey,
-      "X-SCX-SIGNED": signedPayload,
-      "X-SCX-TIMESTAMP": timestamp,
-      "X-SCX-PASSPHRASE": this.configs.passPhrase,
-    };
+    const agent =
+      getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
+        ? null
+        : tunnel.httpsOverHttp({ proxy: { protocol: "http", host: "172.31.8.170", port: 3128 } });
 
-    const derivedMethod = {
-      POST: "post",
-      PUT: "put",
-      GET: "get",
-    }[method];
+    const axiosInstance = axios.create({
+      baseURL: `https://${this.configs.host}:443`,
+      headers: {
+        "X-SCX-API-KEY": this.configs.apiKey,
+        "X-SCX-SIGNED": signedPayload,
+        "X-SCX-TIMESTAMP": timestamp,
+        "X-SCX-PASSPHRASE": this.configs.passPhrase,
+      },
+      method: method,
+      httpsAgent: agent,
+      data: body,
+    });
 
-    const options = {
-      methods: derivedMethod,
-      headers,
-      body,
-      json: true,
-    };
-
-    const requestString = `[${derivedMethod} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
+    const requestString = `[${method} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
     this.logger.info(`Sending ZeroHash request: ${requestString}`);
 
-    const response = await request[derivedMethod](`https://${this.configs.host}${route}`, options).catch(err => {
-      if (err.statusCode == 403) {
-        // Generally means we are not using a whitelisted IP to ZH
-        this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
-        throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
-      } else if (err.statusCode == 400) {
-        this.logger.error(`Error in ZeroHash request: ${requestString}`);
-        this.logger.error(JSON.stringify(err));
-        throw new BadRequestException(err);
-      } else {
-        // catch 404 in caller. This may be for known reasons (e.g. participant not created yet) so we don't want to log it here.
-        throw err;
+    try {
+      const response = await axiosInstance({ url: `${route}` });
+      this.logger.debug(`Received response: ${JSON.stringify(response.data)}`);
+      return response.data;
+    } catch (err) {
+      this.logger.error("Error in ZeroHash Request: " + JSON.stringify(err));
+
+      if (err.response) {
+        if (err.response.status === 403) {
+          // Generally means we are not using a whitelisted IP to ZH
+          this.logger.error("Unable to connect to ZeroHash; confirm whitelisted IP.");
+          throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
+        }
+        if (err.response.status === 400) {
+          this.logger.error(`Error in ZeroHash request: \n ${JSON.stringify(err)}`);
+          throw new BadRequestException(err);
+        }
       }
-    });
-    this.logger.debug(`Received response: ${JSON.stringify(response)}`);
-    return response;
+      throw err;
+    }
   }
 
   async getPrice(underlying: string, quoted_currency: string) {
