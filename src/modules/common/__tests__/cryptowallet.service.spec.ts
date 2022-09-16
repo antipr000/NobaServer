@@ -15,7 +15,7 @@ describe("CryptoWalletService", () => {
     const appConfigsDirectory = join(__dirname, "../../../../appconfigs/secrets.yaml");
 
     let configs = {
-      SANCTIONED_CRYPTO_WALLETS_BUCKET_NAME: "prod-noba-assets",
+      PROD_BUCKET_NAME: "prod-noba-assets",
       SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH: "assets/data/sanctioned_wallets.csv",
       AWS_ACCESS_KEY_ID: null,
       AWS_SECRET_ACCESS_KEY: null,
@@ -46,7 +46,7 @@ describe("CryptoWalletService", () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
-          sanctionedCryptoWalletsBucketName: configs.SANCTIONED_CRYPTO_WALLETS_BUCKET_NAME,
+          prodBucketName: configs.PROD_BUCKET_NAME,
           sanctionedCryptoWalletsFileBucketPath: configs.SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH,
         }),
         getTestWinstonModule(),

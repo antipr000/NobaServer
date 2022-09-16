@@ -18,7 +18,7 @@ describe("CurrencyService", () => {
     const appConfigsDirectory = join(__dirname, "../../../../appconfigs/secrets.yaml");
 
     let configs = {
-      SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME: "prod-noba-assets",
+      PROD_BUCKET_NAME: "prod-noba-assets",
       SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH: "assets/data/cryptocurrency_tokens_lowers.csv",
       AWS_ACCESS_KEY_ID: null,
       AWS_SECRET_ACCESS_KEY: null,
@@ -49,7 +49,7 @@ describe("CurrencyService", () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
-          supportedCryptoBucketName: configs.SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME,
+          prodBucketName: configs.PROD_BUCKET_NAME,
           supportedCryptoFileBucketPath: configs.SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH,
         }),
         getTestWinstonModule(),

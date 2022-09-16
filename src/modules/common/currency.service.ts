@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { parse } from "csv";
 import {
-  SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME,
+  PROD_BUCKET_NAME,
   SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH,
 } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
@@ -24,7 +24,7 @@ export class CurrencyService {
       const parser = parse({ delimiter: ",", columns: true });
       const s3 = new S3();
       const options = {
-        Bucket: this.configService.get(SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME),
+        Bucket: this.configService.get(PROD_BUCKET_NAME),
         Key: this.configService.get(SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH),
       };
 

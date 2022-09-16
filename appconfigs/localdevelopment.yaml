@@ -100,7 +100,6 @@ configuration:
 
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"
-supportedCryptoBucketName: "prod-noba-assets"
+prodBucketName: "prod-noba-assets"
 supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens_test.csv"
-sanctionedCryptoWalletsBucketName: "prod-noba-assets"
 sanctionedCryptoWalletsFileBucketPath: "assets/data/sanctioned_wallets.csv"

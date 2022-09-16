@@ -24,9 +24,8 @@ export const LOCATION_DATA_FILE_NAME = "locationDataFileName";
 export const LOCATION_DATA_FILE_PATH = "LOCATION_DATA_FILE_PATH";
 export const CCBIN_DATA_FILE_NAME_MASK = "ccBINDataFileNameMask";
 export const CCBIN_DATA_FILE_PATH = "CCBIN_DATA_FILE_PATH";
-export const SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME = "supportedCryptoBucketName";
+export const PROD_BUCKET_NAME = "prodBucketName";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH = "supportedCryptoFileBucketPath";
-export const SANCTIONED_CRYPTO_WALLETS_BUCKET_NAME = "sanctionedCryptoWalletsBucketName";
 export const SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH = "sanctionedCryptoWalletsFileBucketPath";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
