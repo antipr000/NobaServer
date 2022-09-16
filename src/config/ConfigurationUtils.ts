@@ -98,7 +98,7 @@ export const ZEROHASH_HOST = "host";
 export const ZEROHASH_PLATFORM_CODE = "platformCode";
 
 export const ELLIPTIC_CONFIG_KEY = "elliptic";
-export const ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameforApiKey";
+export const ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
 export const ELLIPTIC_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR = "awsSecretNameForSecretKey";
 export const ELLIPTIC_API_KEY = "apiKey";
 export const ELLIPTIC_SECRET_KEY = "secretKey";

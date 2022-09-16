@@ -81,8 +81,6 @@ import {
   COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY,
   ZEROHASH_AWS_SECRET_KEY_FOR_PLATFORM_CODE,
   ZEROHASH_PLATFORM_CODE,
-  SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME,
-  SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH,
   ELLIPTIC_CONFIG_KEY,
   ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
   ELLIPTIC_API_KEY,
@@ -163,8 +161,6 @@ export default async function loadAppConfigs() {
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
   configs[CCBIN_DATA_FILE_PATH] = join(configsDir, configs[CCBIN_DATA_FILE_NAME_MASK]);
-  configs[SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME] = configs[SUPPORTED_CRYPTO_TOKENS_BUCKET_NAME];
-  configs[SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH] = configs[SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH];
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
