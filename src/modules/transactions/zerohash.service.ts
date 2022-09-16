@@ -94,7 +94,7 @@ export class ZeroHashService {
       httpsAgent: agent,
       data: body,
     };
-    this.logger.info(`Axios: ${axiosConfig}`);
+    this.logger.info(`Axios: ${JSON.stringify(axiosConfig)}`);
     const axiosInstance = axios.create(axiosConfig);
 
     const requestString = `[${method} ${this.configs.host}${route}]:\nBody: ${JSON.stringify(body)}`;
