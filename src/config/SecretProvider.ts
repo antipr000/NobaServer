@@ -8,7 +8,6 @@ export class SecretProvider {
   // Note the 'SECRET NAME' is different than 'SECRET ARN' and this function expects 'SECRET NAME'.
   // Ref - https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SecretsManager.html#getSecretValue-property
   static async fetchSecretFromAWSSecretManager(secretName: string): Promise<string> {
-    console.log(`Secret name: ${secretName}`);
     return new Promise((resolve, reject) => {
       new SecretsManager().getSecretValue({ SecretId: secretName }, function (err, data) {
         if (err) {

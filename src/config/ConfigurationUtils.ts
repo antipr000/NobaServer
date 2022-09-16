@@ -169,6 +169,6 @@ export async function getParameterValue(awsSecretKey: string, customValue: strin
     }
     return customValue;
   }
-  console.log(`Getting parameter ${awsSecretKey} - custom value ${customValue}`);
+
   return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
 }

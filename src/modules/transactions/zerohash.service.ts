@@ -102,7 +102,7 @@ export class ZeroHashService {
 
     try {
       const response = await axiosInstance({ url: `${route}` });
-      this.logger.info(`Received response: ${JSON.stringify(response.data)}`);
+      //this.logger.info(`Received response: ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (err) {
       this.logger.error("Error in ZeroHash Request: " + JSON.stringify(err));
