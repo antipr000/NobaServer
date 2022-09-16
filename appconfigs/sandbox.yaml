@@ -71,7 +71,7 @@ noba:
     awsSecretKeyForSlippageAllowedPercentage: "TEST_NOBA_SLIPPAGE_ALLOWED_PERCENTAGE"
 
 zerohash:
-  awsSecretNameforApiKey: "TEST_ZEROHASH_API_KEY"
+  awsSecretNameForApiKey: "TEST_ZEROHASH_API_KEY"
   awsSecretNameForApiSecret: "TEST_ZEROHASH_API_SECRET"
   awsSecretNameForPassPhrase: "TEST_ZEROHASH_PASS_PHRASE"
   awsSecretNameForHost: "TEST_ZEROHASH_HOST"
@@ -81,6 +81,8 @@ zerohash:
   passPhrase: ""
   host: ""
   platformCode: ""
+  proxyServerIP: "172.31.8.170"
+  proxyServerPort: 3128
 
 elliptic:
   awsSecretNameForApiKey: "TEST_ELLIPTIC_KEY"
