@@ -1,12 +1,9 @@
 import { Injectable } from "@nestjs/common";
+import { S3 } from "aws-sdk";
 import { parse } from "csv";
-import {
-  PROD_BUCKET_NAME,
-  SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH,
-} from "../../config/ConfigurationUtils";
+import { ASSETS_BUCKET_NAME, SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyDTO } from "../../modules/common/dto/CurrencyDTO";
-import { S3 } from "aws-sdk";
 
 @Injectable()
 export class CurrencyService {
@@ -24,7 +21,7 @@ export class CurrencyService {
       const parser = parse({ delimiter: ",", columns: true });
       const s3 = new S3();
       const options = {
-        Bucket: this.configService.get(PROD_BUCKET_NAME),
+        Bucket: this.configService.get(ASSETS_BUCKET_NAME),
         Key: this.configService.get(SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH),
       };
 

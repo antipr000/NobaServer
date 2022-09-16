@@ -1,10 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { S3 } from "aws-sdk";
 import { parse } from "csv";
-import {
-  SANCTIONED_CRYPTO_WALLETS_BUCKET_NAME,
-  SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH,
-} from "../../config/ConfigurationUtils";
+import { ASSETS_BUCKET_NAME, SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Injectable()
@@ -23,7 +20,7 @@ export class CryptoWalletService {
       const parser = parse({ delimiter: ",", columns: true });
       const s3 = new S3();
       const options = {
-        Bucket: this.configService.get(SANCTIONED_CRYPTO_WALLETS_BUCKET_NAME),
+        Bucket: this.configService.get(ASSETS_BUCKET_NAME),
         Key: this.configService.get(SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH),
       };
 

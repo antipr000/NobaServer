@@ -1,10 +1,10 @@
-import { TestingModule, Test } from "@nestjs/testing";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { CurrencyService } from "../currency.service";
+import { Test, TestingModule } from "@nestjs/testing";
 import { join } from "path";
-import { readConfigsFromYamlFiles } from "../../../core/utils/YamlJsonUtils";
 import { AWS_ACCESS_KEY_ID_ATTR, AWS_SECRET_ACCESS_KEY_ATTR } from "../../../config/ConfigurationUtils";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { readConfigsFromYamlFiles } from "../../../core/utils/YamlJsonUtils";
+import { CurrencyService } from "../currency.service";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
@@ -18,7 +18,7 @@ describe("CurrencyService", () => {
     const appConfigsDirectory = join(__dirname, "../../../../appconfigs/secrets.yaml");
 
     let configs = {
-      PROD_BUCKET_NAME: "prod-noba-assets",
+      ASSETS_BUCKET_NAME: "prod-noba-assets",
       SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH: "assets/data/cryptocurrency_tokens_lowers.csv",
       AWS_ACCESS_KEY_ID: null,
       AWS_SECRET_ACCESS_KEY: null,
@@ -49,7 +49,7 @@ describe("CurrencyService", () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
-          prodBucketName: configs.PROD_BUCKET_NAME,
+          assetsBucketName: configs.ASSETS_BUCKET_NAME,
           supportedCryptoFileBucketPath: configs.SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH,
         }),
         getTestWinstonModule(),
