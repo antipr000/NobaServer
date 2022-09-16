@@ -78,7 +78,7 @@ noba:
     awsSecretKeyForSlippageAllowedPercentage: "PROD_NOBA_SLIPPAGE_ALLOWED_PERCENTAGE"
 
 zerohash:
-  awsSecretNameforApiKey: "PROD_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForApiKey: "PROD_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForApiSecret: "PROD_ZEROHASH_API_SECRET" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForPassPhrase: "PROD_ZEROHASH_PASS_PHRASE" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForHost: "PROD_ZEROHASH_HOST"
@@ -88,6 +88,8 @@ zerohash:
   passPhrase: ""
   host: ""
   platformCode: ""
+  proxyServerIP: "172.31.8.170"
+  proxyServerPort: 3128
 
 elliptic:
   awsSecretNameForApiKey: "PROD_ELLIPTIC_KEY"

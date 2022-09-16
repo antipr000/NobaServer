@@ -9,6 +9,8 @@ import {
   ZEROHASH_PASS_PHRASE,
   ZEROHASH_PLATFORM_CODE,
   ZEROHASH_AWS_SECRET_KEY_FOR_PLATFORM_CODE,
+  ZEROHASH_PROXY_SERVER_IP,
+  ZEROHASH_PROXY_SERVER_PORT,
 } from "../ConfigurationUtils";
 
 export interface ZerohashConfigs {
@@ -22,6 +24,8 @@ export interface ZerohashConfigs {
   [ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR]: string;
   [ZEROHASH_PLATFORM_CODE]: string;
   [ZEROHASH_AWS_SECRET_KEY_FOR_PLATFORM_CODE]: string;
+  [ZEROHASH_PROXY_SERVER_IP]: string;
+  [ZEROHASH_PROXY_SERVER_PORT]: number;
 }
 
 export const ZHLS_PLATFORM_CODE = "00SCXM";

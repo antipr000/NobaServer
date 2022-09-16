@@ -126,6 +126,8 @@ export class ConsumerService {
         throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
       }
 
+      console.log(`Adding card, consumer props: ${JSON.stringify(consumer.props)}`);
+
       await this.emailService.sendCardAddedEmail(
         consumer.props.firstName,
         consumer.props.lastName,

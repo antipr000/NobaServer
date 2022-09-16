@@ -462,7 +462,6 @@ async function configureZerohashCredentials(
   configs: Record<string, any>,
 ): Promise<Record<string, any>> {
   const zerohashConfigs: ZerohashConfigs = configs[ZEROHASH_CONFIG_KEY];
-
   if (zerohashConfigs === undefined) {
     const errorMessage =
       "\n'Zerohash' configurations are required. Please configure the Zerohash credentials in 'appconfigs/<ENV>.yaml' file.\n" +
@@ -476,8 +475,8 @@ async function configureZerohashCredentials(
 
     throw Error(errorMessage);
   }
+  zerohashConfigs.apiKey = await getParameterValue(zerohashConfigs.awsSecretNameForApiKey, zerohashConfigs.apiKey);
 
-  zerohashConfigs.apiKey = await getParameterValue(zerohashConfigs.awsSecretNameforApiKey, zerohashConfigs.apiKey);
   zerohashConfigs.apiSecret = await getParameterValue(
     zerohashConfigs.awsSecretNameForApiSecret,
     zerohashConfigs.apiSecret,
@@ -523,7 +522,9 @@ async function configureEllipticCredentials(
     ellipticConfigs.secretKey,
   );
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
+
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
+
   return configs;
 }
 

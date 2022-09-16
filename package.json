@@ -60,12 +60,12 @@
     "passport-jwt": "^4.0.0",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
-    "request-promise": "^4.2.6",
     "rxjs": "^7",
     "sqs-consumer": "^5.7.0",
     "sqs-producer": "^2.1.0",
     "swagger-ui-express": "^4.5.0",
     "ts-mockito": "^2.6.1",
+    "tunnel": "^0.0.6",
     "twilio": "^3.80.1",
     "winston": "^3.3.3"
   },

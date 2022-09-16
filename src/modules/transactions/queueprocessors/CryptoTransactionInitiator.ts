@@ -19,6 +19,7 @@ import {
   ExecutedQuote,
   FundsAvailabilityRequest,
   ExecutedQuoteStatus,
+  TRADE_TYPE_FIXED,
 } from "../domain/AssetTypes";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
@@ -98,106 +99,110 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       }
     }
 
-    if (!transaction.props.executedQuoteSettledTimestamp) {
-      const executedQuoteTradeStatus: ExecutedQuoteStatus =
-        await assetService.pollEecuteQuoteForFundsAvailabilityStatus(transaction.props.executedQuoteTradeID);
+    if (transaction.props.executedQuoteTradeID !== TRADE_TYPE_FIXED) {
+      if (!transaction.props.executedQuoteSettledTimestamp) {
+        const executedQuoteTradeStatus: ExecutedQuoteStatus =
+          await assetService.pollExecuteQuoteForFundsAvailabilityStatus(transaction.props.executedQuoteTradeID);
 
-      switch (executedQuoteTradeStatus.status) {
-        case PollStatus.SUCCESS:
-          transaction.props.executedQuoteSettledTimestamp = executedQuoteTradeStatus.settledTimestamp;
-          transaction = await this.transactionRepo.updateTransaction(transaction);
-          break;
+        switch (executedQuoteTradeStatus.status) {
+          case PollStatus.SUCCESS:
+            transaction.props.executedQuoteSettledTimestamp = executedQuoteTradeStatus.settledTimestamp;
+            transaction = await this.transactionRepo.updateTransaction(transaction);
+            break;
 
-        case PollStatus.PENDING:
-          this.logger.debug(
-            `${transactionId}: Waiting for quote trade with ID '${transaction.props.executedQuoteTradeID}' to settle.`,
-          );
-          return;
+          case PollStatus.PENDING:
+            this.logger.debug(
+              `${transactionId}: Waiting for quote trade with ID '${transaction.props.executedQuoteTradeID}' to settle.`,
+            );
+            return;
 
-        case PollStatus.FAILURE:
-          // TODO(#): Limit the # of retries.
-          this.logger.error(
-            `${transactionId}: Quote trade failed with ID '${transaction.props.executedQuoteTradeID}'. Re-executing the quote.`,
-          );
+          case PollStatus.FAILURE:
+            // TODO(#): Limit the # of retries.
+            this.logger.error(
+              `${transactionId}: Quote trade failed with ID '${transaction.props.executedQuoteTradeID}'. Re-executing the quote.`,
+            );
 
-          // Retry the quote execution from the beginning.
-          transaction.props.executedQuoteTradeID = undefined;
-          transaction = await this.transactionRepo.updateTransaction(transaction);
-          return;
+            // Retry the quote execution from the beginning.
+            transaction.props.executedQuoteTradeID = undefined;
+            transaction = await this.transactionRepo.updateTransaction(transaction);
+            return;
 
-        case PollStatus.FATAL_ERROR:
-          // TODO(#): Add an alarm here.
-          this.logger.error(`${transactionId}: Unexpected error occured: "${executedQuoteTradeStatus.errorMessage}"`);
-          return this.processFailure(TransactionStatus.FAILED, executedQuoteTradeStatus.errorMessage, transaction);
+          case PollStatus.FATAL_ERROR:
+            // TODO(#): Add an alarm here.
+            this.logger.error(`${transactionId}: Unexpected error occured: "${executedQuoteTradeStatus.errorMessage}"`);
+            return this.processFailure(TransactionStatus.FAILED, executedQuoteTradeStatus.errorMessage, transaction);
+        }
       }
-    }
 
-    // Did we already complete the transfer?
-    if (!transaction.props.nobaTransferTradeID) {
-      this.logger.debug(`${transactionId}: Transferring funds to Noba`);
-      const fundsAvailabilityRequest: FundsAvailabilityRequest = {
-        cryptoAmount: transaction.props.executedCrypto,
-        cryptocurrency: transaction.props.leg2,
-      };
-      const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
-        fundsAvailabilityRequest,
-      );
-      this.logger.info(`${transactionId}: Transfer to Noba initiated with ID: "${fundAvailableResponse.transferID}".`);
-
-      let inconsistentTransfer = false;
-      // Ensure here that we transferred the correct amount of the correct crypto
-      if (
-        fundAvailableResponse.transferredCrypto != fundsAvailabilityRequest.cryptoAmount ||
-        fundAvailableResponse.cryptocurrency != fundsAvailabilityRequest.cryptocurrency
-      ) {
-        // If this happens, still save the transfer ID to the transaction but then abort processing with a failure.
-        inconsistentTransfer = true;
-        this.logger.error(
-          `${transactionId}: Crypto traded to noba != crypto transfer! Traded: ${fundsAvailabilityRequest.cryptoAmount} ${fundsAvailabilityRequest.cryptocurrency}, transferred: ${fundAvailableResponse.transferredCrypto} ${fundAvailableResponse.cryptocurrency}. Trade ID: ${transaction.props.executedQuoteTradeID}, TransferID: ${fundAvailableResponse.transferID}`,
+      // Did we already complete the transfer?
+      if (!transaction.props.nobaTransferTradeID) {
+        this.logger.debug(`${transactionId}: Transferring funds to Noba`);
+        const fundsAvailabilityRequest: FundsAvailabilityRequest = {
+          cryptoAmount: transaction.props.executedCrypto,
+          cryptocurrency: transaction.props.leg2,
+        };
+        const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
+          fundsAvailabilityRequest,
         );
+        this.logger.info(
+          `${transactionId}: Transfer to Noba initiated with ID: "${fundAvailableResponse.transferID}".`,
+        );
+
+        let inconsistentTransfer = false;
+        // Ensure here that we transferred the correct amount of the correct crypto
+        if (
+          fundAvailableResponse.transferredCrypto != fundsAvailabilityRequest.cryptoAmount ||
+          fundAvailableResponse.cryptocurrency != fundsAvailabilityRequest.cryptocurrency
+        ) {
+          // If this happens, still save the transfer ID to the transaction but then abort processing with a failure.
+          inconsistentTransfer = true;
+          this.logger.error(
+            `${transactionId}: Crypto traded to noba != crypto transfer! Traded: ${fundsAvailabilityRequest.cryptoAmount} ${fundsAvailabilityRequest.cryptocurrency}, transferred: ${fundAvailableResponse.transferredCrypto} ${fundAvailableResponse.cryptocurrency}. Trade ID: ${transaction.props.executedQuoteTradeID}, TransferID: ${fundAvailableResponse.transferID}`,
+          );
+        }
+
+        transaction.props.nobaTransferTradeID = fundAvailableResponse.transferID;
+        transaction = await this.transactionRepo.updateTransaction(transaction);
+
+        if (inconsistentTransfer) {
+          return this.processFailure(TransactionStatus.FAILED, "Inconsistent transfer of crypto", transaction);
+        }
       }
 
-      transaction.props.nobaTransferTradeID = fundAvailableResponse.transferID;
-      transaction = await this.transactionRepo.updateTransaction(transaction);
+      // TODO(#): Move this to new processor.
+      // Have we already settled?
+      if (!transaction.props.nobaTransferSettlementID) {
+        this.logger.info(`${transactionId}: Checking for the settlement of Noba Transfer.`);
 
-      if (inconsistentTransfer) {
-        return this.processFailure(TransactionStatus.FAILED, "Inconsistent transfer of crypto", transaction);
-      }
-    }
+        const fundsAvailabilityStatus: FundsAvailabilityStatus = await assetService.pollFundsAvailableStatus(
+          transaction.props.nobaTransferTradeID,
+        );
 
-    // TODO(#): Move this to new processor.
-    // Have we already settled?
-    if (!transaction.props.nobaTransferSettlementID) {
-      this.logger.info(`${transactionId}: Checking for the settlement of Noba Transfer.`);
+        // TODO: Check if the ZH amount coming back from status == executedCrypto on transaction
+        // TODO: Assert also that leg2 == executedCrypto for crypto fixed txn
 
-      const fundsAvailabilityStatus: FundsAvailabilityStatus = await assetService.pollFundsAvailableStatus(
-        transaction.props.nobaTransferTradeID,
-      );
+        this.logger.info(
+          `${transactionId}: Noba Transfer settlement response: ${JSON.stringify(fundsAvailabilityStatus)}`,
+        );
 
-      // TODO: Check if the ZH amount coming back from status == executedCrypto on transaction
-      // TODO: Assert also that leg2 == executedCrypto for crypto fixed txn
+        switch (fundsAvailabilityStatus.status) {
+          case PollStatus.SUCCESS:
+            transaction.props.nobaTransferSettlementID = fundsAvailabilityStatus.settledId;
+            transaction = await this.transactionRepo.updateTransaction(transaction);
+            break;
 
-      this.logger.info(
-        `${transactionId}: Noba Transfer settlement response: ${JSON.stringify(fundsAvailabilityStatus)}`,
-      );
+          case PollStatus.PENDING:
+            this.logger.debug(`${transactionId}: Waiting for transaction ${transaction.props._id} to settle.`);
+            return;
 
-      switch (fundsAvailabilityStatus.status) {
-        case PollStatus.SUCCESS:
-          transaction.props.nobaTransferSettlementID = fundsAvailabilityStatus.settledId;
-          transaction = await this.transactionRepo.updateTransaction(transaction);
-          break;
+          case PollStatus.FAILURE:
+            return this.processFailure(TransactionStatus.FAILED, fundsAvailabilityStatus.errorMessage, transaction);
 
-        case PollStatus.PENDING:
-          this.logger.debug(`${transactionId}: Waiting for transaction ${transaction.props._id} to settle.`);
-          return;
-
-        case PollStatus.FAILURE:
-          return this.processFailure(TransactionStatus.FAILED, fundsAvailabilityStatus.errorMessage, transaction);
-
-        case PollStatus.FATAL_ERROR:
-          // TODO(#): Add an alarm here.
-          this.logger.error(`${transactionId}: Unexpected error occured: "${fundsAvailabilityStatus.errorMessage}"`);
-          return this.processFailure(TransactionStatus.FAILED, fundsAvailabilityStatus.errorMessage, transaction);
+          case PollStatus.FATAL_ERROR:
+            // TODO(#): Add an alarm here.
+            this.logger.error(`${transactionId}: Unexpected error occured: "${fundsAvailabilityStatus.errorMessage}"`);
+            return this.processFailure(TransactionStatus.FAILED, fundsAvailabilityStatus.errorMessage, transaction);
+        }
       }
     }
 

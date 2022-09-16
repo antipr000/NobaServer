@@ -87,7 +87,7 @@ export const AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE = "awsSecretKeyForFixedCre
 export const AWS_SECRET_KEY_FOR_SLIPPAGE_ALLOWED_PERCENTAGE = "awsSecretKeyForSlippageAllowedPercentage";
 
 export const ZEROHASH_CONFIG_KEY = "zerohash";
-export const ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameforApiKey";
+export const ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
 export const ZEROHASH_AWS_SECRET_KEY_FOR_API_SECRET_ATTR = "awsSecretNameForApiSecret";
 export const ZEROHASH_AWS_SECRET_KEY_FOR_PASS_PHRASE_ATTR = "awsSecretNameForPassPhrase";
 export const ZEROHASH_AWS_SECRET_KEY_FOR_HOST_ATTR = "awsSecretNameForHost";
@@ -97,6 +97,8 @@ export const ZEROHASH_API_SECRET = "apiSecret";
 export const ZEROHASH_PASS_PHRASE = "passPhrase";
 export const ZEROHASH_HOST = "host";
 export const ZEROHASH_PLATFORM_CODE = "platformCode";
+export const ZEROHASH_PROXY_SERVER_IP = "proxyServerIP";
+export const ZEROHASH_PROXY_SERVER_PORT = "proxyServerPort";
 
 export const ELLIPTIC_CONFIG_KEY = "elliptic";
 export const ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
@@ -162,11 +164,12 @@ export function setEnvironmentProperty(key: string, value: string): void {
 }
 
 export async function getParameterValue(awsSecretKey: string, customValue: string): Promise<string> {
-  if (awsSecretKey === undefined || awsSecretKey === "") {
+  if (awsSecretKey === undefined || awsSecretKey == null || awsSecretKey === "") {
     if (customValue === undefined || customValue === "") {
       throw Error(`Neither ${awsSecretKey} nor ${customValue} is set.`);
     }
     return customValue;
   }
+
   return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
 }
