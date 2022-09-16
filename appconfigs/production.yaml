@@ -88,6 +88,8 @@ zerohash:
   passPhrase: ""
   host: ""
   platformCode: ""
+  proxyServerIP: "172.31.8.170"
+  proxyServerPort: 3128
 
 elliptic:
   awsSecretNameForApiKey: "PROD_ELLIPTIC_KEY"

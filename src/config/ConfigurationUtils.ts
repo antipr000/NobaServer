@@ -96,6 +96,8 @@ export const ZEROHASH_API_SECRET = "apiSecret";
 export const ZEROHASH_PASS_PHRASE = "passPhrase";
 export const ZEROHASH_HOST = "host";
 export const ZEROHASH_PLATFORM_CODE = "platformCode";
+export const ZEROHASH_PROXY_SERVER_IP = "proxyServerIP";
+export const ZEROHASH_PROXY_SERVER_PORT = "proxyServerPort";
 
 export const ELLIPTIC_CONFIG_KEY = "elliptic";
 export const ELLIPTIC_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameforApiKey";
