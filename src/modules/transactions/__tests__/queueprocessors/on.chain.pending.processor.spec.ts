@@ -224,7 +224,7 @@ describe("OnChainPendingProcessor", () => {
     when(sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transaction.props._id)).thenResolve("");
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
-    when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve({ riskScore: 10 });
+    when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve();
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);
 

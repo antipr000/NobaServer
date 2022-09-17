@@ -78,6 +78,7 @@ const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
   isEVMCompatible: Joi.boolean().optional(),
   status: Joi.string().optional(),
   partnerID: Joi.string().optional(), // TODO(#466) - Make required
+  riskScore: Joi.number().optional(),
 };
 
 const addressValidationJoiKeys: KeysRequired<Address> = {

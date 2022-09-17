@@ -36,7 +36,6 @@ import {
 import { Utils } from "../../core/utils/Utils";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
-import { WalletExposureResponse } from "../common/domain/WalletExposureResponse";
 import { EllipticService } from "../common/elliptic.service";
 import { TransactionFilterOptions } from "./domain/Types";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
@@ -411,8 +410,22 @@ export class TransactionService {
     return withinSlippage;
   }
 
-  async analyzeTransactionWalletExposure(transaction: Transaction): Promise<WalletExposureResponse> {
-    return this.ellipticService.transactionAnalysis(transaction);
+  async analyzeTransactionWalletExposure(transaction: Transaction): Promise<void> {
+    const walletExposureResponse = await this.ellipticService.transactionAnalysis(transaction);
+
+    const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
+
+    cryptoWallet.riskScore = walletExposureResponse.riskScore;
+
+    if (walletExposureResponse.riskScore !== null && walletExposureResponse.riskScore > 0) {
+      this.logger.debug(
+        `Wallet ${transaction.props.destinationWalletAddress} for consumer ${consumer.props._id} has been flagged with risk score: ${walletExposureResponse.riskScore}`,
+      );
+      cryptoWallet.status = WalletStatus.FLAGGED;
+    }
+
+    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAddress: string): boolean {

@@ -1228,11 +1228,11 @@ describe("TransactionService", () => {
   });
 
   describe("analyzeTransactionWalletExposure", () => {
-    it("should return wallet exposure response after querying elliptic", async () => {
+    it("should update wallet status to flagged after querying elliptic and getting risk score > 0", async () => {
       const transactionID = "fake-transaction-id";
       const transaction = Transaction.createTransaction({
         _id: transactionID,
-        userId: "fake-consumer",
+        userId: consumer.props._id,
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
         paymentMethodID: "fake-payment-method",
@@ -1240,16 +1240,38 @@ describe("TransactionService", () => {
         leg2Amount: 1,
         leg1: "USD",
         leg2: "ETH",
-        destinationWalletAddress: "fake-wallet",
+        destinationWalletAddress: "fake-wallet-address",
         partnerID: "12345",
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
-      when(ellipticService.transactionAnalysis(anything())).thenResolve({ riskScore: 10 });
+      const cryptoWallet: CryptoWallet = {
+        address: "fake-wallet-address",
+        status: WalletStatus.APPROVED,
+      };
 
-      const result = await transactionService.analyzeTransactionWalletExposure(transaction);
-      expect(result.riskScore).toBe(10);
+      const currentConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        cryptoWallets: [cryptoWallet],
+      });
+
+      when(ellipticService.transactionAnalysis(anything())).thenResolve({ riskScore: 10 });
+      when(consumerService.getConsumer(currentConsumer.props._id)).thenResolve(currentConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(anything(), anything())).thenResolve(currentConsumer);
+      when(consumerService.getCryptoWallet(deepEqual(currentConsumer), cryptoWallet.address)).thenReturn(cryptoWallet);
+      await transactionService.analyzeTransactionWalletExposure(transaction);
+
       verify(ellipticService.transactionAnalysis(deepEqual(transaction))).once();
+      verify(
+        consumerService.addOrUpdateCryptoWallet(
+          deepEqual(currentConsumer),
+          deepEqual({
+            ...cryptoWallet,
+            riskScore: 10,
+            status: WalletStatus.FLAGGED,
+          }),
+        ),
+      ).once();
     });
   });
 });

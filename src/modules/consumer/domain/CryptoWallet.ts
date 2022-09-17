@@ -7,6 +7,7 @@ export type CryptoWallet = {
   isEVMCompatible?: boolean;
   status: WalletStatus;
   partnerID?: string;
+  riskScore?: number;
 };
 
 // Sourced from: https://docs.google.com/spreadsheets/d/1zndoaJTJNS70Ow0LXc2NWAhvaOQkyFZAEOXHjwM7-qk/edit?usp=sharing
