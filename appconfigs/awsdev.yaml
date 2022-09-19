@@ -92,7 +92,7 @@ elliptic:
   baseUrl: "https://aml-api.elliptic.co/v2"
 
 configuration:
-  lowAmountThreshold: 50
+  lowAmountThreshold: 1
   highAmountThreshold: 200
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
