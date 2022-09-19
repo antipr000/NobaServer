@@ -109,8 +109,7 @@ export class ZeroHashService {
       this.logger.debug(`Received response: ${JSON.stringify(data)}`);
       return data;
     } catch (err) {
-      this.logger.error("Error in ZeroHash Request: " + err);
-
+      // WARNING: Do not JSON.stringify() 'err' as it results in a "circular structure" error message in the AWS envs w/ proxy
       if (err.response) {
         if (err.response.status === 403) {
           // Generally means we are not using a whitelisted IP to ZH
@@ -118,7 +117,7 @@ export class ZeroHashService {
           throw new ServiceUnavailableException(err, "Unable to connect to service provider.");
         }
         if (err.response.status === 400) {
-          this.logger.error(`Request: ${JSON.stringify(axiosConfig)}`);
+          this.logger.error(`Error in ZeroHash request: ${requestString} - ${JSON.stringify(body)}`);
           throw new BadRequestException(err);
         }
       }
