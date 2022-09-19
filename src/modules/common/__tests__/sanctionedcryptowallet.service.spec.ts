@@ -66,7 +66,9 @@ describe("SanctionedCryptoWalletService", () => {
     });
 
     it("Should return true for a wallet that is sanctioned", async () => {
-      const isWalletSanctioned = await sanctionedCryptoWalletService.isWalletSanctioned("3QJyT8nThEQakbfqgX86YjCK1Sp9hfNCUW");
+      const isWalletSanctioned = await sanctionedCryptoWalletService.isWalletSanctioned(
+        "3QJyT8nThEQakbfqgX86YjCK1Sp9hfNCUW",
+      );
 
       expect(isWalletSanctioned).toBeTruthy();
     });
