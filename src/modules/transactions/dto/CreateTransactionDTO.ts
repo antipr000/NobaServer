@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { TransactionType } from "../domain/Types";
 import { CurrencyType } from "../../common/domain/Types";
 
@@ -24,6 +24,6 @@ export class CreateTransactionDTO {
   @ApiProperty({ enum: Object.values(CurrencyType) })
   fixedSide: CurrencyType;
 
-  @ApiPropertyOptional()
-  destinationWalletAddress?: string;
+  @ApiProperty()
+  destinationWalletAddress: string;
 }

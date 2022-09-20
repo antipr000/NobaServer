@@ -31,7 +31,7 @@ import { Roles } from "../auth/roles.decorator";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
-import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
+import { TransactionFilterOptions } from "./domain/Types";
 
 import { AuthUser } from "../auth/auth.decorator";
 import { Public } from "../auth/public.decorator";
@@ -46,6 +46,8 @@ import { LimitsService } from "./limits.service";
 import { TransactionService } from "./transaction.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { TransactionSubmissionException } from "./exceptions/TransactionSubmissionException";
+import { TransactionsQueryResultsDTO } from "./dto/TransactionsQueryResultsDTO";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -159,44 +161,25 @@ export class TransactionController {
     }
   }
 
-  //TODO take filter options, pagination token etc?
   @Get("/transactions/")
   @ApiTags("Transactions")
   @ApiOperation({ summary: "Gets all transactions for the logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: [TransactionDTO],
+    type: TransactionsQueryResultsDTO,
     description: "List of all transactions",
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getTransactions(
     @Request() request,
-    @Query() transactionFilters: TransactionFilterDTO,
+    @Query() transactionFilters: TransactionFilterOptions,
     @AuthUser() authUser: Consumer,
-  ): Promise<TransactionDTO[]> {
-    if (transactionFilters.startDate != undefined && isNaN(Date.parse(transactionFilters.startDate))) {
-      throw new BadRequestException("Invalid start date");
-    }
-
-    if (transactionFilters.endDate != undefined && isNaN(Date.parse(transactionFilters.endDate))) {
-      throw new BadRequestException("Invalid end date");
-    }
-
-    const fromDateInUTC =
-      transactionFilters.startDate != undefined
-        ? new Date(new Date(transactionFilters.startDate).toUTCString())
-        : undefined;
-    const toDateInUTC =
-      transactionFilters.endDate != undefined
-        ? new Date(new Date(transactionFilters.endDate).toUTCString())
-        : undefined;
-
-    return this.transactionService.getTransactionsInInterval(
+  ): Promise<TransactionsQueryResultsDTO> {
+    return (await this.transactionService.getUserTransactions(
       authUser.props._id,
       request.user.partnerId,
-      fromDateInUTC,
-      toDateInUTC,
-    );
+      transactionFilters,
+    )) as TransactionsQueryResultsDTO;
   }
 
   @Get("/consumers/limits/")
@@ -222,23 +205,19 @@ export class TransactionController {
   })
   async downloadTransactions(
     @Request() request,
-    @Query() downloadParames: DownloadTransactionsDTO,
+    @Query() params: DownloadTransactionsDTO,
     @AuthUser() authUser: Consumer,
     @Response() response,
   ) {
-    const fromDateInUTC = new Date(downloadParames.startDate).toUTCString();
-    const toDateInUTC = new Date(downloadParames.endDate).toUTCString();
-
     let filePath = "";
-    const transactions: TransactionDTO[] = await this.transactionService.getTransactionsInInterval(
+    const transactions: PaginatedResult<TransactionDTO> = await this.transactionService.getUserTransactions(
       authUser.props._id,
       request.user.partnerId,
-      new Date(fromDateInUTC),
-      new Date(toDateInUTC),
+      { ...params, pageLimit: params.pageLimit ?? 10000 },
     );
 
-    if (downloadParames.reportFormat == DownloadFormat.CSV) {
-      filePath = await CsvService.convertToCsvAndSaveToDisk(transactions);
+    if (params.reportFormat == DownloadFormat.CSV) {
+      filePath = await CsvService.convertToCsvAndSaveToDisk(transactions.items);
       response.writeHead(200, {
         "Content-Type": "text/csv",
         "Content-Disposition": `attachment; filename=${filePath}`,

@@ -5,6 +5,7 @@ import type { CheckTransactionDTO } from "../models/CheckTransactionDTO";
 import type { CreateTransactionDTO } from "../models/CreateTransactionDTO";
 import type { TransactionDTO } from "../models/TransactionDTO";
 import type { TransactionQuoteDTO } from "../models/TransactionQuoteDTO";
+import type { TransactionsQueryResultsDTO } from "../models/TransactionsQueryResultsDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -177,7 +178,7 @@ export class TransactionsService {
 
   /**
    * Gets all transactions for the logged-in consumer
-   * @returns TransactionDTO List of all transactions
+   * @returns TransactionsQueryResultsDTO List of all transactions
    * @throws ApiError
    */
   public static getTransactions({
@@ -186,6 +187,11 @@ export class TransactionsService {
     xNobaTimestamp,
     startDate,
     endDate,
+    pageOffset,
+    pageLimit,
+    sortField,
+    sortOrder,
+    fiatCurrency,
   }: {
     xNobaApiKey: string;
     xNobaSignature?: string;
@@ -201,7 +207,27 @@ export class TransactionsService {
      * Format: YYYY-MM-DD, example: 2010-04-27
      */
     endDate?: string;
-  }): CancelablePromise<Array<TransactionDTO>> {
+    /**
+     * offset 0 means first page, 1 means second pag etc.
+     */
+    pageOffset?: number;
+    /**
+     * number of items per page
+     */
+    pageLimit?: number;
+    /**
+     * sort by field
+     */
+    sortField?: "timestamp" | "fiatAmount" | "cryptoAmount" | "fiatCurrencyTicker" | "cryptoCurrencyTicker";
+    /**
+     * sort order asc or desc
+     */
+    sortOrder?: "ASC" | "DESC";
+    /**
+     * filter for a particular fiat currency
+     */
+    fiatCurrency?: string;
+  }): CancelablePromise<TransactionsQueryResultsDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/transactions",
@@ -213,6 +239,11 @@ export class TransactionsService {
       query: {
         startDate: startDate,
         endDate: endDate,
+        pageOffset: pageOffset,
+        pageLimit: pageLimit,
+        sortField: sortField,
+        sortOrder: sortOrder,
+        fiatCurrency: fiatCurrency,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -232,6 +263,11 @@ export class TransactionsService {
     xNobaTimestamp,
     startDate,
     endDate,
+    pageOffset,
+    pageLimit,
+    sortField,
+    sortOrder,
+    fiatCurrency,
   }: {
     xNobaApiKey: string;
     /**
@@ -251,6 +287,26 @@ export class TransactionsService {
      * Format: YYYY-MM-DD, example: 2010-04-27
      */
     endDate?: string;
+    /**
+     * offset 0 means first page, 1 means second pag etc.
+     */
+    pageOffset?: number;
+    /**
+     * number of items per page
+     */
+    pageLimit?: number;
+    /**
+     * sort by field
+     */
+    sortField?: "timestamp" | "fiatAmount" | "cryptoAmount" | "fiatCurrencyTicker" | "cryptoCurrencyTicker";
+    /**
+     * sort order asc or desc
+     */
+    sortOrder?: "ASC" | "DESC";
+    /**
+     * filter for a particular fiat currency
+     */
+    fiatCurrency?: string;
   }): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -263,6 +319,11 @@ export class TransactionsService {
       query: {
         startDate: startDate,
         endDate: endDate,
+        pageOffset: pageOffset,
+        pageLimit: pageLimit,
+        sortField: sortField,
+        sortOrder: sortOrder,
+        fiatCurrency: fiatCurrency,
         reportFormat: reportFormat,
       },
     });

@@ -4,11 +4,15 @@ import { TransactionMapper } from "../mapper/TransactionMapper";
 import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Inject, Injectable } from "@nestjs/common";
-import { TransactionStatus } from "../domain/Types";
+import { TransactionFilterOptions, TransactionStatus, transactionPropFromQuerySortField } from "../domain/Types";
 
 import { subDays } from "date-fns";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { PaginatedResult, SortOrder, EMPTY_PAGE_RESULT } from "../../../core/infra/PaginationTypes";
+import { SortOptions, paginationPipeLine } from "../../../infra/mongodb/paginate/PaginationPipeline";
+import { FilterQuery } from "mongoose";
+import { TransactionModel } from "../../../infra/mongodb/models/TransactionModel";
 
 type AggregateResultType = {
   _id: number;
@@ -188,15 +192,59 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return this.transactionMapper.toDomain(updatedTransactionProps);
   }
 
-  async getUserTransactions(userId: string, partnerID: string): Promise<Transaction[]> {
+  async getUserTransactions(
+    userId: string,
+    partnerID: string,
+    transactionsFilterOptions: TransactionFilterOptions = {},
+  ): Promise<PaginatedResult<Transaction>> {
     const transactionModel = await this.dbProvider.getTransactionModel();
     const query = transactionModel.find({ userId: userId });
     if (partnerID != undefined) {
       query.and([{ partnerID: partnerID }]);
     }
-    const result: any = await query.sort({ transactionTimestamp: "desc" }).exec();
-    const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
-    return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
+
+    const filterOpts = transactionsFilterOptions;
+
+    const sortOptions: SortOptions<TransactionProps> = {
+      field: "transactionTimestamp",
+      order: SortOrder.DESC,
+    };
+
+    const sortField = transactionPropFromQuerySortField(transactionsFilterOptions.sortField);
+    sortOptions.field = sortField ?? sortOptions.field;
+    sortOptions.order = transactionsFilterOptions.sortOrder ?? sortOptions.order;
+
+    const filterQuery: FilterQuery<TransactionProps> = {
+      userId: userId,
+      ...(partnerID && { partnerID: partnerID }),
+      ...(filterOpts.transactionStatus && { transactionStatus: filterOpts.transactionStatus }),
+      ...(filterOpts.fiatCurrency && { leg1: filterOpts.fiatCurrency }),
+      ...(filterOpts.cryptoCurrency && { leg2: filterOpts.cryptoCurrency }),
+      ...(filterOpts.startDate && {
+        transactionTimestamp: { $gte: new Date(new Date(filterOpts.startDate).toISOString()) },
+      }),
+      ...(filterOpts.endDate && {
+        transactionTimestamp: { $lte: new Date(new Date(filterOpts.endDate).toISOString()) },
+      }),
+    };
+
+    const pipeline = paginationPipeLine(
+      filterOpts.pageOffset ?? 0,
+      filterOpts.pageLimit ?? 10,
+      filterQuery,
+      sortOptions,
+    );
+
+    const result = await TransactionModel.aggregate(pipeline as any).exec();
+    const pageResult = (result[0] ?? EMPTY_PAGE_RESULT) as unknown as PaginatedResult<TransactionProps>;
+
+    if (!pageResult.items && pageResult.totalItems == 0) {
+      pageResult.items = [];
+    }
+
+    const transactions = pageResult.items.map(transactionProps => this.transactionMapper.toDomain(transactionProps));
+
+    return { ...pageResult, items: transactions };
   }
 
   private async getPeriodicUserTransactionAmount(userId: string, days: number): Promise<number> {

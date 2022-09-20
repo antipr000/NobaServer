@@ -38,6 +38,8 @@ import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 import { WalletExposureResponse } from "../common/domain/WalletExposureResponse";
 import { EllipticService } from "../common/elliptic.service";
+import { TransactionFilterOptions } from "./domain/Types";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 
 @Injectable()
 export class TransactionService {
@@ -125,10 +127,13 @@ export class TransactionService {
     return this.transactionsMapper.toDTO(transaction);
   }
 
-  async getUserTransactions(userID: string, partnerID: string): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactions(userID, partnerID)).map(transaction =>
-      this.transactionsMapper.toDTO(transaction),
-    );
+  async getUserTransactions(
+    userID: string,
+    partnerID: string,
+    transactionQuery?: TransactionFilterOptions,
+  ): Promise<PaginatedResult<TransactionDTO>> {
+    const transactionsResult = await this.transactionsRepo.getUserTransactions(userID, partnerID, transactionQuery);
+    return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
   }
 
   async getTransactionsInInterval(

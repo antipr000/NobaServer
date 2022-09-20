@@ -1,5 +1,6 @@
 import { Transaction, TransactionProps } from "../domain/Transaction";
-import { TransactionStatus } from "../domain/Types";
+import { TransactionStatus, TransactionFilterOptions } from "../domain/Types";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 
 export interface ITransactionRepo {
   getAll(): Promise<Transaction[]>; //this is to be used by app admins. TODO pagination? transaction filter options?
@@ -12,7 +13,11 @@ export interface ITransactionRepo {
     otherProps: Partial<TransactionProps>,
   ): Promise<Transaction>;
   updateLastProcessingTimestamp(transactionId: string): Promise<Transaction>;
-  getUserTransactions(userId: string, partnerID: string): Promise<Transaction[]>; //TODO pagination? transaction filter options?
+  getUserTransactions(
+    userId: string,
+    partnerID: string,
+    transactionFilterOptions?: TransactionFilterOptions,
+  ): Promise<PaginatedResult<Transaction>>; //TODO pagination? transaction filter options?
   getUserTransactionInAnInterval(
     userId: string,
     partnerID: string,

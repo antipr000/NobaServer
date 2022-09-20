@@ -72,7 +72,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
     .required()
     .meta({ _mongoose: { index: true } }),
   sessionKey: Joi.string().optional(), // TODO(#310) Make it required once we no longer have old txns in the database.
-  paymentMethodID: Joi.string().optional(), //TODO ankit make it required
+  paymentMethodID: Joi.string().optional(), //TODO make it required
   transactionStatus: Joi.string()
     // .valid(...Object.values(TransactionStatus)) //TODO Change this
     .required(),

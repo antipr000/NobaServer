@@ -151,3 +151,68 @@ export interface CryptoTransactionRequestResult {
   nobaTransferID?: string;
   tradeID: string;
 }
+
+import { ApiPropertyOptional } from "@nestjs/swagger";
+import { SortOrder } from "../../../core/infra/PaginationTypes";
+import { TransactionProps } from "./Transaction";
+
+export enum TransactionsQuerySortField {
+  transactionTimestamp = "transactionTimestamp",
+  leg1Amount = "leg1Amount",
+  leg2Amount = "leg2Amount",
+  leg1 = "leg1",
+  leg2 = "leg2",
+}
+
+export function transactionPropFromQuerySortField(transactionQuerySortField: TransactionsQuerySortField) {
+  if (!transactionQuerySortField) {
+    return undefined;
+  }
+  const mp: Record<TransactionsQuerySortField, keyof TransactionProps> = {
+    transactionTimestamp: "transactionTimestamp",
+    leg1Amount: "leg1Amount",
+    leg2Amount: "leg2Amount",
+    leg1: "leg1",
+    leg2: "leg2",
+  };
+
+  return mp[transactionQuerySortField];
+}
+
+export class TransactionFilterOptions {
+  @ApiPropertyOptional({
+    description: "Format: YYYY-MM-DD, example: 2010-04-27",
+  })
+  startDate?: string;
+
+  @ApiPropertyOptional({
+    description: "Format: YYYY-MM-DD, example: 2010-04-27",
+  })
+  endDate?: string;
+
+  @ApiPropertyOptional({
+    description: "number of pages to skip, offset 0 means first page results, 1 means second page etc.",
+  })
+  pageOffset?: number;
+
+  @ApiPropertyOptional({ description: "number of items per page" })
+  pageLimit?: number;
+
+  @ApiPropertyOptional({ enum: Object.values(TransactionsQuerySortField), description: "sort by field" })
+  sortField?: TransactionsQuerySortField;
+
+  @ApiPropertyOptional({ enum: Object.values(SortOrder), description: "sort order asc or desc" })
+  sortOrder?: SortOrder;
+
+  @ApiPropertyOptional({ description: "filter for a particular fiat currency" })
+  fiatCurrency?: string;
+
+  @ApiPropertyOptional({ description: "filter for a particular Cryptocurrency" })
+  cryptoCurrency?: string;
+
+  @ApiPropertyOptional({
+    enum: Object.values(TransactionStatus),
+    description: "filter for a particular transaction status",
+  })
+  transactionStatus?: TransactionStatus;
+}

@@ -45,6 +45,7 @@ export type { PeriodLimit } from "./models/PeriodLimit";
 export type { SubdivisionDTO } from "./models/SubdivisionDTO";
 export type { TransactionDTO } from "./models/TransactionDTO";
 export type { TransactionQuoteDTO } from "./models/TransactionQuoteDTO";
+export type { TransactionsQueryResultsDTO } from "./models/TransactionsQueryResultsDTO";
 export type { TransactionStatsDTO } from "./models/TransactionStatsDTO";
 export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO";
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";

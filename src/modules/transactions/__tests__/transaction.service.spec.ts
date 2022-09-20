@@ -66,6 +66,7 @@ import {
 } from "../exceptions/TransactionSubmissionException";
 import { EllipticService } from "../../../modules/common/elliptic.service";
 import { getMockEllipticServiceWithDefaults } from "../../../modules/common/mocks/mock.elliptic.service";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -1161,16 +1162,25 @@ describe("TransactionService", () => {
 
       const transactionDTO = transactionMapper.toDTO(transaction);
 
-      when(transactionRepo.getUserTransactions(transaction.props.userId, transaction.props.partnerID)).thenResolve([
-        transaction,
-      ]);
+      const res: PaginatedResult<Transaction> = {
+        items: [transaction],
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+      };
+
+      when(
+        transactionRepo.getUserTransactions(transaction.props.userId, transaction.props.partnerID, anything()),
+      ).thenResolve(res);
 
       const response = await transactionService.getUserTransactions(
         transaction.props.userId,
         transaction.props.partnerID,
+        {},
       );
-      expect(response.length).toBe(1);
-      expect(response).toStrictEqual([transactionDTO]);
+      expect(response.items.length).toBe(1);
+      expect(response.items[0]).toStrictEqual(transactionDTO);
     });
   });
 
@@ -1193,46 +1203,6 @@ describe("TransactionService", () => {
       when(transactionRepo.getAll()).thenResolve([transaction]);
 
       const response = await transactionService.getAllTransactions();
-      expect(response.length).toBe(1);
-      expect(response).toStrictEqual([transactionMapper.toDTO(transaction)]);
-    });
-  });
-
-  describe("getTransactionsInInterval", () => {
-    it("should return all user transactions from database for an interval", async () => {
-      const fromDate = new Date("2020-01-01");
-      const toDate = new Date("2020-03-03");
-
-      const transaction = Transaction.createTransaction({
-        _id: "fake-transaction-id",
-        userId: consumer.props._id,
-        sessionKey: "fake-session-key",
-        paymentMethodID: "fake-payment-token",
-        leg1Amount: 100,
-        leg2Amount: 0.1,
-        leg1: "USD",
-        leg2: "ETH",
-        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
-        partnerID: "fake-partner",
-        destinationWalletAddress: FAKE_VALID_WALLET,
-        transactionTimestamp: fromDate,
-      });
-
-      when(
-        transactionRepo.getUserTransactionInAnInterval(
-          transaction.props.userId,
-          transaction.props.partnerID,
-          fromDate,
-          toDate,
-        ),
-      ).thenResolve([transaction]);
-
-      const response = await transactionService.getTransactionsInInterval(
-        transaction.props.userId,
-        transaction.props.partnerID,
-        fromDate,
-        toDate,
-      );
       expect(response.length).toBe(1);
       expect(response).toStrictEqual([transactionMapper.toDTO(transaction)]);
     });
