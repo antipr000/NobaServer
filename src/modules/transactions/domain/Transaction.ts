@@ -1,4 +1,5 @@
 import * as Joi from "joi";
+import { Utils } from "../../../core/utils/Utils";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { CurrencyType, KeysRequired } from "../../common/domain/Types";
@@ -22,6 +23,7 @@ const transactionEventJoiSchema = Joi.object()
 
 export interface TransactionProps extends VersioningInfo {
   _id: string;
+  transactionID: string;
   userId: string;
   sessionKey: string;
   paymentMethodID: string;
@@ -68,6 +70,9 @@ export interface TransactionProps extends VersioningInfo {
 export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   ...versioningInfoJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
+  transactionID: Joi.string()
+    .required()
+    .meta({ _mongoose: { index: true } }),
   userId: Joi.string()
     .required()
     .meta({ _mongoose: { index: true } }),
@@ -120,7 +125,8 @@ export class Transaction extends AggregateRoot<TransactionProps> {
   }
 
   public static createTransaction(transactionProps: Partial<TransactionProps>): Transaction {
-    transactionProps._id = transactionProps._id ?? "transaction_" + Entity.getNewID();
+    transactionProps._id = transactionProps._id ?? Entity.getNewID();
+    transactionProps.transactionID = Utils.generateLowercaseUUID(true);
     transactionProps.transactionTimestamp = transactionProps.transactionTimestamp ?? new Date();
     return new Transaction(Joi.attempt(transactionProps, transactionJoiSchema));
   }

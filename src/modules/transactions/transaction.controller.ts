@@ -112,12 +112,12 @@ export class TransactionController {
     description: "Details of a transaction",
   })
   @ApiNotFoundResponse({ description: "Transaction does not exist" })
-  async getTransactionStatus(
+  async getTransaction(
     @Request() request,
     @Param("transactionID") transactionID: string,
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO> {
-    const dto = await this.transactionService.getTransactionStatus(transactionID);
+    const dto = await this.transactionService.getTransaction(transactionID);
     if (dto.userID !== authUser.props._id || dto.partnerID !== request.user.partnerId) {
       // We can't return forbidden, as that would tell the user there IS a transaction - they just can't see it. So "pretend" it's not found.
       throw new NotFoundException("Transaction does not exist");

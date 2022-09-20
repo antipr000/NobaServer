@@ -30,7 +30,7 @@ export function getMockTransactionRepoWithDefaults(): ITransactionRepo {
 
 export function getMockTransactionServiceWithDefaults(): TransactionService {
   const mockTransactionService = mock(TransactionService);
-  when(mockTransactionService.getTransactionStatus(anything())).thenReject(new Error("Method not implemented"));
+  when(mockTransactionService.getTransaction(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionService.getUserTransactions(anything(), anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );

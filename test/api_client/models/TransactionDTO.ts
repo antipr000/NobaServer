@@ -2,9 +2,20 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { TransactionAmountsDTO } from "./TransactionAmountsDTO";
+
 export type TransactionDTO = {
-  _id: string;
+  /**
+   * Unique transaction reference number
+   */
+  transactionID: string;
+  /**
+   * ID of user who initiated the transaction
+   */
   userID: string;
+  /**
+   * Current status of the transaction
+   */
   status:
     | "PENDING"
     | "VALIDATION_FAILED"
@@ -22,22 +33,28 @@ export type TransactionDTO = {
     | "CRYPTO_OUTGOING_FAILED"
     | "COMPLETED"
     | "FAILED";
-  type: "onramp" | "offramp" | "swap";
-  statusMessage?: string;
-  leg1: string;
-  leg2: string;
   /**
-   * Amount to be exchaged. in case of offramp it is amount of fiat currency, offramp amount of crypto, in case of swap the source currency etc.
+   * Hash of the transaction as settled on the blockchain
    */
-  baseAmount: number;
-  leg1Amount: number;
-  leg2Amount: number;
-  transactionTimestamp: string;
-  paymentMethodID?: string;
-  fiatTransactionID?: string;
-  cryptoTransactionID?: string;
+  transactionHash: string;
   /**
-   * Destination wallet address to transfer crypto to in case of off ramp transaction
+   * Timestamp the transaction was submitted
+   */
+  transactionTimestamp: string;
+  /**
+   * Wallet address to which the crypto purchase was transferred
    */
   destinationWalletAddress?: string;
+  /**
+   * Unique ID of the partner through which this transaction was made
+   */
+  partnerID: string;
+  /**
+   * Unique ID of the payment method used to fund this transaction
+   */
+  paymentMethodID: string;
+  /**
+   * All amounts and currency information related to this transaction
+   */
+  amounts: TransactionAmountsDTO;
 };

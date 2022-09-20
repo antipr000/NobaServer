@@ -720,6 +720,7 @@ const getRandomTransaction = (
 ): Transaction => {
   const props: TransactionProps = {
     _id: mkid(id),
+    transactionID: `unique-transaction-id-${id}`,
     userId: options.userId ?? DEFAULT_USER_ID,
     transactionStatus: options.status ?? TransactionStatus.PENDING,
     leg1: options.fiatCurrency ?? "LEG1",

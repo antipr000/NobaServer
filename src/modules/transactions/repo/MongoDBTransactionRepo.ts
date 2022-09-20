@@ -3,7 +3,7 @@ import { Transaction, TransactionProps } from "../domain/Transaction";
 import { TransactionMapper } from "../mapper/TransactionMapper";
 import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { TransactionFilterOptions, TransactionStatus, transactionPropFromQuerySortField } from "../domain/Types";
 
 import { subDays } from "date-fns";
@@ -99,11 +99,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return transactionPropsList.map(transactionResult => this.transactionMapper.toDomain(transactionResult));
   }
 
-  async getTransaction(transactionId: string): Promise<Transaction> {
-    const transactionModel = await this.dbProvider.getTransactionModel();
-    const result: any = await transactionModel.findById(transactionId).exec();
-    const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
-    return this.transactionMapper.toDomain(transactionProps);
+  async getTransaction(id: string): Promise<Transaction> {
+    const transaction = await this.getTransactionByIDOrTransactionID(id);
+    return transaction;
   }
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
@@ -190,6 +188,17 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
     const updatedTransactionProps: TransactionProps = convertDBResponseToJsObject(result);
     return this.transactionMapper.toDomain(updatedTransactionProps);
+  }
+
+  async getTransactionByIDOrTransactionID(id: string): Promise<Transaction> {
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    const result: any = await transactionModel.findOne({ $or: [{ _id: id }, { transactionID: id }] }).exec();
+    if (result == null) {
+      throw new NotFoundException("Transaction does not exist");
+    }
+
+    const transactionProps: TransactionProps = convertDBResponseToJsObject(result);
+    return this.transactionMapper.toDomain(transactionProps);
   }
 
   async getUserTransactions(

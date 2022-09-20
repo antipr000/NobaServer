@@ -1,3 +1,5 @@
+import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
+
 export class Utils {
   static getUsernameFromNameParts(firstName: string, lastName: string): string {
     // Only add a space if first & last name are both present
@@ -27,5 +29,17 @@ export class Utils {
     };
     const n = shift(num, +decimalPlaces);
     return shift(Math.round(n), -decimalPlaces).toFixed(decimalPlaces);
+  }
+
+  static generateLowercaseUUID(removeDashes: boolean = false): string {
+    // 1. Generate UUID
+    // 2. Convert to lowercase
+    // 3. Optionally remove all hyphens
+    const uuid = randomUUID().toLowerCase();
+    return removeDashes ? uuid.replace(/-/g, "") : uuid;
+  }
+
+  static generateBase64String(numBytes: number): string {
+    return randomBytes(numBytes).toString("base64");
   }
 }

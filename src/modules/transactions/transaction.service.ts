@@ -122,7 +122,7 @@ export class TransactionService {
     };
   }
 
-  async getTransactionStatus(transactionID: string): Promise<TransactionDTO> {
+  async getTransaction(transactionID: string): Promise<TransactionDTO> {
     const transaction = await this.transactionsRepo.getTransaction(transactionID);
     return this.transactionsMapper.toDTO(transaction);
   }
@@ -415,13 +415,13 @@ export class TransactionService {
     return this.ellipticService.transactionAnalysis(transaction);
   }
 
-  private isValidDestinationAddress(curr: string, destinationWalletAdress: string): boolean {
+  private isValidDestinationAddress(curr: string, destinationWalletAddress: string): boolean {
     // Throws an exception saying "Missing validator for currency {currency}" if it doesn't know of the currency.
     // We should catch this in the caller and ultimately display a warning to the user that the address could not be validated.
 
     // Strip anything from the first period onward
     const checkCurr = curr.split(".")[0];
-    return validate(destinationWalletAdress, checkCurr);
+    return validate(destinationWalletAddress, checkCurr);
   }
 
   private getAxiosConfig(partner: Partner): AxiosRequestConfig {

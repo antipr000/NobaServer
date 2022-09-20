@@ -105,7 +105,7 @@ export class TransactionsService {
    * @returns TransactionDTO Details of a transaction
    * @throws ApiError
    */
-  public static getTransactionStatus({
+  public static getTransaction({
     xNobaApiKey,
     transactionId,
     xNobaSignature,
@@ -192,6 +192,8 @@ export class TransactionsService {
     sortField,
     sortOrder,
     fiatCurrency,
+    cryptoCurrency,
+    transactionStatus,
   }: {
     xNobaApiKey: string;
     xNobaSignature?: string;
@@ -208,7 +210,7 @@ export class TransactionsService {
      */
     endDate?: string;
     /**
-     * offset 0 means first page, 1 means second pag etc.
+     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
      */
     pageOffset?: number;
     /**
@@ -218,7 +220,7 @@ export class TransactionsService {
     /**
      * sort by field
      */
-    sortField?: "timestamp" | "fiatAmount" | "cryptoAmount" | "fiatCurrencyTicker" | "cryptoCurrencyTicker";
+    sortField?: "transactionTimestamp" | "leg1Amount" | "leg2Amount" | "leg1" | "leg2";
     /**
      * sort order asc or desc
      */
@@ -227,6 +229,30 @@ export class TransactionsService {
      * filter for a particular fiat currency
      */
     fiatCurrency?: string;
+    /**
+     * filter for a particular Cryptocurrency
+     */
+    cryptoCurrency?: string;
+    /**
+     * filter for a particular transaction status
+     */
+    transactionStatus?:
+      | "PENDING"
+      | "VALIDATION_FAILED"
+      | "VALIDATION_PASSED"
+      | "FIAT_INCOMING_INITIATED"
+      | "FIAT_INCOMING_COMPLETED"
+      | "FIAT_INCOMING_FAILED"
+      | "FIAT_REVERSAL_INITIATING"
+      | "FIAT_INCOMING_REVERSAL_INITIATED"
+      | "FIAT_INCOMING_REVERSAL_FAILED"
+      | "FIAT_INCOMING_REVERSED"
+      | "CRYPTO_OUTGOING_INITIATING"
+      | "CRYPTO_OUTGOING_INITIATED"
+      | "CRYPTO_OUTGOING_COMPLETED"
+      | "CRYPTO_OUTGOING_FAILED"
+      | "COMPLETED"
+      | "FAILED";
   }): CancelablePromise<TransactionsQueryResultsDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -244,6 +270,8 @@ export class TransactionsService {
         sortField: sortField,
         sortOrder: sortOrder,
         fiatCurrency: fiatCurrency,
+        cryptoCurrency: cryptoCurrency,
+        transactionStatus: transactionStatus,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -268,6 +296,8 @@ export class TransactionsService {
     sortField,
     sortOrder,
     fiatCurrency,
+    cryptoCurrency,
+    transactionStatus,
   }: {
     xNobaApiKey: string;
     /**
@@ -288,7 +318,7 @@ export class TransactionsService {
      */
     endDate?: string;
     /**
-     * offset 0 means first page, 1 means second pag etc.
+     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
      */
     pageOffset?: number;
     /**
@@ -298,7 +328,7 @@ export class TransactionsService {
     /**
      * sort by field
      */
-    sortField?: "timestamp" | "fiatAmount" | "cryptoAmount" | "fiatCurrencyTicker" | "cryptoCurrencyTicker";
+    sortField?: "transactionTimestamp" | "leg1Amount" | "leg2Amount" | "leg1" | "leg2";
     /**
      * sort order asc or desc
      */
@@ -307,6 +337,30 @@ export class TransactionsService {
      * filter for a particular fiat currency
      */
     fiatCurrency?: string;
+    /**
+     * filter for a particular Cryptocurrency
+     */
+    cryptoCurrency?: string;
+    /**
+     * filter for a particular transaction status
+     */
+    transactionStatus?:
+      | "PENDING"
+      | "VALIDATION_FAILED"
+      | "VALIDATION_PASSED"
+      | "FIAT_INCOMING_INITIATED"
+      | "FIAT_INCOMING_COMPLETED"
+      | "FIAT_INCOMING_FAILED"
+      | "FIAT_REVERSAL_INITIATING"
+      | "FIAT_INCOMING_REVERSAL_INITIATED"
+      | "FIAT_INCOMING_REVERSAL_FAILED"
+      | "FIAT_INCOMING_REVERSED"
+      | "CRYPTO_OUTGOING_INITIATING"
+      | "CRYPTO_OUTGOING_INITIATED"
+      | "CRYPTO_OUTGOING_COMPLETED"
+      | "CRYPTO_OUTGOING_FAILED"
+      | "COMPLETED"
+      | "FAILED";
   }): CancelablePromise<Array<TransactionDTO>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -324,6 +378,8 @@ export class TransactionsService {
         sortField: sortField,
         sortOrder: sortOrder,
         fiatCurrency: fiatCurrency,
+        cryptoCurrency: cryptoCurrency,
+        transactionStatus: transactionStatus,
         reportFormat: reportFormat,
       },
     });
