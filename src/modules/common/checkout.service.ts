@@ -18,7 +18,7 @@ import {
   REASON_CODE_SOFT_DECLINE_BANK_ERROR,
   REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA,
   REASON_CODE_SOFT_DECLINE_CARD_ERROR,
-  REASON_CODE_SOFT_DECLINE_NO_CRYPTO
+  REASON_CODE_SOFT_DECLINE_NO_CRYPTO,
 } from "../transactions/domain/CheckoutConstants";
 import { Transaction } from "../transactions/domain/Transaction";
 import { CreditCardService } from "./creditcard.service";
