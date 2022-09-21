@@ -31,10 +31,10 @@ export class CreditCardService {
           const mask = `${data["Format"]}`.trim();
           const cardType = Object.values(CardType).filter(enumType => enumType.toUpperCase() === type.toUpperCase())[0];
           // A card BIN is supported if it's a debit card or not on the unsupportedIssuers list
-          const supported =
-            unsupportedIssuers.indexOf(issuer) == -1 || cardType == CardType.DEBIT
+          const supported = BINValidity.SUPPORTED;
+          /* unsupportedIssuers.indexOf(issuer) == -1 || cardType == CardType.DEBIT
               ? BINValidity.SUPPORTED
-              : BINValidity.NOT_SUPPORTED;
+              : BINValidity.NOT_SUPPORTED;*/
           const digits = mask.replace(/ /g, "").length; // Replace all spaces and count the characters
           const cvvDigits = network === "Amex" ? 4 : 3; // TODO: are there others?
 
