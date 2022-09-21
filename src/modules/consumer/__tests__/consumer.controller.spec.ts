@@ -162,6 +162,7 @@ describe("ConsumerController", () => {
 
     it("should add a payment method with missing cardName or nick name", async () => {
       const paymentMethodRequest: AddPaymentMethodDTO = {
+        cardName: "",
         cardNumber: "12345678901234",
         expiryMonth: 2,
         expiryYear: 2023,
