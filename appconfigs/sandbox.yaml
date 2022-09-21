@@ -27,8 +27,8 @@ sendgrid:
   apiKey: "bogus-value"
 
 checkout:
-  awsSecretNameForPublicKey: "TEST_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForSecretKey: "TEST_CHECKOUT_SECRET_KEY"
+  awsSecretNameForPublicKey: "PROD_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSecretKey: "PROD_CHECKOUT_SECRET_KEY"
   publicKey: "bogus-value"
   secretKey: "bogus-value"
   couponCode: "NY2018"
