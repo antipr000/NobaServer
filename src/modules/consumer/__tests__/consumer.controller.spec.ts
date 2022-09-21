@@ -159,5 +159,52 @@ describe("ConsumerController", () => {
       expect(result.paymentMethods.length).toBe(1);
       expect(result.paymentMethods[0].cardName).toBe(paymentMethodRequest.cardName);
     });
+
+    it("should add a payment method with missing cardName or nick name", async () => {
+      const paymentMethodRequest: AddPaymentMethodDTO = {
+        cardNumber: "12345678901234",
+        expiryMonth: 2,
+        expiryYear: 2023,
+        cvv: "765",
+      };
+
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      when(consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
+        Consumer.createConsumer({
+          ...consumer.props,
+          paymentMethods: [
+            {
+              paymentProviderID: PaymentProviders.CHECKOUT,
+              paymentToken: "faketoken1234",
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+              imageUri: "testimage",
+            },
+          ],
+        }),
+      );
+
+      const result = await consumerController.addPaymentMethod(paymentMethodRequest, {
+        user: {
+          entity: consumer,
+        },
+      });
+
+      expect(result._id).toBe(consumer.props._id);
+      expect(result.paymentMethods.length).toBe(1);
+    });
   });
 });

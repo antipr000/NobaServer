@@ -1,30 +1,30 @@
-import { Injectable, BadRequestException, Inject } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { Utils } from "../../core/utils/Utils";
+import { BINValidity } from "../common/dto/CreditCardDTO";
+import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { PaymentMethod } from "../consumer/domain/PaymentMethod";
 import { PaymentProviders } from "../consumer/domain/PaymentProviderDetails";
-import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
+import { CheckoutPaymentStatus, FiatTransactionStatus, PaymentRequestResponse } from "../consumer/domain/Types";
 import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
+import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
 import {
   REASON_CODE_SOFT_DECLINE_BANK_ERROR,
   REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA,
   REASON_CODE_SOFT_DECLINE_CARD_ERROR,
-  REASON_CODE_SOFT_DECLINE_NO_CRYPTO,
+  REASON_CODE_SOFT_DECLINE_NO_CRYPTO
 } from "../transactions/domain/CheckoutConstants";
-import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
-import { BINValidity } from "../common/dto/CreditCardDTO";
-import { EmailService } from "./email.service";
-import { CreditCardService } from "./creditcard.service";
-import { CheckoutResponseData } from "./domain/CheckoutResponseData";
-import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
 import { Transaction } from "../transactions/domain/Transaction";
-import { PaymentRequestResponse, CheckoutPaymentStatus, FiatTransactionStatus } from "../consumer/domain/Types";
-import { Utils } from "../../core/utils/Utils";
+import { CreditCardService } from "./creditcard.service";
+import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
+import { CheckoutResponseData } from "./domain/CheckoutResponseData";
+import { EmailService } from "./email.service";
 
 @Injectable()
 export class CheckoutService {
