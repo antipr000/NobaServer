@@ -130,7 +130,7 @@ export class CheckoutService {
     try {
       // Check if added payment method is valid
       checkoutResponse = await this.checkoutApi.payments.request({
-        amount: 100,
+        amount: 1, // 1 cent (amount field is denominated in cents not a decimal dollar)
         currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
         source: {
           type: "id",
