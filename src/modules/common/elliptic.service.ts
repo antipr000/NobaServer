@@ -64,7 +64,6 @@ export class EllipticService {
     const requestBody: EllipticTransactionAnalysisRequest = {
       subject: {
         asset: transaction.props.leg2,
-        blockchain: "algorand",
         type: "transaction",
         hash: transaction.props.blockchainTransactionId,
         output_type: "address",
