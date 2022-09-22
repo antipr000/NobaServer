@@ -197,13 +197,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  public async sendCardAdditionFailedEmail(
-    firstName: string,
-    lastName: string,
-    email: string,
-    cardNetwork: string,
-    last4Digits: string,
-  ) {
+  public async sendCardAdditionFailedEmail(firstName: string, lastName: string, email: string, last4Digits: string) {
     const msg = {
       to: email,
       from: SENDER_EMAIL,
@@ -211,7 +205,6 @@ export class EmailService {
       dynamicTemplateData: {
         user_email: email,
         username: Utils.getUsernameFromNameParts(firstName, lastName),
-        card_network: cardNetwork,
         last_four: last4Digits,
         support_url: SUPPORT_URL,
       },

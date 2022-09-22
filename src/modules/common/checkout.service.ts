@@ -1,30 +1,30 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { Utils } from "../../core/utils/Utils";
-import { BINValidity } from "../common/dto/CreditCardDTO";
-import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { PaymentMethod } from "../consumer/domain/PaymentMethod";
 import { PaymentProviders } from "../consumer/domain/PaymentProviderDetails";
-import { CheckoutPaymentStatus, FiatTransactionStatus, PaymentRequestResponse } from "../consumer/domain/Types";
-import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
 import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
+import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
 import {
   REASON_CODE_SOFT_DECLINE_BANK_ERROR,
   REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA,
   REASON_CODE_SOFT_DECLINE_CARD_ERROR,
   REASON_CODE_SOFT_DECLINE_NO_CRYPTO,
 } from "../transactions/domain/CheckoutConstants";
-import { Transaction } from "../transactions/domain/Transaction";
-import { CreditCardService } from "./creditcard.service";
-import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
-import { CheckoutResponseData } from "./domain/CheckoutResponseData";
+import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
+import { BINValidity } from "../common/dto/CreditCardDTO";
 import { EmailService } from "./email.service";
+import { CreditCardService } from "./creditcard.service";
+import { CheckoutResponseData } from "./domain/CheckoutResponseData";
+import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
+import { Transaction } from "../transactions/domain/Transaction";
+import { PaymentRequestResponse, CheckoutPaymentStatus, FiatTransactionStatus } from "../consumer/domain/Types";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class CheckoutService {
@@ -120,6 +120,13 @@ export class CheckoutService {
       throw new BadRequestException({ message: "Card already added" });
     }
 
+    // Before calling checkout, check against our BIN list
+    const validity = await this.creditCardService.isBINSupported(paymentMethod.cardNumber);
+    if (validity == BINValidity.NOT_SUPPORTED) {
+      // Bypass checkout call entirely
+      throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+    }
+
     try {
       // Check if added payment method is valid
       checkoutResponse = await this.checkoutApi.payments.request({
@@ -153,7 +160,7 @@ export class CheckoutService {
       );
     } catch (e) {
       if (e instanceof CardProcessingException) {
-        throw new BadRequestException(e.message);
+        throw new BadRequestException(e.disposition);
       } else {
         throw new BadRequestException("Unable to add card at this time");
       }
@@ -164,7 +171,6 @@ export class CheckoutService {
         consumer.props.firstName,
         consumer.props.lastName,
         consumer.props.displayEmail,
-        /* cardNetwork = */ "",
         paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
       );
       throw new BadRequestException(CardFailureExceptionText.DECLINE);
@@ -332,14 +338,22 @@ export class CheckoutService {
             response.responseCode,
             response.responseSummary,
           );
-        } else if (REASON_CODE_SOFT_DECLINE_NO_CRYPTO.indexOf(response.responseCode)) {
+        } else if (REASON_CODE_SOFT_DECLINE_NO_CRYPTO.indexOf(response.responseCode) > -1) {
+          // TODO(#593): Update BIN list here
           throw new CardProcessingException(
             CardFailureExceptionText.NO_CRYPTO,
             response.responseCode,
             response.responseSummary,
           );
-        } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(response.responseCode)) {
+        } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(response.responseCode) > -1) {
           sendNobaEmail = true;
+          throw new CardProcessingException(
+            CardFailureExceptionText.SOFT_DECLINE,
+            response.responseCode,
+            response.responseSummary,
+          );
+        } else {
+          this.logger.error(`Unknown checkout response: ${response.responseCode} - ${response.responseSummary}`);
           throw new CardProcessingException(
             CardFailureExceptionText.SOFT_DECLINE,
             response.responseCode,

@@ -138,6 +138,17 @@ export class ConsumerService {
   }
 
   async requestPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
+    // TODO: Check BIN list here
+    /*
+    let response: CheckoutResponseData;
+    // Before calling checkout, check against our BIN list
+    const validity = await this.creditCardService.isBINSupported(paymentMethod.cardNumber);
+    if (validity == BINValidity.NOT_SUPPORTED) {
+      // Bypass checkout call entirely
+      throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+    }
+    */
+
     const paymentProvider = await this.getPaymentMethodProvider(consumer.props._id, transaction.props.paymentMethodID);
     if (paymentProvider === PaymentProviders.CHECKOUT) {
       return this.checkoutService.requestCheckoutPayment(consumer, transaction);

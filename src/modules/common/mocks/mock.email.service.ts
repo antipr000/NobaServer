@@ -32,9 +32,9 @@ export const getMockEmailServiceWithDefaults = () => {
   when(mockEmailService.sendCardAddedEmail(anyString(), anyString(), anyString(), anyString(), anyString())).thenReject(
     new Error("Not implemented!"),
   );
-  when(
-    mockEmailService.sendCardAdditionFailedEmail(anyString(), anyString(), anyString(), anyString(), anyString()),
-  ).thenReject(new Error("Not implemented!"));
+  when(mockEmailService.sendCardAdditionFailedEmail(anyString(), anyString(), anyString(), anyString())).thenReject(
+    new Error("Not implemented!"),
+  );
   when(
     mockEmailService.sendCardDeletedEmail(anyString(), anyString(), anyString(), anyString(), anyString()),
   ).thenReject(new Error("Not implemented!"));
