@@ -83,7 +83,6 @@ describe("Elliptic Tests", () => {
       const ellipticRequestBody: EllipticTransactionAnalysisRequest = {
         subject: {
           asset: transaction.props.leg2,
-          blockchain: "",
           type: "transaction",
           hash: transaction.props.blockchainTransactionId,
           output_type: "address",
