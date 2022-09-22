@@ -1,7 +1,7 @@
 export type EllipticTransactionAnalysisRequest = {
   subject: {
     asset: string;
-    blockchain: string;
+    blockchain?: string;
     type: string;
     hash: string;
     output_type: string;
