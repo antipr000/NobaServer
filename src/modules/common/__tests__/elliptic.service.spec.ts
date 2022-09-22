@@ -93,13 +93,13 @@ describe("Elliptic Tests", () => {
         customer_reference: transaction.props.userId,
       };
 
-      expect(mockAxios.post).toHaveBeenCalledWith("fake-base-url/analyses/synchronous", ellipticRequestBody, {
+      expect(mockAxios.post).toHaveBeenCalledWith("fake-base-url/v2/analyses/synchronous", ellipticRequestBody, {
         headers: {
           "x-access-key": "fake-api-key",
           "x-access-sign": computeSignature(
             JSON.stringify(ellipticRequestBody),
             systemTime,
-            "/analyses/synchronous",
+            "/v2/analyses/synchronous",
             "POST",
           ),
           "x-access-timestamp": systemTime,

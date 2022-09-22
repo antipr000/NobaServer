@@ -29,7 +29,6 @@ export class EllipticService {
 
   private async makeRequest(requestMethod: string, requestPath: string, requestBody: any): Promise<AxiosResponse<any>> {
     const url = `${this.baseUrl}${requestPath}`;
-
     const timestamp = Date.now(); // Same as new Date().getTime() but makes mocking easier
 
     const signaturePlainText = `${timestamp}${requestMethod}${requestPath}${JSON.stringify(requestBody)}`;
@@ -65,7 +64,7 @@ export class EllipticService {
     const requestBody: EllipticTransactionAnalysisRequest = {
       subject: {
         asset: transaction.props.leg2,
-        blockchain: "",
+        blockchain: "algorand",
         type: "transaction",
         hash: transaction.props.blockchainTransactionId,
         output_type: "address",
@@ -81,7 +80,6 @@ export class EllipticService {
         "/v2/analyses/synchronous",
         requestBody,
       );
-
       return {
         riskScore: data.risk_score,
       };
