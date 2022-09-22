@@ -92,7 +92,7 @@ elliptic:
   awsSecretNameForSecretKey: ""
   apiKey: "57073bf78dd8254f2cc34b187017bfa9"
   secretKey: "63a1e25708177ca72113ac07f659ea50"
-  baseUrl: "https://aml-api.elliptic.co/v2"
+  baseUrl: "https://aml-api.elliptic.co"
 
 configuration:
   lowAmountThreshold: 1

@@ -78,7 +78,7 @@ export class EllipticService {
     try {
       const { data }: { data: EllipticTransactionAnalysisResponse } = await this.makeRequest(
         "POST",
-        "/analyses/synchronous",
+        "/v2/analyses/synchronous",
         requestBody,
       );
 

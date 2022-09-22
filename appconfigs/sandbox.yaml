@@ -89,7 +89,7 @@ elliptic:
   awsSecretNameForSecretKey: "TEST_ELLIPTIC_SECRET"
   apiKey: ""
   secretKey: ""
-  baseUrl: "https://aml-api.elliptic.co/v2"
+  baseUrl: "https://aml-api.elliptic.co"
 
 configuration:
   lowAmountThreshold: 1
