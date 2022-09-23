@@ -213,6 +213,8 @@ export class VerificationWebhookController {
     @Body() requestBody: DocumentVerificationWebhookRequestDTO,
     @Request() request: Request,
   ): Promise<DocumentVerificationResultDTO> {
+    this.logger.debug(`Received Sardine document verification webhook call: ${JSON.stringify(request.body)}`);
+
     // Throws an exception if invalid
     this.validateWebhookSignature(request);
 
@@ -236,6 +238,8 @@ export class VerificationWebhookController {
     @Body() requestBody: CaseNotificationWebhookRequestDTO,
     @Request() request: Request,
   ): Promise<string> {
+    this.logger.debug(`Received Sardine case notification webhook call: ${JSON.stringify(request.body)}`);
+
     // Throws an exception if invalid
     this.validateWebhookSignature(request);
 
