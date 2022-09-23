@@ -219,6 +219,9 @@ export class VerificationWebhookController {
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {
+      this.logger.debug(
+        `sardineSignature: ${sardineSignature}, hexString: ${hexString}, requestBody: ${JSON.stringify(requestBody)}`,
+      );
       throw new ForbiddenException("Signature does not match");
     }
     const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
@@ -237,6 +240,9 @@ export class VerificationWebhookController {
     const data = hmac.update(JSON.stringify(requestBody));
     const hexString = data.digest("hex");
     if (sardineSignature !== hexString) {
+      this.logger.debug(
+        `sardineSignature: ${sardineSignature}, hexString: ${hexString}, requestBody: ${JSON.stringify(requestBody)}`,
+      );
       throw new ForbiddenException("Signature does not match");
     }
     this.verificationService.processKycVerificationWebhookRequest(requestBody);
