@@ -12,6 +12,7 @@ import {
   ExecutedQuote,
   FundsAvailabilityRequest,
   ExecutedQuoteStatus,
+  ConsumerWalletTransferResponse,
 } from "../domain/AssetTypes";
 
 export interface AssetService {
@@ -27,6 +28,9 @@ export interface AssetService {
   transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string>;
   pollAssetTransferToConsumerStatus(id: string): Promise<ConsumerAccountTransferStatus>;
 
-  transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<string>;
+  transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<ConsumerWalletTransferResponse>;
   pollConsumerWalletTransferStatus(id: string): Promise<ConsumerWalletTransferStatus>;
+
+  getIntermediaryLeg(): string;
+  needsIntermediaryLeg(): boolean;
 }

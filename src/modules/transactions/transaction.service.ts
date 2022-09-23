@@ -70,21 +70,34 @@ export class TransactionService {
       throw new BadRequestException("Invalid amount");
     }
 
-    const assetService: AssetService = this.assetServiceFactory.getAssetService(
+    const assetService: AssetService = await this.assetServiceFactory.getAssetService(
       transactionQuoteQuery.cryptoCurrencyCode,
     );
+
     let nobaQuote: NobaQuote;
 
     switch (transactionQuoteQuery.fixedSide) {
       case CurrencyType.FIAT:
-        nobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
-          cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
-          fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-          fiatAmount: await this.roundToProperDecimalsForFiatCurrency(
-            transactionQuoteQuery.fiatCurrencyCode,
-            transactionQuoteQuery.fixedAmount,
-          ),
-        });
+        if (assetService.needsIntermediaryLeg()) {
+          nobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
+            cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+            intermediateCryptoCurrency: assetService.getIntermediaryLeg(),
+            fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+            fiatAmount: await this.roundToProperDecimalsForFiatCurrency(
+              transactionQuoteQuery.fiatCurrencyCode,
+              transactionQuoteQuery.fixedAmount,
+            ),
+          });
+        } else {
+          nobaQuote = await assetService.getQuoteForSpecifiedFiatAmount({
+            cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+            fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+            fiatAmount: await this.roundToProperDecimalsForFiatCurrency(
+              transactionQuoteQuery.fiatCurrencyCode,
+              transactionQuoteQuery.fixedAmount,
+            ),
+          });
+        }
         break;
 
       case CurrencyType.CRYPTO:
@@ -221,8 +234,15 @@ export class TransactionService {
       partnerID: partnerID,
       destinationWalletAddress: transactionRequest.destinationWalletAddress,
     });
+    const assetService: AssetService = await this.assetServiceFactory.getAssetService(transactionRequest.leg2);
 
-    const assetService: AssetService = this.assetServiceFactory.getAssetService(transactionRequest.leg2);
+    if (assetService.needsIntermediaryLeg()) {
+      if (transactionRequest.fixedSide === CurrencyType.CRYPTO) {
+        throw new BadRequestException(`Fixed side crypto is not allowed for ${transactionRequest.leg2}`);
+      }
+
+      newTransaction.props.intermediaryLeg = assetService.getIntermediaryLeg();
+    }
 
     const quote =
       transactionRequest.fixedSide === CurrencyType.FIAT
@@ -230,6 +250,7 @@ export class TransactionService {
             fiatCurrency: transactionRequest.leg1,
             cryptoCurrency: transactionRequest.leg2,
             fiatAmount: await this.roundToProperDecimalsForFiatCurrency(transactionRequest.leg1, fiatAmount),
+            intermediateCryptoCurrency: newTransaction.props.intermediaryLeg,
           })
         : await assetService.getQuoteForSpecifiedCryptoQuantity({
             fiatCurrency: transactionRequest.leg1,
@@ -269,6 +290,13 @@ export class TransactionService {
         transactionRequest.leg2,
         quote.totalCryptoQuantity,
       );
+
+      if (quote.totalIntermediateCryptoAmount) {
+        newTransaction.props.intermediaryLegAmount = await this.roundToProperDecimalsForCryptocurrency(
+          newTransaction.props.intermediaryLeg,
+          quote.totalIntermediateCryptoAmount,
+        );
+      }
     } else {
       newTransaction.props.leg1Amount = await this.roundToProperDecimalsForFiatCurrency(
         transactionRequest.leg1,

@@ -956,11 +956,12 @@ describe("DefaultAssetService", () => {
           request.assetId,
           request.consumer.zhParticipantCode,
           nobaPlatformCode,
+          undefined,
         ),
       ).thenResolve(withdrawalID);
 
-      const returnedWithdrawalID = await usdcPolygonAssetService.transferToConsumerWallet(request);
-      expect(returnedWithdrawalID).toEqual(withdrawalID);
+      const returnedWithdrawalResponse = await usdcPolygonAssetService.transferToConsumerWallet(request);
+      expect(returnedWithdrawalResponse.liquidityProviderTransactionId).toEqual(withdrawalID);
     });
   });
 

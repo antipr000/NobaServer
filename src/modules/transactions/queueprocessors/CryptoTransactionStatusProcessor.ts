@@ -11,7 +11,12 @@ import { EmailService } from "../../../modules/common/email.service";
 import { LockService } from "../../../modules/common/lock.service";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { ConsumerAccountTransferStatus, ConsumerWalletTransferRequest, PollStatus } from "../domain/AssetTypes";
+import {
+  ConsumerAccountTransferStatus,
+  ConsumerWalletTransferRequest,
+  ConsumerWalletTransferResponse,
+  PollStatus,
+} from "../domain/AssetTypes";
 
 export class CryptoTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -45,7 +50,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
       return;
     }
 
-    const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
+    const assetService: AssetService = await this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     this.logger.info(
       `${transactionId}: Checking the Consumer Account Transfer status for TransferID: "${transaction.props.cryptoTransactionId}"`,
@@ -84,8 +89,15 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           walletAddress: transaction.props.destinationWalletAddress,
           consumer: consumer.props,
           transactionID: transaction.props._id,
+          intermediateCryptoAsset: transaction.props.intermediaryLeg,
         };
-        transaction.props.zhWithdrawalID = await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
+
+        const consumerWalletTransferResponse: ConsumerWalletTransferResponse =
+          await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
+        transaction.props.zhWithdrawalID = consumerWalletTransferResponse.liquidityProviderTransactionId;
+        transaction.props.executedCrypto = consumerWalletTransferResponse.cryptoAmount
+          ? consumerWalletTransferResponse.cryptoAmount
+          : transaction.props.executedCrypto;
 
         this.logger.info(
           `${transactionId}: Initiated the transfer to consumer wallet with Withdrawal ID: "${transaction.props.zhWithdrawalID}"`,

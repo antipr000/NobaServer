@@ -263,7 +263,7 @@ describe("OnChainPendingProcessor", () => {
       onChainTransactionID: "xyz",
     };
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
@@ -317,7 +317,7 @@ describe("OnChainPendingProcessor", () => {
       onChainTransactionID: "xyz",
     };
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
@@ -368,7 +368,7 @@ describe("OnChainPendingProcessor", () => {
       onChainTransactionID: null,
     };
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
@@ -414,7 +414,7 @@ describe("OnChainPendingProcessor", () => {
       onChainTransactionID: "xyz",
     };
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );

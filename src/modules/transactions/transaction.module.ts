@@ -11,6 +11,7 @@ import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
 import { AssetsModule } from "./assets/assets.module";
+import { SquidService } from "./squid.service";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AssetsModule } from "./assets/assets.module";
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
     },
+    SquidService,
   ],
   exports: [TransactionService], //Need to access in PublicController
 })

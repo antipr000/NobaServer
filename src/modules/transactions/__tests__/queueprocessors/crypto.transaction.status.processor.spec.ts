@@ -149,7 +149,7 @@ describe("CryptoTransactionStatusProcessor", () => {
 
     assetService = getMockAssetServiceWithDefaults();
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(anyString())).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(anyString())).thenResolve(assetServiceInstance);
   });
 
   afterEach(async () => {
@@ -199,7 +199,9 @@ describe("CryptoTransactionStatusProcessor", () => {
       }),
     );
 
-    when(assetService.transferToConsumerWallet(anything())).thenResolve(withdrawalID);
+    when(assetService.transferToConsumerWallet(anything())).thenResolve({
+      liquidityProviderTransactionId: withdrawalID,
+    });
     when(assetService.pollAssetTransferToConsumerStatus(initiatedPaymentId)).thenResolve({
       status: PollStatus.SUCCESS,
       errorMessage: null,

@@ -11,7 +11,6 @@ import {
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { deepEqual, instance, when } from "ts-mockito";
-import { DefaultAssetService } from "../../assets/default.asset.service";
 import {
   ConsumerAccountTransferRequest,
   ConsumerAccountTransferStatus,
@@ -34,22 +33,22 @@ import {
   ZerohashTransferResponse,
   ZerohashTransferStatus,
 } from "../../domain/ZerohashTypes";
-import { Consumer } from "../../../../modules/consumer/domain/Consumer";
+import { Consumer } from "../../../consumer/domain/Consumer";
 import { BadRequestError } from "../../../../core/exception/CommonAppException";
-import { CurrencyType } from "../../../../modules/common/domain/Types";
-import { getMockCurrencyServiceWithDefaults } from "../../../../modules/common/mocks/mock.currency.service";
-import { CurrencyService } from "../../../../modules/common/currency.service";
+import { CurrencyType } from "../../../common/domain/Types";
+import { getMockCurrencyServiceWithDefaults } from "../../../common/mocks/mock.currency.service";
+import { CurrencyService } from "../../../common/currency.service";
+import { ZerohashAssetService } from "../../assets/zerohash.asset.service";
 
-describe("DefaultAssetService", () => {
+describe("ZerohashAssetService", () => {
   let zerohashService: ZeroHashService;
   let currencyService: CurrencyService;
-  let defaultAssetService: DefaultAssetService;
+  let zerohashAssetService: ZerohashAssetService;
   const nobaPlatformCode = "ABCDE";
 
   const setupTestModule = async (environmentVariables: Record<string, any>): Promise<void> => {
     zerohashService = getMockZerohashServiceWithDefaults();
     currencyService = getMockCurrencyServiceWithDefaults();
-
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
       providers: [
@@ -61,11 +60,11 @@ describe("DefaultAssetService", () => {
           provide: CurrencyService,
           useFactory: () => instance(currencyService),
         },
-        DefaultAssetService,
+        ZerohashAssetService,
       ],
     }).compile();
 
-    defaultAssetService = app.get<DefaultAssetService>(DefaultAssetService);
+    zerohashAssetService = app.get<ZerohashAssetService>(ZerohashAssetService);
 
     when(currencyService.getSupportedCryptocurrencies()).thenResolve([
       {
@@ -193,7 +192,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -224,7 +223,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -255,7 +254,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -286,7 +285,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -317,7 +316,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -348,7 +347,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -379,7 +378,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -478,7 +477,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -509,7 +508,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -540,7 +539,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -571,7 +570,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -602,7 +601,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -633,7 +632,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -664,7 +663,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -695,7 +694,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -726,7 +725,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await defaultAssetService.getQuoteForSpecifiedCryptoQuantity({
+      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
@@ -794,7 +793,7 @@ describe("DefaultAssetService", () => {
         perUnitCryptoPriceWithSpread: 1000,
       };
 
-      defaultAssetService.getQuoteForSpecifiedFiatAmount = jest.fn().mockReturnValue(nobaQuote);
+      zerohashAssetService.getQuoteForSpecifiedFiatAmount = jest.fn().mockReturnValue(nobaQuote);
       when(zerohashService.executeQuote(quoteID)).thenResolve({
         tradePrice: 23423,
         cryptoReceived: request.cryptoQuantity,
@@ -803,7 +802,7 @@ describe("DefaultAssetService", () => {
         cryptocurrency: "ETH",
       });
 
-      const quoteResponse = await defaultAssetService.executeQuoteForFundsAvailability(request);
+      const quoteResponse = await zerohashAssetService.executeQuoteForFundsAvailability(request);
       expect(quoteResponse).toEqual(quote);
     });
 
@@ -835,7 +834,7 @@ describe("DefaultAssetService", () => {
       when(currencyService.getCryptocurrency("UNKNOWN")).thenResolve(null);
 
       expect(async () => {
-        await defaultAssetService.executeQuoteForFundsAvailability(request);
+        await zerohashAssetService.executeQuoteForFundsAvailability(request);
       }).rejects.toThrowError(BadRequestError);
     });
 
@@ -867,7 +866,7 @@ describe("DefaultAssetService", () => {
       when(currencyService.getFiatCurrency("UNKNOWN")).thenResolve(null);
 
       expect(async () => {
-        await defaultAssetService.executeQuoteForFundsAvailability(request);
+        await zerohashAssetService.executeQuoteForFundsAvailability(request);
       }).rejects.toThrowError(BadRequestError);
     });
   });
@@ -894,7 +893,7 @@ describe("DefaultAssetService", () => {
 
       when(zerohashService.transferAssetsToNoba(request.cryptocurrency, request.cryptoAmount)).thenResolve(response);
 
-      const fundsAvailabilityResponse = await defaultAssetService.makeFundsAvailable(request);
+      const fundsAvailabilityResponse = await zerohashAssetService.makeFundsAvailable(request);
 
       expect(fundsAvailabilityResponse).toEqual(expectedResponse);
     });
@@ -913,7 +912,7 @@ describe("DefaultAssetService", () => {
         movementID: null,
       });
 
-      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+      const FundsAvailabilityStatus = await zerohashAssetService.pollFundsAvailableStatus(transferID);
 
       expect(FundsAvailabilityStatus).toEqual({ status: PollStatus.PENDING, errorMessage: null, settledId: null });
     });
@@ -930,7 +929,7 @@ describe("DefaultAssetService", () => {
         movementID: null,
       });
 
-      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+      const FundsAvailabilityStatus = await zerohashAssetService.pollFundsAvailableStatus(transferID);
 
       expect(FundsAvailabilityStatus).toEqual({ status: PollStatus.PENDING, errorMessage: null, settledId: null });
     });
@@ -947,7 +946,7 @@ describe("DefaultAssetService", () => {
         movementID: "1111",
       });
 
-      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+      const FundsAvailabilityStatus = await zerohashAssetService.pollFundsAvailableStatus(transferID);
 
       expect(FundsAvailabilityStatus).toEqual({ status: PollStatus.SUCCESS, errorMessage: null, settledId: "1111" });
     });
@@ -964,7 +963,7 @@ describe("DefaultAssetService", () => {
         movementID: null,
       });
 
-      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+      const FundsAvailabilityStatus = await zerohashAssetService.pollFundsAvailableStatus(transferID);
 
       expect(FundsAvailabilityStatus).toEqual({
         status: PollStatus.FATAL_ERROR,
@@ -985,7 +984,7 @@ describe("DefaultAssetService", () => {
         movementID: null,
       });
 
-      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+      const FundsAvailabilityStatus = await zerohashAssetService.pollFundsAvailableStatus(transferID);
 
       expect(FundsAvailabilityStatus).toEqual({
         status: PollStatus.FAILURE,
@@ -1006,7 +1005,7 @@ describe("DefaultAssetService", () => {
         movementID: null,
       });
 
-      const FundsAvailabilityStatus = await defaultAssetService.pollFundsAvailableStatus(transferID);
+      const FundsAvailabilityStatus = await zerohashAssetService.pollFundsAvailableStatus(transferID);
 
       expect(FundsAvailabilityStatus).toEqual({
         status: PollStatus.FATAL_ERROR,
@@ -1064,7 +1063,7 @@ describe("DefaultAssetService", () => {
 
       when(zerohashService.executeTrade(deepEqual(tradeRequest))).thenResolve(response);
 
-      const tradeID = await defaultAssetService.transferAssetToConsumerAccount(request);
+      const tradeID = await zerohashAssetService.transferAssetToConsumerAccount(request);
 
       expect(tradeID).toEqual(response.tradeID);
     });
@@ -1088,7 +1087,7 @@ describe("DefaultAssetService", () => {
 
       when(zerohashService.checkTradeStatus(tradeID)).thenResolve(tradeResponse);
 
-      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+      const transferStatus = await zerohashAssetService.pollAssetTransferToConsumerStatus(tradeID);
 
       expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
     });
@@ -1110,7 +1109,7 @@ describe("DefaultAssetService", () => {
 
       when(zerohashService.checkTradeStatus(tradeID)).thenResolve(tradeResponse);
 
-      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+      const transferStatus = await zerohashAssetService.pollAssetTransferToConsumerStatus(tradeID);
 
       expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
     });
@@ -1133,7 +1132,7 @@ describe("DefaultAssetService", () => {
 
       when(zerohashService.checkTradeStatus(tradeID)).thenResolve(tradeResponse);
 
-      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+      const transferStatus = await zerohashAssetService.pollAssetTransferToConsumerStatus(tradeID);
 
       expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
     });
@@ -1148,7 +1147,7 @@ describe("DefaultAssetService", () => {
 
       when(zerohashService.checkTradeStatus(tradeID)).thenThrow(new Error(errorMessage));
 
-      const transferStatus = await defaultAssetService.pollAssetTransferToConsumerStatus(tradeID);
+      const transferStatus = await zerohashAssetService.pollAssetTransferToConsumerStatus(tradeID);
 
       expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
     });
@@ -1185,11 +1184,12 @@ describe("DefaultAssetService", () => {
           request.assetId,
           request.consumer.zhParticipantCode,
           nobaPlatformCode,
+          undefined,
         ),
       ).thenResolve(withdrawalID);
 
-      const returnedWithdrawalID = await defaultAssetService.transferToConsumerWallet(request);
-      expect(returnedWithdrawalID).toEqual(withdrawalID);
+      const returnedWithdrawalResponse = await zerohashAssetService.transferToConsumerWallet(request);
+      expect(returnedWithdrawalResponse.liquidityProviderTransactionId).toEqual(withdrawalID);
     });
   });
 
@@ -1206,7 +1206,7 @@ describe("DefaultAssetService", () => {
         gasPrice: null,
       });
 
-      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+      const transferStatus = await zerohashAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
         status: PollStatus.PENDING,
@@ -1229,7 +1229,7 @@ describe("DefaultAssetService", () => {
         gasPrice: null,
       });
 
-      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+      const transferStatus = await zerohashAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
         status: PollStatus.PENDING,
@@ -1252,7 +1252,7 @@ describe("DefaultAssetService", () => {
         gasPrice: null,
       });
 
-      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+      const transferStatus = await zerohashAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
         status: PollStatus.RETRYABLE_FAILURE,
@@ -1275,7 +1275,7 @@ describe("DefaultAssetService", () => {
         gasPrice: null,
       });
 
-      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+      const transferStatus = await zerohashAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
         status: PollStatus.PENDING,
@@ -1301,7 +1301,7 @@ describe("DefaultAssetService", () => {
         gasPrice: null,
       });
 
-      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+      const transferStatus = await zerohashAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
         status: PollStatus.SUCCESS,
@@ -1327,7 +1327,7 @@ describe("DefaultAssetService", () => {
         gasPrice: null,
       });
 
-      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+      const transferStatus = await zerohashAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
         status: PollStatus.FAILURE,
@@ -1343,7 +1343,7 @@ describe("DefaultAssetService", () => {
 
       when(zerohashService.getWithdrawal(withdrawalID)).thenThrow(new Error("Processing error"));
 
-      const transferStatus = await defaultAssetService.pollConsumerWalletTransferStatus(withdrawalID);
+      const transferStatus = await zerohashAssetService.pollConsumerWalletTransferStatus(withdrawalID);
 
       expect(transferStatus).toEqual({
         status: PollStatus.PENDING,

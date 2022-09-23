@@ -98,6 +98,14 @@ elliptic:
   secretKey: ""
   baseUrl: "https://aml-api.elliptic.co"
 
+squid:
+  awsSecretNameForApiKey: "PROD_SQUID_API_KEY"
+  apiKey: ""
+  baseUrl: "https://testnet.api.0xsquid.com"
+  intermediaryLeg: "USDC.POLYGON"
+  temporaryWalletAddress: "0xDb933AE704a2D8acF4201D75106464b30dEC1E4e"
+  slippage: 1
+
 configuration:
   lowAmountThreshold: 50
   highAmountThreshold: 200

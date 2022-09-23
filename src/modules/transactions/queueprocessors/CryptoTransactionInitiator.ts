@@ -21,6 +21,7 @@ import {
   ExecutedQuoteStatus,
   TRADE_TYPE_FIXED,
 } from "../domain/AssetTypes";
+import { CurrencyService } from "../../../modules/common/currency.service";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
   constructor(
@@ -31,6 +32,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     transactionService: TransactionService,
     lockService: LockService,
     private readonly assetServiceFactory: AssetServiceFactory,
+    private readonly currencyService: CurrencyService,
   ) {
     super(
       logger,
@@ -55,7 +57,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
+    const assetService: AssetService = await this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     // Did we already execute the trade?
     if (!transaction.props.executedQuoteTradeID) {
@@ -63,10 +65,12 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
       const executeQuoteRequest: ExecuteQuoteRequest = {
         consumer: consumer.props,
-        cryptoCurrency: transaction.props.leg2,
+        cryptoCurrency: transaction.props.intermediaryLeg ? transaction.props.intermediaryLeg : transaction.props.leg2,
         fiatCurrency: transaction.props.leg1,
 
-        cryptoQuantity: transaction.props.leg2Amount,
+        cryptoQuantity: transaction.props.intermediaryLeg
+          ? transaction.props.intermediaryLegAmount
+          : transaction.props.leg2Amount,
         fiatAmount: transaction.props.leg1Amount,
 
         // TODO(#): Populate slippage correctly using 'AssetService'
@@ -81,6 +85,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         const executedQuote: ExecutedQuote = await assetService.executeQuoteForFundsAvailability(executeQuoteRequest);
 
         transaction.props.executedCrypto = executedQuote.cryptoReceived;
+        if (transaction.props.intermediaryLeg) transaction.props.intermediaryLegAmount = executedQuote.cryptoReceived;
         transaction.props.executedQuoteTradeID = executedQuote.tradeID;
         transaction.props.buyRate = executedQuote.tradePrice;
 
@@ -139,7 +144,9 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         this.logger.debug(`${transactionId}: Transferring funds to Noba`);
         const fundsAvailabilityRequest: FundsAvailabilityRequest = {
           cryptoAmount: transaction.props.executedCrypto,
-          cryptocurrency: transaction.props.leg2,
+          cryptocurrency: transaction.props.intermediaryLeg
+            ? transaction.props.intermediaryLeg
+            : transaction.props.leg2,
         };
         const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
           fundsAvailabilityRequest,
@@ -214,7 +221,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       totalCryptoAmount: transaction.props.executedCrypto,
       fiatAmountPreSpread: transaction.props.amountPreSpread,
       totalFiatAmount: transaction.props.leg1Amount,
-      cryptoCurrency: transaction.props.leg2,
+      cryptoCurrency: transaction.props.intermediaryLeg ? transaction.props.intermediaryLeg : transaction.props.leg2,
       fiatCurrency: transaction.props.leg1,
       transactionID: transaction.props._id,
       transactionCreationTimestamp: transaction.props.transactionTimestamp,

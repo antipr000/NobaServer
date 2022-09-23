@@ -87,6 +87,13 @@ import {
   ELLIPTIC_BASE_URL,
   ELLIPTIC_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR,
   ELLIPTIC_SECRET_KEY,
+  SQUID_CONFIG_KEY,
+  SQUID_AWS_SECRET_NAME_FOR_API_KEY_ATTR,
+  SQUID_API_KEY,
+  SQUID_BASE_URL,
+  SQUID_INTERMEDIARY_LEG,
+  SQUID_TEMPORARY_WALLET_ADDRESS,
+  SQUID_SLIPPAGE,
 } from "./ConfigurationUtils";
 import * as fs from "fs";
 import * as os from "os";
@@ -101,6 +108,7 @@ import { KmsConfigs } from "./configtypes/KmsConfigs";
 import { CommonConfigs } from "./configtypes/CommonConfigs";
 import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 import { EllipticConfigs } from "./configtypes/EllipticConfig";
+import { SquidConfigs } from "./configtypes/SquidConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -244,6 +252,7 @@ async function configureAllVendorCredentials(
     configureAwsKmsCredentials,
     configureCommonConfigurations,
     configureEllipticCredentials,
+    configureSquidCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -524,6 +533,37 @@ async function configureEllipticCredentials(
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
 
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
+
+  return configs;
+}
+
+async function configureSquidCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const squidConfigs: SquidConfigs = configs[SQUID_CONFIG_KEY];
+
+  if (squidConfigs === undefined) {
+    const errorMessage =
+      "\n'Elliptic' configurations are required. Please configure the Elliptic credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${SQUID_CONFIG_KEY}" and populate ` +
+      `("${SQUID_AWS_SECRET_NAME_FOR_API_KEY_ATTR}" or "${SQUID_API_KEY}"), ` +
+      `"${SQUID_BASE_URL}"), ` +
+      `"${SQUID_INTERMEDIARY_LEG}"), ` +
+      `"${SQUID_TEMPORARY_WALLET_ADDRESS}"), ` +
+      `"${SQUID_SLIPPAGE}"), ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  squidConfigs.apiKey = await getParameterValue(squidConfigs.awsSecretNameForApiKey, squidConfigs.apiKey);
+  squidConfigs.baseUrl = await getParameterValue(undefined, squidConfigs.baseUrl);
+  squidConfigs.intermediaryLeg = await getParameterValue(undefined, squidConfigs.intermediaryLeg);
+  squidConfigs.temporaryWalletAddress = await getParameterValue(undefined, squidConfigs.temporaryWalletAddress);
+  squidConfigs.slippage = parseInt(await getParameterValue(undefined, squidConfigs.slippage.toString()));
+
+  configs[SQUID_CONFIG_KEY] = squidConfigs;
 
   return configs;
 }

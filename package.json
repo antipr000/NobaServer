@@ -22,6 +22,7 @@
     "gen-test-api-client": "bash ./test/api_client/client.generator.sh"
   },
   "dependencies": {
+    "@0xsquid/sdk": "^1.0.0-beta.15",
     "@aws-crypto/client-node": "^3.1.1",
     "@nestjs/common": "^8.4.7",
     "@nestjs/config": "^2.1.0",

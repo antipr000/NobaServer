@@ -1,7 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import {
   ExecuteQuoteRequest,
-  FundsAvailabilityStatus,
   FundsAvailabilityResponse,
   QuoteRequestForFixedFiat,
   QuoteRequestForFixedCrypto,
@@ -10,12 +9,37 @@ import {
   ExecutedQuote,
   ExecutedQuoteStatus,
   TRADE_TYPE_FIXED,
+  ConsumerAccountTransferRequest,
+  ConsumerWalletTransferRequest,
+  ConsumerWalletTransferResponse,
+  FundsAvailabilityStatus,
 } from "../domain/AssetTypes";
 import { DefaultAssetService } from "./default.asset.service";
-import { ZerohashQuote } from "../domain/ZerohashTypes";
+import {
+  ZerohashNetworkFee,
+  ZerohashQuote,
+  ZerohashTradeRequest,
+  ZerohashTradeResponse,
+  ZerohashTransfer,
+  ZerohashWithdrawalResponse,
+} from "../domain/ZerohashTypes";
+import { CurrencyService } from "../../../modules/common/currency.service";
+import { ZeroHashService } from "../zerohash.service";
+import { Logger } from "winston";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 
 @Injectable()
 export class USDCPolygonAssetService extends DefaultAssetService {
+  constructor(
+    currencyService: CurrencyService,
+    protected readonly zerohashService: ZeroHashService,
+    @Inject(WINSTON_MODULE_PROVIDER) logger: Logger,
+    configService: CustomConfigService,
+  ) {
+    super(currencyService, logger, configService);
+  }
+
   // Overrides superclass method
   protected async getQuoteFromLiquidityProviderFiatFixed(
     cryptoCurrency: string,
@@ -47,6 +71,13 @@ export class USDCPolygonAssetService extends DefaultAssetService {
     };
   }
 
+  protected getNetworkFeeFromLiquidityProvider(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+  ): Promise<ZerohashNetworkFee> {
+    return this.zerohashService.estimateNetworkFee(cryptoCurrency, fiatCurrency);
+  }
+
   async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote> {
     return await super.getQuoteForSpecifiedFiatAmount(request);
   }
@@ -71,9 +102,65 @@ export class USDCPolygonAssetService extends DefaultAssetService {
   makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse> {
     throw new Error("Method not implemented.");
   }
+
   pollFundsAvailableStatus(id: string): Promise<FundsAvailabilityStatus> {
     throw new Error("Method not implemented.");
   }
 
-  // Other interface methods flow through to superclass
+  protected getLiquidityProviderTransfer(id: any): Promise<ZerohashTransfer> {
+    throw new Error("Method not implemented.");
+  }
+
+  async transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string> {
+    // Gets or creates participant code
+    const consumerParticipantCode: string = await this.zerohashService.getParticipantCode(
+      request.consumer,
+      request.transactionCreationTimestamp,
+    );
+
+    // TODO(#310) Confirm that the traded values comes out correctly
+    const tradeRequest: ZerohashTradeRequest = {
+      boughtAssetID: request.cryptoCurrency,
+      soldAssetID: request.fiatCurrency,
+
+      buyAmount: request.totalCryptoAmount,
+      tradePrice: request.cryptoAssetTradePrice,
+
+      sellAmount: request.fiatAmountPreSpread,
+      totalFiatAmount: request.totalFiatAmount,
+
+      buyerParticipantCode: consumerParticipantCode,
+      sellerParticipantCode: this.zerohashService.getNobaPlatformCode(),
+
+      idempotencyID: request.transactionID,
+      requestorEmail: request.consumer.email,
+    };
+
+    const tradeResponse: ZerohashTradeResponse = await this.zerohashService.executeTrade(tradeRequest);
+
+    return tradeResponse.tradeID;
+  }
+
+  protected getLiquidityProviderTradeStatus(id: string): Promise<ZerohashTradeResponse> {
+    return this.zerohashService.checkTradeStatus(id);
+  }
+
+  async transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<ConsumerWalletTransferResponse> {
+    const withdrawalId: string = await this.zerohashService.requestWithdrawal(
+      request.walletAddress,
+      request.amount,
+      request.assetId,
+      request.consumer.zhParticipantCode,
+      this.zerohashService.getNobaPlatformCode(),
+      request.smartContractData,
+    );
+
+    return {
+      liquidityProviderTransactionId: withdrawalId,
+    };
+  }
+
+  protected getLiquidityProviderWithdrawal(id: any): Promise<ZerohashWithdrawalResponse> {
+    return this.zerohashService.getWithdrawal(id);
+  }
 }

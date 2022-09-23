@@ -107,6 +107,14 @@ export const ELLIPTIC_API_KEY = "apiKey";
 export const ELLIPTIC_SECRET_KEY = "secretKey";
 export const ELLIPTIC_BASE_URL = "baseUrl";
 
+export const SQUID_CONFIG_KEY = "squid";
+export const SQUID_AWS_SECRET_NAME_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
+export const SQUID_API_KEY = "apiKey";
+export const SQUID_BASE_URL = "baseUrl";
+export const SQUID_INTERMEDIARY_LEG = "intermediaryLeg";
+export const SQUID_TEMPORARY_WALLET_ADDRESS = "temporaryWalletAddress";
+export const SQUID_SLIPPAGE = "slippage";
+
 export const KMS_CONFIG_CONTEXT_KEY = "context";
 export const KMS_CONFIG_KEY = "kms";
 export const KMS_CONTEXT_STAGE = "stage";

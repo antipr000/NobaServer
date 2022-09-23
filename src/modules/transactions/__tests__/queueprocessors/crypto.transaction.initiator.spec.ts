@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Collection, MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
+import { CurrencyService } from "../../../../modules/common/currency.service";
 import { anything, capture, instance, when } from "ts-mockito";
 import {
   MONGO_CONFIG_KEY,
@@ -38,6 +39,7 @@ import { CryptoTransactionInitiator } from "../../queueprocessors/CryptoTransact
 import { SqsClient } from "../../queueprocessors/sqs.client";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../../transaction.service";
+import { getMockCurrencyServiceWithDefaults } from "../../../../modules/common/mocks/mock.currency.service";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -73,6 +75,7 @@ describe("CryptoTransactionInitiator", () => {
   let transactionCollection: Collection;
   let verificationService: VerificationService;
   let lockService: LockService;
+  let currencyService: CurrencyService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -97,6 +100,7 @@ describe("CryptoTransactionInitiator", () => {
     lockService = getMockLockServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     assetService = getMockAssetServiceWithDefaults();
+    currencyService = getMockCurrencyServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `CryptoTransactionInitiator` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -138,6 +142,10 @@ describe("CryptoTransactionInitiator", () => {
         {
           provide: AssetServiceFactory,
           useFactory: () => instance(assetServiceFactory),
+        },
+        {
+          provide: CurrencyService,
+          useFactory: () => instance(currencyService),
         },
         CryptoTransactionInitiator,
       ],
@@ -242,13 +250,21 @@ describe("CryptoTransactionInitiator", () => {
       transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
       _id: transaction.props._id as any,
     });
+
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
+    });
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     when(sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transaction.props._id)).thenResolve("");
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.makeFundsAvailable(anything())).thenResolve(fundsAvailabilityResponse);
     when(assetService.pollFundsAvailableStatus(anything())).thenResolve({
       status: PollStatus.SUCCESS,
@@ -304,13 +320,20 @@ describe("CryptoTransactionInitiator", () => {
       transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
       _id: transaction.props._id as any,
     });
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
+    });
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     when(sqsClient.enqueue(TransactionQueueName.CryptoTransactionInitiated, transaction.props._id)).thenResolve("");
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       tradeID: "quote_trade_id",
       tradePrice: 12345,
@@ -368,11 +391,18 @@ describe("CryptoTransactionInitiator", () => {
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
       status: PollStatus.SUCCESS,
+    });
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
     });
     when(assetService.makeFundsAvailable(anything())).thenResolve({
       transferID: "noba_account_transfer_id",
@@ -413,9 +443,16 @@ describe("CryptoTransactionInitiator", () => {
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
+    });
 
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
 
     when(assetService.makeFundsAvailable(anything())).thenResolve({
       transferID: "noba_account_transfer_id",
@@ -456,9 +493,16 @@ describe("CryptoTransactionInitiator", () => {
     when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
+    });
 
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {
         quoteID: "executed_quote_id",
@@ -515,8 +559,15 @@ describe("CryptoTransactionInitiator", () => {
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
     when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
 
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
+    });
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {
         quoteID: "quote_id",
@@ -576,8 +627,15 @@ describe("CryptoTransactionInitiator", () => {
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
+    });
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
 
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {
@@ -632,6 +690,13 @@ describe("CryptoTransactionInitiator", () => {
       transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
       _id: transaction.props._id as any,
     });
+    when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
+      ticker: cryptocurrency,
+      provider: "Zerohash",
+      iconPath: "",
+      precision: 0,
+      name: "Ethereum",
+    });
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiated, transaction.props._id)).thenResolve("");
     when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
@@ -639,7 +704,7 @@ describe("CryptoTransactionInitiator", () => {
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
     const assetServiceInstance = instance(assetService);
-    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenReturn(assetServiceInstance);
+    when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
 
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {

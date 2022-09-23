@@ -1,13 +1,10 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { BadRequestError } from "../../../core/exception/CommonAppException";
+import { Injectable } from "@nestjs/common";
 import { Logger } from "winston";
 import {
   ExecuteQuoteRequest,
   ConsumerAccountTransferRequest,
   ConsumerWalletTransferRequest,
   FundsAvailabilityStatus,
-  PollStatus,
   FundsAvailabilityResponse,
   ConsumerAccountTransferStatus,
   ConsumerWalletTransferStatus,
@@ -17,8 +14,9 @@ import {
   ExecutedQuote,
   FundsAvailabilityRequest,
   ExecutedQuoteStatus,
+  PollStatus,
+  ConsumerWalletTransferResponse,
 } from "../domain/AssetTypes";
-import { ZeroHashService } from "../zerohash.service";
 import { AssetService } from "./asset.service";
 import {
   OnChainState,
@@ -27,28 +25,22 @@ import {
   ZerohashNetworkFee,
   ZerohashQuote,
   ZerohashTradeResponse,
-  ZerohashTradeRequest,
   ZerohashTransfer,
   ZerohashTransferStatus,
   ZerohashWithdrawalResponse,
-  ZerohashTransferResponse,
-  ZerohashExecutedQuote,
 } from "../domain/ZerohashTypes";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
-import { CurrencyType } from "../../../modules/common/domain/Types";
 import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 
 @Injectable()
-export class DefaultAssetService implements AssetService {
+export abstract class DefaultAssetService implements AssetService {
   protected readonly nobaTransactionConfigs: NobaTransactionConfigs;
-
   constructor(
     protected readonly currencyService: CurrencyService,
-    protected readonly zerohashService: ZeroHashService,
-    @Inject(WINSTON_MODULE_PROVIDER) protected readonly logger: Logger,
+    protected readonly logger: Logger,
     configService: CustomConfigService,
   ) {
     this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
@@ -61,7 +53,7 @@ export class DefaultAssetService implements AssetService {
     const fixedCreditCardFeeInFiat = this.nobaTransactionConfigs.fixedCreditCardFee;
 
     // Get network / gas fees
-    const networkFee: ZerohashNetworkFee = await this.zerohashService.estimateNetworkFee(
+    const networkFee: ZerohashNetworkFee = await this.getNetworkFeeFromLiquidityProvider(
       request.cryptoCurrency,
       request.fiatCurrency,
     );
@@ -128,7 +120,7 @@ export class DefaultAssetService implements AssetService {
     const fixedCreditCardFeeInFiat = this.nobaTransactionConfigs.fixedCreditCardFee;
 
     // Get network / gas fees
-    const networkFee: ZerohashNetworkFee = await this.zerohashService.estimateNetworkFee(
+    const networkFee: ZerohashNetworkFee = await this.getNetworkFeeFromLiquidityProvider(
       request.cryptoCurrency,
       request.fiatCurrency,
     );
@@ -196,91 +188,10 @@ export class DefaultAssetService implements AssetService {
     };
   }
 
-  protected async getQuoteFromLiquidityProviderFiatFixed(
-    cryptoCurrency: string,
-    fiatCurrency: string,
-    fiatAmount: number,
-  ): Promise<ZerohashQuote> {
-    return await this.zerohashService.requestQuoteForFixedFiatCurrency(cryptoCurrency, fiatCurrency, fiatAmount);
-  }
-
-  protected async getQuoteFromLiquidityProviderCryptoFixed(
-    cryptoCurrency: string,
-    fiatCurrency: string,
-    cryptoQuantity: number,
-  ): Promise<ZerohashQuote> {
-    return await this.zerohashService.requestQuoteForDesiredCryptoQuantity(
-      cryptoCurrency,
-      fiatCurrency,
-      cryptoQuantity,
-    );
-  }
-
-  /**
-   * Make the requested fund available for transfer to consumer wallet.
-   *
-   * @param request: Fiat and Crypto Asset details to be exchanged.
-   * @returns
-   *   - If succeed, returns the ID which can be polled for completion using `pollFundsAvailableStatus` function.
-   *   - If failed, throws the error.
-   *
-   * TODO(#): Make it idempotent by using 'transactionId'.
-   * TODO(#): Fails gracefully with proper error messages.
-   */
-  async executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote> {
-    const cryptocurrency = await this.currencyService.getCryptocurrency(request.cryptoCurrency);
-    if (cryptocurrency == null) {
-      throw new BadRequestError({
-        messageForClient: `Unsupported cryptocurrency: ${request.cryptoCurrency}`,
-      });
-    }
-
-    const fiatCurrency = await this.currencyService.getFiatCurrency(request.fiatCurrency);
-    if (fiatCurrency == null) {
-      throw new BadRequestError({
-        messageForClient: `Unsupported fiat currency: ${request.fiatCurrency}`,
-      });
-    }
-
-    // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
-    let nobaQuote: NobaQuote;
-
-    switch (request.fixedSide) {
-      case CurrencyType.FIAT:
-        nobaQuote = await this.getQuoteForSpecifiedFiatAmount({
-          cryptoCurrency: request.cryptoCurrency,
-          fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
-          fiatCurrency: request.fiatCurrency,
-        });
-
-        break;
-
-      case CurrencyType.CRYPTO:
-        nobaQuote = await this.getQuoteForSpecifiedCryptoQuantity({
-          cryptoCurrency: request.cryptoCurrency,
-          cryptoQuantity: Utils.roundToSpecifiedDecimalNumber(request.cryptoQuantity, cryptocurrency.precision),
-          fiatCurrency: request.fiatCurrency,
-        });
-        break;
-
-      default:
-        throw new BadRequestException(`Unknown 'fixedSide' of the transaction: '${request.fixedSide}'`);
-    }
-
-    // TODO(#): Slippage calculations.
-
-    const executedQuote: ZerohashExecutedQuote = await this.zerohashService.executeQuote(nobaQuote.quoteID);
-    return {
-      quote: nobaQuote,
-      tradeID: executedQuote.tradeID,
-      tradePrice: executedQuote.tradePrice,
-      cryptoReceived: executedQuote.cryptoReceived,
-    };
-  }
+  abstract executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote>;
 
   async pollExecuteQuoteForFundsAvailabilityStatus(id: string): Promise<ExecutedQuoteStatus> {
-    const tradeResponse: ZerohashTradeResponse = await this.zerohashService.checkTradeStatus(id);
-
+    const tradeResponse: ZerohashTradeResponse = await this.getLiquidityProviderTradeStatus(id);
     try {
       switch (tradeResponse.tradeState) {
         case TradeState.PENDING:
@@ -313,18 +224,7 @@ export class DefaultAssetService implements AssetService {
     }
   }
 
-  async makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse> {
-    const assetTransfer: ZerohashTransferResponse = await this.zerohashService.transferAssetsToNoba(
-      request.cryptocurrency,
-      request.cryptoAmount,
-    );
-
-    return {
-      transferID: assetTransfer.transferID,
-      transferredCrypto: assetTransfer.cryptoAmount,
-      cryptocurrency: assetTransfer.cryptocurrency,
-    };
-  }
+  abstract makeFundsAvailable(request: FundsAvailabilityRequest): Promise<FundsAvailabilityResponse>;
 
   /**
    * Polls the status for the funds available requests sent using `makeFundsAvailable()`.
@@ -337,9 +237,10 @@ export class DefaultAssetService implements AssetService {
    *   - If status = FAILURE, the transfer request failed because of an expected reason & can be retried.
    *   - If status = FATAL_ERROR, unexpected error, 'errorMessage' contains the reason.
    */
+
   async pollFundsAvailableStatus(id: string): Promise<FundsAvailabilityStatus> {
     try {
-      const zhTransfer: ZerohashTransfer = await this.zerohashService.getTransfer(id);
+      const zhTransfer: ZerohashTransfer = await this.getLiquidityProviderTransfer(id);
 
       switch (zhTransfer.status) {
         case ZerohashTransferStatus.APPROVED:
@@ -390,39 +291,11 @@ export class DefaultAssetService implements AssetService {
     }
   }
 
-  async transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string> {
-    // Gets or creates participant code
-    const consumerParticipantCode: string = await this.zerohashService.getParticipantCode(
-      request.consumer,
-      request.transactionCreationTimestamp,
-    );
-
-    // TODO(#310) Confirm that the traded values comes out correctly
-    const tradeRequest: ZerohashTradeRequest = {
-      boughtAssetID: request.cryptoCurrency,
-      soldAssetID: request.fiatCurrency,
-
-      buyAmount: request.totalCryptoAmount,
-      tradePrice: request.cryptoAssetTradePrice,
-
-      sellAmount: request.fiatAmountPreSpread,
-      totalFiatAmount: request.totalFiatAmount,
-
-      buyerParticipantCode: consumerParticipantCode,
-      sellerParticipantCode: this.zerohashService.getNobaPlatformCode(),
-
-      idempotencyID: request.transactionID,
-      requestorEmail: request.consumer.email,
-    };
-
-    const tradeResponse: ZerohashTradeResponse = await this.zerohashService.executeTrade(tradeRequest);
-
-    return tradeResponse.tradeID;
-  }
+  abstract transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string>;
 
   async pollAssetTransferToConsumerStatus(id: string): Promise<ConsumerAccountTransferStatus> {
     try {
-      const tradeResponse: ZerohashTradeResponse = await this.zerohashService.checkTradeStatus(id);
+      const tradeResponse: ZerohashTradeResponse = await this.getLiquidityProviderTradeStatus(id);
 
       switch (tradeResponse.tradeState) {
         case TradeState.PENDING:
@@ -452,21 +325,11 @@ export class DefaultAssetService implements AssetService {
   }
 
   // TODO(#): Make this implementation idempotent.
-  async transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<string> {
-    const withdrawalId: string = await this.zerohashService.requestWithdrawal(
-      request.walletAddress,
-      request.amount,
-      request.assetId,
-      request.consumer.zhParticipantCode,
-      this.zerohashService.getNobaPlatformCode(),
-    );
-
-    return withdrawalId;
-  }
+  abstract transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<ConsumerWalletTransferResponse>;
 
   async pollConsumerWalletTransferStatus(id: string): Promise<ConsumerWalletTransferStatus> {
     try {
-      const withdrawalResponse: ZerohashWithdrawalResponse = await this.zerohashService.getWithdrawal(id);
+      const withdrawalResponse: ZerohashWithdrawalResponse = await this.getLiquidityProviderWithdrawal(id);
 
       switch (withdrawalResponse.withdrawalStatus) {
         case WithdrawalState.PENDING:
@@ -539,5 +402,36 @@ export class DefaultAssetService implements AssetService {
         onChainTransactionID: null,
       };
     }
+  }
+
+  protected abstract getNetworkFeeFromLiquidityProvider(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+  ): Promise<ZerohashNetworkFee>;
+
+  protected abstract getQuoteFromLiquidityProviderFiatFixed(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    fiatAmount: number,
+  ): Promise<ZerohashQuote>;
+
+  protected abstract getQuoteFromLiquidityProviderCryptoFixed(
+    cryptoCurrency: string,
+    fiatCurrency: string,
+    cryptoQuantity: number,
+  ): Promise<ZerohashQuote>;
+
+  protected abstract getLiquidityProviderTradeStatus(id: string): Promise<ZerohashTradeResponse>;
+
+  protected abstract getLiquidityProviderTransfer(id): Promise<ZerohashTransfer>;
+
+  protected abstract getLiquidityProviderWithdrawal(id): Promise<ZerohashWithdrawalResponse>;
+
+  getIntermediaryLeg(): string {
+    throw new Error("Method not defined");
+  }
+
+  needsIntermediaryLeg(): boolean {
+    return false;
   }
 }

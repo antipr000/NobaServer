@@ -164,12 +164,13 @@ describe("TransactionService", () => {
     transactionService = app.get<TransactionService>(TransactionService);
 
     assetService = getMockAssetServiceWithDefaults();
-    when(assetServiceFactory.getAssetService(anyString())).thenReturn(instance(assetService));
+    when(assetServiceFactory.getAssetService(anyString())).thenResolve(instance(assetService));
     when(currencyService.getCryptocurrency("ETH")).thenResolve({
       ticker: "ETH",
       name: "Ethereum",
       iconPath: "",
       precision: 8,
+      provider: "Zerohash",
     });
 
     when(currencyService.getFiatCurrency("USD")).thenResolve({
@@ -177,6 +178,7 @@ describe("TransactionService", () => {
       name: "US Dollar",
       iconPath: "",
       precision: 8,
+      provider: "Zerohash",
     });
   };
 
@@ -906,6 +908,7 @@ describe("TransactionService", () => {
           name: "Ethereum",
           iconPath: "",
           precision: 8,
+          provider: "Zerohash",
         },
       ]);
 
@@ -924,6 +927,7 @@ describe("TransactionService", () => {
             fiatCurrency: "USD",
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
+            intermediateCryptoCurrency: undefined,
           }),
         ),
       ).thenResolve(nobaQuote);
@@ -976,6 +980,7 @@ describe("TransactionService", () => {
           name: "Ethereum",
           iconPath: "",
           precision: 8,
+          provider: "Zerohash",
         },
       ]);
 
@@ -994,6 +999,7 @@ describe("TransactionService", () => {
             fiatCurrency: "USD",
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
+            intermediateCryptoCurrency: undefined,
           }),
         ),
       ).thenResolve(nobaQuote);
@@ -1076,6 +1082,7 @@ describe("TransactionService", () => {
           name: "Ethereum",
           iconPath: "",
           precision: 8,
+          provider: "Zerohash",
         },
       ]);
 
@@ -1085,6 +1092,7 @@ describe("TransactionService", () => {
           name: "US Dollar",
           iconPath: "",
           precision: 8,
+          provider: "Zerohash",
         },
       ]);
 

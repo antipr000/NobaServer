@@ -34,6 +34,9 @@ export interface TransactionProps extends VersioningInfo {
   leg2Amount: number;
   leg1: string;
   leg2: string;
+  intermediaryLeg?: string;
+  intermediaryLegAmount?: number;
+  smartContractData?: string;
   fixedSide: CurrencyType;
   type: TransactionType;
   partnerID: string;
@@ -86,6 +89,9 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   settledAmount: Joi.number().optional(),
   leg1: Joi.string().required(),
   leg2: Joi.string().required(),
+  intermediaryLeg: Joi.string().optional(),
+  intermediaryLegAmount: Joi.number().optional(),
+  smartContractData: Joi.string().optional(),
   fixedSide: Joi.string().valid(...Object.values(CurrencyType)),
   type: Joi.string()
     .valid(...Object.values(TransactionType))

@@ -1,10 +1,10 @@
 import { anyString, anything, mock, when } from "ts-mockito";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { DefaultAssetService } from "../assets/default.asset.service";
+import { ZerohashAssetService } from "../assets/zerohash.asset.service";
 
 export function getMockAssetServiceWithDefaults(): AssetService {
-  const mockAssetService = mock(DefaultAssetService);
+  const mockAssetService = mock(ZerohashAssetService);
 
   when(mockAssetService.getQuoteForSpecifiedCryptoQuantity(anything())).thenReject(new Error("Method not implemented"));
   when(mockAssetService.getQuoteForSpecifiedFiatAmount(anything())).thenReject(new Error("Method not implemented"));

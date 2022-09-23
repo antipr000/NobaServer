@@ -355,14 +355,30 @@ export class ZeroHashService {
     asset: string,
     zhParticipantCode: string,
     accountGroup: string,
+    smartContractData?: string,
   ): Promise<string> {
-    const withdrawalRequest = await this.makeRequest("/withdrawals/requests", "POST", {
-      address: cryptocurrencyAddress,
-      participant_code: zhParticipantCode,
-      amount: String(amount),
-      asset: asset,
-      account_group: accountGroup,
-    });
+    let requestData = {};
+
+    if (smartContractData) {
+      requestData = {
+        address: cryptocurrencyAddress,
+        participant_code: zhParticipantCode,
+        amount: String(amount),
+        asset: asset,
+        account_group: accountGroup,
+        input_data: smartContractData,
+      };
+    } else {
+      requestData = {
+        address: cryptocurrencyAddress,
+        participant_code: zhParticipantCode,
+        amount: String(amount),
+        asset: asset,
+        account_group: accountGroup,
+      };
+    }
+
+    const withdrawalRequest = await this.makeRequest("/withdrawals/requests", "POST", requestData);
     return String(withdrawalRequest["message"]["id"]);
   }
 

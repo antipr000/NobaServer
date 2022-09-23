@@ -28,7 +28,7 @@ export function getMockZerohashServiceWithDefaults(): ZeroHashService {
   when(mockZerohashService.executeTrade(anything())).thenReject(new Error("Method not implemented"));
   when(mockZerohashService.getTransfer(anything())).thenReject(new Error("Method not implemented"));
   when(
-    mockZerohashService.requestWithdrawal(anyString(), anyNumber(), anyString(), anyString(), anyString()),
+    mockZerohashService.requestWithdrawal(anyString(), anyNumber(), anyString(), anyString(), anyString(), anyString()),
   ).thenReject(new Error("Method not implemented"));
   when(mockZerohashService.checkTradeStatus(anything())).thenReject(new Error("Method not implemented"));
   return mockZerohashService;

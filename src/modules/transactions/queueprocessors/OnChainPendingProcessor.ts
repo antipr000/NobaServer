@@ -47,7 +47,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const assetService: AssetService = this.assetServiceFactory.getAssetService(transaction.props.leg2);
+    const assetService: AssetService = await this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     this.logger.info(`${transactionId}: Polling the withdrawal status of "${transaction.props.zhWithdrawalID}"`);
 

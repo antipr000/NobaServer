@@ -77,6 +77,13 @@ export interface ConsumerWalletTransferRequest {
   assetId: string;
   consumer: ConsumerProps;
   transactionID: string;
+  intermediateCryptoAsset?: string;
+  smartContractData?: string;
+}
+
+export interface ConsumerWalletTransferResponse {
+  liquidityProviderTransactionId: string;
+  cryptoAmount?: number;
 }
 
 export interface ConsumerWalletTransferStatus {
@@ -92,6 +99,7 @@ export interface NobaQuote {
   quoteID: string;
   fiatCurrency: string;
   cryptoCurrency: string;
+  intermediateCryptoCurrency?: string;
 
   processingFeeInFiat: number;
   amountPreSpread: number; // Amount in fiat before spread calculation
@@ -100,6 +108,7 @@ export interface NobaQuote {
 
   totalFiatAmount: number;
   totalCryptoQuantity: number;
+  totalIntermediateCryptoAmount?: number;
   perUnitCryptoPriceWithSpread: number; // Sell rate - this is what the consumer sees
   perUnitCryptoPriceWithoutSpread: number; // Buy rate - this is what Noba pays
 }
@@ -108,6 +117,7 @@ export interface QuoteRequestForFixedFiat {
   cryptoCurrency: string;
   fiatCurrency: string;
   fiatAmount: number;
+  intermediateCryptoCurrency?: string;
 }
 
 export interface QuoteRequestForFixedCrypto {
