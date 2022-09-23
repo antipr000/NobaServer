@@ -216,8 +216,17 @@ export class VerificationWebhookController {
     // Throws an exception if invalid
     this.validateWebhookSignature(request);
 
-    const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
-    return this.verificationResponseMapper.toDocumentResultDTO(result);
+    try {
+      const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
+      return this.verificationResponseMapper.toDocumentResultDTO(result);
+    } catch (err) {
+      this.logger.error(
+        `Error processing Sardine webhook document verification response: request body: ${JSON.stringify(
+          request.body,
+        )}: error: ${JSON.stringify(err)}`,
+      );
+      throw err;
+    }
   }
 
   @Public()
@@ -230,8 +239,17 @@ export class VerificationWebhookController {
     // Throws an exception if invalid
     this.validateWebhookSignature(request);
 
-    this.verificationService.processKycVerificationWebhookRequest(requestBody);
-    return "Successfully received";
+    try {
+      await this.verificationService.processKycVerificationWebhookRequest(requestBody);
+      return "Successfully received";
+    } catch (err) {
+      this.logger.error(
+        `Error processing Sardine webhook case verification response: request body: ${JSON.stringify(
+          request.body,
+        )}: error: ${JSON.stringify(err)}`,
+      );
+      throw err;
+    }
   }
 
   private validateWebhookSignature(request: Request) {
