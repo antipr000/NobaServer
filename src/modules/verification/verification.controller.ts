@@ -46,7 +46,6 @@ import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import * as crypto_ts from "crypto";
 import { DocumentVerificationResultDTO } from "./dto/DocumentVerificationResultDTO";
 import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificationWebhookRequestDTO";
-import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
 import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";
 
 @Roles(Role.User)
@@ -211,19 +210,12 @@ export class VerificationWebhookController {
   @Post("/document/result")
   @HttpCode(200)
   async postDocumentVerificationResult(
-    @Headers() headers: WebhookHeadersDTO,
     @Body() requestBody: DocumentVerificationWebhookRequestDTO,
+    @Request() request: Request,
   ): Promise<DocumentVerificationResultDTO> {
-    const sardineSignature = headers["x-sardine-signature"];
-    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
-    const data = hmac.update(JSON.stringify(requestBody));
-    const hexString = data.digest("hex");
-    if (sardineSignature !== hexString) {
-      this.logger.debug(
-        `sardineSignature: ${sardineSignature}, hexString: ${hexString}, requestBody: ${JSON.stringify(requestBody)}`,
-      );
-      throw new ForbiddenException("Signature does not match");
-    }
+    // Throws an exception if invalid
+    this.validateWebhookSignature(request);
+
     const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
@@ -232,20 +224,27 @@ export class VerificationWebhookController {
   @Post("/case/notification")
   @HttpCode(200)
   async postCaseNotification(
-    @Headers() headers: WebhookHeadersDTO,
     @Body() requestBody: CaseNotificationWebhookRequestDTO,
+    @Request() request: Request,
   ): Promise<string> {
-    const sardineSignature = headers["x-sardine-signature"];
-    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
-    const data = hmac.update(JSON.stringify(requestBody));
-    const hexString = data.digest("hex");
-    if (sardineSignature !== hexString) {
-      this.logger.debug(
-        `sardineSignature: ${sardineSignature}, hexString: ${hexString}, requestBody: ${JSON.stringify(requestBody)}`,
-      );
-      throw new ForbiddenException("Signature does not match");
-    }
+    // Throws an exception if invalid
+    this.validateWebhookSignature(request);
+
     this.verificationService.processKycVerificationWebhookRequest(requestBody);
     return "Successfully received";
+  }
+
+  private validateWebhookSignature(request: Request) {
+    const sardineSignature = request.headers["x-sardine-signature"];
+    const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
+    const computedSignature = hmac.update(JSON.stringify(request.body)).digest("hex");
+    if (sardineSignature !== computedSignature) {
+      this.logger.debug(
+        `sardineSignature: ${sardineSignature}, hexString: ${computedSignature}, requestBody: ${JSON.stringify(
+          request.body,
+        )}`,
+      );
+      throw new ForbiddenException("Sardine webhook signature does not match");
+    }
   }
 }
