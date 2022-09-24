@@ -451,13 +451,13 @@ describe("PartnerController", () => {
         partnerService.updatePartner(
           partner.props._id,
           deepEqual({
-            takeRate: newTakeRate,
+            config: { fees: { takeRate: newTakeRate } },
           }),
         ),
       ).thenResolve(
         Partner.createPartner({
           ...partner.props,
-          takeRate: newTakeRate,
+          config: { fees: { takeRate: newTakeRate } },
         }),
       );
 
@@ -476,7 +476,7 @@ describe("PartnerController", () => {
         partnerMapper.toDTO(
           Partner.createPartner({
             ...partner.props,
-            takeRate: newTakeRate,
+            config: { fees: { takeRate: newTakeRate } },
           }),
         ),
       );
@@ -500,12 +500,12 @@ describe("PartnerController", () => {
 
       when(
         partnerService.updatePartner(partner.props._id, {
-          takeRate: newTakeRate,
+          config: { fees: { takeRate: newTakeRate } },
         }),
       ).thenResolve(
         Partner.createPartner({
           ...partner.props,
-          takeRate: newTakeRate,
+          config: { fees: { takeRate: newTakeRate } },
         }),
       );
 
@@ -544,12 +544,12 @@ describe("PartnerController", () => {
 
       when(
         partnerService.updatePartner(partner.props._id, {
-          takeRate: newTakeRate,
+          config: { fees: { takeRate: newTakeRate } },
         }),
       ).thenResolve(
         Partner.createPartner({
           ...partner.props,
-          takeRate: newTakeRate,
+          config: { fees: { takeRate: newTakeRate } },
         }),
       );
       try {
