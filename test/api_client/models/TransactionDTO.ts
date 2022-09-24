@@ -6,11 +6,15 @@ import type { TransactionAmountsDTO } from "./TransactionAmountsDTO";
 
 export type TransactionDTO = {
   /**
+   * Internal unique reference to this transaction
+   */
+  _id: string;
+  /**
    * Unique transaction reference number
    */
   transactionID: string;
   /**
-   * ID of user who initiated the transaction
+   * Internal unique reference to the user who initiated the transaction
    */
   userID: string;
   /**
