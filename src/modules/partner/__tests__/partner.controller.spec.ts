@@ -500,12 +500,12 @@ describe("PartnerController", () => {
 
       when(
         partnerService.updatePartner(partner.props._id, {
-          config: { fees: { takeRate: newTakeRate } },
+          config: { fees: { takeRate: newTakeRate } as any },
         }),
       ).thenResolve(
         Partner.createPartner({
           ...partner.props,
-          config: { fees: { takeRate: newTakeRate } },
+          config: { fees: { takeRate: newTakeRate } as any },
         }),
       );
 
@@ -544,12 +544,12 @@ describe("PartnerController", () => {
 
       when(
         partnerService.updatePartner(partner.props._id, {
-          config: { fees: { takeRate: newTakeRate } },
+          config: { fees: { takeRate: newTakeRate } as any },
         }),
       ).thenResolve(
         Partner.createPartner({
           ...partner.props,
-          config: { fees: { takeRate: newTakeRate } },
+          config: { fees: { takeRate: newTakeRate } as any },
         }),
       );
       try {

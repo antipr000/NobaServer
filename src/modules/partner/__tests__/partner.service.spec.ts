@@ -92,14 +92,14 @@ describe("PartnerService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
-        config: { fees: { takeRate: newTakeRate } },
+        config: { fees: { takeRate: newTakeRate } as any },
       });
 
       when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
       when(partnerRepo.updatePartner(deepEqual(updatePartner))).thenResolve(updatePartner);
 
       const result = await partnerService.updatePartner(partner.props._id, {
-        config: { fees: { takeRate: newTakeRate } },
+        config: { fees: { takeRate: newTakeRate } as any },
       });
       expect(result).toStrictEqual(updatePartner);
     });
