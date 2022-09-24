@@ -13,6 +13,7 @@ import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { deepEqual, instance, when } from "ts-mockito";
 import { USDCPolygonAssetService } from "../../assets/usdc.polygon.asset.service";
 import {
+  CombinedNobaQuote,
   ConsumerAccountTransferRequest,
   ConsumerAccountTransferStatus,
   ConsumerWalletTransferRequest,
@@ -120,7 +121,7 @@ describe("DefaultAssetService", () => {
       originalCostPerUnit: number,
       input: QuoteInputs,
       output: QuoteExpectations,
-    ): Promise<NobaQuote> => {
+    ): Promise<CombinedNobaQuote> => {
       const environmentVariables = {
         [NOBA_CONFIG_KEY]: {
           [NOBA_TRANSACTION_CONFIG_KEY]: {
@@ -151,26 +152,39 @@ describe("DefaultAssetService", () => {
       });
 
       const expectedTotalFees = output.expectedNobaFee + output.expectedProcessingFee + output.expectedNetworkFee;
-      return {
-        quoteID: "FIXED",
-        fiatCurrency: "USD",
-        cryptoCurrency: "USDC.POLYGON",
-        amountPreSpread: output.amountPreSpread,
-        processingFeeInFiat: output.expectedProcessingFee,
-        networkFeeInFiat: output.expectedNetworkFee,
-        nobaFeeInFiat: output.expectedNobaFee,
-        totalFiatAmount: requestedFiatAmount,
-        totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
-        perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
-        perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "FIXED",
+          fiatCurrency: "USD",
+          cryptoCurrency: "USDC.POLYGON",
+          amountPreSpread: output.amountPreSpread,
+          processingFeeInFiat: output.expectedProcessingFee,
+          networkFeeInFiat: output.expectedNetworkFee,
+          nobaFeeInFiat: output.expectedNobaFee,
+          totalFiatAmount: requestedFiatAmount,
+          totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
+          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread: output.amountPreSpread,
+          processingFeeInFiat: output.expectedProcessingFee,
+          networkFeeInFiat: output.expectedNetworkFee,
+          nobaFeeInFiat: output.expectedNobaFee,
+          totalFiatAmount: requestedFiatAmount,
+          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+        },
       };
+      return nobaQuote;
     };
 
     it("Noba spread percentage is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -189,7 +203,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -201,7 +215,7 @@ describe("DefaultAssetService", () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -220,7 +234,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -232,7 +246,7 @@ describe("DefaultAssetService", () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -251,7 +265,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -263,7 +277,7 @@ describe("DefaultAssetService", () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -282,7 +296,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -294,7 +308,7 @@ describe("DefaultAssetService", () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -313,7 +327,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -325,7 +339,7 @@ describe("DefaultAssetService", () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -344,7 +358,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
@@ -356,7 +370,7 @@ describe("DefaultAssetService", () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -375,7 +389,7 @@ describe("DefaultAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,

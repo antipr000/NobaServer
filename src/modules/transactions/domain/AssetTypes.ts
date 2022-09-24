@@ -1,3 +1,4 @@
+import { Utils } from "../../../core/utils/Utils";
 import { CurrencyType } from "../../../modules/common/domain/Types";
 import { ConsumerProps } from "../../consumer/domain/Consumer";
 
@@ -95,11 +96,17 @@ export interface ConsumerWalletTransferStatus {
   onChainTransactionID: string;
 }
 
-export interface NobaQuote {
+export interface NobaQuote extends NonDiscountedNobaQuote {
   quoteID: string;
-  fiatCurrency: string;
   cryptoCurrency: string;
   intermediateCryptoCurrency?: string;
+
+  totalCryptoQuantity: number;
+  totalIntermediateCryptoAmount?: number;
+}
+
+export interface NonDiscountedNobaQuote {
+  fiatCurrency: string;
 
   processingFeeInFiat: number;
   amountPreSpread: number; // Amount in fiat before spread calculation
@@ -107,23 +114,45 @@ export interface NobaQuote {
   nobaFeeInFiat: number;
 
   totalFiatAmount: number;
-  totalCryptoQuantity: number;
-  totalIntermediateCryptoAmount?: number;
   perUnitCryptoPriceWithSpread: number; // Sell rate - this is what the consumer sees
   perUnitCryptoPriceWithoutSpread: number; // Buy rate - this is what Noba pays
 }
 
-export interface QuoteRequestForFixedFiat {
+export type CombinedNobaQuote = {
+  quote: NobaQuote;
+  nonDiscountedQuote: NonDiscountedNobaQuote;
+};
+
+export type DiscountedAmount = {
+  value: number;
+  discountedValue: number;
+};
+
+export type QuoteRequestForFixedFiat = {
   cryptoCurrency: string;
   fiatCurrency: string;
   fiatAmount: number;
   intermediateCryptoCurrency?: string;
-}
+
+  // Discounts
+  nobaSpreadDiscountPercent?: number;
+  nobaFeeDiscountPercent?: number;
+  processingFeeDiscountPercent?: number;
+  fixedCreditCardFeeDiscountPercent?: number;
+  networkFeeDiscountPercent?: number;
+};
 
 export interface QuoteRequestForFixedCrypto {
   cryptoCurrency: string;
   fiatCurrency: string;
   cryptoQuantity: number;
+
+  // Discounts
+  nobaSpreadDiscountPercent?: number;
+  nobaFeeDiscountPercent?: number;
+  processingFeeDiscountPercent?: number;
+  fixedCreditCardFeeDiscountPercent?: number;
+  networkFeeDiscountPercent?: number;
 }
 
 export interface ExecutedQuoteStatus {

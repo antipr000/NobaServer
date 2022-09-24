@@ -13,10 +13,11 @@ import {
   FundsAvailabilityRequest,
   ExecutedQuoteStatus,
   ConsumerWalletTransferResponse,
+  CombinedNobaQuote,
 } from "../domain/AssetTypes";
 
 export interface AssetService {
-  getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote>;
+  getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote>;
   getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote>;
 
   executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote>;

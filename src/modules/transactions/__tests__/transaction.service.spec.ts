@@ -55,8 +55,8 @@ import { PartnerService } from "../../partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { BadRequestException } from "@nestjs/common";
 import { AssetService } from "../assets/asset.service";
-import { NobaQuote } from "../domain/AssetTypes";
-import { Partner } from "../../../modules/partner/domain/Partner";
+import { CombinedNobaQuote, NobaQuote } from "../domain/AssetTypes";
+import { Partner, PartnerProps } from "../../../modules/partner/domain/Partner";
 import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
 import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { TransactionMapper } from "../mapper/TransactionMapper";
@@ -654,27 +654,52 @@ describe("TransactionService", () => {
     });
 
     it("should return correct quote for 'FIAT' fixed side", async () => {
+      const partnerID = "partner-12345";
+      const partner: Partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
+
       const transactionQuoteQuery: TransactionQuoteQueryDTO = {
         fiatCurrencyCode: "USD",
         cryptoCurrencyCode: "ETH",
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 10,
+        partnerID: partnerID,
       };
 
-      const nobaQuote: NobaQuote = {
-        quoteID: "fake-quote",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "fake-quote",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
-        processingFeeInFiat: 1,
-        networkFeeInFiat: 1,
-        nobaFeeInFiat: 1,
-        amountPreSpread: 1,
+          processingFeeInFiat: 1,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1,
+          amountPreSpread: 1,
 
-        totalFiatAmount: 13,
-        totalCryptoQuantity: 0.0001,
-        perUnitCryptoPriceWithoutSpread: 1000,
-        perUnitCryptoPriceWithSpread: 1000,
+          totalFiatAmount: 13,
+          totalCryptoQuantity: 0.0001,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+
+          processingFeeInFiat: 1,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1,
+          amountPreSpread: 1,
+
+          totalFiatAmount: 13,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
       };
 
       when(
@@ -683,20 +708,36 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+            fixedCreditCardFeeDiscountPercent: undefined,
+            networkFeeDiscountPercent: undefined,
+            nobaFeeDiscountPercent: undefined,
+            nobaSpreadDiscountPercent: undefined,
+            processingFeeDiscountPercent: undefined,
           }),
         ),
       ).thenResolve(nobaQuote);
 
       const response = await transactionService.requestTransactionQuote(transactionQuoteQuery);
-      assertOnRequestTransactionQuoteResponse(response, nobaQuote, transactionQuoteQuery);
+      assertOnRequestTransactionQuoteResponse(response, nobaQuote.quote, transactionQuoteQuery);
     });
 
     it("should return correct quote for 'CRYPTO' fixed side", async () => {
+      const partnerID = "partner-12345";
+      const partner: Partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
+
       const transactionQuoteQuery: TransactionQuoteQueryDTO = {
         fiatCurrencyCode: "USD",
         cryptoCurrencyCode: "ETH",
         fixedSide: CurrencyType.CRYPTO,
         fixedAmount: 0.1,
+        partnerID: partnerID,
       };
 
       const nobaQuote: NobaQuote = {
@@ -755,7 +796,6 @@ describe("TransactionService", () => {
         name: "Fake Partner",
         apiKey: "FakeApiKey",
         secretKey: "FakeSecret",
-        allowPublicWallets: true, // Can wallets added for this partner be shared with others?
         webhookClientID: "fake-webhook-cid",
         webhookSecret: "fake-webhook-secret",
         webhooks: [
@@ -886,20 +926,34 @@ describe("TransactionService", () => {
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
 
-      const nobaQuote: NobaQuote = {
-        quoteID: "fake-quote",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "fake-quote",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
-        processingFeeInFiat: 0.01,
-        networkFeeInFiat: 0.01,
-        nobaFeeInFiat: 0.01,
-        amountPreSpread: 0.01,
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 0.01,
 
-        totalFiatAmount: 1000,
-        totalCryptoQuantity: 0.3,
-        perUnitCryptoPriceWithoutSpread: 1000,
-        perUnitCryptoPriceWithSpread: 1000,
+          totalFiatAmount: 1000,
+          totalCryptoQuantity: 0.3,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 0.01,
+
+          totalFiatAmount: 1000,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -958,20 +1012,34 @@ describe("TransactionService", () => {
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
 
-      const nobaQuote: NobaQuote = {
-        quoteID: "fake-quote",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "fake-quote",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
-        processingFeeInFiat: 0.01,
-        networkFeeInFiat: 0.01,
-        nobaFeeInFiat: 0.01,
-        amountPreSpread: 0.01,
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 0.01,
 
-        totalFiatAmount: 100,
-        totalCryptoQuantity: 0.1,
-        perUnitCryptoPriceWithoutSpread: 1000,
-        perUnitCryptoPriceWithSpread: 1000,
+          totalFiatAmount: 100,
+          totalCryptoQuantity: 0.1,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 0.01,
+
+          totalFiatAmount: 100,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
       };
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -1017,9 +1085,9 @@ describe("TransactionService", () => {
         transactionStatus: TransactionStatus.PENDING,
         partnerID: partnerId,
         destinationWalletAddress: transactionRequest.destinationWalletAddress,
-        networkFee: nobaQuote.networkFeeInFiat,
-        nobaFee: nobaQuote.nobaFeeInFiat,
-        processingFee: nobaQuote.processingFeeInFiat,
+        networkFee: nobaQuote.quote.networkFeeInFiat,
+        nobaFee: nobaQuote.quote.nobaFeeInFiat,
+        processingFee: nobaQuote.quote.processingFeeInFiat,
         exchangeRate: exchangeRate,
       });
 
