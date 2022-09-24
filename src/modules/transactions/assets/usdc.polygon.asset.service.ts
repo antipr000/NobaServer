@@ -13,6 +13,7 @@ import {
   ConsumerWalletTransferRequest,
   ConsumerWalletTransferResponse,
   FundsAvailabilityStatus,
+  CombinedNobaQuote,
 } from "../domain/AssetTypes";
 import { DefaultAssetService } from "./default.asset.service";
 import {
@@ -78,7 +79,7 @@ export class USDCPolygonAssetService extends DefaultAssetService {
     return this.zerohashService.estimateNetworkFee(cryptoCurrency, fiatCurrency);
   }
 
-  async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote> {
+  async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote> {
     return await super.getQuoteForSpecifiedFiatAmount(request);
   }
 

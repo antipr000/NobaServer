@@ -16,6 +16,9 @@ import {
   ExecutedQuoteStatus,
   PollStatus,
   ConsumerWalletTransferResponse,
+  DiscountedAmount,
+  NonDiscountedNobaQuote,
+  CombinedNobaQuote,
 } from "../domain/AssetTypes";
 import { AssetService } from "./asset.service";
 import {
@@ -34,6 +37,7 @@ import { NobaConfigs, NobaTransactionConfigs } from "../../../config/configtypes
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
+import { getDiscountedAmount } from "./AssetServiceHelper";
 
 @Injectable()
 export abstract class DefaultAssetService implements AssetService {
@@ -46,71 +50,152 @@ export abstract class DefaultAssetService implements AssetService {
     this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
   }
 
-  async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote> {
-    const nobaSpreadPercent = this.nobaTransactionConfigs.spreadPercentage;
-    const nobaFlatFeeInFiat = this.nobaTransactionConfigs.flatFeeDollars;
-    const creditCardFeePercent = this.nobaTransactionConfigs.dynamicCreditCardFeePercentage;
-    const fixedCreditCardFeeInFiat = this.nobaTransactionConfigs.fixedCreditCardFee;
+  async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote> {
+    const nobaSpreadPercent = getDiscountedAmount(
+      this.nobaTransactionConfigs.spreadPercentage,
+      request.nobaSpreadDiscountPercent,
+    );
+    const nobaFlatFeeInFiat = getDiscountedAmount(
+      this.nobaTransactionConfigs.flatFeeDollars,
+      request.nobaFeeDiscountPercent,
+    );
+    const creditCardFeePercent = getDiscountedAmount(
+      this.nobaTransactionConfigs.dynamicCreditCardFeePercentage,
+      request.processingFeeDiscountPercent,
+    );
+    const fixedCreditCardFeeInFiat = getDiscountedAmount(
+      this.nobaTransactionConfigs.fixedCreditCardFee,
+      request.fixedCreditCardFeeDiscountPercent,
+    );
 
     // Get network / gas fees
-    const networkFee: ZerohashNetworkFee = await this.getNetworkFeeFromLiquidityProvider(
+    const networkFeeEstimate: ZerohashNetworkFee = await this.getNetworkFeeFromLiquidityProvider(
       request.cryptoCurrency,
       request.fiatCurrency,
     );
 
-    const totalCreditCardFeeInFiat: number = Utils.roundTo2DecimalNumber(
-      request.fiatAmount * creditCardFeePercent + fixedCreditCardFeeInFiat,
-    );
-    const totalFee: number = networkFee.feeInFiat + totalCreditCardFeeInFiat + nobaFlatFeeInFiat;
+    const networkFee = getDiscountedAmount(networkFeeEstimate.feeInFiat, request.networkFeeDiscountPercent);
 
-    const fiatAmountAfterAllChargesWithoutSpread: number = request.fiatAmount - totalFee;
-    const fiatAmountAfterAllChargesWithSpread: number =
-      fiatAmountAfterAllChargesWithoutSpread / (1 + nobaSpreadPercent);
+    const totalCreditCardFeeInFiat: DiscountedAmount = {
+      value: Utils.roundTo2DecimalNumber(
+        request.fiatAmount * creditCardFeePercent.value + fixedCreditCardFeeInFiat.value,
+      ),
+      discountedValue: Utils.roundTo2DecimalNumber(
+        request.fiatAmount * creditCardFeePercent.discountedValue + fixedCreditCardFeeInFiat.discountedValue,
+      ),
+    };
 
-    const zhQuote: ZerohashQuote = await this.getQuoteFromLiquidityProviderFiatFixed(
+    const totalFee: DiscountedAmount = {
+      value: networkFee.value + totalCreditCardFeeInFiat.value + nobaFlatFeeInFiat.value,
+      discountedValue:
+        networkFee.discountedValue + totalCreditCardFeeInFiat.discountedValue + nobaFlatFeeInFiat.discountedValue,
+    };
+
+    const fiatAmountAfterAllChargesWithoutSpread: DiscountedAmount = {
+      value: request.fiatAmount - totalFee.value,
+      discountedValue: request.fiatAmount - totalFee.discountedValue,
+    };
+
+    const fiatAmountAfterAllChargesWithSpread: DiscountedAmount = {
+      value: Utils.roundTo2DecimalNumber(fiatAmountAfterAllChargesWithoutSpread.value / (1 + nobaSpreadPercent.value)),
+      discountedValue: Utils.roundTo2DecimalNumber(
+        fiatAmountAfterAllChargesWithoutSpread.discountedValue / (1 + nobaSpreadPercent.discountedValue),
+      ),
+    };
+
+    const zhQuoteWithDiscount: ZerohashQuote = await this.getQuoteFromLiquidityProviderFiatFixed(
       request.cryptoCurrency,
       request.fiatCurrency,
-      fiatAmountAfterAllChargesWithSpread,
+      fiatAmountAfterAllChargesWithSpread.discountedValue,
     );
 
-    const perUnitCryptoCostWithoutSpread: number = zhQuote.perUnitCryptoAssetCost;
-    const perUnitCryptoCostWithSpread: number = perUnitCryptoCostWithoutSpread * (1 + nobaSpreadPercent);
+    const perUnitCryptoCostWithoutSpread: DiscountedAmount = {
+      // Intentionally using the same zhQuote for both because the non-discounted value really doesn't matter for anything
+      value: zhQuoteWithDiscount.perUnitCryptoAssetCost,
+      discountedValue: zhQuoteWithDiscount.perUnitCryptoAssetCost,
+    };
+
+    const perUnitCryptoCostWithSpread: DiscountedAmount = {
+      value: perUnitCryptoCostWithoutSpread.value * (1 + nobaSpreadPercent.value),
+      discountedValue: perUnitCryptoCostWithoutSpread.discountedValue * (1 + nobaSpreadPercent.discountedValue),
+    };
+
+    const totalFiatAmount: DiscountedAmount = {
+      value: fiatAmountAfterAllChargesWithSpread.value / perUnitCryptoCostWithoutSpread.value,
+      discountedValue:
+        fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.discountedValue,
+    };
+
+    const nonDiscountedNobaQuote: NonDiscountedNobaQuote = {
+      fiatCurrency: request.fiatCurrency,
+      networkFeeInFiat: networkFee.value,
+      nobaFeeInFiat: nobaFlatFeeInFiat.value,
+      processingFeeInFiat: totalCreditCardFeeInFiat.value,
+      amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.value,
+      totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.value,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.value,
+    };
+
+    const discountedNobaQuote: NobaQuote = {
+      cryptoCurrency: request.cryptoCurrency,
+      fiatCurrency: request.fiatCurrency,
+      networkFeeInFiat: networkFee.discountedValue,
+      nobaFeeInFiat: nobaFlatFeeInFiat.discountedValue,
+      processingFeeInFiat: totalCreditCardFeeInFiat.discountedValue,
+      amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.discountedValue,
+      totalCryptoQuantity: totalFiatAmount.discountedValue,
+      totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.discountedValue,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.discountedValue,
+      quoteID: zhQuoteWithDiscount.quoteID,
+    };
 
     this.logger.debug(`
       FIAT FIXED (${request.fiatCurrency}):\t\t${request.fiatAmount}
-      NETWORK FEE (${request.fiatCurrency}):\t${networkFee.feeInFiat}
-      PROCESSING FEES (${request.fiatCurrency}):\t${totalCreditCardFeeInFiat}
-      NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat}
-      PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread}
-      QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread}
+      NETWORK FEE (${request.fiatCurrency}):\t${networkFee.value}
+      PROCESSING FEES (${request.fiatCurrency}):\t${totalCreditCardFeeInFiat.value}
+      NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat.value}
+      PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread.value}
+      QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread.value}
       ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${
-      fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread
+      fiatAmountAfterAllChargesWithSpread.value / perUnitCryptoCostWithoutSpread.value
     }
       SPREAD REVENUE (${request.fiatCurrency}):\t${
-      fiatAmountAfterAllChargesWithoutSpread - fiatAmountAfterAllChargesWithSpread
+      fiatAmountAfterAllChargesWithoutSpread.value - fiatAmountAfterAllChargesWithSpread.value
     }
       ZERO HASH FEE (${request.fiatCurrency}):\t${request.fiatAmount * 0.007}
       NOBA REVENUE (${request.fiatCurrency}):\t${
-      fiatAmountAfterAllChargesWithoutSpread -
-      fiatAmountAfterAllChargesWithSpread +
-      nobaFlatFeeInFiat -
+      fiatAmountAfterAllChargesWithoutSpread.value -
+      fiatAmountAfterAllChargesWithSpread.value +
+      nobaFlatFeeInFiat.value -
       request.fiatAmount * 0.007
     }
     `);
 
-    return {
-      cryptoCurrency: request.cryptoCurrency,
-      fiatCurrency: request.fiatCurrency,
-      networkFeeInFiat: networkFee.feeInFiat,
-      nobaFeeInFiat: nobaFlatFeeInFiat,
-      processingFeeInFiat: totalCreditCardFeeInFiat,
-      amountPreSpread: fiatAmountAfterAllChargesWithoutSpread,
-      totalCryptoQuantity: fiatAmountAfterAllChargesWithSpread / perUnitCryptoCostWithoutSpread,
-      totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
-      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
-      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
-      quoteID: zhQuote.quoteID,
-    };
+    this.logger.debug(`
+    FIAT FIXED (${request.fiatCurrency}):\t\t${request.fiatAmount}
+    NETWORK FEE (${request.fiatCurrency}):\t${networkFee.discountedValue}
+    PROCESSING FEES (${request.fiatCurrency}):\t${totalCreditCardFeeInFiat.discountedValue}
+    NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat.discountedValue}
+    PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread.discountedValue}
+    QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread.discountedValue}
+    ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${
+      fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.discountedValue
+    }
+    SPREAD REVENUE (${request.fiatCurrency}):\t${
+      fiatAmountAfterAllChargesWithoutSpread.discountedValue - fiatAmountAfterAllChargesWithSpread.discountedValue
+    }
+    ZERO HASH FEE (${request.fiatCurrency}):\t${request.fiatAmount * 0.007}
+    NOBA REVENUE (${request.fiatCurrency}):\t${
+      fiatAmountAfterAllChargesWithoutSpread.discountedValue -
+      fiatAmountAfterAllChargesWithSpread.discountedValue +
+      nobaFlatFeeInFiat.discountedValue -
+      request.fiatAmount * 0.007
+    }
+  `);
+
+    return { quote: discountedNobaQuote, nonDiscountedQuote: nonDiscountedNobaQuote };
   }
 
   async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {

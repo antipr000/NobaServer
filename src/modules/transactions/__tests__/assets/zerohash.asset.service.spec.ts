@@ -12,6 +12,7 @@ import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { deepEqual, instance, when } from "ts-mockito";
 import {
+  CombinedNobaQuote,
   ConsumerAccountTransferRequest,
   ConsumerAccountTransferStatus,
   ConsumerWalletTransferRequest,
@@ -123,7 +124,7 @@ describe("ZerohashAssetService", () => {
       originalCostPerUnit: number,
       input: QuoteInputs,
       output: QuoteExpectations,
-    ): Promise<NobaQuote> => {
+    ): Promise<CombinedNobaQuote> => {
       const environmentVariables = {
         [NOBA_CONFIG_KEY]: {
           [NOBA_TRANSACTION_CONFIG_KEY]: {
@@ -154,26 +155,41 @@ describe("ZerohashAssetService", () => {
       });
 
       const expectedTotalFees = output.expectedNobaFee + output.expectedProcessingFee + output.expectedNetworkFee;
-      return {
-        quoteID: "id-1",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
-        amountPreSpread: output.amountPreSpread,
-        processingFeeInFiat: output.expectedProcessingFee,
-        networkFeeInFiat: output.expectedNetworkFee,
-        nobaFeeInFiat: output.expectedNobaFee,
-        totalFiatAmount: requestedFiatAmount,
-        totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
-        perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
-        perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "id-1",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread: output.amountPreSpread,
+          processingFeeInFiat: output.expectedProcessingFee,
+          networkFeeInFiat: output.expectedNetworkFee,
+          nobaFeeInFiat: output.expectedNobaFee,
+          totalFiatAmount: requestedFiatAmount,
+          totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
+          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread: output.amountPreSpread,
+          processingFeeInFiat: output.expectedProcessingFee,
+          networkFeeInFiat: output.expectedNetworkFee,
+          nobaFeeInFiat: output.expectedNobaFee,
+          totalFiatAmount: requestedFiatAmount,
+          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+        },
       };
+
+      return nobaQuote;
     };
 
     it("Noba spread percentage is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -192,19 +208,26 @@ describe("ZerohashAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        // All these discounts should mean that the quote & non-discounted quote remain equal
+        fixedCreditCardFeeDiscountPercent: undefined,
+        networkFeeDiscountPercent: null,
+        nobaFeeDiscountPercent: 1,
+        nobaSpreadDiscountPercent: 1,
+        processingFeeDiscountPercent: 1,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
     it("Noba flat fee is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -223,19 +246,19 @@ describe("ZerohashAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
 
     it("Noba 'dynamic' credit card fee is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -254,19 +277,19 @@ describe("ZerohashAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
 
     it("Noba 'fixed' credit card fee is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -285,19 +308,19 @@ describe("ZerohashAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
 
     it("should operate dynamic credit card fee on original amount rather than reduced amount", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -316,19 +339,19 @@ describe("ZerohashAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
 
     it("should operate spread percentage on reduced amount rather than original amount", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -347,19 +370,19 @@ describe("ZerohashAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
 
     it("should take both dynamic & fixed credit card charges", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
-      const expectedNobaQuote: NobaQuote = await setupTestAndGetQuoteResponse(
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -378,13 +401,51 @@ describe("ZerohashAssetService", () => {
         },
       );
 
-      const nobaQuote: NobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
+
+    /* it("Fee discounts are correctly applied", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 10;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 0.6,
+          fiatFeeDollars: 0,
+          dynamicCreditCardFeePercentage: 0,
+          fixedCreditCardFee: 0,
+        },
+        {
+          expectedNobaFee: 0,
+          expectedProcessingFee: 0,
+          expectedNetworkFee: 0,
+          quotedCostPerUnit: 12.4,
+          amountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 80.65,
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD, // Discounted amount
+
+        fixedCreditCardFeeDiscountPercent: 0.1,
+        networkFeeDiscountPercent: 0.2,
+        nobaFeeDiscountPercent: 0.3,
+        nobaSpreadDiscountPercent: 0.4,
+        processingFeeDiscountPercent: 0.5,
+      });
+      //expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+    });*/
   });
 
   describe("getQuoteForSpecifiedCryptoQuantity()", () => {
@@ -779,18 +840,30 @@ describe("ZerohashAssetService", () => {
         },
       };
 
-      const nobaQuote: NobaQuote = {
-        quoteID: quoteID,
-        fiatCurrency: "USD",
-        cryptoCurrency: request.cryptoCurrency,
-        processingFeeInFiat: 2,
-        amountPreSpread: 1234,
-        networkFeeInFiat: 1,
-        nobaFeeInFiat: 1.99,
-        totalFiatAmount: 50,
-        totalCryptoQuantity: request.cryptoQuantity,
-        perUnitCryptoPriceWithoutSpread: 1000,
-        perUnitCryptoPriceWithSpread: 1000,
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: quoteID,
+          fiatCurrency: "USD",
+          cryptoCurrency: request.cryptoCurrency,
+          processingFeeInFiat: 2,
+          amountPreSpread: 1234,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1.99,
+          totalFiatAmount: 50,
+          totalCryptoQuantity: request.cryptoQuantity,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          processingFeeInFiat: 2,
+          amountPreSpread: 1234,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1.99,
+          totalFiatAmount: 50,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
       };
 
       zerohashAssetService.getQuoteForSpecifiedFiatAmount = jest.fn().mockReturnValue(nobaQuote);

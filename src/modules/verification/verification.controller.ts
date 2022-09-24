@@ -47,6 +47,7 @@ import * as crypto_ts from "crypto";
 import { DocumentVerificationResultDTO } from "./dto/DocumentVerificationResultDTO";
 import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificationWebhookRequestDTO";
 import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";
+import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -210,13 +211,14 @@ export class VerificationWebhookController {
   @Post("/document/result")
   @HttpCode(200)
   async postDocumentVerificationResult(
+    @Headers() headers: WebhookHeadersDTO,
     @Body() requestBody: DocumentVerificationWebhookRequestDTO,
     @Request() request: Request,
   ): Promise<DocumentVerificationResultDTO> {
     this.logger.debug(`Received Sardine document verification webhook call: ${JSON.stringify(request.body)}`);
 
     // Throws an exception if invalid
-    this.validateWebhookSignature(request);
+    this.validateWebhookSignature(headers, request);
 
     try {
       const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
@@ -235,13 +237,14 @@ export class VerificationWebhookController {
   @Post("/case/notification")
   @HttpCode(200)
   async postCaseNotification(
+    @Headers() headers: WebhookHeadersDTO,
     @Body() requestBody: CaseNotificationWebhookRequestDTO,
     @Request() request: Request,
   ): Promise<string> {
     this.logger.debug(`Received Sardine case notification webhook call: ${JSON.stringify(request.body)}`);
 
     // Throws an exception if invalid
-    this.validateWebhookSignature(request);
+    this.validateWebhookSignature(headers, request);
 
     try {
       await this.verificationService.processKycVerificationWebhookRequest(requestBody);
@@ -256,8 +259,8 @@ export class VerificationWebhookController {
     }
   }
 
-  private validateWebhookSignature(request: Request) {
-    const sardineSignature = request.headers["x-sardine-signature"];
+  private validateWebhookSignature(headers: WebhookHeadersDTO, request: Request) {
+    const sardineSignature = headers["x-sardine-signature"];
     const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
     const computedSignature = hmac.update(JSON.stringify(request.body)).digest("hex");
     if (sardineSignature !== computedSignature) {

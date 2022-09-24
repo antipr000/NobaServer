@@ -3,9 +3,9 @@ import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../co
 import { KeysRequired } from "../../common/domain/Types";
 import * as Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
-import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
 import { WebhookType } from "./WebhookTypes";
 import { Utils } from "../../../core/utils/Utils";
+import { number } from "joi";
 
 export interface PartnerProps extends VersioningInfo {
   _id: string;
@@ -13,16 +13,33 @@ export interface PartnerProps extends VersioningInfo {
   apiKey: string;
   secretKey: string;
   verificationData?: KybStatusInfo;
-  takeRate?: number;
-  allowPublicWallets?: boolean; // Can wallets added for this partner be shared with others?
   webhookClientID?: string;
   webhookSecret?: string;
   webhooks?: PartnerWebhook[];
+  config?: PartnerConfig;
 }
 
 export type PartnerWebhook = {
   type: WebhookType;
   url: string;
+};
+
+export type PartnerConfig = {
+  privateWallets?: boolean; // Are wallets added under this partner exposed to the user when coming in via other partners?
+  viewOtherWallets?: boolean; // Are wallets for other partners allowed to be seen when the user comes in via this partner?
+  bypassLogonOTP?: boolean;
+  bypassWalletOTP?: boolean;
+  cryptocurrencyAllowList?: string[];
+  fees?: PartnerFees;
+};
+
+export type PartnerFees = {
+  takeRate?: number;
+  creditCardFeeDiscountPercent?: number;
+  nobaFeeDiscountPercent?: number;
+  processingFeeDiscountPercent?: number;
+  networkFeeDiscountPercent?: number;
+  spreadDiscountPercent?: number;
 };
 
 const partnerWebhookJoiKeys: KeysRequired<PartnerWebhook> = {
@@ -39,11 +56,28 @@ export const partnerKeys: KeysRequired<PartnerProps> = {
   apiKey: Joi.string().required(),
   secretKey: Joi.string().required(),
   verificationData: Joi.object().optional(),
-  takeRate: Joi.number().optional(),
-  allowPublicWallets: Joi.boolean().default(true),
   webhookClientID: Joi.string().optional(),
   webhookSecret: Joi.string().optional(),
   webhooks: Joi.array().items(partnerWebhookJoiKeys).default([]),
+  config: Joi.object().optional(),
+};
+
+export const partnerConfigKeys: KeysRequired<PartnerConfig> = {
+  privateWallets: Joi.boolean().optional(),
+  viewOtherWallets: Joi.boolean().optional(),
+  bypassLogonOTP: Joi.boolean().optional(),
+  bypassWalletOTP: Joi.boolean().optional(),
+  cryptocurrencyAllowList: Joi.array().items(Joi.string()).default([]),
+  fees: Joi.object().optional(),
+};
+
+export const partnerFees: KeysRequired<PartnerFees> = {
+  takeRate: Joi.number().optional(),
+  creditCardFeeDiscountPercent: Joi.number().optional(),
+  nobaFeeDiscountPercent: Joi.number().optional(),
+  processingFeeDiscountPercent: Joi.number().optional(),
+  networkFeeDiscountPercent: Joi.number().optional(),
+  spreadDiscountPercent: Joi.number().optional(),
 };
 
 export const partnerSchema = Joi.object(partnerKeys).options({ allowUnknown: true, stripUnknown: false });

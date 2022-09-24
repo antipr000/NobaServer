@@ -57,6 +57,7 @@ export class ZerohashAssetService extends DefaultAssetService {
     fiatCurrency: string,
     fiatAmount: number,
   ): Promise<ZerohashQuote> {
+    console.log(`Input amounts: ${fiatAmount}`);
     return await this.zerohashService.requestQuoteForFixedFiatCurrency(cryptoCurrency, fiatCurrency, fiatAmount);
   }
 
@@ -103,11 +104,13 @@ export class ZerohashAssetService extends DefaultAssetService {
 
     switch (request.fixedSide) {
       case CurrencyType.FIAT:
-        nobaQuote = await this.getQuoteForSpecifiedFiatAmount({
-          cryptoCurrency: request.cryptoCurrency,
-          fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
-          fiatCurrency: request.fiatCurrency,
-        });
+        nobaQuote = (
+          await this.getQuoteForSpecifiedFiatAmount({
+            cryptoCurrency: request.cryptoCurrency,
+            fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
+            fiatCurrency: request.fiatCurrency,
+          })
+        ).quote;
 
         break;
 

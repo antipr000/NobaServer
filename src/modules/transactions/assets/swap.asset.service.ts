@@ -13,6 +13,7 @@ import {
   ConsumerAccountTransferStatus,
   ConsumerWalletTransferResponse,
   ConsumerWalletTransferStatus,
+  CombinedNobaQuote,
 } from "../domain/AssetTypes";
 import { AssetService } from "./asset.service";
 import { RouteResponse } from "../domain/SwapServiceProviderTypes";
@@ -22,26 +23,31 @@ import { SwapServiceProvider } from "../domain/swap.service.provider";
 export class SwapAssetService implements AssetService {
   constructor(private readonly swapServiceProvider: SwapServiceProvider, private readonly assetService: AssetService) {}
 
-  async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<NobaQuote> {
+  async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote> {
     const intermediaryQuoteRequest: QuoteRequestForFixedFiat = {
       cryptoCurrency: request.intermediateCryptoCurrency,
       fiatCurrency: request.fiatCurrency,
       fiatAmount: request.fiatAmount,
     };
 
-    const intermediaryQuoteResponse: NobaQuote = await this.assetService.getQuoteForSpecifiedFiatAmount(
+    const intermediaryQuoteResponse: CombinedNobaQuote = await this.assetService.getQuoteForSpecifiedFiatAmount(
       intermediaryQuoteRequest,
     );
 
     const routeResponse: RouteResponse = await this.swapServiceProvider.performRouting(
       request.cryptoCurrency,
-      intermediaryQuoteResponse.totalCryptoQuantity,
+      intermediaryQuoteResponse.quote.totalCryptoQuantity,
     );
+
+    const updatedQuote: NobaQuote = {
+      ...intermediaryQuoteResponse.quote,
+      totalCryptoQuantity: routeResponse.assetQuantity,
+    };
 
     // Find the proper calculations
     return {
-      ...intermediaryQuoteResponse,
-      totalCryptoQuantity: routeResponse.assetQuantity,
+      quote: updatedQuote,
+      nonDiscountedQuote: intermediaryQuoteResponse.nonDiscountedQuote,
     };
   }
 
