@@ -54,6 +54,7 @@ import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestD
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import { CreatePartnerRequestDTO } from "../partner/dto/CreatePartnerRequestDTO";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")
@@ -287,13 +288,26 @@ export class AdminController {
     description: "User forbidden from adding a new partner",
   })
   @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
-  async registerPartner(@Body() requestBody: AddPartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
+  async registerPartner(@Body() requestBody: CreatePartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);
     }
 
-    const createdPartner: Partner = await this.partnerService.createPartner(requestBody.name);
+    const createdPartner: Partner = await this.partnerService.createPartner({
+      name: requestBody.name,
+      allowedCryptoCurrencies: requestBody.allowedCryptoCurrencies,
+      takeRate: requestBody.takeRate,
+      bypassLoginOtp: requestBody.bypassLoginOtp,
+      bypassWalletOtp: requestBody.bypassWalletOtp,
+      creditCardFeeDiscountPercent: requestBody.creditCardFeeDiscountPercent,
+      keepWalletsPrivate: requestBody.keepWalletsPrivate,
+      makeOtherPartnerWalletsVisible: requestBody.makeOtherPartnerWalletsVisible,
+      networkFeeDiscountPercent: requestBody.networkFeeDiscountPercent,
+      nobaFeeDiscountPercent: requestBody.nobaFeeDiscountPercent,
+      processingFeeDiscountPercent: requestBody.processingFeeDiscountPercent,
+      spreadDiscountPercent: requestBody.spreadDiscountPercent,
+    });
     return this.partnerMapper.toDTO(createdPartner);
   }
 

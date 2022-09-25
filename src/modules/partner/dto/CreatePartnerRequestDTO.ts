@@ -36,4 +36,4 @@ export class CreatePartnerRequestDTO {
 
   @ApiPropertyOptional()
   spreadDiscountPercent?: number;
-};
+}

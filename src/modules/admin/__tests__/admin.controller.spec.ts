@@ -26,6 +26,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KYCStatus, DocumentVerificationStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
+import { CreatePartnerRequestDTO } from "src/modules/partner/dto/CreatePartnerRequestDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -1270,8 +1271,10 @@ describe("AdminController", () => {
       });
 
       try {
-        const addPartnerRequest: AddPartnerRequestDTO = {
+        const addPartnerRequest: CreatePartnerRequestDTO = {
           name: newPartnerName,
+          takeRate: 10,
+          allowedCryptoCurrencies: ["ETH", "USDC"],
         };
         await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingConsumer } });
 
@@ -1295,8 +1298,10 @@ describe("AdminController", () => {
       });
 
       try {
-        const addPartnerRequest: AddPartnerRequestDTO = {
+        const addPartnerRequest: CreatePartnerRequestDTO = {
           name: newPartnerName,
+          takeRate: 10,
+          allowedCryptoCurrencies: ["ETH", "USDC"],
         };
         await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingPartnerAdmin } });
 
@@ -1317,8 +1322,10 @@ describe("AdminController", () => {
       });
 
       try {
-        const addPartnerRequest: AddPartnerRequestDTO = {
+        const addPartnerRequest: CreatePartnerRequestDTO = {
           name: newPartnerName,
+          takeRate: 10,
+          allowedCryptoCurrencies: ["ETH", "USDC"],
         };
         await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingNobaAdmin } });
 
@@ -1339,15 +1346,23 @@ describe("AdminController", () => {
         role: "INTERMEDIATE",
       });
 
-      when(mockPartnerService.createPartner(newPartnerName)).thenResolve(
+      when(mockPartnerService.createPartner(anything())).thenResolve(
         Partner.createPartner({
           _id: createdPartnerId,
           name: newPartnerName,
+          config: {
+            cryptocurrencyAllowList: ["ETH", "USDC"],
+            fees: {
+              takeRate: 10,
+            } as any,
+          },
         }),
       );
 
-      const addPartnerRequest: AddPartnerRequestDTO = {
+      const addPartnerRequest: CreatePartnerRequestDTO = {
         name: newPartnerName,
+        takeRate: 10,
+        allowedCryptoCurrencies: ["ETH", "USDC"],
       };
       const result: PartnerDTO = await adminController.registerPartner(addPartnerRequest, {
         user: {
@@ -1373,15 +1388,23 @@ describe("AdminController", () => {
         role: "ADMIN",
       });
 
-      when(mockPartnerService.createPartner(newPartnerName)).thenResolve(
+      when(mockPartnerService.createPartner(anything())).thenResolve(
         Partner.createPartner({
           _id: createdPartnerId,
           name: newPartnerName,
+          config: {
+            cryptocurrencyAllowList: ["ETH", "USDC"],
+            fees: {
+              takeRate: 10,
+            } as any,
+          },
         }),
       );
 
-      const addPartnerRequest: AddPartnerRequestDTO = {
+      const addPartnerRequest: CreatePartnerRequestDTO = {
         name: newPartnerName,
+        takeRate: 10,
+        allowedCryptoCurrencies: ["ETH", "USDC"],
       };
       const result: PartnerDTO = await adminController.registerPartner(addPartnerRequest, {
         user: {
@@ -1394,6 +1417,65 @@ describe("AdminController", () => {
       expect(result.apiKey).toHaveLength(32);
       expect(result.secretKey).toHaveLength(88);
       expect(result.apiKey).not.toEqual(result.secretKey);
+    });
+
+    it("NobaAdmin with 'ADMIN' role registers a new Partner with proper params", async () => {
+      const adminId = "AAAAAAAAAA";
+      const createdPartnerId = "PPPPPPPPPP";
+      const newPartnerName = "Noba Partner";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: "ADMIN",
+      });
+
+      when(mockPartnerService.createPartner(anything())).thenResolve(
+        Partner.createPartner({
+          _id: createdPartnerId,
+          name: newPartnerName,
+          config: {
+            cryptocurrencyAllowList: ["ETH", "USDC"],
+            fees: {
+              takeRate: 10,
+            } as any,
+          },
+        }),
+      );
+
+      const addPartnerRequest: CreatePartnerRequestDTO = {
+        name: newPartnerName,
+        takeRate: 10,
+        allowedCryptoCurrencies: ["ETH", "USDC"],
+        bypassLoginOtp: true,
+        bypassWalletOtp: true,
+        keepWalletsPrivate: true,
+        makeOtherPartnerWalletsVisible: false,
+        creditCardFeeDiscountPercent: 1,
+        networkFeeDiscountPercent: 2,
+        nobaFeeDiscountPercent: 3,
+        processingFeeDiscountPercent: 4,
+        spreadDiscountPercent: 5,
+      };
+      await adminController.registerPartner(addPartnerRequest, {
+        user: {
+          entity: requestingNobaAdmin,
+        },
+      });
+
+      const [savePartnerRequest] = capture(mockPartnerService.createPartner).last();
+      expect(savePartnerRequest.name).toBe(newPartnerName);
+      expect(savePartnerRequest.allowedCryptoCurrencies).toStrictEqual(["ETH", "USDC"]);
+      expect(savePartnerRequest.takeRate).toBe(10);
+      expect(savePartnerRequest.bypassLoginOtp).toBe(true);
+      expect(savePartnerRequest.bypassWalletOtp).toBe(true);
+      expect(savePartnerRequest.keepWalletsPrivate).toBe(true);
+      expect(savePartnerRequest.makeOtherPartnerWalletsVisible).toBe(false);
+      expect(savePartnerRequest.creditCardFeeDiscountPercent).toBe(1);
+      expect(savePartnerRequest.networkFeeDiscountPercent).toBe(2);
+      expect(savePartnerRequest.nobaFeeDiscountPercent).toBe(3);
+      expect(savePartnerRequest.processingFeeDiscountPercent).toBe(4);
+      expect(savePartnerRequest.spreadDiscountPercent).toBe(5);
     });
 
     it("NobaAdmin with 'Admin' role should be able to update consumer details", async () => {
