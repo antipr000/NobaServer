@@ -11,6 +11,7 @@ import {
   Query,
   Response,
   Request,
+  Headers,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
@@ -48,6 +49,8 @@ import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { TransactionSubmissionException } from "./exceptions/TransactionSubmissionException";
 import { TransactionsQueryResultsDTO } from "./dto/TransactionsQueryResultsDTO";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { PartnerService } from "../partner/partner.service";
+import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -56,6 +59,9 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 export class TransactionController {
   // @Inject(WINSTON_MODULE_PROVIDER)
   // private readonly logger: Logger;
+
+  @Inject()
+  private readonly partnerService: PartnerService;
 
   constructor(
     private readonly transactionService: TransactionService,
@@ -73,12 +79,18 @@ export class TransactionController {
   @ApiBadRequestResponse({ description: "Invalid currency code (fiat or crypto)" })
   @ApiServiceUnavailableResponse({ description: "Unable to connect to underlying service provider" })
   async getTransactionQuote(
+    @Headers() headers,
     @Request() request,
     @Query() transactionQuoteQuery: TransactionQuoteQueryDTO,
   ): Promise<TransactionQuoteDTO> {
     if (transactionQuoteQuery.partnerID === undefined) {
-      // Set it if we have it, otherwise just don't use it
       transactionQuoteQuery.partnerID = request.user?.partnerId;
+      if (!transactionQuoteQuery.partnerID) {
+        // If still empty, it means we're unauthenticated. Get by API key instead.
+        const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props
+          ._id;
+        transactionQuoteQuery.partnerID = partnerId;
+      }
     }
     const transactionQuote = await this.transactionService.requestTransactionQuote(transactionQuoteQuery);
     return transactionQuote;
