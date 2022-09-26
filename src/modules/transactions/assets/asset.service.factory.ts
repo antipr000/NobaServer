@@ -33,6 +33,7 @@ export class AssetServiceFactory {
 
   async getAssetService(ticker: string): Promise<AssetService> {
     const currency = await this.currencyService.getCryptocurrency(ticker);
+    if (!currency) throw Error(`Unknown cryptocurrency: ${ticker}`);
     if (currency.provider.toLocaleLowerCase() === "squid") {
       const intermediaryLeg = this.squidService.getIntermediaryLeg();
       const assetService: AssetService = this.commonAssetServiceFactory.getAssetService(intermediaryLeg);

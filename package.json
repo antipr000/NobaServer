@@ -68,6 +68,7 @@
     "ts-mockito": "^2.6.1",
     "tunnel": "^0.0.6",
     "twilio": "^3.80.1",
+    "web3": "^1.8.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {

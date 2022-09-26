@@ -120,11 +120,10 @@ export abstract class DefaultAssetService implements AssetService {
       discountedValue: perUnitCryptoCostWithoutSpread.discountedValue * (1 + nobaSpreadPercent.discountedValue),
     };
 
-    const totalFiatAmount: DiscountedAmount = {
-      value: fiatAmountAfterAllChargesWithSpread.value / perUnitCryptoCostWithoutSpread.value,
-      discountedValue:
-        fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.discountedValue,
-    };
+    const totalCryptoQuantity: number = await this.roundToProperDecimalsForCryptocurrency(
+      request.cryptoCurrency,
+      fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.discountedValue,
+    );
 
     const nonDiscountedNobaQuote: NonDiscountedNobaQuote = {
       fiatCurrency: request.fiatCurrency,
@@ -144,7 +143,7 @@ export abstract class DefaultAssetService implements AssetService {
       nobaFeeInFiat: nobaFlatFeeInFiat.discountedValue,
       processingFeeInFiat: totalCreditCardFeeInFiat.discountedValue,
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.discountedValue,
-      totalCryptoQuantity: totalFiatAmount.discountedValue,
+      totalCryptoQuantity: totalCryptoQuantity,
       totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
       perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.discountedValue,
       perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.discountedValue,
@@ -158,9 +157,7 @@ export abstract class DefaultAssetService implements AssetService {
       NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat.value}
       PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread.value}
       QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread.value}
-      ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${
-      fiatAmountAfterAllChargesWithSpread.value / perUnitCryptoCostWithoutSpread.value
-    }
+      ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${totalCryptoQuantity}
       SPREAD REVENUE (${request.fiatCurrency}):\t${
       fiatAmountAfterAllChargesWithoutSpread.value - fiatAmountAfterAllChargesWithSpread.value
     }
@@ -180,9 +177,7 @@ export abstract class DefaultAssetService implements AssetService {
     NOBA FLAT FEE (${request.fiatCurrency}):\t${nobaFlatFeeInFiat.discountedValue}
     PRE-SPREAD (${request.fiatCurrency}):\t\t${fiatAmountAfterAllChargesWithoutSpread.discountedValue}
     QUOTE PRICE (${request.fiatCurrency}):\t${fiatAmountAfterAllChargesWithSpread.discountedValue}
-    ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${
-      fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.discountedValue
-    }
+    ESTIMATED CRYPTO (${request.cryptoCurrency}):\t${totalCryptoQuantity}
     SPREAD REVENUE (${request.fiatCurrency}):\t${
       fiatAmountAfterAllChargesWithoutSpread.discountedValue - fiatAmountAfterAllChargesWithSpread.discountedValue
     }
@@ -196,6 +191,14 @@ export abstract class DefaultAssetService implements AssetService {
   `);
 
     return { quote: discountedNobaQuote, nonDiscountedQuote: nonDiscountedNobaQuote };
+  }
+
+  async roundToProperDecimalsForCryptocurrency(cryptocurrency: string, cryptoAmount: number): Promise<number> {
+    const currencyDTO = await this.currencyService.getCryptocurrency(cryptocurrency);
+    if (currencyDTO == null) {
+      throw new Error(`Unknown cryptocurrency: ${cryptocurrency}`);
+    }
+    return Utils.roundToSpecifiedDecimalNumber(cryptoAmount, currencyDTO.precision);
   }
 
   async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {

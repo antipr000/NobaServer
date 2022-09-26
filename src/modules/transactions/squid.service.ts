@@ -7,6 +7,7 @@ import { SQUID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { SquidConfigs } from "src/config/configtypes/SquidConfigs";
 import { Squid, Config, GetRoute, Route, TokenData, ChainsData, ChainData } from "@0xsquid/sdk";
 import { SwapServiceProvider } from "./domain/swap.service.provider";
+const web3 = require("web3");
 
 @Injectable()
 export class SquidService implements SwapServiceProvider {
@@ -45,7 +46,12 @@ export class SquidService implements SwapServiceProvider {
     await this.initializeSquid();
     if (!targetWalletAddress) targetWalletAddress = this.temporaryWalletAddress;
     const destinationTokenData = this.getTokenData(finalCryptoAsset);
-    const sourceTokenData = this.getTokenData(this.intermediaryLeg);
+
+    // TODO(#) this is temporary until we can change the config to have both the ZH & Squid symbol
+    let intermediaryLeg = this.intermediaryLeg;
+    if (intermediaryLeg === "AVAX") intermediaryLeg = "AVAX.Avalanche";
+    if (intermediaryLeg === "DAI.ETH") intermediaryLeg = "DAI.Ethereum";
+    const sourceTokenData = this.getTokenData(intermediaryLeg);
     const crossChainTokenAddress = this.getDefaultCrossChainToken(destinationTokenData.chainId);
 
     const squidParams: GetRoute = {
@@ -58,22 +64,46 @@ export class SquidService implements SwapServiceProvider {
       slippage: this.slippage,
     };
 
+    this.logger.debug(`Squid route params: ${JSON.stringify(squidParams, null, 1)}`);
+
     const squidRouteResponse = await this.getRoute(squidParams);
+    this.logger.debug(`Squid route response: ${JSON.stringify(squidRouteResponse, null, 1)}`);
     return {
       assetQuantity: this.convertSquidAmountToCryptoAmount(squidRouteResponse.estimate.sendAmount), // TODO(#594): Figure out actual quantity here
       smartContractData: squidRouteResponse.transactionRequest.data,
+      exchangeRate: Number(squidRouteResponse.estimate.exchangeRate),
     };
   }
 
   private getDefaultCrossChainToken(chainId: string | number): string {
     const chains: ChainsData = this.squid.chains;
-    const chainData: ChainData = chains.filter(chainInfo => chainInfo.chainId.toString() === chainId)[0];
+    console.log(`Getting chain data for chainID: ${chainId}`);
+    const chainData: ChainData = chains.filter(chainInfo => chainInfo.chainId.toString() === chainId.toString())[0];
     return chainData.squidContracts.defaultCrosschainToken;
   }
 
-  private getTokenData(ticker: string): TokenData {
-    const filteredTokenData = this.squid.tokens.filter(token => token.symbol.toLowerCase() === ticker.toLowerCase());
-    if (filteredTokenData.length === 0) throw new BadRequestException(`Ticker ${ticker} not supported`);
+  private getTokenData(tickerAndChainIn: string): TokenData {
+    // Ticket must be of the format Chain.Ticker
+    if (tickerAndChainIn.indexOf(".") == -1)
+      throw new BadRequestException(`Malformed ticker symbol: ${tickerAndChainIn}`);
+    const tickerAndChainArr = tickerAndChainIn.split(".");
+    if (tickerAndChainArr.length != 2) throw new BadRequestException(`Malformed ticker symbol: ${tickerAndChainIn}`);
+    const ticker = tickerAndChainArr[0];
+    const chainName = tickerAndChainArr[1];
+
+    const filteredChainData = this.squid.chains.filter(
+      chain => chain.chainName.toLowerCase() === chainName.toLowerCase(),
+    );
+    if (filteredChainData.length === 0) throw new BadRequestException(`Chain ${chainName} not supported`);
+
+    const chainID = filteredChainData[0].chainId;
+    const filteredTokenData = this.squid.tokens.filter(
+      token => token.symbol.toLowerCase() === ticker.toLowerCase() && token.chainId === chainID,
+    );
+    if (filteredTokenData.length === 0)
+      throw new BadRequestException(`Ticker ${ticker} not supported on chain ${chainName}`);
+
+    console.log(`Got token data: ${JSON.stringify(filteredTokenData[0])}`);
     return filteredTokenData[0];
   }
 
@@ -93,17 +123,11 @@ export class SquidService implements SwapServiceProvider {
     }
   }
 
-  //TODO(#594): Use different external service for these calculations
   private convertCryptoAmountToSquidAmount(amount: number): string {
-    const strAmount = `${amount}`;
-    const [nonDecimalPart, decimalPart] = strAmount.split(".");
-    const decimalPartInWei = Math.round(parseInt(decimalPart) * 1000000 * 1000000 * 1000000); // will be less than 10^18
-    return `${nonDecimalPart}${decimalPartInWei}`;
+    return web3.utils.toWei(amount.toString(), "ether");
   }
 
   private convertSquidAmountToCryptoAmount(amount: string): number {
-    const decimalPart = amount.substring(amount.length - 18);
-    const integerPart = amount.substring(0, amount.length - 18);
-    return parseFloat(`${integerPart}.${decimalPart}`);
+    return web3.utils.fromWei(amount, "ether");
   }
 }

@@ -218,6 +218,7 @@ describe("SwapAssetService", () => {
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
         assetQuantity: 0.123,
+        exchangeRate: 1,
       });
 
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
@@ -258,6 +259,7 @@ describe("SwapAssetService", () => {
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
         assetQuantity: 0.123,
+        exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
 
@@ -298,6 +300,7 @@ describe("SwapAssetService", () => {
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
         assetQuantity: 0.123,
+        exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
 
@@ -338,6 +341,7 @@ describe("SwapAssetService", () => {
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
         assetQuantity: 0.123,
+        exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
 
@@ -378,6 +382,7 @@ describe("SwapAssetService", () => {
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
         assetQuantity: 0.123,
+        exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
 
@@ -719,6 +724,7 @@ describe("SwapAssetService", () => {
       ).thenResolve({
         assetQuantity: 123,
         smartContractData: fakeSmartContractData,
+        exchangeRate: 1,
       });
 
       when(swapServiceProvider.getIntermediaryLeg()).thenReturn("USDC.POLYGON");
