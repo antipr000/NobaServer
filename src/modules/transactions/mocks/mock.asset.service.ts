@@ -15,6 +15,7 @@ export function getMockAssetServiceWithDefaults(): AssetService {
   when(mockAssetService.pollFundsAvailableStatus(anyString())).thenReject(new Error("Method not implemented"));
   when(mockAssetService.transferAssetToConsumerAccount(anything())).thenReject(new Error("Method not implemented"));
   when(mockAssetService.transferToConsumerWallet(anything())).thenReject(new Error("Method not implemented"));
+  when(mockAssetService.needsIntermediaryLeg()).thenReturn(false);
   return mockAssetService;
 }
 

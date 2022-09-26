@@ -56,7 +56,7 @@ import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mock
 import { BadRequestException } from "@nestjs/common";
 import { AssetService } from "../assets/asset.service";
 import { CombinedNobaQuote, NobaQuote } from "../domain/AssetTypes";
-import { Partner, PartnerProps } from "../../../modules/partner/domain/Partner";
+import { Partner } from "../../../modules/partner/domain/Partner";
 import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
 import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { TransactionMapper } from "../mapper/TransactionMapper";
@@ -721,6 +721,85 @@ describe("TransactionService", () => {
       assertOnRequestTransactionQuoteResponse(response, nobaQuote.quote, transactionQuoteQuery);
     });
 
+    it("should return correct quote for 'FIAT' fixed side when assetService needs intermediary leg", async () => {
+      const partnerID = "partner-12345";
+      const partner: Partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
+      when(currencyService.getCryptocurrency("axlUSDCMoonbeam")).thenResolve({
+        ticker: "axlUSDCMoonbeam",
+        name: "Moonbeam",
+        iconPath: "",
+        precision: 8,
+        provider: "Squid",
+      });
+
+      const transactionQuoteQuery: TransactionQuoteQueryDTO = {
+        fiatCurrencyCode: "USD",
+        cryptoCurrencyCode: "axlUSDCMoonbeam",
+        fixedSide: CurrencyType.FIAT,
+        fixedAmount: 10,
+        partnerID: partnerID,
+      };
+
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "fake-quote",
+          fiatCurrency: "USD",
+          cryptoCurrency: "axlUSDCMoonbeam",
+
+          processingFeeInFiat: 1,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1,
+          amountPreSpread: 1,
+
+          totalFiatAmount: 13,
+          totalCryptoQuantity: 0.0001,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+
+          processingFeeInFiat: 1,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1,
+          amountPreSpread: 1,
+
+          totalFiatAmount: 13,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+      };
+
+      when(assetService.needsIntermediaryLeg()).thenReturn(true);
+      when(assetService.getIntermediaryLeg()).thenReturn("USDC.POLYGON");
+
+      when(
+        assetService.getQuoteForSpecifiedFiatAmount(
+          deepEqual({
+            cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+            fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+            fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+            fixedCreditCardFeeDiscountPercent: undefined,
+            networkFeeDiscountPercent: undefined,
+            nobaFeeDiscountPercent: undefined,
+            nobaSpreadDiscountPercent: undefined,
+            processingFeeDiscountPercent: undefined,
+            intermediateCryptoCurrency: "USDC.POLYGON",
+          }),
+        ),
+      ).thenResolve(nobaQuote);
+
+      const response = await transactionService.requestTransactionQuote(transactionQuoteQuery);
+      assertOnRequestTransactionQuoteResponse(response, nobaQuote.quote, transactionQuoteQuery);
+    });
+
     it("should return correct quote for 'CRYPTO' fixed side", async () => {
       const partnerID = "partner-12345";
       const partner: Partner = Partner.createPartner({
@@ -911,6 +990,58 @@ describe("TransactionService", () => {
       }
     });
 
+    it("should throw BadRequestException when intermediary leg is needed and fixed side is 'CRYPTO'", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "axlUSDCMoonbeam",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.CRYPTO,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          ticker: "axlUSDCMoonbeam",
+          name: "Moonbeam",
+          iconPath: "",
+          precision: 8,
+          provider: "Zerohash",
+        },
+      ]);
+
+      when(currencyService.getCryptocurrency("axlUSDCMoonbeam")).thenResolve({
+        ticker: "axlUSDCMoonbeam",
+        name: "Moonbeam",
+        iconPath: "",
+        precision: 8,
+        provider: "Zerohash",
+      });
+
+      when(assetService.needsIntermediaryLeg()).thenReturn(true);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+          precision: 8,
+        },
+      ]);
+
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe(`Fixed side crypto is not allowed for ${transactionRequest.leg2}`);
+      }
+    });
+
     it("should throw BadRequestException when the amount exceeds slippage", async () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
@@ -965,6 +1096,8 @@ describe("TransactionService", () => {
           provider: "Zerohash",
         },
       ]);
+
+      when(assetService.needsIntermediaryLeg()).thenReturn(false);
 
       when(currencyService.getSupportedFiatCurrencies()).thenResolve([
         {
