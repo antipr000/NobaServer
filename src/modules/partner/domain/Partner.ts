@@ -15,8 +15,8 @@ export interface PartnerProps extends VersioningInfo {
   verificationData?: KybStatusInfo;
   webhookClientID?: string;
   webhookSecret?: string;
-  webhooks?: PartnerWebhook[];
-  config?: PartnerConfig;
+  webhooks: PartnerWebhook[];
+  config: PartnerConfig;
 }
 
 export type PartnerWebhook = {
@@ -30,16 +30,16 @@ export type PartnerConfig = {
   bypassLogonOTP?: boolean;
   bypassWalletOTP?: boolean;
   cryptocurrencyAllowList?: string[];
-  fees?: PartnerFees;
+  fees: PartnerFees;
 };
 
 export type PartnerFees = {
-  takeRate?: number;
-  creditCardFeeDiscountPercent?: number;
-  nobaFeeDiscountPercent?: number;
-  processingFeeDiscountPercent?: number;
-  networkFeeDiscountPercent?: number;
-  spreadDiscountPercent?: number;
+  takeRate: number;
+  creditCardFeeDiscountPercent: number;
+  nobaFeeDiscountPercent: number;
+  processingFeeDiscountPercent: number;
+  networkFeeDiscountPercent: number;
+  spreadDiscountPercent: number;
 };
 
 const partnerWebhookJoiKeys: KeysRequired<PartnerWebhook> = {
@@ -91,6 +91,21 @@ export class Partner extends AggregateRoot<PartnerProps> {
     if (!partnerProps._id) partnerProps._id = Entity.getNewID();
     if (!partnerProps.apiKey) partnerProps.apiKey = Partner.generateAPIKey();
     if (!partnerProps.secretKey) partnerProps.secretKey = Partner.generateSecretKey();
+
+    if (!partnerProps.webhooks) partnerProps.webhooks = [];
+    if (!partnerProps.config) partnerProps.config = {} as any;
+
+    partnerProps.config.fees = {
+      creditCardFeeDiscountPercent: 0,
+      networkFeeDiscountPercent: 0,
+      nobaFeeDiscountPercent: 0,
+      processingFeeDiscountPercent: 0,
+      spreadDiscountPercent: 0,
+      takeRate: 1, // TODO(#): Define a proper default 'takeRate'.
+
+      ...(partnerProps.config.fees ? partnerProps.config.fees : {}),
+    };
+
     return new Partner(Joi.attempt(partnerProps, partnerSchema));
   }
 

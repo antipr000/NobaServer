@@ -1,21 +1,24 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, instance, when, deepEqual } from "ts-mockito";
+import { anything, instance, when, deepEqual, capture } from "ts-mockito";
 import { PartnerService } from "../partner.service";
 import { getMockPartnerRepoWithDefaults } from "../mocks/mock.partner.repo";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Partner } from "../domain/Partner";
 import { WebhookType } from "../domain/WebhookTypes";
+import { BadRequestException } from "@nestjs/common";
+import { IPartnerRepo } from "../repo/PartnerRepo";
 
 describe("PartnerService", () => {
   let partnerService: PartnerService;
-
-  const partnerRepo = getMockPartnerRepoWithDefaults();
+  let partnerRepo: IPartnerRepo;
 
   jest.setTimeout(20000);
   const OLD_ENV = process.env;
 
   beforeEach(async () => {
+    partnerRepo = getMockPartnerRepoWithDefaults();
+
     const PartnerRepoProvider = {
       provide: "PartnerRepo",
       useFactory: () => instance(partnerRepo),
@@ -29,21 +32,150 @@ describe("PartnerService", () => {
     partnerService = app.get<PartnerService>(PartnerService);
   });
 
-  describe("partner service tests", () => {
-    it("should add a new partner", async () => {
-      const partner: Partner = Partner.createPartner({
-        _id: "mock-partner-1",
-        name: "Mock Partner",
-        apiKey: "mockPublicKey",
-        secretKey: "mockPrivateKey",
-      });
-
-      when(partnerRepo.addPartner(anything())).thenResolve(partner);
-
-      const result = await partnerService.createPartner(partner.props.name);
-      expect(result).toStrictEqual(partner);
+  describe("CreatePartner", () => {
+    it("should throw BadRequestException if 'name' is missing", async () => {
+      try {
+        await partnerService.createPartner({
+          takeRate: 10,
+          allowedCryptoCurrencies: ["ETH", "USDC"],
+        } as any);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
     });
 
+    it("should throw BadRequestException if 'allowedCryptoCurrencies' is missing", async () => {
+      try {
+        await partnerService.createPartner({
+          takeRate: 10,
+          name: "partnerA",
+        } as any);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("should throw BadRequestException if 'takeRate' is missing", async () => {
+      try {
+        await partnerService.createPartner({
+          name: "partnerA",
+          allowedCryptoCurrencies: ["ETH", "USDC"],
+        } as any);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("should save default values of the non-required parameters", async () => {
+      const partnerName: string = "partner name";
+      const allowedCryptoCurrencies = ["ETH", "USDC"];
+      const takeRate = 10;
+
+      const partner = Partner.createPartner({
+        name: partnerName,
+        config: {
+          cryptocurrencyAllowList: allowedCryptoCurrencies,
+          viewOtherWallets: true,
+          privateWallets: false,
+          bypassLogonOTP: false,
+          bypassWalletOTP: false,
+          fees: {
+            creditCardFeeDiscountPercent: 0,
+            networkFeeDiscountPercent: 0,
+            nobaFeeDiscountPercent: 0,
+            processingFeeDiscountPercent: 0,
+            spreadDiscountPercent: 0,
+            takeRate: takeRate,
+          },
+        },
+      });
+      when(partnerRepo.addPartner(anything())).thenResolve(partner);
+
+      // There are 2 things to check here
+      //   - What is the parameters passed to the DB Layer?
+      //   - Whether there is any diffs between the response from DB Layer vs returend response?
+      const savedPartner: Partner = await partnerService.createPartner({
+        name: partnerName,
+        allowedCryptoCurrencies: allowedCryptoCurrencies,
+        takeRate: takeRate,
+      });
+      expect(savedPartner).toBe(partner);
+
+      const [repoSaveRequest] = capture(partnerRepo.addPartner).last();
+      expect(repoSaveRequest.props.name).toBe(partnerName);
+      expect(repoSaveRequest.props.config.cryptocurrencyAllowList).toBe(allowedCryptoCurrencies);
+      expect(repoSaveRequest.props.config.viewOtherWallets).toBe(true);
+      expect(repoSaveRequest.props.config.privateWallets).toBe(false);
+      expect(repoSaveRequest.props.config.bypassLogonOTP).toBe(false);
+      expect(repoSaveRequest.props.config.bypassWalletOTP).toBe(false);
+      expect(repoSaveRequest.props.config.fees.creditCardFeeDiscountPercent).toBe(0);
+      expect(repoSaveRequest.props.config.fees.networkFeeDiscountPercent).toBe(0);
+      expect(repoSaveRequest.props.config.fees.nobaFeeDiscountPercent).toBe(0);
+      expect(repoSaveRequest.props.config.fees.processingFeeDiscountPercent).toBe(0);
+      expect(repoSaveRequest.props.config.fees.spreadDiscountPercent).toBe(0);
+      expect(repoSaveRequest.props.config.fees.takeRate).toBe(takeRate);
+    });
+
+    it("should save the specified values of the non-required parameters", async () => {
+      const partnerName: string = "partner name";
+      const allowedCryptoCurrencies = ["ETH", "USDC"];
+      const takeRate = 10;
+
+      const partner = Partner.createPartner({
+        name: partnerName,
+        config: {
+          cryptocurrencyAllowList: allowedCryptoCurrencies,
+          viewOtherWallets: false,
+          privateWallets: true,
+          bypassLogonOTP: true,
+          bypassWalletOTP: true,
+          fees: {
+            creditCardFeeDiscountPercent: 1,
+            networkFeeDiscountPercent: 2,
+            nobaFeeDiscountPercent: 3,
+            processingFeeDiscountPercent: 4,
+            spreadDiscountPercent: 5,
+            takeRate: takeRate,
+          },
+        },
+      });
+      when(partnerRepo.addPartner(anything())).thenResolve(partner);
+
+      await partnerService.createPartner({
+        name: partnerName,
+        allowedCryptoCurrencies: allowedCryptoCurrencies,
+        takeRate: takeRate,
+        bypassLoginOtp: true,
+        bypassWalletOtp: true,
+        keepWalletsPrivate: true,
+        makeOtherPartnerWalletsVisible: false,
+        creditCardFeeDiscountPercent: 1,
+        networkFeeDiscountPercent: 2,
+        nobaFeeDiscountPercent: 3,
+        processingFeeDiscountPercent: 4,
+        spreadDiscountPercent: 5,
+      });
+
+      const [repoSaveRequest] = capture(partnerRepo.addPartner).last();
+      expect(repoSaveRequest.props.name).toBe(partnerName);
+      expect(repoSaveRequest.props.config.cryptocurrencyAllowList).toBe(allowedCryptoCurrencies);
+      expect(repoSaveRequest.props.config.viewOtherWallets).toBe(false);
+      expect(repoSaveRequest.props.config.privateWallets).toBe(true);
+      expect(repoSaveRequest.props.config.bypassLogonOTP).toBe(true);
+      expect(repoSaveRequest.props.config.bypassWalletOTP).toBe(true);
+      expect(repoSaveRequest.props.config.fees.creditCardFeeDiscountPercent).toBe(1);
+      expect(repoSaveRequest.props.config.fees.networkFeeDiscountPercent).toBe(2);
+      expect(repoSaveRequest.props.config.fees.nobaFeeDiscountPercent).toBe(3);
+      expect(repoSaveRequest.props.config.fees.processingFeeDiscountPercent).toBe(4);
+      expect(repoSaveRequest.props.config.fees.spreadDiscountPercent).toBe(5);
+      expect(repoSaveRequest.props.config.fees.takeRate).toBe(takeRate);
+    });
+  });
+
+  describe("partner service tests", () => {
     it("should get partner given id", async () => {
       const partner: Partner = Partner.createPartner({
         _id: "mock-partner-1",
@@ -92,14 +224,14 @@ describe("PartnerService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
-        config: { fees: { takeRate: newTakeRate } },
+        config: { fees: { takeRate: newTakeRate } as any },
       });
 
       when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
       when(partnerRepo.updatePartner(deepEqual(updatePartner))).thenResolve(updatePartner);
 
       const result = await partnerService.updatePartner(partner.props._id, {
-        config: { fees: { takeRate: newTakeRate } },
+        config: { fees: { takeRate: newTakeRate } as any },
       });
       expect(result).toStrictEqual(updatePartner);
     });

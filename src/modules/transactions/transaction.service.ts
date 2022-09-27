@@ -90,11 +90,11 @@ export class TransactionService {
                 transactionQuoteQuery.fiatCurrencyCode,
                 transactionQuoteQuery.fixedAmount,
               ),
-              fixedCreditCardFeeDiscountPercent: partner.props.config?.fees?.processingFeeDiscountPercent,
-              networkFeeDiscountPercent: partner.props.config?.fees?.networkFeeDiscountPercent,
-              nobaFeeDiscountPercent: partner.props.config?.fees?.nobaFeeDiscountPercent,
-              nobaSpreadDiscountPercent: partner.props.config?.fees?.spreadDiscountPercent,
-              processingFeeDiscountPercent: partner.props.config?.fees?.processingFeeDiscountPercent,
+              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+              nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+              nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+              processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
             })
           ).quote;
         } else {
@@ -106,11 +106,11 @@ export class TransactionService {
                 transactionQuoteQuery.fiatCurrencyCode,
                 transactionQuoteQuery.fixedAmount,
               ),
-              fixedCreditCardFeeDiscountPercent: partner.props.config?.fees?.processingFeeDiscountPercent,
-              networkFeeDiscountPercent: partner.props.config?.fees?.networkFeeDiscountPercent,
-              nobaFeeDiscountPercent: partner.props.config?.fees?.nobaFeeDiscountPercent,
-              nobaSpreadDiscountPercent: partner.props.config?.fees?.spreadDiscountPercent,
-              processingFeeDiscountPercent: partner.props.config?.fees?.processingFeeDiscountPercent,
+              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+              nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+              nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+              processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
             })
           ).quote;
         }

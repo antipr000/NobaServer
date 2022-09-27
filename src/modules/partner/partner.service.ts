@@ -4,6 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IPartnerRepo } from "./repo/PartnerRepo";
 import { WebhookType } from "./domain/WebhookTypes";
+import { CreatePartnerRequest } from "./dto/ServiceTypes";
 
 @Injectable()
 export class PartnerService {
@@ -26,8 +27,31 @@ export class PartnerService {
     return partner;
   }
 
-  async createPartner(partnerName: string): Promise<Partner> {
-    const partner = Partner.createPartner({ name: partnerName });
+  async createPartner(request: CreatePartnerRequest): Promise<Partner> {
+    const requiredFields = ["name", "allowedCryptoCurrencies", "takeRate"];
+    requiredFields.forEach(field => {
+      if (!request[field])
+        throw new BadRequestException(`"${requiredFields}" fields are required for creating a Partner`);
+    });
+
+    const partner = Partner.createPartner({
+      name: request.name,
+      config: {
+        viewOtherWallets: request.makeOtherPartnerWalletsVisible ?? true,
+        privateWallets: request.keepWalletsPrivate ?? false,
+        bypassLogonOTP: request.bypassLoginOtp ?? false,
+        bypassWalletOTP: request.bypassWalletOtp ?? false,
+        cryptocurrencyAllowList: request.allowedCryptoCurrencies,
+        fees: {
+          creditCardFeeDiscountPercent: request.creditCardFeeDiscountPercent ?? 0,
+          networkFeeDiscountPercent: request.networkFeeDiscountPercent ?? 0,
+          nobaFeeDiscountPercent: request.nobaFeeDiscountPercent ?? 0,
+          processingFeeDiscountPercent: request.processingFeeDiscountPercent ?? 0,
+          spreadDiscountPercent: request.spreadDiscountPercent ?? 0,
+          takeRate: request.takeRate,
+        },
+      },
+    });
     const partnerResult: Partner = await this.partnerRepo.addPartner(partner);
     return partnerResult;
   }

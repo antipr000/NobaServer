@@ -35,6 +35,7 @@ import { PartnerAdminMapper } from "./mappers/PartnerAdminMapper";
 import { PartnerMapper } from "./mappers/PartnerMapper";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
+import { CreatePartnerRequestDTO } from "./dto/CreatePartnerRequestDTO";
 
 @ApiBearerAuth("JWT-auth")
 @Controller("partners")
@@ -57,8 +58,21 @@ export class PartnerController {
   @IsNoApiKeyNeeded()
   @Post("/")
   @ApiOperation({ summary: "Creates a partner" })
-  async createPartner(@Body() requestBody: UpdatePartnerRequestDTO): Promise<PartnerDTO> {
-    const partner = await this.partnerService.createPartner(requestBody.name);
+  async createPartner(@Body() requestBody: CreatePartnerRequestDTO): Promise<PartnerDTO> {
+    const partner = await this.partnerService.createPartner({
+      name: requestBody.name,
+      allowedCryptoCurrencies: requestBody.allowedCryptoCurrencies,
+      takeRate: requestBody.takeRate,
+      bypassLoginOtp: requestBody.bypassLoginOtp,
+      bypassWalletOtp: requestBody.bypassWalletOtp,
+      creditCardFeeDiscountPercent: requestBody.creditCardFeeDiscountPercent,
+      keepWalletsPrivate: requestBody.keepWalletsPrivate,
+      makeOtherPartnerWalletsVisible: requestBody.makeOtherPartnerWalletsVisible,
+      networkFeeDiscountPercent: requestBody.networkFeeDiscountPercent,
+      nobaFeeDiscountPercent: requestBody.nobaFeeDiscountPercent,
+      processingFeeDiscountPercent: requestBody.processingFeeDiscountPercent,
+      spreadDiscountPercent: requestBody.spreadDiscountPercent,
+    });
     return this.partnerMapper.toDTO(partner);
   }
 
