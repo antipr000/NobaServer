@@ -741,7 +741,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddPartnerRequestDTO" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatePartnerRequestDTO" } } }
         },
         "responses": {
           "201": {
@@ -806,7 +806,7 @@
         ],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePartnerRequestDTO" } } }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatePartnerRequestDTO" } } }
         },
         "responses": { "201": { "description": "" } },
         "tags": ["Partner"],
@@ -1963,10 +1963,23 @@
         "type": "object",
         "properties": { "email": { "type": "string" }, "name": { "type": "string" }, "role": { "type": "string" } }
       },
-      "AddPartnerRequestDTO": {
+      "CreatePartnerRequestDTO": {
         "type": "object",
-        "properties": { "name": { "type": "string" } },
-        "required": ["name"]
+        "properties": {
+          "name": { "type": "string" },
+          "allowedCryptoCurrencies": { "type": "array", "items": { "type": "string" } },
+          "keepWalletsPrivate": { "type": "boolean" },
+          "makeOtherPartnerWalletsVisible": { "type": "boolean" },
+          "bypassLoginOtp": { "type": "boolean" },
+          "bypassWalletOtp": { "type": "boolean" },
+          "takeRate": { "type": "number" },
+          "creditCardFeeDiscountPercent": { "type": "number" },
+          "nobaFeeDiscountPercent": { "type": "number" },
+          "processingFeeDiscountPercent": { "type": "number" },
+          "networkFeeDiscountPercent": { "type": "number" },
+          "spreadDiscountPercent": { "type": "number" }
+        },
+        "required": ["name", "allowedCryptoCurrencies", "takeRate"]
       },
       "KybStatusInfoDTO": {
         "type": "object",
