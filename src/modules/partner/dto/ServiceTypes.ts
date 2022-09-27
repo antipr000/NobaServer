@@ -4,10 +4,10 @@ export type CreatePartnerRequest = {
 
   keepWalletsPrivate?: boolean;
   makeOtherPartnerWalletsVisible?: boolean;
-  // bypassLoginOtp?: boolean;
+  bypassLoginOtp?: boolean;
   bypassWalletOtp?: boolean;
 
-  // takeRate: number;
+  takeRate?: number;
   creditCardFeeDiscountPercent?: number;
   nobaFeeDiscountPercent?: number;
   processingFeeDiscountPercent?: number;
