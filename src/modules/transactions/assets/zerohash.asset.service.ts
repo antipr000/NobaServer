@@ -109,6 +109,13 @@ export class ZerohashAssetService extends DefaultAssetService {
             cryptoCurrency: request.cryptoCurrency,
             fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
             fiatCurrency: request.fiatCurrency,
+            discount: {
+              fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+              networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
+              nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
+              nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
+              processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+            },
           })
         ).quote;
 

@@ -90,11 +90,13 @@ export class TransactionService {
                 transactionQuoteQuery.fiatCurrencyCode,
                 transactionQuoteQuery.fixedAmount,
               ),
-              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-              networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-              nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-              nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-              processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              discount: {
+                fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+                networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+                nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+                nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+                processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              },
             })
           ).quote;
         } else {
@@ -106,11 +108,13 @@ export class TransactionService {
                 transactionQuoteQuery.fiatCurrencyCode,
                 transactionQuoteQuery.fixedAmount,
               ),
-              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-              networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-              nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-              nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-              processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              discount: {
+                fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+                networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+                nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+                nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+                processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              },
             })
           ).quote;
         }
@@ -226,15 +230,15 @@ export class TransactionService {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
     }
 
-    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
-    if (cryptoCurrencies.filter(curr => curr.ticker === transactionRequest.leg2).length == 0) {
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
-    }
-
     const fiatAmount = await this.roundToProperDecimalsForFiatCurrency(
       transactionRequest.leg1,
       transactionRequest.leg1Amount,
     );
+
+    if (partnerID === null || partnerID === undefined)
+      throw new BadRequestException("Partner ID is required for submitting a transaction");
+    const partner = await this.partnerService.getPartner(partnerID);
+    if (partner === null || partner === undefined) throw new BadRequestException("Unknown Partner ID");
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
@@ -269,6 +273,13 @@ export class TransactionService {
         cryptoCurrency: transactionRequest.leg2,
         fiatAmount: await this.roundToProperDecimalsForFiatCurrency(transactionRequest.leg1, fiatAmount),
         intermediateCryptoCurrency: newTransaction.props.intermediaryLeg,
+        /* discount: {
+          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+          networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+          nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+          nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+          processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+        },*/
       });
       quote = combinedQuote.quote;
     } else {

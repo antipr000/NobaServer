@@ -53,19 +53,19 @@ export abstract class DefaultAssetService implements AssetService {
   async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote> {
     const nobaSpreadPercent = getDiscountedAmount(
       this.nobaTransactionConfigs.spreadPercentage,
-      request.nobaSpreadDiscountPercent,
+      request.discount.nobaSpreadDiscountPercent,
     );
     const nobaFlatFeeInFiat = getDiscountedAmount(
       this.nobaTransactionConfigs.flatFeeDollars,
-      request.nobaFeeDiscountPercent,
+      request.discount.nobaFeeDiscountPercent,
     );
     const creditCardFeePercent = getDiscountedAmount(
       this.nobaTransactionConfigs.dynamicCreditCardFeePercentage,
-      request.processingFeeDiscountPercent,
+      request.discount.processingFeeDiscountPercent,
     );
     const fixedCreditCardFeeInFiat = getDiscountedAmount(
       this.nobaTransactionConfigs.fixedCreditCardFee,
-      request.fixedCreditCardFeeDiscountPercent,
+      request.discount.fixedCreditCardFeeDiscountPercent,
     );
 
     // Get network / gas fees
@@ -74,7 +74,7 @@ export abstract class DefaultAssetService implements AssetService {
       request.fiatCurrency,
     );
 
-    const networkFee = getDiscountedAmount(networkFeeEstimate.feeInFiat, request.networkFeeDiscountPercent);
+    const networkFee = getDiscountedAmount(networkFeeEstimate.feeInFiat, request.discount.networkFeeDiscountPercent);
 
     const totalCreditCardFeeInFiat: DiscountedAmount = {
       value: Utils.roundTo2DecimalNumber(

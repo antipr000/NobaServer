@@ -33,6 +33,8 @@ export interface ExecuteQuoteRequest {
   transactionCreationTimestamp: Date;
 
   consumer: ConsumerProps;
+
+  discount?: QuoteDiscount;
 }
 
 export interface FundsAvailabilityRequest {
@@ -135,11 +137,7 @@ export type QuoteRequestForFixedFiat = {
   intermediateCryptoCurrency?: string;
 
   // Discounts
-  nobaSpreadDiscountPercent?: number;
-  nobaFeeDiscountPercent?: number;
-  processingFeeDiscountPercent?: number;
-  fixedCreditCardFeeDiscountPercent?: number;
-  networkFeeDiscountPercent?: number;
+  discount?: QuoteDiscount;
 };
 
 export interface QuoteRequestForFixedCrypto {
@@ -148,11 +146,7 @@ export interface QuoteRequestForFixedCrypto {
   cryptoQuantity: number;
 
   // Discounts
-  nobaSpreadDiscountPercent?: number;
-  nobaFeeDiscountPercent?: number;
-  processingFeeDiscountPercent?: number;
-  fixedCreditCardFeeDiscountPercent?: number;
-  networkFeeDiscountPercent?: number;
+  discount?: QuoteDiscount;
 }
 
 export interface ExecutedQuoteStatus {
@@ -160,3 +154,11 @@ export interface ExecutedQuoteStatus {
   errorMessage: string;
   settledTimestamp: number;
 }
+
+export type QuoteDiscount = {
+  nobaSpreadDiscountPercent: number;
+  nobaFeeDiscountPercent: number;
+  processingFeeDiscountPercent: number;
+  fixedCreditCardFeeDiscountPercent: number;
+  networkFeeDiscountPercent: number;
+};
