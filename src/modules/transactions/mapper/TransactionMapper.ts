@@ -1,5 +1,5 @@
 import { Mapper } from "../../../core/infra/Mapper";
-import { Transaction, transactionJoiSchema } from "../domain/Transaction";
+import { Transaction } from "../domain/Transaction";
 import { TransactionDTO } from "../dto/TransactionDTO";
 
 export class TransactionMapper implements Mapper<Transaction> {

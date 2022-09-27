@@ -43,7 +43,6 @@ import { AddPartnerAdminRequestDTO } from "../partner/dto/AddPartnerAdminRequest
 import { PartnerAdmin } from "../partner/domain/PartnerAdmin";
 import { PartnerAdminService } from "../partner/partneradmin.service";
 import { PartnerAdminMapper } from "../partner/mappers/PartnerAdminMapper";
-import { AddPartnerRequestDTO } from "./dto/AddPartnerRequestDTO";
 import { PartnerDTO } from "../partner/dto/PartnerDTO";
 import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";

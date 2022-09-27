@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { TransactionStatus, TransactionType } from "../domain/Types";
+import { TransactionStatus } from "../domain/Types";
 
 export class TransactionAmountsDTO {
   @ApiProperty({ description: "Fiat amount in USD" })

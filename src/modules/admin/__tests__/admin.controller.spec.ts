@@ -18,7 +18,6 @@ import { getMockPartnerAdminServiceWithDefaults } from "../../../../src/modules/
 import { AddPartnerAdminRequestDTO } from "../../../../src/modules/partner/dto/AddPartnerAdminRequestDTO";
 import { PartnerService } from "../../partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
-import { AddPartnerRequestDTO } from "../dto/AddPartnerRequestDTO";
 import { Partner } from "../../partner/domain/Partner";
 import { PartnerDTO } from "../../partner/dto/PartnerDTO";
 import { UpdatePartnerAdminRequestDTO } from "../../../modules/partner/dto/UpdatePartnerAdminRequestDTO";

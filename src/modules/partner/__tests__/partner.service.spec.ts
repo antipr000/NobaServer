@@ -70,7 +70,7 @@ describe("PartnerService", () => {
     });
 
     it("should save default values of the non-required parameters", async () => {
-      const partnerName: string = "partner name";
+      const partnerName = "partner name";
       const allowedCryptoCurrencies = ["ETH", "USDC"];
       const takeRate = 10;
 
@@ -120,7 +120,7 @@ describe("PartnerService", () => {
     });
 
     it("should save the specified values of the non-required parameters", async () => {
-      const partnerName: string = "partner name";
+      const partnerName = "partner name";
       const allowedCryptoCurrencies = ["ETH", "USDC"];
       const takeRate = 10;
 

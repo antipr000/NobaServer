@@ -31,7 +31,7 @@ export class Utils {
     return shift(Math.round(n), -decimalPlaces).toFixed(decimalPlaces);
   }
 
-  static generateLowercaseUUID(removeDashes: boolean = false): string {
+  static generateLowercaseUUID(removeDashes = false): string {
     // 1. Generate UUID
     // 2. Convert to lowercase
     // 3. Optionally remove all hyphens

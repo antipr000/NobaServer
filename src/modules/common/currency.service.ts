@@ -1,7 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { S3 } from "aws-sdk";
 import { parse } from "csv";
-import { ASSETS_BUCKET_NAME, SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH } from "../../config/ConfigurationUtils";
+import {
+  AppEnvironment,
+  ASSETS_BUCKET_NAME,
+  getEnvironmentName,
+  SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH,
+} from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyDTO } from "../../modules/common/dto/CurrencyDTO";
 
@@ -16,6 +21,8 @@ export class CurrencyService {
   }
 
   private async loadCurrenciesFromS3(): Promise<Array<CurrencyDTO>> {
+    const environment: AppEnvironment = getEnvironmentName();
+
     return new Promise((resolve, reject) => {
       const results = new Array<CurrencyDTO>();
       const parser = parse({ delimiter: ",", columns: true });
@@ -29,21 +36,24 @@ export class CurrencyService {
       readStream
         .pipe(parser)
         .on("data", data => {
-          const name = `${data["Name"]}`.trim();
-          const symbol = `${data["Symbol"]}`.trim();
-          const precision = Number(`${data["Precision"]}`.trim());
-          const provider = `${data["Provider"]}`.trim();
-          const type = `${data["Type"]}`.trim();
-          // Include only records for which ZH provides liquidity services (Liquidity=Yes)
-          // Exclude XRP
-          const curr = new CurrencyDTO();
-          curr.name = name;
-          curr.ticker = symbol;
-          curr.type = type;
-          curr.provider = provider;
-          curr.iconPath = `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`;
-          curr.precision = precision;
-          results.push(curr);
+          const isValidForEnv: boolean = `${data[environment]}`.trim().toLowerCase() == "true";
+          if (isValidForEnv) {
+            const name = `${data["Name"]}`.trim();
+            const symbol = `${data["Symbol"]}`.trim();
+            const precision = Number(`${data["Precision"]}`.trim());
+            const provider = `${data["Provider"]}`.trim();
+            const type = `${data["Type"]}`.trim();
+            // Include only records for which ZH provides liquidity services (Liquidity=Yes)
+            // Exclude XRP
+            const curr = new CurrencyDTO();
+            curr.name = name;
+            curr.ticker = symbol;
+            curr.type = type;
+            curr.provider = provider;
+            curr.iconPath = `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`;
+            curr.precision = precision;
+            results.push(curr);
+          }
         })
         .on("error", err => {
           reject(err);
