@@ -135,11 +135,11 @@ export type QuoteRequestForFixedFiat = {
   intermediateCryptoCurrency?: string;
 
   // Discounts
-  nobaSpreadDiscountPercent: number;
-  nobaFeeDiscountPercent: number;
-  processingFeeDiscountPercent: number;
-  fixedCreditCardFeeDiscountPercent: number;
-  networkFeeDiscountPercent: number;
+  nobaSpreadDiscountPercent?: number;
+  nobaFeeDiscountPercent?: number;
+  processingFeeDiscountPercent?: number;
+  fixedCreditCardFeeDiscountPercent?: number;
+  networkFeeDiscountPercent?: number;
 };
 
 export interface QuoteRequestForFixedCrypto {

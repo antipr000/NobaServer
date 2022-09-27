@@ -102,7 +102,6 @@ export abstract class DefaultAssetService implements AssetService {
         fiatAmountAfterAllChargesWithoutSpread.discountedValue / (1 + nobaSpreadPercent.discountedValue),
       ),
     };
-    console.log(nobaSpreadPercent, fiatAmountAfterAllChargesWithoutSpread, fiatAmountAfterAllChargesWithSpread);
 
     const zhQuoteWithDiscount: ZerohashQuote = await this.getQuoteFromLiquidityProviderFiatFixed(
       request.cryptoCurrency,

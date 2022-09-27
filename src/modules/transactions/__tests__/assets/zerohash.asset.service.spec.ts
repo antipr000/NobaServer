@@ -628,6 +628,59 @@ describe("ZerohashAssetService", () => {
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
+    // it("should include 'nobaFeeDiscountPercent' correctly", async () => {
+    //   const fiatAmountUSD = 100;
+    //   const originalCostPerUnit = 10;
+
+    //   const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+    //     fiatAmountUSD,
+    //     originalCostPerUnit,
+    //     {
+    //       spreadPercentage: 1,
+    //       fiatFeeDollars: 7.5,
+    //       dynamicCreditCardFeePercentage: 0.12,
+    //       fixedCreditCardFee: 10,
+
+    //       fixedCreditCardFeeDiscountPercent: 0,
+    //       networkFeeDiscountPercent: 0,
+    //       nobaFeeDiscountPercent: 0.5,
+    //       nobaSpreadDiscountPercent: 0,
+    //       processingFeeDiscountPercent: 0,
+    //     },
+    //     {
+    //       // Without discounts.
+    //       expectedNobaFee: 7.5,
+    //       expectedProcessingFee: 22,
+    //       expectedNetworkFee: 10,
+    //       quotedCostPerUnit: 20,
+    //       amountPreSpread: 60.5,
+    //       expectedPriceAfterFeeAndSpread: 30.25,
+
+    //       // WITH discounts.
+    //       discountedExpectedNobaFee: 3.75,
+    //       discountedExpectedProcessingFee: 22,
+    //       discountedExpectedNetworkFee: 10,
+    //       discountedQuotedCostPerUnit: 20,
+    //       discountedAmountPreSpread: 64.25,
+    //       discountedExpectedPriceAfterFeeAndSpread: 32.13,  // actual = 32.125
+    //     },
+    //   );
+
+    //   const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+    //     cryptoCurrency: "ETH",
+    //     fiatCurrency: "USD",
+    //     fiatAmount: fiatAmountUSD,
+
+    //     fixedCreditCardFeeDiscountPercent: 0,
+    //     networkFeeDiscountPercent: 0,
+    //     nobaFeeDiscountPercent: 0.5,
+    //     nobaSpreadDiscountPercent: 0,
+    //     processingFeeDiscountPercent: 0,
+    //   });
+    //   expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+    //   expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+    // });
+
     /* it("Fee discounts are correctly applied", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
