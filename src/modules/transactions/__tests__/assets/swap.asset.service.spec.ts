@@ -227,6 +227,13 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -268,6 +275,13 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -309,6 +323,13 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -350,6 +371,13 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -391,6 +419,13 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -495,6 +530,13 @@ describe("SwapAssetService", () => {
           cryptoCurrency: REQUESTED_CRYPTO_ASSET,
           fiatCurrency: "USD",
           cryptoQuantity: cryptoQuantity,
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0,
+            networkFeeDiscountPercent: 0,
+            nobaFeeDiscountPercent: 0,
+            nobaSpreadDiscountPercent: 0,
+            processingFeeDiscountPercent: 0,
+          },
         });
       } catch (e) {
         expect(e.message).toBe(`Fixed side crypto is not supported for ${REQUESTED_CRYPTO_ASSET}`);
