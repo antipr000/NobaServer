@@ -207,6 +207,13 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -238,6 +245,13 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -269,6 +283,13 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -300,6 +321,13 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -331,6 +359,13 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -362,6 +397,13 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
@@ -393,6 +435,13 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });

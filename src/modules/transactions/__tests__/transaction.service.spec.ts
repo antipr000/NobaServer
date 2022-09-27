@@ -711,11 +711,13 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
-            fixedCreditCardFeeDiscountPercent: 0,
-            networkFeeDiscountPercent: 0,
-            nobaFeeDiscountPercent: 0,
-            nobaSpreadDiscountPercent: 0,
-            processingFeeDiscountPercent: 0,
+            discount: {
+              fixedCreditCardFeeDiscountPercent: 0,
+              networkFeeDiscountPercent: 0,
+              nobaFeeDiscountPercent: 0,
+              nobaSpreadDiscountPercent: 0,
+              processingFeeDiscountPercent: 0,
+            },
           }),
         ),
       ).thenResolve(nobaQuote);
@@ -789,12 +791,14 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
-            fixedCreditCardFeeDiscountPercent: 0,
-            networkFeeDiscountPercent: 0,
-            nobaFeeDiscountPercent: 0,
-            nobaSpreadDiscountPercent: 0,
-            processingFeeDiscountPercent: 0,
             intermediateCryptoCurrency: "USDC.POLYGON",
+            discount: {
+              fixedCreditCardFeeDiscountPercent: 0,
+              networkFeeDiscountPercent: 0,
+              nobaFeeDiscountPercent: 0,
+              nobaSpreadDiscountPercent: 0,
+              processingFeeDiscountPercent: 0,
+            },
           }),
         ),
       ).thenResolve(nobaQuote);
@@ -924,6 +928,15 @@ describe("TransactionService", () => {
         destinationWalletAddress: "fake-wallet-1234",
       };
 
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
       try {
         await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
       } catch (e) {
@@ -949,6 +962,15 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([]);
       try {
@@ -976,6 +998,15 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
         {
@@ -1237,6 +1268,15 @@ describe("TransactionService", () => {
 
       when(transactionRepo.createTransaction(anything())).thenResolve(responseTransaction);
 
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
       const response = await transactionService.initiateTransaction(
         consumerId,
         partnerId,
@@ -1365,6 +1405,15 @@ describe("TransactionService", () => {
       delete responseTransactionDTO.transactionTimestamp;
 
       when(transactionRepo.createTransaction(anything())).thenResolve(responseTransaction);
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const response = await transactionService.initiateTransaction(
         consumerId,

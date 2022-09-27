@@ -109,11 +109,13 @@ describe("ZerohashAssetService", () => {
       dynamicCreditCardFeePercentage: number;
       fixedCreditCardFee: number;
 
-      fixedCreditCardFeeDiscountPercent?: number;
-      networkFeeDiscountPercent?: number;
-      nobaFeeDiscountPercent?: number;
-      nobaSpreadDiscountPercent?: number;
-      processingFeeDiscountPercent?: number;
+      discount?: {
+        fixedCreditCardFeeDiscountPercent?: number;
+        networkFeeDiscountPercent?: number;
+        nobaFeeDiscountPercent?: number;
+        nobaSpreadDiscountPercent?: number;
+        processingFeeDiscountPercent?: number;
+      };
     }
 
     interface QuoteExpectations {
@@ -151,11 +153,12 @@ describe("ZerohashAssetService", () => {
       };
       await setupTestModule(environmentVariables);
 
-      input.fixedCreditCardFeeDiscountPercent = input.fixedCreditCardFeeDiscountPercent ?? 0;
-      input.nobaFeeDiscountPercent = input.nobaFeeDiscountPercent ?? 0;
-      input.networkFeeDiscountPercent = input.networkFeeDiscountPercent ?? 0;
-      input.nobaSpreadDiscountPercent = input.nobaSpreadDiscountPercent ?? 0;
-      input.processingFeeDiscountPercent = input.processingFeeDiscountPercent ?? 0;
+      if (!input.discount) input.discount = {};
+      input.discount.fixedCreditCardFeeDiscountPercent = input.discount.fixedCreditCardFeeDiscountPercent ?? 0;
+      input.discount.nobaFeeDiscountPercent = input.discount.nobaFeeDiscountPercent ?? 0;
+      input.discount.networkFeeDiscountPercent = input.discount.networkFeeDiscountPercent ?? 0;
+      input.discount.nobaSpreadDiscountPercent = input.discount.nobaSpreadDiscountPercent ?? 0;
+      input.discount.processingFeeDiscountPercent = input.discount.processingFeeDiscountPercent ?? 0;
 
       when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
         cryptoCurrency: "ETH",
@@ -242,11 +245,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         // All these discounts should mean that the quote & non-discounted quote remain equal
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
@@ -288,11 +293,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
@@ -333,11 +340,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
@@ -378,11 +387,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
@@ -423,11 +434,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
@@ -468,11 +481,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
@@ -513,11 +528,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
     });
@@ -535,11 +552,13 @@ describe("ZerohashAssetService", () => {
           dynamicCreditCardFeePercentage: 0.12,
           fixedCreditCardFee: 10,
 
-          fixedCreditCardFeeDiscountPercent: 0.5,
-          networkFeeDiscountPercent: 0,
-          nobaFeeDiscountPercent: 0,
-          nobaSpreadDiscountPercent: 0,
-          processingFeeDiscountPercent: 0,
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0.5,
+            networkFeeDiscountPercent: 0,
+            nobaFeeDiscountPercent: 0,
+            nobaSpreadDiscountPercent: 0,
+            processingFeeDiscountPercent: 0,
+          },
         },
         {
           // Without discounts.
@@ -565,11 +584,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0.5,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0.5,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
@@ -588,11 +609,13 @@ describe("ZerohashAssetService", () => {
           dynamicCreditCardFeePercentage: 0.12,
           fixedCreditCardFee: 10,
 
-          fixedCreditCardFeeDiscountPercent: 0,
-          networkFeeDiscountPercent: 0.5,
-          nobaFeeDiscountPercent: 0,
-          nobaSpreadDiscountPercent: 0,
-          processingFeeDiscountPercent: 0,
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0,
+            networkFeeDiscountPercent: 0.5,
+            nobaFeeDiscountPercent: 0,
+            nobaSpreadDiscountPercent: 0,
+            processingFeeDiscountPercent: 0,
+          },
         },
         {
           // Without discounts.
@@ -618,11 +641,13 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0.5,
-        nobaFeeDiscountPercent: 0,
-        nobaSpreadDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0.5,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
@@ -1091,6 +1116,13 @@ describe("ZerohashAssetService", () => {
         transactionCreationTimestamp: new Date(),
         transactionID: "123456",
         fixedSide: CurrencyType.FIAT,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
       };
 
       const quote: ExecutedQuote = {

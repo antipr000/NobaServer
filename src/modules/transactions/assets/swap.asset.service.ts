@@ -28,6 +28,13 @@ export class SwapAssetService implements AssetService {
       cryptoCurrency: request.intermediateCryptoCurrency,
       fiatCurrency: request.fiatCurrency,
       fiatAmount: request.fiatAmount,
+      discount: {
+        fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+        networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
+        nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
+        nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
+        processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+      },
     };
 
     const intermediaryQuoteResponse: CombinedNobaQuote = await this.assetService.getQuoteForSpecifiedFiatAmount(
