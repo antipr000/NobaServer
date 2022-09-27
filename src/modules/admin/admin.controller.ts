@@ -296,8 +296,6 @@ export class AdminController {
     const createdPartner: Partner = await this.partnerService.createPartner({
       name: requestBody.name,
       allowedCryptoCurrencies: requestBody.allowedCryptoCurrencies,
-      takeRate: requestBody.takeRate,
-      bypassLoginOtp: requestBody.bypassLoginOtp,
       bypassWalletOtp: requestBody.bypassWalletOtp,
       creditCardFeeDiscountPercent: requestBody.creditCardFeeDiscountPercent,
       keepWalletsPrivate: requestBody.keepWalletsPrivate,

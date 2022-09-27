@@ -1272,7 +1272,6 @@ describe("AdminController", () => {
       try {
         const addPartnerRequest: CreatePartnerRequestDTO = {
           name: newPartnerName,
-          takeRate: 10,
           allowedCryptoCurrencies: ["ETH", "USDC"],
         };
         await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingConsumer } });
@@ -1299,7 +1298,6 @@ describe("AdminController", () => {
       try {
         const addPartnerRequest: CreatePartnerRequestDTO = {
           name: newPartnerName,
-          takeRate: 10,
           allowedCryptoCurrencies: ["ETH", "USDC"],
         };
         await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingPartnerAdmin } });
@@ -1323,7 +1321,6 @@ describe("AdminController", () => {
       try {
         const addPartnerRequest: CreatePartnerRequestDTO = {
           name: newPartnerName,
-          takeRate: 10,
           allowedCryptoCurrencies: ["ETH", "USDC"],
         };
         await adminController.registerPartner(addPartnerRequest, { user: { entity: requestingNobaAdmin } });
@@ -1351,16 +1348,13 @@ describe("AdminController", () => {
           name: newPartnerName,
           config: {
             cryptocurrencyAllowList: ["ETH", "USDC"],
-            fees: {
-              takeRate: 10,
-            } as any,
+            fees: {} as any,
           },
         }),
       );
 
       const addPartnerRequest: CreatePartnerRequestDTO = {
         name: newPartnerName,
-        takeRate: 10,
         allowedCryptoCurrencies: ["ETH", "USDC"],
       };
       const result: PartnerDTO = await adminController.registerPartner(addPartnerRequest, {
@@ -1393,16 +1387,13 @@ describe("AdminController", () => {
           name: newPartnerName,
           config: {
             cryptocurrencyAllowList: ["ETH", "USDC"],
-            fees: {
-              takeRate: 10,
-            } as any,
+            fees: {} as any,
           },
         }),
       );
 
       const addPartnerRequest: CreatePartnerRequestDTO = {
         name: newPartnerName,
-        takeRate: 10,
         allowedCryptoCurrencies: ["ETH", "USDC"],
       };
       const result: PartnerDTO = await adminController.registerPartner(addPartnerRequest, {
@@ -1435,18 +1426,14 @@ describe("AdminController", () => {
           name: newPartnerName,
           config: {
             cryptocurrencyAllowList: ["ETH", "USDC"],
-            fees: {
-              takeRate: 10,
-            } as any,
+            fees: {} as any,
           },
         }),
       );
 
       const addPartnerRequest: CreatePartnerRequestDTO = {
         name: newPartnerName,
-        takeRate: 10,
         allowedCryptoCurrencies: ["ETH", "USDC"],
-        bypassLoginOtp: true,
         bypassWalletOtp: true,
         keepWalletsPrivate: true,
         makeOtherPartnerWalletsVisible: false,
@@ -1465,8 +1452,6 @@ describe("AdminController", () => {
       const [savePartnerRequest] = capture(mockPartnerService.createPartner).last();
       expect(savePartnerRequest.name).toBe(newPartnerName);
       expect(savePartnerRequest.allowedCryptoCurrencies).toStrictEqual(["ETH", "USDC"]);
-      expect(savePartnerRequest.takeRate).toBe(10);
-      expect(savePartnerRequest.bypassLoginOtp).toBe(true);
       expect(savePartnerRequest.bypassWalletOtp).toBe(true);
       expect(savePartnerRequest.keepWalletsPrivate).toBe(true);
       expect(savePartnerRequest.makeOtherPartnerWalletsVisible).toBe(false);
