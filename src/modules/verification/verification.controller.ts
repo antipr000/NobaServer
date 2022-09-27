@@ -43,7 +43,7 @@ import { SardineConfigs } from "../../config/configtypes/SardineConfigs";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { SARDINE_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
-import * as crypto_ts from "crypto";
+import crypto_ts from "crypto";
 import { DocumentVerificationResultDTO } from "./dto/DocumentVerificationResultDTO";
 import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificationWebhookRequestDTO";
 import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";

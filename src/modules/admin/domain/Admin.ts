@@ -1,7 +1,7 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
-import * as Joi from "joi";
+import Joi from "joi";
 
 const Permissions = {
   viewNobaDashboard: "VIEW_NOBA_DASHBOARD",

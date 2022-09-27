@@ -1,5 +1,5 @@
 import { readFileSync } from "fs-extra";
-import * as yaml from "js-yaml";
+import yaml from "js-yaml";
 
 export function readConfigsFromYamlFiles(...filesPaths: string[]) {
   const configs: any = {};

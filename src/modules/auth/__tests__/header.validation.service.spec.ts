@@ -8,7 +8,7 @@ import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mock
 import { instance, when } from "ts-mockito";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Partner } from "../../../modules/partner/domain/Partner";
-import * as CryptoJS from "crypto-js";
+import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
 
 describe("HeaderValidationService", () => {

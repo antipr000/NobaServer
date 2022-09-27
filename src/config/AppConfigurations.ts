@@ -1,4 +1,4 @@
-import * as Joi from "joi";
+import Joi from "joi";
 import { join } from "path";
 import { readConfigsFromYamlFiles } from "../core/utils/YamlJsonUtils";
 import {
@@ -95,8 +95,8 @@ import {
   SQUID_TEMPORARY_WALLET_ADDRESS,
   SQUID_SLIPPAGE,
 } from "./ConfigurationUtils";
-import * as fs from "fs";
-import * as os from "os";
+import fs from "fs";
+import os from "os";
 
 import { TwilioConfigs } from "./configtypes/TwilioConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";

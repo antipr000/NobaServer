@@ -1,5 +1,5 @@
 import { differenceInMinutes, format, formatISO, parseISO } from "date-fns";
-import * as Joi from "joi";
+import Joi from "joi";
 
 export const validISODateTimeStringFilter: Joi.CustomValidator = (value, helpers) => {
   //This is same as Joi.string().isoDate() but this doesn't allow invalid dates, Joi's isoDate is just a regex check

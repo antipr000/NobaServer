@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { readFileSync } from "fs";
-import * as path from "path";
+import path from "path";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationDTO, SubdivisionDTO } from "./dto/LocationDTO";
 import {

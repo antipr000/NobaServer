@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import * as Joi from "joi";
+import Joi from "joi";
 import { KeysRequired } from "../../modules/common/domain/Types";
 
 export type VersioningInfo = {

@@ -1,7 +1,7 @@
 import { MongoClient } from "mongodb";
 import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
-import * as CryptoJS from "crypto-js";
+import CryptoJS from "crypto-js";
 
 export const fetchOtpFromDb = async (mongoUri: string, email: string, identityType: string): Promise<number> => {
   // Setup a mongodb client for interacting with "admins" collection.

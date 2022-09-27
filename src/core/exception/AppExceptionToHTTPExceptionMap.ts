@@ -1,5 +1,5 @@
 import { HttpStatus, HttpException } from "@nestjs/common";
-import * as Joi from "joi";
+import Joi from "joi";
 import { AppExceptionCode, ApplicationException, BadRequestError } from "./CommonAppException";
 
 export function convertToHTTPException(exception: any): HttpException {

@@ -1,4 +1,4 @@
-import * as Joi from "joi";
+import Joi from "joi";
 import { Utils } from "../../../core/utils/Utils";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";

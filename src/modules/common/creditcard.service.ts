@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { parse } from "csv";
 import { createReadStream } from "fs";
-import * as path from "path";
+import path from "path";
 import { CCBIN_DATA_FILE_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { unsupportedIssuers, CreditCardDTO, BINValidity, CardType, BINReportDetails } from "./dto/CreditCardDTO";

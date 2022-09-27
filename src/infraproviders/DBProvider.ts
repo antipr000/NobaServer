@@ -4,7 +4,7 @@ import { Logger } from "winston";
 import { Model } from "mongoose";
 import { ConsumerProps } from "../modules/consumer/domain/Consumer";
 import { UserModel } from "../infra/mongodb/models/UserModel";
-import * as Mongoose from "mongoose";
+import Mongoose from "mongoose";
 import { TransactionProps } from "../modules/transactions/domain/Transaction";
 import { TransactionModel } from "../infra/mongodb/models/TransactionModel";
 import { PartnerProps } from "../modules/partner/domain/Partner";
@@ -22,7 +22,7 @@ import { VerificationDataProps } from "../modules/verification/domain/Verificati
 import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataModel";
 import { LockModel } from "../infra/mongodb/models/LockModel";
 import { LockProps } from "../modules/common/domain/Lock";
-import * as path from "path";
+import path from "path";
 
 @Injectable()
 export class DBProvider {

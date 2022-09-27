@@ -40,7 +40,7 @@ import {
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Multer } from "multer";
 import { FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE } from "../src/modules/verification/integrations/fakes/FakeSardineResponses";
-import * as crypto_ts from "crypto";
+import crypto_ts from "crypto";
 
 describe("Verification", () => {
   jest.setTimeout(20000);

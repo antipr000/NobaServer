@@ -166,7 +166,7 @@ describe("SwapAssetService", () => {
         quote: {
           quoteID: "FIXED",
           fiatCurrency: "USD",
-          cryptoCurrency: "USDC.POLYGON",
+          cryptoCurrency: REQUESTED_CRYPTO_ASSET,
           amountPreSpread: output.amountPreSpread,
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
@@ -222,6 +222,7 @@ describe("SwapAssetService", () => {
       });
 
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
+      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
         fiatCurrency: "USD",
@@ -262,6 +263,7 @@ describe("SwapAssetService", () => {
         exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
+      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
@@ -303,6 +305,7 @@ describe("SwapAssetService", () => {
         exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
+      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
@@ -344,6 +347,7 @@ describe("SwapAssetService", () => {
         exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
+      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
@@ -385,6 +389,7 @@ describe("SwapAssetService", () => {
         exchangeRate: 1,
       });
       expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
+      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,

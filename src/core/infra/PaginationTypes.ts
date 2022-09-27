@@ -1,5 +1,5 @@
 import { KeysRequired } from "../../../src/modules/common/domain/Types";
-import * as Joi from "joi";
+import Joi from "joi";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class PaginatedResult<T> {

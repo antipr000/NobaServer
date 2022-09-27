@@ -1,7 +1,7 @@
 import { SQS } from "aws-sdk";
 import { MessageBodyAttributeMap } from "aws-sdk/clients/sqs";
 import { AppEnvironment, getEnvironmentName } from "../../../config/ConfigurationUtils";
-import * as os from "os";
+import os from "os";
 import { Producer } from "sqs-producer";
 import { Consumer } from "sqs-consumer";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";

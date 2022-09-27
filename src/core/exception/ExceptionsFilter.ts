@@ -1,7 +1,7 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from "@nestjs/common";
 import { Logger } from "winston";
 import { convertToHTTPException, isApplicationException } from "./AppExceptionToHTTPExceptionMap";
-import * as Joi from "joi";
+import Joi from "joi";
 import { ApplicationException } from "./CommonAppException";
 
 @Catch()

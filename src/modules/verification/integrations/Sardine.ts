@@ -35,7 +35,7 @@ import {
   SardineRiskLevels,
 } from "./SardineTypeDefinitions";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
-import * as FormData from "form-data";
+import FormData from "form-data";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";

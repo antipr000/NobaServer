@@ -1,4 +1,4 @@
-import * as winston from "winston";
+import winston from "winston";
 import { utilities as nestWinstonModuleUtilities, WinstonModule } from "nest-winston";
 import { SERVER_LOG_FILE_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "./AppConfigModule";

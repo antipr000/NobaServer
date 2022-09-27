@@ -60,7 +60,7 @@ import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { SqsClient } from "../../queueprocessors/sqs.client";
 import { TransactionQueueName } from "../../domain/Types";
-import * as os from "os";
+import os from "os";
 import { MessageProcessor } from "../../queueprocessors/message.processor";
 import { getMockMessageProcessorWithDefaults } from "../../mocks/mock.message.processor";
 import { MessageBodyAttributeMap } from "aws-sdk/clients/sqs";

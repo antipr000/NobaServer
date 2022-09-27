@@ -1,11 +1,10 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
-import * as Joi from "joi";
+import Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
 import { WebhookType } from "./WebhookTypes";
 import { Utils } from "../../../core/utils/Utils";
-import { number } from "joi";
 
 export interface PartnerProps extends VersioningInfo {
   _id: string;

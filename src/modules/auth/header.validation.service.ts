@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common"
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";
-import * as CryptoJS from "crypto-js";
+import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
 import { AppEnvironment, getEnvironmentName } from "../../config/ConfigurationUtils";
 

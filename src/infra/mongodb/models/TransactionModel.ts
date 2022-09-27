@@ -1,6 +1,6 @@
 import { Schema, model, Model } from "mongoose";
-import * as Mongoose from "mongoose";
-import * as Joigoose from "joigoose";
+import Mongoose from "mongoose";
+import Joigoose from "joigoose";
 import { TransactionProps, transactionJoiSchema } from "../../../modules/transactions/domain/Transaction";
 
 const joigoose = Joigoose(Mongoose, null, {});

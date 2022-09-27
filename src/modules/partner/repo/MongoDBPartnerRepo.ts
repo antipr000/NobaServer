@@ -28,10 +28,13 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
     try {
       const partnerModel = await this.dbProvider.getPartnerModel();
       const result: any = await partnerModel.findOne({ apiKey: apiKey }).exec();
+      if (!result) {
+        throw new NotFoundException(`Partner with api key ${apiKey} not found`);
+      }
       const partnerData: PartnerProps = convertDBResponseToJsObject(result);
       return this.partnerMapper.toDomain(partnerData);
     } catch (e) {
-      throw new NotFoundException();
+      throw new NotFoundException(`Partner with api key ${apiKey} not found`);
     }
   }
 

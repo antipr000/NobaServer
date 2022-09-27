@@ -1,8 +1,8 @@
 import { Schema, model, Model } from "mongoose";
-import * as Mongoose from "mongoose";
-import * as Joigoose from "joigoose";
+import Mongoose from "mongoose";
+import Joigoose from "joigoose";
 
-import * as Joi from "joi";
+import Joi from "joi";
 
 const joigoose = Joigoose(Mongoose, null, {});
 

@@ -1,7 +1,7 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
-import * as Joi from "joi";
+import Joi from "joi";
 import { allIdentities } from "./IdentityType";
 
 export interface OtpProps extends VersioningInfo {

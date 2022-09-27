@@ -23,7 +23,7 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import * as fs from "fs";
+import fs from "fs";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";

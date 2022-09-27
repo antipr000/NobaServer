@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
 import axios, { AxiosRequestConfig, Method } from "axios";
-import * as tunnel from "tunnel";
+import tunnel from "tunnel";
 import {
   BadRequestException,
   Inject,

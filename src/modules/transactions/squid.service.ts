@@ -7,8 +7,9 @@ import { SQUID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { SquidConfigs } from "src/config/configtypes/SquidConfigs";
 import { Squid, Config, GetRoute, Route, TokenData, ChainsData, ChainData } from "@0xsquid/sdk";
 import { SwapServiceProvider } from "./domain/swap.service.provider";
-const web3 = require("web3");
+import Web3 from "web3";
 
+const web3 = new Web3();
 @Injectable()
 export class SquidService implements SwapServiceProvider {
   private readonly squid: Squid;
@@ -24,13 +25,8 @@ export class SquidService implements SwapServiceProvider {
     this.slippage = configService.get<SquidConfigs>(SQUID_CONFIG_KEY).slippage;
 
     const squidConfig: Config = {
-      apiKey: apiKey,
       baseUrl: baseUrl,
-      executionSettings: {
-        infiniteApproval: true,
-      },
     };
-
     this.squid = new Squid(squidConfig);
   }
 
@@ -83,11 +79,10 @@ export class SquidService implements SwapServiceProvider {
   }
 
   private getTokenData(tickerAndChainIn: string): TokenData {
-    // Ticket must be of the format Chain.Ticker
+    // Ticket must be of the format Ticker.Chain
     if (tickerAndChainIn.indexOf(".") == -1)
       throw new BadRequestException(`Malformed ticker symbol: ${tickerAndChainIn}`);
     const tickerAndChainArr = tickerAndChainIn.split(".");
-    if (tickerAndChainArr.length != 2) throw new BadRequestException(`Malformed ticker symbol: ${tickerAndChainIn}`);
     const ticker = tickerAndChainArr[0];
     const chainName = tickerAndChainArr[1];
 
@@ -128,6 +123,6 @@ export class SquidService implements SwapServiceProvider {
   }
 
   private convertSquidAmountToCryptoAmount(amount: string): number {
-    return web3.utils.fromWei(amount, "ether");
+    return parseFloat(web3.utils.fromWei(amount, "ether"));
   }
 }

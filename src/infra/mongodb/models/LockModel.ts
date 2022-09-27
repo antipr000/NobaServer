@@ -1,6 +1,6 @@
 import { Schema, model, Model } from "mongoose";
-import * as Mongoose from "mongoose";
-import * as Joigoose from "joigoose";
+import Mongoose from "mongoose";
+import Joigoose from "joigoose";
 import { LockProps, lockJoiSchema } from "../../../modules/common/domain/Lock";
 
 const joigoose = Joigoose(Mongoose, null, {});

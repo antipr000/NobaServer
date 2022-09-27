@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { stringify } from "csv-stringify";
-import * as fs from "fs";
+import fs from "fs";
 import { tmpdir } from "os";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 
