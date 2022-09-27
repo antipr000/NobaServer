@@ -43,8 +43,7 @@ export class CurrencyService {
             const precision = Number(`${data["Precision"]}`.trim());
             const provider = `${data["Provider"]}`.trim();
             const type = `${data["Type"]}`.trim();
-            // Include only records for which ZH provides liquidity services (Liquidity=Yes)
-            // Exclude XRP
+
             const curr = new CurrencyDTO();
             curr.name = name;
             curr.ticker = symbol;
