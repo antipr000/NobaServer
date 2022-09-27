@@ -13,14 +13,14 @@ export class CreatePartnerRequestDTO {
   @ApiPropertyOptional()
   makeOtherPartnerWalletsVisible?: boolean;
 
-  @ApiPropertyOptional()
-  bypassLoginOtp?: boolean;
+  // @ApiPropertyOptional()
+  // bypassLoginOtp?: boolean;
 
   @ApiPropertyOptional()
   bypassWalletOtp?: boolean;
 
-  @ApiProperty()
-  takeRate: number;
+  // @ApiProperty()
+  // takeRate: number;
 
   @ApiPropertyOptional()
   creditCardFeeDiscountPercent?: number;
