@@ -45,30 +45,6 @@ describe("PartnerService", () => {
       }
     });
 
-    it("should throw BadRequestException if 'allowedCryptoCurrencies' is missing", async () => {
-      try {
-        await partnerService.createPartner({
-          takeRate: 10,
-          name: "partnerA",
-        } as any);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-      }
-    });
-
-    it("should throw BadRequestException if 'takeRate' is missing", async () => {
-      try {
-        await partnerService.createPartner({
-          name: "partnerA",
-          allowedCryptoCurrencies: ["ETH", "USDC"],
-        } as any);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-      }
-    });
-
     it("should save default values of the non-required parameters", async () => {
       const partnerName: string = "partner name";
       const allowedCryptoCurrencies = ["ETH", "USDC"];

@@ -28,7 +28,7 @@ export class PartnerService {
   }
 
   async createPartner(request: CreatePartnerRequest): Promise<Partner> {
-    const requiredFields = ["name", "allowedCryptoCurrencies", "takeRate"];
+    const requiredFields = ["name"];
     requiredFields.forEach(field => {
       if (!request[field])
         throw new BadRequestException(`"${requiredFields}" fields are required for creating a Partner`);
