@@ -3,6 +3,7 @@ import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { MongoDBOtpRepo } from "../auth/repo/MongoDBOtpRepo";
 import { CommonModule } from "../common/common.module";
+import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { ConsumerController } from "./consumer.controller";
 import { ConsumerService } from "./consumer.service";
 import { MongoDBConsumerRepo } from "./repos/MongoDBConsumerRepo";
@@ -21,6 +22,7 @@ import { MongoDBConsumerRepo } from "./repos/MongoDBConsumerRepo";
       provide: "OTPRepo",
       useClass: MongoDBOtpRepo,
     },
+    SanctionedCryptoWalletService,
   ],
   exports: [ConsumerService],
 })
