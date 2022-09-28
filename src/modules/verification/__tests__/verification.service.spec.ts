@@ -901,6 +901,7 @@ function getFakeTransactionInformation(): TransactionInformation {
     cardID: "fake-card",
     cryptoCurrencyCode: "ETH",
     walletAddress: "fake-wallet-address",
+    partnerName: "fake-partner-name",
   };
 }
 
