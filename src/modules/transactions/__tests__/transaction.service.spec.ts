@@ -10,8 +10,8 @@ jest.mock("multicoin-address-validator", () => ({
 
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { getMockSanctionedCryptoWalletServiceWithDefaults } from "src/modules/common/mocks/mock.sanctionedcryptowallet.service.spec";
-import { SanctionedCryptoWalletService } from "src/modules/common/sanctionedcryptowallet.service";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service.spec";
+import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { anyString, anything, deepEqual, instance, reset, verify, when } from "ts-mockito";
 import {
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
