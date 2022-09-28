@@ -224,6 +224,52 @@ describe("CurrencyService for sandbox env", () => {
         },
       ]);
     });
+
+    it("Should filter by the provided list (one item)", async () => {
+      const cryptoCurrencies = await currencyService.getSupportedCryptocurrencies(["USDC.POLYGON"]);
+
+      expect(cryptoCurrencies.length).toEqual(1);
+      expect(cryptoCurrencies[0].ticker).toEqual("USDC.POLYGON");
+    });
+
+    it("Should filter by the provided list (multiple items)", async () => {
+      const cryptoCurrencies = await currencyService.getSupportedCryptocurrencies(["BTC", "ETH", "USDC.POLYGON"]);
+
+      expect(cryptoCurrencies.length).toEqual(3);
+      expect(cryptoCurrencies[0].ticker).toEqual("BTC");
+      expect(cryptoCurrencies[1].ticker).toEqual("ETH");
+      expect(cryptoCurrencies[2].ticker).toEqual("USDC.POLYGON");
+    });
+
+    it("Should ignore entries in the filter that don't exist", async () => {
+      const cryptoCurrencies = await currencyService.getSupportedCryptocurrencies([
+        "BTC",
+        "AAAA",
+        "ETH",
+        "USDC.POLYGON",
+        "FFFF",
+      ]);
+
+      expect(cryptoCurrencies.length).toEqual(3);
+      expect(cryptoCurrencies[0].ticker).toEqual("BTC");
+      expect(cryptoCurrencies[1].ticker).toEqual("ETH");
+      expect(cryptoCurrencies[2].ticker).toEqual("USDC.POLYGON");
+    });
+
+    it("Should return the full list if filter is null", async () => {
+      const cryptoCurrencies = await currencyService.getSupportedCryptocurrencies(null);
+      expect(cryptoCurrencies.length).toBeGreaterThan(40);
+    });
+
+    it("Should return the full list if filter is undefined", async () => {
+      const cryptoCurrencies = await currencyService.getSupportedCryptocurrencies(undefined);
+      expect(cryptoCurrencies.length).toBeGreaterThan(40);
+    });
+
+    it("Should return the full list if filter is empty", async () => {
+      const cryptoCurrencies = await currencyService.getSupportedCryptocurrencies([]);
+      expect(cryptoCurrencies.length).toBeGreaterThan(40);
+    });
   });
 
   it("Does not contain EOS", async () => {

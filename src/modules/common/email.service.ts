@@ -433,7 +433,11 @@ export class EmailService {
   }
 
   private async getCryptocurrencyNameFromTicker(ticker: string): Promise<string> {
-    const cryptoCurrencies = await this.currencyService.getSupportedCryptocurrencies();
-    return cryptoCurrencies.find(curr => curr.ticker === ticker).name;
+    const cryptoCurrency = await this.currencyService.getCryptocurrency(ticker);
+    // Quite unlikely this would happen
+    if (cryptoCurrency === null || cryptoCurrency === undefined) {
+      return ticker;
+    }
+    return cryptoCurrency.name;
   }
 }
