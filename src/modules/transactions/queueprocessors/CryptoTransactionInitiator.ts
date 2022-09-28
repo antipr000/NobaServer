@@ -82,7 +82,6 @@ export class CryptoTransactionInitiator extends MessageProcessor {
       };
 
       try {
-        console.log(executeQuoteRequest);
         const executedQuote: ExecutedQuote = await assetService.executeQuoteForFundsAvailability(executeQuoteRequest);
 
         transaction.props.executedCrypto = executedQuote.cryptoReceived;
