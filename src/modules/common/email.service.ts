@@ -4,6 +4,7 @@ import { SendGridConfigs } from "../../config/configtypes/SendGridConfigs";
 import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyService } from "../../modules/common/currency.service";
+import { Logger } from "winston";
 import {
   CryptoFailedEmailParameters,
   OrderExecutedEmailParameters,
@@ -12,12 +13,16 @@ import {
 } from "./domain/EmailParameters";
 import { EmailTemplates } from "./domain/EmailTemplates";
 import { Utils } from "../../core/utils/Utils";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
 const NOBA_COMPLIANCE_EMAIL = "Noba Compliance <compliance@noba.com>";
 @Injectable()
 export class EmailService {
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
+
   constructor(
     configService: CustomConfigService,
     @Inject(CurrencyService) private readonly currencyService: CurrencyService,
@@ -436,6 +441,7 @@ export class EmailService {
     const cryptoCurrency = await this.currencyService.getCryptocurrency(ticker);
     // Quite unlikely this would happen
     if (cryptoCurrency === null || cryptoCurrency === undefined) {
+      this.logger.error(`Unable to find cryptocurrency entry for ticker ${ticker}`);
       return ticker;
     }
     return cryptoCurrency.name;
