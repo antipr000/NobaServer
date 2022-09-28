@@ -51,6 +51,11 @@ export abstract class DefaultAssetService implements AssetService {
   }
 
   async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote> {
+    // TODO(#): Remove this once all the clients are aware about "discount"
+    if (request.discount === undefined || request.discount === null) request.discount = {} as any;
+
+    console.log(request, request.discount);
+
     const nobaSpreadPercent = getDiscountedAmount(
       this.nobaTransactionConfigs.spreadPercentage,
       request.discount.nobaSpreadDiscountPercent,
