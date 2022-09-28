@@ -964,8 +964,7 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
-      const walletAddress = "sanctioned-wallet-1234";
-      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(true);
+      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(true);
 
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
@@ -975,7 +974,7 @@ describe("TransactionService", () => {
         leg1Amount: 100,
         leg2Amount: 0.1,
         fixedSide: CurrencyType.FIAT,
-        destinationWalletAddress: walletAddress,
+        destinationWalletAddress: FAKE_VALID_WALLET,
       };
 
       const partner: Partner = Partner.createPartner({
