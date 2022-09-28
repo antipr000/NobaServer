@@ -11,7 +11,7 @@ import { MongoDBPartnerRepo } from "./repo/MongoDBPartnerRepo";
 import { MongoDBPartnerAdminRepo } from "./repo/MongoDBPartnerAdminRepo";
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, CommonModule, ConsumerModule],
+  imports: [InfraProvidersModule, ConfigModule, CommonModule],
   controllers: [PartnerController],
   providers: [
     DBProvider,

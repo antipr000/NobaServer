@@ -3,12 +3,13 @@ import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { MongoDBOtpRepo } from "../auth/repo/MongoDBOtpRepo";
 import { CommonModule } from "../common/common.module";
+import { PartnerModule } from "../partner/partner.module";
 import { ConsumerController } from "./consumer.controller";
 import { ConsumerService } from "./consumer.service";
 import { MongoDBConsumerRepo } from "./repos/MongoDBConsumerRepo";
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule],
+  imports: [InfraProvidersModule, CommonModule, PartnerModule],
   controllers: [ConsumerController],
   providers: [
     ConsumerService,
