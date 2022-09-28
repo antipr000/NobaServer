@@ -57,7 +57,6 @@ export class ZerohashAssetService extends DefaultAssetService {
     fiatCurrency: string,
     fiatAmount: number,
   ): Promise<ZerohashQuote> {
-    console.log(`Input amounts: ${fiatAmount}`);
     return await this.zerohashService.requestQuoteForFixedFiatCurrency(cryptoCurrency, fiatCurrency, fiatAmount);
   }
 
