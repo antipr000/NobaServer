@@ -10,8 +10,6 @@ jest.mock("multicoin-address-validator", () => ({
 
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service.spec";
-import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { anyString, anything, deepEqual, instance, reset, verify, when } from "ts-mockito";
 import {
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
@@ -28,6 +26,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { EllipticService } from "../../../modules/common/elliptic.service";
 import { getMockEllipticServiceWithDefaults } from "../../../modules/common/mocks/mock.elliptic.service";
+import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { CryptoWallet } from "../../../modules/consumer/domain/CryptoWallet";
 import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../../../modules/consumer/domain/Types";
@@ -40,6 +39,7 @@ import { CurrencyType } from "../../common/domain/Types";
 import { EmailService } from "../../common/email.service";
 import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.currency.service";
 import { getMockEmailServiceWithDefaults } from "../../common/mocks/mock.email.service";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
@@ -191,7 +191,7 @@ describe("TransactionService", () => {
     });
   };
 
-  when(sanctionedCryptoWalletService.isWalletSanctioned("1234567890")).thenResolve(false);
+  when(sanctionedCryptoWalletService.isWalletSanctioned(anyString())).thenResolve(false);
 
   describe("withinSlippage()", () => {
     const paymentAmount = 500;
@@ -250,7 +250,6 @@ describe("TransactionService", () => {
     const sessionKey = "12345";
     const paymentMethodID = "XXXXXXXXXX";
     const walletAddress = "1234567890";
-    when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
 
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
@@ -877,7 +876,6 @@ describe("TransactionService", () => {
 
     it("should call webhook if partner webhook is available", async () => {
       const walletAddress = "fake-wallet-address";
-      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const transaction: Transaction = Transaction.createTransaction({
         _id: "1111111111",
         userId: consumer.props._id,
@@ -932,10 +930,7 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
-
       const walletAddress = "fake-wallet-1234";
-      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
-
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -969,7 +964,6 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
-
       const walletAddress = "sanctioned-wallet-1234";
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(true);
 
@@ -1008,7 +1002,6 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1045,7 +1038,6 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1089,7 +1081,6 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1142,7 +1133,6 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1237,7 +1227,6 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const exchangeRate = 1000;
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1316,9 +1305,6 @@ describe("TransactionService", () => {
         ),
       ).thenResolve(nobaQuote);
 
-      when(sanctionedCryptoWalletService.isWalletSanctioned(transactionRequest.destinationWalletAddress)).thenResolve(
-        false,
-      );
       const responseTransaction = Transaction.createTransaction({
         _id: "fake-id-12345",
         transactionID: "fake-transaction-id",
@@ -1373,7 +1359,6 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const exchangeRate = 1000;
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1462,9 +1447,6 @@ describe("TransactionService", () => {
 
       when(assetService.needsIntermediaryLeg()).thenReturn(true);
       when(assetService.getIntermediaryLeg()).thenReturn(intermediaryLeg);
-      when(sanctionedCryptoWalletService.isWalletSanctioned(transactionRequest.destinationWalletAddress)).thenResolve(
-        false,
-      );
       const responseTransaction = Transaction.createTransaction({
         _id: "fake-id-12345",
         transactionID: "fake-transaction-id",
@@ -1520,7 +1502,6 @@ describe("TransactionService", () => {
       const fiatAmount = 100;
       const conversionRate = 1000;
 
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1578,9 +1559,6 @@ describe("TransactionService", () => {
         ),
       ).thenResolve(nobaQuote);
 
-      when(sanctionedCryptoWalletService.isWalletSanctioned(transactionRequest.destinationWalletAddress)).thenResolve(
-        false,
-      );
       const responseTransaction = Transaction.createTransaction({
         _id: "fake-id-12345",
         transactionID: "fake-transaction-id",
@@ -1622,7 +1600,6 @@ describe("TransactionService", () => {
 
   describe("getTransactionStatus", () => {
     it("should get transaction with given id from database", async () => {
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
         userId: consumer.props._id,
@@ -1648,7 +1625,6 @@ describe("TransactionService", () => {
 
   describe("getUserTransactions", () => {
     it("should return all user transactions from database", async () => {
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
         userId: consumer.props._id,
@@ -1690,7 +1666,6 @@ describe("TransactionService", () => {
 
   describe("getAllTransactions", () => {
     it("should return all transactions from database", async () => {
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
         userId: consumer.props._id,
@@ -1715,7 +1690,6 @@ describe("TransactionService", () => {
 
   describe("analyzeTransactionWalletExposure", () => {
     it("should update wallet status to flagged after querying elliptic and getting risk score > 0", async () => {
-      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       const transactionID = "fake-transaction-id";
       const transaction = Transaction.createTransaction({
         _id: transactionID,

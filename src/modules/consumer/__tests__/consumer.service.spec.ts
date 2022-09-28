@@ -27,7 +27,7 @@ import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { Otp } from "../../../modules/auth/domain/Otp";
-import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../../modules/common/mocks/mock.sanctionedcryptowallet.service.spec";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -76,6 +76,10 @@ describe("ConsumerService", () => {
         {
           provide: CheckoutService,
           useFactory: () => instance(checkoutService),
+        },
+        {
+          provide: SanctionedCryptoWalletService,
+          useFactory: () => instance(sanctionedCryptoWalletService),
         },
         KmsService,
       ],
