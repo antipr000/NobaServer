@@ -11,7 +11,6 @@ import { CurrencyType } from "../common/domain/Types";
 import { EmailService } from "../common/email.service";
 import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
-import { SANCTIONED_WALLETS } from "../consumer/domain/CryptoWallet";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { KYCStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
@@ -39,6 +38,7 @@ import { ITransactionRepo } from "./repo/TransactionRepo";
 import { EllipticService } from "../common/elliptic.service";
 import { TransactionFilterOptions } from "./domain/Types";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 
 @Injectable()
 export class TransactionService {
@@ -53,6 +53,7 @@ export class TransactionService {
     private readonly assetServiceFactory: AssetServiceFactory,
     private readonly partnerService: PartnerService,
     private readonly ellipticService: EllipticService,
+    private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     @Inject(EmailService) private readonly emailService: EmailService,
@@ -220,8 +221,11 @@ export class TransactionService {
       transactionRequest.leg2Amount,
     );
 
-    // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as flagged
-    if (SANCTIONED_WALLETS.includes(transactionRequest.destinationWalletAddress)) {
+    // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as FLAGGED
+    const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(
+      transactionRequest.destinationWalletAddress,
+    );
+    if (isSanctionedWallet) {
       const consumer = await this.consumerService.getConsumer(consumerID);
       const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transactionRequest.destinationWalletAddress);
       cryptoWallet.address = WalletStatus.FLAGGED;

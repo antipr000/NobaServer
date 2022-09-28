@@ -1,18 +1,18 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { Result } from "../../core/logic/Result";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
 import { CheckoutService } from "../common/checkout.service";
+import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
 import { EmailService } from "../common/email.service";
 import { KmsService } from "../common/kms.service";
-
-import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
-import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
+import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { Transaction } from "../transactions/domain/Transaction";
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
-import { CryptoWallet, SANCTIONED_WALLETS } from "./domain/CryptoWallet";
+import { CryptoWallet } from "./domain/CryptoWallet";
 import { PaymentMethod } from "./domain/PaymentMethod";
 import { PaymentProviders } from "./domain/PaymentProviderDetails";
 import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
@@ -20,6 +20,7 @@ import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
+
 @Injectable()
 export class ConsumerService {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -36,6 +37,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly checkoutService: CheckoutService;
+
+  @Inject()
+  private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService;
 
   @Inject("OTPRepo")
   private readonly otpRepo: IOTPRepo;
@@ -271,7 +275,8 @@ export class ConsumerService {
       existingCryptoWallet => existingCryptoWallet.address == walletAddress,
     )[0];
 
-    if (SANCTIONED_WALLETS.includes(cryptoWallet.address)) {
+    const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(cryptoWallet.address);
+    if (isSanctionedWallet) {
       // Flag the wallet if it is a sanctioned wallet address.
       cryptoWallet.status = WalletStatus.FLAGGED;
       this.logger.error(
