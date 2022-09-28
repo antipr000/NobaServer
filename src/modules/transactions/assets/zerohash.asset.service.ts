@@ -101,6 +101,16 @@ export class ZerohashAssetService extends DefaultAssetService {
     // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
     let nobaQuote: NobaQuote;
 
+    // TODO(#): Remove this once all the clients are aware about "discount"
+    if (request.discount === undefined || request.discount === null)
+      request.discount = {
+        fixedCreditCardFeeDiscountPercent: 0,
+        networkFeeDiscountPercent: 0,
+        nobaFeeDiscountPercent: 0,
+        nobaSpreadDiscountPercent: 0,
+        processingFeeDiscountPercent: 0,
+      };
+
     switch (request.fixedSide) {
       case CurrencyType.FIAT:
         nobaQuote = (

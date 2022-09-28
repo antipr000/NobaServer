@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddPartnerAdminRequestDTO } from "../models/AddPartnerAdminRequestDTO";
+import type { CreatePartnerRequestDTO } from "../models/CreatePartnerRequestDTO";
 import type { PartnerAdminDTO } from "../models/PartnerAdminDTO";
 import type { PartnerDTO } from "../models/PartnerDTO";
 import type { UpdatePartnerRequestDTO } from "../models/UpdatePartnerRequestDTO";
@@ -23,7 +24,7 @@ export class PartnerService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    requestBody: UpdatePartnerRequestDTO;
+    requestBody: CreatePartnerRequestDTO;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
