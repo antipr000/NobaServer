@@ -65,16 +65,20 @@ export class CurrencyService {
 
   private async getCurrencies(): Promise<Array<CurrencyDTO>> {
     if (this.isCurrenciesLoaded) return this.currencies;
-
     this.currencies = await this.loadCurrenciesFromS3();
     this.isCurrenciesLoaded = true;
 
     return this.currencies;
   }
 
-  async getSupportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
-    // TODO(#235): Pull from database post-MVP
-    return this.getCurrencies();
+  async getSupportedCryptocurrencies(cryptoFilter?: string[]): Promise<Array<CurrencyDTO>> {
+    const supportedCryptocurrencies = await this.getCurrencies();
+
+    if (cryptoFilter !== null && cryptoFilter !== undefined && cryptoFilter.length > 0) {
+      return supportedCryptocurrencies.filter(curr => cryptoFilter.includes(curr.ticker));
+    } else {
+      return supportedCryptocurrencies;
+    }
   }
 
   async getCryptocurrency(ticker: string): Promise<CurrencyDTO> {

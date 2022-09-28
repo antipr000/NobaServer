@@ -273,13 +273,13 @@ export class TransactionService {
         cryptoCurrency: transactionRequest.leg2,
         fiatAmount: await this.roundToProperDecimalsForFiatCurrency(transactionRequest.leg1, fiatAmount),
         intermediateCryptoCurrency: newTransaction.props.intermediaryLeg,
-        /* discount: {
+        discount: {
           fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
           networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
           nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
           nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
           processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-        },*/
+        },
       });
       quote = combinedQuote.quote;
     } else {

@@ -2,9 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddPartnerAdminRequestDTO } from "../models/AddPartnerAdminRequestDTO";
-import type { AddPartnerRequestDTO } from "../models/AddPartnerRequestDTO";
 import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
+import type { CreatePartnerRequestDTO } from "../models/CreatePartnerRequestDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
 import type { PartnerAdminDTO } from "../models/PartnerAdminDTO";
@@ -384,7 +384,7 @@ export class AdminService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    requestBody: AddPartnerRequestDTO;
+    requestBody: CreatePartnerRequestDTO;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()

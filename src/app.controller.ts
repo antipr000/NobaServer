@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Inject, NotFoundException, Param, Query } from "@nestjs/common";
+import { Controller, Get, HttpStatus, Inject, NotFoundException, Param, Query, Headers } from "@nestjs/common";
 import { ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -12,6 +12,8 @@ import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
+import { PartnerService } from "./modules/partner/partner.service";
+import { X_NOBA_API_KEY } from "./modules/auth/domain/HeaderConstants";
 
 @Controller()
 @ApiHeaders(getCommonHeaders())
@@ -20,6 +22,7 @@ export class AppController {
     private readonly currencyService: CurrencyService,
     private readonly locationService: LocationService,
     private readonly creditCardService: CreditCardService,
+    private readonly partnerService: PartnerService,
     private readonly configurationsProviderService: ConfigurationProviderService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -42,8 +45,11 @@ export class AppController {
     description: "List of all supported cryptocurrencies",
   })
   @ApiTags("Assets")
-  async supportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
-    return this.currencyService.getSupportedCryptocurrencies();
+  async supportedCryptocurrencies(@Headers() headers): Promise<Array<CurrencyDTO>> {
+    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()]);
+    const allowedCrypto = partner.props.config.cryptocurrencyAllowList;
+
+    return await this.currencyService.getSupportedCryptocurrencies(allowedCrypto);
   }
 
   @Public()

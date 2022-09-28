@@ -4,7 +4,6 @@ import { DiscountedAmount } from "../domain/AssetTypes";
 export function getDiscountedAmount(value: number, discountPercent: number, roundTo?: number): DiscountedAmount {
   if (!discountPercent) discountPercent = 0;
 
-  console.log(discountPercent);
   return {
     value: roundTo ? Utils.roundToSpecifiedDecimalNumber(value, roundTo) : value,
     discountedValue: roundTo

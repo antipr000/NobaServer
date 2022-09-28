@@ -15,6 +15,9 @@ import { ConfigurationProviderService } from "../modules/common/configuration.pr
 import { getMockConfigurationProviderServiceWithDefaults } from "../modules/common/mocks/mock.configuration.provider.service";
 import { NotFoundException } from "@nestjs/common";
 import { BINValidity, CardType, CreditCardDTO } from "../modules/common/dto/CreditCardDTO";
+import { PartnerService } from "../modules/partner/partner.service";
+import { getMockPartnerServiceWithDefaults } from "../modules/partner/mocks/mock.partner.service";
+import { Partner } from "../modules/partner/domain/Partner";
 
 describe("AppController", () => {
   let appController: AppController;
@@ -22,6 +25,7 @@ describe("AppController", () => {
   let mockCurrencyService: CurrencyService;
   let mockCreditCardService: CreditCardService;
   let mockLocationService: LocationService;
+  let mockPartnerService: PartnerService;
   let mockConfigurationProviderService: ConfigurationProviderService;
 
   beforeEach(async () => {
@@ -29,6 +33,7 @@ describe("AppController", () => {
     mockCurrencyService = getMockCurrencyServiceWithDefaults();
     mockCreditCardService = getMockCreditCardServiceWithDefaults();
     mockLocationService = getMockLocationServiceWithDefaults();
+    mockPartnerService = getMockPartnerServiceWithDefaults();
     mockConfigurationProviderService = getMockConfigurationProviderServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
@@ -50,6 +55,10 @@ describe("AppController", () => {
         {
           provide: LocationService,
           useFactory: () => instance(mockLocationService),
+        },
+        {
+          provide: PartnerService,
+          useFactory: () => instance(mockPartnerService),
         },
         {
           provide: ConfigurationProviderService,
@@ -83,8 +92,30 @@ describe("AppController", () => {
   });
 
   describe("supportedCryptocurrencies()", () => {
+    const partnerID = "Partner-12345";
+    const apiKey = "1234567890";
+    const partner = Partner.createPartner({
+      name: "Partner 12345",
+      apiKey: apiKey,
+      config: {
+        cryptocurrencyAllowList: ["ETH"],
+        viewOtherWallets: true,
+        privateWallets: false,
+        bypassLogonOTP: false,
+        bypassWalletOTP: false,
+        fees: {
+          creditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+          spreadDiscountPercent: 0,
+          takeRate: 0,
+        },
+      },
+    });
+
     it("should return the list of supported cryptocurrencies", async () => {
-      when(mockCurrencyService.getSupportedCryptocurrencies()).thenResolve([
+      when(mockCurrencyService.getSupportedCryptocurrencies(anything())).thenResolve([
         {
           name: "Ethereum",
           ticker: "ETH",
@@ -93,7 +124,11 @@ describe("AppController", () => {
         },
       ]);
 
-      const result = await appController.supportedCryptocurrencies();
+      when(mockPartnerService.getPartnerFromApiKey(anything())).thenResolve(partner);
+      const result = await appController.supportedCryptocurrencies({
+        headers: { "x-noba-api-key": apiKey },
+      });
+
       // Just ensuring something's returned. Other unit tests are responsible for exactly what's returned.
       expect(result.length).toEqual(1);
     });

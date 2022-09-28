@@ -3,7 +3,6 @@ import { PartnerAdmin, PartnerAdminProps } from "./domain/PartnerAdmin";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IPartnerAdminRepo } from "./repo/PartnerAdminRepo";
-import { ConsumerService } from "../consumer/consumer.service";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { Result } from "../../core/logic/Result";
 
@@ -15,7 +14,7 @@ export class PartnerAdminService {
   @Inject("PartnerAdminRepo")
   private readonly partnerAdminRepo: IPartnerAdminRepo;
 
-  constructor(private readonly userService: ConsumerService) {}
+  constructor() {}
 
   async getPartnerAdmin(partnerAdminId: string): Promise<PartnerAdmin> {
     const partnerAdmin: Result<PartnerAdmin> = await this.partnerAdminRepo.getPartnerAdmin(partnerAdminId);
