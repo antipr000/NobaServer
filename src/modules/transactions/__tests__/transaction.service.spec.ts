@@ -1152,6 +1152,13 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: undefined,
+            discount: {
+              fixedCreditCardFeeDiscountPercent: 0,
+              networkFeeDiscountPercent: 0,
+              nobaFeeDiscountPercent: 0,
+              nobaSpreadDiscountPercent: 0,
+              processingFeeDiscountPercent: 0,
+            },
           }),
         ),
       ).thenResolve(nobaQuote);
@@ -1238,6 +1245,13 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: undefined,
+            discount: {
+              fixedCreditCardFeeDiscountPercent: 0,
+              networkFeeDiscountPercent: 0,
+              nobaFeeDiscountPercent: 0,
+              nobaSpreadDiscountPercent: 0,
+              processingFeeDiscountPercent: 0,
+            },
           }),
         ),
       ).thenResolve(nobaQuote);
@@ -1372,6 +1386,13 @@ describe("TransactionService", () => {
             cryptoCurrency: "axlUSDCMoonbeam",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: intermediaryLeg,
+            discount: {
+              fixedCreditCardFeeDiscountPercent: 0,
+              networkFeeDiscountPercent: 0,
+              nobaFeeDiscountPercent: 0,
+              nobaSpreadDiscountPercent: 0,
+              processingFeeDiscountPercent: 0,
+            },
           }),
         ),
       ).thenResolve(nobaQuote);
