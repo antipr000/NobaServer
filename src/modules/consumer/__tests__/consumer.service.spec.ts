@@ -6,6 +6,7 @@ import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from ".
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { CheckoutService } from "../../../modules/common/checkout.service";
+import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { EmailService } from "../../../modules/common/email.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockEmailServiceWithDefaults } from "../../../modules/common/mocks/mock.email.service";
@@ -26,8 +27,7 @@ import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { Otp } from "../../../modules/auth/domain/Otp";
-import { SanctionedCryptoWalletService } from "src/modules/common/sanctionedcryptowallet.service";
-import { getMockSanctionedCryptoWalletServiceWithDefaults } from "src/modules/common/mocks/mock.sanctionedcryptowallet.service.spec";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../../modules/common/mocks/mock.sanctionedcryptowallet.service.spec";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
