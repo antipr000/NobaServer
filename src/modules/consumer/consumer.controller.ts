@@ -70,12 +70,14 @@ export class ConsumerController {
     }
     const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()]);
 
-    // TODO: Add check in login logic to not allow login of consumer who are not part of a partner
     const consumerID: string = consumer.props._id;
     const entity: Consumer = await this.consumerService.getConsumer(consumerID);
-    entity.props.cryptoWallets = entity.props.cryptoWallets.filter(wallet => {
-      return wallet.partnerID === partner.props._id;
-    });
+
+    if (!partner.props.config.viewOtherWallets) {
+      entity.props.cryptoWallets = entity.props.cryptoWallets.filter(wallet => {
+        return wallet.partnerID === partner.props._id;
+      });
+    }
 
     return this.consumerMapper.toDTO(entity);
   }
