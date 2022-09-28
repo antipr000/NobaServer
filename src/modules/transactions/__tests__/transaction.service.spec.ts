@@ -189,9 +189,9 @@ describe("TransactionService", () => {
       precision: 8,
       provider: "Zerohash",
     });
-  };
 
-  when(sanctionedCryptoWalletService.isWalletSanctioned(anyString())).thenResolve(false);
+    when(sanctionedCryptoWalletService.isWalletSanctioned(anyString())).thenResolve(false);
+  };
 
   describe("withinSlippage()", () => {
     const paymentAmount = 500;
