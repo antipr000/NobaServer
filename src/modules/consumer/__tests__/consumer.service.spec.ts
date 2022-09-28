@@ -26,6 +26,8 @@ import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { Otp } from "../../../modules/auth/domain/Otp";
+import { SanctionedCryptoWalletService } from "src/modules/common/sanctionedcryptowallet.service";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "src/modules/common/mocks/mock.sanctionedcryptowallet.service.spec";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -33,6 +35,7 @@ describe("ConsumerService", () => {
   let emailService: EmailService;
   let mockOtpRepo: IOTPRepo;
   let checkoutService: CheckoutService;
+  let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
 
   jest.setTimeout(30000);
 
@@ -41,6 +44,7 @@ describe("ConsumerService", () => {
     emailService = getMockEmailServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
     checkoutService = getMockCheckoutServiceWithDefaults();
+    sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -808,6 +812,7 @@ describe("ConsumerService", () => {
       const walletAddress = "fake-wallet-address";
       const otp = 123456;
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -888,6 +893,7 @@ describe("ConsumerService", () => {
       const otp = 123456;
       const wrongOtp = 234567;
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -949,6 +955,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -1043,6 +1050,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",

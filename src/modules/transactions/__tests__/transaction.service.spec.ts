@@ -8,7 +8,10 @@ jest.mock("multicoin-address-validator", () => ({
   }),
 }));
 
+import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "src/modules/common/mocks/mock.sanctionedcryptowallet.service.spec";
+import { SanctionedCryptoWalletService } from "src/modules/common/sanctionedcryptowallet.service";
 import { anyString, anything, deepEqual, instance, reset, verify, when } from "ts-mockito";
 import {
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
@@ -19,13 +22,19 @@ import {
   SLIPPAGE_ALLOWED_PERCENTAGE,
   SPREAD_PERCENTAGE,
 } from "../../../config/ConfigurationUtils";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
+import { EllipticService } from "../../../modules/common/elliptic.service";
+import { getMockEllipticServiceWithDefaults } from "../../../modules/common/mocks/mock.elliptic.service";
 import { CryptoWallet } from "../../../modules/consumer/domain/CryptoWallet";
 import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../../../modules/consumer/domain/Types";
 import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
+import { Partner } from "../../../modules/partner/domain/Partner";
+import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
+import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { CurrencyService } from "../../common/currency.service";
 import { CurrencyType } from "../../common/domain/Types";
 import { EmailService } from "../../common/email.service";
@@ -34,14 +43,23 @@ import { getMockEmailServiceWithDefaults } from "../../common/mocks/mock.email.s
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
+import { PartnerService } from "../../partner/partner.service";
 import { getMockVerificationServiceWithDefaults } from "../../verification/mocks/mock.verification.service";
 import { VerificationService } from "../../verification/verification.service";
+import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
+import { CombinedNobaQuote, NobaQuote } from "../domain/AssetTypes";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus, TransactionType } from "../domain/Types";
+import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQueryDTO";
+import {
+  TransactionSubmissionException,
+  TransactionSubmissionFailureExceptionText,
+} from "../exceptions/TransactionSubmissionException";
 import { LimitsService } from "../limits.service";
+import { TransactionMapper } from "../mapper/TransactionMapper";
 import {
   getMockAssetServiceFactoryWithDefaultAssetService,
   getMockAssetServiceWithDefaults,
@@ -51,22 +69,6 @@ import { getMockZerohashServiceWithDefaults } from "../mocks/mock.zerohash.servi
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
-import { PartnerService } from "../../partner/partner.service";
-import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
-import { BadRequestException } from "@nestjs/common";
-import { AssetService } from "../assets/asset.service";
-import { CombinedNobaQuote, NobaQuote } from "../domain/AssetTypes";
-import { Partner } from "../../../modules/partner/domain/Partner";
-import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
-import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
-import { TransactionMapper } from "../mapper/TransactionMapper";
-import {
-  TransactionSubmissionException,
-  TransactionSubmissionFailureExceptionText,
-} from "../exceptions/TransactionSubmissionException";
-import { EllipticService } from "../../../modules/common/elliptic.service";
-import { getMockEllipticServiceWithDefaults } from "../../../modules/common/mocks/mock.elliptic.service";
-import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -93,6 +95,7 @@ describe("TransactionService", () => {
   let assetService: AssetService;
   let transactionMapper: TransactionMapper;
   let ellipticService: EllipticService;
+  let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
 
   const userId = "1234567890";
   const consumer: Consumer = Consumer.createConsumer({
@@ -115,6 +118,8 @@ describe("TransactionService", () => {
     partnerService = getMockPartnerServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     ellipticService = getMockEllipticServiceWithDefaults();
+    sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
+
     transactionMapper = new TransactionMapper();
 
     const app: TestingModule = await Test.createTestingModule({
@@ -159,6 +164,10 @@ describe("TransactionService", () => {
           provide: EllipticService,
           useFactory: () => instance(ellipticService),
         },
+        {
+          provide: SanctionedCryptoWalletService,
+          useFactory: () => instance(sanctionedCryptoWalletService),
+        },
       ],
     }).compile();
     transactionService = app.get<TransactionService>(TransactionService);
@@ -181,6 +190,8 @@ describe("TransactionService", () => {
       provider: "Zerohash",
     });
   };
+
+  when(sanctionedCryptoWalletService.isWalletSanctioned("1234567890")).thenResolve(false);
 
   describe("withinSlippage()", () => {
     const paymentAmount = 500;
