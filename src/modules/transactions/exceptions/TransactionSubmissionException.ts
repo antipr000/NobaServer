@@ -7,6 +7,7 @@ export enum TransactionSubmissionFailureExceptionText {
   SANCTIONED_TRANSACTION = "SANCTIONED-TRANSACTION",
   WALLET_DOES_NOT_EXIST = "WALLET-DOES-NOT-EXIST",
   UNKNOWN_PAYMENT_METHOD = "UNKNOWN-PAYMENT-METHOD",
+  UNKNOWN_PARTNER = "UNKNOWN-PARTNER",
 }
 
 export class TransactionSubmissionException extends Error {
