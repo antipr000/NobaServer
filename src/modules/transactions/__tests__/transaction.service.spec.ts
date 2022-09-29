@@ -1090,7 +1090,7 @@ describe("TransactionService", () => {
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
         config: {
-          cryptocurrencyAllowList: ["ETH"],
+          cryptocurrencyAllowList: ["ETH", "ABC"], // This condition would never arise.
         } as any,
       });
       when(partnerService.getPartner(partnerId)).thenResolve(partner);

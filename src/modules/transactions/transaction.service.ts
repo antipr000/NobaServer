@@ -73,8 +73,8 @@ export class TransactionService {
     }
     if (!partner.props.config.cryptocurrencyAllowList.includes(transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
-        `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}".` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}"`,
+        `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
     }
 
@@ -215,6 +215,19 @@ export class TransactionService {
     sessionKey: string,
     transactionRequest: CreateTransactionDTO,
   ): Promise<TransactionDTO> {
+    if (partnerID === null || partnerID === undefined)
+      throw new BadRequestException("Partner ID is required for submitting a transaction");
+
+    const partner = await this.partnerService.getPartner(partnerID);
+    if (partner === null || partner === undefined) throw new BadRequestException("Unknown Partner ID");
+
+    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionRequest.leg2)) {
+      throw new BadRequestException(
+        `Unsupported crypto currency "${transactionRequest.leg2}". ` +
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+      );
+    }
+
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
@@ -240,19 +253,6 @@ export class TransactionService {
       transactionRequest.leg1,
       transactionRequest.leg1Amount,
     );
-
-    if (partnerID === null || partnerID === undefined)
-      throw new BadRequestException("Partner ID is required for submitting a transaction");
-
-    const partner = await this.partnerService.getPartner(partnerID);
-    if (partner === null || partner === undefined) throw new BadRequestException("Unknown Partner ID");
-
-    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionRequest.leg2)) {
-      throw new BadRequestException(
-        `Unsupported crypto currency "${transactionRequest.leg2}".` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}"`,
-      );
-    }
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
