@@ -71,6 +71,12 @@ export class TransactionService {
     if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
       throw new BadRequestException("Invalid amount");
     }
+    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionQuoteQuery.cryptoCurrencyCode)) {
+      throw new BadRequestException(
+        `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}".` +
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}"`,
+      );
+    }
 
     const assetService: AssetService = await this.assetServiceFactory.getAssetService(
       transactionQuoteQuery.cryptoCurrencyCode,
@@ -237,8 +243,16 @@ export class TransactionService {
 
     if (partnerID === null || partnerID === undefined)
       throw new BadRequestException("Partner ID is required for submitting a transaction");
+
     const partner = await this.partnerService.getPartner(partnerID);
     if (partner === null || partner === undefined) throw new BadRequestException("Unknown Partner ID");
+
+    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionRequest.leg2)) {
+      throw new BadRequestException(
+        `Unsupported crypto currency "${transactionRequest.leg2}".` +
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}"`,
+      );
+    }
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,

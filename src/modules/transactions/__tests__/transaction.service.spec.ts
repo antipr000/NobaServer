@@ -640,12 +640,27 @@ describe("TransactionService", () => {
     beforeEach(() => {
       when(assetService.needsIntermediaryLeg()).thenReturn(false);
     });
+
     it("throws 'BadRequestException' if amount is not valid", async () => {
+      const partnerID = "partner-12345";
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
+      });
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
+
       const transactionQuoteQuery: TransactionQuoteQueryDTO = {
         fiatCurrencyCode: "USD",
         cryptoCurrencyCode: "ETH",
         fixedSide: CurrencyType.FIAT,
         fixedAmount: -1,
+        partnerID: partnerID,
       };
 
       try {
@@ -653,18 +668,53 @@ describe("TransactionService", () => {
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toMatch("amount");
       }
     });
 
-    it("should return correct quote for 'FIAT' fixed side", async () => {
+    it("throws 'BadRequestException' if crypto currency is not allowed by the partner", async () => {
       const partnerID = "partner-12345";
+
       const partner: Partner = Partner.createPartner({
         _id: partnerID,
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
       });
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
 
+      const transactionQuoteQuery: TransactionQuoteQueryDTO = {
+        fiatCurrencyCode: "USD",
+        cryptoCurrencyCode: "USDC.POLYGON",
+        fixedSide: CurrencyType.FIAT,
+        fixedAmount: 100,
+        partnerID: partnerID,
+      };
+
+      try {
+        await transactionService.requestTransactionQuote(transactionQuoteQuery);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toMatch("crypto currency");
+      }
+    });
+
+    it("should return correct quote for 'FIAT' fixed side", async () => {
+      const partnerID = "partner-12345";
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
+      });
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
 
       const transactionQuoteQuery: TransactionQuoteQueryDTO = {
@@ -733,6 +783,9 @@ describe("TransactionService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+        } as any,
       });
 
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -814,6 +867,9 @@ describe("TransactionService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
       });
 
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -910,9 +966,19 @@ describe("TransactionService", () => {
   });
 
   describe("initiateTransaction", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
+      const environmentVariables = {
+        [NOBA_CONFIG_KEY]: {
+          [NOBA_TRANSACTION_CONFIG_KEY]: {
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
+          },
+        },
+      };
+      await setupTestModule(environmentVariables);
+
       when(assetService.needsIntermediaryLeg()).thenReturn(false);
     });
+
     it("throws TransactionSubmissionException when destination wallet address is invalid", async () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
@@ -933,8 +999,10 @@ describe("TransactionService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
       });
-
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       try {
@@ -968,8 +1036,10 @@ describe("TransactionService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
       });
-
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([]);
@@ -1004,8 +1074,10 @@ describe("TransactionService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
       });
-
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -1027,10 +1099,68 @@ describe("TransactionService", () => {
       }
     });
 
-    it("should throw BadRequestException when intermediary leg is needed and fixed side is 'CRYPTO'", async () => {
+    it("throws BadRequestException when specified leg2 currency is not allowed by Partner", async () => {
+      when(currencyService.getFiatCurrency("ABC")).thenResolve(null);
+
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: "fake-payment-token",
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["USDC.POLYGON"],
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+          precision: 8,
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([]);
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toMatch("crypto currency");
+      }
+    });
+
+    it("should throw BadRequestException when intermediary leg is needed and fixed side is 'CRYPTO'", async () => {
+      const consumerId = consumer.props._id;
+      const partnerId = "fake-partner-2";
+      const sessionKey = "fake-session-key";
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1081,8 +1211,20 @@ describe("TransactionService", () => {
 
     it("should throw BadRequestException when the amount exceeds slippage", async () => {
       const consumerId = consumer.props._id;
-      const partnerId = "fake-partner-1";
+      const partnerId = "fake-partner-124";
       const sessionKey = "fake-session-key";
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
         type: TransactionType.ONRAMP,
@@ -1177,6 +1319,17 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const exchangeRate = 1000;
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
@@ -1282,15 +1435,6 @@ describe("TransactionService", () => {
 
       when(transactionRepo.createTransaction(anything())).thenResolve(responseTransaction);
 
-      const partner: Partner = Partner.createPartner({
-        _id: partnerId,
-        name: "Mock Partner",
-        apiKey: "mockPublicKey",
-        secretKey: "mockPrivateKey",
-      });
-
-      when(partnerService.getPartner(partnerId)).thenResolve(partner);
-
       const response = await transactionService.initiateTransaction(
         consumerId,
         partnerId,
@@ -1310,6 +1454,17 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const exchangeRate = 1000;
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
@@ -1427,15 +1582,6 @@ describe("TransactionService", () => {
 
       when(transactionRepo.createTransaction(anything())).thenResolve(responseTransaction);
 
-      const partner: Partner = Partner.createPartner({
-        _id: partnerId,
-        name: "Mock Partner",
-        apiKey: "mockPublicKey",
-        secretKey: "mockPrivateKey",
-      });
-
-      when(partnerService.getPartner(partnerId)).thenResolve(partner);
-
       const response = await transactionService.initiateTransaction(
         consumerId,
         partnerId,
@@ -1450,10 +1596,21 @@ describe("TransactionService", () => {
 
     it("should create transaction entry in DB with fixed CRYPTO side", async () => {
       const consumerId = consumer.props._id;
-      const partnerId = "fake-partner-1";
+      const partnerId = "fake-partner-197";
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const conversionRate = 1000;
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
@@ -1552,6 +1709,17 @@ describe("TransactionService", () => {
   });
 
   describe("getTransactionStatus", () => {
+    beforeEach(async () => {
+      const environmentVariables = {
+        [NOBA_CONFIG_KEY]: {
+          [NOBA_TRANSACTION_CONFIG_KEY]: {
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
+          },
+        },
+      };
+      await setupTestModule(environmentVariables);
+    });
+
     it("should get transaction with given id from database", async () => {
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
@@ -1567,16 +1735,26 @@ describe("TransactionService", () => {
         destinationWalletAddress: FAKE_VALID_WALLET,
         transactionTimestamp: new Date(),
       });
+      when(transactionRepo.getTransaction(transaction.props._id)).thenResolve(transaction);
 
       const transactionDTO = transactionMapper.toDTO(transaction);
-
-      when(transactionRepo.getTransaction(transaction.props._id)).thenResolve(transaction);
       const response = await transactionService.getTransaction(transaction.props._id);
       expect(response).toStrictEqual(transactionDTO);
     });
   });
 
   describe("getUserTransactions", () => {
+    beforeEach(async () => {
+      const environmentVariables = {
+        [NOBA_CONFIG_KEY]: {
+          [NOBA_TRANSACTION_CONFIG_KEY]: {
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
+          },
+        },
+      };
+      await setupTestModule(environmentVariables);
+    });
+
     it("should return all user transactions from database", async () => {
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
@@ -1618,6 +1796,17 @@ describe("TransactionService", () => {
   });
 
   describe("getAllTransactions", () => {
+    beforeEach(async () => {
+      const environmentVariables = {
+        [NOBA_CONFIG_KEY]: {
+          [NOBA_TRANSACTION_CONFIG_KEY]: {
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
+          },
+        },
+      };
+      await setupTestModule(environmentVariables);
+    });
+
     it("should return all transactions from database", async () => {
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
@@ -1642,6 +1831,17 @@ describe("TransactionService", () => {
   });
 
   describe("analyzeTransactionWalletExposure", () => {
+    beforeEach(async () => {
+      const environmentVariables = {
+        [NOBA_CONFIG_KEY]: {
+          [NOBA_TRANSACTION_CONFIG_KEY]: {
+            [SLIPPAGE_ALLOWED_PERCENTAGE]: 0.02,
+          },
+        },
+      };
+      await setupTestModule(environmentVariables);
+    });
+
     it("should update wallet status to flagged after querying elliptic and getting risk score > 0", async () => {
       const transactionID = "fake-transaction-id";
       const transaction = Transaction.createTransaction({
