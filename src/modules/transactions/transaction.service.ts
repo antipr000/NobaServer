@@ -389,6 +389,15 @@ export class TransactionService {
       );
     }
 
+    const partner = await this.partnerService.getPartner(transaction.props.partnerID);
+    if (partner == null) {
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER,
+        "Unknown partner",
+        `Unable to find record for partner ID ${transaction.props.partnerID}`,
+      );
+    }
+
     // Check Sardine for AML
     const sardineTransactionInformation: TransactionInformation = {
       transactionID: transaction.props._id,
@@ -400,6 +409,7 @@ export class TransactionService {
       cryptoCurrencyCode: transaction.props.leg2,
       walletAddress: transaction.props.destinationWalletAddress,
       walletStatus: cryptoWallet.status,
+      partnerName: partner.props.name,
     };
     const result = await this.verificationService.transactionVerification(
       transaction.props.sessionKey,

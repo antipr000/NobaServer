@@ -215,6 +215,65 @@ describe("SardineTests", () => {
       expect(response.idvProviderRiskLevel).toBe("very_high");
     });
 
+    it("Should execute the international flow for an international user", async () => {
+      const consumerInformation: ConsumerInformation = {
+        userID: "test-user-1234",
+        firstName: "Test",
+        lastName: "User",
+        address: {
+          streetLine1: "Test street",
+          streetLine2: "Test street line 2",
+          countryCode: "IN",
+          city: "CA",
+          regionCode: "RC",
+          postalCode: "123456",
+        },
+        dateOfBirth: "1860-03-03",
+        email: "test+user@noba.com",
+        phoneNumber: "+123456789",
+        nationalID: {
+          type: NationalIDTypes.SOCIAL_SECURITY,
+          number: "000000002",
+        },
+      };
+
+      const sardineRequest: SardineCustomerRequest = {
+        flow: "kyc-non-us",
+        sessionKey: KYC_SSN_LOW_RISK.data.sessionKey,
+        customer: {
+          id: consumerInformation.userID,
+          firstName: consumerInformation.firstName,
+          lastName: consumerInformation.lastName,
+          address: {
+            street1: consumerInformation.address.streetLine1,
+            street2: consumerInformation.address.streetLine2,
+            city: consumerInformation.address.city,
+            regionCode: consumerInformation.address.regionCode,
+            postalCode: consumerInformation.address.postalCode,
+            countryCode: consumerInformation.address.countryCode,
+          },
+          phone: consumerInformation.phoneNumber,
+          isPhoneVerified: false,
+          emailAddress: consumerInformation.email,
+          isEmailVerified: true,
+          dateOfBirth: consumerInformation.dateOfBirth,
+          taxId: consumerInformation.nationalID.number,
+        },
+        checkpoints: ["customer"],
+      };
+
+      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation);
+      expect(mockAxios.post).toHaveBeenCalledWith("http://localhost:8080/sardine/v1/customers", sardineRequest, {
+        auth: { password: "test-secret-key", username: "test-client-id" },
+      });
+      mockAxios.mockResponse(KYC_SSN_LOW_RISK);
+
+      const response = await responsePromise;
+
+      expect(response.status).toBe(KYCStatus.APPROVED);
+      expect(response.idvProviderRiskLevel).toBe("low");
+    });
+
     it("should thow BadRequestException when Sardine api call fails", async () => {
       const consumerInformation: ConsumerInformation = {
         userID: "test-user-1234",
@@ -266,6 +325,7 @@ describe("SardineTests", () => {
         cardID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
+        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
@@ -312,6 +372,7 @@ describe("SardineTests", () => {
         cardID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "risk+wallet",
+        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
@@ -358,6 +419,7 @@ describe("SardineTests", () => {
         cardID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
+        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
@@ -404,6 +466,7 @@ describe("SardineTests", () => {
         cardID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
+        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
