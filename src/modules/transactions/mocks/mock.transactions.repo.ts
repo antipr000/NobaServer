@@ -7,7 +7,7 @@ export function getMockTransactionRepoWithDefaults(): ITransactionRepo {
   const mockTransactionRepo = mock(MongoDBTransactionRepo);
 
   when(mockTransactionRepo.getAll()).thenReject(new Error("Method not implemented"));
-  when(mockTransactionRepo.getTransaction(anything())).thenReject(new Error("Method not implemented"));
+  when(mockTransactionRepo.getTransaction(anyString())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.createTransaction(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.updateTransaction(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.getUserTransactions(anything(), anything())).thenReject(new Error("Method not implemented"));

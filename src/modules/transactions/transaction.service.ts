@@ -72,6 +72,12 @@ export class TransactionService {
     if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
       throw new BadRequestException("Invalid amount");
     }
+    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionQuoteQuery.cryptoCurrencyCode)) {
+      throw new BadRequestException(
+        `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+      );
+    }
 
     const assetService: AssetService = await this.assetServiceFactory.getAssetService(
       transactionQuoteQuery.cryptoCurrencyCode,
@@ -210,6 +216,22 @@ export class TransactionService {
     sessionKey: string,
     transactionRequest: CreateTransactionDTO,
   ): Promise<TransactionDTO> {
+    if (partnerID === null || partnerID === undefined)
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER);
+
+    const partner = await this.partnerService.getPartner(partnerID);
+    if (partner === null || partner === undefined) {
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER);
+    }
+
+    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionRequest.leg2)) {
+      this.logger.debug(
+        `Unsupported crypto currency "${transactionRequest.leg2}". ` +
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+      );
+      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
+    }
+
     // Validate that destination wallet address is a valid address for given currency
     if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
@@ -238,11 +260,6 @@ export class TransactionService {
       transactionRequest.leg1,
       transactionRequest.leg1Amount,
     );
-
-    if (partnerID === null || partnerID === undefined)
-      throw new BadRequestException("Partner ID is required for submitting a transaction");
-    const partner = await this.partnerService.getPartner(partnerID);
-    if (partner === null || partner === undefined) throw new BadRequestException("Unknown Partner ID");
 
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
