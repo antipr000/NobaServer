@@ -37,21 +37,30 @@ export class SwapAssetService implements AssetService {
       },
     };
 
+    // Quote for Fiat -> Intermediary
     const intermediaryQuoteResponse: CombinedNobaQuote = await this.assetService.getQuoteForSpecifiedFiatAmount(
       intermediaryQuoteRequest,
     );
 
+    // Quote for Intermediary -> Destination token
     const routeResponse: RouteResponse = await this.swapServiceProvider.performRouting(
       request.cryptoCurrency,
       intermediaryQuoteResponse.quote.totalCryptoQuantity,
     );
 
     const updatedQuote: NobaQuote = {
+      // Start with the quote for Fiat -> Intermediary
       ...intermediaryQuoteResponse.quote,
+      // Update with the quantity they will get of the destination token
       totalCryptoQuantity: routeResponse.assetQuantity,
-      // TODO Figure out what this should be. Should not be the same as with spread.
-      perUnitCryptoPriceWithoutSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.quote.totalFiatAmount,
+
+      // Exchange rate between fiat & destination token that Noba pays
+      perUnitCryptoPriceWithoutSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.quote.quotedFiatAmount,
+
+      // Exchange rate between fiat & destination token that the customer pays
       perUnitCryptoPriceWithSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.quote.totalFiatAmount,
+
+      // Update quote with destination token
       cryptoCurrency: request.cryptoCurrency,
     };
 

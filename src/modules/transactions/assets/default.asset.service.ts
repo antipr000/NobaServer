@@ -106,6 +106,10 @@ export abstract class DefaultAssetService implements AssetService {
       ),
     };
 
+    // For Fiat fixed, the total amount the customer will ever pay is the amount they entered.
+    // So we SUBTRACT fees from that amount and quote how much crypto we can buy with that REDUCED amount of fiat (fiatAmountAfterAllChargesWithSpread).
+    // This amount that we quote is how much Noba ends up paying for the crypto, whereas the customer pays Noba
+    // the full amount requested. Noba's gross profit is the difference between these two values.
     const zhQuoteWithDiscount: ZerohashQuote = await this.getQuoteFromLiquidityProviderFiatFixed(
       request.cryptoCurrency,
       request.fiatCurrency,
@@ -134,6 +138,7 @@ export abstract class DefaultAssetService implements AssetService {
       nobaFeeInFiat: nobaFlatFeeInFiat.value,
       processingFeeInFiat: totalCreditCardFeeInFiat.value,
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.value,
+      quotedFiatAmount: fiatAmountAfterAllChargesWithSpread.value,
       totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
       perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.value,
       perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.value,
@@ -147,6 +152,7 @@ export abstract class DefaultAssetService implements AssetService {
       processingFeeInFiat: totalCreditCardFeeInFiat.discountedValue,
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.discountedValue,
       totalCryptoQuantity: totalCryptoQuantity,
+      quotedFiatAmount: fiatAmountAfterAllChargesWithSpread.discountedValue,
       totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
       perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.discountedValue,
       perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.discountedValue,
@@ -272,6 +278,7 @@ export abstract class DefaultAssetService implements AssetService {
       processingFeeInFiat: totalCreditCardFeeInFiat,
       amountPreSpread: rawFiatAmountForRequestedCryptoPreSpread,
       totalCryptoQuantity: request.cryptoQuantity,
+      quotedFiatAmount: rawFiatAmountForRequestedCryptoPreSpread,
       totalFiatAmount: Utils.roundTo2DecimalNumber(finalFiatAmount),
       perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread,
       perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,

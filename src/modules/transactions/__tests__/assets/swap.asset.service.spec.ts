@@ -114,6 +114,14 @@ describe("SwapAssetService", () => {
       fiatFeeDollars: number;
       dynamicCreditCardFeePercentage: number;
       fixedCreditCardFee: number;
+
+      discount?: {
+        fixedCreditCardFeeDiscountPercent?: number;
+        networkFeeDiscountPercent?: number;
+        nobaFeeDiscountPercent?: number;
+        nobaSpreadDiscountPercent?: number;
+        processingFeeDiscountPercent?: number;
+      };
     }
 
     interface QuoteExpectations {
@@ -123,11 +131,19 @@ describe("SwapAssetService", () => {
       quotedCostPerUnit: number;
       expectedPriceAfterFeeAndSpread: number;
       amountPreSpread: number;
+
+      discountedExpectedNobaFee: number;
+      discountedExpectedProcessingFee: number;
+      discountedExpectedNetworkFee: number;
+      discountedQuotedCostPerUnit: number;
+      discountedExpectedPriceAfterFeeAndSpread: number;
+      discountedAmountPreSpread: number;
     }
 
     const setupTestAndGetQuoteResponse = async (
       requestedFiatAmount: number,
       originalCostPerUnit: number,
+      cryptoQuantity: number,
       input: QuoteInputs,
       output: QuoteExpectations,
     ): Promise<CombinedNobaQuote> => {
@@ -143,6 +159,13 @@ describe("SwapAssetService", () => {
         },
       };
       await setupTestModule(environmentVariables);
+
+      if (!input.discount) input.discount = {};
+      input.discount.fixedCreditCardFeeDiscountPercent = input.discount.fixedCreditCardFeeDiscountPercent ?? 0;
+      input.discount.nobaFeeDiscountPercent = input.discount.nobaFeeDiscountPercent ?? 0;
+      input.discount.networkFeeDiscountPercent = input.discount.networkFeeDiscountPercent ?? 0;
+      input.discount.nobaSpreadDiscountPercent = input.discount.nobaSpreadDiscountPercent ?? 0;
+      input.discount.processingFeeDiscountPercent = input.discount.processingFeeDiscountPercent ?? 0;
 
       when(zerohashService.estimateNetworkFee("USDC.POLYGON", "USD")).thenResolve({
         cryptoCurrency: "USDC.POLYGON",
@@ -161,8 +184,25 @@ describe("SwapAssetService", () => {
       });
 
       const expectedTotalFees = output.expectedNobaFee + output.expectedProcessingFee + output.expectedNetworkFee;
+      const discountedExpectedTotalFees =
+        output.discountedExpectedNobaFee + output.discountedExpectedProcessingFee + output.discountedExpectedNetworkFee;
 
+      const quotedFiatAmount =
+        output.expectedPriceAfterFeeAndSpread +
+        (output.discountedExpectedPriceAfterFeeAndSpread - output.expectedPriceAfterFeeAndSpread);
+      const totalCryptoQuantity = (requestedFiatAmount - discountedExpectedTotalFees) / output.quotedCostPerUnit;
       const nobaQuote: CombinedNobaQuote = {
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread: output.amountPreSpread,
+          processingFeeInFiat: output.expectedProcessingFee,
+          networkFeeInFiat: output.expectedNetworkFee,
+          nobaFeeInFiat: output.expectedNobaFee,
+          quotedFiatAmount: output.expectedPriceAfterFeeAndSpread,
+          totalFiatAmount: requestedFiatAmount,
+          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+        },
         quote: {
           quoteID: "FIXED",
           fiatCurrency: "USD",
@@ -171,32 +211,26 @@ describe("SwapAssetService", () => {
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
           nobaFeeInFiat: output.expectedNobaFee,
+          quotedFiatAmount: quotedFiatAmount,
           totalFiatAmount: requestedFiatAmount,
-          totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
-          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
-          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
-        },
-        nonDiscountedQuote: {
-          fiatCurrency: "USD",
-          amountPreSpread: output.amountPreSpread,
-          processingFeeInFiat: output.expectedProcessingFee,
-          networkFeeInFiat: output.expectedNetworkFee,
-          nobaFeeInFiat: output.expectedNobaFee,
-          totalFiatAmount: requestedFiatAmount,
-          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
-          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+          totalCryptoQuantity: totalCryptoQuantity,
+          perUnitCryptoPriceWithSpread: cryptoQuantity / requestedFiatAmount,
+          perUnitCryptoPriceWithoutSpread: cryptoQuantity / output.discountedExpectedPriceAfterFeeAndSpread,
         },
       };
+
       return nobaQuote;
     };
 
     it("Noba spread percentage is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
+      const cryptoQuantity = 0.123;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
+        cryptoQuantity,
         {
           spreadPercentage: 0.6,
           fiatFeeDollars: 0,
@@ -209,7 +243,15 @@ describe("SwapAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 1.6,
           amountPreSpread: 100,
-          expectedPriceAfterFeeAndSpread: 6.25,
+          expectedPriceAfterFeeAndSpread: 62.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1.6,
+          discountedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 62.5,
         },
       );
 
@@ -217,12 +259,12 @@ describe("SwapAssetService", () => {
         swapServiceProvider.performRouting(REQUESTED_CRYPTO_ASSET, expectedNobaQuote.quote.totalCryptoQuantity),
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
-        assetQuantity: 0.123,
+        assetQuantity: cryptoQuantity,
         exchangeRate: 1,
       });
 
-      expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
-      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
+      expectedNobaQuote.quote.totalCryptoQuantity = cryptoQuantity;
+
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
         fiatCurrency: "USD",
@@ -242,10 +284,12 @@ describe("SwapAssetService", () => {
     it("Noba flat fee is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
+      const cryptoQuantity = 0.123;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
+        cryptoQuantity,
         {
           spreadPercentage: 0,
           fiatFeeDollars: 9.5,
@@ -259,6 +303,14 @@ describe("SwapAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 90.5,
           expectedPriceAfterFeeAndSpread: 90.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 9.5,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 90.5,
+          discountedExpectedPriceAfterFeeAndSpread: 90.5,
         },
       );
 
@@ -266,11 +318,11 @@ describe("SwapAssetService", () => {
         swapServiceProvider.performRouting(REQUESTED_CRYPTO_ASSET, expectedNobaQuote.quote.totalCryptoQuantity),
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
-        assetQuantity: 0.123,
+        assetQuantity: cryptoQuantity,
         exchangeRate: 1,
       });
-      expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
-      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
+
+      expectedNobaQuote.quote.totalCryptoQuantity = cryptoQuantity;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
@@ -291,10 +343,12 @@ describe("SwapAssetService", () => {
     it("Noba 'dynamic' credit card fee is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
+      const cryptoQuantity = 0.123;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
+        cryptoQuantity,
         {
           spreadPercentage: 0,
           fiatFeeDollars: 0,
@@ -308,6 +362,14 @@ describe("SwapAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 87.7,
           expectedPriceAfterFeeAndSpread: 87.7,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 12.3,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 87.7,
+          discountedExpectedPriceAfterFeeAndSpread: 87.7,
         },
       );
 
@@ -315,11 +377,11 @@ describe("SwapAssetService", () => {
         swapServiceProvider.performRouting(REQUESTED_CRYPTO_ASSET, expectedNobaQuote.quote.totalCryptoQuantity),
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
-        assetQuantity: 0.123,
+        assetQuantity: cryptoQuantity,
         exchangeRate: 1,
       });
-      expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
-      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
+
+      expectedNobaQuote.quote.totalCryptoQuantity = cryptoQuantity;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
@@ -340,10 +402,12 @@ describe("SwapAssetService", () => {
     it("Noba 'fixed' credit card fee is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
+      const cryptoQuantity = 0.123;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
+        cryptoQuantity,
         {
           spreadPercentage: 0,
           fiatFeeDollars: 0,
@@ -357,6 +421,14 @@ describe("SwapAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 99.5,
           expectedPriceAfterFeeAndSpread: 99.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0.5,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 99.5,
+          discountedExpectedPriceAfterFeeAndSpread: 99.5,
         },
       );
 
@@ -364,11 +436,11 @@ describe("SwapAssetService", () => {
         swapServiceProvider.performRouting(REQUESTED_CRYPTO_ASSET, expectedNobaQuote.quote.totalCryptoQuantity),
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
-        assetQuantity: 0.123,
+        assetQuantity: cryptoQuantity,
         exchangeRate: 1,
       });
-      expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
-      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
+
+      expectedNobaQuote.quote.totalCryptoQuantity = cryptoQuantity;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
@@ -389,10 +461,12 @@ describe("SwapAssetService", () => {
     it("should operate dynamic credit card fee on original amount rather than reduced amount", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 1;
+      const cryptoQuantity = 0.123;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
         fiatAmountUSD,
         originalCostPerUnit,
+        cryptoQuantity,
         {
           spreadPercentage: 0,
           fiatFeeDollars: 7.1,
@@ -406,6 +480,14 @@ describe("SwapAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 80.9,
           expectedPriceAfterFeeAndSpread: 80.9,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 7.1,
+          discountedExpectedProcessingFee: 12,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 90.9,
+          discountedExpectedPriceAfterFeeAndSpread: 80.9,
         },
       );
 
@@ -413,11 +495,12 @@ describe("SwapAssetService", () => {
         swapServiceProvider.performRouting(REQUESTED_CRYPTO_ASSET, expectedNobaQuote.quote.totalCryptoQuantity),
       ).thenResolve({
         smartContractData: "fake-smart-contract-data",
-        assetQuantity: 0.123,
+        assetQuantity: cryptoQuantity,
         exchangeRate: 1,
       });
-      expectedNobaQuote.quote.totalCryptoQuantity = 0.123;
-      expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / 0.123;
+
+      expectedNobaQuote.quote.totalCryptoQuantity = cryptoQuantity;
+      //expectedNobaQuote.quote.perUnitCryptoPriceWithSpread = fiatAmountUSD / cryptoQuantity;
 
       const nobaQuote: CombinedNobaQuote = await swapAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: REQUESTED_CRYPTO_ASSET,
@@ -497,6 +580,9 @@ describe("SwapAssetService", () => {
         processingFeeInFiat: output.expectedProcessingFee,
         networkFeeInFiat: output.expectedNetworkFee,
         nobaFeeInFiat: output.expectedNobaFee,
+        quotedFiatAmount: Utils.roundTo2DecimalNumber(
+          requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,
+        ),
         // (X - fees)/perUnitCost = cryptoQuantity
         totalFiatAmount: Utils.roundTo2DecimalNumber(
           requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,

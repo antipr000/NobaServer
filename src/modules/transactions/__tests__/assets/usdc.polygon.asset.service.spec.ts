@@ -105,6 +105,14 @@ describe("DefaultAssetService", () => {
       fiatFeeDollars: number;
       dynamicCreditCardFeePercentage: number;
       fixedCreditCardFee: number;
+
+      discount?: {
+        fixedCreditCardFeeDiscountPercent?: number;
+        networkFeeDiscountPercent?: number;
+        nobaFeeDiscountPercent?: number;
+        nobaSpreadDiscountPercent?: number;
+        processingFeeDiscountPercent?: number;
+      };
     }
 
     interface QuoteExpectations {
@@ -114,6 +122,13 @@ describe("DefaultAssetService", () => {
       quotedCostPerUnit: number;
       expectedPriceAfterFeeAndSpread: number;
       amountPreSpread: number;
+
+      discountedExpectedNobaFee: number;
+      discountedExpectedProcessingFee: number;
+      discountedExpectedNetworkFee: number;
+      discountedQuotedCostPerUnit: number;
+      discountedExpectedPriceAfterFeeAndSpread: number;
+      discountedAmountPreSpread: number;
     }
 
     const setupTestAndGetQuoteResponse = async (
@@ -135,6 +150,13 @@ describe("DefaultAssetService", () => {
       };
       await setupTestModule(environmentVariables);
 
+      if (!input.discount) input.discount = {};
+      input.discount.fixedCreditCardFeeDiscountPercent = input.discount.fixedCreditCardFeeDiscountPercent ?? 0;
+      input.discount.nobaFeeDiscountPercent = input.discount.nobaFeeDiscountPercent ?? 0;
+      input.discount.networkFeeDiscountPercent = input.discount.networkFeeDiscountPercent ?? 0;
+      input.discount.nobaSpreadDiscountPercent = input.discount.nobaSpreadDiscountPercent ?? 0;
+      input.discount.processingFeeDiscountPercent = input.discount.processingFeeDiscountPercent ?? 0;
+
       when(zerohashService.estimateNetworkFee("USDC.POLYGON", "USD")).thenResolve({
         cryptoCurrency: "USDC.POLYGON",
         feeInCrypto: 0,
@@ -152,28 +174,35 @@ describe("DefaultAssetService", () => {
       });
 
       const expectedTotalFees = output.expectedNobaFee + output.expectedProcessingFee + output.expectedNetworkFee;
+      const discountedExpectedTotalFees =
+        output.discountedExpectedNobaFee + output.discountedExpectedProcessingFee + output.discountedExpectedNetworkFee;
+
       const nobaQuote: CombinedNobaQuote = {
-        quote: {
-          quoteID: "FIXED",
-          fiatCurrency: "USD",
-          cryptoCurrency: "USDC.POLYGON",
-          amountPreSpread: output.amountPreSpread,
-          processingFeeInFiat: output.expectedProcessingFee,
-          networkFeeInFiat: output.expectedNetworkFee,
-          nobaFeeInFiat: output.expectedNobaFee,
-          totalFiatAmount: requestedFiatAmount,
-          totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
-          perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
-          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
-        },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
           amountPreSpread: output.amountPreSpread,
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
           nobaFeeInFiat: output.expectedNobaFee,
+          quotedFiatAmount: output.expectedPriceAfterFeeAndSpread,
           totalFiatAmount: requestedFiatAmount,
           perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
+          perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
+        },
+        quote: {
+          quoteID: "FIXED",
+          fiatCurrency: "USD",
+          cryptoCurrency: "USDC.POLYGON",
+          amountPreSpread: output.discountedAmountPreSpread,
+          processingFeeInFiat: output.discountedExpectedProcessingFee,
+          networkFeeInFiat: output.discountedExpectedNetworkFee,
+          totalCryptoQuantity: (requestedFiatAmount - discountedExpectedTotalFees) / output.quotedCostPerUnit,
+          nobaFeeInFiat: output.discountedExpectedNobaFee,
+          quotedFiatAmount:
+            output.expectedPriceAfterFeeAndSpread +
+            (output.discountedExpectedPriceAfterFeeAndSpread - output.expectedPriceAfterFeeAndSpread),
+          totalFiatAmount: requestedFiatAmount,
+          perUnitCryptoPriceWithSpread: output.discountedQuotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
         },
       };
@@ -199,7 +228,15 @@ describe("DefaultAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 1.6,
           amountPreSpread: 100,
-          expectedPriceAfterFeeAndSpread: 6.25,
+          expectedPriceAfterFeeAndSpread: 62.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1.6,
+          discountedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 62.5,
         },
       );
 
@@ -238,6 +275,14 @@ describe("DefaultAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 90.5,
           expectedPriceAfterFeeAndSpread: 90.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 9.5,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 90.5,
+          discountedExpectedPriceAfterFeeAndSpread: 90.5,
         },
       );
 
@@ -276,6 +321,14 @@ describe("DefaultAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 87.7,
           expectedPriceAfterFeeAndSpread: 87.7,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 12.3,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 87.7,
+          discountedExpectedPriceAfterFeeAndSpread: 87.7,
         },
       );
 
@@ -314,6 +367,14 @@ describe("DefaultAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 99.5,
           expectedPriceAfterFeeAndSpread: 99.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0.5,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 99.5,
+          discountedExpectedPriceAfterFeeAndSpread: 99.5,
         },
       );
 
@@ -352,6 +413,14 @@ describe("DefaultAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 80.9,
           expectedPriceAfterFeeAndSpread: 80.9,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 7.1,
+          discountedExpectedProcessingFee: 12,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 80.9,
+          discountedExpectedPriceAfterFeeAndSpread: 80.9,
         },
       );
 
@@ -390,6 +459,14 @@ describe("DefaultAssetService", () => {
           quotedCostPerUnit: 2,
           amountPreSpread: 80.5,
           expectedPriceAfterFeeAndSpread: 40.25,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 7.5,
+          discountedExpectedProcessingFee: 12,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 2,
+          discountedAmountPreSpread: 80.5,
+          discountedExpectedPriceAfterFeeAndSpread: 40.25,
         },
       );
 
@@ -428,6 +505,14 @@ describe("DefaultAssetService", () => {
           quotedCostPerUnit: 1,
           amountPreSpread: 86.5,
           expectedPriceAfterFeeAndSpread: 86.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 13.5,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 86.5,
+          discountedExpectedPriceAfterFeeAndSpread: 86.5,
         },
       );
 
@@ -441,6 +526,59 @@ describe("DefaultAssetService", () => {
           nobaFeeDiscountPercent: 0,
           nobaSpreadDiscountPercent: 0,
           processingFeeDiscountPercent: 0,
+        },
+      });
+      expect(nobaQuote).toEqual(expectedNobaQuote);
+    });
+
+    it("all fees are waived", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 1;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 0,
+          fiatFeeDollars: 0,
+          dynamicCreditCardFeePercentage: 0.125,
+          fixedCreditCardFee: 1,
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 1,
+            networkFeeDiscountPercent: 1,
+            nobaFeeDiscountPercent: 1,
+            nobaSpreadDiscountPercent: 1,
+            processingFeeDiscountPercent: 1,
+          },
+        },
+        {
+          expectedNobaFee: 0,
+          expectedProcessingFee: 13.5,
+          expectedNetworkFee: 0,
+          quotedCostPerUnit: 1,
+          amountPreSpread: 86.5,
+          expectedPriceAfterFeeAndSpread: 86.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100,
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "USDC.POLYGON",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 1,
+          networkFeeDiscountPercent: 1,
+          nobaFeeDiscountPercent: 1,
+          nobaSpreadDiscountPercent: 1,
+          processingFeeDiscountPercent: 1,
         },
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
@@ -508,6 +646,7 @@ describe("DefaultAssetService", () => {
         processingFeeInFiat: output.expectedProcessingFee,
         networkFeeInFiat: output.expectedNetworkFee,
         nobaFeeInFiat: output.expectedNobaFee,
+        quotedFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit,
         // (X - fees)/perUnitCost = cryptoQuantity
         totalFiatAmount: Utils.roundTo2DecimalNumber(
           requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,
