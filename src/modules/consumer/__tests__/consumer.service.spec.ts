@@ -6,6 +6,7 @@ import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from ".
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { CheckoutService } from "../../../modules/common/checkout.service";
+import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { EmailService } from "../../../modules/common/email.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockEmailServiceWithDefaults } from "../../../modules/common/mocks/mock.email.service";
@@ -26,6 +27,7 @@ import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { Otp } from "../../../modules/auth/domain/Otp";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -33,6 +35,7 @@ describe("ConsumerService", () => {
   let emailService: EmailService;
   let mockOtpRepo: IOTPRepo;
   let checkoutService: CheckoutService;
+  let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
 
   jest.setTimeout(30000);
 
@@ -41,6 +44,7 @@ describe("ConsumerService", () => {
     emailService = getMockEmailServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
     checkoutService = getMockCheckoutServiceWithDefaults();
+    sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -72,6 +76,10 @@ describe("ConsumerService", () => {
         {
           provide: CheckoutService,
           useFactory: () => instance(checkoutService),
+        },
+        {
+          provide: SanctionedCryptoWalletService,
+          useFactory: () => instance(sanctionedCryptoWalletService),
         },
         KmsService,
       ],
@@ -808,6 +816,7 @@ describe("ConsumerService", () => {
       const walletAddress = "fake-wallet-address";
       const otp = 123456;
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -888,6 +897,7 @@ describe("ConsumerService", () => {
       const otp = 123456;
       const wrongOtp = 234567;
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -949,6 +959,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -1043,6 +1054,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",

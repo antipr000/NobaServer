@@ -19,6 +19,7 @@ import { OnChainPendingProcessor } from "./OnChainPendingProcessor";
 import { SqsClient } from "./sqs.client";
 import { TransactionFailedProcessor } from "./TransactionFailedProcessor";
 import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactionProcessor";
+import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
       provide: TransactionQueueName.TransactionFailed,
       useClass: TransactionFailedProcessor,
     },
+    SanctionedCryptoWalletService,
   ],
 })
 export class AsyncTransactionProcessorModule {}

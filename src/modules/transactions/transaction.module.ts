@@ -12,6 +12,7 @@ import { ZeroHashService } from "./zerohash.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
 import { AssetsModule } from "./assets/assets.module";
 import { SquidService } from "./squid.service";
+import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { SquidService } from "./squid.service";
       useClass: MongoDBTransactionRepo,
     },
     SquidService,
+    SanctionedCryptoWalletService,
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
