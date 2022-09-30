@@ -223,6 +223,7 @@ export class Sardine implements IDVProvider {
           },
         },
       },
+      partnerId: transactionInformation.partnerName,
       checkpoints: ["aml", "payment"],
     };
 
@@ -260,17 +261,6 @@ export class Sardine implements IDVProvider {
     } catch (e) {
       this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
       throw new BadRequestException(e.message);
-    }
-  }
-
-  private mapSardineRiskLevelToNobaRiskLevel(riskLevel: SardineRiskLevels): RiskLevel {
-    switch (riskLevel) {
-      case SardineRiskLevels.LOW:
-        return RiskLevel.LOW;
-      case SardineRiskLevels.MEDIUM:
-        return RiskLevel.MEDIUM;
-      default:
-        return RiskLevel.HIGH;
     }
   }
 

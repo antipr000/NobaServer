@@ -5,16 +5,22 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerController } from "../consumer.controller";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
+import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
 import { PaymentProviders } from "../domain/PaymentProviderDetails";
 import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "../dto/ConsumerDTO";
 import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { getMockConsumerServiceWithDefaults } from "../mocks/mock.consumer.service";
+import { PartnerService } from "../../partner/partner.service";
+import { WalletStatus } from "../domain/VerificationStatus";
+import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
+import { Partner } from "../../../modules/partner/domain/Partner";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
   let consumerService: ConsumerService;
+  let partnerService: PartnerService;
 
   const consumerMapper = new ConsumerMapper();
 
@@ -22,22 +28,28 @@ describe("ConsumerController", () => {
 
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
-    const UserServiceProvider = {
-      provide: ConsumerService,
-      useFactory: () => instance(consumerService),
-    };
+    partnerService = getMockPartnerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [ConsumerController],
-      providers: [UserServiceProvider],
+      providers: [
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(consumerService),
+        },
+        {
+          provide: PartnerService,
+          useFactory: () => instance(partnerService),
+        },
+      ],
     }).compile();
 
     consumerController = app.get<ConsumerController>(ConsumerController);
   });
 
   describe("consumer controller tests", () => {
-    it("should get consuner data", async () => {
+    it("should return only wallets belonging to the 'partner' if 'viewOtherWallets' is false", async () => {
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
@@ -49,13 +61,149 @@ describe("ConsumerController", () => {
         ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "1111111111",
+            status: WalletStatus.APPROVED,
+          },
+          {
+            address: "wallet-2",
+            partnerID: "2222222222",
+            status: WalletStatus.APPROVED,
+          },
+          {
+            address: "wallet-3",
+            partnerID: "1111111111",
+            status: WalletStatus.APPROVED,
+          },
+        ],
       });
-
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
 
-      const result: ConsumerDTO = await consumerController.getConsumer({
-        user: { entity: consumer },
+      const partner1: Partner = Partner.createPartner({
+        _id: "1111111111",
+        apiKey: "partner-1-api-key",
+        name: "partner1",
+        config: {
+          viewOtherWallets: false,
+        } as any,
       });
+      const partner2: Partner = Partner.createPartner({
+        _id: "2222222222",
+        apiKey: "partner-2-api-key",
+        name: "partner2",
+        config: {
+          viewOtherWallets: false,
+        } as any,
+      });
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
+      when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
+
+      const result: ConsumerDTO = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      const filteredConsumer: Consumer = consumer;
+      filteredConsumer.props.cryptoWallets = [
+        {
+          address: "wallet-1",
+          partnerID: "1111111111",
+          status: WalletStatus.APPROVED,
+        },
+        {
+          address: "wallet-3",
+          partnerID: "1111111111",
+          status: WalletStatus.APPROVED,
+        },
+      ];
+      expect(result).toStrictEqual(consumerMapper.toDTO(filteredConsumer));
+    });
+
+    it("shouldn't filter wallets belonging to the 'partner' if 'viewOtherWallets' is true", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "1111111111",
+            status: WalletStatus.APPROVED,
+          },
+          {
+            address: "wallet-2",
+            partnerID: "2222222222",
+            status: WalletStatus.APPROVED,
+          },
+          {
+            address: "wallet-3",
+            partnerID: "1111111111",
+            status: WalletStatus.APPROVED,
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      const partner1: Partner = Partner.createPartner({
+        _id: "1111111111",
+        apiKey: "partner-1-api-key",
+        name: "partner1",
+        config: {
+          viewOtherWallets: true,
+        } as any,
+      });
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
+
+      const result: ConsumerDTO = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(result).toStrictEqual(consumerMapper.toDTO(consumer));
+    });
+
+    it("should works if there are no wallets belonging to the 'partner' in context", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+      });
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      const partner1: Partner = Partner.createPartner({
+        _id: "1111111111",
+        apiKey: "partner-1-api-key",
+        name: "partner1",
+      });
+      const partner2: Partner = Partner.createPartner({
+        _id: "2222222222",
+        apiKey: "partner-2-api-key",
+        name: "partner2",
+      });
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
+      when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
+
+      const result: ConsumerDTO = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
 
       expect(result).toStrictEqual(consumerMapper.toDTO(consumer));
     });

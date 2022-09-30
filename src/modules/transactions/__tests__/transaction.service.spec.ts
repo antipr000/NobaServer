@@ -250,7 +250,8 @@ describe("TransactionService", () => {
     const sessionKey = "12345";
     const paymentMethodID = "XXXXXXXXXX";
     const walletAddress = "1234567890";
-
+    const partnerID = "Partner-12345";
+    const partnerName = "Partner 12345";
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
       userId: consumerID,
@@ -262,7 +263,7 @@ describe("TransactionService", () => {
       leg1: "USD",
       leg2: "ETH",
       destinationWalletAddress: walletAddress,
-      partnerID: "12345",
+      partnerID: partnerID,
     });
 
     const paymentMethod: PaymentMethod = {
@@ -277,7 +278,7 @@ describe("TransactionService", () => {
       address: walletAddress,
       isEVMCompatible: false,
       status: undefined,
-      partnerID: "1234",
+      partnerID: partnerID,
     };
 
     const consumerNoPaymentMethod = Consumer.createConsumer({
@@ -287,6 +288,11 @@ describe("TransactionService", () => {
       partners: [{ partnerID: "partner-1" }],
       dateOfBirth: "1998-01-01",
       email: "mock@noba.com",
+    });
+
+    const partner = Partner.createPartner({
+      _id: partnerID,
+      name: partnerName,
     });
 
     const consumer = Consumer.createConsumer({
@@ -317,11 +323,11 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
       when(consumerService.addOrUpdateCryptoWallet(consumer, anything())).thenResolve(consumer);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(consumer);
 
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       const status = await transactionService.validatePendingTransaction(consumer, transaction);
       expect(status).toEqual(PendingTransactionValidationStatus.PASS);
       const updatedWallet: CryptoWallet = {
@@ -344,6 +350,7 @@ describe("TransactionService", () => {
       });
       reset(consumerService);
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
         expect(true).toBe(false);
@@ -387,6 +394,7 @@ describe("TransactionService", () => {
 
       reset(consumerService);
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
         expect(true).toBe(false);
@@ -404,6 +412,7 @@ describe("TransactionService", () => {
       });
       reset(consumerService);
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
         expect(true).toBe(false);
@@ -441,6 +450,7 @@ describe("TransactionService", () => {
 
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
 
       const status = await transactionService.validatePendingTransaction(consumer, transaction);
       expect(status).toEqual(PendingTransactionValidationStatus.PASS);
@@ -473,6 +483,7 @@ describe("TransactionService", () => {
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       const status = await transactionService.validatePendingTransaction(consumer, transaction);
       expect(status).toEqual(PendingTransactionValidationStatus.PASS);
       verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
@@ -504,6 +515,7 @@ describe("TransactionService", () => {
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       const status = await transactionService.validatePendingTransaction(consumer, transaction);
       expect(status).toEqual(PendingTransactionValidationStatus.PASS);
       verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
@@ -535,6 +547,7 @@ describe("TransactionService", () => {
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       const status = await transactionService.validatePendingTransaction(consumer, transaction);
       expect(status).toEqual(PendingTransactionValidationStatus.PASS);
       verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
@@ -569,6 +582,7 @@ describe("TransactionService", () => {
       when(emailService.sendTransactionInitiatedEmail(anything(), anything(), anything(), anything())).thenThrow(
         new Error("Unable to send email"),
       );
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       const status = await transactionService.validatePendingTransaction(consumer, transaction);
       expect(status).toEqual(PendingTransactionValidationStatus.PASS);
       verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
@@ -600,6 +614,7 @@ describe("TransactionService", () => {
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
         expect(true).toBe(false);
@@ -636,6 +651,7 @@ describe("TransactionService", () => {
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
         expect(true).toBe(false);
@@ -644,6 +660,42 @@ describe("TransactionService", () => {
         expect(e.disposition).toBe(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
         verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).once();
         verify(consumerService.addOrUpdateCryptoWallet(consumer, deepEqual(updatedWallet))).once();
+      }
+    });
+
+    it("should throw an error if the partnerID is unknown", async () => {
+      await setupTestModule(defaultEnvironmentVariables);
+      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
+        status: KYCStatus.APPROVED,
+        walletStatus: WalletStatus.REJECTED,
+        paymentMethodStatus: PaymentMethodStatus.APPROVED,
+      });
+
+      const updatedWallet: CryptoWallet = {
+        ...cryptoWallet,
+        status: WalletStatus.REJECTED,
+      };
+      const updatedPaymentMethod: PaymentMethod = {
+        ...paymentMethod,
+        status: PaymentMethodStatus.APPROVED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [updatedPaymentMethod],
+        cryptoWallets: [updatedWallet],
+      });
+
+      reset(consumerService);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(partnerService.getPartner(partnerID)).thenResolve(null);
+      try {
+        await transactionService.validatePendingTransaction(consumer, transaction);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        expect(e.disposition).toBe(TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER);
       }
     });
   });

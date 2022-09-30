@@ -4,6 +4,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  Headers,
   HttpStatus,
   Inject,
   Param,
@@ -35,6 +36,8 @@ import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "./dto/ConsumerDTO";
 import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
+import { PartnerService } from "../partner/partner.service";
+import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -47,7 +50,7 @@ export class ConsumerController {
 
   private readonly consumerMapper: ConsumerMapper;
 
-  constructor(private readonly consumerService: ConsumerService) {
+  constructor(private readonly consumerService: ConsumerService, private readonly partnerService: PartnerService) {
     this.consumerMapper = new ConsumerMapper();
   }
 
@@ -60,15 +63,23 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getConsumer(@Request() request): Promise<ConsumerDTO> {
+  async getConsumer(@Headers() headers, @Request() request): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
-    // TODO: Add check in login logic to not allow login of consumer who are not part of a partner
+    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()]);
+
     const consumerID: string = consumer.props._id;
-    const resp = await this.consumerService.getConsumer(consumerID);
-    return this.consumerMapper.toDTO(resp);
+    const entity: Consumer = await this.consumerService.getConsumer(consumerID);
+
+    if (!partner.props.config.viewOtherWallets) {
+      entity.props.cryptoWallets = entity.props.cryptoWallets.filter(wallet => {
+        return wallet.partnerID === partner.props._id;
+      });
+    }
+
+    return this.consumerMapper.toDTO(entity);
   }
 
   @Patch("/")

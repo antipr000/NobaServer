@@ -5,7 +5,6 @@
 export type { ActionDTO } from "./models/ActionDTO";
 export type { AddCryptoWalletDTO } from "./models/AddCryptoWalletDTO";
 export type { AddPartnerAdminRequestDTO } from "./models/AddPartnerAdminRequestDTO";
-export type { AddPartnerRequestDTO } from "./models/AddPartnerRequestDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
@@ -17,6 +16,7 @@ export type { ConfigurationsDTO } from "./models/ConfigurationsDTO";
 export type { ConfirmWalletUpdateDTO } from "./models/ConfirmWalletUpdateDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
 export type { ConsumerLimitsDTO } from "./models/ConsumerLimitsDTO";
+export type { CreatePartnerRequestDTO } from "./models/CreatePartnerRequestDTO";
 export type { CreateTransactionDTO } from "./models/CreateTransactionDTO";
 export type { CreditCardDTO } from "./models/CreditCardDTO";
 export type { CryptoWalletsDTO } from "./models/CryptoWalletsDTO";

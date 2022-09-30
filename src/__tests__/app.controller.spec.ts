@@ -18,6 +18,7 @@ import { BINValidity, CardType, CreditCardDTO } from "../modules/common/dto/Cred
 import { PartnerService } from "../modules/partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../modules/partner/mocks/mock.partner.service";
 import { Partner } from "../modules/partner/domain/Partner";
+import { X_NOBA_API_KEY } from "../modules/auth/domain/HeaderConstants";
 
 describe("AppController", () => {
   let appController: AppController;
@@ -124,10 +125,8 @@ describe("AppController", () => {
         },
       ]);
 
-      when(mockPartnerService.getPartnerFromApiKey(anything())).thenResolve(partner);
-      const result = await appController.supportedCryptocurrencies({
-        headers: { "x-noba-api-key": apiKey },
-      });
+      when(mockPartnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+      const result = await appController.supportedCryptocurrencies({ [X_NOBA_API_KEY.toLocaleLowerCase()]: apiKey });
 
       // Just ensuring something's returned. Other unit tests are responsible for exactly what's returned.
       expect(result.length).toEqual(1);
