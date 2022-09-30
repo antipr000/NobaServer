@@ -170,6 +170,7 @@ describe("CryptoTransactionInitiator", () => {
   const processingFeeInFiat = 0;
   const networkFeeInFiat = 0;
   const nobaFeeInFiat = 0;
+  const quotedFiatAmount = 0;
   const totalFiatAmount = 0;
   const totalCryptoQuantity = 0;
   const perUnitCryptoPriceWithoutSpread = 0;
@@ -283,6 +284,7 @@ describe("CryptoTransactionInitiator", () => {
         processingFeeInFiat,
         networkFeeInFiat,
         nobaFeeInFiat,
+        quotedFiatAmount,
         totalFiatAmount,
         totalCryptoQuantity,
         perUnitCryptoPriceWithoutSpread,
@@ -346,6 +348,7 @@ describe("CryptoTransactionInitiator", () => {
         processingFeeInFiat,
         networkFeeInFiat,
         nobaFeeInFiat,
+        quotedFiatAmount,
         totalFiatAmount,
         totalCryptoQuantity,
         perUnitCryptoPriceWithoutSpread,
@@ -512,6 +515,7 @@ describe("CryptoTransactionInitiator", () => {
         processingFeeInFiat,
         networkFeeInFiat,
         nobaFeeInFiat,
+        quotedFiatAmount,
         totalFiatAmount,
         totalCryptoQuantity,
         perUnitCryptoPriceWithoutSpread,
@@ -577,6 +581,7 @@ describe("CryptoTransactionInitiator", () => {
         processingFeeInFiat,
         networkFeeInFiat,
         nobaFeeInFiat,
+        quotedFiatAmount,
         totalFiatAmount,
         totalCryptoQuantity,
         perUnitCryptoPriceWithoutSpread,
@@ -646,6 +651,7 @@ describe("CryptoTransactionInitiator", () => {
         processingFeeInFiat,
         networkFeeInFiat,
         nobaFeeInFiat,
+        quotedFiatAmount,
         totalFiatAmount,
         totalCryptoQuantity,
         perUnitCryptoPriceWithoutSpread,
@@ -715,6 +721,7 @@ describe("CryptoTransactionInitiator", () => {
         processingFeeInFiat,
         networkFeeInFiat,
         nobaFeeInFiat,
+        quotedFiatAmount,
         totalFiatAmount,
         totalCryptoQuantity,
         perUnitCryptoPriceWithoutSpread,

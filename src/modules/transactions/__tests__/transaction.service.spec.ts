@@ -800,6 +800,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 1,
           amountPreSpread: 1,
 
+          quotedFiatAmount: 13,
           totalFiatAmount: 13,
           totalCryptoQuantity: 0.0001,
           perUnitCryptoPriceWithoutSpread: 1000,
@@ -813,6 +814,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 1,
           amountPreSpread: 1,
 
+          quotedFiatAmount: 13,
           totalFiatAmount: 13,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
@@ -880,6 +882,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 1,
           amountPreSpread: 1,
 
+          quotedFiatAmount: 13,
           totalFiatAmount: 13,
           totalCryptoQuantity: 0.0001,
           perUnitCryptoPriceWithoutSpread: 1000,
@@ -893,6 +896,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 1,
           amountPreSpread: 1,
 
+          quotedFiatAmount: 13,
           totalFiatAmount: 13,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
@@ -956,6 +960,7 @@ describe("TransactionService", () => {
         nobaFeeInFiat: 0.01,
         amountPreSpread: 1000,
 
+        quotedFiatAmount: 1000,
         totalFiatAmount: 1000,
         totalCryptoQuantity: 1000,
         perUnitCryptoPriceWithoutSpread: 1000,
@@ -1415,6 +1420,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 0.01,
           amountPreSpread: 0.01,
 
+          quotedFiatAmount: 1000,
           totalFiatAmount: 1000,
           totalCryptoQuantity: 0.3,
           perUnitCryptoPriceWithoutSpread: 1000,
@@ -1428,6 +1434,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 0.01,
           amountPreSpread: 0.01,
 
+          quotedFiatAmount: 1000,
           totalFiatAmount: 1000,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
@@ -1522,6 +1529,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 0.01,
           amountPreSpread: 0.01,
 
+          quotedFiatAmount: 100,
           totalFiatAmount: 100,
           totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 1000,
@@ -1535,6 +1543,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 0.01,
           amountPreSpread: 0.01,
 
+          quotedFiatAmount: 100,
           totalFiatAmount: 100,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
@@ -1658,6 +1667,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 0.01,
           amountPreSpread: 0.01,
 
+          quotedFiatAmount: 100,
           totalFiatAmount: 100,
           totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 1000,
@@ -1671,6 +1681,7 @@ describe("TransactionService", () => {
           nobaFeeInFiat: 0.01,
           amountPreSpread: 0.01,
 
+          quotedFiatAmount: 100,
           totalFiatAmount: 100,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
@@ -1803,6 +1814,7 @@ describe("TransactionService", () => {
         nobaFeeInFiat: 0.01,
         amountPreSpread: 0.01,
 
+        quotedFiatAmount: 100,
         totalFiatAmount: 100,
         totalCryptoQuantity: 0.1,
         perUnitCryptoPriceWithoutSpread: 1000,
