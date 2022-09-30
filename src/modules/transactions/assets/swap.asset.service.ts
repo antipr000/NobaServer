@@ -49,11 +49,12 @@ export class SwapAssetService implements AssetService {
     const updatedQuote: NobaQuote = {
       ...intermediaryQuoteResponse.quote,
       totalCryptoQuantity: routeResponse.assetQuantity,
-      perUnitCryptoPriceWithSpread: intermediaryQuoteResponse.quote.totalFiatAmount / routeResponse.assetQuantity,
+      // TODO Figure out what this should be. Should not be the same as with spread.
+      perUnitCryptoPriceWithoutSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.quote.totalFiatAmount,
+      perUnitCryptoPriceWithSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.quote.totalFiatAmount,
       cryptoCurrency: request.cryptoCurrency,
     };
 
-    // Find the proper calculations
     return {
       quote: updatedQuote,
       nonDiscountedQuote: intermediaryQuoteResponse.nonDiscountedQuote,

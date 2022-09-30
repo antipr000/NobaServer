@@ -7,9 +7,8 @@ import { SQUID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { SquidConfigs } from "src/config/configtypes/SquidConfigs";
 import { Squid, Config, GetRoute, Route, TokenData, ChainsData, ChainData } from "@0xsquid/sdk";
 import { SwapServiceProvider } from "./domain/swap.service.provider";
-import Web3 from "web3";
-
-const web3 = new Web3();
+import { formatUnits, parseUnits } from "@ethersproject/units";
+import { BigNumber } from "@ethersproject/bignumber";
 @Injectable()
 export class SquidService implements SwapServiceProvider {
   private readonly squid: Squid;
@@ -48,14 +47,12 @@ export class SquidService implements SwapServiceProvider {
     if (intermediaryLeg === "AVAX") intermediaryLeg = "AVAX.Avalanche";
     if (intermediaryLeg === "DAI.ETH") intermediaryLeg = "DAI.Ethereum";
     const sourceTokenData = this.getTokenData(intermediaryLeg);
-    const crossChainTokenAddress = this.getDefaultCrossChainToken(destinationTokenData.chainId);
-
     const squidParams: GetRoute = {
       sourceChainId: sourceTokenData.chainId,
       destinationChainId: destinationTokenData.chainId,
       sourceTokenAddress: sourceTokenData.address,
-      destinationTokenAddress: crossChainTokenAddress,
-      sourceAmount: `${this.convertCryptoAmountToSquidAmount(sourceAmount)}`,
+      destinationTokenAddress: destinationTokenData.address,
+      sourceAmount: `${parseUnits(sourceAmount.toString(), sourceTokenData.decimals)}`,
       recipientAddress: targetWalletAddress,
       slippage: this.slippage,
     };
@@ -64,18 +61,14 @@ export class SquidService implements SwapServiceProvider {
 
     const squidRouteResponse = await this.getRoute(squidParams);
     this.logger.debug(`Squid route response: ${JSON.stringify(squidRouteResponse, null, 1)}`);
+
     return {
-      assetQuantity: this.convertSquidAmountToCryptoAmount(squidRouteResponse.estimate.sendAmount), // TODO(#594): Figure out actual quantity here
+      assetQuantity: Number(
+        formatUnits(BigNumber.from(squidRouteResponse.estimate.toAmount), destinationTokenData.decimals),
+      ),
       smartContractData: squidRouteResponse.transactionRequest.data,
       exchangeRate: Number(squidRouteResponse.estimate.exchangeRate),
     };
-  }
-
-  private getDefaultCrossChainToken(chainId: string | number): string {
-    const chains: ChainsData = this.squid.chains;
-    console.log(`Getting chain data for chainID: ${chainId}`);
-    const chainData: ChainData = chains.filter(chainInfo => chainInfo.chainId.toString() === chainId.toString())[0];
-    return chainData.squidContracts.defaultCrosschainToken;
   }
 
   private getTokenData(tickerAndChainIn: string): TokenData {
@@ -105,6 +98,7 @@ export class SquidService implements SwapServiceProvider {
   private async getRoute(params: GetRoute): Promise<Route> {
     try {
       const { route } = await this.squid.getRoute(params);
+      console.log(JSON.stringify(route, null, 1));
       return route;
     } catch (e) {
       this.logger.error(`Squid getRoute API failed. Reason: ${JSON.stringify(e)}`);
@@ -116,13 +110,5 @@ export class SquidService implements SwapServiceProvider {
     if (!this.squid.initialized) {
       await this.squid.init();
     }
-  }
-
-  private convertCryptoAmountToSquidAmount(amount: number): string {
-    return web3.utils.toWei(amount.toString(), "ether");
-  }
-
-  private convertSquidAmountToCryptoAmount(amount: string): number {
-    return parseFloat(web3.utils.fromWei(amount, "ether"));
   }
 }

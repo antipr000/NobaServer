@@ -161,9 +161,8 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 
 import { SquidService } from "../squid.service";
-import Web3 from "web3";
+import { formatUnits, parseUnits } from "@ethersproject/units";
 import { BadRequestException } from "@nestjs/common";
-const web3 = new Web3();
 
 describe("SquidService", () => {
   let squidService: SquidService;
@@ -206,7 +205,7 @@ describe("SquidService", () => {
       destinationChainId: 1287,
       sourceTokenAddress: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
       destinationTokenAddress: "0xd1633f7fb3d716643125d6415d4177bc36b7186b",
-      sourceAmount: `${convertCryptoAmountToSquidAmount(1)}`,
+      sourceAmount: `${parseUnits("1", 18)}`,
       recipientAddress: "0xDb933AE704a2D8acF4201D75106464b30dEC1E4e",
       slippage: 1,
     });
@@ -239,7 +238,3 @@ describe("SquidService", () => {
     }
   });
 });
-
-function convertCryptoAmountToSquidAmount(amount: number): string {
-  return web3.utils.toWei(amount.toString(), "ether");
-}

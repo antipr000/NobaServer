@@ -24,6 +24,8 @@
   "dependencies": {
     "@0xsquid/sdk": "^1.0.0-beta.16",
     "@aws-crypto/client-node": "^3.1.1",
+    "@ethersproject/bignumber": "^5.7.0",
+    "@ethersproject/units": "^5.7.0",
     "@nestjs/common": "^8.4.7",
     "@nestjs/config": "^2.1.0",
     "@nestjs/core": "^8.4.7",
@@ -68,7 +70,6 @@
     "ts-mockito": "^2.6.1",
     "tunnel": "^0.0.6",
     "twilio": "^3.80.1",
-    "web3": "^1.8.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
