@@ -72,7 +72,8 @@ export class TransactionService {
     if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
       throw new BadRequestException("Invalid amount");
     }
-    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionQuoteQuery.cryptoCurrencyCode)) {
+
+    if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
         `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
           `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
@@ -224,9 +225,10 @@ export class TransactionService {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER);
     }
 
-    if (!partner.props.config.cryptocurrencyAllowList.includes(transactionRequest.leg2)) {
+    // Null or empty crypto allow list means "allow all"
+    if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
       this.logger.debug(
-        `Unsupported crypto currency "${transactionRequest.leg2}". ` +
+        `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
           `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
@@ -564,5 +566,14 @@ export class TransactionService {
         `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${err.message}`,
       );
     }
+  }
+
+  private isCryptocurrencyAllowed(partner: Partner, cryptocurrency: string) {
+    return (
+      partner.props.config.cryptocurrencyAllowList === null ||
+      partner.props.config.cryptocurrencyAllowList === undefined ||
+      partner.props.config.cryptocurrencyAllowList.length == 0 ||
+      partner.props.config.cryptocurrencyAllowList.includes(cryptocurrency)
+    );
   }
 }
