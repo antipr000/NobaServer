@@ -6,7 +6,6 @@ import {
   FundsAvailabilityResponse,
   FundsAvailabilityStatus,
   ConsumerWalletTransferStatus,
-  NobaQuote,
   QuoteRequestForFixedFiat,
   QuoteRequestForFixedCrypto,
   ExecutedQuote,
@@ -18,7 +17,7 @@ import {
 
 export interface AssetService {
   getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote>;
-  getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote>;
+  getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<CombinedNobaQuote>;
 
   executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote>;
   pollExecuteQuoteForFundsAvailabilityStatus(id: string): Promise<ExecutedQuoteStatus>;

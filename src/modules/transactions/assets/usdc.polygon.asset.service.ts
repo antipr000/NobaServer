@@ -83,7 +83,7 @@ export class USDCPolygonAssetService extends DefaultAssetService {
     return await super.getQuoteForSpecifiedFiatAmount(request);
   }
 
-  async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
+  async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<CombinedNobaQuote> {
     return await super.getQuoteForSpecifiedCryptoQuantity(request);
   }
 

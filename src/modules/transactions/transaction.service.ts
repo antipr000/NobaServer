@@ -76,7 +76,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
         `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
     }
 
@@ -129,14 +129,23 @@ export class TransactionService {
         break;
 
       case CurrencyType.CRYPTO:
-        nobaQuote = await assetService.getQuoteForSpecifiedCryptoQuantity({
-          cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
-          fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-          cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(
-            transactionQuoteQuery.cryptoCurrencyCode,
-            transactionQuoteQuery.fixedAmount,
-          ),
-        });
+        nobaQuote = (
+          await assetService.getQuoteForSpecifiedFiatAmount({
+            cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+            fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+            fiatAmount: await this.roundToProperDecimalsForCryptocurrency(
+              transactionQuoteQuery.cryptoCurrencyCode,
+              transactionQuoteQuery.fixedAmount,
+            ),
+            discount: {
+              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+              nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+              nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+              processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+            },
+          })
+        ).quote;
         break;
 
       default:
@@ -229,7 +238,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
       this.logger.debug(
         `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
@@ -287,7 +296,7 @@ export class TransactionService {
       newTransaction.props.intermediaryLeg = assetService.getIntermediaryLeg();
     }
 
-    // TODO: Some temporary logic here until crypto fixed quotes return a CombinedNobaQuote
+    // TODO: Refactor this by calling 'requestTransactionQuote' directly.
     let quote: NobaQuote;
     let combinedQuote: CombinedNobaQuote;
     if (transactionRequest.fixedSide === CurrencyType.FIAT) {
@@ -306,11 +315,19 @@ export class TransactionService {
       });
       quote = combinedQuote.quote;
     } else {
-      quote = await assetService.getQuoteForSpecifiedCryptoQuantity({
+      combinedQuote = await assetService.getQuoteForSpecifiedCryptoQuantity({
         fiatCurrency: transactionRequest.leg1,
         cryptoCurrency: transactionRequest.leg2,
         cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(transactionRequest.leg2, cryptoAmount),
+        discount: {
+          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+          networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+          nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+          nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+          processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+        },
       });
+      quote = combinedQuote.quote;
     }
 
     // Perform rounding
@@ -497,8 +514,7 @@ export class TransactionService {
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
     this.logger.debug(
-      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
-        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
     );
 

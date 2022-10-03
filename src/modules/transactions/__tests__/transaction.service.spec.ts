@@ -808,6 +808,7 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 1,
           networkFeeInFiat: 1,
@@ -816,6 +817,7 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 13,
           totalFiatAmount: 13,
+          totalCryptoQuantity: 0.0001,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -890,6 +892,7 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
+          cryptoCurrency: "axlUSDCMoonbeam",
 
           processingFeeInFiat: 1,
           networkFeeInFiat: 1,
@@ -898,6 +901,7 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 13,
           totalFiatAmount: 13,
+          totalCryptoQuantity: 0.0001,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -950,21 +954,38 @@ describe("TransactionService", () => {
         partnerID: partnerID,
       };
 
-      const nobaQuote: NobaQuote = {
-        quoteID: "fake-quote",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "fake-quote",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
-        processingFeeInFiat: 0.01,
-        networkFeeInFiat: 0.01,
-        nobaFeeInFiat: 0.01,
-        amountPreSpread: 1000,
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 1000,
 
-        quotedFiatAmount: 1000,
-        totalFiatAmount: 1000,
-        totalCryptoQuantity: 1000,
-        perUnitCryptoPriceWithoutSpread: 1000,
-        perUnitCryptoPriceWithSpread: 1000,
+          quotedFiatAmount: 1000,
+          totalFiatAmount: 1000,
+          totalCryptoQuantity: 0.1,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 1000,
+
+          quotedFiatAmount: 1000,
+          totalFiatAmount: 1000,
+          totalCryptoQuantity: 1000,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
       };
 
       when(
@@ -978,7 +999,7 @@ describe("TransactionService", () => {
       ).thenResolve(nobaQuote);
 
       const response = await transactionService.requestTransactionQuote(transactionQuoteQuery);
-      assertOnRequestTransactionQuoteResponse(response, nobaQuote, transactionQuoteQuery);
+      assertOnRequestTransactionQuoteResponse(response, nobaQuote.quote, transactionQuoteQuery);
     });
   });
 
@@ -1428,6 +1449,7 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 0.01,
           networkFeeInFiat: 0.01,
@@ -1436,6 +1458,7 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 1000,
           totalFiatAmount: 1000,
+          totalCryptoQuantity: 0.3,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1537,6 +1560,7 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 0.01,
           networkFeeInFiat: 0.01,
@@ -1545,6 +1569,7 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 100,
           totalFiatAmount: 100,
+          totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1675,6 +1700,7 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
+          cryptoCurrency: "axlUSDCMoonbeam",
 
           processingFeeInFiat: 0.01,
           networkFeeInFiat: 0.01,
@@ -1683,6 +1709,7 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 100,
           totalFiatAmount: 100,
+          totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1804,21 +1831,38 @@ describe("TransactionService", () => {
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
 
-      const nobaQuote: NobaQuote = {
-        quoteID: "fake-quote",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "fake-quote",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
 
-        processingFeeInFiat: 0.01,
-        networkFeeInFiat: 0.01,
-        nobaFeeInFiat: 0.01,
-        amountPreSpread: 0.01,
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 0.01,
 
-        quotedFiatAmount: 100,
-        totalFiatAmount: 100,
-        totalCryptoQuantity: 0.1,
-        perUnitCryptoPriceWithoutSpread: 1000,
-        perUnitCryptoPriceWithSpread: 1000,
+          quotedFiatAmount: 100,
+          totalFiatAmount: 100,
+          totalCryptoQuantity: 0.1,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+
+          processingFeeInFiat: 0.01,
+          networkFeeInFiat: 0.01,
+          nobaFeeInFiat: 0.01,
+          amountPreSpread: 0.01,
+
+          quotedFiatAmount: 100,
+          totalFiatAmount: 100,
+          totalCryptoQuantity: 0.1,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
       };
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
@@ -1865,9 +1909,9 @@ describe("TransactionService", () => {
         transactionStatus: TransactionStatus.PENDING,
         partnerID: partnerId,
         destinationWalletAddress: transactionRequest.destinationWalletAddress,
-        networkFee: nobaQuote.networkFeeInFiat,
-        nobaFee: nobaQuote.nobaFeeInFiat,
-        processingFee: nobaQuote.processingFeeInFiat,
+        networkFee: nobaQuote.quote.networkFeeInFiat,
+        nobaFee: nobaQuote.quote.nobaFeeInFiat,
+        processingFee: nobaQuote.quote.processingFeeInFiat,
         exchangeRate: conversionRate,
       });
 
