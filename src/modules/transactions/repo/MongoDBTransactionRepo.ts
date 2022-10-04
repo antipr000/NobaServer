@@ -245,8 +245,6 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     );
 
     const result = await TransactionModel.aggregate(pipeline as any).exec();
-    console.log("ankitpipelineresult");
-    console.log(result);
     const pageResult = (result[0] ?? EMPTY_PAGE_RESULT) as unknown as PaginatedResult<TransactionProps>;
 
     if (!pageResult.items && pageResult.totalItems == 0) {
