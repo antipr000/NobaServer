@@ -28,6 +28,7 @@ import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { Otp } from "../../../modules/auth/domain/Otp";
 import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
+import { CryptoWallet } from "../domain/CryptoWallet";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -807,6 +808,118 @@ describe("ConsumerService", () => {
           `Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`,
         );
       }
+    });
+  });
+
+  describe("addOrUpdateCryptoWallet", () => {
+    it("should throw error if partnerID is updated for existing wallet", async () => {
+      const cryptoWallet: CryptoWallet = {
+        address: "fake-wallet-address",
+        status: WalletStatus.APPROVED,
+        partnerID: "partner-1",
+      };
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fake+email@noba.com",
+        displayEmail: "fake+email@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProviders.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            paymentProviderID: "Checkout",
+            paymentToken: "fake-token",
+            first6Digits: "123456",
+            last4Digits: "7890",
+            imageUri: "fake-uri",
+            cardName: "Fake card",
+            cardType: "VISA",
+          },
+        ],
+        cryptoWallets: [cryptoWallet],
+      });
+
+      try {
+        await consumerService.addOrUpdateCryptoWallet(consumer, {
+          ...cryptoWallet,
+          partnerID: "partner-2",
+        });
+        expect(true).toBeFalsy();
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("Cannot update address, chainType and partnerID for an already existing wallet");
+      }
+    });
+
+    it("should add new crypto wallet", async () => {
+      const cryptoWallet: CryptoWallet = {
+        address: "fake-wallet-address",
+        status: WalletStatus.PENDING,
+        partnerID: "partner-1",
+      };
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fake+email@noba.com",
+        displayEmail: "fake+email@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProviders.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            paymentProviderID: "Checkout",
+            paymentToken: "fake-token",
+            first6Digits: "123456",
+            last4Digits: "7890",
+            imageUri: "fake-uri",
+            cardName: "Fake card",
+            cardType: "VISA",
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        cryptoWallets: [cryptoWallet],
+      });
+      when(mockOtpRepo.deleteAllOTPsForUser(consumer.props.email, "CONSUMER")).thenResolve();
+      when(mockOtpRepo.saveOTP(consumer.props.email, anyString(), "CONSUMER")).thenResolve();
+      when(
+        emailService.sendWalletUpdateVerificationCode(
+          consumer.props.email,
+          anyString(),
+          cryptoWallet.address,
+          consumer.props.firstName,
+        ),
+      ).thenResolve();
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
+
+      const response = await consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+
+      expect(response).toStrictEqual(updatedConsumer);
     });
   });
 

@@ -305,6 +305,21 @@ export class ConsumerService {
       existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
     );
 
+    const selectedCryptoWallet = consumer.props.cryptoWallets.filter(
+      existingCryptoWallet => existingCryptoWallet.address === cryptoWallet.address,
+    );
+
+    if (selectedCryptoWallet.length !== 0) {
+      const wallet = selectedCryptoWallet[0];
+      if (
+        wallet.address !== cryptoWallet.address ||
+        wallet.chainType !== cryptoWallet.chainType ||
+        wallet.partnerID !== cryptoWallet.partnerID
+      ) {
+        throw new BadRequestException("Cannot update address, chainType and partnerID for an already existing wallet");
+      }
+    }
+
     // Send the verification OTP to the user
     if (cryptoWallet.status == WalletStatus.PENDING) {
       await this.sendWalletVerificationOTP(consumer, cryptoWallet.address);
