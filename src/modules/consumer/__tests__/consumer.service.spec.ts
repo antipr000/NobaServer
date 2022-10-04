@@ -191,6 +191,44 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("findConsumerById", () => {
+    it("should find the consumer", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+      const consumerID = "mock-consumer-1";
+      const consumer = Consumer.createConsumer({
+        _id: consumerID,
+        email: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProviders.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [],
+        cryptoWallets: [],
+      });
+
+      when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
+      const response = await consumerService.findConsumerById(consumerID);
+      expect(response).toStrictEqual(consumer);
+    });
+
+    it("should not find the consumer if it doesn't exist", async () => {
+      when(consumerRepo.getConsumer("missing-consumer")).thenThrow(new NotFoundException());
+
+      expect(async () => {
+        await consumerService.findConsumerById("missing-consumer");
+      }).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe("updateConsumer", () => {
     it("should update consumer details", async () => {
       const email = "mock-user@noba.com";
@@ -812,7 +850,7 @@ describe("ConsumerService", () => {
   });
 
   describe("addOrUpdateCryptoWallet", () => {
-    it("should throw error if partnerID is updated for existing wallet", async () => {
+    it("should add a second address if address exists for another partnerID", async () => {
       const cryptoWallet: CryptoWallet = {
         address: "fake-wallet-address",
         status: WalletStatus.APPROVED,
@@ -836,30 +874,23 @@ describe("ConsumerService", () => {
           },
         ],
         isAdmin: false,
-        paymentMethods: [
-          {
-            paymentProviderID: "Checkout",
-            paymentToken: "fake-token",
-            first6Digits: "123456",
-            last4Digits: "7890",
-            imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
-          },
-        ],
+        paymentMethods: [],
         cryptoWallets: [cryptoWallet],
       });
 
-      try {
-        await consumerService.addOrUpdateCryptoWallet(consumer, {
-          ...cryptoWallet,
-          partnerID: "partner-2",
-        });
-        expect(true).toBeFalsy();
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.message).toBe("Cannot update address, chainType and partnerID for an already existing wallet");
-      }
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        cryptoWallets: [cryptoWallet, { ...cryptoWallet, partnerID: "partner-2" }],
+      });
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
+      const response = await consumerService.addOrUpdateCryptoWallet(consumer, {
+        ...cryptoWallet,
+        partnerID: "partner-2",
+      });
+
+      expect(response).toBe(updatedConsumer);
     });
 
     it("should add new crypto wallet", async () => {
@@ -924,7 +955,7 @@ describe("ConsumerService", () => {
   });
 
   describe("confirmWalletUpdateOTP", () => {
-    it("update existing crypto wallet", async () => {
+    it("updates existing crypto wallet", async () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
       const otp = 123456;
@@ -1002,6 +1033,94 @@ describe("ConsumerService", () => {
       expect(response).toStrictEqual(updatedConsumer);
 
       verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
+    });
+
+    it("throws an error for a sanctioned wallet", async () => {
+      const email = "mock-user@noba.com";
+      const walletAddress = "fake-wallet-address";
+      const otp = 123456;
+
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(true);
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProviders.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            paymentProviderID: "Checkout",
+            paymentToken: "fake-token",
+            first6Digits: "123456",
+            last4Digits: "7890",
+            imageUri: "fake-uri",
+            cardName: "Fake card",
+            cardType: "VISA",
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: walletAddress,
+            status: WalletStatus.PENDING,
+          },
+        ],
+      });
+
+      const flaggedWallet = {
+        walletName: "Test wallet",
+        address: walletAddress,
+        status: WalletStatus.FLAGGED,
+      };
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        cryptoWallets: [flaggedWallet],
+      });
+
+      const expiryDate = new Date();
+      expiryDate.setMinutes(expiryDate.getMinutes() + 5);
+
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
+        Otp.createOtp({
+          _id: "fake-otp-id",
+          emailOrPhone: consumer.props.email,
+          otp: otp,
+          otpExpiryTime: expiryDate.getTime(),
+          identityType: "CONSUMER",
+        }),
+      );
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(mockOtpRepo.deleteOTP("fake-otp-id")).thenResolve();
+
+      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
+      //when();
+
+      expect(async () => {
+        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp);
+      }).rejects.toThrow(BadRequestException);
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(updatedConsumer);
+
+      expect(await consumerService.getConsumer(consumer.props._id)).toEqual(updatedConsumer);
+
+      //expect()
+
+      //expect(response).toStrictEqual(updatedConsumer);
+
+      //expect(consumerService.addOrUpdateCryptoWallet).toBeCalledTimes(1);
     });
 
     it("throws Unauthorized exception when otp is wrong", async () => {
@@ -1214,7 +1333,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.removeCryptoWallet(consumer, walletAddress);
+      const response = await consumerService.removeCryptoWallet(consumer, walletAddress, "partner-1");
 
       expect(response).toStrictEqual(updatedConsumer);
       verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();

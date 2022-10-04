@@ -301,23 +301,23 @@ export class ConsumerService {
   }
 
   async addOrUpdateCryptoWallet(consumer: Consumer, cryptoWallet: CryptoWallet): Promise<Consumer> {
-    const otherCryptoWallets = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
-    );
-
-    const selectedCryptoWallet = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet => existingCryptoWallet.address === cryptoWallet.address,
-    );
-
-    if (selectedCryptoWallet.length !== 0) {
-      const wallet = selectedCryptoWallet[0];
+    const allCryptoWallets = consumer.props.cryptoWallets;
+    let match = false;
+    for (let i = 0; i < allCryptoWallets.length; i++) {
+      // If we find a matching wallet based on address and partnerID, update it. Otherwise, we will add.
       if (
-        wallet.address !== cryptoWallet.address ||
-        wallet.chainType !== cryptoWallet.chainType ||
-        wallet.partnerID !== cryptoWallet.partnerID
+        allCryptoWallets[i].address === cryptoWallet.address &&
+        allCryptoWallets[i].partnerID === cryptoWallet.partnerID
       ) {
-        throw new BadRequestException("Cannot update address, chainType and partnerID for an already existing wallet");
+        // We found a match!
+        allCryptoWallets[i] = cryptoWallet;
+        match = true;
       }
+    }
+
+    // It's an add
+    if (!match) {
+      allCryptoWallets.push(cryptoWallet);
     }
 
     // Send the verification OTP to the user
@@ -327,14 +327,15 @@ export class ConsumerService {
 
     const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
-      cryptoWallets: [...otherCryptoWallets, cryptoWallet],
+      cryptoWallets: allCryptoWallets,
     });
     return updatedConsumer;
   }
 
-  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {
+  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string, partnerID: string): Promise<Consumer> {
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet => existingCryptoWallet.address !== cryptoWalletAddress,
+      existingCryptoWallet =>
+        existingCryptoWallet.address !== cryptoWalletAddress && existingCryptoWallet.partnerID !== partnerID,
     );
 
     const updatedConsumer = await this.updateConsumer({
