@@ -253,7 +253,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
     const transactions = pageResult.items.map(transactionProps => this.transactionMapper.toDomain(transactionProps));
 
-    return { ...pageResult, items: transactions, totalPages: Math.ceil(pageResult.totalPages) };
+    return { ...pageResult, items: transactions, totalPages: Math.ceil(pageResult.totalPages) }; //ceil is not supported in documentDB pipeline so we need to do it here
   }
 
   private async getPeriodicUserTransactionAmount(userId: string, days: number): Promise<number> {
