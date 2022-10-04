@@ -253,7 +253,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
     const transactions = pageResult.items.map(transactionProps => this.transactionMapper.toDomain(transactionProps));
 
-    return { ...pageResult, items: transactions };
+    return { ...pageResult, items: transactions, totalPages: Math.ceil(pageResult.totalPages) };
   }
 
   private async getPeriodicUserTransactionAmount(userId: string, days: number): Promise<number> {
