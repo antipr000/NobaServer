@@ -5,6 +5,11 @@ import Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
 import { WebhookType } from "./WebhookTypes";
 import { Utils } from "../../../core/utils/Utils";
+import { NotificationConfiguration } from "./NotificationConfiguration";
+import {
+  NotificationEventHandlers,
+  NotificationEventTypes,
+} from "../../../modules/notifications/domain/NotificationTypes";
 
 export interface PartnerProps extends VersioningInfo {
   _id: string;
@@ -30,6 +35,7 @@ export type PartnerConfig = {
   bypassWalletOTP?: boolean;
   cryptocurrencyAllowList?: string[];
   fees: PartnerFees;
+  notificationConfig: NotificationConfiguration[];
 };
 
 export type PartnerFees = {
@@ -61,6 +67,15 @@ export const partnerKeys: KeysRequired<PartnerProps> = {
   config: Joi.object().optional(),
 };
 
+export const notificationConfigKeys: KeysRequired<NotificationConfiguration> = {
+  notificationEventType: Joi.string()
+    .required()
+    .valid(...Object.values(NotificationEventTypes)),
+  notificationEventHandler: Joi.array()
+    .items(Joi.string().valid(...Object.values(NotificationEventHandlers)))
+    .default([]),
+};
+
 export const partnerConfigKeys: KeysRequired<PartnerConfig> = {
   privateWallets: Joi.boolean().optional(),
   viewOtherWallets: Joi.boolean().optional(),
@@ -68,6 +83,7 @@ export const partnerConfigKeys: KeysRequired<PartnerConfig> = {
   bypassWalletOTP: Joi.boolean().optional(),
   cryptocurrencyAllowList: Joi.array().items(Joi.string()).default([]),
   fees: Joi.object().optional(),
+  notificationConfig: Joi.array().items(notificationConfigKeys).default([]),
 };
 
 export const partnerFees: KeysRequired<PartnerFees> = {
