@@ -4,6 +4,8 @@ import { PartnerService } from "../partner/partner.service";
 import { NotificationPayload } from "./domain/NotificationPayload";
 import { NotificationEventHandlers, NotificationEventTypes } from "./domain/NotificationTypes";
 import { SendOtpEvent } from "./events/SendOtpEvent";
+import { SendWalletUpdateVerificationCodeEvent } from "./events/SendWalletUpdateVerificationCodeEvent";
+import { SendWelcomeMessageEvent } from "./events/SendWelcomeMessageEvent";
 
 export class NotificationService {
   constructor(private readonly eventEmitter: EventEmitter2, private readonly partnerService: PartnerService) {}
@@ -47,6 +49,27 @@ export class NotificationService {
             email: payload.email,
             otp: payload.otp,
             name: payload.firstName,
+          }),
+        );
+        break;
+      case NotificationEventTypes.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendWalletUpdateVerificationCodeEvent({
+            email: payload.email,
+            otp: payload.otp,
+            name: payload.firstName,
+            walletAddress: payload.walletAddress,
+          }),
+        );
+        break;
+      case NotificationEventTypes.SEND_WELCOME_MESSAGE_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendWelcomeMessageEvent({
+            email: payload.email,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
           }),
         );
         break;

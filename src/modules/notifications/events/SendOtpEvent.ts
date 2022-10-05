@@ -1,7 +1,7 @@
 export class SendOtpEvent {
-  public email: string;
-  public otp: string;
-  public name: string;
+  public readonly email: string;
+  public readonly otp: string;
+  public readonly name: string;
 
   constructor({ email, otp, name }) {
     this.email = email;
