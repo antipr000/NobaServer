@@ -301,23 +301,21 @@ export class ConsumerService {
   }
 
   async addOrUpdateCryptoWallet(consumer: Consumer, cryptoWallet: CryptoWallet): Promise<Consumer> {
-    const allCryptoWallets = consumer.props.cryptoWallets;
-    let match = false;
-    for (let i = 0; i < allCryptoWallets.length; i++) {
-      // If we find a matching wallet based on address and partnerID, update it. Otherwise, we will add.
-      if (
-        allCryptoWallets[i].address === cryptoWallet.address &&
-        allCryptoWallets[i].partnerID === cryptoWallet.partnerID
-      ) {
-        // We found a match!
-        allCryptoWallets[i] = cryptoWallet;
-        match = true;
-      }
-    }
+    let allCryptoWallets = consumer.props.cryptoWallets;
+
+    const selectedWallet = allCryptoWallets.filter(
+      wallet => wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID,
+    );
+
+    const remainingWallets = allCryptoWallets.filter(
+      wallet => !(wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID),
+    );
 
     // It's an add
-    if (!match) {
+    if (selectedWallet.length === 0) {
       allCryptoWallets.push(cryptoWallet);
+    } else {
+      allCryptoWallets = [...remainingWallets, cryptoWallet];
     }
 
     // Send the verification OTP to the user
