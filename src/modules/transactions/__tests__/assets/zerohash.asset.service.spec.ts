@@ -825,9 +825,7 @@ describe("ZerohashAssetService", () => {
 
       const expectedTotalFees = output.expectedNobaFee + output.expectedProcessingFee + output.expectedNetworkFee;
       const discountedExpectedTotalFees =
-        output.discountedExpectedNobaFee +
-        output.discountedExpectedProcessingFee +
-        output.discountedExpectedNetworkFee;
+        output.discountedExpectedNobaFee + output.discountedExpectedProcessingFee + output.discountedExpectedNetworkFee;
 
       return {
         quote: {
@@ -858,8 +856,8 @@ describe("ZerohashAssetService", () => {
           totalCryptoQuantity: requestedCryptoQuantity,
           perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
-        }
-      }
+        },
+      };
     };
 
     it("Noba spread percentage is taken into account correctly", async () => {

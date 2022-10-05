@@ -21,7 +21,7 @@ import { SwapServiceProvider } from "../domain/swap.service.provider";
 
 // TODO(#594): Rename class to something proper
 export class SwapAssetService implements AssetService {
-  constructor(private readonly swapServiceProvider: SwapServiceProvider, private readonly assetService: AssetService) { }
+  constructor(private readonly swapServiceProvider: SwapServiceProvider, private readonly assetService: AssetService) {}
 
   async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote> {
     const intermediaryQuoteRequest: QuoteRequestForFixedFiat = {

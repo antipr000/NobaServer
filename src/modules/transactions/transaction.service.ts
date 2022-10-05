@@ -21,7 +21,7 @@ import { TransactionInformation } from "../verification/domain/TransactionInform
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
-import { CombinedNobaQuote, NobaQuote } from "./domain/AssetTypes";
+import { CombinedNobaQuote, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -76,7 +76,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
         `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
-        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
     }
 
@@ -88,57 +88,38 @@ export class TransactionService {
 
     switch (transactionQuoteQuery.fixedSide) {
       case CurrencyType.FIAT:
-        if (assetService.needsIntermediaryLeg()) {
-          nobaQuote = (
-            await assetService.getQuoteForSpecifiedFiatAmount({
-              cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
-              intermediateCryptoCurrency: assetService.getIntermediaryLeg(),
-              fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-              fiatAmount: await this.roundToProperDecimalsForFiatCurrency(
-                transactionQuoteQuery.fiatCurrencyCode,
-                transactionQuoteQuery.fixedAmount,
-              ),
-              discount: {
-                fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-                networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-                nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-                nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-                processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-              },
-            })
-          ).quote;
-        } else {
-          nobaQuote = (
-            await assetService.getQuoteForSpecifiedFiatAmount({
-              cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
-              fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-              fiatAmount: await this.roundToProperDecimalsForFiatCurrency(
-                transactionQuoteQuery.fiatCurrencyCode,
-                transactionQuoteQuery.fixedAmount,
-              ),
-              discount: {
-                fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-                networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-                nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-                nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-                processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-              },
-            })
-          ).quote;
-        }
+        const quoteRequest: QuoteRequestForFixedFiat = {
+          cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+          fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+          fiatAmount: await this.roundToProperDecimalsForFiatCurrency(
+            transactionQuoteQuery.fiatCurrencyCode,
+            transactionQuoteQuery.fixedAmount,
+          ),
+          discount: {
+            fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+            networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+            nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+            nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+            processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+          },
+        };
+        if (assetService.needsIntermediaryLeg())
+          quoteRequest.intermediateCryptoCurrency = assetService.getIntermediaryLeg();
+
+        nobaQuote = (await assetService.getQuoteForSpecifiedFiatAmount(quoteRequest)).quote;
         break;
 
       case CurrencyType.CRYPTO:
         nobaQuote = (
-          await assetService.getQuoteForSpecifiedFiatAmount({
+          await assetService.getQuoteForSpecifiedCryptoQuantity({
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
-            fiatAmount: await this.roundToProperDecimalsForCryptocurrency(
+            cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(
               transactionQuoteQuery.cryptoCurrencyCode,
               transactionQuoteQuery.fixedAmount,
             ),
             discount: {
-              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
               networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
               nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
               nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
@@ -238,7 +219,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
       this.logger.debug(
         `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
-        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
@@ -320,7 +301,7 @@ export class TransactionService {
         cryptoCurrency: transactionRequest.leg2,
         cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(transactionRequest.leg2, cryptoAmount),
         discount: {
-          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
           networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
           nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
           nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
@@ -514,7 +495,8 @@ export class TransactionService {
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
     this.logger.debug(
-      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
+        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
     );
 

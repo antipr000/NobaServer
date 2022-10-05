@@ -118,6 +118,7 @@ export interface NonDiscountedNobaQuote {
   */
   quotedFiatAmount: number; // The amount of fiat we requested worth of crypto from liquidity provider
   totalFiatAmount: number; // The total amount of fiat requested
+
   totalCryptoQuantity: number;
 
   perUnitCryptoPriceWithSpread: number; // Sell rate - this is what the consumer sees
