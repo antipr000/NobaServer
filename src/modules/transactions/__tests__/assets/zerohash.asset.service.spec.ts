@@ -838,7 +838,7 @@ describe("ZerohashAssetService", () => {
           nobaFeeInFiat: output.expectedNobaFee,
           quotedFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit,
           // (X - fees)/perUnitCost = cryptoQuantity
-          totalFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,
+          totalFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit + discountedExpectedTotalFees,
           totalCryptoQuantity: requestedCryptoQuantity,
           perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
@@ -878,15 +878,15 @@ describe("ZerohashAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
-          expectedAmountPreSpread: 160,
+          expectedAmountPreSpread: 100,
           expectedPriceAfterFeeAndSpread: 160 * (1 + 0.6),
 
           discountedExpectedNobaFee: 0,
           discountedExpectedProcessingFee: 0,
           discountedExpectedNetworkFee: 0,
           discountedQuotedCostPerUnit: 16,
-          discountedExpectedPriceAfterFeeAndSpread: 160,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0.6),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
         },
       );
 
@@ -925,8 +925,8 @@ describe("ZerohashAssetService", () => {
           discountedExpectedProcessingFee: 0,
           discountedExpectedNetworkFee: 0,
           discountedQuotedCostPerUnit: 10,
-          discountedExpectedPriceAfterFeeAndSpread: 100,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0),
         },
       );
 
@@ -958,14 +958,14 @@ describe("ZerohashAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
-          expectedPriceAfterFeeAndSpread: 160 * (1 + 0),
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0),
 
           discountedExpectedNobaFee: 0,
           discountedExpectedProcessingFee: 56.25,
           discountedExpectedNetworkFee: 0,
           discountedQuotedCostPerUnit: 10,
-          discountedExpectedPriceAfterFeeAndSpread: 100,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0),
         },
       );
 
@@ -996,14 +996,14 @@ describe("ZerohashAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
-          expectedPriceAfterFeeAndSpread: 160 * (1 + 0),
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0),
 
           discountedExpectedNobaFee: 0,
           discountedExpectedProcessingFee: 20,
           discountedExpectedNetworkFee: 0,
           discountedQuotedCostPerUnit: 10,
-          discountedExpectedPriceAfterFeeAndSpread: 100,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0),
         },
       );
 
@@ -1035,14 +1035,14 @@ describe("ZerohashAssetService", () => {
           expectedNetworkFee: 0,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
-          expectedPriceAfterFeeAndSpread: 160 * (1 + 0),
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0),
 
           discountedExpectedNobaFee: 0,
           discountedExpectedProcessingFee: 87.5,
           discountedExpectedNetworkFee: 0,
           discountedQuotedCostPerUnit: 10,
-          discountedExpectedPriceAfterFeeAndSpread: 100,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0),
         },
       );
 
@@ -1073,15 +1073,15 @@ describe("ZerohashAssetService", () => {
           expectedProcessingFee: 0,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
-          expectedAmountPreSpread: 160,
-          expectedPriceAfterFeeAndSpread: 160 * (1 + 0.6),
+          expectedAmountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 7,
           discountedExpectedProcessingFee: 0,
           discountedExpectedNetworkFee: 0,
           discountedQuotedCostPerUnit: 16,
-          discountedExpectedPriceAfterFeeAndSpread: 160,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0.6),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
         },
       );
 
@@ -1112,15 +1112,15 @@ describe("ZerohashAssetService", () => {
           expectedProcessingFee: 94.5,
           expectedNetworkFee: 0,
           quotedCostPerUnit: 16,
-          expectedAmountPreSpread: 160,
-          expectedPriceAfterFeeAndSpread: 160 * (1 + 0.6),
+          expectedAmountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 8,
           discountedExpectedProcessingFee: 94.5,
           discountedExpectedNetworkFee: 0,
           discountedQuotedCostPerUnit: 16,
-          discountedExpectedPriceAfterFeeAndSpread: 160,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0.6),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
         },
       );
 
@@ -1152,14 +1152,14 @@ describe("ZerohashAssetService", () => {
           expectedNetworkFee: 20,
           quotedCostPerUnit: 10,
           expectedAmountPreSpread: 100,
-          expectedPriceAfterFeeAndSpread: 160 * (1 + 0),
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0),
 
           discountedExpectedNobaFee: 0,
           discountedExpectedProcessingFee: 0,
           discountedExpectedNetworkFee: 20,
           discountedQuotedCostPerUnit: 10,
-          discountedExpectedPriceAfterFeeAndSpread: 100,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0),
         },
       );
 
@@ -1190,15 +1190,15 @@ describe("ZerohashAssetService", () => {
           expectedProcessingFee: 128,
           expectedNetworkFee: 4,
           quotedCostPerUnit: 16,
-          expectedAmountPreSpread: 160,
-          expectedPriceAfterFeeAndSpread: 160 * (1 + 0.6),
+          expectedAmountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 8,
           discountedExpectedProcessingFee: 128,
           discountedExpectedNetworkFee: 4,
           discountedQuotedCostPerUnit: 16,
-          discountedExpectedPriceAfterFeeAndSpread: 160,
-          discountedExpectedAmountPreSpread: 160 * (1 + 0.6),
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
         },
       );
 

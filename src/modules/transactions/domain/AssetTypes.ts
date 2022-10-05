@@ -109,7 +109,7 @@ export interface NonDiscountedNobaQuote {
   cryptoCurrency: string;
 
   processingFeeInFiat: number;
-  amountPreSpread: number; // Amount in fiat before spread calculation
+  amountPreSpread: number; // Amount in fiat before spread calculation. IT IS DISCOUNT AGNOUSTIC.
   networkFeeInFiat: number;
   nobaFeeInFiat: number;
 
