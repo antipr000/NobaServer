@@ -14,6 +14,7 @@ import { LockService } from "./lock.service";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
+import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRepo";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -34,6 +35,10 @@ import { EllipticService } from "./elliptic.service";
     },
     LockService,
     EllipticService,
+    {
+      provide: "CreditCardBinDataRepo",
+      useClass: MongoDBCreditCardBinDataRepo,
+    },
   ],
   exports: [
     CsvService,

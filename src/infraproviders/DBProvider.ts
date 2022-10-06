@@ -23,6 +23,8 @@ import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataM
 import { LockModel } from "../infra/mongodb/models/LockModel";
 import { LockProps } from "../modules/common/domain/Lock";
 import path from "path";
+import { CreditCardBinDataProps } from "../modules/common/domain/CreditCardBinData";
+import { CreditCardBinDataModel } from "../infra/mongodb/models/CreditCardBinDataModel";
 
 @Injectable()
 export class DBProvider {
@@ -95,5 +97,10 @@ export class DBProvider {
     await this.connectToDb();
     await LockModel.ensureIndexes();
     return LockModel;
+  }
+
+  async getCreditCardBinDataModel(): Promise<Model<CreditCardBinDataProps>> {
+    await this.connectToDb();
+    return CreditCardBinDataModel;
   }
 }
