@@ -78,6 +78,9 @@ export class ConsumerController {
         return wallet.partnerID === partner.props._id;
       });
     }
+    entity.props.cryptoWallets = entity.props.cryptoWallets.filter(wallet => {
+      return wallet.partnerID === partner.props._id || wallet.isPrivate === false;
+    });
 
     return this.consumerMapper.toDTO(entity);
   }
@@ -166,7 +169,11 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid crypto wallet details" })
-  async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @Request() request): Promise<ConsumerDTO> {
+  async addCryptoWallet(
+    @Body() requestBody: AddCryptoWalletDTO,
+    @Headers() headers,
+    @Request() request,
+  ): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
@@ -180,7 +187,7 @@ export class ConsumerController {
       isEVMCompatible: requestBody.isEVMCompatible,
       status: WalletStatus.PENDING,
       partnerID: request.user.partnerId,
-    };
+    } as any;
 
     const res = await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
     return this.consumerMapper.toDTO(res);

@@ -279,6 +279,7 @@ describe("TransactionService", () => {
       isEVMCompatible: false,
       status: undefined,
       partnerID: partnerID,
+      isPrivate: false,
     };
 
     const consumerNoPaymentMethod = Consumer.createConsumer({
@@ -2045,6 +2046,8 @@ describe("TransactionService", () => {
       const cryptoWallet: CryptoWallet = {
         address: "fake-wallet-address",
         status: WalletStatus.APPROVED,
+        isPrivate: false,
+        partnerID: "12345",
       };
 
       const currentConsumer = Consumer.createConsumer({

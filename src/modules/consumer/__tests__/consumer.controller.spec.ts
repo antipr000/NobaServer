@@ -66,16 +66,19 @@ describe("ConsumerController", () => {
             address: "wallet-1",
             partnerID: "1111111111",
             status: WalletStatus.APPROVED,
+            isPrivate: false,
           },
           {
             address: "wallet-2",
             partnerID: "2222222222",
             status: WalletStatus.APPROVED,
+            isPrivate: false,
           },
           {
             address: "wallet-3",
             partnerID: "1111111111",
             status: WalletStatus.APPROVED,
+            isPrivate: false,
           },
         ],
       });
@@ -111,11 +114,90 @@ describe("ConsumerController", () => {
           address: "wallet-1",
           partnerID: "1111111111",
           status: WalletStatus.APPROVED,
+          isPrivate: false,
         },
         {
           address: "wallet-3",
           partnerID: "1111111111",
           status: WalletStatus.APPROVED,
+          isPrivate: false,
+        },
+      ];
+      expect(result).toStrictEqual(consumerMapper.toDTO(filteredConsumer));
+    });
+
+    it("should filter the private wallets of 'other partners' in the response", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "1111111111",
+            status: WalletStatus.APPROVED,
+            isPrivate: true,
+          },
+          {
+            address: "wallet-2",
+            partnerID: "2222222222",
+            status: WalletStatus.APPROVED,
+            isPrivate: true,
+          },
+          {
+            address: "wallet-3",
+            partnerID: "1111111111",
+            status: WalletStatus.APPROVED,
+            isPrivate: true,
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      const partner1: Partner = Partner.createPartner({
+        _id: "1111111111",
+        apiKey: "partner-1-api-key",
+        name: "partner1",
+        config: {
+          viewOtherWallets: true,
+        } as any,
+      });
+      const partner2: Partner = Partner.createPartner({
+        _id: "2222222222",
+        apiKey: "partner-2-api-key",
+        name: "partner2",
+        config: {
+          viewOtherWallets: false,
+        } as any,
+      });
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
+      when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
+
+      const result: ConsumerDTO = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      const filteredConsumer: Consumer = consumer;
+      filteredConsumer.props.cryptoWallets = [
+        {
+          address: "wallet-1",
+          partnerID: "1111111111",
+          status: WalletStatus.APPROVED,
+          isPrivate: true,
+        },
+        {
+          address: "wallet-3",
+          partnerID: "1111111111",
+          status: WalletStatus.APPROVED,
+          isPrivate: true,
         },
       ];
       expect(result).toStrictEqual(consumerMapper.toDTO(filteredConsumer));
@@ -138,16 +220,19 @@ describe("ConsumerController", () => {
             address: "wallet-1",
             partnerID: "1111111111",
             status: WalletStatus.APPROVED,
+            isPrivate: false,
           },
           {
             address: "wallet-2",
             partnerID: "2222222222",
             status: WalletStatus.APPROVED,
+            isPrivate: false,
           },
           {
             address: "wallet-3",
             partnerID: "1111111111",
             status: WalletStatus.APPROVED,
+            isPrivate: false,
           },
         ],
       });
