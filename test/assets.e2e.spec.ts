@@ -338,7 +338,7 @@ describe("CryptoCurrencies & Locations", () => {
       })) as ConfigurationsDTO & ResponseStatus;
       expect(config.__status).toBe(200);
 
-      expect(config.lowAmountThreshold).toBe(1);
+      expect(config.lowAmountThreshold).toBe(0.01);
       expect(config.highAmountThreshold).toBe(200);
       expect(config.cryptoImageBaseUrl).toBe(
         "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto",

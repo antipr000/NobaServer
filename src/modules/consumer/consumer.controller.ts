@@ -187,7 +187,8 @@ export class ConsumerController {
       isEVMCompatible: requestBody.isEVMCompatible,
       status: WalletStatus.PENDING,
       partnerID: request.user.partnerId,
-    } as any;
+      isPrivate: true, // default value of 'isPrivate'.
+    };
 
     const res = await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
     return this.consumerMapper.toDTO(res);
@@ -208,7 +209,8 @@ export class ConsumerController {
       throw new ForbiddenException();
     }
 
-    const res = await this.consumerService.removeCryptoWallet(consumer, walletAddress);
+    const partner = await this.partnerService.getPartnerFromApiKey(request.headers[X_NOBA_API_KEY.toLowerCase()]);
+    const res = await this.consumerService.removeCryptoWallet(consumer, walletAddress, partner.props._id);
     return this.consumerMapper.toDTO(res);
   }
 

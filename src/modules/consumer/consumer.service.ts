@@ -306,9 +306,22 @@ export class ConsumerService {
   }
 
   async addOrUpdateCryptoWallet(consumer: Consumer, cryptoWallet: CryptoWallet): Promise<Consumer> {
-    const otherCryptoWallets = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet => existingCryptoWallet.address !== cryptoWallet.address,
+    let allCryptoWallets = consumer.props.cryptoWallets;
+
+    const selectedWallet = allCryptoWallets.filter(
+      wallet => wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID,
     );
+
+    const remainingWallets = allCryptoWallets.filter(
+      wallet => !(wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID),
+    );
+
+    // It's an add
+    if (selectedWallet.length === 0) {
+      allCryptoWallets.push(cryptoWallet);
+    } else {
+      allCryptoWallets = [...remainingWallets, cryptoWallet];
+    }
 
     // Send the verification OTP to the user
     if (cryptoWallet.status == WalletStatus.PENDING) {
@@ -327,14 +340,15 @@ export class ConsumerService {
 
     const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
-      cryptoWallets: [...otherCryptoWallets, cryptoWallet],
+      cryptoWallets: allCryptoWallets,
     });
     return updatedConsumer;
   }
 
-  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {
+  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string, partnerID: string): Promise<Consumer> {
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet => existingCryptoWallet.address !== cryptoWalletAddress,
+      existingCryptoWallet =>
+        existingCryptoWallet.address !== cryptoWalletAddress && existingCryptoWallet.partnerID !== partnerID,
     );
 
     const updatedConsumer = await this.updateConsumer({
