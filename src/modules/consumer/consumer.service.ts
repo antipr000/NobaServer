@@ -6,7 +6,6 @@ import { Result } from "../../core/logic/Result";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
 import { CheckoutService } from "../common/checkout.service";
 import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
-import { EmailService } from "../common/email.service";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { Partner } from "../partner/domain/Partner";
@@ -22,6 +21,8 @@ import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
+import { NotificationService } from "../notifications/notification.service";
+import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class ConsumerService {
@@ -32,7 +33,7 @@ export class ConsumerService {
   private readonly consumerRepo: IConsumerRepo;
 
   @Inject()
-  private readonly emailService: EmailService;
+  private readonly notificationService: NotificationService;
 
   @Inject()
   private readonly kmsService: KmsService;
@@ -76,7 +77,11 @@ export class ConsumerService {
         ],
       });
       const result = await this.consumerRepo.createConsumer(newConsumer);
-      await this.emailService.sendWelcomeMessage(emailOrPhone, result.props.firstName, result.props.lastName);
+      await this.notificationService.sendNotification(NotificationEventTypes.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
+        email: emailOrPhone,
+        firstName: result.props.firstName,
+        lastName: result.props.lastName,
+      });
       return result;
     } else if (
       consumerResult.getValue().props.partners.filter(partner => partner.partnerID === partnerID).length === 0

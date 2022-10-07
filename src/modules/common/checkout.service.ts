@@ -18,7 +18,7 @@ import {
 } from "../transactions/domain/CheckoutConstants";
 import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
 import { BINValidity } from "../common/dto/CreditCardDTO";
-import { EmailService } from "./email.service";
+import { EmailService } from "../notifications/email.service";
 import { CreditCardService } from "./creditcard.service";
 import { CheckoutResponseData } from "./domain/CheckoutResponseData";
 import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
