@@ -8,4 +8,5 @@ export type CryptoWallet = {
   status: WalletStatus;
   partnerID?: string;
   riskScore?: number;
+  isPrivate: boolean;
 };

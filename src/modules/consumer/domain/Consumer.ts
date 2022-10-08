@@ -79,6 +79,7 @@ const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
   status: Joi.string().optional(),
   partnerID: Joi.string().optional(), // TODO(#466) - Make required
   riskScore: Joi.number().optional(),
+  isPrivate: Joi.boolean().optional(),
 };
 
 const addressValidationJoiKeys: KeysRequired<Address> = {

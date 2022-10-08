@@ -9,6 +9,8 @@ import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodRespo
 import { EmailService } from "../common/email.service";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
+import { Partner } from "../partner/domain/Partner";
+import { PartnerService } from "../partner/partner.service";
 import { Transaction } from "../transactions/domain/Transaction";
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
@@ -43,6 +45,9 @@ export class ConsumerService {
 
   @Inject("OTPRepo")
   private readonly otpRepo: IOTPRepo;
+
+  @Inject()
+  private readonly partnerService: PartnerService;
 
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
@@ -322,6 +327,16 @@ export class ConsumerService {
     if (cryptoWallet.status == WalletStatus.PENDING) {
       await this.sendWalletVerificationOTP(consumer, cryptoWallet.address);
     }
+
+    const partner: Partner = await this.partnerService.getPartner(cryptoWallet.partnerID);
+    if (partner.props.config === null || partner.props.config === undefined) {
+      partner.props.config = {} as any;
+    }
+    // By default the wallet is private.
+    cryptoWallet.isPrivate =
+      partner.props.config.privateWallets === null || partner.props.config.privateWallets === undefined
+        ? true
+        : partner.props.config.privateWallets;
 
     const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
