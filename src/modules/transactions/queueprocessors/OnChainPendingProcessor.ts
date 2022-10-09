@@ -4,7 +4,6 @@ import { Logger } from "winston";
 import { TransactionStatus, TransactionQueueName } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { ConsumerService } from "../../consumer/consumer.service";
-import { EmailService } from "../../common/email.service";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
@@ -12,6 +11,8 @@ import { LockService } from "../../../modules/common/lock.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { AssetService } from "../assets/asset.service";
 import { ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
 
 export class OnChainPendingProcessor extends MessageProcessor {
   constructor(
@@ -21,7 +22,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
     lockService: LockService,
-    private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
     private readonly assetServiceFactory: AssetServiceFactory,
   ) {
     super(
@@ -105,27 +106,31 @@ export class OnChainPendingProcessor extends MessageProcessor {
     // Make webhook callback to partner
     await this.transactionService.callTransactionConfirmWebhook(consumer, transaction);
 
-    await this.emailService.sendOrderExecutedEmail(
-      consumer.props.firstName,
-      consumer.props.lastName,
-      consumer.props.displayEmail,
+    await this.notificationService.sendNotification(
+      NotificationEventTypes.SEND_ORDER_EXECUTED_EVENT,
+      transaction.props.partnerID,
       {
-        transactionID: transaction.props._id,
-        transactionTimestamp: transaction.props.transactionTimestamp,
-        settledTimestamp: new Date(),
-        transactionHash: transaction.props.blockchainTransactionId,
-        paymentMethod: paymentMethod.cardType,
-        last4Digits: paymentMethod.last4Digits,
-        currencyCode: transaction.props.leg1,
-        conversionRate: transaction.props.exchangeRate,
-        processingFee: transaction.props.processingFee,
-        networkFee: transaction.props.networkFee,
-        nobaFee: transaction.props.nobaFee,
-        totalPrice: transaction.props.leg1Amount,
-        cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
-        cryptoCurrency: transaction.props.leg2,
-        cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
-        // TODO(#): Evaluate if we need to send "settledAmount" as well :)
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.displayEmail,
+        orderExecutedParams: {
+          transactionID: transaction.props._id,
+          transactionTimestamp: transaction.props.transactionTimestamp,
+          settledTimestamp: new Date(),
+          transactionHash: transaction.props.blockchainTransactionId,
+          paymentMethod: paymentMethod.cardType,
+          last4Digits: paymentMethod.last4Digits,
+          currencyCode: transaction.props.leg1,
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+          cryptoCurrency: transaction.props.leg2,
+          cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
+          // TODO(#): Evaluate if we need to send "settledAmount" as well :)
+        },
       },
     );
   }

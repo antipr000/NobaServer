@@ -16,6 +16,7 @@ import { PartnerService } from "../../partner/partner.service";
 import { WalletStatus } from "../domain/VerificationStatus";
 import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
 import { Partner } from "../../../modules/partner/domain/Partner";
+import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -365,7 +366,9 @@ describe("ConsumerController", () => {
         email: "mock@noba.com",
       });
 
-      when(consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
+      when(
+        consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest), "partner-1"),
+      ).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
           paymentMethods: [
@@ -385,7 +388,8 @@ describe("ConsumerController", () => {
       const result = await consumerController.addPaymentMethod(paymentMethodRequest, {
         user: {
           entity: consumer,
-        },
+          partnerId: "partner-1",
+        } as AuthenticatedUser,
       });
 
       expect(result._id).toBe(consumer.props._id);
@@ -415,7 +419,9 @@ describe("ConsumerController", () => {
         email: "mock@noba.com",
       });
 
-      when(consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
+      when(
+        consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest), "partner-1"),
+      ).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
           paymentMethods: [
@@ -434,7 +440,8 @@ describe("ConsumerController", () => {
       const result = await consumerController.addPaymentMethod(paymentMethodRequest, {
         user: {
           entity: consumer,
-        },
+          partnerId: "partner-1",
+        } as AuthenticatedUser,
       });
 
       expect(result._id).toBe(consumer.props._id);

@@ -38,6 +38,7 @@ import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { PartnerService } from "../partner/partner.service";
 import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
+import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -118,12 +119,12 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
   async addPaymentMethod(@Body() requestBody: AddPaymentMethodDTO, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
+    const user: AuthenticatedUser = request.user;
+    const consumer = user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
-
-    const res = await this.consumerService.addPaymentMethod(consumer, requestBody);
+    const res = await this.consumerService.addPaymentMethod(consumer, requestBody, user.partnerId);
     return this.consumerMapper.toDTO(res);
   }
 
@@ -137,12 +138,12 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
   async deletePaymentMethod(@Param("paymentToken") paymentToken: string, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
+    const user: AuthenticatedUser = request.user;
+    const consumer = user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
-
-    const res = await this.consumerService.removePaymentMethod(consumer, paymentToken);
+    const res = await this.consumerService.removePaymentMethod(consumer, paymentToken, user.partnerId);
     return this.consumerMapper.toDTO(res);
   }
 

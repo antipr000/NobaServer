@@ -14,11 +14,13 @@ import { CommonModule } from "./modules/common/common.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { PartnerModule } from "./modules/partner/partner.module";
 import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 @Module({
   imports: [
     CustomConfigModule,
     getWinstonModule(),
+    EventEmitterModule.forRoot(),
     InfraProvidersModule,
     CommonModule,
     AuthModule,

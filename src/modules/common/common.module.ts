@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import {} from "aws-sdk";
-import { CheckoutService } from "./checkout.service";
 import { CsvService } from "./csv.service";
 import { CreditCardService } from "./creditcard.service";
 import { CurrencyService } from "./currency.service";
@@ -20,7 +19,6 @@ import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRep
   providers: [
     DBProvider,
     CsvService,
-    CheckoutService,
     SMSService,
     KmsService,
     CurrencyService,
@@ -40,7 +38,6 @@ import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRep
   ],
   exports: [
     CsvService,
-    CheckoutService,
     SMSService,
     KmsService,
     CurrencyService,

@@ -8,7 +8,6 @@ import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyService } from "../common/currency.service";
 import { CurrencyType } from "../common/domain/Types";
-import { EmailService } from "../common/email.service";
 import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
@@ -39,6 +38,8 @@ import { EllipticService } from "../common/elliptic.service";
 import { TransactionFilterOptions } from "./domain/Types";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
+import { NotificationService } from "../notifications/notification.service";
+import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class TransactionService {
@@ -56,7 +57,7 @@ export class TransactionService {
     private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
-    @Inject(EmailService) private readonly emailService: EmailService,
+    @Inject(NotificationService) private readonly notificationService: NotificationService,
   ) {
     this.transactionsMapper = new TransactionMapper();
     this.nobaTransactionConfigs = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction;
@@ -461,23 +462,27 @@ export class TransactionService {
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
-      await this.emailService.sendTransactionInitiatedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.displayEmail,
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_TRANSACTION_INITIATED_EVENT,
+        transaction.props.partnerID,
         {
-          transactionID: transaction.props._id,
-          transactionTimestamp: transaction.props.transactionTimestamp,
-          paymentMethod: paymentMethod.cardType,
-          last4Digits: paymentMethod.last4Digits,
-          currencyCode: transaction.props.leg1,
-          conversionRate: transaction.props.exchangeRate,
-          processingFee: transaction.props.processingFee,
-          networkFee: transaction.props.networkFee,
-          nobaFee: transaction.props.nobaFee,
-          totalPrice: transaction.props.leg1Amount,
-          cryptoAmount: transaction.props.leg2Amount,
-          cryptoCurrency: transaction.props.leg2,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+          transactionInitiatedParams: {
+            transactionID: transaction.props._id,
+            transactionTimestamp: transaction.props.transactionTimestamp,
+            paymentMethod: paymentMethod.cardType,
+            last4Digits: paymentMethod.last4Digits,
+            currencyCode: transaction.props.leg1,
+            conversionRate: transaction.props.exchangeRate,
+            processingFee: transaction.props.processingFee,
+            networkFee: transaction.props.networkFee,
+            nobaFee: transaction.props.nobaFee,
+            totalPrice: transaction.props.leg1Amount,
+            cryptoAmount: transaction.props.leg2Amount,
+            cryptoCurrency: transaction.props.leg2,
+          },
         },
       );
     } catch (e) {

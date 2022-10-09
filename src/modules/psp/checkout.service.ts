@@ -18,13 +18,14 @@ import {
 } from "../transactions/domain/CheckoutConstants";
 import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
 import { BINValidity } from "../common/dto/CreditCardDTO";
-import { EmailService } from "../notifications/email.service";
-import { CreditCardService } from "./creditcard.service";
-import { CheckoutResponseData } from "./domain/CheckoutResponseData";
-import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
+import { CreditCardService } from "../common/creditcard.service";
+import { CheckoutResponseData } from "../common/domain/CheckoutResponseData";
+import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
 import { Transaction } from "../transactions/domain/Transaction";
 import { PaymentRequestResponse, CheckoutPaymentStatus, FiatTransactionStatus } from "../consumer/domain/Types";
 import { Utils } from "../../core/utils/Utils";
+import { NotificationService } from "../notifications/notification.service";
+import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class CheckoutService {
@@ -34,7 +35,7 @@ export class CheckoutService {
   private readonly logger: Logger;
 
   @Inject()
-  private readonly emailService: EmailService;
+  private readonly notificationService: NotificationService;
 
   @Inject()
   private readonly creditCardService: CreditCardService;
@@ -50,6 +51,7 @@ export class CheckoutService {
   public async addPaymentMethod(
     consumer: Consumer,
     paymentMethod: AddPaymentMethodDTO,
+    partnerId: string,
   ): Promise<AddPaymentMethodResponse> {
     const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
       paymentProviderAccount => paymentProviderAccount.providerID === PaymentProviders.CHECKOUT,
@@ -157,6 +159,7 @@ export class CheckoutService {
         paymentMethod.cardNumber,
         "verification",
         "verification",
+        partnerId,
       );
     } catch (e) {
       if (e instanceof CardProcessingException) {
@@ -167,11 +170,15 @@ export class CheckoutService {
     }
 
     if (response.paymentMethodStatus === PaymentMethodStatus.REJECTED) {
-      await this.emailService.sendCardAdditionFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.displayEmail,
-        paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_CARD_ADDITION_FAILED_EVENT,
+        partnerId,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+          last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+        },
       );
       throw new BadRequestException(CardFailureExceptionText.DECLINE);
     } else if (response.paymentMethodStatus === PaymentMethodStatus.FLAGGED) {
@@ -255,6 +262,7 @@ export class CheckoutService {
       null,
       transaction.props.sessionKey,
       transaction.props._id,
+      transaction.props.partnerID,
     );
 
     switch (response.paymentMethodStatus) {
@@ -297,6 +305,7 @@ export class CheckoutService {
     cardNumber: string,
     sessionID: string,
     transactionID: string,
+    partnerId: string,
   ): Promise<CheckoutResponseData> {
     const response: CheckoutResponseData = new CheckoutResponseData();
     response.responseCode = checkoutResponse["response_code"];
@@ -381,17 +390,17 @@ export class CheckoutService {
       }
     } finally {
       if (sendNobaEmail) {
-        this.emailService.sendHardDeclineEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.email,
-          sessionID,
-          transactionID,
-          instrumentID,
-          PaymentProviders.CHECKOUT,
-          response.responseCode,
-          response.responseSummary,
-        );
+        await this.notificationService.sendNotification(NotificationEventTypes.SEND_HARD_DECLINE_EVENT, partnerId, {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+          sessionID: sessionID,
+          transactionID: transactionID,
+          paymentToken: instrumentID,
+          processor: PaymentProviders.CHECKOUT,
+          responseCode: response.responseCode,
+          responseSummary: response.responseCode,
+        });
       }
     }
 

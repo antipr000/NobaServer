@@ -5,11 +5,12 @@ import { ConsumerService } from "../../consumer/consumer.service";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus, TransactionQueueName } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
-import { EmailService } from "../../../modules/common/email.service";
 import { MessageProcessor } from "./message.processor";
 import { SqsClient } from "./sqs.client";
 import { TransactionService } from "../transaction.service";
 import { LockService } from "../../../modules/common/lock.service";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
 
 export class TransactionFailedProcessor extends MessageProcessor {
   constructor(
@@ -18,7 +19,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
     sqsClient: SqsClient,
     consumerService: ConsumerService,
     transactionService: TransactionService,
-    private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
     lockService: LockService,
   ) {
     super(
@@ -88,24 +89,28 @@ export class TransactionFailedProcessor extends MessageProcessor {
         transaction.props.transactionExceptions[transaction.props.transactionExceptions.length - 1].message;
     }
 
-    await this.emailService.sendOrderFailedEmail(
-      consumer.props.firstName,
-      consumer.props.lastName,
-      consumer.props.email,
+    await this.notificationService.sendNotification(
+      NotificationEventTypes.SEND_ORDER_FAILED_EVENT,
+      transaction.props.partnerID,
       {
-        transactionID: transaction.props._id,
-        transactionTimestamp: transaction.props.transactionTimestamp,
-        paymentMethod: paymentMethod.cardType,
-        last4Digits: paymentMethod.last4Digits,
-        currencyCode: transaction.props.leg1,
-        conversionRate: transaction.props.exchangeRate,
-        processingFee: transaction.props.processingFee,
-        networkFee: transaction.props.networkFee,
-        nobaFee: transaction.props.nobaFee,
-        totalPrice: transaction.props.leg1Amount,
-        cryptoAmount: transaction.props.leg2Amount,
-        cryptoCurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
-        failureReason: errorMessage,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.displayEmail,
+        orderFailedParams: {
+          transactionID: transaction.props._id,
+          transactionTimestamp: transaction.props.transactionTimestamp,
+          paymentMethod: paymentMethod.cardType,
+          last4Digits: paymentMethod.last4Digits,
+          currencyCode: transaction.props.leg1,
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.leg2Amount,
+          cryptoCurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
+          failureReason: errorMessage,
+        },
       },
     );
   }

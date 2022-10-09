@@ -1,9 +1,7 @@
 import { Module } from "@nestjs/common";
-import { ConsumerModule } from "../consumer/consumer.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { ConfigModule } from "@nestjs/config";
-import { CommonModule } from "../common/common.module";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
 import { PartnerController } from "./partner.controller";
@@ -11,7 +9,7 @@ import { MongoDBPartnerRepo } from "./repo/MongoDBPartnerRepo";
 import { MongoDBPartnerAdminRepo } from "./repo/MongoDBPartnerAdminRepo";
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, CommonModule],
+  imports: [InfraProvidersModule, ConfigModule],
   controllers: [PartnerController],
   providers: [
     DBProvider,

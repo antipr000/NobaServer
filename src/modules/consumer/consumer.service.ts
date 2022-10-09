@@ -4,7 +4,7 @@ import { Logger } from "winston";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { Result } from "../../core/logic/Result";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
-import { CheckoutService } from "../common/checkout.service";
+import { CheckoutService } from "../psp/checkout.service";
 import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
@@ -124,10 +124,11 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerId);
   }
 
-  async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
+  async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO, partnerId: string): Promise<Consumer> {
     const addPaymentMethodResponse: AddPaymentMethodResponse = await this.checkoutService.addPaymentMethod(
       consumer,
       paymentMethod,
+      partnerId,
     );
 
     if (addPaymentMethodResponse.updatedConsumerData) {
@@ -140,13 +141,13 @@ export class ConsumerService {
         throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
       }
 
-      await this.emailService.sendCardAddedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.displayEmail,
-        addPaymentMethodResponse.newPaymentMethod.cardType,
-        addPaymentMethodResponse.newPaymentMethod.last4Digits,
-      );
+      await this.notificationService.sendNotification(NotificationEventTypes.SEND_CARD_ADDED_EVENT, partnerId, {
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.displayEmail,
+        cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardType,
+        last4Digits: addPaymentMethodResponse.newPaymentMethod.last4Digits,
+      });
       return result;
     }
   }
@@ -176,7 +177,7 @@ export class ConsumerService {
     }
   }
 
-  async removePaymentMethod(consumer: Consumer, paymentToken: string): Promise<Consumer> {
+  async removePaymentMethod(consumer: Consumer, paymentToken: string, partnerId: string): Promise<Consumer> {
     const paymentMethod = consumer.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken === paymentToken,
     );
@@ -203,13 +204,13 @@ export class ConsumerService {
 
     const result = await this.updateConsumer(updatedConsumer);
 
-    await this.emailService.sendCardDeletedEmail(
-      consumer.props.firstName,
-      consumer.props.lastName,
-      consumer.props.displayEmail,
-      paymentMethod[0].cardType,
-      paymentMethod[0].last4Digits,
-    );
+    await this.notificationService.sendNotification(NotificationEventTypes.SEND_CARD_DELETED_EVENT, partnerId, {
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      email: consumer.props.displayEmail,
+      cardNetwork: paymentMethod[0].cardType,
+      last4Digits: paymentMethod[0].last4Digits,
+    });
     return result;
   }
 
@@ -255,15 +256,19 @@ export class ConsumerService {
     });
   }
 
-  async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string) {
+  async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string, partnerId: string) {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
     await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, "CONSUMER");
     await this.otpRepo.saveOTP(consumer.props.email, otp, "CONSUMER");
-    await this.emailService.sendWalletUpdateVerificationCode(
-      consumer.props.email,
-      otp.toString(),
-      walletAddress,
-      consumer.props.firstName,
+    await this.notificationService.sendNotification(
+      NotificationEventTypes.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+      partnerId,
+      {
+        email: consumer.props.displayEmail,
+        otp: otp.toString(),
+        walletAddress: walletAddress,
+        firstName: consumer.props.firstName,
+      },
     );
   }
 
@@ -330,7 +335,7 @@ export class ConsumerService {
 
     // Send the verification OTP to the user
     if (cryptoWallet.status == WalletStatus.PENDING) {
-      await this.sendWalletVerificationOTP(consumer, cryptoWallet.address);
+      await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, cryptoWallet.partnerID);
     }
 
     const partner: Partner = await this.partnerService.getPartner(cryptoWallet.partnerID);

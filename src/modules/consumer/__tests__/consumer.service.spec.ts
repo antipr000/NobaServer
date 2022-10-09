@@ -1,22 +1,20 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getMockOtpRepoWithDefaults } from "../../../modules/auth/mocks/MockOtpRepo";
 import { IOTPRepo } from "../../../modules/auth/repo/OTPRepo";
-import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { CheckoutService } from "../../../modules/common/checkout.service";
+import { CheckoutService } from "../../psp/checkout.service";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
-import { EmailService } from "../../../modules/common/email.service";
 import { KmsService } from "../../../modules/common/kms.service";
-import { getMockEmailServiceWithDefaults } from "../../../modules/common/mocks/mock.email.service";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
 import { PaymentProviders } from "../domain/PaymentProviderDetails";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { Result } from "../../../core/logic/Result";
-import { getMockCheckoutServiceWithDefaults } from "../../../modules/common/mocks/mock.checkout.service";
+import { getMockCheckoutServiceWithDefaults } from "../../psp/mocks/mock.checkout.service";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
 import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
@@ -32,11 +30,14 @@ import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.part
 import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
 import { Partner } from "../../partner/domain/Partner";
 import { CryptoWallet } from "../domain/CryptoWallet";
+import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
   let consumerRepo: IConsumerRepo;
-  let emailService: EmailService;
+  let notificationService: NotificationService;
   let mockOtpRepo: IOTPRepo;
   let checkoutService: CheckoutService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
@@ -46,7 +47,7 @@ describe("ConsumerService", () => {
 
   beforeEach(async () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
-    emailService = getMockEmailServiceWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
     checkoutService = getMockCheckoutServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
@@ -73,8 +74,8 @@ describe("ConsumerService", () => {
         ConsumerRepoProvider,
         ConsumerService,
         {
-          provide: EmailService,
-          useFactory: () => instance(emailService),
+          provide: NotificationService,
+          useFactory: () => instance(notificationService),
         },
         {
           provide: "OTPRepo",
@@ -124,10 +125,20 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
       when(consumerRepo.createConsumer(anything())).thenResolve(consumer);
-      when(emailService.sendWelcomeMessage(email, undefined, undefined)).thenResolve();
 
       const response = await consumerService.createConsumerIfFirstTimeLogin(email, partnerId);
       expect(response).toStrictEqual(consumer);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_WELCOME_MESSAGE_EVENT,
+          partnerId,
+          deepEqual({
+            email: email,
+            firstName: undefined,
+            lastName: undefined,
+          }),
+        ),
+      ).once();
     });
 
     it("should update partner details if consumer already exists and is added for new partner", async () => {
@@ -337,7 +348,7 @@ describe("ConsumerService", () => {
         PaymentMethodStatus.APPROVED,
       );
 
-      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve(
+      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
         addPaymentMethodResponse,
       );
 
@@ -347,19 +358,22 @@ describe("ConsumerService", () => {
         consumerRepo.updateConsumer(deepEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData))),
       ).thenResolve(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData));
 
-      when(
-        emailService.sendCardAddedEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.email,
-          addPaymentMethodResponse.newPaymentMethod.cardType,
-          addPaymentMethodResponse.newPaymentMethod.last4Digits,
-        ),
-      ).thenResolve();
-
-      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod);
+      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
 
       expect(response).toStrictEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData));
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_CARD_ADDED_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.email,
+            cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardType,
+            last4Digits: addPaymentMethodResponse.newPaymentMethod.last4Digits,
+          }),
+        ),
+      ).once();
     });
 
     it("throws error when payment method is UNSUPPORTED", async () => {
@@ -399,7 +413,7 @@ describe("ConsumerService", () => {
         PaymentMethodStatus.UNSUPPORTED,
       );
 
-      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve(
+      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
         addPaymentMethodResponse,
       );
 
@@ -409,17 +423,8 @@ describe("ConsumerService", () => {
         Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData),
       );
 
-      when(
-        emailService.sendCardAddedEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.email,
-          addPaymentMethodResponse.newPaymentMethod.cardType,
-          addPaymentMethodResponse.newPaymentMethod.last4Digits,
-        ),
-      ).thenResolve();
       try {
-        await consumerService.addPaymentMethod(consumer, addPaymentMethod);
+        await consumerService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
         verify(
@@ -597,7 +602,7 @@ describe("ConsumerService", () => {
       });
 
       try {
-        await consumerService.removePaymentMethod(consumer, paymentToken);
+        await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
@@ -640,7 +645,7 @@ describe("ConsumerService", () => {
       });
 
       try {
-        await consumerService.removePaymentMethod(consumer, paymentToken);
+        await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
@@ -691,21 +696,22 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(checkoutService.removePaymentMethod(paymentToken)).thenResolve();
-      when(
-        emailService.sendCardDeletedEmail(anyString(), anyString(), anyString(), anyString(), anyString()),
-      ).thenResolve();
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
 
-      const response = await consumerService.removePaymentMethod(consumer, paymentToken);
+      const response = await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
       expect(response).toStrictEqual(updatedConsumer);
       expect(response.props.paymentMethods.length).toBe(0);
       verify(
-        emailService.sendCardDeletedEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.email,
-          consumer.props.paymentMethods[0].cardType,
-          consumer.props.paymentMethods[0].last4Digits,
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_CARD_DELETED_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.email,
+            cardNetwork: consumer.props.paymentMethods[0].cardType,
+            last4Digits: consumer.props.paymentMethods[0].last4Digits,
+          }),
         ),
       ).once();
     });

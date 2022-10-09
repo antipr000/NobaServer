@@ -144,7 +144,7 @@ describe("AdminService", () => {
 
       when(mockAdminAuthService.createOtp()).thenReturn(otp);
       when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
-      when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
+      when(mockAdminAuthService.sendOtp(adminEmail, otp.toString(), partnerId)).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
 
       await authController.loginUser(
@@ -165,7 +165,7 @@ describe("AdminService", () => {
 
       when(mockConsumerAuthService.createOtp()).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString(), partnerId)).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(
@@ -186,7 +186,7 @@ describe("AdminService", () => {
 
       when(mockConsumerAuthService.createOtp()).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString(), partnerId)).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(
@@ -222,7 +222,7 @@ describe("AdminService", () => {
 
       when(mockPartnerAuthService.createOtp()).thenReturn(otp);
       when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp)).thenResolve();
-      when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString())).thenResolve();
+      when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString(), partnerId)).thenResolve();
       when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(

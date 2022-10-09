@@ -13,6 +13,8 @@ import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.mo
 import { AssetsModule } from "./assets/assets.module";
 import { SquidService } from "./squid.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
+import { NotificationsModule } from "../notifications/notification.module";
+import { PspModule } from "../psp/psp.module";
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
     PartnerModule,
     AsyncTransactionProcessorModule,
     AssetsModule,
+    NotificationsModule,
+    PspModule,
   ],
   controllers: [TransactionController],
   providers: [

@@ -50,6 +50,7 @@ export class PartnerService {
           spreadDiscountPercent: request.spreadDiscountPercent ?? 0,
           takeRate: request.takeRate,
         },
+        notificationConfig: [],
       },
     });
     const partnerResult: Partner = await this.partnerRepo.addPartner(partner);

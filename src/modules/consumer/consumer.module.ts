@@ -8,9 +8,11 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
 import { ConsumerController } from "./consumer.controller";
 import { ConsumerService } from "./consumer.service";
 import { MongoDBConsumerRepo } from "./repos/MongoDBConsumerRepo";
+import { NotificationsModule } from "../notifications/notification.module";
+import { PspModule } from "../psp/psp.module";
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule, PartnerModule],
+  imports: [InfraProvidersModule, CommonModule, PartnerModule, NotificationsModule, PspModule],
   controllers: [ConsumerController],
   providers: [
     ConsumerService,

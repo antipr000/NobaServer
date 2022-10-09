@@ -7,7 +7,6 @@ import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { MessageProcessor } from "./message.processor";
 import { SqsClient } from "./sqs.client";
-import { EmailService } from "../../../modules/common/email.service";
 import { LockService } from "../../../modules/common/lock.service";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
@@ -17,6 +16,8 @@ import {
   ConsumerWalletTransferResponse,
   PollStatus,
 } from "../domain/AssetTypes";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
 
 export class CryptoTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -26,7 +27,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
     consumerService: ConsumerService,
     transactionService: TransactionService,
     lockService: LockService,
-    private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
     private readonly assetServiceFactory: AssetServiceFactory,
   ) {
     super(
@@ -134,24 +135,28 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
       }
 
       // TODO: Check, we are already sending email in TransactionFailedProcessor. Is it needed here?
-      await this.emailService.sendCryptoFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.displayEmail,
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_CRYPTO_FAILED_EVENT,
+        transaction.props.partnerID,
         {
-          transactionID: transaction.props._id,
-          transactionTimestamp: transaction.props.transactionTimestamp,
-          paymentMethod: paymentMethod.cardType,
-          last4Digits: paymentMethod.last4Digits,
-          currencyCode: transaction.props.leg1,
-          conversionRate: transaction.props.exchangeRate,
-          processingFee: transaction.props.processingFee,
-          networkFee: transaction.props.networkFee,
-          nobaFee: transaction.props.nobaFee,
-          totalPrice: transaction.props.leg1Amount,
-          cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
-          cryptoCurrency: transaction.props.leg2,
-          failureReason: "Failed to settle crypto transaction", // TODO: Better message
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+          cryptoFailedParams: {
+            transactionID: transaction.props._id,
+            transactionTimestamp: transaction.props.transactionTimestamp,
+            paymentMethod: paymentMethod.cardType,
+            last4Digits: paymentMethod.last4Digits,
+            currencyCode: transaction.props.leg1,
+            conversionRate: transaction.props.exchangeRate,
+            processingFee: transaction.props.processingFee,
+            networkFee: transaction.props.networkFee,
+            nobaFee: transaction.props.nobaFee,
+            totalPrice: transaction.props.leg1Amount,
+            cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+            cryptoCurrency: transaction.props.leg2,
+            failureReason: "Failed to settle crypto transaction", // TODO: Better message
+          },
         },
       );
       return;

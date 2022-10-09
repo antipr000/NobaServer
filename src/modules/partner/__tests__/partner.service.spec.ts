@@ -66,6 +66,7 @@ describe("PartnerService", () => {
             spreadDiscountPercent: 0,
             takeRate: takeRate,
           },
+          notificationConfig: [],
         },
       });
       when(partnerRepo.addPartner(anything())).thenResolve(partner);
@@ -116,6 +117,7 @@ describe("PartnerService", () => {
             spreadDiscountPercent: 5,
             takeRate: takeRate,
           },
+          notificationConfig: [],
         },
       });
       when(partnerRepo.addPartner(anything())).thenResolve(partner);
@@ -200,14 +202,14 @@ describe("PartnerService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
-        config: { fees: { takeRate: newTakeRate } as any },
+        config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },
       });
 
       when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
       when(partnerRepo.updatePartner(deepEqual(updatePartner))).thenResolve(updatePartner);
 
       const result = await partnerService.updatePartner(partner.props._id, {
-        config: { fees: { takeRate: newTakeRate } as any },
+        config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },
       });
       expect(result).toStrictEqual(updatePartner);
     });

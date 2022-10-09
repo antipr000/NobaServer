@@ -23,8 +23,6 @@ import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { ObjectType } from "../../../../modules/common/domain/ObjectType";
 import { CryptoTransactionStatusProcessor } from "../../queueprocessors/CryptoTransactionStatusProcessor";
-import { EmailService } from "../../../../modules/common/email.service";
-import { getMockEmailServiceWithDefaults } from "../../../../modules/common/mocks/mock.email.service";
 import { AssetService } from "../../assets/asset.service";
 import { PollStatus } from "../../domain/AssetTypes";
 import { TransactionService } from "../../transaction.service";
@@ -38,6 +36,8 @@ import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
 import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
 import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
+import { NotificationService } from "../../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../../modules/notifications/mocks/mock.notification.service";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -71,7 +71,7 @@ describe("CryptoTransactionStatusProcessor", () => {
   let mongoClient: MongoClient;
   let transactionCollection: Collection;
   let lockService: LockService;
-  let emailService: EmailService;
+  let notificationService: NotificationService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -93,7 +93,7 @@ describe("CryptoTransactionStatusProcessor", () => {
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     sqsClient = getMockSqsClientWithDefaults();
     lockService = getMockLockServiceWithDefaults();
-    emailService = getMockEmailServiceWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
     transactionService = getMockTransactionServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `FiatTransactionInitiator` will be initiated
@@ -133,8 +133,8 @@ describe("CryptoTransactionStatusProcessor", () => {
           useFactory: () => instance(lockService),
         },
         {
-          provide: EmailService,
-          useFactory: () => instance(emailService),
+          provide: NotificationService,
+          useFactory: () => instance(notificationService),
         },
         CryptoTransactionStatusProcessor,
       ],
@@ -426,8 +426,6 @@ describe("CryptoTransactionStatusProcessor", () => {
         paymentMethods: [paymentMethod],
       }),
     );
-
-    when(emailService.sendCryptoFailedEmail(anything(), anything(), anything(), anything())).thenResolve();
 
     await cryptoTransactionStatusProcessor.processMessageInternal(transaction.props._id);
 

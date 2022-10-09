@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, deepEqual, instance, when, verify, anyString, capture } from "ts-mockito";
+import { anything, deepEqual, instance, when, verify, capture } from "ts-mockito";
 import { VerificationService } from "../verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { IVerificationDataRepo } from "../repos/IVerificationDataRepo";
@@ -12,8 +12,6 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { BadRequestException } from "@nestjs/common";
-import { EmailService } from "../../../modules/common/email.service";
-import { getMockEmailServiceWithDefaults } from "../../../modules/common/mocks/mock.email.service";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { DocumentVerificationStatus, KYCStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
@@ -36,13 +34,17 @@ import { Multer } from "multer";
 import { Readable } from "stream";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { DocumentTypes } from "../domain/DocumentTypes";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
+import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
   let verificationRepo: IVerificationDataRepo;
   let consumerService: ConsumerService;
   let idvProvider: IDVProvider;
-  let emailService: EmailService;
+  let notificationService: NotificationService;
+  let partnerId;
 
   jest.setTimeout(30000);
   const OLD_ENV = process.env;
@@ -59,7 +61,8 @@ describe("VerificationService", () => {
     verificationRepo = getMockVerificationRepoWithDefaults();
     idvProvider = getMockIdvProviderIntegrationWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
-    emailService = getMockEmailServiceWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
+    partnerId = "partner-1";
 
     const verificationDataRepoProvider = {
       provide: "VerificationDataRepo",
@@ -77,8 +80,8 @@ describe("VerificationService", () => {
     };
 
     const emailServiceProvider = {
-      provide: EmailService,
-      useFactory: () => instance(emailService),
+      provide: NotificationService,
+      useFactory: () => instance(notificationService),
     };
 
     const app: TestingModule = await Test.createTestingModule({
@@ -139,6 +142,7 @@ describe("VerificationService", () => {
           testConsumerInformation.userID,
           "session-1234",
           testConsumerInformation,
+          partnerId,
         );
         expect(true).toBe(false);
       } catch (e) {
@@ -167,6 +171,7 @@ describe("VerificationService", () => {
           testConsumerInformation.userID,
           "session-1234",
           testConsumerInformation,
+          partnerId,
         );
         expect(true).toBe(false);
       } catch (e) {
@@ -195,6 +200,7 @@ describe("VerificationService", () => {
           testConsumerInformation.userID,
           "session-1234",
           testConsumerInformation,
+          partnerId,
         );
         expect(true).toBe(false);
       } catch (e) {
@@ -236,20 +242,25 @@ describe("VerificationService", () => {
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
-      when(
-        emailService.sendKycApprovedUSEmail(
-          consumerInformation.firstName,
-          consumerInformation.lastName,
-          consumer.props.email,
-        ),
-      ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(
         consumer.props._id,
         sessionKey,
         consumerInformation,
+        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: newConsumerData.firstName,
+            lastName: newConsumerData.lastName,
+            email: newConsumerData.email,
+          }),
+        ),
+      ).once();
     });
 
     it("should verify ConsumerInformation when idvProvider returns APPROVED for non-US user", async () => {
@@ -285,20 +296,25 @@ describe("VerificationService", () => {
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
-      when(
-        emailService.sendKycApprovedNonUSEmail(
-          consumerInformation.firstName,
-          consumerInformation.lastName,
-          consumer.props.email,
-        ),
-      ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(
         consumer.props._id,
         sessionKey,
         consumerInformation,
+        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: newConsumerData.firstName,
+            lastName: newConsumerData.lastName,
+            email: newConsumerData.email,
+          }),
+        ),
+      ).once();
     });
 
     it("should return REJECTED status when Sardine marks consumerInformation as high risk and should send denied email", async () => {
@@ -335,20 +351,25 @@ describe("VerificationService", () => {
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
-      when(
-        emailService.sendKycDeniedEmail(
-          consumerInformation.firstName,
-          consumerInformation.lastName,
-          consumer.props.displayEmail,
-        ),
-      ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(
         consumer.props._id,
         sessionKey,
         consumerInformation,
+        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_DENIED_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: newConsumerData.firstName,
+            lastName: newConsumerData.lastName,
+            email: newConsumerData.email,
+          }),
+        ),
+      ).once();
     });
 
     it("should return PENDING status when Sardine marks consumerInformation as medium risk and should send flagged email", async () => {
@@ -384,20 +405,25 @@ describe("VerificationService", () => {
         consumerVerificationResult,
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
-      when(
-        emailService.sendKycPendingOrFlaggedEmail(
-          consumerInformation.firstName,
-          consumerInformation.lastName,
-          consumer.props.displayEmail,
-        ),
-      ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(
         consumer.props._id,
         sessionKey,
         consumerInformation,
+        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: newConsumerData.firstName,
+            lastName: newConsumerData.lastName,
+            email: newConsumerData.email,
+          }),
+        ),
+      ).once();
     });
   });
 
@@ -423,16 +449,24 @@ describe("VerificationService", () => {
       when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
         Consumer.createConsumer(newConsumerProps),
       );
-      when(
-        emailService.sendKycApprovedUSEmail(
-          newConsumerProps.firstName,
-          newConsumerProps.lastName,
-          newConsumerProps.email,
-        ),
-      ).thenResolve();
 
-      const result = await verificationService.getDocumentVerificationResult(consumer.props._id, verificationId);
+      const result = await verificationService.getDocumentVerificationResult(
+        consumer.props._id,
+        verificationId,
+        partnerId,
+      );
       expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: newConsumerProps.firstName,
+            lastName: newConsumerProps.lastName,
+            email: newConsumerProps.email,
+          }),
+        ),
+      ).once();
     });
 
     it("should set status as REJECTED when document verification fails because of document invalid size or type", async () => {
@@ -456,16 +490,24 @@ describe("VerificationService", () => {
       when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
         Consumer.createConsumer(newConsumerProps),
       );
-      when(
-        emailService.sendDocVerificationFailedTechEmail(
-          newConsumerProps.firstName,
-          newConsumerProps.lastName,
-          newConsumerProps.email,
-        ),
-      ).thenResolve();
 
-      const result = await verificationService.getDocumentVerificationResult(consumer.props._id, verificationId);
+      const result = await verificationService.getDocumentVerificationResult(
+        consumer.props._id,
+        verificationId,
+        partnerId,
+      );
       expect(result.status).toBe(DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: newConsumerProps.firstName,
+            lastName: newConsumerProps.lastName,
+            email: newConsumerProps.email,
+          }),
+        ),
+      ).once();
     });
   });
 
@@ -506,18 +548,22 @@ describe("VerificationService", () => {
           deepEqual(documentVerificationResult),
         ),
       ).thenResolve();
-      when(
-        emailService.sendKycApprovedUSEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.displayEmail,
-        ),
-      ).thenResolve();
 
       const result = await verificationService.processDocumentVerificationWebhookResult(
         documentVerificationWebhookRequest,
       );
       expect(result).toStrictEqual(documentVerificationResult);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          undefined,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.email,
+          }),
+        ),
+      ).once();
     });
 
     it("should return status REJECTED_DOCUMENT_REQUIRES_RECAPTURE when document verification is rejected and needs recapture", async () => {
@@ -556,18 +602,22 @@ describe("VerificationService", () => {
           deepEqual(documentVerificationResult),
         ),
       ).thenResolve();
-      when(
-        emailService.sendDocVerificationRejectedEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.displayEmail,
-        ),
-      ).thenResolve();
 
       const result = await verificationService.processDocumentVerificationWebhookResult(
         documentVerificationWebhookRequest,
       );
       expect(result).toStrictEqual(documentVerificationResult);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+          undefined,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.displayEmail,
+          }),
+        ),
+      ).once();
     });
   });
 
@@ -657,16 +707,19 @@ describe("VerificationService", () => {
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
       when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
-      when(emailService.sendKycApprovedUSEmail(anyString(), anyString(), anyString())).thenResolve();
 
       await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
 
       verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
       verify(
-        emailService.sendKycApprovedUSEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.displayEmail,
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          undefined,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.displayEmail,
+          }),
         ),
       ).once();
     });
@@ -697,16 +750,20 @@ describe("VerificationService", () => {
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
       when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
-      when(emailService.sendKycApprovedNonUSEmail(anyString(), anyString(), anyString())).thenResolve();
 
       await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
 
       verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
+
       verify(
-        emailService.sendKycApprovedNonUSEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.displayEmail,
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+          undefined,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.displayEmail,
+          }),
         ),
       ).once();
     });
@@ -737,13 +794,20 @@ describe("VerificationService", () => {
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
       when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
-      when(emailService.sendKycDeniedEmail(anyString(), anyString(), anyString())).thenResolve();
 
       await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
 
       verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
       verify(
-        emailService.sendKycDeniedEmail(consumer.props.firstName, consumer.props.lastName, consumer.props.displayEmail),
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_DENIED_EVENT,
+          undefined,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.email,
+          }),
+        ),
       ).once();
     });
   });
@@ -770,17 +834,26 @@ describe("VerificationService", () => {
         verificationId,
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
-      when(emailService.sendKycPendingOrFlaggedEmail(anyString(), anyString(), anyString())).thenResolve();
 
-      const result = await verificationService.verifyDocument(consumer.props._id, sessionKey, documentInformation);
+      const result = await verificationService.verifyDocument(
+        consumer.props._id,
+        sessionKey,
+        documentInformation,
+        partnerId,
+      );
       const updateUserArgs = capture(consumerService.updateConsumer).first()[0];
 
       expect(result).toBe(verificationId);
+
       verify(
-        emailService.sendKycPendingOrFlaggedEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.displayEmail,
+        notificationService.sendNotification(
+          NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+          partnerId,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.email,
+          }),
         ),
       ).once();
 

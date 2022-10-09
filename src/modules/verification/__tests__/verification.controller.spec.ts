@@ -11,6 +11,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
 import { NotFoundException } from "@nestjs/common";
+import { AuthenticatedUser } from "src/modules/auth/domain/AuthenticatedUser";
 
 describe("VerificationController", () => {
   let verificationController: VerificationController;
@@ -83,7 +84,12 @@ describe("VerificationController", () => {
       };
 
       when(
-        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
+        verificationService.verifyConsumerInformation(
+          consumerInfo.userID,
+          "test-session",
+          deepEqual(consumerInfo),
+          "partner-1",
+        ),
       ).thenResolve({
         status: KYCStatus.APPROVED,
       });
@@ -98,7 +104,7 @@ describe("VerificationController", () => {
           dateOfBirth: consumerInfo.dateOfBirth,
         },
         {
-          user: { entity: Consumer.createConsumer(consumer) },
+          user: { entity: Consumer.createConsumer(consumer), partnerId: "partner-1" } as AuthenticatedUser,
         },
       );
 
@@ -133,7 +139,12 @@ describe("VerificationController", () => {
       };
 
       when(
-        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
+        verificationService.verifyConsumerInformation(
+          consumerInfo.userID,
+          "test-session",
+          deepEqual(consumerInfo),
+          "partner-1",
+        ),
       ).thenResolve({
         status: KYCStatus.REJECTED,
       });
@@ -148,7 +159,7 @@ describe("VerificationController", () => {
           dateOfBirth: consumerInfo.dateOfBirth,
         },
         {
-          user: { entity: Consumer.createConsumer(consumer) },
+          user: { entity: Consumer.createConsumer(consumer), partnerId: "partner-1" } as AuthenticatedUser,
         },
       );
 
@@ -183,7 +194,12 @@ describe("VerificationController", () => {
       };
 
       when(
-        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
+        verificationService.verifyConsumerInformation(
+          consumerInfo.userID,
+          "test-session",
+          deepEqual(consumerInfo),
+          "partner-1",
+        ),
       ).thenResolve({
         status: KYCStatus.FLAGGED,
       });
@@ -198,7 +214,7 @@ describe("VerificationController", () => {
           dateOfBirth: consumerInfo.dateOfBirth,
         },
         {
-          user: { entity: Consumer.createConsumer(consumer) },
+          user: { entity: Consumer.createConsumer(consumer), partnerId: "partner-1" } as AuthenticatedUser,
         },
       );
 
@@ -226,18 +242,19 @@ describe("VerificationController", () => {
         },
       });
 
-      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
+      when(
+        verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2", "partner-1"),
+      ).thenResolve({
         status: DocumentVerificationStatus.APPROVED,
       });
 
       try {
         await verificationController.getDocumentVerificationResult("fake-transaction-2", {
-          user: {
-            entity: consumer,
-          },
+          user: { entity: consumer, partnerId: "partner-1" } as AuthenticatedUser,
         });
         expect(true).toBe(false);
       } catch (e) {
+        console.log(e);
         expect(e).toBeInstanceOf(NotFoundException);
       }
     });
@@ -261,14 +278,14 @@ describe("VerificationController", () => {
         },
       });
 
-      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
+      when(
+        verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2", "partner-1"),
+      ).thenResolve({
         status: DocumentVerificationStatus.APPROVED,
       });
 
       const result = await verificationController.getDocumentVerificationResult("fake-transaction-2", {
-        user: {
-          entity: consumer,
-        },
+        user: { entity: consumer, partnerId: "partner-1" } as AuthenticatedUser,
       });
       expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
     });

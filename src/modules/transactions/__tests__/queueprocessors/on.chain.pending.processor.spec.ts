@@ -21,8 +21,6 @@ import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentPro
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
 import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
 import { VerificationService } from "../../../../modules/verification/verification.service";
-import { EmailService } from "../../../common/email.service";
-import { getMockEmailServiceWithDefaults } from "../../../common/mocks/mock.email.service";
 import { ConsumerService } from "../../../consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
 import { AssetService } from "../../assets/asset.service";
@@ -40,6 +38,8 @@ import { OnChainPendingProcessor } from "../../queueprocessors/OnChainPendingPro
 import { SqsClient } from "../../queueprocessors/sqs.client";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../../transaction.service";
+import { NotificationService } from "../../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../../modules/notifications/mocks/mock.notification.service";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -75,7 +75,7 @@ describe("OnChainPendingProcessor", () => {
   let transactionCollection: Collection;
   let verificationService: VerificationService;
   let lockService: LockService;
-  let emailService: EmailService;
+  let notificationService: NotificationService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -100,7 +100,7 @@ describe("OnChainPendingProcessor", () => {
     lockService = getMockLockServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     assetService = getMockAssetServiceWithDefaults();
-    emailService = getMockEmailServiceWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `OnChainPendingProcessor` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -144,8 +144,8 @@ describe("OnChainPendingProcessor", () => {
           useFactory: () => instance(assetServiceFactory),
         },
         {
-          provide: EmailService,
-          useFactory: () => instance(emailService),
+          provide: NotificationService,
+          useFactory: () => instance(notificationService),
         },
         OnChainPendingProcessor,
       ],
@@ -267,14 +267,6 @@ describe("OnChainPendingProcessor", () => {
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
-    when(
-      emailService.sendOrderExecutedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.email,
-        anything(),
-      ),
-    ).thenResolve();
     when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
     when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve();
 
@@ -321,14 +313,6 @@ describe("OnChainPendingProcessor", () => {
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
-    when(
-      emailService.sendOrderExecutedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.email,
-        anything(),
-      ),
-    ).thenResolve();
     when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);
@@ -418,14 +402,6 @@ describe("OnChainPendingProcessor", () => {
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
-    when(
-      emailService.sendOrderExecutedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.email,
-        anything(),
-      ),
-    ).thenResolve();
     when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
     when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve();
 

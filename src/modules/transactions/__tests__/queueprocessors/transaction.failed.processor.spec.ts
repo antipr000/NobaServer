@@ -20,8 +20,6 @@ import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentPro
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
 import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
 import { VerificationService } from "../../../../modules/verification/verification.service";
-import { EmailService } from "../../../common/email.service";
-import { getMockEmailServiceWithDefaults } from "../../../common/mocks/mock.email.service";
 import { ConsumerService } from "../../../consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
 import { AssetService } from "../../assets/asset.service";
@@ -39,6 +37,8 @@ import { SqsClient } from "../../queueprocessors/sqs.client";
 import { TransactionFailedProcessor } from "../../queueprocessors/TransactionFailedProcessor";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../../transaction.service";
+import { NotificationService } from "../../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../../modules/notifications/mocks/mock.notification.service";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -74,7 +74,7 @@ describe("TransactionFailedProcessor", () => {
   let transactionCollection: Collection;
   let verificationService: VerificationService;
   let lockService: LockService;
-  let emailService: EmailService;
+  let notificationService: NotificationService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -99,7 +99,7 @@ describe("TransactionFailedProcessor", () => {
     lockService = getMockLockServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     assetService = getMockAssetServiceWithDefaults();
-    emailService = getMockEmailServiceWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `TransactionFailedProcessor` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -143,8 +143,8 @@ describe("TransactionFailedProcessor", () => {
           useFactory: () => instance(assetServiceFactory),
         },
         {
-          provide: EmailService,
-          useFactory: () => instance(emailService),
+          provide: NotificationService,
+          useFactory: () => instance(notificationService),
         },
         TransactionFailedProcessor,
       ],
@@ -238,15 +238,6 @@ describe("TransactionFailedProcessor", () => {
       transactionStatus: TransactionStatus.FIAT_INCOMING_FAILED,
       _id: transaction.props._id as any,
     });
-
-    when(
-      emailService.sendOrderFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.email,
-        anything(),
-      ),
-    ).thenResolve();
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     await transactionFailedProcessor.processMessageInternal(transaction.props._id);
 
@@ -268,14 +259,6 @@ describe("TransactionFailedProcessor", () => {
       _id: transaction.props._id as any,
     });
 
-    when(
-      emailService.sendOrderFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.email,
-        anything(),
-      ),
-    ).thenResolve();
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     await transactionFailedProcessor.processMessageInternal(transaction.props._id);
 
@@ -297,14 +280,6 @@ describe("TransactionFailedProcessor", () => {
       _id: transaction.props._id as any,
     });
 
-    when(
-      emailService.sendOrderFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.email,
-        anything(),
-      ),
-    ).thenResolve();
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     await transactionFailedProcessor.processMessageInternal(transaction.props._id);
 
@@ -325,15 +300,6 @@ describe("TransactionFailedProcessor", () => {
       transactionStatus: TransactionStatus.FIAT_INCOMING_REVERSAL_FAILED,
       _id: transaction.props._id as any,
     });
-
-    when(
-      emailService.sendOrderFailedEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.email,
-        anything(),
-      ),
-    ).thenResolve();
     when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
     await transactionFailedProcessor.processMessageInternal(transaction.props._id);
 

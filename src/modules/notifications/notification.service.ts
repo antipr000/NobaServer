@@ -32,26 +32,41 @@ export class NotificationService {
 
   async sendNotification(
     eventType: NotificationEventTypes,
-    partnerApiKey: string,
+    partnerID: string,
     payload: NotificationPayload,
   ): Promise<void> {
-    const partner = await this.partnerService.getPartnerFromApiKey(partnerApiKey);
-
-    const notificationConfigs: NotificationConfiguration[] = partner.props.config.notificationConfig;
-
-    const filteredNotificationEvents = notificationConfigs.filter(
-      notificationConfig => notificationConfig.notificationEventType === eventType,
-    );
-
     let notificationEvent: NotificationConfiguration = null;
+    if (partnerID) {
+      try {
+        // Partner exists in db. Read configurations set by partner
+        const partner = await this.partnerService.getPartner(partnerID);
 
-    if (filteredNotificationEvents.length === 0) {
+        const notificationConfigs: NotificationConfiguration[] = partner.props.config?.notificationConfig ?? [];
+
+        const filteredNotificationEvents = notificationConfigs.filter(
+          notificationConfig => notificationConfig.notificationEventType === eventType,
+        );
+
+        if (filteredNotificationEvents.length === 0) {
+          notificationEvent = {
+            notificationEventType: eventType,
+            notificationEventHandler: [NotificationEventHandlers.EMAIL],
+          };
+        } else {
+          notificationEvent = filteredNotificationEvents[0];
+        }
+      } catch (e) {
+        // PartnerId does not exist in db. Send only email
+        notificationEvent = {
+          notificationEventType: eventType,
+          notificationEventHandler: [NotificationEventHandlers.EMAIL],
+        };
+      }
+    } else {
       notificationEvent = {
         notificationEventType: eventType,
         notificationEventHandler: [NotificationEventHandlers.EMAIL],
       };
-    } else {
-      notificationEvent = filteredNotificationEvents[0];
     }
 
     notificationEvent.notificationEventHandler.forEach(eventHandler => {

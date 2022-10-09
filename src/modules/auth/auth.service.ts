@@ -4,10 +4,11 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IOTPRepo } from "./repo/OTPRepo";
 import { Otp } from "./domain/Otp";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
-import { EmailService } from "../common/email.service";
+import { NotificationService } from "../notifications/notification.service";
 import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PartnerService } from "../partner/partner.service";
+import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export abstract class AuthService {
@@ -18,7 +19,7 @@ export abstract class AuthService {
   private readonly otpRepo: IOTPRepo;
 
   @Inject()
-  private readonly emailService: EmailService;
+  private readonly notificationService: NotificationService;
 
   @Inject()
   private readonly smsService: SMSService;
@@ -77,10 +78,13 @@ export abstract class AuthService {
   }
 
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
-  async sendOtp(emailOrPhone: string, otp: string): Promise<void> {
+  async sendOtp(emailOrPhone: string, otp: string, partnerId: string): Promise<void> {
     const isEmail = emailOrPhone.includes("@");
     if (isEmail) {
-      await this.emailService.sendOtp(emailOrPhone, otp);
+      await this.notificationService.sendNotification(NotificationEventTypes.SEND_OTP_EVENT, partnerId, {
+        email: emailOrPhone,
+        otp: otp,
+      });
     } else {
       await this.smsService.sendOtp(emailOrPhone, otp);
     }

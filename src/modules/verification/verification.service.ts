@@ -13,12 +13,13 @@ import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
 import { TransactionInformation } from "./domain/TransactionInformation";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
-import { EmailService } from "../common/email.service";
 import {
   CaseNotificationWebhookRequest,
   DocumentVerificationWebhookRequest,
   SardineDeviceInformationResponse,
 } from "./integrations/SardineTypeDefinitions";
+import { NotificationService } from "../notifications/notification.service";
+import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class VerificationService {
@@ -32,7 +33,7 @@ export class VerificationService {
   private readonly verificationDataRepo: IVerificationDataRepo;
 
   @Inject()
-  private readonly emailService: EmailService;
+  private readonly notificationService: NotificationService;
 
   constructor(private consumerService: ConsumerService) {}
 
@@ -40,6 +41,7 @@ export class VerificationService {
     consumerID: string,
     sessionKey: string,
     consumerInformation: ConsumerInformation,
+    partnerId: string,
   ): Promise<ConsumerVerificationResult> {
     if (consumerInformation.dateOfBirth && !isValidDateOfBirth(consumerInformation.dateOfBirth)) {
       throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
@@ -74,30 +76,38 @@ export class VerificationService {
     if (result.status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       if (isUS) {
-        await this.emailService.sendKycApprovedUSEmail(
-          updatedConsumer.props.firstName,
-          updatedConsumer.props.lastName,
-          updatedConsumer.props.displayEmail,
-        );
+        await this.notificationService.sendNotification(NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT, partnerId, {
+          firstName: updatedConsumer.props.firstName,
+          lastName: updatedConsumer.props.lastName,
+          email: updatedConsumer.props.displayEmail,
+        });
       } else {
-        await this.emailService.sendKycApprovedNonUSEmail(
-          updatedConsumer.props.firstName,
-          updatedConsumer.props.lastName,
-          updatedConsumer.props.displayEmail,
+        await this.notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+          partnerId,
+          {
+            firstName: updatedConsumer.props.firstName,
+            lastName: updatedConsumer.props.lastName,
+            email: updatedConsumer.props.displayEmail,
+          },
         );
       }
     } else if (result.status === KYCStatus.REJECTED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
-      await this.emailService.sendKycDeniedEmail(
-        updatedConsumer.props.firstName,
-        updatedConsumer.props.lastName,
-        updatedConsumer.props.displayEmail,
-      );
+      await this.notificationService.sendNotification(NotificationEventTypes.SEND_KYC_DENIED_EVENT, partnerId, {
+        firstName: updatedConsumer.props.firstName,
+        lastName: updatedConsumer.props.lastName,
+        email: updatedConsumer.props.displayEmail,
+      });
     } else {
-      await this.emailService.sendKycPendingOrFlaggedEmail(
-        updatedConsumer.props.firstName,
-        updatedConsumer.props.lastName,
-        updatedConsumer.props.displayEmail,
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
+        partnerId,
+        {
+          firstName: updatedConsumer.props.firstName,
+          lastName: updatedConsumer.props.lastName,
+          email: updatedConsumer.props.displayEmail,
+        },
       );
     }
     return result;
@@ -122,23 +132,35 @@ export class VerificationService {
 
       if (result.status === KYCStatus.APPROVED) {
         if (consumer.props.address.countryCode.toLocaleLowerCase() === "us") {
-          await this.emailService.sendKycApprovedUSEmail(
-            consumer.props.firstName,
-            consumer.props.lastName,
-            consumer.props.displayEmail,
+          await this.notificationService.sendNotification(
+            NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+            /* partnerId= */ undefined,
+            {
+              firstName: consumer.props.firstName,
+              lastName: consumer.props.lastName,
+              email: consumer.props.displayEmail,
+            },
           );
         } else {
-          await this.emailService.sendKycApprovedNonUSEmail(
-            consumer.props.firstName,
-            consumer.props.lastName,
-            consumer.props.displayEmail,
+          await this.notificationService.sendNotification(
+            NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+            /* partnerId= */ undefined,
+            {
+              firstName: consumer.props.firstName,
+              lastName: consumer.props.lastName,
+              email: consumer.props.displayEmail,
+            },
           );
         }
       } else if (result.status === KYCStatus.REJECTED) {
-        await this.emailService.sendKycDeniedEmail(
-          consumer.props.firstName,
-          consumer.props.lastName,
-          consumer.props.displayEmail,
+        await this.notificationService.sendNotification(
+          NotificationEventTypes.SEND_KYC_DENIED_EVENT,
+          /* partnerId= */ undefined,
+          {
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            email: consumer.props.displayEmail,
+          },
         );
       }
     }
@@ -148,6 +170,7 @@ export class VerificationService {
     consumerID: string,
     sessionKey: string,
     documentInformation: DocumentInformation,
+    partnerId: string,
   ): Promise<string> {
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
     let id: string;
@@ -164,23 +187,35 @@ export class VerificationService {
         },
       };
     } catch (e) {
-      this.emailService.sendDocVerificationFailedTechEmail(
-        consumer.props.firstName,
-        consumer.props.lastName,
-        consumer.props.displayEmail,
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
+        partnerId,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+        },
       );
       throw e;
     }
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
-    await this.emailService.sendKycPendingOrFlaggedEmail(
-      updatedConsumer.props.firstName,
-      updatedConsumer.props.lastName,
-      updatedConsumer.props.displayEmail,
+    await this.notificationService.sendNotification(
+      NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+      partnerId,
+      {
+        firstName: updatedConsumer.props.firstName,
+        lastName: updatedConsumer.props.lastName,
+        email: updatedConsumer.props.displayEmail,
+      },
     );
     return id;
   }
 
-  async getDocumentVerificationResult(consumerID: string, verificationID: string): Promise<DocumentVerificationResult> {
+  async getDocumentVerificationResult(
+    consumerID: string,
+    verificationID: string,
+    partnerId: string,
+  ): Promise<DocumentVerificationResult> {
     const result = await this.idvProvider.getDocumentVerificationResult(verificationID);
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
     const newConsumerData: ConsumerProps = {
@@ -190,22 +225,31 @@ export class VerificationService {
         documentVerificationStatus: result.status,
       },
     };
-    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+    await this.consumerService.updateConsumer(newConsumerData);
 
     if (
       result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
-      await this.emailService.sendKycApprovedUSEmail(
-        updatedConsumer.props.firstName,
-        updatedConsumer.props.lastName,
-        updatedConsumer.props.displayEmail,
-      );
-    } else if (result.status === DocumentVerificationStatus.REJECTED) {
-      await this.emailService.sendDocVerificationRejectedEmail(
-        updatedConsumer.props.firstName,
-        updatedConsumer.props.lastName,
-        updatedConsumer.props.displayEmail,
+      await this.notificationService.sendNotification(NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT, partnerId, {
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.displayEmail,
+      });
+    } else if (
+      result.status === DocumentVerificationStatus.REJECTED ||
+      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE ||
+      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY ||
+      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE
+    ) {
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        partnerId,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+        },
       );
     }
 
@@ -229,24 +273,37 @@ export class VerificationService {
         documentVerificationStatus: result.status,
       },
     };
-    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+    await this.consumerService.updateConsumer(newConsumerData);
 
     if (
       result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
       await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
-      await this.emailService.sendKycApprovedUSEmail(
-        updatedConsumer.props.firstName,
-        updatedConsumer.props.lastName,
-        updatedConsumer.props.displayEmail,
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+        /* partnerId= */ undefined,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+        },
       );
-    } else if (result.status === DocumentVerificationStatus.REJECTED) {
+    } else if (
+      result.status === DocumentVerificationStatus.REJECTED ||
+      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE ||
+      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY ||
+      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE
+    ) {
       await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
-      await this.emailService.sendDocVerificationRejectedEmail(
-        updatedConsumer.props.firstName,
-        updatedConsumer.props.lastName,
-        updatedConsumer.props.displayEmail,
+      await this.notificationService.sendNotification(
+        NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        /* partnerId= */ undefined,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          email: consumer.props.displayEmail,
+        },
       );
     }
     return result;

@@ -36,9 +36,7 @@ import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { CurrencyService } from "../../common/currency.service";
 import { CurrencyType } from "../../common/domain/Types";
-import { EmailService } from "../../common/email.service";
 import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.currency.service";
-import { getMockEmailServiceWithDefaults } from "../../common/mocks/mock.email.service";
 import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Consumer } from "../../consumer/domain/Consumer";
@@ -69,6 +67,8 @@ import { getMockZerohashServiceWithDefaults } from "../mocks/mock.zerohash.servi
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -89,7 +89,7 @@ describe("TransactionService", () => {
   let zerohashService: ZeroHashService;
   let verificationService: VerificationService;
   let currencyService: CurrencyService;
-  let emailService: EmailService;
+  let notificationService: NotificationService;
   let partnerService: PartnerService;
   let assetServiceFactory: AssetServiceFactory;
   let assetService: AssetService;
@@ -114,7 +114,7 @@ describe("TransactionService", () => {
     zerohashService = getMockZerohashServiceWithDefaults();
     currencyService = getMockCurrencyServiceWithDefaults();
     verificationService = getMockVerificationServiceWithDefaults();
-    emailService = getMockEmailServiceWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     ellipticService = getMockEllipticServiceWithDefaults();
@@ -149,8 +149,8 @@ describe("TransactionService", () => {
           useFactory: () => instance(verificationService),
         },
         {
-          provide: EmailService,
-          useFactory: () => instance(emailService),
+          provide: NotificationService,
+          useFactory: () => instance(notificationService),
         },
         {
           provide: PartnerService,
@@ -580,7 +580,7 @@ describe("TransactionService", () => {
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
-      when(emailService.sendTransactionInitiatedEmail(anything(), anything(), anything(), anything())).thenThrow(
+      when(notificationService.sendNotification(anyString(), anyString(), anything())).thenThrow(
         new Error("Unable to send email"),
       );
       when(partnerService.getPartner(partnerID)).thenResolve(partner);

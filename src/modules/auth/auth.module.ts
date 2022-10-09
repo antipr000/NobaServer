@@ -17,6 +17,7 @@ import { PartnerModule } from "../partner/partner.module";
 import { PartnerAuthService } from "./partner.auth.service";
 import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 import { HeaderValidationService } from "./header.validation.service";
+import { NotificationsModule } from "../notifications/notification.module";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { HeaderValidationService } from "./header.validation.service";
     InfraProvidersModule,
     ConfigModule,
     CommonModule,
+    NotificationsModule,
   ],
   providers: [
     JwtStrategy,

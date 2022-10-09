@@ -8,9 +8,10 @@ import { MongoDBVerificationDataRepo } from "./repos/MongoDBVerificationDataRepo
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { CommonModule } from "../common/common.module";
+import { NotificationsModule } from "../notifications/notification.module";
 
 @Module({
-  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule],
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule],
   controllers: [VerificationController],
   providers: [
     VerificationService,
@@ -29,7 +30,7 @@ import { CommonModule } from "../common/common.module";
 export class VerificationModule {}
 
 @Module({
-  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule],
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule],
   controllers: [VerificationWebhookController],
   providers: [
     VerificationService,

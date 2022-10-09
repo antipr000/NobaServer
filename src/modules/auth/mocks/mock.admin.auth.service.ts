@@ -9,7 +9,7 @@ export const getMockAdminAuthServiceWithDefaults = () => {
   );
   when(mockAdminAuthService.generateAccessToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockAdminAuthService.saveOtp(anyString(), anyString())).thenReject(new Error("Not implemented!"));
-  when(mockAdminAuthService.sendOtp(anyString(), anyString())).thenReject(new Error("Not implemented!"));
+  when(mockAdminAuthService.sendOtp(anyString(), anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockAdminAuthService.createOtp()).thenReject(new Error("Not implemented!"));
   when(mockAdminAuthService.verifyUserExistence(anyString())).thenReject(new Error("Not implemented!"));
 

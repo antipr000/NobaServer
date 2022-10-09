@@ -4,8 +4,6 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { PartnerAdminService } from "../../../modules/partner/partneradmin.service";
 import { getMockPartnerAdminServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.admin.service";
-import { EmailService } from "../../../../src/modules/common/email.service";
-import { getMockEmailServiceWithDefaults } from "../../../../src/modules/common/mocks/mock.email.service";
 import { getMockSmsServiceWithDefaults } from "../../../../src/modules/common/mocks/mock.sms.service";
 import { SMSService } from "../../../../src/modules/common/sms.service";
 import { instance, when } from "ts-mockito";
@@ -19,13 +17,15 @@ import { PartnerAdmin } from "../../../../src/modules/partner/domain/PartnerAdmi
 import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID } from "../../../config/ConfigurationUtils";
 import { PartnerService } from "../../../modules/partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 
 describe("PartnerAuthService", () => {
   jest.setTimeout(5000);
 
   let mockPartnerAdminService: PartnerAdminService;
   let mockOtpRepo: IOTPRepo;
-  let mockEmailService: EmailService;
+  let mockNotificationService: NotificationService;
   let mockSmsService: SMSService;
   let mockPartnerService: PartnerService;
 
@@ -56,7 +56,7 @@ describe("PartnerAuthService", () => {
   beforeEach(async () => {
     mockPartnerAdminService = getMockPartnerAdminServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
-    mockEmailService = getMockEmailServiceWithDefaults();
+    mockNotificationService = getMockNotificationServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
     mockPartnerService = getMockPartnerServiceWithDefaults();
 
@@ -80,8 +80,8 @@ describe("PartnerAuthService", () => {
           useFactory: () => instance(mockOtpRepo),
         },
         {
-          provide: EmailService,
-          useFactory: () => instance(mockEmailService),
+          provide: NotificationService,
+          useFactory: () => instance(mockNotificationService),
         },
         {
           provide: SMSService,

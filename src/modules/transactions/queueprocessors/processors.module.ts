@@ -20,6 +20,8 @@ import { SqsClient } from "./sqs.client";
 import { TransactionFailedProcessor } from "./TransactionFailedProcessor";
 import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactionProcessor";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
+import { NotificationsModule } from "../../../modules/notifications/notification.module";
+import { PspModule } from "../../../modules/psp/psp.module";
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { SanctionedCryptoWalletService } from "../../../modules/common/sanctione
     VerificationModule,
     PartnerModule,
     getWinstonModule(),
+    NotificationsModule,
+    PspModule,
   ],
   controllers: [],
   providers: [

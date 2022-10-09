@@ -14,6 +14,7 @@ import {
   ForbiddenException,
   HttpCode,
   NotFoundException,
+  BadRequestException,
 } from "@nestjs/common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import {
@@ -48,6 +49,7 @@ import { DocumentVerificationResultDTO } from "./dto/DocumentVerificationResultD
 import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificationWebhookRequestDTO";
 import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";
 import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
+import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -92,12 +94,20 @@ export class VerificationController {
     @Body() requestBody: IDVerificationRequestDTO,
     @Request() request,
   ): Promise<VerificationResultDTO> {
-    const consumer: Consumer = request.user.entity;
-    const result = await this.verificationService.verifyConsumerInformation(consumer.props._id, sessionKey, {
-      ...requestBody,
-      userID: consumer.props._id,
-      email: consumer.props.email,
-    });
+    const user: AuthenticatedUser = request.user;
+    if (!(user.entity instanceof Consumer))
+      throw new BadRequestException("verifyConsumer is only allowed for consumer");
+    const consumer: Consumer = user.entity;
+    const result = await this.verificationService.verifyConsumerInformation(
+      consumer.props._id,
+      sessionKey,
+      {
+        ...requestBody,
+        userID: consumer.props._id,
+        email: consumer.props.email,
+      },
+      user.partnerId,
+    );
     return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }
 
@@ -146,14 +156,22 @@ export class VerificationController {
     @Body() requestData: DocVerificationRequestDTO,
     @Request() request,
   ): Promise<string> {
-    const consumer: Consumer = request.user.entity;
-    const result = await this.verificationService.verifyDocument(consumer.props._id, sessionKey, {
-      userID: consumer.props._id,
-      documentType: requestData.documentType,
-      documentFrontImage: files.frontImage[0],
-      documentBackImage: files.backImage?.length > 0 ? files.backImage[0] : undefined,
-      photoImage: files.photoImage?.length > 0 ? files.photoImage[0] : undefined,
-    });
+    const user: AuthenticatedUser = request.user;
+    if (!(user.entity instanceof Consumer))
+      throw new BadRequestException("verifyConsumer is only allowed for consumer");
+    const consumer: Consumer = user.entity;
+    const result = await this.verificationService.verifyDocument(
+      consumer.props._id,
+      sessionKey,
+      {
+        userID: consumer.props._id,
+        documentType: requestData.documentType,
+        documentFrontImage: files.frontImage[0],
+        documentBackImage: files.backImage?.length > 0 ? files.backImage[0] : undefined,
+        photoImage: files.photoImage?.length > 0 ? files.photoImage[0] : undefined,
+      },
+      user.partnerId,
+    );
 
     return result;
   }
@@ -171,11 +189,14 @@ export class VerificationController {
     @Param("id") id: string,
     @Request() request,
   ): Promise<DocumentVerificationResultDTO> {
-    const consumer: Consumer = request.user.entity;
+    const user: AuthenticatedUser = request.user;
+    if (!(user.entity instanceof Consumer))
+      throw new BadRequestException("verifyConsumer is only allowed for consumer");
+    const consumer: Consumer = user.entity;
     if (id !== consumer.props.verificationData.documentVerificationTransactionID) {
       throw new NotFoundException("No verification record is found for the user with the given id");
     }
-    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id);
+    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id, user.partnerId);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 
