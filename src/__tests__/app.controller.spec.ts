@@ -112,6 +112,7 @@ describe("AppController", () => {
           spreadDiscountPercent: 0,
           takeRate: 0,
         },
+        notificationConfig: [],
       },
     });
 

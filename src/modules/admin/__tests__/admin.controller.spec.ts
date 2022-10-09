@@ -1349,6 +1349,7 @@ describe("AdminController", () => {
           config: {
             cryptocurrencyAllowList: ["ETH", "USDC"],
             fees: {} as any,
+            notificationConfig: [],
           },
         }),
       );
@@ -1388,6 +1389,7 @@ describe("AdminController", () => {
           config: {
             cryptocurrencyAllowList: ["ETH", "USDC"],
             fees: {} as any,
+            notificationConfig: [],
           },
         }),
       );
@@ -1427,6 +1429,7 @@ describe("AdminController", () => {
           config: {
             cryptocurrencyAllowList: ["ETH", "USDC"],
             fees: {} as any,
+            notificationConfig: [],
           },
         }),
       );
