@@ -1,9 +1,9 @@
 import {
-  NotificationEventHandlers,
-  NotificationEventTypes,
+  NotificationEventHandler,
+  NotificationEventType,
 } from "../../../modules/notifications/domain/NotificationTypes";
 
 export type NotificationConfiguration = {
-  notificationEventType: NotificationEventTypes;
-  notificationEventHandler: NotificationEventHandlers[];
+  notificationEventType: NotificationEventType;
+  notificationEventHandler: NotificationEventHandler[];
 };

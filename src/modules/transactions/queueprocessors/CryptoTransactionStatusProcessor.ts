@@ -17,7 +17,7 @@ import {
   PollStatus,
 } from "../domain/AssetTypes";
 import { NotificationService } from "../../../modules/notifications/notification.service";
-import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 export class CryptoTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -136,7 +136,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
 
       // TODO: Check, we are already sending email in TransactionFailedProcessor. Is it needed here?
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_CRYPTO_FAILED_EVENT,
+        NotificationEventType.SEND_CRYPTO_FAILED_EVENT,
         transaction.props.partnerID,
         {
           firstName: consumer.props.firstName,

@@ -19,7 +19,7 @@ import {
   SardineDeviceInformationResponse,
 } from "./integrations/SardineTypeDefinitions";
 import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class VerificationService {
@@ -76,14 +76,14 @@ export class VerificationService {
     if (result.status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       if (isUS) {
-        await this.notificationService.sendNotification(NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT, partnerId, {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, partnerId, {
           firstName: updatedConsumer.props.firstName,
           lastName: updatedConsumer.props.lastName,
           email: updatedConsumer.props.displayEmail,
         });
       } else {
         await this.notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+          NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
           partnerId,
           {
             firstName: updatedConsumer.props.firstName,
@@ -94,14 +94,14 @@ export class VerificationService {
       }
     } else if (result.status === KYCStatus.REJECTED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
-      await this.notificationService.sendNotification(NotificationEventTypes.SEND_KYC_DENIED_EVENT, partnerId, {
+      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, partnerId, {
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
         email: updatedConsumer.props.displayEmail,
       });
     } else {
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
+        NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
         partnerId,
         {
           firstName: updatedConsumer.props.firstName,
@@ -133,7 +133,7 @@ export class VerificationService {
       if (result.status === KYCStatus.APPROVED) {
         if (consumer.props.address.countryCode.toLocaleLowerCase() === "us") {
           await this.notificationService.sendNotification(
-            NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+            NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
             /* partnerId= */ undefined,
             {
               firstName: consumer.props.firstName,
@@ -143,7 +143,7 @@ export class VerificationService {
           );
         } else {
           await this.notificationService.sendNotification(
-            NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+            NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
             /* partnerId= */ undefined,
             {
               firstName: consumer.props.firstName,
@@ -154,7 +154,7 @@ export class VerificationService {
         }
       } else if (result.status === KYCStatus.REJECTED) {
         await this.notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_DENIED_EVENT,
+          NotificationEventType.SEND_KYC_DENIED_EVENT,
           /* partnerId= */ undefined,
           {
             firstName: consumer.props.firstName,
@@ -188,7 +188,7 @@ export class VerificationService {
       };
     } catch (e) {
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
+        NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
         partnerId,
         {
           firstName: consumer.props.firstName,
@@ -200,7 +200,7 @@ export class VerificationService {
     }
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
     await this.notificationService.sendNotification(
-      NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+      NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
       partnerId,
       {
         firstName: updatedConsumer.props.firstName,
@@ -231,7 +231,7 @@ export class VerificationService {
       result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
-      await this.notificationService.sendNotification(NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT, partnerId, {
+      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, partnerId, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
         email: consumer.props.displayEmail,
@@ -243,7 +243,7 @@ export class VerificationService {
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE
     ) {
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
         partnerId,
         {
           firstName: consumer.props.firstName,
@@ -281,7 +281,7 @@ export class VerificationService {
     ) {
       await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+        NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
         /* partnerId= */ undefined,
         {
           firstName: consumer.props.firstName,
@@ -297,7 +297,7 @@ export class VerificationService {
     ) {
       await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
         /* partnerId= */ undefined,
         {
           firstName: consumer.props.firstName,

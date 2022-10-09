@@ -25,7 +25,7 @@ import { Transaction } from "../transactions/domain/Transaction";
 import { PaymentRequestResponse, CheckoutPaymentStatus, FiatTransactionStatus } from "../consumer/domain/Types";
 import { Utils } from "../../core/utils/Utils";
 import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class CheckoutService {
@@ -171,7 +171,7 @@ export class CheckoutService {
 
     if (response.paymentMethodStatus === PaymentMethodStatus.REJECTED) {
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_CARD_ADDITION_FAILED_EVENT,
+        NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT,
         partnerId,
         {
           firstName: consumer.props.firstName,
@@ -390,7 +390,7 @@ export class CheckoutService {
       }
     } finally {
       if (sendNobaEmail) {
-        await this.notificationService.sendNotification(NotificationEventTypes.SEND_HARD_DECLINE_EVENT, partnerId, {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, partnerId, {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
           email: consumer.props.displayEmail,

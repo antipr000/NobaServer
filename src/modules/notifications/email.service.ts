@@ -9,7 +9,7 @@ import { EmailTemplates } from "../common/domain/EmailTemplates";
 import { Utils } from "../../core/utils/Utils";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { OnEvent } from "@nestjs/event-emitter";
-import { NotificationEventTypes } from "./domain/NotificationTypes";
+import { NotificationEventType } from "./domain/NotificationTypes";
 import { SendOtpEvent } from "./events/SendOtpEvent";
 import { SendWalletUpdateVerificationCodeEvent } from "./events/SendWalletUpdateVerificationCodeEvent";
 import { SendWelcomeMessageEvent } from "./events/SendWelcomeMessageEvent";
@@ -45,7 +45,7 @@ export class EmailService {
     sgMail.setApiKey(sendGridApiKey);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_OTP_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_OTP_EVENT}`)
   public async sendOtp(payload: SendOtpEvent) {
     const msg = {
       to: payload.email,
@@ -61,7 +61,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`)
   public async sendWalletUpdateVerificationCode(payload: SendWalletUpdateVerificationCodeEvent) {
     const msg = {
       to: payload.email,
@@ -78,7 +78,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_WELCOME_MESSAGE_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_WELCOME_MESSAGE_EVENT}`)
   public async sendWelcomeMessage(payload: SendWelcomeMessageEvent) {
     const msg = {
       to: payload.email,
@@ -93,7 +93,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_US_EVENT}`)
   public async sendKycApprovedUSEmail(payload: SendKycApprovedUSEvent) {
     const msg = {
       to: payload.email,
@@ -108,7 +108,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT}`)
   public async sendKycApprovedNonUSEmail(payload: SendKycApprovedNonUSEvent) {
     const msg = {
       to: payload.email,
@@ -123,7 +123,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_KYC_DENIED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_KYC_DENIED_EVENT}`)
   public async sendKycDeniedEmail(payload: SendKycDeniedEvent) {
     const msg = {
       to: payload.email,
@@ -139,7 +139,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
   public async sendKycPendingOrFlaggedEmail(payload: SendKycPendingOrFlaggedEvent) {
     const minutesFromNow = 10; // TODO: Remove hardcoded minutes
     const futureDate = new Date(new Date().getTime() + minutesFromNow * 60000).toUTCString();
@@ -158,7 +158,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT}`)
   public async sendDocVerificationPendingEmail(payload: SendDocumentVerificationPendingEvent) {
     const msg = {
       to: payload.email,
@@ -173,7 +173,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT}`)
   public async sendDocVerificationRejectedEmail(payload: SendDocumentVerificationRejectedEvent) {
     const msg = {
       to: payload.email,
@@ -188,7 +188,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT}`)
   public async sendDocVerificationFailedTechEmail(payload: SendDocumentVerificationTechnicalFailureEvent) {
     const msg = {
       to: payload.email,
@@ -203,7 +203,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_CARD_ADDED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDED_EVENT}`)
   public async sendCardAddedEmail(payload: SendCardAddedEvent) {
     const msg = {
       to: payload.email,
@@ -221,7 +221,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_CARD_ADDITION_FAILED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT}`)
   public async sendCardAdditionFailedEmail(payload: SendCardAdditionFailedEvent) {
     const msg = {
       to: payload.email,
@@ -238,7 +238,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_CARD_DELETED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_CARD_DELETED_EVENT}`)
   public async sendCardDeletedEmail(payload: SendCardDeletedEvent) {
     const msg = {
       to: payload.email,
@@ -256,7 +256,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_TRANSACTION_INITIATED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT}`)
   public async sendTransactionInitiatedEmail(payload: SendTransactionInitiatedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
@@ -292,7 +292,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_CRYPTO_FAILED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_CRYPTO_FAILED_EVENT}`)
   public async sendCryptoFailedEmail(payload: SendCryptoFailedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
@@ -329,7 +329,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_ORDER_EXECUTED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_ORDER_EXECUTED_EVENT}`)
   public async sendOrderExecutedEmail(payload: SendOrderExecutedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
@@ -368,7 +368,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_ORDER_FAILED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_ORDER_FAILED_EVENT}`)
   public async sendOrderFailedEmail(payload: SendOrderFailedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
@@ -405,7 +405,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventTypes.SEND_HARD_DECLINE_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_HARD_DECLINE_EVENT}`)
   public async sendHardDeclineEmail(payload: SendHardDeclineEvent) {
     const msg = {
       to: NOBA_COMPLIANCE_EMAIL,

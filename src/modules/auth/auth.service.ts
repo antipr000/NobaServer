@@ -8,7 +8,7 @@ import { NotificationService } from "../notifications/notification.service";
 import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PartnerService } from "../partner/partner.service";
-import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export abstract class AuthService {
@@ -81,7 +81,7 @@ export abstract class AuthService {
   async sendOtp(emailOrPhone: string, otp: string, partnerId: string): Promise<void> {
     const isEmail = emailOrPhone.includes("@");
     if (isEmail) {
-      await this.notificationService.sendNotification(NotificationEventTypes.SEND_OTP_EVENT, partnerId, {
+      await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerId, {
         email: emailOrPhone,
         otp: otp,
       });

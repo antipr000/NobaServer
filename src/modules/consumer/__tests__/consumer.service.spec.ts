@@ -32,7 +32,7 @@ import { Partner } from "../../partner/domain/Partner";
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
-import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -130,7 +130,7 @@ describe("ConsumerService", () => {
       expect(response).toStrictEqual(consumer);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_WELCOME_MESSAGE_EVENT,
+          NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
           partnerId,
           deepEqual({
             email: email,
@@ -363,7 +363,7 @@ describe("ConsumerService", () => {
       expect(response).toStrictEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData));
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_CARD_ADDED_EVENT,
+          NotificationEventType.SEND_CARD_ADDED_EVENT,
           partnerId,
           deepEqual({
             firstName: consumer.props.firstName,
@@ -703,7 +703,7 @@ describe("ConsumerService", () => {
       expect(response.props.paymentMethods.length).toBe(0);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_CARD_DELETED_EVENT,
+          NotificationEventType.SEND_CARD_DELETED_EVENT,
           partnerId,
           deepEqual({
             firstName: consumer.props.firstName,

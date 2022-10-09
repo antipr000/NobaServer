@@ -12,7 +12,7 @@ import { AssetServiceFactory } from "../assets/asset.service.factory";
 import { AssetService } from "../assets/asset.service";
 import { ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
 import { NotificationService } from "../../../modules/notifications/notification.service";
-import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 export class OnChainPendingProcessor extends MessageProcessor {
   constructor(
@@ -107,7 +107,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     await this.transactionService.callTransactionConfirmWebhook(consumer, transaction);
 
     await this.notificationService.sendNotification(
-      NotificationEventTypes.SEND_ORDER_EXECUTED_EVENT,
+      NotificationEventType.SEND_ORDER_EXECUTED_EVENT,
       transaction.props.partnerID,
       {
         firstName: consumer.props.firstName,

@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import { NotificationConfiguration } from "../partner/domain/NotificationConfiguration";
 import { PartnerService } from "../partner/partner.service";
 import { NotificationPayload } from "./domain/NotificationPayload";
-import { NotificationEventHandlers, NotificationEventTypes } from "./domain/NotificationTypes";
+import { NotificationEventHandler, NotificationEventType } from "./domain/NotificationTypes";
 import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "./events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "./events/SendCardDeletedEvent";
@@ -31,7 +31,7 @@ export class NotificationService {
   constructor(private readonly eventEmitter: EventEmitter2, private readonly partnerService: PartnerService) {}
 
   async sendNotification(
-    eventType: NotificationEventTypes,
+    eventType: NotificationEventType,
     partnerID: string,
     payload: NotificationPayload,
   ): Promise<void> {
@@ -50,7 +50,7 @@ export class NotificationService {
         if (filteredNotificationEvents.length === 0) {
           notificationEvent = {
             notificationEventType: eventType,
-            notificationEventHandler: [NotificationEventHandlers.EMAIL],
+            notificationEventHandler: [NotificationEventHandler.EMAIL],
           };
         } else {
           notificationEvent = filteredNotificationEvents[0];
@@ -59,13 +59,13 @@ export class NotificationService {
         // PartnerId does not exist in db. Send only email
         notificationEvent = {
           notificationEventType: eventType,
-          notificationEventHandler: [NotificationEventHandlers.EMAIL],
+          notificationEventHandler: [NotificationEventHandler.EMAIL],
         };
       }
     } else {
       notificationEvent = {
         notificationEventType: eventType,
-        notificationEventHandler: [NotificationEventHandlers.EMAIL],
+        notificationEventHandler: [NotificationEventHandler.EMAIL],
       };
     }
 
@@ -75,9 +75,9 @@ export class NotificationService {
     });
   }
 
-  private createEvent(eventName: string, eventType: NotificationEventTypes, payload: NotificationPayload) {
+  private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
     switch (eventType) {
-      case NotificationEventTypes.SEND_OTP_EVENT:
+      case NotificationEventType.SEND_OTP_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendOtpEvent({
@@ -87,7 +87,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT:
+      case NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendWalletUpdateVerificationCodeEvent({
@@ -98,7 +98,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_WELCOME_MESSAGE_EVENT:
+      case NotificationEventType.SEND_WELCOME_MESSAGE_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendWelcomeMessageEvent({
@@ -108,7 +108,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT:
+      case NotificationEventType.SEND_KYC_APPROVED_US_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendKycApprovedUSEvent({
@@ -118,7 +118,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT:
+      case NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendKycApprovedNonUSEvent({
@@ -128,7 +128,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_KYC_DENIED_EVENT:
+      case NotificationEventType.SEND_KYC_DENIED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendKycDeniedEvent({
@@ -138,7 +138,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_KYC_PENDING_OR_FLAGGED_EVENT:
+      case NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendKycPendingOrFlaggedEvent({
@@ -148,7 +148,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT:
+      case NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendDocumentVerificationPendingEvent({
@@ -158,7 +158,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT:
+      case NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendDocumentVerificationRejectedEvent({
@@ -168,7 +168,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT:
+      case NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendDocumentVerificationTechnicalFailureEvent({
@@ -178,7 +178,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_CARD_ADDED_EVENT:
+      case NotificationEventType.SEND_CARD_ADDED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendCardAddedEvent({
@@ -190,7 +190,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_CARD_ADDITION_FAILED_EVENT:
+      case NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendCardAdditionFailedEvent({
@@ -201,7 +201,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_CARD_DELETED_EVENT:
+      case NotificationEventType.SEND_CARD_DELETED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendCardDeletedEvent({
@@ -213,7 +213,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_TRANSACTION_INITIATED_EVENT:
+      case NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendTransactionInitiatedEvent({
@@ -224,7 +224,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_CRYPTO_FAILED_EVENT:
+      case NotificationEventType.SEND_CRYPTO_FAILED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendCryptoFailedEvent({
@@ -235,7 +235,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_ORDER_EXECUTED_EVENT:
+      case NotificationEventType.SEND_ORDER_EXECUTED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendOrderExecutedEvent({
@@ -246,7 +246,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_ORDER_FAILED_EVENT:
+      case NotificationEventType.SEND_ORDER_FAILED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendOrderFailedEvent({
@@ -257,7 +257,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventTypes.SEND_HARD_DECLINE_EVENT:
+      case NotificationEventType.SEND_HARD_DECLINE_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendHardDeclineEvent({

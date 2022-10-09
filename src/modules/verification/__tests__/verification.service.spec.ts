@@ -36,7 +36,7 @@ import { DocumentInformation } from "../domain/DocumentInformation";
 import { DocumentTypes } from "../domain/DocumentTypes";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
-import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -252,7 +252,7 @@ describe("VerificationService", () => {
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
           partnerId,
           deepEqual({
             firstName: newConsumerData.firstName,
@@ -306,7 +306,7 @@ describe("VerificationService", () => {
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+          NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
           partnerId,
           deepEqual({
             firstName: newConsumerData.firstName,
@@ -361,7 +361,7 @@ describe("VerificationService", () => {
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_DENIED_EVENT,
+          NotificationEventType.SEND_KYC_DENIED_EVENT,
           partnerId,
           deepEqual({
             firstName: newConsumerData.firstName,
@@ -415,7 +415,7 @@ describe("VerificationService", () => {
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
+          NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
           partnerId,
           deepEqual({
             firstName: newConsumerData.firstName,
@@ -458,7 +458,7 @@ describe("VerificationService", () => {
       expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
           partnerId,
           deepEqual({
             firstName: newConsumerProps.firstName,
@@ -499,7 +499,7 @@ describe("VerificationService", () => {
       expect(result.status).toBe(DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+          NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
           partnerId,
           deepEqual({
             firstName: newConsumerProps.firstName,
@@ -555,7 +555,7 @@ describe("VerificationService", () => {
       expect(result).toStrictEqual(documentVerificationResult);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
           undefined,
           deepEqual({
             firstName: consumer.props.firstName,
@@ -609,7 +609,7 @@ describe("VerificationService", () => {
       expect(result).toStrictEqual(documentVerificationResult);
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+          NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
           undefined,
           deepEqual({
             firstName: consumer.props.firstName,
@@ -713,7 +713,7 @@ describe("VerificationService", () => {
       verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_APPROVED_US_EVENT,
+          NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
           undefined,
           deepEqual({
             firstName: consumer.props.firstName,
@@ -757,7 +757,7 @@ describe("VerificationService", () => {
 
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_APPROVED_NON_US_EVENT,
+          NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
           undefined,
           deepEqual({
             firstName: consumer.props.firstName,
@@ -800,7 +800,7 @@ describe("VerificationService", () => {
       verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_KYC_DENIED_EVENT,
+          NotificationEventType.SEND_KYC_DENIED_EVENT,
           undefined,
           deepEqual({
             firstName: consumer.props.firstName,
@@ -847,7 +847,7 @@ describe("VerificationService", () => {
 
       verify(
         notificationService.sendNotification(
-          NotificationEventTypes.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+          NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
           partnerId,
           deepEqual({
             firstName: consumer.props.firstName,

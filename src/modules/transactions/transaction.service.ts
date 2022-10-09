@@ -39,7 +39,7 @@ import { TransactionFilterOptions } from "./domain/Types";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class TransactionService {
@@ -463,7 +463,7 @@ export class TransactionService {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
       await this.notificationService.sendNotification(
-        NotificationEventTypes.SEND_TRANSACTION_INITIATED_EVENT,
+        NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
         transaction.props.partnerID,
         {
           firstName: consumer.props.firstName,

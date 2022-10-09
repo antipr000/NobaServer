@@ -1,4 +1,4 @@
-export enum NotificationEventTypes {
+export enum NotificationEventType {
   SEND_OTP_EVENT = "send.otp.event",
   SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT = "send.wallet.update.verification.code.event",
   SEND_WELCOME_MESSAGE_EVENT = "send.welcome.message.event",
@@ -19,7 +19,7 @@ export enum NotificationEventTypes {
   SEND_HARD_DECLINE_EVENT = "send.hard.decline.event",
 }
 
-export enum NotificationEventHandlers {
+export enum NotificationEventHandler {
   EMAIL = "email",
   WEBHOOK = "webhook",
 }

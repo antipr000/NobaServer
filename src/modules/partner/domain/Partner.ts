@@ -7,8 +7,8 @@ import { WebhookType } from "./WebhookTypes";
 import { Utils } from "../../../core/utils/Utils";
 import { NotificationConfiguration } from "./NotificationConfiguration";
 import {
-  NotificationEventHandlers,
-  NotificationEventTypes,
+  NotificationEventHandler,
+  NotificationEventType,
 } from "../../../modules/notifications/domain/NotificationTypes";
 
 export interface PartnerProps extends VersioningInfo {
@@ -70,9 +70,9 @@ export const partnerKeys: KeysRequired<PartnerProps> = {
 export const notificationConfigKeys: KeysRequired<NotificationConfiguration> = {
   notificationEventType: Joi.string()
     .required()
-    .valid(...Object.values(NotificationEventTypes)),
+    .valid(...Object.values(NotificationEventType)),
   notificationEventHandler: Joi.array()
-    .items(Joi.string().valid(...Object.values(NotificationEventHandlers)))
+    .items(Joi.string().valid(...Object.values(NotificationEventHandler)))
     .default([]),
 };
 

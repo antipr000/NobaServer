@@ -10,7 +10,7 @@ import { SqsClient } from "./sqs.client";
 import { TransactionService } from "../transaction.service";
 import { LockService } from "../../../modules/common/lock.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
-import { NotificationEventTypes } from "../../../modules/notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 export class TransactionFailedProcessor extends MessageProcessor {
   constructor(
@@ -90,7 +90,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
     }
 
     await this.notificationService.sendNotification(
-      NotificationEventTypes.SEND_ORDER_FAILED_EVENT,
+      NotificationEventType.SEND_ORDER_FAILED_EVENT,
       transaction.props.partnerID,
       {
         firstName: consumer.props.firstName,

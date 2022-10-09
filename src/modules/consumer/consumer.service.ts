@@ -22,7 +22,7 @@ import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventTypes } from "../notifications/domain/NotificationTypes";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class ConsumerService {
@@ -77,7 +77,7 @@ export class ConsumerService {
         ],
       });
       const result = await this.consumerRepo.createConsumer(newConsumer);
-      await this.notificationService.sendNotification(NotificationEventTypes.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
+      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
         email: emailOrPhone,
         firstName: result.props.firstName,
         lastName: result.props.lastName,
@@ -141,7 +141,7 @@ export class ConsumerService {
         throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
       }
 
-      await this.notificationService.sendNotification(NotificationEventTypes.SEND_CARD_ADDED_EVENT, partnerId, {
+      await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
         email: consumer.props.displayEmail,
@@ -204,7 +204,7 @@ export class ConsumerService {
 
     const result = await this.updateConsumer(updatedConsumer);
 
-    await this.notificationService.sendNotification(NotificationEventTypes.SEND_CARD_DELETED_EVENT, partnerId, {
+    await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_DELETED_EVENT, partnerId, {
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,
       email: consumer.props.displayEmail,
@@ -261,7 +261,7 @@ export class ConsumerService {
     await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, "CONSUMER");
     await this.otpRepo.saveOTP(consumer.props.email, otp, "CONSUMER");
     await this.notificationService.sendNotification(
-      NotificationEventTypes.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+      NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       partnerId,
       {
         email: consumer.props.displayEmail,
