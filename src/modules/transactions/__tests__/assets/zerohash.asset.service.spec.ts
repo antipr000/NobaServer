@@ -168,7 +168,11 @@ describe("ZerohashAssetService", () => {
         feeInFiat: output.expectedNetworkFee,
       });
       when(
-        zerohashService.requestQuoteForFixedFiatCurrency("ETH", "USD", output.discountedExpectedPriceAfterFeeAndSpread),
+        zerohashService.requestQuoteForFixedFiatCurrency(
+          "ETH",
+          "USD",
+          Utils.roundTo2DecimalNumber(output.discountedExpectedPriceAfterFeeAndSpread),
+        ),
       ).thenResolve({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
@@ -202,7 +206,7 @@ describe("ZerohashAssetService", () => {
           amountPreSpread: output.discountedAmountPreSpread,
           processingFeeInFiat: output.discountedExpectedProcessingFee,
           networkFeeInFiat: output.discountedExpectedNetworkFee,
-          totalCryptoQuantity: (requestedFiatAmount - discountedExpectedTotalFees) / output.quotedCostPerUnit,
+          totalCryptoQuantity: (requestedFiatAmount - discountedExpectedTotalFees) / output.discountedQuotedCostPerUnit,
           nobaFeeInFiat: output.discountedExpectedNobaFee,
           quotedFiatAmount:
             output.expectedPriceAfterFeeAndSpread +
@@ -234,7 +238,7 @@ describe("ZerohashAssetService", () => {
         expectedQuote.quote[field] = Utils.roundToSpecifiedDecimalNumber(expectedQuote.quote[field], 3);
         expectedQuote.nonDiscountedQuote[field] = Utils.roundToSpecifiedDecimalNumber(
           expectedQuote.nonDiscountedQuote[field],
-          3,
+          6,
         );
       });
 
@@ -742,7 +746,7 @@ describe("ZerohashAssetService", () => {
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
-    /* it("Fee discounts are correctly applied", async () => {
+    it("should include 'nobaSpreadDiscountPercent' correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
@@ -750,35 +754,168 @@ describe("ZerohashAssetService", () => {
         fiatAmountUSD,
         originalCostPerUnit,
         {
-          spreadPercentage: 0.6,
-          fiatFeeDollars: 0,
-          dynamicCreditCardFeePercentage: 0,
-          fixedCreditCardFee: 0,
+          spreadPercentage: 1,
+          fiatFeeDollars: 7.5,
+          dynamicCreditCardFeePercentage: 0.12,
+          fixedCreditCardFee: 10,
+
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0,
+            networkFeeDiscountPercent: 0,
+            nobaFeeDiscountPercent: 0,
+            nobaSpreadDiscountPercent: 0.5,
+            processingFeeDiscountPercent: 0,
+          },
         },
         {
-          expectedNobaFee: 0,
-          expectedProcessingFee: 0,
-          expectedNetworkFee: 0,
-          quotedCostPerUnit: 12.4,
-          amountPreSpread: 100,
-          expectedPriceAfterFeeAndSpread: 80.65,
+          // Without discounts.
+          expectedNobaFee: 7.5,
+          expectedProcessingFee: 22,
+          expectedNetworkFee: 10,
+          quotedCostPerUnit: 20,
+          amountPreSpread: 60.5,
+          expectedPriceAfterFeeAndSpread: 30.25,
+
+          // WITH discounts.
+          discountedExpectedNobaFee: 7.5,
+          discountedExpectedProcessingFee: 22,
+          discountedExpectedNetworkFee: 10,
+          discountedQuotedCostPerUnit: 15,
+          discountedAmountPreSpread: 60.5,
+          discountedExpectedPriceAfterFeeAndSpread: 40.33, // actual = 32.125
         },
       );
 
       const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
-        fiatAmount: fiatAmountUSD, // Discounted amount
+        fiatAmount: fiatAmountUSD,
 
-        fixedCreditCardFeeDiscountPercent: 0.1,
-        networkFeeDiscountPercent: 0.2,
-        nobaFeeDiscountPercent: 0.3,
-        nobaSpreadDiscountPercent: 0.4,
-        processingFeeDiscountPercent: 0.5,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0.5,
+          processingFeeDiscountPercent: 0,
+        },
       });
-      //expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
-    });*/
+    });
+
+    it("should include 'processingFeeDiscountPercent' correctly", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 10;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 1,
+          fiatFeeDollars: 7.5,
+          dynamicCreditCardFeePercentage: 0.12,
+          fixedCreditCardFee: 10,
+
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0,
+            networkFeeDiscountPercent: 0,
+            nobaFeeDiscountPercent: 0,
+            nobaSpreadDiscountPercent: 0,
+            processingFeeDiscountPercent: 0.5,
+          },
+        },
+        {
+          // Without discounts.
+          expectedNobaFee: 7.5,
+          expectedProcessingFee: 22,
+          expectedNetworkFee: 10,
+          quotedCostPerUnit: 20,
+          amountPreSpread: 60.5,
+          expectedPriceAfterFeeAndSpread: 30.25,
+
+          // WITH discounts.
+          discountedExpectedNobaFee: 7.5,
+          discountedExpectedProcessingFee: 16,
+          discountedExpectedNetworkFee: 10,
+          discountedQuotedCostPerUnit: 20,
+          discountedAmountPreSpread: 66.5,
+          discountedExpectedPriceAfterFeeAndSpread: 33.25, // actual = 32.125
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD,
+
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0.5,
+        },
+      });
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+    });
+
+    it("should include all the discounts correctly", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 10;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 1,
+          fiatFeeDollars: 7.5,
+          dynamicCreditCardFeePercentage: 0.12,
+          fixedCreditCardFee: 10,
+
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            nobaSpreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        },
+        {
+          // Without discounts.
+          expectedNobaFee: 7.5,
+          expectedProcessingFee: 22,
+          expectedNetworkFee: 10,
+          quotedCostPerUnit: 20,
+          amountPreSpread: 60.5,
+          expectedPriceAfterFeeAndSpread: 30.25,
+
+          // WITH discounts.
+          discountedExpectedNobaFee: 5.25,
+          discountedExpectedProcessingFee: 15,
+          discountedExpectedNetworkFee: 8,
+          discountedQuotedCostPerUnit: 16,
+          discountedAmountPreSpread: 71.75,
+          discountedExpectedPriceAfterFeeAndSpread: 44.84375, // actual = 32.125
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD,
+
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0.1,
+          networkFeeDiscountPercent: 0.2,
+          nobaFeeDiscountPercent: 0.3,
+          nobaSpreadDiscountPercent: 0.4,
+          processingFeeDiscountPercent: 0.5,
+        },
+      });
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+    });
   });
 
   describe("getQuoteForSpecifiedCryptoQuantity()", () => {
@@ -911,7 +1048,7 @@ describe("ZerohashAssetService", () => {
         expectedQuote.quote[field] = Utils.roundToSpecifiedDecimalNumber(expectedQuote.quote[field], 3);
         expectedQuote.nonDiscountedQuote[field] = Utils.roundToSpecifiedDecimalNumber(
           expectedQuote.nonDiscountedQuote[field],
-          3,
+          6,
         );
       });
 
@@ -1549,62 +1686,61 @@ describe("ZerohashAssetService", () => {
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
-    // TODO: Fix the rounding issue and uncomment this test.
-    // it("should apply 'ALL' the discount percentages correctly", async () => {
-    //   const cryptoQuantity = 10;
-    //   const originalCostPerUnit = 10;
+    it("should apply 'ALL' the discount percentages correctly", async () => {
+      const cryptoQuantity = 10;
+      const originalCostPerUnit = 10;
 
-    //   const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
-    //     cryptoQuantity,
-    //     originalCostPerUnit,
-    //     {
-    //       spreadPercentage: 0.6,
-    //       fiatFeeDollars: 8,
-    //       dynamicCreditCardFeePercentage: 0.36,
-    //       fixedCreditCardFee: 20,
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        cryptoQuantity,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 0.6,
+          fiatFeeDollars: 8,
+          dynamicCreditCardFeePercentage: 0.36,
+          fixedCreditCardFee: 20,
 
-    //       discount: {
-    //         fixedCreditCardFeeDiscountPercent: 0.1,
-    //         networkFeeDiscountPercent: 0.2,
-    //         nobaFeeDiscountPercent: 0.3,
-    //         nobaSpreadDiscountPercent: 0.4,
-    //         processingFeeDiscountPercent: 0.5,
-    //       },
-    //     },
-    //     {
-    //       expectedNobaFee: 8,
-    //       expectedProcessingFee: 128,
-    //       expectedNetworkFee: 4,
-    //       quotedCostPerUnit: 16,
-    //       expectedAmountPreSpread: 100,
-    //       expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            nobaSpreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        },
+        {
+          expectedNobaFee: 8,
+          expectedProcessingFee: 128,
+          expectedNetworkFee: 4,
+          quotedCostPerUnit: 16,
+          expectedAmountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
-    //       discountedExpectedNobaFee: 5.6,
-    //       discountedExpectedProcessingFee: 53.7365854,
-    //       discountedExpectedNetworkFee: 3.2,
-    //       discountedQuotedCostPerUnit: 13.6,
-    //       discountedExpectedAmountPreSpread: 100,
-    //       discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
-    //     },
-    //   );
+          discountedExpectedNobaFee: 5.6,
+          discountedExpectedProcessingFee: 53.7365854,
+          discountedExpectedNetworkFee: 3.2,
+          discountedQuotedCostPerUnit: 13.6,
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
+        },
+      );
 
-    //   const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
-    //     cryptoCurrency: "ETH",
-    //     fiatCurrency: "USD",
-    //     cryptoQuantity: cryptoQuantity,
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        cryptoQuantity: cryptoQuantity,
 
-    //     discount: {
-    //       fixedCreditCardFeeDiscountPercent: 0.1,
-    //       networkFeeDiscountPercent: 0.2,
-    //       nobaFeeDiscountPercent: 0.3,
-    //       nobaSpreadDiscountPercent: 0.4,
-    //       processingFeeDiscountPercent: 0.5,
-    //     },
-    //   });
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0.1,
+          networkFeeDiscountPercent: 0.2,
+          nobaFeeDiscountPercent: 0.3,
+          nobaSpreadDiscountPercent: 0.4,
+          processingFeeDiscountPercent: 0.5,
+        },
+      });
 
-    //   expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
-    //   expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
-    // });
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+    });
   });
 
   describe("executeQuoteForFundsAvailability()", () => {

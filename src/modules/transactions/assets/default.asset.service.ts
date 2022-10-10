@@ -146,8 +146,8 @@ export abstract class DefaultAssetService implements AssetService {
       quotedFiatAmount: fiatAmountAfterAllChargesWithSpread.value,
       totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
       totalCryptoQuantity: nonDiscountedtotalCryptoQuantity,
-      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.value,
-      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.value,
+      perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.value),
+      perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread.value),
     };
 
     const discountedNobaQuote: NobaQuote = {
@@ -160,8 +160,8 @@ export abstract class DefaultAssetService implements AssetService {
       totalCryptoQuantity: discountedTotalCryptoQuantity,
       quotedFiatAmount: fiatAmountAfterAllChargesWithSpread.discountedValue,
       totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
-      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.discountedValue,
-      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.discountedValue,
+      perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.discountedValue),
+      perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread.discountedValue),
       quoteID: zhQuoteWithDiscount.quoteID,
     };
 
@@ -349,10 +349,10 @@ export abstract class DefaultAssetService implements AssetService {
         processingFeeInFiat: totalCreditCardFeeInFiat.discountedValue,
         amountPreSpread: request.cryptoQuantity * perUnitCryptoCostWithoutSpread,
         totalCryptoQuantity: request.cryptoQuantity,
-        quotedFiatAmount: rawFiatAmountForRequestedCryptoPostSpread.discountedValue,
+        quotedFiatAmount: Utils.roundTo2DecimalNumber(rawFiatAmountForRequestedCryptoPostSpread.discountedValue),
         totalFiatAmount: Utils.roundTo2DecimalNumber(finalFiatAmount.discountedValue),
-        perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.discountedValue,
-        perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
+        perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.discountedValue),
+        perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread),
         quoteID: zhQuote.quoteID,
       },
       nonDiscountedQuote: {
@@ -362,11 +362,11 @@ export abstract class DefaultAssetService implements AssetService {
         nobaFeeInFiat: nobaFlatFeeInFiat.value,
         processingFeeInFiat: totalCreditCardFeeInFiat.value,
         amountPreSpread: request.cryptoQuantity * perUnitCryptoCostWithoutSpread,
-        quotedFiatAmount: rawFiatAmountForRequestedCryptoPostSpread.value,
+        quotedFiatAmount: Utils.roundTo2DecimalNumber(rawFiatAmountForRequestedCryptoPostSpread.value),
         totalFiatAmount: Utils.roundTo2DecimalNumber(finalFiatAmount.value),
         totalCryptoQuantity: request.cryptoQuantity,
-        perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.value,
-        perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
+        perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.value),
+        perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread),
       },
     };
   }
