@@ -64,13 +64,20 @@ export class SwapAssetService implements AssetService {
       cryptoCurrency: request.cryptoCurrency,
     };
 
+    // TODO: Fix the values for non discounted quote.
     return {
       quote: updatedQuote,
-      nonDiscountedQuote: intermediaryQuoteResponse.nonDiscountedQuote,
+      nonDiscountedQuote: {
+        ...intermediaryQuoteResponse.nonDiscountedQuote,
+        // totalCryptoQuantity: routeResponse.assetQuantity,
+        // perUnitCryptoPriceWithoutSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.nonDiscountedQuote.quotedFiatAmount,
+        // perUnitCryptoPriceWithSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.nonDiscountedQuote.totalFiatAmount,
+        cryptoCurrency: request.cryptoCurrency,
+      },
     };
   }
 
-  async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<NobaQuote> {
+  async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<CombinedNobaQuote> {
     throw new Error(`Fixed side crypto is not supported for ${request.cryptoCurrency}`);
   }
 
