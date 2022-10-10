@@ -71,11 +71,16 @@ export class NotificationService {
 
     notificationEvent.notificationEventHandler.forEach(eventHandler => {
       const eventName = `${eventHandler}.${eventType}`;
-      this.createEvent(eventName, eventType, payload);
+      this.createEvent(eventName, eventType, payload, partnerID);
     });
   }
 
-  private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
+  private createEvent(
+    eventName: string,
+    eventType: NotificationEventType,
+    payload: NotificationPayload,
+    partnerID?: string,
+  ) {
     switch (eventType) {
       case NotificationEventType.SEND_OTP_EVENT:
         this.eventEmitter.emitAsync(
@@ -84,6 +89,7 @@ export class NotificationService {
             email: payload.email,
             otp: payload.otp,
             name: payload.firstName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -95,6 +101,7 @@ export class NotificationService {
             otp: payload.otp,
             name: payload.firstName,
             walletAddress: payload.walletAddress,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -105,6 +112,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -115,6 +123,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -125,6 +134,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -135,6 +145,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -145,6 +156,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -155,6 +167,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -165,6 +178,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -175,6 +189,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -187,6 +202,7 @@ export class NotificationService {
             lastName: payload.lastName,
             cardNetwork: payload.cardNetwork,
             last4Digits: payload.last4Digits,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -198,6 +214,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             last4Digits: payload.last4Digits,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -210,6 +227,7 @@ export class NotificationService {
             lastName: payload.lastName,
             cardNetwork: payload.cardNetwork,
             last4Digits: payload.last4Digits,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -221,6 +239,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             params: payload.transactionInitiatedParams,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -232,6 +251,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             params: payload.cryptoFailedParams,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -243,6 +263,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             params: payload.orderExecutedParams,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -254,6 +275,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             params: payload.orderFailedParams,
+            partnerId: partnerID,
           }),
         );
         break;
@@ -270,6 +292,7 @@ export class NotificationService {
             processor: payload.processor,
             responseCode: payload.responseCode,
             responseSummary: payload.responseSummary,
+            partnerId: partnerID,
           }),
         );
         break;
