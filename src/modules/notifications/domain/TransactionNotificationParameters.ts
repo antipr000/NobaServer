@@ -13,18 +13,18 @@ export type TransactionParameters = {
   cryptoCurrency: string;
 };
 
-export interface CryptoFailedEmailParameters extends TransactionParameters {
+export interface CryptoFailedNotificationParameters extends TransactionParameters {
   failureReason: string;
 }
 
-export type TransactionInitiatedEmailParameters = TransactionParameters;
+export type TransactionInitiatedNotificationParameters = TransactionParameters;
 
-export interface OrderExecutedEmailParameters extends TransactionParameters {
+export interface OrderExecutedNotificationParameters extends TransactionParameters {
   transactionHash: string;
   settledTimestamp: Date;
   cryptoAmountExpected: number;
 }
 
-export interface OrderFailedEmailParameters extends TransactionParameters {
+export interface OrderFailedNotificationParameters extends TransactionParameters {
   failureReason: string;
 }

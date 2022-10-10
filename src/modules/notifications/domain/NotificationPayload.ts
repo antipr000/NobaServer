@@ -1,9 +1,9 @@
 import {
-  CryptoFailedEmailParameters,
-  OrderExecutedEmailParameters,
-  OrderFailedEmailParameters,
-  TransactionInitiatedEmailParameters,
-} from "../../../modules/common/domain/EmailParameters";
+  CryptoFailedNotificationParameters,
+  OrderExecutedNotificationParameters,
+  OrderFailedNotificationParameters,
+  TransactionInitiatedNotificationParameters,
+} from "./TransactionNotificationParameters";
 
 export type NotificationPayload = {
   email: string;
@@ -13,10 +13,10 @@ export type NotificationPayload = {
   lastName?: string;
   cardNetwork?: string;
   last4Digits?: string;
-  transactionInitiatedParams?: TransactionInitiatedEmailParameters;
-  cryptoFailedParams?: CryptoFailedEmailParameters;
-  orderExecutedParams?: OrderExecutedEmailParameters;
-  orderFailedParams?: OrderFailedEmailParameters;
+  transactionInitiatedParams?: TransactionInitiatedNotificationParameters;
+  cryptoFailedParams?: CryptoFailedNotificationParameters;
+  orderExecutedParams?: OrderExecutedNotificationParameters;
+  orderFailedParams?: OrderFailedNotificationParameters;
   sessionID?: string;
   transactionID?: string;
   paymentToken?: string;

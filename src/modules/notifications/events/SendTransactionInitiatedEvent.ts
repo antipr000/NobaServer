@@ -1,10 +1,10 @@
-import { TransactionInitiatedEmailParameters } from "../../../modules/common/domain/EmailParameters";
+import { TransactionInitiatedNotificationParameters } from "../domain/TransactionNotificationParameters";
 
 export class SendTransactionInitiatedEvent {
   public readonly email: string;
   public readonly firstName?: string;
   public readonly lastName?: string;
-  public readonly params: TransactionInitiatedEmailParameters;
+  public readonly params: TransactionInitiatedNotificationParameters;
   public readonly partnerId?: string;
 
   constructor({ email, firstName, lastName, params, partnerId }) {

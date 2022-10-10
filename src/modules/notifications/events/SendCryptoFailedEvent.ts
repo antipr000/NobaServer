@@ -1,10 +1,10 @@
-import { CryptoFailedEmailParameters } from "../../../modules/common/domain/EmailParameters";
+import { CryptoFailedNotificationParameters } from "../domain/TransactionNotificationParameters";
 
 export class SendCryptoFailedEvent {
   public readonly email: string;
   public readonly firstName?: string;
   public readonly lastName?: string;
-  public readonly params: CryptoFailedEmailParameters;
+  public readonly params: CryptoFailedNotificationParameters;
   public readonly partnerId?: string;
 
   constructor({ email, firstName, lastName, params, partnerId }) {

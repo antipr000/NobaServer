@@ -5,7 +5,7 @@ import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyService } from "../common/currency.service";
 import { Logger } from "winston";
-import { EmailTemplates } from "../common/domain/EmailTemplates";
+import { EmailTemplates } from "./domain/EmailTemplates";
 import { Utils } from "../../core/utils/Utils";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { OnEvent } from "@nestjs/event-emitter";

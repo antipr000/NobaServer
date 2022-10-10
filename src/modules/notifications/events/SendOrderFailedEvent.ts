@@ -1,10 +1,10 @@
-import { OrderFailedEmailParameters } from "../../../modules/common/domain/EmailParameters";
+import { OrderFailedNotificationParameters } from "../domain/TransactionNotificationParameters";
 
 export class SendOrderFailedEvent {
   public readonly email: string;
   public readonly firstName?: string;
   public readonly lastName?: string;
-  public readonly params: OrderFailedEmailParameters;
+  public readonly params: OrderFailedNotificationParameters;
   public readonly partnerId?: string;
 
   constructor({ email, firstName, lastName, params, partnerId }) {
