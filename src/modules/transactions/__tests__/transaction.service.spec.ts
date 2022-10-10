@@ -933,6 +933,90 @@ describe("TransactionService", () => {
       assertOnRequestTransactionQuoteResponse(response, nobaQuote.quote, transactionQuoteQuery);
     });
 
+    it("should return correct quote with all the different discounts applied for 'FIAT' fixed side", async () => {
+      const partnerID = "partner-123455";
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH"],
+          fees: {
+            creditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            spreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          } as any,
+        },
+      });
+      when(partnerService.getPartner(partnerID)).thenResolve(partner);
+
+      const transactionQuoteQuery: TransactionQuoteQueryDTO = {
+        fiatCurrencyCode: "USD",
+        cryptoCurrencyCode: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        fixedAmount: 10,
+        partnerID: partnerID,
+      };
+
+      const nobaQuote: CombinedNobaQuote = {
+        quote: {
+          quoteID: "fake-quote",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+
+          processingFeeInFiat: 1,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1,
+          amountPreSpread: 1,
+
+          quotedFiatAmount: 13,
+          totalFiatAmount: 13,
+          totalCryptoQuantity: 0.0001,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+
+          processingFeeInFiat: 1,
+          networkFeeInFiat: 1,
+          nobaFeeInFiat: 1,
+          amountPreSpread: 1,
+
+          quotedFiatAmount: 13,
+          totalFiatAmount: 13,
+          totalCryptoQuantity: 0.0001,
+          perUnitCryptoPriceWithoutSpread: 1000,
+          perUnitCryptoPriceWithSpread: 1000,
+        },
+      };
+
+      when(
+        assetService.getQuoteForSpecifiedFiatAmount(
+          deepEqual({
+            cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
+            fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
+            fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+            discount: {
+              fixedCreditCardFeeDiscountPercent: 0.1,
+              networkFeeDiscountPercent: 0.2,
+              nobaFeeDiscountPercent: 0.3,
+              nobaSpreadDiscountPercent: 0.4,
+              processingFeeDiscountPercent: 0.5,
+            },
+          }),
+        ),
+      ).thenResolve(nobaQuote);
+
+      const response = await transactionService.requestTransactionQuote(transactionQuoteQuery);
+      assertOnRequestTransactionQuoteResponse(response, nobaQuote.quote, transactionQuoteQuery);
+    });
+
     it("should return correct quote for 'CRYPTO' fixed side", async () => {
       const partnerID = "partner-12345";
       const partner: Partner = Partner.createPartner({
@@ -1542,7 +1626,14 @@ describe("TransactionService", () => {
         secretKey: "mockPrivateKey",
         config: {
           cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
-        } as any,
+          fees: {
+            creditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            spreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          } as any,
+        },
       });
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
@@ -1619,11 +1710,11 @@ describe("TransactionService", () => {
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: undefined,
             discount: {
-              fixedCreditCardFeeDiscountPercent: 0,
-              networkFeeDiscountPercent: 0,
-              nobaFeeDiscountPercent: 0,
-              nobaSpreadDiscountPercent: 0,
-              processingFeeDiscountPercent: 0,
+              fixedCreditCardFeeDiscountPercent: 0.1,
+              networkFeeDiscountPercent: 0.2,
+              nobaFeeDiscountPercent: 0.3,
+              nobaSpreadDiscountPercent: 0.4,
+              processingFeeDiscountPercent: 0.5,
             },
           }),
         ),

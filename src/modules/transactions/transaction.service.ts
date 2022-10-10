@@ -97,7 +97,7 @@ export class TransactionService {
             transactionQuoteQuery.fixedAmount,
           ),
           discount: {
-            fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+            fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
             networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
             nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
             nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
@@ -278,17 +278,15 @@ export class TransactionService {
       newTransaction.props.intermediaryLeg = assetService.getIntermediaryLeg();
     }
 
-    // TODO: Refactor this by calling 'requestTransactionQuote' directly.
     let quote: NobaQuote;
-    let combinedQuote: CombinedNobaQuote;
     if (transactionRequest.fixedSide === CurrencyType.FIAT) {
-      combinedQuote = await assetService.getQuoteForSpecifiedFiatAmount({
+      const combinedQuote = await assetService.getQuoteForSpecifiedFiatAmount({
         fiatCurrency: transactionRequest.leg1,
         cryptoCurrency: transactionRequest.leg2,
         fiatAmount: await this.roundToProperDecimalsForFiatCurrency(transactionRequest.leg1, fiatAmount),
         intermediateCryptoCurrency: newTransaction.props.intermediaryLeg,
         discount: {
-          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
           networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
           nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
           nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
@@ -297,7 +295,7 @@ export class TransactionService {
       });
       quote = combinedQuote.quote;
     } else {
-      combinedQuote = await assetService.getQuoteForSpecifiedCryptoQuantity({
+      const combinedQuote = await assetService.getQuoteForSpecifiedCryptoQuantity({
         fiatCurrency: transactionRequest.leg1,
         cryptoCurrency: transactionRequest.leg2,
         cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(transactionRequest.leg2, cryptoAmount),
