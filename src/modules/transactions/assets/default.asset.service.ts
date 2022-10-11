@@ -138,14 +138,12 @@ export abstract class DefaultAssetService implements AssetService {
 
     const nonDiscountedNobaQuote: NonDiscountedNobaQuote = {
       fiatCurrency: request.fiatCurrency,
-      cryptoCurrency: request.cryptoCurrency,
       networkFeeInFiat: networkFee.value,
       nobaFeeInFiat: nobaFlatFeeInFiat.value,
       processingFeeInFiat: totalCreditCardFeeInFiat.value,
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.value,
       quotedFiatAmount: fiatAmountAfterAllChargesWithSpread.value,
       totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
-      totalCryptoQuantity: nonDiscountedtotalCryptoQuantity,
       perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.value),
       perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread.value),
     };
@@ -357,14 +355,12 @@ export abstract class DefaultAssetService implements AssetService {
       },
       nonDiscountedQuote: {
         fiatCurrency: request.fiatCurrency,
-        cryptoCurrency: request.cryptoCurrency,
         networkFeeInFiat: networkFee.value,
         nobaFeeInFiat: nobaFlatFeeInFiat.value,
         processingFeeInFiat: totalCreditCardFeeInFiat.value,
         amountPreSpread: request.cryptoQuantity * perUnitCryptoCostWithoutSpread,
         quotedFiatAmount: Utils.roundTo2DecimalNumber(rawFiatAmountForRequestedCryptoPostSpread.value),
         totalFiatAmount: Utils.roundTo2DecimalNumber(finalFiatAmount.value),
-        totalCryptoQuantity: request.cryptoQuantity,
         perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.value),
         perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread),
       },

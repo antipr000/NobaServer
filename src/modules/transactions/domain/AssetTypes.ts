@@ -101,12 +101,14 @@ export interface NobaQuote extends NonDiscountedNobaQuote {
   quoteID: string;
   intermediateCryptoCurrency?: string;
   totalIntermediateCryptoAmount?: number;
+
+  cryptoCurrency: string;
+  totalCryptoQuantity: number;
 }
 
 // TODO(#): Check for staleness of these comments.
 export interface NonDiscountedNobaQuote {
   fiatCurrency: string;
-  cryptoCurrency: string;
 
   processingFeeInFiat: number;
   amountPreSpread: number; // Amount in fiat before spread calculation. IT IS DISCOUNT AGNOUSTIC.
@@ -118,8 +120,6 @@ export interface NonDiscountedNobaQuote {
   */
   quotedFiatAmount: number; // The amount of fiat we requested worth of crypto from liquidity provider
   totalFiatAmount: number; // The total amount of fiat requested
-
-  totalCryptoQuantity: number;
 
   perUnitCryptoPriceWithSpread: number; // Sell rate - this is what the consumer sees
   perUnitCryptoPriceWithoutSpread: number; // Buy rate - this is what Noba pays

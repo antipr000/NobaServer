@@ -180,11 +180,9 @@ describe("DefaultAssetService", () => {
       const nobaQuote: CombinedNobaQuote = {
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "USDC.POLYGON",
           amountPreSpread: output.amountPreSpread,
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
-          totalCryptoQuantity: (requestedFiatAmount - discountedExpectedTotalFees) / output.quotedCostPerUnit,
           nobaFeeInFiat: output.expectedNobaFee,
           quotedFiatAmount: output.expectedPriceAfterFeeAndSpread,
           totalFiatAmount: requestedFiatAmount,
@@ -685,7 +683,6 @@ describe("DefaultAssetService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "USDC.POLYGON",
           amountPreSpread: output.expectedAmountPreSpread,
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
@@ -693,7 +690,6 @@ describe("DefaultAssetService", () => {
           quotedFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit,
           // (X - fees)/perUnitCost = cryptoQuantity
           totalFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,
-          totalCryptoQuantity: requestedCryptoQuantity,
           perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
         },

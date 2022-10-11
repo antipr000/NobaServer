@@ -194,11 +194,9 @@ describe("SwapAssetService", () => {
       const nobaQuote: CombinedNobaQuote = {
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: REQUESTED_CRYPTO_ASSET,
           amountPreSpread: output.amountPreSpread,
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
-          totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
           nobaFeeInFiat: output.expectedNobaFee,
           quotedFiatAmount: output.expectedPriceAfterFeeAndSpread,
           totalFiatAmount: requestedFiatAmount,

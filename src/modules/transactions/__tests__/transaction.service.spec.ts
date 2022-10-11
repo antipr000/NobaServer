@@ -809,7 +809,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 1,
           networkFeeInFiat: 1,
@@ -818,7 +817,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 13,
           totalFiatAmount: 13,
-          totalCryptoQuantity: 0.0001,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -893,7 +891,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "axlUSDCMoonbeam",
 
           processingFeeInFiat: 1,
           networkFeeInFiat: 1,
@@ -902,7 +899,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 13,
           totalFiatAmount: 13,
-          totalCryptoQuantity: 0.0001,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -950,7 +946,7 @@ describe("TransactionService", () => {
             spreadDiscountPercent: 0.4,
             processingFeeDiscountPercent: 0.5,
           } as any,
-        },
+        } as any,
       });
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
 
@@ -981,7 +977,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 1,
           networkFeeInFiat: 1,
@@ -990,7 +985,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 13,
           totalFiatAmount: 13,
-          totalCryptoQuantity: 0.0001,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1034,7 +1028,7 @@ describe("TransactionService", () => {
             spreadDiscountPercent: 0.5,
             takeRate: 70,
           },
-        },
+        } as any,
       });
 
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -1066,7 +1060,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 10,
           networkFeeInFiat: 20,
@@ -1075,7 +1068,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 90,
           totalFiatAmount: 160,
-          totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 900,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1549,7 +1541,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 0.01,
           networkFeeInFiat: 0.01,
@@ -1558,7 +1549,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 1000,
           totalFiatAmount: 1000,
-          totalCryptoQuantity: 0.3,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1632,8 +1622,8 @@ describe("TransactionService", () => {
             nobaFeeDiscountPercent: 0.3,
             spreadDiscountPercent: 0.4,
             processingFeeDiscountPercent: 0.5,
-          } as any,
-        },
+          },
+        } as any,
       });
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
@@ -1667,7 +1657,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 0.01,
           networkFeeInFiat: 0.01,
@@ -1676,7 +1665,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 100,
           totalFiatAmount: 100,
-          totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1807,7 +1795,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "axlUSDCMoonbeam",
 
           processingFeeInFiat: 0.01,
           networkFeeInFiat: 0.01,
@@ -1816,7 +1803,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 100,
           totalFiatAmount: 100,
-          totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -1931,7 +1917,7 @@ describe("TransactionService", () => {
             spreadDiscountPercent: 0.5,
             takeRate: 70,
           },
-        },
+        } as any,
       });
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
@@ -1965,7 +1951,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 10,
           networkFeeInFiat: 20,
@@ -1974,7 +1959,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 90,
           totalFiatAmount: 160,
-          totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 900,
           perUnitCryptoPriceWithSpread: 1000,
         },
@@ -2080,7 +2064,7 @@ describe("TransactionService", () => {
             spreadDiscountPercent: 0.5,
             takeRate: 70,
           },
-        },
+        } as any,
       });
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
@@ -2114,7 +2098,6 @@ describe("TransactionService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
 
           processingFeeInFiat: 10,
           networkFeeInFiat: 20,
@@ -2123,7 +2106,6 @@ describe("TransactionService", () => {
 
           quotedFiatAmount: 90,
           totalFiatAmount: 160,
-          totalCryptoQuantity: 0.1,
           perUnitCryptoPriceWithoutSpread: 900,
           perUnitCryptoPriceWithSpread: 1000,
         },

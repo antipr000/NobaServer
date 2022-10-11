@@ -188,11 +188,9 @@ describe("ZerohashAssetService", () => {
       const expectedQuote: CombinedNobaQuote = {
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
           amountPreSpread: output.amountPreSpread,
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
-          totalCryptoQuantity: (requestedFiatAmount - expectedTotalFees) / output.quotedCostPerUnit,
           nobaFeeInFiat: output.expectedNobaFee,
           quotedFiatAmount: output.expectedPriceAfterFeeAndSpread,
           totalFiatAmount: requestedFiatAmount,
@@ -236,10 +234,6 @@ describe("ZerohashAssetService", () => {
       const ethAssetAmountFieldsForRoundingInQuote = ["totalCryptoQuantity"];
       ethAssetAmountFieldsForRoundingInQuote.forEach(field => {
         expectedQuote.quote[field] = Utils.roundToSpecifiedDecimalNumber(expectedQuote.quote[field], 3);
-        expectedQuote.nonDiscountedQuote[field] = Utils.roundToSpecifiedDecimalNumber(
-          expectedQuote.nonDiscountedQuote[field],
-          6,
-        );
       });
 
       return expectedQuote;
@@ -725,7 +719,7 @@ describe("ZerohashAssetService", () => {
           discountedExpectedNetworkFee: 10,
           discountedQuotedCostPerUnit: 20,
           discountedAmountPreSpread: 64.25,
-          discountedExpectedPriceAfterFeeAndSpread: 32.13, // actual = 32.125
+          discountedExpectedPriceAfterFeeAndSpread: 32.125, // actual = 32.125
         },
       );
 
@@ -782,7 +776,7 @@ describe("ZerohashAssetService", () => {
           discountedExpectedNetworkFee: 10,
           discountedQuotedCostPerUnit: 15,
           discountedAmountPreSpread: 60.5,
-          discountedExpectedPriceAfterFeeAndSpread: 40.33, // actual = 32.125
+          discountedExpectedPriceAfterFeeAndSpread: 40.333333,
         },
       );
 
@@ -839,7 +833,7 @@ describe("ZerohashAssetService", () => {
           discountedExpectedNetworkFee: 10,
           discountedQuotedCostPerUnit: 20,
           discountedAmountPreSpread: 66.5,
-          discountedExpectedPriceAfterFeeAndSpread: 33.25, // actual = 32.125
+          discountedExpectedPriceAfterFeeAndSpread: 33.25,
         },
       );
 
@@ -896,7 +890,7 @@ describe("ZerohashAssetService", () => {
           discountedExpectedNetworkFee: 8,
           discountedQuotedCostPerUnit: 16,
           discountedAmountPreSpread: 71.75,
-          discountedExpectedPriceAfterFeeAndSpread: 44.84375, // actual = 32.125
+          discountedExpectedPriceAfterFeeAndSpread: 44.84375,
         },
       );
 
@@ -1012,7 +1006,6 @@ describe("ZerohashAssetService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
           amountPreSpread: output.expectedAmountPreSpread,
           processingFeeInFiat: output.expectedProcessingFee,
           networkFeeInFiat: output.expectedNetworkFee,
@@ -1020,7 +1013,6 @@ describe("ZerohashAssetService", () => {
           quotedFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit,
           // (X - fees)/perUnitCost = cryptoQuantity
           totalFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,
-          totalCryptoQuantity: requestedCryptoQuantity,
           perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
         },
@@ -1045,11 +1037,7 @@ describe("ZerohashAssetService", () => {
       // ETH is rounded to "3" decimal places.
       const ethAssetAmountFieldsForRoundingInQuote = ["totalCryptoQuantity"];
       ethAssetAmountFieldsForRoundingInQuote.forEach(field => {
-        expectedQuote.quote[field] = Utils.roundToSpecifiedDecimalNumber(expectedQuote.quote[field], 3);
-        expectedQuote.nonDiscountedQuote[field] = Utils.roundToSpecifiedDecimalNumber(
-          expectedQuote.nonDiscountedQuote[field],
-          6,
-        );
+        expectedQuote.quote[field] = Utils.roundToSpecifiedDecimalNumber(expectedQuote.quote[field], 6);
       });
 
       return expectedQuote;
@@ -1813,14 +1801,12 @@ describe("ZerohashAssetService", () => {
         },
         nonDiscountedQuote: {
           fiatCurrency: "USD",
-          cryptoCurrency: request.cryptoCurrency,
           processingFeeInFiat: 2,
           amountPreSpread: 1234,
           networkFeeInFiat: 1,
           nobaFeeInFiat: 1.99,
           quotedFiatAmount: 50,
           totalFiatAmount: 50,
-          totalCryptoQuantity: request.cryptoQuantity,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },

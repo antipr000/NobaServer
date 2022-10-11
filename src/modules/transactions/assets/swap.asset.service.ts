@@ -72,7 +72,6 @@ export class SwapAssetService implements AssetService {
         // totalCryptoQuantity: routeResponse.assetQuantity,
         // perUnitCryptoPriceWithoutSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.nonDiscountedQuote.quotedFiatAmount,
         // perUnitCryptoPriceWithSpread: routeResponse.assetQuantity / intermediaryQuoteResponse.nonDiscountedQuote.totalFiatAmount,
-        cryptoCurrency: request.cryptoCurrency,
       },
     };
   }
