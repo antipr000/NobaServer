@@ -16,9 +16,9 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
   private async validateHeaders(request: Request): Promise<boolean> {
     try {
-      const apiKey = request.headers[X_NOBA_API_KEY.toLowerCase()];
-      const signature = request.headers[X_NOBA_SIGNATURE.toLowerCase()];
-      const timestamp = request.headers[X_NOBA_TIMESTAMP.toLowerCase()];
+      const apiKey = request.headers[X_NOBA_API_KEY];
+      const signature = request.headers[X_NOBA_SIGNATURE];
+      const timestamp = request.headers[X_NOBA_TIMESTAMP];
 
       await this.headerValidationService.validateApiKeyAndSignature(
         apiKey,

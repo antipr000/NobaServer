@@ -105,7 +105,7 @@ describe("ConsumerController", () => {
       when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
 
       const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -182,7 +182,7 @@ describe("ConsumerController", () => {
       when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
 
       const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -250,7 +250,7 @@ describe("ConsumerController", () => {
       when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
 
       const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -287,7 +287,7 @@ describe("ConsumerController", () => {
       when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
 
       const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY.toLocaleLowerCase()]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
         { user: { entity: consumer } },
       );
 

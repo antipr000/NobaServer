@@ -1,12 +1,17 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
-import { AppEnvironment, NODE_ENV_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import {
+  AppEnvironment,
+  NODE_ENV_CONFIG_KEY,
+  PARTNER_CONFIG_EMBED_SECRET_KEY,
+  PARTNER_CONFIG_KEY,
+} from "../../../config/ConfigurationUtils";
 import { HeaderValidationService } from "../header.validation.service";
 import { PartnerService } from "../../../modules/partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { instance, when } from "ts-mockito";
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Partner } from "../../../modules/partner/domain/Partner";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
@@ -32,6 +37,9 @@ describe("HeaderValidationService", () => {
      **/
     const appConfigurations = {
       [NODE_ENV_CONFIG_KEY]: AppEnvironment.DEV,
+      [PARTNER_CONFIG_KEY]: {
+        [PARTNER_CONFIG_EMBED_SECRET_KEY]: "dev-fake-embed-secret",
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -80,11 +88,11 @@ describe("HeaderValidationService", () => {
         );
         expect(true).toBe(false);
       } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e).toBeInstanceOf(NotFoundException);
       }
     });
 
-    it("should validate when values are provided and return true if signature matches", async () => {
+    it("should validate when values are provided and return true if signature matches for API integration mode", async () => {
       const apiKey = "fake-api-key";
       const timestamp = new Date().getTime().toString();
       const secretKey = "fake-secret-key";
@@ -96,6 +104,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
+        isApiEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
@@ -114,7 +123,39 @@ describe("HeaderValidationService", () => {
       expect(response).toBe(true);
     });
 
-    it("should validate when values are provided and throw error if signature does not match", async () => {
+    it("should validate when values are provided and return true if signature matches for EMBED integration mode", async () => {
+      const apiKey = "fake-api-key";
+      const timestamp = new Date().getTime().toString();
+      const secretKey = "fake-secret-key";
+      const method = "GET";
+      const url = "/v1/fake/path";
+      const body = JSON.stringify({});
+      const partner = Partner.createPartner({
+        _id: "fake-id-1234",
+        apiKey: "fake-api-key-2",
+        apiKeyForEmbed: apiKey,
+        secretKey: secretKey,
+        name: "Fake Partner",
+        isEmbedEnabled: true,
+      });
+      const utf8Secret = CryptoJS.enc.Utf8.parse("dev-fake-embed-secret");
+      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
+      const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, utf8Secret));
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+
+      const response = await headerValidationService.validateApiKeyAndSignature(
+        apiKey,
+        timestamp,
+        hmacSignatureString,
+        method,
+        url,
+        body,
+      );
+
+      expect(response).toBe(true);
+    });
+
+    it("should validate and throw ForbiddenException if integration mode is API and it is not enabled", async () => {
       const apiKey = "fake-api-key";
       const timestamp = new Date().getTime().toString();
       const secretKey = "fake-secret-key";
@@ -126,6 +167,76 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
+        isApiEnabled: false,
+      });
+      const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
+      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${"POST"}${url}${body}`);
+      const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, utf8Secret));
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+
+      try {
+        await headerValidationService.validateApiKeyAndSignature(
+          apiKey,
+          timestamp,
+          hmacSignatureString,
+          method,
+          url,
+          body,
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("should validate when values are provided and throw error if signature does not match for API integration mode", async () => {
+      const apiKey = "fake-api-key";
+      const timestamp = new Date().getTime().toString();
+      const secretKey = "fake-secret-key";
+      const method = "GET";
+      const url = "/v1/fake/path";
+      const body = JSON.stringify({});
+      const partner = Partner.createPartner({
+        _id: "fake-id-1234",
+        apiKey: apiKey,
+        secretKey: secretKey,
+        name: "Fake Partner",
+        isApiEnabled: true,
+      });
+      const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
+      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${"POST"}${url}${body}`);
+      const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, utf8Secret));
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+
+      try {
+        await headerValidationService.validateApiKeyAndSignature(
+          apiKey,
+          timestamp,
+          hmacSignatureString,
+          method,
+          url,
+          body,
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("should validate when values are provided and throw error if signature does not match for EMBED integration mode", async () => {
+      const apiKey = "fake-api-key";
+      const timestamp = new Date().getTime().toString();
+      const secretKey = "fake-secret-key";
+      const method = "GET";
+      const url = "/v1/fake/path";
+      const body = JSON.stringify({});
+      const partner = Partner.createPartner({
+        _id: "fake-id-1234",
+        apiKey: "fake-api-key-2",
+        apiKeyForEmbed: apiKey,
+        secretKey: secretKey,
+        name: "Fake Partner",
+        isEmbedEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${"POST"}${url}${body}`);
@@ -159,6 +270,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
+        isApiEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
@@ -194,6 +306,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
+        isApiEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
@@ -232,6 +345,9 @@ describe("HeaderValidationService", () => {
      **/
     const appConfigurations = {
       [NODE_ENV_CONFIG_KEY]: AppEnvironment.PROD,
+      [PARTNER_CONFIG_KEY]: {
+        [PARTNER_CONFIG_EMBED_SECRET_KEY]: "prod-fake-embed-secret",
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -266,7 +382,7 @@ describe("HeaderValidationService", () => {
       }
     });
 
-    it("should validate when values are provided and return true if signature matches", async () => {
+    it("should validate when values are provided and return true if signature matches for API integration", async () => {
       const apiKey = "fake-api-key";
       const timestamp = new Date().getTime().toString();
       const secretKey = "fake-secret-key";
@@ -278,8 +394,41 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
+        isApiEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
+      const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
+      const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, utf8Secret));
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+
+      const response = await headerValidationService.validateApiKeyAndSignature(
+        apiKey,
+        timestamp,
+        hmacSignatureString,
+        method,
+        url,
+        body,
+      );
+
+      expect(response).toBe(true);
+    });
+
+    it("should validate when values are provided and return true if signature matches for EMBED integration", async () => {
+      const apiKey = "fake-api-key";
+      const timestamp = new Date().getTime().toString();
+      const secretKey = "fake-secret-key";
+      const method = "GET";
+      const url = "/v1/fake/path";
+      const body = JSON.stringify({});
+      const partner = Partner.createPartner({
+        _id: "fake-id-1234",
+        apiKey: "fake-api-key-2",
+        apiKeyForEmbed: apiKey,
+        secretKey: secretKey,
+        name: "Fake Partner",
+        isEmbedEnabled: true,
+      });
+      const utf8Secret = CryptoJS.enc.Utf8.parse("prod-fake-embed-secret");
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
       const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, utf8Secret));
       when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
@@ -308,6 +457,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
+        isApiEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${"POST"}${url}${body}`);

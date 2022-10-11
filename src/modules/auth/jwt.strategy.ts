@@ -40,9 +40,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // TODO: Move all the payload related logic to a single file.
   async validate(request: Request, payload: any): Promise<AuthenticatedUser> {
     try {
-      const apiKey = request.headers[X_NOBA_API_KEY.toLowerCase()];
-      const signature = request.headers[X_NOBA_SIGNATURE.toLowerCase()];
-      const timestamp = request.headers[X_NOBA_TIMESTAMP.toLowerCase()];
+      const apiKey = request.headers[X_NOBA_API_KEY];
+      const signature = request.headers[X_NOBA_SIGNATURE];
+      const timestamp = request.headers[X_NOBA_TIMESTAMP];
       await this.headerValidationService.validateApiKeyAndSignature(
         apiKey,
         timestamp,

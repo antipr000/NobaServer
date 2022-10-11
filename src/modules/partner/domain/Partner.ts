@@ -16,11 +16,14 @@ export interface PartnerProps extends VersioningInfo {
   name: string;
   apiKey: string;
   secretKey: string;
+  apiKeyForEmbed: string;
   verificationData?: KybStatusInfo;
   webhookClientID?: string;
   webhookSecret?: string;
   webhooks: PartnerWebhook[];
   config: PartnerConfig;
+  isApiEnabled: boolean;
+  isEmbedEnabled: boolean;
 }
 
 export type PartnerWebhook = {
@@ -59,7 +62,10 @@ export const partnerKeys: KeysRequired<PartnerProps> = {
   _id: Joi.string().min(10).required(),
   name: Joi.string().min(2).max(100).required(),
   apiKey: Joi.string().required(),
+  apiKeyForEmbed: Joi.string().required(),
   secretKey: Joi.string().required(),
+  isApiEnabled: Joi.boolean().required().default(false),
+  isEmbedEnabled: Joi.boolean().required().default(true),
   verificationData: Joi.object().optional(),
   webhookClientID: Joi.string().optional(),
   webhookSecret: Joi.string().optional(),
@@ -105,10 +111,19 @@ export class Partner extends AggregateRoot<PartnerProps> {
   public static createPartner(partnerProps: Partial<PartnerProps>): Partner {
     if (!partnerProps._id) partnerProps._id = Entity.getNewID();
     if (!partnerProps.apiKey) partnerProps.apiKey = Partner.generateAPIKey();
+    if (!partnerProps.apiKeyForEmbed) partnerProps.apiKeyForEmbed = Partner.generateAPIKey();
     if (!partnerProps.secretKey) partnerProps.secretKey = Partner.generateSecretKey();
+    if (!partnerProps.webhookClientID) partnerProps.webhookClientID = Partner.generateAPIKey();
+    if (!partnerProps.webhookSecret) partnerProps.webhookSecret = Partner.generateSecretKey();
 
     if (!partnerProps.webhooks) partnerProps.webhooks = [];
     if (!partnerProps.config) partnerProps.config = {} as any;
+
+    if (!partnerProps.isApiEnabled) partnerProps.isApiEnabled = false;
+
+    if (!partnerProps.isEmbedEnabled) partnerProps.isEmbedEnabled = true;
+
+    if (!partnerProps.config.notificationConfig) partnerProps.config.notificationConfig = [];
 
     partnerProps.config.fees = {
       creditCardFeeDiscountPercent: 0,

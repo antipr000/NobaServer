@@ -1,10 +1,11 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { PartnerProps, Partner, PartnerWebhook } from "./domain/Partner";
+import { Partner, PartnerWebhook } from "./domain/Partner";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IPartnerRepo } from "./repo/PartnerRepo";
 import { WebhookType } from "./domain/WebhookTypes";
 import { CreatePartnerRequest } from "./dto/ServiceTypes";
+import { UpdatePartnerRequestDTO } from "./dto/UpdatePartnerRequestDTO";
 
 @Injectable()
 export class PartnerService {
@@ -57,11 +58,20 @@ export class PartnerService {
     return partnerResult;
   }
 
-  async updatePartner(partnerId: string, partialPartnerProps: Partial<PartnerProps>): Promise<Partner> {
+  async updatePartner(partnerId: string, partnerUpdateRequest: UpdatePartnerRequestDTO): Promise<Partner> {
     const partner = await this.getPartner(partnerId);
     const updatedPartner = Partner.createPartner({
       ...partner.props,
-      ...partialPartnerProps,
+      name: partnerUpdateRequest.name ?? partner.props.name,
+      config: {
+        ...partner.props.config,
+        fees: {
+          ...partner.props.config.fees,
+          takeRate: partnerUpdateRequest.takeRate ?? partner.props.config.fees.takeRate,
+        },
+        notificationConfig: partnerUpdateRequest.notificationConfigs ?? partner.props.config.notificationConfig,
+      },
+      webhooks: partnerUpdateRequest.webhooks ?? partner.props.webhooks,
     });
 
     const partnerResult: Partner = await this.partnerRepo.updatePartner(updatedPartner);
@@ -83,17 +93,6 @@ export class PartnerService {
       throw new BadRequestException("Unknown partner ID");
     }
 
-    const partnerUpdates: Partial<PartnerProps> = {};
-    if (!partner.props.webhookClientID) {
-      // Generate a new client id using API key algorithm
-      partnerUpdates.webhookClientID = Partner.generateAPIKey();
-    }
-
-    if (!partner.props.webhookSecret) {
-      // Generate new secret
-      partnerUpdates.webhookSecret = Partner.generateSecretKey();
-    }
-
     // Get all the webhooks except for any existing of the same type that we want to overwrite
     let existingWebhooks = partner.props.webhooks.filter(webhook => webhook.type !== type);
     if (!existingWebhooks) {
@@ -101,9 +100,8 @@ export class PartnerService {
     }
 
     existingWebhooks.push({ type: type, url: url });
-    partnerUpdates.webhooks = existingWebhooks;
 
-    const partnerResult: Partner = await this.updatePartner(partnerID, partnerUpdates);
+    const partnerResult: Partner = await this.updatePartner(partnerID, { webhooks: existingWebhooks });
     return partnerResult;
   }
 }

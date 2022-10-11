@@ -45,9 +45,9 @@ export class AdminService {
         adminID: adminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
     });
   }
@@ -88,9 +88,9 @@ export class AdminService {
         adminID: adminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
         startDate: startDate,
@@ -122,9 +122,9 @@ export class AdminService {
       method: "POST",
       url: "/v1/admins",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -156,9 +156,9 @@ export class AdminService {
       method: "GET",
       url: "/v1/admins",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         403: `User forbidden from retrieving details of the Noba admin`,
@@ -194,9 +194,9 @@ export class AdminService {
         adminID: adminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -233,9 +233,9 @@ export class AdminService {
         adminID: adminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         403: `User forbidden from deleting Noba admin or attempt to delete one's own record`,
@@ -272,9 +272,9 @@ export class AdminService {
         partnerID: partnerId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -315,9 +315,9 @@ export class AdminService {
         partnerAdminID: partnerAdminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid parameter(s)`,
@@ -358,9 +358,9 @@ export class AdminService {
         partnerAdminID: partnerAdminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -395,9 +395,9 @@ export class AdminService {
       method: "POST",
       url: "/v1/admins/partners",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -436,9 +436,9 @@ export class AdminService {
         consumerID: consumerId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",

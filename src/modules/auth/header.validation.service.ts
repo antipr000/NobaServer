@@ -1,10 +1,12 @@
-import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Inject, Injectable, Logger } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
-import { AppEnvironment, getEnvironmentName } from "../../config/ConfigurationUtils";
+import { AppEnvironment, getEnvironmentName, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
 
 @Injectable()
 export class HeaderValidationService {
@@ -12,6 +14,12 @@ export class HeaderValidationService {
   private readonly logger: Logger;
 
   @Inject() partnerService: PartnerService;
+
+  private readonly embedSecretKey: string;
+
+  constructor(configService: CustomConfigService) {
+    this.embedSecretKey = configService.get<PartnerConfigs>(PARTNER_CONFIG_KEY).embedSecretKey;
+  }
 
   async validateApiKeyAndSignature(
     apiKey: string,
@@ -33,7 +41,18 @@ export class HeaderValidationService {
     }
     try {
       const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
-      const secretKey = CryptoJS.enc.Utf8.parse(partner.props.secretKey);
+      if (
+        (partner.props.apiKeyForEmbed === apiKey && !partner.props.isEmbedEnabled) ||
+        (partner.props.apiKey === apiKey && !partner.props.isApiEnabled)
+      ) {
+        throw new ForbiddenException(
+          `Integration for ${partner.props.apiKey === apiKey ? "API" : "EMBED"}  is not enabled`,
+        );
+      }
+      const secretKey =
+        partner.props.apiKey === apiKey
+          ? CryptoJS.enc.Utf8.parse(partner.props.secretKey)
+          : CryptoJS.enc.Utf8.parse(this.embedSecretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(
         `${timestamp}${apiKey}${requestMethod}${requestPath}${requestBody}`,
       );
@@ -46,7 +65,7 @@ export class HeaderValidationService {
       return true;
     } catch (e) {
       this.logger.error(e);
-      throw new BadRequestException("Failed to validate headers. Reason: " + e.message);
+      throw e;
     }
   }
 

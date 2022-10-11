@@ -127,7 +127,7 @@ describe("AppController", () => {
       ]);
 
       when(mockPartnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
-      const result = await appController.supportedCryptocurrencies({ [X_NOBA_API_KEY.toLocaleLowerCase()]: apiKey });
+      const result = await appController.supportedCryptocurrencies({ [X_NOBA_API_KEY]: apiKey });
 
       // Just ensuring something's returned. Other unit tests are responsible for exactly what's returned.
       expect(result.length).toEqual(1);

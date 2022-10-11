@@ -87,8 +87,7 @@ export class TransactionController {
       transactionQuoteQuery.partnerID = request.user?.partnerId;
       if (!transactionQuoteQuery.partnerID) {
         // If still empty, it means we're unauthenticated. Get by API key instead.
-        const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props
-          ._id;
+        const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY])).props._id;
         transactionQuoteQuery.partnerID = partnerId;
       }
     }

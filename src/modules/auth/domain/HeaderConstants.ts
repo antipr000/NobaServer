@@ -1,3 +1,4 @@
-export const X_NOBA_API_KEY = "X-Noba-API-Key";
-export const X_NOBA_TIMESTAMP = "X-Noba-Timestamp";
-export const X_NOBA_SIGNATURE = "X-Noba-Signature";
+export const X_NOBA_API_KEY = "x-noba-api-key";
+export const X_NOBA_TIMESTAMP = "x-noba-timestamp";
+export const X_NOBA_SIGNATURE = "x-noba-signature";
+export const X_NOBA_INTEGRATION_MODE = "x-noba-integration-mode";

@@ -5,6 +5,7 @@ import type { AddPartnerAdminRequestDTO } from "../models/AddPartnerAdminRequest
 import type { CreatePartnerRequestDTO } from "../models/CreatePartnerRequestDTO";
 import type { PartnerAdminDTO } from "../models/PartnerAdminDTO";
 import type { PartnerDTO } from "../models/PartnerDTO";
+import type { UpdatePartnerAdminRequestDTO } from "../models/UpdatePartnerAdminRequestDTO";
 import type { UpdatePartnerRequestDTO } from "../models/UpdatePartnerRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -35,9 +36,9 @@ export class PartnerService {
       method: "POST",
       url: "/v1/partners",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -67,9 +68,9 @@ export class PartnerService {
       method: "PATCH",
       url: "/v1/partners",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -106,9 +107,9 @@ export class PartnerService {
         partnerID: partnerId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -143,9 +144,9 @@ export class PartnerService {
         partnerAdminID: partnerAdminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -168,7 +169,7 @@ export class PartnerService {
   }: {
     xNobaApiKey: string;
     partnerAdminId: string;
-    requestBody: UpdatePartnerRequestDTO;
+    requestBody: UpdatePartnerAdminRequestDTO;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -182,9 +183,9 @@ export class PartnerService {
         partnerAdminID: partnerAdminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -221,9 +222,9 @@ export class PartnerService {
         partnerAdminID: partnerAdminId,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -253,9 +254,9 @@ export class PartnerService {
       method: "GET",
       url: "/v1/partners/admins",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -287,9 +288,9 @@ export class PartnerService {
       method: "POST",
       url: "/v1/partners/admins",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",

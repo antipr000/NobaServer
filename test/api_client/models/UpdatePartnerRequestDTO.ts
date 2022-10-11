@@ -4,6 +4,7 @@
 
 export type UpdatePartnerRequestDTO = {
   name?: string;
-  role?: string;
   takeRate?: number;
+  notificationConfigs?: Array<string>;
+  webhooks?: Array<string>;
 };

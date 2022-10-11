@@ -498,11 +498,7 @@ describe("PartnerController", () => {
 
       const newTakeRate = 20;
 
-      when(
-        partnerService.updatePartner(partner.props._id, {
-          config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },
-        }),
-      ).thenResolve(
+      when(partnerService.updatePartner(partner.props._id, { takeRate: newTakeRate })).thenResolve(
         Partner.createPartner({
           ...partner.props,
           config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },
@@ -542,11 +538,7 @@ describe("PartnerController", () => {
 
       const newTakeRate = 20;
 
-      when(
-        partnerService.updatePartner(partner.props._id, {
-          config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },
-        }),
-      ).thenResolve(
+      when(partnerService.updatePartner(partner.props._id, { takeRate: newTakeRate })).thenResolve(
         Partner.createPartner({
           ...partner.props,
           config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },

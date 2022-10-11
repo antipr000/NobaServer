@@ -8,6 +8,10 @@ import { Partner } from "../domain/Partner";
 import { WebhookType } from "../domain/WebhookTypes";
 import { BadRequestException } from "@nestjs/common";
 import { IPartnerRepo } from "../repo/PartnerRepo";
+import {
+  NotificationEventHandler,
+  NotificationEventType,
+} from "../../../modules/notifications/domain/NotificationTypes";
 
 describe("PartnerService", () => {
   let partnerService: PartnerService;
@@ -171,13 +175,19 @@ describe("PartnerService", () => {
         _id: "mock-partner-1",
         name: "Mock Partner",
         apiKey: "mockPublicKey",
+        apiKeyForEmbed: "fakeApiKeyForEmbed",
         secretKey: "mockPrivateKey",
+        webhookClientID: "fakeWebhookClientID",
+        webhookSecret: "fakeWebhookSecret",
       });
       const updatedPartner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "New Partner Name",
         apiKey: "mockPublicKey",
+        apiKeyForEmbed: "fakeApiKeyForEmbed",
         secretKey: "mockPrivateKey",
+        webhookClientID: "fakeWebhookClientID",
+        webhookSecret: "fakeWebhookSecret",
       });
 
       when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
@@ -194,22 +204,79 @@ describe("PartnerService", () => {
         _id: "mock-partner-1",
         name: "Mock Partner",
         apiKey: "mockPublicKey",
+        apiKeyForEmbed: "fakeApiKeyForEmbed",
         secretKey: "mockPrivateKey",
+        webhookClientID: "fakeWebhookClientID",
+        webhookSecret: "fakeWebhookSecret",
       });
       const newTakeRate = 20;
       const updatePartner = Partner.createPartner({
         _id: "mock-partner-1",
         name: "Mock Partner",
         apiKey: "mockPublicKey",
+        apiKeyForEmbed: "fakeApiKeyForEmbed",
         secretKey: "mockPrivateKey",
+        webhookClientID: "fakeWebhookClientID",
+        webhookSecret: "fakeWebhookSecret",
         config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },
       });
 
       when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
       when(partnerRepo.updatePartner(deepEqual(updatePartner))).thenResolve(updatePartner);
 
+      const result = await partnerService.updatePartner(partner.props._id, { takeRate: newTakeRate });
+      expect(result).toStrictEqual(updatePartner);
+    });
+
+    it("should update notification configurations", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        apiKeyForEmbed: "fakeApiKeyForEmbed",
+        secretKey: "mockPrivateKey",
+        webhookClientID: "fakeWebhookClientID",
+        webhookSecret: "fakeWebhookSecret",
+        config: {
+          fees: { takeRate: 10 } as any,
+          notificationConfig: [
+            {
+              notificationEventType: NotificationEventType.SEND_OTP_EVENT,
+              notificationEventHandler: [NotificationEventHandler.EMAIL],
+            },
+          ],
+        },
+      });
+
+      const updatePartner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        apiKeyForEmbed: "fakeApiKeyForEmbed",
+        secretKey: "mockPrivateKey",
+        webhookClientID: "fakeWebhookClientID",
+        webhookSecret: "fakeWebhookSecret",
+        config: {
+          fees: { takeRate: 10 } as any,
+          notificationConfig: [
+            {
+              notificationEventType: NotificationEventType.SEND_OTP_EVENT,
+              notificationEventHandler: [NotificationEventHandler.WEBHOOK],
+            },
+          ],
+        },
+      });
+
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+      when(partnerRepo.updatePartner(deepEqual(updatePartner))).thenResolve(updatePartner);
+
       const result = await partnerService.updatePartner(partner.props._id, {
-        config: { fees: { takeRate: newTakeRate } as any, notificationConfig: [] },
+        notificationConfigs: [
+          {
+            notificationEventType: NotificationEventType.SEND_OTP_EVENT,
+            notificationEventHandler: [NotificationEventHandler.WEBHOOK],
+          },
+        ],
       });
       expect(result).toStrictEqual(updatePartner);
     });
@@ -220,6 +287,8 @@ describe("PartnerService", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+        webhookClientID: "fakeWebhookClientID",
+        webhookSecret: "fakeWebhookSecret",
       });
 
       const webhookType = WebhookType.TRANSACTION_CONFIRM;
@@ -248,6 +317,7 @@ describe("PartnerService", () => {
         secretKey: "mockPrivateKey",
         webhookClientID: "mockClientID",
         webhookSecret: "mockWebhookSecret",
+        apiKeyForEmbed: "fakeApiKeyForEmbed",
       });
 
       const webhookType = WebhookType.TRANSACTION_CONFIRM;

@@ -94,6 +94,8 @@ import {
   SQUID_SLIPPAGE,
   CCBIN_DATA_FILE_PATH,
   CCBIN_DATA_FILE_NAME_MASK,
+  PARTNER_CONFIG_KEY,
+  PARTNER_CONFIG_EMBED_SECRET_KEY,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -109,6 +111,7 @@ import { CommonConfigs } from "./configtypes/CommonConfigs";
 import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 import { EllipticConfigs } from "./configtypes/EllipticConfig";
 import { SquidConfigs } from "./configtypes/SquidConfigs";
+import { PartnerConfigs } from "./configtypes/PartnerConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -253,6 +256,7 @@ async function configureAllVendorCredentials(
     configureCommonConfigurations,
     configureEllipticCredentials,
     configureSquidCredentials,
+    configurePartnerConfigurations,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -533,6 +537,29 @@ async function configureEllipticCredentials(
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
 
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
+
+  return configs;
+}
+
+async function configurePartnerConfigurations(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const partnerConfigs: PartnerConfigs = configs[PARTNER_CONFIG_KEY];
+
+  if (partnerConfigs === undefined) {
+    const errorMessage =
+      "\n'Partner' configurations are required. Please configure the Partner configurations in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${PARTNER_CONFIG_KEY}" and populate ` +
+      `("${PARTNER_CONFIG_EMBED_SECRET_KEY}"` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  partnerConfigs.embedSecretKey = await getParameterValue(null, partnerConfigs.embedSecretKey);
+
+  configs[PARTNER_CONFIG_KEY] = partnerConfigs;
 
   return configs;
 }

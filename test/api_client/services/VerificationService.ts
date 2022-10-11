@@ -32,9 +32,9 @@ export class VerificationService {
       method: "GET",
       url: "/v1/verify",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
     });
   }
@@ -60,9 +60,9 @@ export class VerificationService {
       method: "POST",
       url: "/v1/verify/session",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request`,
@@ -95,9 +95,9 @@ export class VerificationService {
       method: "POST",
       url: "/v1/verify/consumerinfo",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
         sessionKey: sessionKey,
@@ -143,9 +143,9 @@ export class VerificationService {
       method: "POST",
       url: "/v1/verify/document",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
         sessionKey: sessionKey,
@@ -184,9 +184,9 @@ export class VerificationService {
         id: id,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -218,9 +218,9 @@ export class VerificationService {
       method: "GET",
       url: "/v1/verify/device/result",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
         sessionKey: sessionKey,

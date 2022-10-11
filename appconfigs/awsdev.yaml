@@ -105,6 +105,9 @@ configuration:
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
 
+partner:
+  embedSecretKey: "QSCA2fUSwScK+zFdTsXPVf//j8NYtQ4DlL373Vvs0hCqnN7EbZl8da+adxDbO32ZxIVw7qG2RSeQj6fslfGDdg=="
+
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"
 assetsBucketName: "prod-noba-assets"

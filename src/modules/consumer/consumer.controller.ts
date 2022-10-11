@@ -69,7 +69,7 @@ export class ConsumerController {
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
-    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()]);
+    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY]);
 
     const consumerID: string = consumer.props._id;
     const entity: Consumer = await this.consumerService.getConsumer(consumerID);
@@ -210,7 +210,7 @@ export class ConsumerController {
       throw new ForbiddenException();
     }
 
-    const partner = await this.partnerService.getPartnerFromApiKey(request.headers[X_NOBA_API_KEY.toLowerCase()]);
+    const partner = await this.partnerService.getPartnerFromApiKey(request.headers[X_NOBA_API_KEY]);
     const res = await this.consumerService.removeCryptoWallet(consumer, walletAddress, partner.props._id);
     return this.consumerMapper.toDTO(res);
   }

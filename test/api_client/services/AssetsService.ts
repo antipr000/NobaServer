@@ -32,9 +32,9 @@ export class AssetsService {
       method: "GET",
       url: "/v1/cryptocurrencies",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
     });
   }
@@ -60,9 +60,9 @@ export class AssetsService {
       method: "GET",
       url: "/v1/fiatcurrencies",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
     });
   }
@@ -93,9 +93,9 @@ export class AssetsService {
       method: "GET",
       url: "/v1/countries",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
         includeSubdivisions: includeSubdivisions,
@@ -129,9 +129,9 @@ export class AssetsService {
         countryCode: countryCode,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         404: `Country code not found`,
@@ -160,9 +160,9 @@ export class AssetsService {
       method: "GET",
       url: "/v1/config",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         404: `Configurations not found`,
@@ -196,9 +196,9 @@ export class AssetsService {
         bin: bin,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         404: `Credit card information not found`,

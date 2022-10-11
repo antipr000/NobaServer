@@ -34,9 +34,9 @@ export class ConsumerService {
       method: "GET",
       url: "/v1/consumers",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -68,9 +68,9 @@ export class ConsumerService {
       method: "PATCH",
       url: "/v1/consumers",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -104,9 +104,9 @@ export class ConsumerService {
       method: "POST",
       url: "/v1/consumers/paymentmethods",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -143,9 +143,9 @@ export class ConsumerService {
         paymentToken: paymentToken,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid payment method details`,
@@ -177,9 +177,9 @@ export class ConsumerService {
       method: "POST",
       url: "/v1/consumers/wallets",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -216,9 +216,9 @@ export class ConsumerService {
         walletAddress: walletAddress,
       },
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid wallet address`,
@@ -250,9 +250,9 @@ export class ConsumerService {
       method: "POST",
       url: "/v1/consumers/wallets/confirm",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -283,9 +283,9 @@ export class ConsumerService {
       method: "GET",
       url: "/v1/consumers/limits",
       headers: {
-        "X-Noba-API-Key": xNobaApiKey,
-        "X-Noba-Signature": xNobaSignature,
-        "X-Noba-Timestamp": xNobaTimestamp,
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         400: `Invalid request parameters`,

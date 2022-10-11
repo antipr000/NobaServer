@@ -27,7 +27,18 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
   async getPartnerFromApiKey(apiKey: string): Promise<Partner> {
     try {
       const partnerModel = await this.dbProvider.getPartnerModel();
-      const result: any = await partnerModel.findOne({ apiKey: apiKey }).exec();
+      const result: any = await partnerModel
+        .findOne({
+          $or: [
+            {
+              apiKey: apiKey,
+            },
+            {
+              apiKeyForEmbed: apiKey,
+            },
+          ],
+        })
+        .exec();
       if (!result) {
         throw new NotFoundException(`Partner with api key ${apiKey} not found`);
       }

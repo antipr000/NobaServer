@@ -36,6 +36,7 @@ import { PartnerMapper } from "./mappers/PartnerMapper";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
 import { CreatePartnerRequestDTO } from "./dto/CreatePartnerRequestDTO";
+import { UpdatePartnerAdminRequestDTO } from "./dto/UpdatePartnerAdminRequestDTO";
 
 @ApiBearerAuth("JWT-auth")
 @Controller("partners")
@@ -163,7 +164,7 @@ export class PartnerController {
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updatePartnerAdmin(
     @Param(PartnerAdminID) partnerAdminID: string,
-    @Body() requestBody: UpdatePartnerRequestDTO,
+    @Body() requestBody: UpdatePartnerAdminRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
     const requestUser: PartnerAdmin = request.user.entity;

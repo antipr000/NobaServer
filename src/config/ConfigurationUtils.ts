@@ -132,6 +132,9 @@ export const COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY = "highAmountThreshold";
 export const COMMON_CONFIG_CRYPTO_IMAGE_BASE_URL = "cryptoImageBaseUrl";
 export const COMMON_CONFIG_FIAT_IMAGE_BASE_URL = "fiatImageBaseUrl";
 
+export const PARTNER_CONFIG_KEY = "partner";
+export const PARTNER_CONFIG_EMBED_SECRET_KEY = "embedSecretKey";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

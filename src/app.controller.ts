@@ -46,7 +46,7 @@ export class AppController {
   })
   @ApiTags("Assets")
   async supportedCryptocurrencies(@Headers() headers): Promise<Array<CurrencyDTO>> {
-    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()]);
+    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY]);
     const allowedCrypto = partner.props.config.cryptocurrencyAllowList;
 
     return await this.currencyService.getSupportedCryptocurrencies(allowedCrypto);
