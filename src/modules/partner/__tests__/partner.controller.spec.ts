@@ -429,7 +429,7 @@ describe("PartnerController", () => {
 
       when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
 
-      const result = await partnerController.getPartner(partner.props._id, {
+      const result = await partnerController.getPartner({
         user: {
           entity: requestingPartnerAdmin,
         },
@@ -449,7 +449,7 @@ describe("PartnerController", () => {
       when(partnerService.getPartner("partner-1")).thenResolve(null);
 
       try {
-        const result = await partnerController.getPartner("partner-1", {
+        await partnerController.getPartner({
           user: {
             entity: requestingPartnerAdmin,
           },

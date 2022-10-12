@@ -119,9 +119,9 @@ export class Partner extends AggregateRoot<PartnerProps> {
     if (!partnerProps.webhooks) partnerProps.webhooks = [];
     if (!partnerProps.config) partnerProps.config = {} as any;
 
-    if (!partnerProps.isAPIEnabled) partnerProps.isAPIEnabled = true;
+    if (partnerProps.isAPIEnabled === undefined) partnerProps.isAPIEnabled = true;
 
-    if (!partnerProps.isEmbedEnabled) partnerProps.isEmbedEnabled = true;
+    if (partnerProps.isEmbedEnabled === undefined) partnerProps.isEmbedEnabled = true;
 
     if (!partnerProps.config.notificationConfig) partnerProps.config.notificationConfig = [];
 

@@ -21,12 +21,10 @@ export class PartnerService {
    */
   public static getPartner({
     xNobaApiKey,
-    partnerId,
     xNobaSignature,
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    partnerId: string;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -35,10 +33,7 @@ export class PartnerService {
   }): CancelablePromise<PartnerDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/partners/{partnerID}",
-      path: {
-        partnerID: partnerId,
-      },
+      url: "/v1/partners",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
@@ -280,6 +275,7 @@ export class PartnerService {
     xNobaSignature,
     xNobaTimestamp,
     consumerId,
+    partnerId,
     startDate,
     endDate,
     pageOffset,
@@ -300,6 +296,10 @@ export class PartnerService {
      * Consumer ID whose transactions is needed
      */
     consumerId?: string;
+    /**
+     * Partner ID whose transactions needs to be filtered
+     */
+    partnerId?: string;
     /**
      * Format: YYYY-MM-DD, example: 2010-04-27
      */
@@ -355,7 +355,7 @@ export class PartnerService {
   }): CancelablePromise<TransactionsQueryResultsDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/partners/admins/transactions",
+      url: "/v1/partners/transactions",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
@@ -363,6 +363,7 @@ export class PartnerService {
       },
       query: {
         consumerID: consumerId,
+        partnerID: partnerId,
         startDate: startDate,
         endDate: endDate,
         pageOffset: pageOffset,
@@ -400,7 +401,7 @@ export class PartnerService {
   }): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/partners/admins/transactions/{transactionID}",
+      url: "/v1/partners/transactions/{transactionID}",
       path: {
         transactionID: transactionId,
       },
