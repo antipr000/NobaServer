@@ -57,7 +57,7 @@ sardine:
   sardineBaseUri: "https://api.sandbox.sardine.ai"
 
 noba:
-  partnerID: "d4KZqfVKwSHWueOJhmgN-"
+  partnerID: "Vols9tBpNOyPmXdoUrSWu"
   apiKeyForEmbed: "197bebcdba604c8184c2c4434766fd55"
   transaction:
     spreadPercentage: ""
