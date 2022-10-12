@@ -101,15 +101,17 @@ export class TransactionFailedProcessor extends MessageProcessor {
           transactionTimestamp: transaction.props.transactionTimestamp,
           paymentMethod: paymentMethod.cardType,
           last4Digits: paymentMethod.last4Digits,
-          currencyCode: transaction.props.leg1,
+          fiatCurrency: transaction.props.leg1,
           conversionRate: transaction.props.exchangeRate,
           processingFee: transaction.props.processingFee,
           networkFee: transaction.props.networkFee,
           nobaFee: transaction.props.nobaFee,
           totalPrice: transaction.props.leg1Amount,
           cryptoAmount: transaction.props.leg2Amount,
-          cryptoCurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
+          cryptocurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
           failureReason: errorMessage,
+          destinationWalletAddress: transaction.props.destinationWalletAddress,
+          status: transaction.props.transactionStatus,
         },
       },
     );

@@ -1,16 +1,20 @@
+import { TransactionStatus } from "../../../modules/transactions/domain/Types";
+
 export type TransactionParameters = {
   transactionID: string;
   transactionTimestamp: Date;
   paymentMethod: string;
+  destinationWalletAddress: string;
   last4Digits: string;
-  currencyCode: string;
+  fiatCurrency: string;
   conversionRate: number;
   processingFee: number;
   networkFee: number;
   nobaFee: number;
   totalPrice: number;
   cryptoAmount: number;
-  cryptoCurrency: string;
+  cryptocurrency: string;
+  status: TransactionStatus;
 };
 
 export interface CryptoFailedNotificationParameters extends TransactionParameters {

@@ -147,14 +147,16 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
             transactionTimestamp: transaction.props.transactionTimestamp,
             paymentMethod: paymentMethod.cardType,
             last4Digits: paymentMethod.last4Digits,
-            currencyCode: transaction.props.leg1,
+            fiatCurrency: transaction.props.leg1,
             conversionRate: transaction.props.exchangeRate,
             processingFee: transaction.props.processingFee,
             networkFee: transaction.props.networkFee,
             nobaFee: transaction.props.nobaFee,
             totalPrice: transaction.props.leg1Amount,
             cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
-            cryptoCurrency: transaction.props.leg2,
+            cryptocurrency: transaction.props.leg2,
+            destinationWalletAddress: transaction.props.destinationWalletAddress,
+            status: transaction.props.transactionStatus,
             failureReason: "Failed to settle crypto transaction", // TODO: Better message
           },
         },
