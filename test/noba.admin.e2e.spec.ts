@@ -144,7 +144,6 @@ describe("Noba Admin", () => {
         "POST",
         "/v1/admins",
         JSON.stringify({
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin@noba.com",
           name: "Test Admin",
           role: "BASIC",
@@ -155,7 +154,6 @@ describe("Noba Admin", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin@noba.com",
           name: "Test Admin",
           role: "BASIC",
@@ -177,7 +175,6 @@ describe("Noba Admin", () => {
         "POST",
         "/v1/admins",
         JSON.stringify({
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin@noba.com",
           name: "Test Admin",
           role: "BASIC",
@@ -189,7 +186,6 @@ describe("Noba Admin", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin@noba.com",
           name: "Test Admin",
           role: "BASIC",
@@ -212,7 +208,6 @@ describe("Noba Admin", () => {
         "POST",
         "/v1/admins",
         JSON.stringify({
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin.2@noba.com",
           name: "Test Admin 2",
           role: "BASIC",
@@ -224,7 +219,6 @@ describe("Noba Admin", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin.2@noba.com",
           name: "Test Admin 2",
           role: "BASIC",
@@ -247,7 +241,6 @@ describe("Noba Admin", () => {
         "POST",
         "/v1/admins",
         JSON.stringify({
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin.2@noba.com",
           name: "Test Admin 2",
           role: "BASIC",
@@ -259,7 +252,6 @@ describe("Noba Admin", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          _id: "AAAAAAAAAA",
           email: "test.noba.admin.2@noba.com",
           name: "Test Admin 2",
           role: "BASIC",
@@ -287,7 +279,6 @@ describe("Noba Admin", () => {
         "POST",
         "/v1/admins",
         JSON.stringify({
-          _id: "A2A2A2A2A2A2",
           email: newNobaAdminEmail,
           name: newNobaAdminName,
           role: newNobaAdminRole,
@@ -299,7 +290,6 @@ describe("Noba Admin", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          _id: "A2A2A2A2A2A2",
           email: newNobaAdminEmail,
           name: newNobaAdminName,
           role: newNobaAdminRole,

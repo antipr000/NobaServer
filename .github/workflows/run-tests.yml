@@ -48,9 +48,16 @@ jobs:
           yarn install
           echo [SUCCESS] yarn install succeeded.
 
-      - name: Test and coverage          
+      - name: Unit tests with coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: yarn jest --verbose --silent --coverage --runInBand && yarn test:e2e
+        run: yarn jest --verbose --silent --coverage --runInBand
+
+      - name: E2E tests
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: yarn test:e2e
