@@ -54,6 +54,7 @@ import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { CreatePartnerRequestDTO } from "../partner/dto/CreatePartnerRequestDTO";
+import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")
@@ -115,7 +116,7 @@ export class AdminController {
   @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The newly created Noba admin" })
   @ApiForbiddenResponse({ description: "User forbidden from adding new Noba admin" })
   @ApiConflictResponse({ description: "User is already a Noba admin" })
-  async createNobaAdmin(@Request() request, @Body() nobaAdmin: NobaAdminDTO): Promise<NobaAdminDTO> {
+  async createNobaAdmin(@Request() request, @Body() nobaAdmin: AddNobaAdminDTO): Promise<NobaAdminDTO> {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddNobaAdmin()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba admin.`);
