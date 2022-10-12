@@ -22,6 +22,11 @@ export class NobaPartnerSeed {
       // Update all partner records so that defaults are added for missing fields
       const allPartnersRecords: PartnerProps[] = convertDBResponseToJsObject(await partnerModel.find().exec());
       const allPartners: Partner[] = allPartnersRecords.map(Partner.createPartner);
+      allPartners.forEach(partner => {
+        if (this.partnerId === partner.props._id) {
+          partner.props.apiKeyForEmbed = this.apiKeyForEmbed;
+        }
+      });
       const promises = allPartners.map(partner =>
         partnerModel.findByIdAndUpdate(partner.props._id, partner.props).exec(),
       );
