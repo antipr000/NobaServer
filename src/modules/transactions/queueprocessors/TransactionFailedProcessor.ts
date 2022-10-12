@@ -90,7 +90,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
     }
 
     await this.notificationService.sendNotification(
-      NotificationEventType.SEND_ORDER_FAILED_EVENT,
+      NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
       transaction.props.partnerID,
       {
         firstName: consumer.props.firstName,

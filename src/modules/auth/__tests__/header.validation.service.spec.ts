@@ -104,7 +104,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
-        isApiEnabled: true,
+        isAPIEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
@@ -167,7 +167,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
-        isApiEnabled: false,
+        isAPIEnabled: false,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${"POST"}${url}${body}`);
@@ -201,7 +201,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
-        isApiEnabled: true,
+        isAPIEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${"POST"}${url}${body}`);
@@ -270,7 +270,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
-        isApiEnabled: true,
+        isAPIEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
@@ -306,7 +306,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
-        isApiEnabled: true,
+        isAPIEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
@@ -394,7 +394,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
-        isApiEnabled: true,
+        isAPIEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${method}${url}${body}`);
@@ -457,7 +457,7 @@ describe("HeaderValidationService", () => {
         apiKey: apiKey,
         secretKey: secretKey,
         name: "Fake Partner",
-        isApiEnabled: true,
+        isAPIEnabled: true,
       });
       const utf8Secret = CryptoJS.enc.Utf8.parse(secretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(`${timestamp}${apiKey}${"POST"}${url}${body}`);

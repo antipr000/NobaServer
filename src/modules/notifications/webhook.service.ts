@@ -44,6 +44,7 @@ export class WebhookService {
     };
 
     try {
+      this.logger.info(`Webhook Payload: ${JSON.stringify(payload, null, 1)}`);
       await axios.post(url, payload, axiosRequestConfig);
     } catch (e) {
       this.logger.error(
@@ -322,12 +323,12 @@ export class WebhookService {
     await this.makeRequest(partner, webhookRequestPayload, webhook.url);
   }
 
-  @OnEvent(`webhook.${NotificationEventType.SEND_ORDER_EXECUTED_EVENT}`)
+  @OnEvent(`webhook.${NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT}`)
   public async sendOrderExecutedMessage(payload: SendOrderExecutedEvent) {
     const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
-      event: NotificationEventType.SEND_ORDER_EXECUTED_EVENT,
+      event: NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
       userData: {
         email: payload.email,
         firstName: payload.firstName,
@@ -341,12 +342,12 @@ export class WebhookService {
     await this.makeRequest(partner, webhookRequestPayload, webhook.url);
   }
 
-  @OnEvent(`webhook.${NotificationEventType.SEND_ORDER_FAILED_EVENT}`)
+  @OnEvent(`webhook.${NotificationEventType.SEND_TRANSACTION_FAILED_EVENT}`)
   public async sendOrderFailedMessage(payload: SendOrderFailedEvent) {
     const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
-      event: NotificationEventType.SEND_ORDER_FAILED_EVENT,
+      event: NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
       userData: {
         email: payload.email,
         firstName: payload.firstName,

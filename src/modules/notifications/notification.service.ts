@@ -43,10 +43,12 @@ export class NotificationService {
 
         const notificationConfigs: NotificationConfiguration[] = partner.props.config?.notificationConfig ?? [];
 
+        console.log(`Notification events: ${JSON.stringify(notificationConfigs, null, 1)}`);
         const filteredNotificationEvents = notificationConfigs.filter(
           notificationConfig => notificationConfig.notificationEventType === eventType,
         );
 
+        console.log(`Filtered notification events: ${JSON.stringify(filteredNotificationEvents, null, 1)}`);
         if (filteredNotificationEvents.length === 0) {
           notificationEvent = {
             notificationEventType: eventType,
@@ -54,6 +56,7 @@ export class NotificationService {
           };
         } else {
           notificationEvent = filteredNotificationEvents[0];
+          console.log(`Notification event: ${JSON.stringify(notificationEvent, null, 1)}`);
         }
       } catch (e) {
         // PartnerId does not exist in db. Send only email
@@ -67,10 +70,12 @@ export class NotificationService {
         notificationEventType: eventType,
         notificationEventHandler: [NotificationEventHandler.EMAIL],
       };
+      console.log(`Defaulting to email: ${JSON.stringify(notificationEvent, null, 1)}`);
     }
 
     notificationEvent.notificationEventHandler.forEach(eventHandler => {
       const eventName = `${eventHandler}.${eventType}`;
+      console.log(`Event name: ${eventName}`);
       this.createEvent(eventName, eventType, payload, partnerID);
     });
   }
@@ -255,7 +260,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventType.SEND_ORDER_EXECUTED_EVENT:
+      case NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendOrderExecutedEvent({
@@ -267,7 +272,7 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventType.SEND_ORDER_FAILED_EVENT:
+      case NotificationEventType.SEND_TRANSACTION_FAILED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
           new SendOrderFailedEvent({

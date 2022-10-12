@@ -107,7 +107,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     await this.transactionService.callTransactionConfirmWebhook(consumer, transaction);
 
     await this.notificationService.sendNotification(
-      NotificationEventType.SEND_ORDER_EXECUTED_EVENT,
+      NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
       transaction.props.partnerID,
       {
         firstName: consumer.props.firstName,

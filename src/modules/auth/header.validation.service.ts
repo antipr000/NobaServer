@@ -43,10 +43,10 @@ export class HeaderValidationService {
       const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
       if (
         (partner.props.apiKeyForEmbed === apiKey && !partner.props.isEmbedEnabled) ||
-        (partner.props.apiKey === apiKey && !partner.props.isApiEnabled)
+        (partner.props.apiKey === apiKey && !partner.props.isAPIEnabled)
       ) {
         throw new ForbiddenException(
-          `Integration for ${partner.props.apiKey === apiKey ? "API" : "EMBED"}  is not enabled`,
+          `Integration for ${partner.props.apiKey === apiKey ? "API" : "EMBED"} is not enabled`,
         );
       }
       const secretKey =

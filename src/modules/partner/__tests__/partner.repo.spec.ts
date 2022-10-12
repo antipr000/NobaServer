@@ -24,7 +24,7 @@ const getAllRecordsInPartnerCollection = async (partnerCollection: Collection): 
       secretKey: document.secretKey,
       name: document.name,
       config: document.config,
-      isApiEnabled: document.isApiEnabled,
+      isAPIEnabled: document.isAPIEnabled,
       isEmbedEnabled: document.isEmbedEnabled,
     });
     allRecords.push(currentRecord);
@@ -93,7 +93,7 @@ describe("PartnerRepo", () => {
       apiKey: apiKey,
       secretKey: secretKey,
       apiKeyForEmbed: apiKeyForEmbed,
-      isApiEnabled: true,
+      isAPIEnabled: true,
       isEmbedEnabled: true,
     });
     await partnerCollection.insertOne(partner.props);

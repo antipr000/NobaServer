@@ -125,7 +125,7 @@ export const setupPartner = async (mongoUri: string, partnerId: string) => {
     name: "Test Partner",
     apiKey: TEST_API_KEY,
     secretKey: TEST_SECRET_KEY,
-    isApiEnabled: true,
+    isAPIEnabled: true,
     isEmbedEnabled: true,
   });
 

@@ -329,7 +329,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_ORDER_EXECUTED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT}`)
   public async sendOrderExecutedEmail(payload: SendOrderExecutedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
@@ -368,7 +368,7 @@ export class EmailService {
     await sgMail.send(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_ORDER_FAILED_EVENT}`)
+  @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_FAILED_EVENT}`)
   public async sendOrderFailedEmail(payload: SendOrderFailedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
