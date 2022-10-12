@@ -4,7 +4,7 @@ import { PartnerService } from "../partner.service";
 import { getMockPartnerRepoWithDefaults } from "../mocks/mock.partner.repo";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { Partner } from "../domain/Partner";
+import { Partner, PartnerWebhook } from "../domain/Partner";
 import { WebhookType } from "../domain/WebhookTypes";
 import { BadRequestException } from "@nestjs/common";
 import { IPartnerRepo } from "../repo/PartnerRepo";
@@ -12,16 +12,25 @@ import {
   NotificationEventHandler,
   NotificationEventType,
 } from "../../../modules/notifications/domain/NotificationTypes";
+import { ITransactionRepo } from "../../../modules/transactions/repo/TransactionRepo";
+import { getMockTransactionRepoWithDefaults } from "../../../modules/transactions/mocks/mock.transactions.repo";
+import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
+import { Transaction } from "../../../modules/transactions/domain/Transaction";
+import { TransactionStatus } from "../../../modules/transactions/domain/Types";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 
 describe("PartnerService", () => {
   let partnerService: PartnerService;
   let partnerRepo: IPartnerRepo;
+  let transactionRepo: ITransactionRepo;
+  const transactionMapper = new TransactionMapper();
 
   jest.setTimeout(20000);
   const OLD_ENV = process.env;
 
   beforeEach(async () => {
     partnerRepo = getMockPartnerRepoWithDefaults();
+    transactionRepo = getMockTransactionRepoWithDefaults();
 
     const PartnerRepoProvider = {
       provide: "PartnerRepo",
@@ -30,7 +39,14 @@ describe("PartnerService", () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
-      providers: [PartnerRepoProvider, PartnerService],
+      providers: [
+        PartnerRepoProvider,
+        PartnerService,
+        {
+          provide: "TransactionRepo",
+          useFactory: () => instance(transactionRepo),
+        },
+      ],
     }).compile();
 
     partnerService = app.get<PartnerService>(PartnerService);
@@ -359,6 +375,161 @@ describe("PartnerService", () => {
 
       const result = await partnerService.addOrReplaceWebhook(partner.props._id, webhookType, webhookURL);
       expect(result).toStrictEqual(updatedPartner);
+    });
+  });
+
+  describe("getAllTransactionsForPartner", () => {
+    it("should return all transactions for partner", async () => {
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: "user-id-1",
+        sessionKey: "fake-session-key",
+        paymentMethodID: "fake-payment-token",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        partnerID: "fake-partner",
+        destinationWalletAddress: "fake-wallet",
+        transactionTimestamp: new Date(),
+      });
+
+      const transactionDTO = transactionMapper.toDTO(transaction);
+
+      const allTransactionsResult: PaginatedResult<Transaction> = {
+        items: [transaction],
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+      };
+
+      when(transactionRepo.getPartnerTransactions(transaction.props.partnerID, deepEqual({}))).thenResolve(
+        allTransactionsResult,
+      );
+
+      const response = await partnerService.getAllTransactionsForPartner(transaction.props.partnerID, {});
+      expect(response.totalItems).toBe(1);
+      expect(response.items[0]).toStrictEqual(transactionDTO);
+    });
+  });
+
+  describe("getTransaction", () => {
+    it("should return requested transaction", async () => {
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: "user-id-1",
+        sessionKey: "fake-session-key",
+        paymentMethodID: "fake-payment-token",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        partnerID: "fake-partner",
+        destinationWalletAddress: "fake-wallet",
+        transactionTimestamp: new Date(),
+      });
+
+      const transactionDTO = transactionMapper.toDTO(transaction);
+
+      when(transactionRepo.getTransaction(transaction.props._id)).thenResolve(transaction);
+
+      const response = await partnerService.getTransaction(transaction.props._id);
+
+      expect(response).toStrictEqual(transactionDTO);
+    });
+  });
+
+  describe("getPartnerFromApiKey", () => {
+    it("returns partner account with given api key", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        webhookClientID: "mockClientID",
+        webhookSecret: "mockWebhookSecret",
+        webhooks: [],
+      });
+
+      when(partnerRepo.getPartnerFromApiKey(partner.props.apiKey)).thenResolve(partner);
+
+      const response = await partnerService.getPartnerFromApiKey(partner.props.apiKey);
+      expect(response).toStrictEqual(partner);
+    });
+  });
+
+  describe("getWebhook", () => {
+    it("should return webhooks of given type", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        webhookClientID: "mockClientID",
+        webhookSecret: "mockWebhookSecret",
+        webhooks: [{ url: "url1", type: WebhookType.NOTIFICATION }],
+      });
+
+      const response = await partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
+
+      expect(response.url).toBe("url1");
+    });
+
+    it("should return null if webhook of given type does not exist", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        webhookClientID: "mockClientID",
+        webhookSecret: "mockWebhookSecret",
+        webhooks: [],
+      });
+
+      const response = await partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
+
+      expect(response).toBe(null);
+    });
+  });
+
+  describe("addOrReplaceWebhook", () => {
+    it("should add new webhook", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        apiKeyForEmbed: "mockApiKeyForEmbed",
+        webhookClientID: "mockClientID",
+        webhookSecret: "mockWebhookSecret",
+        webhooks: [],
+      });
+
+      const updatedPartner = Partner.createPartner({
+        ...partner.props,
+        webhooks: [{ url: "url2", type: WebhookType.NOTIFICATION } as PartnerWebhook],
+      });
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+      when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
+
+      const response = await partnerService.addOrReplaceWebhook(partner.props._id, WebhookType.NOTIFICATION, "url2");
+      expect(response).toStrictEqual(updatedPartner);
+    });
+
+    it("should throw BadRequestException when partner with id does not exist", async () => {
+      const id = "mock-partner-2";
+
+      when(partnerRepo.getPartner(id)).thenResolve(null);
+
+      try {
+        await partnerService.addOrReplaceWebhook(id, WebhookType.NOTIFICATION, "url2");
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("Unknown partner ID");
+      }
     });
   });
 });

@@ -6,6 +6,11 @@ import { IPartnerRepo } from "./repo/PartnerRepo";
 import { WebhookType } from "./domain/WebhookTypes";
 import { CreatePartnerRequest } from "./dto/ServiceTypes";
 import { UpdatePartnerRequestDTO } from "./dto/UpdatePartnerRequestDTO";
+import { TransactionFilterOptions } from "../transactions/domain/Types";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { TransactionDTO } from "../transactions/dto/TransactionDTO";
+import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
+import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
 
 @Injectable()
 export class PartnerService {
@@ -15,8 +20,14 @@ export class PartnerService {
   @Inject("PartnerRepo")
   private readonly partnerRepo: IPartnerRepo;
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() {}
+  @Inject("TransactionRepo")
+  private readonly transactionRepo: ITransactionRepo;
+
+  private readonly transactionMapper: TransactionMapper;
+
+  constructor() {
+    this.transactionMapper = new TransactionMapper();
+  }
 
   async getPartner(partnerId: string): Promise<Partner> {
     const partner: Partner = await this.partnerRepo.getPartner(partnerId);
@@ -73,7 +84,6 @@ export class PartnerService {
       },
       webhooks: partnerUpdateRequest.webhooks ?? partner.props.webhooks,
     });
-
     const partnerResult: Partner = await this.partnerRepo.updatePartner(updatedPartner);
     return partnerResult;
   }
@@ -94,14 +104,24 @@ export class PartnerService {
     }
 
     // Get all the webhooks except for any existing of the same type that we want to overwrite
-    let existingWebhooks = partner.props.webhooks.filter(webhook => webhook.type !== type);
-    if (!existingWebhooks) {
-      existingWebhooks = [];
-    }
+    const existingWebhooks = partner.props.webhooks.filter(webhook => webhook.type !== type);
 
     existingWebhooks.push({ type: type, url: url });
 
     const partnerResult: Partner = await this.updatePartner(partnerID, { webhooks: existingWebhooks });
     return partnerResult;
+  }
+
+  async getAllTransactionsForPartner(
+    partnerID: string,
+    transactionQuery?: TransactionFilterOptions,
+  ): Promise<PaginatedResult<TransactionDTO>> {
+    const transactionsResult = await this.transactionRepo.getPartnerTransactions(partnerID, transactionQuery);
+    return { ...transactionsResult, items: transactionsResult.items.map(this.transactionMapper.toDTO) };
+  }
+
+  async getTransaction(transactionID: string): Promise<TransactionDTO> {
+    const transaction = await this.transactionRepo.getTransaction(transactionID);
+    return this.transactionMapper.toDTO(transaction);
   }
 }

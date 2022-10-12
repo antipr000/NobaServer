@@ -185,6 +185,7 @@ export class TransactionsService {
     xNobaApiKey,
     xNobaSignature,
     xNobaTimestamp,
+    consumerId,
     startDate,
     endDate,
     pageOffset,
@@ -201,6 +202,10 @@ export class TransactionsService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
+    /**
+     * Consumer ID whose transactions is needed
+     */
+    consumerId?: string;
     /**
      * Format: YYYY-MM-DD, example: 2010-04-27
      */
@@ -263,6 +268,7 @@ export class TransactionsService {
         "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
+        consumerID: consumerId,
         startDate: startDate,
         endDate: endDate,
         pageOffset: pageOffset,
@@ -289,6 +295,7 @@ export class TransactionsService {
     reportFormat,
     xNobaSignature,
     xNobaTimestamp,
+    consumerId,
     startDate,
     endDate,
     pageOffset,
@@ -309,6 +316,10 @@ export class TransactionsService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
+    /**
+     * Consumer ID whose transactions is needed
+     */
+    consumerId?: string;
     /**
      * Format: YYYY-MM-DD, example: 2010-04-27
      */
@@ -371,6 +382,7 @@ export class TransactionsService {
         "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
+        consumerID: consumerId,
         startDate: startDate,
         endDate: endDate,
         pageOffset: pageOffset,

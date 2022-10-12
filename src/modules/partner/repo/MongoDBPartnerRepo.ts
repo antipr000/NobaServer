@@ -20,7 +20,7 @@ export class MongoDBPartnerRepo implements IPartnerRepo {
       const partnerData: PartnerProps = convertDBResponseToJsObject(result);
       return this.partnerMapper.toDomain(partnerData);
     } catch (e) {
-      throw new NotFoundException();
+      return null;
     }
   }
 

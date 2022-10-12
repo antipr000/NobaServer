@@ -167,14 +167,6 @@ export class TransactionService {
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
   }
 
-  async getAllTransactionsForPartner(
-    partnerID: string,
-    transactionQuery?: TransactionFilterOptions,
-  ): Promise<PaginatedResult<TransactionDTO>> {
-    const transactionsResult = await this.transactionsRepo.getPartnerTransactions(partnerID, transactionQuery);
-    return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
-  }
-
   async getTransactionsInInterval(
     userID: string,
     partnerID: string,

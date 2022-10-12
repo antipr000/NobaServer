@@ -19,8 +19,9 @@ export class NobaPartnerSeed {
     const partnerModel = await this.dbProvider.getPartnerModel();
     try {
       const response = await partnerModel.findById(this.partnerId).exec();
-      if (!response) {
+      if (response) {
         console.log("Noba partner already exists");
+        return;
       }
     } catch (e) {
       // pass through

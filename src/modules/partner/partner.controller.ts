@@ -40,7 +40,6 @@ import { PartnerAdminService } from "./partneradmin.service";
 import { UpdatePartnerAdminRequestDTO } from "./dto/UpdatePartnerAdminRequestDTO";
 import { TransactionsQueryResultsDTO } from "../transactions/dto/TransactionsQueryResultsDTO";
 import { TransactionFilterOptions } from "../transactions/domain/Types";
-import { TransactionService } from "../transactions/transaction.service";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 
 @ApiBearerAuth("JWT-auth")
@@ -55,7 +54,6 @@ export class PartnerController {
   constructor(
     private readonly partnerService: PartnerService,
     private readonly partnerAdminService: PartnerAdminService,
-    private readonly transactionService: TransactionService,
   ) {
     this.partnerMapper = new PartnerMapper();
     this.partnerAdminMapper = new PartnerAdminMapper();
@@ -77,6 +75,9 @@ export class PartnerController {
     }
     if (!requestUser.canGetPartnerDetails()) throw new ForbiddenException();
     const partner: Partner = await this.partnerService.getPartner(partnerID);
+    if (!partner) {
+      throw new NotFoundException();
+    }
     return this.partnerMapper.toDTO(partner);
   }
 
@@ -220,7 +221,7 @@ export class PartnerController {
     if (!user.canViewAllTransactions()) {
       throw new ForbiddenException("You do not have sufficient privileges to view all transactions");
     }
-    return (await this.transactionService.getAllTransactionsForPartner(
+    return (await this.partnerService.getAllTransactionsForPartner(
       user.props.partnerId,
       transactionFilters,
     )) as TransactionsQueryResultsDTO;
@@ -241,9 +242,9 @@ export class PartnerController {
     }
 
     if (!user.canViewAllTransactions()) {
-      throw new ForbiddenException("You do not have sufficient privileges to view all transactions");
+      throw new ForbiddenException("You do not have sufficient privileges to view the requested transaction");
     }
-    const transactionDTO = await this.transactionService.getTransaction(transactionID);
+    const transactionDTO = await this.partnerService.getTransaction(transactionID);
 
     if (transactionDTO.partnerID !== user.props.partnerId) {
       throw new NotFoundException("Transaction does not exist");

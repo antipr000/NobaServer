@@ -242,6 +242,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
     filterQuery = {
       ...filterQuery,
+      ...(filterOpts.consumerID && { userId: filterOpts.consumerID }),
       ...(filterOpts.transactionStatus && { transactionStatus: filterOpts.transactionStatus }),
       ...(filterOpts.fiatCurrency && { leg1: filterOpts.fiatCurrency }),
       ...(filterOpts.cryptoCurrency && { leg2: filterOpts.cryptoCurrency }),

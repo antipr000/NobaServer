@@ -12,19 +12,17 @@ import { PartnerController } from "../partner.controller";
 import { PartnerAdmin } from "../domain/PartnerAdmin";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Partner } from "../domain/Partner";
-import { TransactionService } from "../../../modules/transactions/transaction.service";
-import { getMockTransactionServiceWithDefaults } from "../../../modules/transactions/mocks/mock.transactions.repo";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
   let partnerService: PartnerService;
   let partnerAdminService: PartnerAdminService;
-  let transactionService: TransactionService;
   const partnerMapper: PartnerMapper = new PartnerMapper();
   const partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
   const transactionMapper = new TransactionMapper();
@@ -35,7 +33,6 @@ describe("PartnerController", () => {
   beforeEach(async () => {
     partnerService = getMockPartnerServiceWithDefaults();
     partnerAdminService = getMockPartnerAdminServiceWithDefaults();
-    transactionService = getMockTransactionServiceWithDefaults();
 
     const PartnerServiceProvider = {
       provide: PartnerService,
@@ -50,14 +47,7 @@ describe("PartnerController", () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [PartnerController],
-      providers: [
-        PartnerServiceProvider,
-        PartnerAdminServiceProvider,
-        {
-          provide: TransactionService,
-          useFactory: () => instance(transactionService),
-        },
-      ],
+      providers: [PartnerServiceProvider, PartnerAdminServiceProvider],
     }).compile();
 
     partnerController = app.get<PartnerController>(PartnerController);
@@ -446,6 +436,27 @@ describe("PartnerController", () => {
       });
 
       expect(result).toStrictEqual(partnerMapper.toDTO(partner));
+    });
+
+    it("should throw NotFoundException when partner is missing", async () => {
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "mock2@partner.com",
+        partnerId: "partner-1",
+        role: "BASIC",
+      });
+
+      when(partnerService.getPartner("partner-1")).thenResolve(null);
+
+      try {
+        const result = await partnerController.getPartner("partner-1", {
+          user: {
+            entity: requestingPartnerAdmin,
+          },
+        });
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+      }
     });
     /*
     it("should update partner details when requesting admin has all access", async () => {
@@ -918,7 +929,7 @@ describe("PartnerController", () => {
           totalItems: 1,
         };
         when(
-          transactionService.getAllTransactionsForPartner(requestingPartnerAdmin.props.partnerId, deepEqual({})),
+          partnerService.getAllTransactionsForPartner(requestingPartnerAdmin.props.partnerId, deepEqual({})),
         ).thenResolve(allTransactionsResult);
 
         const response = await partnerController.getTransactions(
@@ -930,6 +941,47 @@ describe("PartnerController", () => {
 
         expect(response.totalItems).toBe(1);
         expect(response.items[0]).toStrictEqual(transactionDTO);
+      });
+
+      it("should throw ForbiddenException if requesting user is not PartnerAdmin", async () => {
+        const user = Consumer.createConsumer({
+          _id: "fake-consumer-id",
+          email: "fake+consumer@noba.com",
+          partners: [{ partnerID: "partner-1" }],
+        });
+
+        try {
+          await partnerController.getTransactions(
+            {
+              user: { entity: user },
+            },
+            {},
+          );
+        } catch (e) {
+          expect(e).toBeInstanceOf(ForbiddenException);
+          expect(e.message).toBe("Only partner admins can access this endpoint");
+        }
+      });
+
+      it("should throw ForbiddenException if requesting user does not have proper privilege", async () => {
+        const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+          _id: "mock-partner-admin-2",
+          email: "moc2k@partner.com",
+          partnerId: "mock-partner-1",
+          role: "BASIC",
+        });
+
+        try {
+          await partnerController.getTransactions(
+            {
+              user: { entity: requestingPartnerAdmin },
+            },
+            {},
+          );
+        } catch (e) {
+          expect(e).toBeInstanceOf(ForbiddenException);
+          expect(e.message).toBe("You do not have sufficient privileges to view all transactions");
+        }
       });
     });
 
@@ -959,7 +1011,7 @@ describe("PartnerController", () => {
 
         const transactionDTO = transactionMapper.toDTO(transaction);
 
-        when(transactionService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
+        when(partnerService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
         const response = await partnerController.getTransaction(
           {
             user: { entity: requestingPartnerAdmin },
@@ -967,6 +1019,86 @@ describe("PartnerController", () => {
           transaction.props._id,
         );
         expect(response).toStrictEqual(transactionDTO);
+      });
+
+      it("should throw ForbiddenException if requesting user is not PartnerAdmin", async () => {
+        const user = Consumer.createConsumer({
+          _id: "fake-consumer-id",
+          email: "fake+consumer@noba.com",
+          partners: [{ partnerID: "partner-1" }],
+        });
+
+        try {
+          await partnerController.getTransaction(
+            {
+              user: { entity: user },
+            },
+            "transaction-1",
+          );
+        } catch (e) {
+          expect(e).toBeInstanceOf(ForbiddenException);
+          expect(e.message).toBe("Only partner admins can access this endpoint");
+        }
+      });
+
+      it("should throw ForbiddenException if requesting user does not have proper privilege", async () => {
+        const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+          _id: "mock-partner-admin-2",
+          email: "moc2k@partner.com",
+          partnerId: "mock-partner-1",
+          role: "BASIC",
+        });
+
+        try {
+          await partnerController.getTransaction(
+            {
+              user: { entity: requestingPartnerAdmin },
+            },
+            "transaction-1",
+          );
+        } catch (e) {
+          expect(e).toBeInstanceOf(ForbiddenException);
+          expect(e.message).toBe("You do not have sufficient privileges to view the requested transaction");
+        }
+      });
+
+      it("should throw NotFoundException if transactionID does not exist for given partner", async () => {
+        const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+          _id: "mock-partner-admin-2",
+          email: "moc2k@partner.com",
+          partnerId: "mock-partner-1",
+          role: "ALL",
+        });
+
+        const transaction = Transaction.createTransaction({
+          _id: "fake-transaction-id",
+          userId: "user-id-1",
+          sessionKey: "fake-session-key",
+          paymentMethodID: "fake-payment-token",
+          leg1Amount: 100,
+          leg2Amount: 0.1,
+          leg1: "USD",
+          leg2: "ETH",
+          transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+          partnerID: "mock-partner-2",
+          destinationWalletAddress: "fake-wallet",
+          transactionTimestamp: new Date(),
+        });
+
+        const transactionDTO = transactionMapper.toDTO(transaction);
+
+        when(partnerService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
+        try {
+          await partnerController.getTransaction(
+            {
+              user: { entity: requestingPartnerAdmin },
+            },
+            transaction.props._id,
+          );
+        } catch (e) {
+          expect(e).toBeInstanceOf(NotFoundException);
+          expect(e.message).toBe("Transaction does not exist");
+        }
       });
     });
   });

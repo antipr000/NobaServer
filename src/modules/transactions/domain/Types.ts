@@ -180,6 +180,9 @@ export function transactionPropFromQuerySortField(transactionQuerySortField: Tra
 }
 
 export class TransactionFilterOptions {
+  @ApiPropertyOptional({ description: "Consumer ID whose transactions is needed" })
+  consumerID?: string;
+
   @ApiPropertyOptional({
     description: "Format: YYYY-MM-DD, example: 2010-04-27",
   })
