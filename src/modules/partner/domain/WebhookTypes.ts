@@ -3,9 +3,9 @@ import { NotificationEventType } from "../../../modules/notifications/domain/Not
 import { ConsumerSimpleDTO } from "../../../modules/consumer/dto/ConsumerDTO";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
 import { KYCStatus } from "../../../modules/consumer/domain/VerificationStatus";
+import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 
 export enum WebhookType {
-  TRANSACTION_CONFIRM = "TransConfirm",
   NOTIFICATION = "Notification",
 }
 
@@ -23,6 +23,12 @@ class UserDataDTO {
 
   @ApiPropertyOptional()
   lastName?: string;
+
+  @ApiPropertyOptional()
+  nobaUserID?: string;
+
+  @ApiPropertyOptional()
+  partnerUserID?: string;
 
   @ApiProperty()
   email: string;
@@ -50,7 +56,7 @@ class TransactionInformationDTO {
   last4Digits: string;
 
   @ApiProperty()
-  currencyCode: string;
+  fiatCurrency: string;
 
   @ApiProperty()
   conversionRate: number;
@@ -71,7 +77,7 @@ class TransactionInformationDTO {
   cryptoAmount: number;
 
   @ApiProperty()
-  cryptoCurrency: string;
+  cryptocurrency: string;
 
   @ApiPropertyOptional()
   failureReason?: string;
@@ -84,6 +90,12 @@ class TransactionInformationDTO {
 
   @ApiPropertyOptional()
   cryptoAmountExpected?: number;
+
+  @ApiPropertyOptional()
+  destinationWalletAddress?: string;
+
+  @ApiPropertyOptional({ enum: Object.values(TransactionStatus), description: "Current status of the transaction" })
+  status: TransactionStatus;
 }
 
 class OtpDataDTO {

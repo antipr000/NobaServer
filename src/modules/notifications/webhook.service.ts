@@ -57,7 +57,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_OTP_EVENT}`)
   public async sendOtp(payload: SendOtpEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_OTP_EVENT,
@@ -75,7 +75,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`)
   public async sendWalletUpdateVerificationCode(payload: SendWalletUpdateVerificationCodeEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
@@ -94,7 +94,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_WELCOME_MESSAGE_EVENT}`)
   public async sendWelcomeMessage(payload: SendWelcomeMessageEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
@@ -110,7 +110,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_KYC_APPROVED_US_EVENT}`)
   public async sendKycApprovedUSMessage(payload: SendKycApprovedUSEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
@@ -127,7 +127,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT}`)
   public async sendKycApprovedNonUSMessage(payload: SendKycApprovedNonUSEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
@@ -144,7 +144,7 @@ export class WebhookService {
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_DENIED_EVENT}`)
   public async sendKycDeniedMessage(payload: SendKycDeniedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_KYC_DENIED_EVENT,
@@ -161,7 +161,7 @@ export class WebhookService {
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
   public async sendKycPendingOrFlaggedMessage(payload: SendKycPendingOrFlaggedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
@@ -178,7 +178,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT}`)
   public async sendDocVerificationPendingMessage(payload: SendDocumentVerificationPendingEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
@@ -195,7 +195,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT}`)
   public async sendDocVerificationRejectedMessage(payload: SendDocumentVerificationRejectedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
@@ -212,7 +212,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT}`)
   public async sendDocVerificationFailedTechMessage(payload: SendDocumentVerificationTechnicalFailureEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
@@ -228,7 +228,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_CARD_ADDED_EVENT}`)
   public async sendCardAddedMessage(payload: SendCardAddedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_CARD_ADDED_EVENT,
@@ -248,7 +248,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT}`)
   public async sendCardAdditionFailedMessage(payload: SendCardAdditionFailedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT,
@@ -267,7 +267,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_CARD_DELETED_EVENT}`)
   public async sendCardDeletedMessage(payload: SendCardDeletedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_CARD_DELETED_EVENT,
@@ -287,7 +287,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT}`)
   public async sendTransactionInitiatedMessage(payload: SendTransactionInitiatedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
@@ -306,7 +306,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_CRYPTO_FAILED_EVENT}`)
   public async sendCryptoFailedMessage(payload: SendCryptoFailedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_CRYPTO_FAILED_EVENT,
@@ -325,7 +325,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT}`)
   public async sendOrderExecutedMessage(payload: SendOrderExecutedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
@@ -344,7 +344,7 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_TRANSACTION_FAILED_EVENT}`)
   public async sendOrderFailedMessage(payload: SendOrderFailedEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
@@ -363,7 +363,7 @@ export class WebhookService {
 
   @OnEvent(`email.${NotificationEventType.SEND_HARD_DECLINE_EVENT}`)
   public async sendHardDeclineMessage(payload: SendHardDeclineEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerId);
+    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_HARD_DECLINE_EVENT,

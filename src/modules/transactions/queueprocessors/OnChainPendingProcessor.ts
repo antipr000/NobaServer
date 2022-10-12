@@ -103,8 +103,6 @@ export class OnChainPendingProcessor extends MessageProcessor {
     } catch (e) {
       // pass
     }
-    // Make webhook callback to partner
-    await this.transactionService.callTransactionConfirmWebhook(consumer, transaction);
 
     await this.notificationService.sendNotification(
       NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
@@ -112,6 +110,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
       {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
         email: consumer.props.displayEmail,
         orderExecutedParams: {
           transactionID: transaction.props._id,

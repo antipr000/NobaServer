@@ -257,6 +257,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
+            nobaUserID: newConsumerData._id,
             email: newConsumerData.email,
           }),
         ),
@@ -311,6 +312,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
+            nobaUserID: newConsumerData._id,
             email: newConsumerData.email,
           }),
         ),
@@ -366,6 +368,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
+            nobaUserID: newConsumerData._id,
             email: newConsumerData.email,
           }),
         ),
@@ -420,6 +423,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
+            nobaUserID: newConsumerData._id,
             email: newConsumerData.email,
           }),
         ),
@@ -463,6 +467,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerProps.firstName,
             lastName: newConsumerProps.lastName,
+            nobaUserID: newConsumerProps._id,
             email: newConsumerProps.email,
           }),
         ),
@@ -504,6 +509,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerProps.firstName,
             lastName: newConsumerProps.lastName,
+            nobaUserID: newConsumerProps._id,
             email: newConsumerProps.email,
           }),
         ),
@@ -560,6 +566,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.email,
           }),
         ),
@@ -614,6 +621,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.displayEmail,
           }),
         ),
@@ -718,6 +726,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.displayEmail,
           }),
         ),
@@ -762,6 +771,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.displayEmail,
           }),
         ),
@@ -805,6 +815,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.email,
           }),
         ),
@@ -852,6 +863,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.email,
           }),
         ),

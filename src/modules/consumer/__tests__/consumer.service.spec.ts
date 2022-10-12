@@ -136,6 +136,7 @@ describe("ConsumerService", () => {
             email: email,
             firstName: undefined,
             lastName: undefined,
+            nobaUserID: consumer.props._id,
           }),
         ),
       ).once();
@@ -368,6 +369,7 @@ describe("ConsumerService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.email,
             cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardType,
             last4Digits: addPaymentMethodResponse.newPaymentMethod.last4Digits,
@@ -708,6 +710,7 @@ describe("ConsumerService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.email,
             cardNetwork: consumer.props.paymentMethods[0].cardType,
             last4Digits: consumer.props.paymentMethods[0].last4Digits,

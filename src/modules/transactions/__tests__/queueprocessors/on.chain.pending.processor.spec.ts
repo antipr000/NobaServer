@@ -267,7 +267,6 @@ describe("OnChainPendingProcessor", () => {
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
-    when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
     when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve();
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);
@@ -313,7 +312,6 @@ describe("OnChainPendingProcessor", () => {
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
-    when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);
 
@@ -402,7 +400,6 @@ describe("OnChainPendingProcessor", () => {
     when(assetService.pollConsumerWalletTransferStatus(transaction.props.zhWithdrawalID)).thenResolve(
       consumerWalletTransferStatus,
     );
-    when(transactionService.callTransactionConfirmWebhook(consumer, anything())).thenResolve();
     when(transactionService.analyzeTransactionWalletExposure(anything())).thenResolve();
 
     await onChainPendingProcessor.processMessageInternal(transaction.props._id);

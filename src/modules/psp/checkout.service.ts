@@ -176,6 +176,7 @@ export class CheckoutService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
           last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
         },
@@ -305,7 +306,7 @@ export class CheckoutService {
     cardNumber: string,
     sessionID: string,
     transactionID: string,
-    partnerId: string,
+    partnerID: string,
   ): Promise<CheckoutResponseData> {
     const response: CheckoutResponseData = new CheckoutResponseData();
     response.responseCode = checkoutResponse["response_code"];
@@ -390,9 +391,10 @@ export class CheckoutService {
       }
     } finally {
       if (sendNobaEmail) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, partnerId, {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, partnerID, {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
           sessionID: sessionID,
           transactionID: transactionID,

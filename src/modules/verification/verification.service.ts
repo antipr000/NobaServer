@@ -79,6 +79,7 @@ export class VerificationService {
         await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, partnerId, {
           firstName: updatedConsumer.props.firstName,
           lastName: updatedConsumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: updatedConsumer.props.displayEmail,
         });
       } else {
@@ -88,6 +89,7 @@ export class VerificationService {
           {
             firstName: updatedConsumer.props.firstName,
             lastName: updatedConsumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: updatedConsumer.props.displayEmail,
           },
         );
@@ -97,6 +99,7 @@ export class VerificationService {
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, partnerId, {
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
+        nobaUserID: consumer.props._id,
         email: updatedConsumer.props.displayEmail,
       });
     } else {
@@ -106,6 +109,7 @@ export class VerificationService {
         {
           firstName: updatedConsumer.props.firstName,
           lastName: updatedConsumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: updatedConsumer.props.displayEmail,
         },
       );
@@ -138,6 +142,7 @@ export class VerificationService {
             {
               firstName: consumer.props.firstName,
               lastName: consumer.props.lastName,
+              nobaUserID: consumer.props._id,
               email: consumer.props.displayEmail,
             },
           );
@@ -148,6 +153,7 @@ export class VerificationService {
             {
               firstName: consumer.props.firstName,
               lastName: consumer.props.lastName,
+              nobaUserID: consumer.props._id,
               email: consumer.props.displayEmail,
             },
           );
@@ -159,6 +165,7 @@ export class VerificationService {
           {
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
             email: consumer.props.displayEmail,
           },
         );
@@ -193,6 +200,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
         },
       );
@@ -205,6 +213,7 @@ export class VerificationService {
       {
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
+        nobaUserID: consumer.props._id,
         email: updatedConsumer.props.displayEmail,
       },
     );
@@ -234,6 +243,7 @@ export class VerificationService {
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, partnerId, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
         email: consumer.props.displayEmail,
       });
     } else if (
@@ -248,6 +258,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
         },
       );
@@ -286,6 +297,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
         },
       );
@@ -302,6 +314,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
         },
       );

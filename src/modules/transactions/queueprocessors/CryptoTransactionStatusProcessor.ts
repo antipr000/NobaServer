@@ -141,6 +141,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
           cryptoFailedParams: {
             transactionID: transaction.props._id,

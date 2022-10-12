@@ -81,6 +81,7 @@ export class ConsumerService {
         email: emailOrPhone,
         firstName: result.props.firstName,
         lastName: result.props.lastName,
+        nobaUserID: result.props._id,
       });
       return result;
     } else if (
@@ -144,6 +145,7 @@ export class ConsumerService {
       await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
         email: consumer.props.displayEmail,
         cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardType,
         last4Digits: addPaymentMethodResponse.newPaymentMethod.last4Digits,
@@ -207,6 +209,7 @@ export class ConsumerService {
     await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_DELETED_EVENT, partnerId, {
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,
+      nobaUserID: consumer.props._id,
       email: consumer.props.displayEmail,
       cardNetwork: paymentMethod[0].cardType,
       last4Digits: paymentMethod[0].last4Digits,
@@ -268,6 +271,7 @@ export class ConsumerService {
         otp: otp.toString(),
         walletAddress: walletAddress,
         firstName: consumer.props.firstName,
+        nobaUserID: consumer.props._id,
       },
     );
   }

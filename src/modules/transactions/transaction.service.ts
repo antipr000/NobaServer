@@ -468,6 +468,7 @@ export class TransactionService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
           transactionInitiatedParams: {
             transactionID: transaction.props._id,
@@ -544,33 +545,6 @@ export class TransactionService {
         password: partner.props.webhookSecret,
       },
     };
-  }
-
-  async callTransactionConfirmWebhook(consumer: Consumer, transaction: Transaction) {
-    const partnerID = transaction.props.partnerID;
-    if (!partnerID) {
-      return;
-    }
-
-    const partner = await this.partnerService.getPartner(partnerID);
-    const webhook = this.partnerService.getWebhook(partner, WebhookType.TRANSACTION_CONFIRM);
-    if (webhook == null) {
-      return; // Partner doesn't have a webhook callback
-    }
-
-    const payload: TransConfirmDTO = {
-      consumer: new ConsumerMapper().toSimpleDTO(consumer),
-      transaction: new TransactionMapper().toDTO(transaction),
-    };
-
-    try {
-      const config = this.getAxiosConfig(partner);
-      await axios.post(webhook.url, payload, config);
-    } catch (err) {
-      this.logger.error(
-        `Error calling ${webhook.type} at url ${webhook.url} for partner ${partner.props.name} transaction ID: ${transaction.props._id}. Error: ${err.message}`,
-      );
-    }
   }
 
   private isCryptocurrencyAllowed(partner: Partner, cryptocurrency: string) {

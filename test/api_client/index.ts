@@ -4,6 +4,7 @@
 
 export type { ActionDTO } from "./models/ActionDTO";
 export type { AddCryptoWalletDTO } from "./models/AddCryptoWalletDTO";
+export type { AddNobaAdminDTO } from "./models/AddNobaAdminDTO";
 export type { AddPartnerAdminRequestDTO } from "./models/AddPartnerAdminRequestDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";

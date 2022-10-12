@@ -11,6 +11,8 @@ export type NotificationPayload = {
   walletAddress?: string;
   firstName?: string;
   lastName?: string;
+  nobaUserID?: string;
+  partnerUserID?: string;
   cardNetwork?: string;
   last4Digits?: string;
   transactionInitiatedParams?: TransactionInitiatedNotificationParameters;

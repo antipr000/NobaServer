@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AddNobaAdminDTO } from "../models/AddNobaAdminDTO";
 import type { AddPartnerAdminRequestDTO } from "../models/AddPartnerAdminRequestDTO";
 import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
@@ -111,7 +112,7 @@ export class AdminService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    requestBody: NobaAdminDTO;
+    requestBody: AddNobaAdminDTO;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()

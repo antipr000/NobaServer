@@ -1095,59 +1095,6 @@ describe("TransactionService", () => {
     });
   });
 
-  describe("callTransactionConfirmationWebhook", () => {
-    afterEach(() => {
-      mockAxios.reset();
-    });
-
-    it("should call webhook if partner webhook is available", async () => {
-      const walletAddress = "fake-wallet-address";
-      const transaction: Transaction = Transaction.createTransaction({
-        _id: "1111111111",
-        userId: consumer.props._id,
-        sessionKey: "fake-session",
-        transactionStatus: TransactionStatus.PENDING,
-        paymentMethodID: "fake-payment-method-id",
-        leg1Amount: 1000,
-        leg2Amount: 1,
-        leg1: "USD",
-        leg2: "ETH",
-        destinationWalletAddress: walletAddress,
-        partnerID: "fake-partner-id",
-      });
-
-      const partner = Partner.createPartner({
-        _id: transaction.props.partnerID,
-        name: "Fake Partner",
-        apiKey: "FakeApiKey",
-        secretKey: "FakeSecret",
-        webhookClientID: "fake-webhook-cid",
-        webhookSecret: "fake-webhook-secret",
-        webhooks: [
-          {
-            type: WebhookType.TRANSACTION_CONFIRM,
-            url: "https://localhost:8080/fakeurl",
-          },
-        ],
-      });
-
-      when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
-      when(partnerService.getWebhook(deepEqual(partner), WebhookType.TRANSACTION_CONFIRM)).thenReturn(
-        partner.props.webhooks[0],
-      );
-
-      const responsePromise = transactionService.callTransactionConfirmWebhook(consumer, transaction);
-      // expect(mockAxios.post).toHaveBeenCalled();
-      // mockAxios.mockResponse({
-      //   status: 200,
-      //   statusText: "Successful",
-      //   data: {},
-      // });
-      // await responsePromise;
-      // expect(true).toBe(true);
-    });
-  });
-
   describe("initiateTransaction", () => {
     beforeEach(async () => {
       const environmentVariables = {

@@ -2,12 +2,12 @@ export class SendOtpEvent {
   public readonly email: string;
   public readonly otp: string;
   public readonly name: string;
-  public readonly partnerId?: string;
+  public readonly partnerID?: string;
 
-  constructor({ email, otp, name, partnerId }) {
+  constructor({ email, otp, name, partnerID }) {
     this.email = email;
     this.otp = otp;
     this.name = name;
-    this.partnerId = partnerId;
+    this.partnerID = partnerID;
   }
 }
