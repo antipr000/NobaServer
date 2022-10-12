@@ -132,7 +132,7 @@ export class Transaction extends AggregateRoot<TransactionProps> {
 
   public static createTransaction(transactionProps: Partial<TransactionProps>): Transaction {
     transactionProps._id = transactionProps._id ?? Entity.getNewID();
-    transactionProps.transactionID = Utils.generateLowercaseUUID(true);
+    transactionProps.transactionID = transactionProps.transactionID ?? Utils.generateLowercaseUUID(true);
     transactionProps.transactionTimestamp = transactionProps.transactionTimestamp ?? new Date();
     return new Transaction(Joi.attempt(transactionProps, transactionJoiSchema));
   }
