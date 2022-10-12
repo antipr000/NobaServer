@@ -58,7 +58,7 @@ sardine:
 
 noba:
   partnerID: "d4KZqfVKwSHWueOJhmgN-"
-  apiKeyForEmbed: "54a18bf17fa0474da0faec75b629d2a1"
+  apiKeyForEmbed: "8fcf9b044cad490d8f15bdb5fe38f727"
   transaction:
     spreadPercentage: ""
     awsSecretKeyForSpreadPercentage: "TEST_NOBA_SPREAD_PERCENTAGE"

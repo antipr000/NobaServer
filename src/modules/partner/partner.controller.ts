@@ -26,7 +26,6 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
-import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
 import { Partner } from "./domain/Partner";
 import { PartnerAdmin } from "./domain/PartnerAdmin";
 import { AddPartnerAdminRequestDTO } from "./dto/AddPartnerAdminRequestDTO";
@@ -59,7 +58,7 @@ export class PartnerController {
     this.partnerAdminMapper = new PartnerAdminMapper();
   }
 
-  @Get("/:" + PartnerID)
+  @Get("/")
   @ApiOperation({ summary: "Gets details of a partner" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -68,13 +67,13 @@ export class PartnerController {
   })
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner details" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getPartner(@Param(PartnerID) partnerID: string, @Request() request): Promise<PartnerDTO> {
+  async getPartner(@Request() request): Promise<PartnerDTO> {
     const requestUser = request.user.entity;
     if (!(requestUser instanceof PartnerAdmin)) {
       throw new ForbiddenException("Only partner admins can access this endpoint");
     }
     if (!requestUser.canGetPartnerDetails()) throw new ForbiddenException();
-    const partner: Partner = await this.partnerService.getPartner(partnerID);
+    const partner: Partner = await this.partnerService.getPartner(requestUser.props.partnerId);
     if (!partner) {
       throw new NotFoundException();
     }
@@ -96,7 +95,7 @@ export class PartnerController {
     return this.partnerMapper.toDTO(partner);
   }
 
-  @Get("/admins/:" + PartnerAdminID)
+  @Get("/admins/:partnerAdminID")
   @ApiOperation({ summary: "Gets details of a partner admin" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -105,7 +104,7 @@ export class PartnerController {
   })
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getPartnerAdmin(@Param(PartnerAdminID) partnerAdminID: string, @Request() request): Promise<PartnerAdminDTO> {
+  async getPartnerAdmin(@Param("partnerAdminID") partnerAdminID: string, @Request() request): Promise<PartnerAdminDTO> {
     const requestUser = request.user.entity;
     if (!(requestUser instanceof PartnerAdmin)) {
       throw new ForbiddenException("Only partner admins can access this endpoint");
@@ -157,13 +156,13 @@ export class PartnerController {
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
-  @Patch("/admins/:" + PartnerAdminID)
+  @Patch("/admins/:partnerAdminID")
   @ApiOperation({ summary: "Updates details of a partner admin" })
   @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Details of updated partner admin" })
   @ApiForbiddenResponse({ description: "User lacks permission to update partner admin" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updatePartnerAdmin(
-    @Param(PartnerAdminID) partnerAdminID: string,
+    @Param("partnerAdminID") partnerAdminID: string,
     @Body() requestBody: UpdatePartnerAdminRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
@@ -180,13 +179,13 @@ export class PartnerController {
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
-  @Delete("/admins/:" + PartnerAdminID)
+  @Delete("/admins/:partnerAdminID")
   @ApiOperation({ summary: "Deletes a parter admin" })
   @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Deleted partner admin record" })
   @ApiForbiddenResponse({ description: "User lacks permission to delete partner admin" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async deletePartnerAdmin(
-    @Param(PartnerAdminID) partnerAdminID: string,
+    @Param("partnerAdminID") partnerAdminID: string,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
     const requestUser = request.user.entity;
@@ -201,7 +200,7 @@ export class PartnerController {
     return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
   }
 
-  @Get("/admins/transactions")
+  @Get("/transactions")
   @ApiOperation({ summary: "Get all transactions for the given partner" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -227,7 +226,7 @@ export class PartnerController {
     )) as TransactionsQueryResultsDTO;
   }
 
-  @Get("/admins/transactions/:transactionID")
+  @Get("/transactions/:transactionID")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,

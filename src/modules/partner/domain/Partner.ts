@@ -64,7 +64,7 @@ export const partnerKeys: KeysRequired<PartnerProps> = {
   apiKey: Joi.string().required(),
   apiKeyForEmbed: Joi.string().required(),
   secretKey: Joi.string().required(),
-  isAPIEnabled: Joi.boolean().required().default(false),
+  isAPIEnabled: Joi.boolean().required().default(true),
   isEmbedEnabled: Joi.boolean().required().default(true),
   verificationData: Joi.object().optional(),
   webhookClientID: Joi.string().optional(),
@@ -119,7 +119,7 @@ export class Partner extends AggregateRoot<PartnerProps> {
     if (!partnerProps.webhooks) partnerProps.webhooks = [];
     if (!partnerProps.config) partnerProps.config = {} as any;
 
-    if (!partnerProps.isAPIEnabled) partnerProps.isAPIEnabled = false;
+    if (!partnerProps.isAPIEnabled) partnerProps.isAPIEnabled = true;
 
     if (!partnerProps.isEmbedEnabled) partnerProps.isEmbedEnabled = true;
 
