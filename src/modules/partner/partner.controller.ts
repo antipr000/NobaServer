@@ -6,9 +6,11 @@ import {
   Get,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Patch,
   Post,
+  Query,
   Request,
 } from "@nestjs/common";
 import {
@@ -16,6 +18,7 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiHeaders,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -23,7 +26,6 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
-import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { PartnerID, PartnerAdminID } from "../auth/roles.decorator";
 import { Partner } from "./domain/Partner";
 import { PartnerAdmin } from "./domain/PartnerAdmin";
@@ -35,8 +37,11 @@ import { PartnerAdminMapper } from "./mappers/PartnerAdminMapper";
 import { PartnerMapper } from "./mappers/PartnerMapper";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
-import { CreatePartnerRequestDTO } from "./dto/CreatePartnerRequestDTO";
 import { UpdatePartnerAdminRequestDTO } from "./dto/UpdatePartnerAdminRequestDTO";
+import { TransactionsQueryResultsDTO } from "../transactions/dto/TransactionsQueryResultsDTO";
+import { TransactionFilterOptions } from "../transactions/domain/Types";
+import { TransactionService } from "../transactions/transaction.service";
+import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 
 @ApiBearerAuth("JWT-auth")
 @Controller("partners")
@@ -50,31 +55,10 @@ export class PartnerController {
   constructor(
     private readonly partnerService: PartnerService,
     private readonly partnerAdminService: PartnerAdminService,
+    private readonly transactionService: TransactionService,
   ) {
     this.partnerMapper = new PartnerMapper();
     this.partnerAdminMapper = new PartnerAdminMapper();
-  }
-
-  // TODO: Temporarily for tests. Remove this
-  @IsNoApiKeyNeeded()
-  @Post("/")
-  @ApiOperation({ summary: "Creates a partner" })
-  async createPartner(@Body() requestBody: CreatePartnerRequestDTO): Promise<PartnerDTO> {
-    const partner = await this.partnerService.createPartner({
-      name: requestBody.name,
-      allowedCryptoCurrencies: requestBody.allowedCryptoCurrencies,
-      // takeRate: requestBody.takeRate,
-      // bypassLoginOtp: requestBody.bypassLoginOtp,
-      bypassWalletOtp: requestBody.bypassWalletOtp,
-      creditCardFeeDiscountPercent: requestBody.creditCardFeeDiscountPercent,
-      keepWalletsPrivate: requestBody.keepWalletsPrivate,
-      makeOtherPartnerWalletsVisible: requestBody.makeOtherPartnerWalletsVisible,
-      networkFeeDiscountPercent: requestBody.networkFeeDiscountPercent,
-      nobaFeeDiscountPercent: requestBody.nobaFeeDiscountPercent,
-      processingFeeDiscountPercent: requestBody.processingFeeDiscountPercent,
-      spreadDiscountPercent: requestBody.spreadDiscountPercent,
-    });
-    return this.partnerMapper.toDTO(partner);
   }
 
   @Get("/:" + PartnerID)
@@ -87,7 +71,10 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner details" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getPartner(@Param(PartnerID) partnerID: string, @Request() request): Promise<PartnerDTO> {
-    const requestUser: PartnerAdmin = request.user.entity;
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
     if (!requestUser.canGetPartnerDetails()) throw new ForbiddenException();
     const partner: Partner = await this.partnerService.getPartner(partnerID);
     return this.partnerMapper.toDTO(partner);
@@ -99,7 +86,10 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to update partner details" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async updatePartner(@Body() requestBody: UpdatePartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
-    const requestUser: PartnerAdmin = request.user.entity;
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
     if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
     const partner: Partner = await this.partnerService.updatePartner(requestUser.props.partnerId, requestBody);
     return this.partnerMapper.toDTO(partner);
@@ -115,7 +105,10 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getPartnerAdmin(@Param(PartnerAdminID) partnerAdminID: string, @Request() request): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user.entity;
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
     if (requestUser.props._id !== partnerAdminID && !requestUser.canGetAllAdmins()) throw new ForbiddenException();
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.getPartnerAdmin(partnerAdminID);
     return this.partnerAdminMapper.toDTO(partnerAdmin);
@@ -131,7 +124,10 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin list" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllPartnerAdmins(@Request() request): Promise<PartnerAdminDTO[]> {
-    const requestUser: PartnerAdmin = request.user.entity;
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
     if (!requestUser.canGetAllAdmins()) throw new ForbiddenException();
     const partnerAdmins: PartnerAdmin[] = await this.partnerAdminService.getAllPartnerAdmins(
       requestUser.props.partnerId,
@@ -145,7 +141,10 @@ export class PartnerController {
   @ApiForbiddenResponse({ description: "User lacks permission to add a new partner admin" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async addPartnerAdmin(@Body() requestBody: AddPartnerAdminRequestDTO, @Request() request): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user.entity;
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
     if (!requestUser.canAddPartnerAdmin()) throw new ForbiddenException();
 
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addAdminForPartner(
@@ -167,7 +166,10 @@ export class PartnerController {
     @Body() requestBody: UpdatePartnerAdminRequestDTO,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user.entity;
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
     if (!requestUser.canUpdatePartnerAdmin()) throw new ForbiddenException();
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.updateAdminForPartner(
       requestUser.props.partnerId,
@@ -186,12 +188,66 @@ export class PartnerController {
     @Param(PartnerAdminID) partnerAdminID: string,
     @Request() request,
   ): Promise<PartnerAdminDTO> {
-    const requestUser: PartnerAdmin = request.user.entity;
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
     if (!requestUser.canRemovePartnerAdmin()) throw new ForbiddenException();
     const deletedPartnerAdmin = await this.partnerAdminService.deleteAdminForPartner(
       requestUser.props.partnerId,
       partnerAdminID,
     );
     return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
+  }
+
+  @Get("/admins/transactions")
+  @ApiOperation({ summary: "Get all transactions for the given partner" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionsQueryResultsDTO,
+    description: "All transactions for the partner",
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getTransactions(
+    @Request() request,
+    @Query() transactionFilters: TransactionFilterOptions,
+  ): Promise<TransactionsQueryResultsDTO> {
+    const user = request.user.entity;
+    if (!(user instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
+
+    if (!user.canViewAllTransactions()) {
+      throw new ForbiddenException("You do not have sufficient privileges to view all transactions");
+    }
+    return (await this.transactionService.getAllTransactionsForPartner(
+      user.props.partnerId,
+      transactionFilters,
+    )) as TransactionsQueryResultsDTO;
+  }
+
+  @Get("/admins/transactions/:transactionID")
+  @ApiOperation({ summary: "Gets details of a transaction" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionDTO,
+    description: "Details of a transaction",
+  })
+  @ApiNotFoundResponse({ description: "Transaction does not exist" })
+  async getTransaction(@Request() request, @Param("transactionID") transactionID: string): Promise<TransactionDTO> {
+    const user = request.user.entity;
+    if (!(user instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
+
+    if (!user.canViewAllTransactions()) {
+      throw new ForbiddenException("You do not have sufficient privileges to view all transactions");
+    }
+    const transactionDTO = await this.transactionService.getTransaction(transactionID);
+
+    if (transactionDTO.partnerID !== user.props.partnerId) {
+      throw new NotFoundException("Transaction does not exist");
+    }
+    return transactionDTO;
   }
 }

@@ -11,10 +11,12 @@ import {
   SPREAD_PERCENTAGE,
   SLIPPAGE_ALLOWED_PERCENTAGE,
   AWS_SECRET_KEY_FOR_SLIPPAGE_ALLOWED_PERCENTAGE,
+  NOBA_API_KEY_FOR_EMBED,
 } from "../ConfigurationUtils";
 
 export interface NobaConfigs {
   [NOBA_PARTNER_ID]: string;
+  [NOBA_API_KEY_FOR_EMBED]: string;
   [NOBA_TRANSACTION_CONFIG_KEY]: NobaTransactionConfigs;
 }
 

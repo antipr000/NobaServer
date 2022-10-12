@@ -12,13 +12,22 @@ import { PartnerController } from "../partner.controller";
 import { PartnerAdmin } from "../domain/PartnerAdmin";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Partner } from "../domain/Partner";
+import { TransactionService } from "../../../modules/transactions/transaction.service";
+import { getMockTransactionServiceWithDefaults } from "../../../modules/transactions/mocks/mock.transactions.repo";
+import { Transaction } from "../../../modules/transactions/domain/Transaction";
+import { TransactionStatus } from "../../../modules/transactions/domain/Types";
+import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
   let partnerService: PartnerService;
   let partnerAdminService: PartnerAdminService;
+  let transactionService: TransactionService;
   const partnerMapper: PartnerMapper = new PartnerMapper();
   const partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
+  const transactionMapper = new TransactionMapper();
 
   jest.setTimeout(30000);
   const OLD_ENV = process.env;
@@ -26,6 +35,7 @@ describe("PartnerController", () => {
   beforeEach(async () => {
     partnerService = getMockPartnerServiceWithDefaults();
     partnerAdminService = getMockPartnerAdminServiceWithDefaults();
+    transactionService = getMockTransactionServiceWithDefaults();
 
     const PartnerServiceProvider = {
       provide: PartnerService,
@@ -40,7 +50,14 @@ describe("PartnerController", () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [PartnerController],
-      providers: [PartnerServiceProvider, PartnerAdminServiceProvider],
+      providers: [
+        PartnerServiceProvider,
+        PartnerAdminServiceProvider,
+        {
+          provide: TransactionService,
+          useFactory: () => instance(transactionService),
+        },
+      ],
     }).compile();
 
     partnerController = app.get<PartnerController>(PartnerController);
@@ -865,6 +882,92 @@ describe("PartnerController", () => {
       } catch (e) {
         expect(e).toBeInstanceOf(ForbiddenException);
       }
+    });
+
+    describe("GET /admins/transactions", () => {
+      it("should return all transactions for partner", async () => {
+        const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+          _id: "mock-partner-admin-2",
+          email: "moc2k@partner.com",
+          partnerId: "mock-partner-1",
+          role: "ALL",
+        });
+
+        const transaction = Transaction.createTransaction({
+          _id: "fake-transaction-id",
+          userId: "user-id-1",
+          sessionKey: "fake-session-key",
+          paymentMethodID: "fake-payment-token",
+          leg1Amount: 100,
+          leg2Amount: 0.1,
+          leg1: "USD",
+          leg2: "ETH",
+          transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+          partnerID: "fake-partner",
+          destinationWalletAddress: "fake-wallet",
+          transactionTimestamp: new Date(),
+        });
+
+        const transactionDTO = transactionMapper.toDTO(transaction);
+
+        const allTransactionsResult: PaginatedResult<TransactionDTO> = {
+          items: [transactionDTO],
+          page: 1,
+          hasNextPage: false,
+          totalPages: 1,
+          totalItems: 1,
+        };
+        when(
+          transactionService.getAllTransactionsForPartner(requestingPartnerAdmin.props.partnerId, deepEqual({})),
+        ).thenResolve(allTransactionsResult);
+
+        const response = await partnerController.getTransactions(
+          {
+            user: { entity: requestingPartnerAdmin },
+          },
+          {},
+        );
+
+        expect(response.totalItems).toBe(1);
+        expect(response.items[0]).toStrictEqual(transactionDTO);
+      });
+    });
+
+    describe("GET /admins/transaction/:transactionID", () => {
+      it("should return all transactions for partner", async () => {
+        const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+          _id: "mock-partner-admin-2",
+          email: "moc2k@partner.com",
+          partnerId: "mock-partner-1",
+          role: "ALL",
+        });
+
+        const transaction = Transaction.createTransaction({
+          _id: "fake-transaction-id",
+          userId: "user-id-1",
+          sessionKey: "fake-session-key",
+          paymentMethodID: "fake-payment-token",
+          leg1Amount: 100,
+          leg2Amount: 0.1,
+          leg1: "USD",
+          leg2: "ETH",
+          transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+          partnerID: "mock-partner-1",
+          destinationWalletAddress: "fake-wallet",
+          transactionTimestamp: new Date(),
+        });
+
+        const transactionDTO = transactionMapper.toDTO(transaction);
+
+        when(transactionService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
+        const response = await partnerController.getTransaction(
+          {
+            user: { entity: requestingPartnerAdmin },
+          },
+          transaction.props._id,
+        );
+        expect(response).toStrictEqual(transactionDTO);
+      });
     });
   });
 });

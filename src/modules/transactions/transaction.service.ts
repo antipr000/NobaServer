@@ -20,7 +20,7 @@ import { TransactionInformation } from "../verification/domain/TransactionInform
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
-import { CombinedNobaQuote, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
+import { NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -164,6 +164,14 @@ export class TransactionService {
     transactionQuery?: TransactionFilterOptions,
   ): Promise<PaginatedResult<TransactionDTO>> {
     const transactionsResult = await this.transactionsRepo.getUserTransactions(userID, partnerID, transactionQuery);
+    return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
+  }
+
+  async getAllTransactionsForPartner(
+    partnerID: string,
+    transactionQuery?: TransactionFilterOptions,
+  ): Promise<PaginatedResult<TransactionDTO>> {
+    const transactionsResult = await this.transactionsRepo.getPartnerTransactions(partnerID, transactionQuery);
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
   }
 

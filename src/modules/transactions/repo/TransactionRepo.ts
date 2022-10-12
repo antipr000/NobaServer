@@ -18,6 +18,10 @@ export interface ITransactionRepo {
     partnerID: string,
     transactionFilterOptions?: TransactionFilterOptions,
   ): Promise<PaginatedResult<Transaction>>; //TODO pagination? transaction filter options?
+  getPartnerTransactions(
+    partnerID: string,
+    transactionsFilterOptions?: TransactionFilterOptions,
+  ): Promise<PaginatedResult<Transaction>>;
   getUserTransactionInAnInterval(
     userId: string,
     partnerID: string,

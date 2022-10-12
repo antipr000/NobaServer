@@ -73,6 +73,7 @@ export const SARDINE_URI = "sardineBaseUri";
 
 export const NOBA_CONFIG_KEY = "noba";
 export const NOBA_PARTNER_ID = "partnerID";
+export const NOBA_API_KEY_FOR_EMBED = "apiKeyForEmbed";
 
 export const NOBA_TRANSACTION_CONFIG_KEY = "transaction";
 export const SPREAD_PERCENTAGE = "spreadPercentage";

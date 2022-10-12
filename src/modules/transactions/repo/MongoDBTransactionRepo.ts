@@ -12,7 +12,6 @@ import { Logger } from "winston";
 import { PaginatedResult, SortOrder, EMPTY_PAGE_RESULT } from "../../../core/infra/PaginationTypes";
 import { SortOptions, paginationPipeLine } from "../../../infra/mongodb/paginate/PaginationPipeline";
 import { FilterQuery } from "mongoose";
-import { TransactionModel } from "../../../infra/mongodb/models/TransactionModel";
 
 type AggregateResultType = {
   _id: number;
@@ -206,14 +205,32 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     partnerID: string,
     transactionsFilterOptions: TransactionFilterOptions = {},
   ): Promise<PaginatedResult<Transaction>> {
+    const filterQuery: FilterQuery<TransactionProps> = {
+      userId: userId,
+      ...(partnerID && { partnerID: partnerID }),
+    };
+
+    return this.filterTransactionsAsPerFilterOptions(filterQuery, transactionsFilterOptions);
+  }
+
+  async getPartnerTransactions(
+    partnerID: string,
+    transactionsFilterOptions: TransactionFilterOptions = {},
+  ): Promise<PaginatedResult<Transaction>> {
+    const filterQuery: FilterQuery<TransactionProps> = {
+      partnerID: partnerID,
+    };
+
+    return this.filterTransactionsAsPerFilterOptions(filterQuery, transactionsFilterOptions);
+  }
+
+  private async filterTransactionsAsPerFilterOptions(
+    filterQuery: FilterQuery<TransactionProps>,
+    transactionsFilterOptions: TransactionFilterOptions,
+  ): Promise<PaginatedResult<Transaction>> {
     const transactionModel = await this.dbProvider.getTransactionModel();
-    const query = transactionModel.find({ userId: userId });
-    if (partnerID != undefined) {
-      query.and([{ partnerID: partnerID }]);
-    }
 
     const filterOpts = transactionsFilterOptions;
-
     const sortOptions: SortOptions<TransactionProps> = {
       field: "transactionTimestamp",
       order: SortOrder.DESC,
@@ -223,9 +240,8 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     sortOptions.field = sortField ?? sortOptions.field;
     sortOptions.order = transactionsFilterOptions.sortOrder ?? sortOptions.order;
 
-    const filterQuery: FilterQuery<TransactionProps> = {
-      userId: userId,
-      ...(partnerID && { partnerID: partnerID }),
+    filterQuery = {
+      ...filterQuery,
       ...(filterOpts.transactionStatus && { transactionStatus: filterOpts.transactionStatus }),
       ...(filterOpts.fiatCurrency && { leg1: filterOpts.fiatCurrency }),
       ...(filterOpts.cryptoCurrency && { leg2: filterOpts.cryptoCurrency }),
@@ -244,7 +260,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       sortOptions,
     );
 
-    const result = await TransactionModel.aggregate(pipeline as any).exec();
+    const result = await transactionModel.aggregate(pipeline as any).exec();
     const pageResult = (result[0] ?? EMPTY_PAGE_RESULT) as unknown as PaginatedResult<TransactionProps>;
 
     if (!pageResult.items && pageResult.totalItems == 0) {

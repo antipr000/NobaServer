@@ -7,9 +7,10 @@ import { PartnerAdminService } from "./partneradmin.service";
 import { PartnerController } from "./partner.controller";
 import { MongoDBPartnerRepo } from "./repo/MongoDBPartnerRepo";
 import { MongoDBPartnerAdminRepo } from "./repo/MongoDBPartnerAdminRepo";
+import { TransactionModule } from "../transactions/transaction.module";
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule],
+  imports: [InfraProvidersModule, ConfigModule, TransactionModule],
   controllers: [PartnerController],
   providers: [
     DBProvider,
