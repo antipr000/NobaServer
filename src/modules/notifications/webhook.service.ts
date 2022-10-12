@@ -102,6 +102,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
     };
 
@@ -118,6 +119,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       verificationStatus: KYCStatus.APPROVED,
     };
@@ -135,6 +137,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       verificationStatus: KYCStatus.APPROVED,
     };
@@ -152,6 +155,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       verificationStatus: KYCStatus.REJECTED,
     };
@@ -169,6 +173,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       verificationStatus: KYCStatus.PENDING,
     };
@@ -186,6 +191,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       verificationStatus: KYCStatus.PENDING,
     };
@@ -203,6 +209,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       verificationStatus: KYCStatus.REJECTED,
     };
@@ -220,6 +227,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
     };
 
@@ -236,6 +244,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       paymentMethodInformation: {
         last4Digits: payload.last4Digits,
@@ -256,6 +265,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       paymentMethodInformation: {
         last4Digits: payload.last4Digits,
@@ -275,6 +285,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       paymentMethodInformation: {
         last4Digits: payload.last4Digits,
@@ -295,6 +306,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       transactionInformation: {
         ...payload.params,
@@ -314,6 +326,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       transactionInformation: {
         ...payload.params,
@@ -333,6 +346,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       transactionInformation: {
         ...payload.params,
@@ -352,6 +366,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       transactionInformation: {
         ...payload.params,
@@ -371,6 +386,7 @@ export class WebhookService {
         email: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+        nobaUserID: payload.nobaUserID,
       },
       paymentHardDeclineInformation: {
         sessionId: payload.sessionID,
