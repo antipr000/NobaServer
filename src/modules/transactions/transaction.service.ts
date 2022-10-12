@@ -245,7 +245,7 @@ export class TransactionService {
     if (isSanctionedWallet) {
       const consumer = await this.consumerService.getConsumer(consumerID);
       const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transactionRequest.destinationWalletAddress);
-      cryptoWallet.address = WalletStatus.FLAGGED;
+      cryptoWallet.status = WalletStatus.FLAGGED;
       await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
       this.logger.error("Failed to transact to a sanctioned wallet");
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
