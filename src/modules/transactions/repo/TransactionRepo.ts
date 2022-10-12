@@ -13,15 +13,7 @@ export interface ITransactionRepo {
     otherProps: Partial<TransactionProps>,
   ): Promise<Transaction>;
   updateLastProcessingTimestamp(transactionId: string): Promise<Transaction>;
-  getUserTransactions(
-    userId: string,
-    partnerID: string,
-    transactionFilterOptions?: TransactionFilterOptions,
-  ): Promise<PaginatedResult<Transaction>>; //TODO pagination? transaction filter options?
-  getPartnerTransactions(
-    partnerID: string,
-    transactionsFilterOptions?: TransactionFilterOptions,
-  ): Promise<PaginatedResult<Transaction>>;
+  getFilteredTransactions(transactionFilterOptions?: TransactionFilterOptions): Promise<PaginatedResult<Transaction>>;
   getUserTransactionInAnInterval(
     userId: string,
     partnerID: string,

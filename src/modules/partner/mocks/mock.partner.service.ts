@@ -12,6 +12,9 @@ export const getMockPartnerServiceWithDefaults = () => {
   when(mockPartnerService.addOrReplaceWebhook(anyString(), anything(), anyString())).thenReject(
     new Error("Method not implemented!"),
   );
-
+  when(mockPartnerService.getAllTransactionsForPartner(anyString(), anything())).thenReject(
+    new Error("Method not implemented!"),
+  );
+  when(mockPartnerService.getTransaction(anyString())).thenReject(new Error("Method not implemented!"));
   return mockPartnerService;
 };

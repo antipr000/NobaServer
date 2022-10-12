@@ -2233,9 +2233,7 @@ describe("TransactionService", () => {
         totalItems: 1,
       };
 
-      when(
-        transactionRepo.getUserTransactions(transaction.props.userId, transaction.props.partnerID, anything()),
-      ).thenResolve(res);
+      when(transactionRepo.getFilteredTransactions(anything())).thenResolve(res);
 
       const response = await transactionService.getUserTransactions(
         transaction.props.userId,

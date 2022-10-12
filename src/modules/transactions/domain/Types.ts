@@ -183,6 +183,9 @@ export class TransactionFilterOptions {
   @ApiPropertyOptional({ description: "Consumer ID whose transactions is needed" })
   consumerID?: string;
 
+  @ApiPropertyOptional({ description: "Partner ID whose transactions needs to be filtered" })
+  partnerID?: string;
+
   @ApiPropertyOptional({
     description: "Format: YYYY-MM-DD, example: 2010-04-27",
   })

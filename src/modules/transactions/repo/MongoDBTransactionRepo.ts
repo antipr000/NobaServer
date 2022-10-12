@@ -11,7 +11,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PaginatedResult, SortOrder, EMPTY_PAGE_RESULT } from "../../../core/infra/PaginationTypes";
 import { SortOptions, paginationPipeLine } from "../../../infra/mongodb/paginate/PaginationPipeline";
-import { FilterQuery } from "mongoose";
 
 type AggregateResultType = {
   _id: number;
@@ -200,36 +199,10 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return this.transactionMapper.toDomain(transactionProps);
   }
 
-  async getUserTransactions(
-    userId: string,
-    partnerID: string,
+  async getFilteredTransactions(
     transactionsFilterOptions: TransactionFilterOptions = {},
-  ): Promise<PaginatedResult<Transaction>> {
-    const filterQuery: FilterQuery<TransactionProps> = {
-      userId: userId,
-      ...(partnerID && { partnerID: partnerID }),
-    };
-
-    return this.filterTransactionsAsPerFilterOptions(filterQuery, transactionsFilterOptions);
-  }
-
-  async getPartnerTransactions(
-    partnerID: string,
-    transactionsFilterOptions: TransactionFilterOptions = {},
-  ): Promise<PaginatedResult<Transaction>> {
-    const filterQuery: FilterQuery<TransactionProps> = {
-      partnerID: partnerID,
-    };
-
-    return this.filterTransactionsAsPerFilterOptions(filterQuery, transactionsFilterOptions);
-  }
-
-  private async filterTransactionsAsPerFilterOptions(
-    filterQuery: FilterQuery<TransactionProps>,
-    transactionsFilterOptions: TransactionFilterOptions,
   ): Promise<PaginatedResult<Transaction>> {
     const transactionModel = await this.dbProvider.getTransactionModel();
-
     const filterOpts = transactionsFilterOptions;
     const sortOptions: SortOptions<TransactionProps> = {
       field: "transactionTimestamp",
@@ -240,9 +213,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     sortOptions.field = sortField ?? sortOptions.field;
     sortOptions.order = transactionsFilterOptions.sortOrder ?? sortOptions.order;
 
-    filterQuery = {
-      ...filterQuery,
+    const filterQuery = {
       ...(filterOpts.consumerID && { userId: filterOpts.consumerID }),
+      ...(filterOpts.partnerID && { partnerID: filterOpts.partnerID }),
       ...(filterOpts.transactionStatus && { transactionStatus: filterOpts.transactionStatus }),
       ...(filterOpts.fiatCurrency && { leg1: filterOpts.fiatCurrency }),
       ...(filterOpts.cryptoCurrency && { leg2: filterOpts.cryptoCurrency }),

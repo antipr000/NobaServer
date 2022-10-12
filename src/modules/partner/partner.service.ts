@@ -116,7 +116,8 @@ export class PartnerService {
     partnerID: string,
     transactionQuery?: TransactionFilterOptions,
   ): Promise<PaginatedResult<TransactionDTO>> {
-    const transactionsResult = await this.transactionRepo.getPartnerTransactions(partnerID, transactionQuery);
+    transactionQuery.partnerID = partnerID;
+    const transactionsResult = await this.transactionRepo.getFilteredTransactions(transactionQuery);
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionMapper.toDTO) };
   }
 

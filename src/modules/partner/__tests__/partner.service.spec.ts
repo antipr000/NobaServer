@@ -405,7 +405,7 @@ describe("PartnerService", () => {
         totalItems: 1,
       };
 
-      when(transactionRepo.getPartnerTransactions(transaction.props.partnerID, deepEqual({}))).thenResolve(
+      when(transactionRepo.getFilteredTransactions(deepEqual({ partnerID: transaction.props.partnerID }))).thenResolve(
         allTransactionsResult,
       );
 

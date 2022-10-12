@@ -153,7 +153,37 @@ describe("MongoDBTransactionRepoTests", () => {
     });
   });
 
-  describe("getUserTransactions", () => {
+  describe("getFilteredTransactions", () => {
+    it("should get all transactions for a partner", async () => {
+      await transactionRepo.createTransaction(
+        getRandomTransaction("3", { userId: "differentUser", partnerID: DEFAULT_PARTNER_ID }),
+      );
+      await transactionRepo.createTransaction(getRandomTransaction("4", { partnerID: "partner1" }));
+
+      await transactionRepo.createTransaction(
+        getRandomTransaction("5", {
+          userId: DEFAULT_USER_ID,
+          partnerID: DEFAULT_PARTNER_ID,
+          cryptoCurrency: ETH,
+          fiatCurrency: USD,
+          status: TransactionStatus.COMPLETED,
+        }),
+      );
+
+      const filteredByPartnerIDResponse = await transactionRepo.getFilteredTransactions({
+        partnerID: DEFAULT_PARTNER_ID,
+      });
+
+      expect(filteredByPartnerIDResponse.totalItems).toBe(4);
+
+      const filteredByPartnerAndConsumerIDResponse = await transactionRepo.getFilteredTransactions({
+        partnerID: DEFAULT_PARTNER_ID,
+        consumerID: DEFAULT_USER_ID,
+      });
+
+      expect(filteredByPartnerAndConsumerIDResponse.totalItems).toBe(3);
+      expect(filteredByPartnerAndConsumerIDResponse.items[0].props.userId).toBe(DEFAULT_USER_ID);
+    });
     it("should get all transactions for a user", async () => {
       //  2 transaction already exists in beforeEachStep, will add 2 more transaction one with different user and one with same user but different partner
       await transactionRepo.createTransaction(
@@ -161,26 +191,24 @@ describe("MongoDBTransactionRepoTests", () => {
       );
       await transactionRepo.createTransaction(getRandomTransaction("4", { partnerID: "partner1" }));
 
-      const filterOpts: TransactionFilterOptions = {};
+      const filterOpts: TransactionFilterOptions = {
+        consumerID: DEFAULT_USER_ID,
+        partnerID: DEFAULT_PARTNER_ID,
+      };
 
       // 1. test basic filter on userId and partnerID works
-      const ts: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        DEFAULT_PARTNER_ID,
-        filterOpts,
-      );
+      const ts: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions(filterOpts);
       expect(ts.items).toHaveLength(2);
 
       //2. test basic filter on userID alone works
-      const allPartnersTs: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-      );
+      const allPartnersTs: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+      });
       expect(allPartnersTs.items).toHaveLength(3);
 
       // above total 4 transactions have been added, we will add more to cover below scenarios
 
-      const transaction5 = await transactionRepo.createTransaction(
+      await transactionRepo.createTransaction(
         getRandomTransaction("5", {
           userId: DEFAULT_USER_ID,
           cryptoCurrency: ETH,
@@ -189,19 +217,19 @@ describe("MongoDBTransactionRepoTests", () => {
         }),
       );
 
-      const transaction6 = await transactionRepo.createTransaction(
+      await transactionRepo.createTransaction(
         getRandomTransaction("6", { userId: DEFAULT_USER_ID, cryptoCurrency: ETH, fiatCurrency: USD }),
       );
 
-      const transaction7 = await transactionRepo.createTransaction(
+      await transactionRepo.createTransaction(
         getRandomTransaction("7", { userId: DEFAULT_USER_ID, cryptoCurrency: BTC, fiatCurrency: EUR }),
       );
 
-      const transaction8 = await transactionRepo.createTransaction(
+      await transactionRepo.createTransaction(
         getRandomTransaction("8", { userId: DEFAULT_USER_ID, cryptoCurrency: BTC, fiatCurrency: USD }),
       );
 
-      const transaction9 = await transactionRepo.createTransaction(
+      await transactionRepo.createTransaction(
         getRandomTransaction("9", { userId: DEFAULT_USER_ID, cryptoCurrency: BTC, fiatCurrency: USD }),
       );
 
@@ -212,94 +240,70 @@ describe("MongoDBTransactionRepoTests", () => {
       //total 10 transactions have been added, we will test below scenarios, one of the above transacitions belongs to different user
 
       //3. test filter on cryptoCurrency alone works
-      const testScenario3Results: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          cryptoCurrency: ETH,
-        },
-      );
+      const testScenario3Results: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        cryptoCurrency: ETH,
+      });
 
       expect(testScenario3Results.items).toHaveLength(3);
 
       //4. test filter on fiatCurrency alone works
 
-      const testScenario4Results: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          fiatCurrency: EUR,
-        },
-      );
+      const testScenario4Results: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        fiatCurrency: EUR,
+      });
       expect(testScenario4Results.items).toHaveLength(2);
 
       //5. test filter on cryptoCurrency and fiatCurrency works
-      const testScenario5Results: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          cryptoCurrency: BTC,
-          fiatCurrency: USD,
-        },
-      );
+      const testScenario5Results: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        cryptoCurrency: BTC,
+        fiatCurrency: USD,
+      });
       expect(testScenario5Results.items).toHaveLength(2);
 
       //6. test filter on transactionStatus alone works
-      const testScenario6Results: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          transactionStatus: TransactionStatus.PENDING,
-        },
-      );
+      const testScenario6Results: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        transactionStatus: TransactionStatus.PENDING,
+      });
       expect(testScenario6Results.items).toHaveLength(8); // only one in completed state, rest of 8 of 9 are in pending state, 1 belongs to different user
 
-      const testScenario6Resultsb: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          transactionStatus: TransactionStatus.COMPLETED,
-        },
-      );
+      const testScenario6Resultsb: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        transactionStatus: TransactionStatus.COMPLETED,
+      });
       expect(testScenario6Resultsb.items).toHaveLength(1);
 
       //7. test sorting on the fiatCurrencyTicker fields works
-      const testScenario7Results: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          sortField: TransactionsQuerySortField.leg1,
-          sortOrder: SortOrder.ASC,
-        },
-      );
+      const testScenario7Results: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        sortField: TransactionsQuerySortField.leg1,
+        sortOrder: SortOrder.ASC,
+      });
       // four usd, two eur, three "LEG1" transactions
       expect(testScenario7Results.items.length).toBe(9);
       expect(testScenario7Results.items[0].props.leg1).toBe(EUR);
       expect(testScenario7Results.items[2].props.leg1).toBe("LEG1");
       expect(testScenario7Results.items[5].props.leg1).toBe(USD);
 
-      const testScenario7Resultsb: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          sortField: TransactionsQuerySortField.leg1,
-          sortOrder: SortOrder.DESC,
-        },
-      );
+      const testScenario7Resultsb: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        sortField: TransactionsQuerySortField.leg1,
+        sortOrder: SortOrder.DESC,
+      });
       // four usd, two eur, three "LEG1" transactions
       expect(testScenario7Resultsb.items[0].props.leg1).toBe(USD);
       expect(testScenario7Resultsb.items[4].props.leg1).toBe("LEG1");
       expect(testScenario7Resultsb.items[7].props.leg1).toBe(EUR);
 
       //8. test sorting on the cryptoCurrency fields works
-      const testScenario8Results: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          sortField: TransactionsQuerySortField.leg2,
-          sortOrder: SortOrder.DESC,
-        },
-      );
+      const testScenario8Results: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        sortField: TransactionsQuerySortField.leg2,
+        sortOrder: SortOrder.DESC,
+      });
       // three ETH, 3 BTC, 3 "LEG2" transactions
       expect(testScenario8Results.items.length).toBe(9);
       expect(testScenario8Results.items[0].props.leg2).toBe("LEG2");
@@ -307,14 +311,11 @@ describe("MongoDBTransactionRepoTests", () => {
       expect(testScenario8Results.items[6].props.leg2).toBe(BTC);
 
       //9. test sorting on creationTimestamp works
-      const testScenario9Results: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          sortField: TransactionsQuerySortField.transactionTimestamp,
-          sortOrder: SortOrder.ASC,
-        },
-      );
+      const testScenario9Results: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        sortField: TransactionsQuerySortField.transactionTimestamp,
+        sortOrder: SortOrder.ASC,
+      });
       // test for ascending order
       expect(testScenario9Results.items.length).toBe(9);
       expect(testScenario9Results.items[0].props._id).toBe(mkid("1"));
@@ -327,14 +328,11 @@ describe("MongoDBTransactionRepoTests", () => {
       expect(testScenario9Results.items[7].props._id).toBe(mkid("9"));
       expect(testScenario9Results.items[8].props._id).toBe(mkid("10"));
 
-      const testScenario9bResults: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        {
-          sortField: TransactionsQuerySortField.transactionTimestamp,
-          sortOrder: SortOrder.DESC,
-        },
-      );
+      const testScenario9bResults: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        sortField: TransactionsQuerySortField.transactionTimestamp,
+        sortOrder: SortOrder.DESC,
+      });
       // test for descending order
       expect(testScenario9bResults.items.length).toBe(9);
       expect(testScenario9bResults.items[0].props._id).toBe(mkid("10"));
@@ -355,70 +353,64 @@ describe("MongoDBTransactionRepoTests", () => {
         Transaction.createTransaction({ ...transaction10.props, transactionTimestamp: new Date("2020-01-01") }),
       );
 
-      const tsAfter2ndJan2020: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { startDate: "2020-01-02" },
-      );
+      const tsAfter2ndJan2020: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        startDate: "2020-01-02",
+      });
 
       expect(tsAfter2ndJan2020.items).toHaveLength(8); // one transaction shouldn't come
 
-      const tsAfter1stJan2020: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { startDate: "2020-01-01" },
-      );
+      const tsAfter1stJan2020: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        startDate: "2020-01-01",
+      });
 
       expect(tsAfter1stJan2020.items).toHaveLength(9); // all transactions should come
 
-      const tsAfterInfinity: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { startDate: "2200-01-01" },
-      );
+      const tsAfterInfinity: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        startDate: "2200-01-01",
+      });
 
       expect(tsAfterInfinity.items).toHaveLength(0); // no transaction should come
 
       //11. test end time filter works
-      const tsBefore2ndJan2020: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { endDate: "2020-01-02" },
-      );
+      const tsBefore2ndJan2020: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        endDate: "2020-01-02",
+      });
 
       expect(tsBefore2ndJan2020.items).toHaveLength(1); // all transactions should come
 
-      const tsBefore1stJan2020: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { endDate: "2019-01-01" },
-      );
+      const tsBefore1stJan2020: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        endDate: "2019-01-01",
+      });
 
       expect(tsBefore1stJan2020.items).toHaveLength(0); // no transaction should come
 
-      const tsBeforeInfinity: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { endDate: "2100-01-01" },
-      );
+      const tsBeforeInfinity: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        endDate: "2100-01-01",
+      });
 
       expect(tsBeforeInfinity.items).toHaveLength(9); // all transactions should come
 
       //12. test both start and end time filter works
-      const tsBetween1stJan2020And2ndJan2020: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { startDate: "2020-01-01", endDate: "2020-01-02" },
-      );
+      const tsBetween1stJan2020And2ndJan2020: PaginatedResult<Transaction> =
+        await transactionRepo.getFilteredTransactions({
+          consumerID: DEFAULT_USER_ID,
+          startDate: "2020-01-01",
+          endDate: "2020-01-02",
+        });
 
       expect(tsBetween1stJan2020And2ndJan2020.items).toHaveLength(1); // only one transaction should come
 
       //13. test pagination works with page limit
-      const tsPage1: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { pageLimit: 3 },
-      );
+      const tsPage1: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        pageLimit: 3,
+      });
 
       expect(tsPage1.items).toHaveLength(3);
       expect(tsPage1.hasNextPage).toBe(true);
@@ -427,11 +419,11 @@ describe("MongoDBTransactionRepoTests", () => {
       expect(tsPage1.page).toBe(1);
 
       //14. test offset works with filtering
-      const tsPage2: PaginatedResult<Transaction> = await transactionRepo.getUserTransactions(
-        DEFAULT_USER_ID,
-        undefined,
-        { pageLimit: 3, pageOffset: 1 },
-      );
+      const tsPage2: PaginatedResult<Transaction> = await transactionRepo.getFilteredTransactions({
+        consumerID: DEFAULT_USER_ID,
+        pageLimit: 3,
+        pageOffset: 1,
+      });
 
       expect(tsPage2.page).toBe(2);
       expect(tsPage2.items[0].props._id).toBe(mkid("6")); // 9,8,7,6  as sorted by timestamp by default
