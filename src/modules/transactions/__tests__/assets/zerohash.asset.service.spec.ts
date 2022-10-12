@@ -213,7 +213,7 @@ describe("ZerohashAssetService", () => {
           perUnitCryptoPriceWithSpread: output.discountedQuotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
         },
-      };
+      } as any;
 
       const fiatAmountFieldsForRoundingInQuote = [
         "amountPreSpread",
@@ -285,6 +285,13 @@ describe("ZerohashAssetService", () => {
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Noba flat fee is taken into account correctly", async () => {
@@ -332,6 +339,14 @@ describe("ZerohashAssetService", () => {
         },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Noba 'dynamic' credit card fee is taken into account correctly", async () => {
@@ -379,6 +394,14 @@ describe("ZerohashAssetService", () => {
         },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Noba 'fixed' credit card fee is taken into account correctly", async () => {
@@ -426,6 +449,14 @@ describe("ZerohashAssetService", () => {
         },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should operate dynamic credit card fee on original amount rather than reduced amount", async () => {
@@ -473,6 +504,14 @@ describe("ZerohashAssetService", () => {
         },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should operate spread percentage on reduced amount rather than original amount", async () => {
@@ -520,6 +559,14 @@ describe("ZerohashAssetService", () => {
         },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should take both dynamic & fixed credit card charges", async () => {
@@ -567,6 +614,14 @@ describe("ZerohashAssetService", () => {
         },
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should include 'fixedCreditCardFeeDiscountPercent' correctly", async () => {
@@ -624,6 +679,13 @@ describe("ZerohashAssetService", () => {
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 5,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should include 'networkFeeDiscountPercent' correctly", async () => {
@@ -681,6 +743,13 @@ describe("ZerohashAssetService", () => {
       });
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 5,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should include 'nobaFeeDiscountPercent' correctly", async () => {
@@ -1015,8 +1084,8 @@ describe("ZerohashAssetService", () => {
           totalFiatAmount: requestedCryptoQuantity * output.quotedCostPerUnit + expectedTotalFees,
           perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
-        },
-      };
+        }
+      } as any;
 
       // FIAT amounts are rounded to "2" decimal places.
       const fiatAmountFieldsForRoundingInQuote = [
@@ -1081,6 +1150,13 @@ describe("ZerohashAssetService", () => {
 
       expect(quote.quote).toEqual(expectedNobaQuote.quote);
       expect(quote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(quote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Noba flat fee is taken into account correctly", async () => {
@@ -1119,7 +1195,15 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Credit card percentage is taken into account correctly", async () => {
@@ -1157,7 +1241,16 @@ describe("ZerohashAssetService", () => {
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Fixed credit card fee is taken into account correctly", async () => {
@@ -1196,7 +1289,15 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Both credit card fee & credit card percentage are taken into account correctly", async () => {
@@ -1235,7 +1336,15 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Both spread & noba flat fee are taken into account correctly", async () => {
@@ -1274,7 +1383,15 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("All spread, noba flat fee and credit card percentage are taken into account correctly", async () => {
@@ -1313,7 +1430,15 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Network fee is taken into account correctly", async () => {
@@ -1352,7 +1477,15 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("All the parameters are taken into account correctly", async () => {
@@ -1391,7 +1524,15 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should apply 'fixedCreditCardFeeDiscountPercent' correctly", async () => {
@@ -1424,7 +1565,7 @@ describe("ZerohashAssetService", () => {
           expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 8,
-          discountedExpectedProcessingFee: 112.375,
+          discountedExpectedProcessingFee: 118,
           discountedExpectedNetworkFee: 4,
           discountedQuotedCostPerUnit: 16,
           discountedExpectedAmountPreSpread: 100,
@@ -1448,6 +1589,13 @@ describe("ZerohashAssetService", () => {
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 10,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should apply 'networkFeeDiscountPercent' correctly", async () => {
@@ -1480,7 +1628,7 @@ describe("ZerohashAssetService", () => {
           expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 8,
-          discountedExpectedProcessingFee: 126.875,
+          discountedExpectedProcessingFee: 128,
           discountedExpectedNetworkFee: 2,
           discountedQuotedCostPerUnit: 16,
           discountedExpectedAmountPreSpread: 100,
@@ -1504,6 +1652,13 @@ describe("ZerohashAssetService", () => {
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 2,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should apply 'nobaFeeDiscountPercent' correctly", async () => {
@@ -1536,7 +1691,7 @@ describe("ZerohashAssetService", () => {
           expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 4,
-          discountedExpectedProcessingFee: 125.75,
+          discountedExpectedProcessingFee: 128,
           discountedExpectedNetworkFee: 4,
           discountedQuotedCostPerUnit: 16,
           discountedExpectedAmountPreSpread: 100,
@@ -1560,6 +1715,13 @@ describe("ZerohashAssetService", () => {
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 4,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should apply 'nobaSpreadDiscountPercent' correctly", async () => {
@@ -1592,7 +1754,7 @@ describe("ZerohashAssetService", () => {
           expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 8,
-          discountedExpectedProcessingFee: 111.125,
+          discountedExpectedProcessingFee: 128,
           discountedExpectedNetworkFee: 4,
           discountedQuotedCostPerUnit: 13,
           discountedExpectedAmountPreSpread: 100,
@@ -1616,6 +1778,13 @@ describe("ZerohashAssetService", () => {
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 30,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should apply 'processingFeeDiscountPercent' correctly", async () => {
@@ -1648,7 +1817,7 @@ describe("ZerohashAssetService", () => {
           expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 8,
-          discountedExpectedProcessingFee: 62.1463415,
+          discountedExpectedProcessingFee: 74,
           discountedExpectedNetworkFee: 4,
           discountedQuotedCostPerUnit: 16,
           discountedExpectedAmountPreSpread: 100,
@@ -1672,6 +1841,13 @@ describe("ZerohashAssetService", () => {
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 54,
+      });
     });
 
     it("should apply 'ALL' the discount percentages correctly", async () => {
@@ -1704,7 +1880,7 @@ describe("ZerohashAssetService", () => {
           expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
 
           discountedExpectedNobaFee: 5.6,
-          discountedExpectedProcessingFee: 53.7365854,
+          discountedExpectedProcessingFee: 72,
           discountedExpectedNetworkFee: 3.2,
           discountedQuotedCostPerUnit: 13.6,
           discountedExpectedAmountPreSpread: 100,
@@ -1728,6 +1904,13 @@ describe("ZerohashAssetService", () => {
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
       expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 2,
+        networkFeeDiscount: 0.8,
+        nobaFeeDiscount: 2.4,
+        spreadDiscount: 24,
+        processingFeeDiscount: 54,
+      });
     });
   });
 
@@ -1764,26 +1947,6 @@ describe("ZerohashAssetService", () => {
         },
       };
 
-      const quote: ExecutedQuote = {
-        cryptoReceived: request.cryptoQuantity,
-        tradeID: "12345",
-        tradePrice: 23423,
-        quote: {
-          quoteID: "quote_id",
-          fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
-          amountPreSpread: 1234,
-          processingFeeInFiat: 2,
-          networkFeeInFiat: 1,
-          nobaFeeInFiat: 1.99,
-          quotedFiatAmount: 50,
-          totalFiatAmount: 50,
-          totalCryptoQuantity: 12345.6789,
-          perUnitCryptoPriceWithoutSpread: 1000,
-          perUnitCryptoPriceWithSpread: 1000,
-        },
-      };
-
       const nobaQuote: CombinedNobaQuote = {
         quote: {
           quoteID: quoteID,
@@ -1810,6 +1973,20 @@ describe("ZerohashAssetService", () => {
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
+        discountsGiven: {
+          creditCardFeeDiscount: 0.111,
+          networkFeeDiscount: 0.222,
+          nobaFeeDiscount: 0.333,
+          processingFeeDiscount: 0.444,
+          spreadDiscount: 0.5555,
+        }
+      };
+
+      const quote: ExecutedQuote = {
+        cryptoReceived: request.cryptoQuantity,
+        tradeID: "12345",
+        tradePrice: 23423,
+        quote: nobaQuote,
       };
 
       zerohashAssetService.getQuoteForSpecifiedFiatAmount = jest.fn().mockReturnValue(nobaQuote);

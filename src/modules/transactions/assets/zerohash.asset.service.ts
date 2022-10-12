@@ -7,7 +7,7 @@ import {
   ConsumerAccountTransferRequest,
   ConsumerWalletTransferRequest,
   FundsAvailabilityResponse,
-  NobaQuote,
+  CombinedNobaQuote,
   ExecutedQuote,
   FundsAvailabilityRequest,
   ConsumerWalletTransferResponse,
@@ -98,9 +98,6 @@ export class ZerohashAssetService extends DefaultAssetService {
       });
     }
 
-    // Snce we've already calculated fees & spread based on a true fixed side, we will always pass FIAT here
-    let nobaQuote: NobaQuote;
-
     // TODO(#): Remove this once all the clients are aware about "discount"
     if (request.discount === undefined || request.discount === null)
       request.discount = {
@@ -110,6 +107,8 @@ export class ZerohashAssetService extends DefaultAssetService {
         nobaSpreadDiscountPercent: 0,
         processingFeeDiscountPercent: 0,
       };
+
+    let nobaQuote: CombinedNobaQuote;
 
     switch (request.fixedSide) {
       case CurrencyType.FIAT:
@@ -126,8 +125,7 @@ export class ZerohashAssetService extends DefaultAssetService {
               processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
             },
           })
-        ).quote;
-
+        );
         break;
 
       case CurrencyType.CRYPTO:
@@ -144,8 +142,7 @@ export class ZerohashAssetService extends DefaultAssetService {
               processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
             },
           })
-        ).quote;
-
+        );
         break;
 
       default:
@@ -154,7 +151,7 @@ export class ZerohashAssetService extends DefaultAssetService {
 
     // TODO(#): Slippage calculations.
 
-    const executedQuote: ZerohashExecutedQuote = await this.zerohashService.executeQuote(nobaQuote.quoteID);
+    const executedQuote: ZerohashExecutedQuote = await this.zerohashService.executeQuote(nobaQuote.quote.quoteID);
     return {
       quote: nobaQuote,
       tradeID: executedQuote.tradeID,

@@ -15,7 +15,7 @@ export interface ExecutedQuote {
   tradeID: string;
   tradePrice: number;
   cryptoReceived: number;
-  quote: NobaQuote;
+  quote: CombinedNobaQuote;
 }
 
 export interface ExecuteQuoteRequest {
@@ -128,7 +128,16 @@ export interface NonDiscountedNobaQuote {
 export type CombinedNobaQuote = {
   quote: NobaQuote;
   nonDiscountedQuote: NonDiscountedNobaQuote;
+  discountsGiven: PartnerDiscounts;
 };
+
+export interface PartnerDiscounts {
+  creditCardFeeDiscount: number;
+  nobaFeeDiscount: number;
+  processingFeeDiscount: number;
+  networkFeeDiscount: number;
+  spreadDiscount: number;
+}
 
 export type DiscountedAmount = {
   value: number;

@@ -68,6 +68,15 @@ export interface TransactionProps extends VersioningInfo {
   lastStatusUpdateTimestamp: number;
 
   transactionExceptions?: TransactionEvent[];
+  discounts: PartnerDiscounts;
+}
+
+export interface PartnerDiscounts {
+  creditCardFeeDiscount: number;
+  nobaFeeDiscount: number;
+  processingFeeDiscount: number;
+  networkFeeDiscount: number;
+  spreadDiscount: number;
 }
 
 export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
@@ -121,6 +130,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   lastProcessingTimestamp: Joi.number().optional(),
   lastStatusUpdateTimestamp: Joi.number().optional(),
   transactionExceptions: Joi.array().items(transactionEventJoiSchema).optional(),
+  discounts: Joi.object().optional(),
 };
 
 export const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({ allowUnknown: true });

@@ -20,6 +20,7 @@ import {
   FundsAvailabilityRequest,
   ExecutedQuoteStatus,
   TRADE_TYPE_FIXED,
+  CombinedNobaQuote,
 } from "../domain/AssetTypes";
 import { CurrencyService } from "../../../modules/common/currency.service";
 
@@ -83,19 +84,23 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
       try {
         const executedQuote: ExecutedQuote = await assetService.executeQuoteForFundsAvailability(executeQuoteRequest);
+        const nobaQuote: CombinedNobaQuote = executedQuote.quote;
 
         transaction.props.executedCrypto = executedQuote.cryptoReceived;
         if (transaction.props.intermediaryLeg) transaction.props.intermediaryLegAmount = executedQuote.cryptoReceived;
         transaction.props.executedQuoteTradeID = executedQuote.tradeID;
         transaction.props.buyRate = executedQuote.tradePrice;
 
-        // TODO(#): Verify if this needs to be changed.
-        // transaction.props.tradeQuoteID = executedQuote.quote.quoteID;
-        // transaction.props.nobaFee = executedQuote.quote.nobaFeeInFiat;
-        // transaction.props.networkFee = executedQuote.quote.networkFeeInFiat;
-        // transaction.props.processingFee = executedQuote.quote.processingFeeInFiat;
-        // transaction.props.exchangeRate = executedQuote.quote.perUnitCryptoPrice;
-        // transaction.props.amountPreSpread = executedQuote.quote.amountPreSpread;
+        transaction.props.tradeQuoteID = nobaQuote.quote.quoteID;
+        transaction.props.nobaFee = nobaQuote.quote.nobaFeeInFiat;
+        transaction.props.networkFee = nobaQuote.quote.networkFeeInFiat;
+        transaction.props.processingFee = nobaQuote.quote.processingFeeInFiat;
+        transaction.props.exchangeRate = nobaQuote.quote.perUnitCryptoPriceWithSpread;
+        transaction.props.amountPreSpread = nobaQuote.quote.amountPreSpread;
+
+        transaction.props.discounts = {
+          creditCardFeeDiscount: ()
+        }
 
         transaction = await this.transactionRepo.updateTransaction(transaction);
       } catch (e) {
