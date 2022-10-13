@@ -37,10 +37,9 @@ export class NotificationService {
   ): Promise<void> {
     let notificationEvent: NotificationConfiguration = null;
     if (partnerID) {
-      try {
-        // Partner exists in db. Read configurations set by partner
-        const partner = await this.partnerService.getPartner(partnerID);
+      const partner = await this.partnerService.getPartner(partnerID);
 
+      if (partner) {
         const notificationConfigs: NotificationConfiguration[] = partner.props.config?.notificationConfig ?? [];
 
         const filteredNotificationEvents = notificationConfigs.filter(
@@ -55,8 +54,7 @@ export class NotificationService {
         } else {
           notificationEvent = filteredNotificationEvents[0];
         }
-      } catch (e) {
-        // PartnerId does not exist in db. Send only email
+      } else {
         notificationEvent = {
           notificationEventType: eventType,
           notificationEventHandler: [NotificationEventHandler.EMAIL],
