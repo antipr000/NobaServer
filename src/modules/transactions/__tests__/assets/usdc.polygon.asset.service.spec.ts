@@ -205,7 +205,7 @@ describe("DefaultAssetService", () => {
           perUnitCryptoPriceWithSpread: output.discountedQuotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
         },
-      };
+      } as any;
       return nobaQuote;
     };
 
@@ -252,7 +252,16 @@ describe("DefaultAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Noba flat fee is taken into account correctly", async () => {
@@ -298,7 +307,15 @@ describe("DefaultAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Noba 'dynamic' credit card fee is taken into account correctly", async () => {
@@ -344,7 +361,15 @@ describe("DefaultAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Noba 'fixed' credit card fee is taken into account correctly", async () => {
@@ -390,7 +415,15 @@ describe("DefaultAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should operate dynamic credit card fee on original amount rather than reduced amount", async () => {
@@ -436,7 +469,15 @@ describe("DefaultAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should operate spread percentage on reduced amount rather than original amount", async () => {
@@ -482,7 +523,15 @@ describe("DefaultAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("should take both dynamic & fixed credit card charges", async () => {
@@ -528,7 +577,15 @@ describe("DefaultAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     // it("all fees are waived", async () => {
@@ -693,7 +750,7 @@ describe("DefaultAssetService", () => {
           perUnitCryptoPriceWithSpread: output.quotedCostPerUnit,
           perUnitCryptoPriceWithoutSpread: originalCostPerUnit,
         },
-      };
+      } as any;
 
       const fiatAmountFieldsForRoundingInQuote = [
         "amountPreSpread",
@@ -788,7 +845,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Credit card percentage is taken into account correctly", async () => {
@@ -827,7 +892,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Fixed credit card fee is taken into account correctly", async () => {
@@ -866,7 +939,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Both credit card fee & credit card percentage are taken into account correctly", async () => {
@@ -905,7 +986,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Both spread & noba flat fee are taken into account correctly", async () => {
@@ -944,7 +1033,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("All spread, noba flat fee and credit card percentage are taken into account correctly", async () => {
@@ -983,7 +1080,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("Network fee is taken into account correctly", async () => {
@@ -1022,7 +1127,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
 
     it("All the parameters are taken into account correctly", async () => {
@@ -1061,7 +1174,15 @@ describe("DefaultAssetService", () => {
         cryptoQuantity: cryptoQuantity,
       });
 
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
     });
   });
 

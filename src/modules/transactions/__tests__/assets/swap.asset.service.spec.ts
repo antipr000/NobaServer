@@ -217,7 +217,7 @@ describe("SwapAssetService", () => {
           perUnitCryptoPriceWithSpread: cryptoQuantity / requestedFiatAmount,
           perUnitCryptoPriceWithoutSpread: cryptoQuantity / output.discountedExpectedPriceAfterFeeAndSpread,
         },
-      };
+      } as any;
 
       return nobaQuote;
     };
@@ -278,7 +278,8 @@ describe("SwapAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
     it("Noba flat fee is taken into account correctly", async () => {
@@ -337,7 +338,8 @@ describe("SwapAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
     it("Noba 'dynamic' credit card fee is taken into account correctly", async () => {
@@ -396,7 +398,8 @@ describe("SwapAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
     it("Noba 'fixed' credit card fee is taken into account correctly", async () => {
@@ -455,7 +458,8 @@ describe("SwapAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
 
     it("should operate dynamic credit card fee on original amount rather than reduced amount", async () => {
@@ -515,7 +519,8 @@ describe("SwapAssetService", () => {
           processingFeeDiscountPercent: 0,
         },
       });
-      expect(nobaQuote).toEqual(expectedNobaQuote);
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
     });
   });
 

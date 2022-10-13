@@ -240,16 +240,24 @@ describe("CryptoTransactionInitiator", () => {
   });
 
   // TODO(#): Have an independent 'transaction' instance here & check for the final transaction state.
-  it("should process a transaction in FIAT_INCOMING_COMPLETED status", async () => {
+  it("should process a transaction in FIAT_INCOMING_COMPLETED status & update the quote parameters and discounts", async () => {
     // expect that 'CryptoTransactionInitiator' actually subscribed to 'FiatTransactionCompleted' queue.
     const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
     expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionCompleted);
     expect(processor).toBeInstanceOf(CryptoTransactionInitiator);
 
     await transactionCollection.insertOne({
-      ...transaction.props,
+      _id: "1111111111" as any,
+      userId: consumerID,
       transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
-      _id: transaction.props._id as any,
+      paymentMethodID: paymentMethodID,
+      leg1Amount: 1000,
+      leg2Amount: 1.234,
+      leg1: "USD",
+      leg2: cryptocurrency,
+      partnerID: "12345",
+      lastProcessingTimestamp: Date.now().valueOf(),
+      lastStatusUpdateTimestamp: Date.now().valueOf(),
     });
 
     when(currencyService.getCryptocurrency(cryptocurrency)).thenResolve({
@@ -277,20 +285,41 @@ describe("CryptoTransactionInitiator", () => {
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,
       quote: {
-        quoteID: "12345",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
-        amountPreSpread,
-        processingFeeInFiat,
-        networkFeeInFiat,
-        nobaFeeInFiat,
-        quotedFiatAmount,
-        totalFiatAmount,
-        totalCryptoQuantity,
-        perUnitCryptoPriceWithoutSpread,
-        perUnitCryptoPriceWithSpread,
+        quote: {
+          quoteID: "raw_quote_id",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread: 90,
+          processingFeeInFiat: 10,
+          networkFeeInFiat: 11,
+          nobaFeeInFiat: 12,
+          quotedFiatAmount: 100,
+          totalFiatAmount: 133,
+          totalCryptoQuantity: 0.9,
+          perUnitCryptoPriceWithoutSpread: 100,
+          perUnitCryptoPriceWithSpread: 111.11,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread: 90,
+          processingFeeInFiat: 5,
+          networkFeeInFiat: 5.5,
+          nobaFeeInFiat: 6,
+          quotedFiatAmount: 100,
+          totalFiatAmount: 116.5,
+          perUnitCryptoPriceWithoutSpread: 100,
+          perUnitCryptoPriceWithSpread: 111.11,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 2,
+          networkFeeDiscount: 5.5,
+          nobaFeeDiscount: 6,
+          processingFeeDiscount: 3,
+          spreadDiscount: 0,
+        },
       },
     });
+
     when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
       errorMessage: null,
       settledTimestamp: 908070605040,
@@ -308,6 +337,20 @@ describe("CryptoTransactionInitiator", () => {
     );
     expect(allTransactionsInDb[0].executedQuoteTradeID).toBe("quote_trade_id");
     expect(allTransactionsInDb[0].executedQuoteSettledTimestamp).toBe(908070605040);
+
+    // Quote parameters
+    expect(allTransactionsInDb[0].tradeQuoteID).toBe("raw_quote_id");
+    expect(allTransactionsInDb[0].nobaFee).toBe(12);
+    expect(allTransactionsInDb[0].networkFee).toBe(11);
+    expect(allTransactionsInDb[0].processingFee).toBe(10);
+    expect(allTransactionsInDb[0].exchangeRate).toBe(111.11);
+    expect(allTransactionsInDb[0].amountPreSpread).toBe(90);
+
+    expect(allTransactionsInDb[0].discounts.dynamicCreditCardFeeDiscount).toBe(3);
+    expect(allTransactionsInDb[0].discounts.fixedCreditCardFeeDiscount).toBe(2);
+    expect(allTransactionsInDb[0].discounts.nobaFeeDiscount).toBe(6);
+    expect(allTransactionsInDb[0].discounts.networkFeeDiscount).toBe(5.5);
+    expect(allTransactionsInDb[0].discounts.spreadDiscount).toBe(0);
   });
 
   // TODO(#): Have an independent 'transaction' instance here & check for the final transaction state.
@@ -341,18 +384,38 @@ describe("CryptoTransactionInitiator", () => {
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,
       quote: {
-        quoteID: "12345",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
-        amountPreSpread,
-        processingFeeInFiat,
-        networkFeeInFiat,
-        nobaFeeInFiat,
-        quotedFiatAmount,
-        totalFiatAmount,
-        totalCryptoQuantity,
-        perUnitCryptoPriceWithoutSpread,
-        perUnitCryptoPriceWithSpread,
+        quote: {
+          quoteID: "12345",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          totalCryptoQuantity,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       },
     });
     when(assetService.pollExecuteQuoteForFundsAvailabilityStatus("quote_trade_id")).thenResolve({
@@ -508,18 +571,38 @@ describe("CryptoTransactionInitiator", () => {
     when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {
-        quoteID: "executed_quote_id",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
-        amountPreSpread,
-        processingFeeInFiat,
-        networkFeeInFiat,
-        nobaFeeInFiat,
-        quotedFiatAmount,
-        totalFiatAmount,
-        totalCryptoQuantity,
-        perUnitCryptoPriceWithoutSpread,
-        perUnitCryptoPriceWithSpread,
+        quote: {
+          quoteID: "executed_quote_id",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          totalCryptoQuantity,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,
@@ -574,18 +657,38 @@ describe("CryptoTransactionInitiator", () => {
     when(assetServiceFactory.getAssetService(transaction.props.leg2)).thenResolve(assetServiceInstance);
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {
-        quoteID: "quote_id",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
-        amountPreSpread,
-        processingFeeInFiat,
-        networkFeeInFiat,
-        nobaFeeInFiat,
-        quotedFiatAmount,
-        totalFiatAmount,
-        totalCryptoQuantity,
-        perUnitCryptoPriceWithoutSpread,
-        perUnitCryptoPriceWithSpread,
+        quote: {
+          quoteID: "quote_id",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          totalCryptoQuantity,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,
@@ -644,18 +747,38 @@ describe("CryptoTransactionInitiator", () => {
 
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {
-        quoteID: "quote_id",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
-        amountPreSpread,
-        processingFeeInFiat,
-        networkFeeInFiat,
-        nobaFeeInFiat,
-        quotedFiatAmount,
-        totalFiatAmount,
-        totalCryptoQuantity,
-        perUnitCryptoPriceWithoutSpread,
-        perUnitCryptoPriceWithSpread,
+        quote: {
+          quoteID: "quote_id",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          totalCryptoQuantity,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount * 2,
@@ -714,18 +837,38 @@ describe("CryptoTransactionInitiator", () => {
 
     when(assetService.executeQuoteForFundsAvailability(anything())).thenResolve({
       quote: {
-        quoteID: "quote_id",
-        fiatCurrency: "USD",
-        cryptoCurrency: "ETH",
-        amountPreSpread,
-        processingFeeInFiat,
-        networkFeeInFiat,
-        nobaFeeInFiat,
-        quotedFiatAmount,
-        totalFiatAmount,
-        totalCryptoQuantity,
-        perUnitCryptoPriceWithoutSpread,
-        perUnitCryptoPriceWithSpread,
+        quote: {
+          quoteID: "quote_id",
+          fiatCurrency: "USD",
+          cryptoCurrency: "ETH",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          totalCryptoQuantity,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        nonDiscountedQuote: {
+          fiatCurrency: "USD",
+          amountPreSpread,
+          processingFeeInFiat,
+          networkFeeInFiat,
+          nobaFeeInFiat,
+          quotedFiatAmount,
+          totalFiatAmount,
+          perUnitCryptoPriceWithoutSpread,
+          perUnitCryptoPriceWithSpread,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       },
       tradePrice: 12345,
       cryptoReceived: cryptoAmount,

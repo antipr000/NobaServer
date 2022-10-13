@@ -818,6 +818,13 @@ describe("TransactionService", () => {
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       };
 
       when(
@@ -899,6 +906,13 @@ describe("TransactionService", () => {
           totalFiatAmount: 13,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
         },
       };
 
@@ -986,6 +1000,13 @@ describe("TransactionService", () => {
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       };
 
       when(
@@ -1068,6 +1089,13 @@ describe("TransactionService", () => {
           totalFiatAmount: 160,
           perUnitCryptoPriceWithoutSpread: 900,
           perUnitCryptoPriceWithSpread: 1000,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
         },
       };
 
@@ -1497,6 +1525,13 @@ describe("TransactionService", () => {
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
         },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       };
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
@@ -1612,6 +1647,13 @@ describe("TransactionService", () => {
           totalFiatAmount: 100,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
         },
       };
 
@@ -1750,6 +1792,13 @@ describe("TransactionService", () => {
           totalFiatAmount: 100,
           perUnitCryptoPriceWithoutSpread: 1000,
           perUnitCryptoPriceWithSpread: 1000,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
         },
       };
 
@@ -1907,6 +1956,13 @@ describe("TransactionService", () => {
           perUnitCryptoPriceWithoutSpread: 900,
           perUnitCryptoPriceWithSpread: 1000,
         },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
+        },
       };
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
@@ -2053,6 +2109,13 @@ describe("TransactionService", () => {
           totalFiatAmount: 160,
           perUnitCryptoPriceWithoutSpread: 900,
           perUnitCryptoPriceWithSpread: 1000,
+        },
+        discountsGiven: {
+          creditCardFeeDiscount: 0,
+          networkFeeDiscount: 0,
+          nobaFeeDiscount: 0,
+          processingFeeDiscount: 0,
+          spreadDiscount: 0,
         },
       };
 

@@ -99,8 +99,12 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         transaction.props.amountPreSpread = nobaQuote.quote.amountPreSpread;
 
         transaction.props.discounts = {
-          creditCardFeeDiscount: ()
-        }
+          fixedCreditCardFeeDiscount: nobaQuote.discountsGiven.creditCardFeeDiscount,
+          dynamicCreditCardFeeDiscount: nobaQuote.discountsGiven.processingFeeDiscount,
+          networkFeeDiscount: nobaQuote.discountsGiven.networkFeeDiscount,
+          nobaFeeDiscount: nobaQuote.discountsGiven.nobaFeeDiscount,
+          spreadDiscount: nobaQuote.discountsGiven.spreadDiscount,
+        };
 
         transaction = await this.transactionRepo.updateTransaction(transaction);
       } catch (e) {

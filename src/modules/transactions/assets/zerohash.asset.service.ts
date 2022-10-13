@@ -112,37 +112,33 @@ export class ZerohashAssetService extends DefaultAssetService {
 
     switch (request.fixedSide) {
       case CurrencyType.FIAT:
-        nobaQuote = (
-          await this.getQuoteForSpecifiedFiatAmount({
-            cryptoCurrency: request.cryptoCurrency,
-            fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
-            fiatCurrency: request.fiatCurrency,
-            discount: {
-              fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
-              networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
-              nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
-              nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
-              processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
-            },
-          })
-        );
+        nobaQuote = await this.getQuoteForSpecifiedFiatAmount({
+          cryptoCurrency: request.cryptoCurrency,
+          fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
+          fiatCurrency: request.fiatCurrency,
+          discount: {
+            fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+            networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
+            nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
+            nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
+            processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+          },
+        });
         break;
 
       case CurrencyType.CRYPTO:
-        nobaQuote = (
-          await this.getQuoteForSpecifiedCryptoQuantity({
-            cryptoCurrency: request.cryptoCurrency,
-            cryptoQuantity: Utils.roundToSpecifiedDecimalNumber(request.cryptoQuantity, cryptocurrency.precision),
-            fiatCurrency: request.fiatCurrency,
-            discount: {
-              fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
-              networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
-              nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
-              nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
-              processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
-            },
-          })
-        );
+        nobaQuote = await this.getQuoteForSpecifiedCryptoQuantity({
+          cryptoCurrency: request.cryptoCurrency,
+          cryptoQuantity: Utils.roundToSpecifiedDecimalNumber(request.cryptoQuantity, cryptocurrency.precision),
+          fiatCurrency: request.fiatCurrency,
+          discount: {
+            fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+            networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
+            nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
+            nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
+            processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+          },
+        });
         break;
 
       default:
