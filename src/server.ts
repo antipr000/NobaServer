@@ -141,7 +141,7 @@ function getMorgan(winstonLogger) {
   };
 
   return morgan((tokens, req, res) => {
-    const userID = ((req as any).user as any)?.props?._id;
+    const userID = ((req as any).user as any)?.entity?.props?._id;
 
     return [
       userID ?? "unauthenticated-request",
