@@ -208,7 +208,7 @@ export class PartnerController {
     description: "All transactions for the partner",
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getTransactions(
+  async getPartnerTransactions(
     @Request() request,
     @Query() transactionFilters: TransactionFilterOptions,
   ): Promise<TransactionsQueryResultsDTO> {
@@ -234,7 +234,10 @@ export class PartnerController {
     description: "Details of a transaction",
   })
   @ApiNotFoundResponse({ description: "Transaction does not exist" })
-  async getTransaction(@Request() request, @Param("transactionID") transactionID: string): Promise<TransactionDTO> {
+  async getPartnerTransaction(
+    @Request() request,
+    @Param("transactionID") transactionID: string,
+  ): Promise<TransactionDTO> {
     const user = request.user.entity;
     if (!(user instanceof PartnerAdmin)) {
       throw new ForbiddenException("Only partner admins can access this endpoint");

@@ -932,7 +932,7 @@ describe("PartnerController", () => {
           partnerService.getAllTransactionsForPartner(requestingPartnerAdmin.props.partnerId, deepEqual({})),
         ).thenResolve(allTransactionsResult);
 
-        const response = await partnerController.getTransactions(
+        const response = await partnerController.getPartnerTransactions(
           {
             user: { entity: requestingPartnerAdmin },
           },
@@ -951,7 +951,7 @@ describe("PartnerController", () => {
         });
 
         try {
-          await partnerController.getTransactions(
+          await partnerController.getPartnerTransactions(
             {
               user: { entity: user },
             },
@@ -972,7 +972,7 @@ describe("PartnerController", () => {
         });
 
         try {
-          await partnerController.getTransactions(
+          await partnerController.getPartnerTransactions(
             {
               user: { entity: requestingPartnerAdmin },
             },
@@ -1012,7 +1012,7 @@ describe("PartnerController", () => {
         const transactionDTO = transactionMapper.toDTO(transaction);
 
         when(partnerService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
-        const response = await partnerController.getTransaction(
+        const response = await partnerController.getPartnerTransaction(
           {
             user: { entity: requestingPartnerAdmin },
           },
@@ -1029,7 +1029,7 @@ describe("PartnerController", () => {
         });
 
         try {
-          await partnerController.getTransaction(
+          await partnerController.getPartnerTransaction(
             {
               user: { entity: user },
             },
@@ -1050,7 +1050,7 @@ describe("PartnerController", () => {
         });
 
         try {
-          await partnerController.getTransaction(
+          await partnerController.getPartnerTransaction(
             {
               user: { entity: requestingPartnerAdmin },
             },
@@ -1089,7 +1089,7 @@ describe("PartnerController", () => {
 
         when(partnerService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
         try {
-          await partnerController.getTransaction(
+          await partnerController.getPartnerTransaction(
             {
               user: { entity: requestingPartnerAdmin },
             },
