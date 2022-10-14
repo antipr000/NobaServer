@@ -1,5 +1,4 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import axios, { AxiosRequestConfig } from "axios";
 import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -12,9 +11,7 @@ import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { KYCStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
-import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { Partner } from "../partner/domain/Partner";
-import { TransConfirmDTO, WebhookType } from "../partner/domain/WebhookTypes";
 import { PartnerService } from "../partner/partner.service";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
@@ -471,7 +468,7 @@ export class TransactionService {
           nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
           transactionInitiatedParams: {
-            transactionID: transaction.props._id,
+            transactionID: transaction.props.transactionID,
             transactionTimestamp: transaction.props.transactionTimestamp,
             paymentMethod: paymentMethod.cardType,
             last4Digits: paymentMethod.last4Digits,
@@ -536,15 +533,6 @@ export class TransactionService {
     // Strip anything from the first period onward
     const checkCurr = curr.split(".")[0];
     return validate(destinationWalletAddress, checkCurr);
-  }
-
-  private getAxiosConfig(partner: Partner): AxiosRequestConfig {
-    return {
-      auth: {
-        username: partner.props.webhookClientID,
-        password: partner.props.webhookSecret,
-      },
-    };
   }
 
   private isCryptocurrencyAllowed(partner: Partner, cryptocurrency: string) {

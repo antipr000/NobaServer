@@ -262,7 +262,7 @@ export class CheckoutService {
       transaction.props.paymentMethodID,
       null,
       transaction.props.sessionKey,
-      transaction.props._id,
+      transaction.props.transactionID,
       transaction.props.partnerID,
     );
 

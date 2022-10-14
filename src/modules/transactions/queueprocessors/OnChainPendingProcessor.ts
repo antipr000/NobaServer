@@ -113,7 +113,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
         nobaUserID: consumer.props._id,
         email: consumer.props.displayEmail,
         orderExecutedParams: {
-          transactionID: transaction.props._id,
+          transactionID: transaction.props.transactionID,
           transactionTimestamp: transaction.props.transactionTimestamp,
           settledTimestamp: new Date(),
           transactionHash: transaction.props.blockchainTransactionId,

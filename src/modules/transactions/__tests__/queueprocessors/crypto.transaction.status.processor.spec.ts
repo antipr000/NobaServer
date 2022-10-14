@@ -101,7 +101,7 @@ describe("CryptoTransactionStatusProcessor", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.CryptoTransactionInitiated, anything())).thenReturn({
-      start: () => {},
+      start: () => null,
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({

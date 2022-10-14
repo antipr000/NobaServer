@@ -1,4 +1,3 @@
-import mockAxios from "jest-mock-axios";
 const FAKE_VALID_WALLET = "fake-valid-wallet";
 
 jest.mock("multicoin-address-validator", () => ({
@@ -32,7 +31,6 @@ import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../../../modules/consumer/domain/Types";
 import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { Partner } from "../../../modules/partner/domain/Partner";
-import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { CurrencyService } from "../../common/currency.service";
 import { CurrencyType } from "../../common/domain/Types";

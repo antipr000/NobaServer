@@ -98,7 +98,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
         nobaUserID: consumer.props._id,
         email: consumer.props.displayEmail,
         orderFailedParams: {
-          transactionID: transaction.props._id,
+          transactionID: transaction.props.transactionID,
           transactionTimestamp: transaction.props.transactionTimestamp,
           paymentMethod: paymentMethod.cardType,
           last4Digits: paymentMethod.last4Digits,
