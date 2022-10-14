@@ -207,20 +207,24 @@ export abstract class DefaultAssetService implements AssetService {
       quote: discountedNobaQuote,
       nonDiscountedQuote: nonDiscountedNobaQuote,
       discountsGiven: {
-        networkFeeDiscount: networkFee.value - networkFee.discountedValue,
-        nobaFeeDiscount: nobaFlatFeeInFiat.value - nobaFlatFeeInFiat.discountedValue,
+        networkFeeDiscount: Utils.roundTo2DecimalNumber(networkFee.value - networkFee.discountedValue),
+        nobaFeeDiscount: Utils.roundTo2DecimalNumber(nobaFlatFeeInFiat.value - nobaFlatFeeInFiat.discountedValue),
         // dynamic credit card fees.
-        processingFeeDiscount:
+        processingFeeDiscount: Utils.roundTo2DecimalNumber(
           totalCreditCardFeeInFiat.value -
-          fixedCreditCardFeeInFiat.value -
-          (totalCreditCardFeeInFiat.discountedValue - fixedCreditCardFeeInFiat.discountedValue),
+            fixedCreditCardFeeInFiat.value -
+            (totalCreditCardFeeInFiat.discountedValue - fixedCreditCardFeeInFiat.discountedValue),
+        ),
         // fixed credit card fees.
-        creditCardFeeDiscount: fixedCreditCardFeeInFiat.value - fixedCreditCardFeeInFiat.discountedValue,
-        spreadDiscount:
+        creditCardFeeDiscount: Utils.roundTo2DecimalNumber(
+          fixedCreditCardFeeInFiat.value - fixedCreditCardFeeInFiat.discountedValue,
+        ),
+        spreadDiscount: Utils.roundTo2DecimalNumber(
           fiatAmountAfterAllChargesWithoutSpread.value -
-          fiatAmountAfterAllChargesWithSpread.value -
-          (fiatAmountAfterAllChargesWithoutSpread.discountedValue -
-            fiatAmountAfterAllChargesWithSpread.discountedValue),
+            fiatAmountAfterAllChargesWithSpread.value -
+            (fiatAmountAfterAllChargesWithoutSpread.discountedValue -
+              fiatAmountAfterAllChargesWithSpread.discountedValue),
+        ),
       },
     };
   }
@@ -367,7 +371,7 @@ export abstract class DefaultAssetService implements AssetService {
         networkFeeInFiat: networkFee.discountedValue,
         nobaFeeInFiat: nobaFlatFeeInFiat.discountedValue,
         processingFeeInFiat: dynamicCreditCardFeeInFiat.discountedValue + fixedCreditCardFeeInFiat.discountedValue,
-        amountPreSpread: request.cryptoQuantity * perUnitCryptoCostWithoutSpread,
+        amountPreSpread: Utils.roundTo2DecimalNumber(request.cryptoQuantity * perUnitCryptoCostWithoutSpread),
         totalCryptoQuantity: request.cryptoQuantity,
         quotedFiatAmount: rawFiatAmountForRequestedCryptoPostSpread.discountedValue,
         totalFiatAmount: quotedFiatAmount.discountedValue,
@@ -380,21 +384,26 @@ export abstract class DefaultAssetService implements AssetService {
         networkFeeInFiat: networkFee.value,
         nobaFeeInFiat: nobaFlatFeeInFiat.value,
         processingFeeInFiat: dynamicCreditCardFeeInFiat.value + fixedCreditCardFeeInFiat.value,
-        amountPreSpread: request.cryptoQuantity * perUnitCryptoCostWithoutSpread,
+        amountPreSpread: Utils.roundTo2DecimalNumber(request.cryptoQuantity * perUnitCryptoCostWithoutSpread),
         quotedFiatAmount: rawFiatAmountForRequestedCryptoPostSpread.value,
         totalFiatAmount: quotedFiatAmount.value,
         perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.value,
         perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread,
       },
       discountsGiven: {
-        networkFeeDiscount: networkFee.value - networkFee.discountedValue,
-        nobaFeeDiscount: nobaFlatFeeInFiat.value - nobaFlatFeeInFiat.discountedValue,
+        networkFeeDiscount: Utils.roundTo2DecimalNumber(networkFee.value - networkFee.discountedValue),
+        nobaFeeDiscount: Utils.roundTo2DecimalNumber(nobaFlatFeeInFiat.value - nobaFlatFeeInFiat.discountedValue),
         // dynamic credit card fees.
-        processingFeeDiscount: dynamicCreditCardFeeInFiat.value - dynamicCreditCardFeeInFiat.discountedValue,
+        processingFeeDiscount: Utils.roundTo2DecimalNumber(
+          dynamicCreditCardFeeInFiat.value - dynamicCreditCardFeeInFiat.discountedValue,
+        ),
         // fixed credit card fees.
-        creditCardFeeDiscount: fixedCreditCardFeeInFiat.value - fixedCreditCardFeeInFiat.discountedValue,
-        spreadDiscount:
+        creditCardFeeDiscount: Utils.roundTo2DecimalNumber(
+          fixedCreditCardFeeInFiat.value - fixedCreditCardFeeInFiat.discountedValue,
+        ),
+        spreadDiscount: Utils.roundTo2DecimalNumber(
           (perUnitCryptoCostWithSpread.value - perUnitCryptoCostWithSpread.discountedValue) * request.cryptoQuantity,
+        ),
       },
     };
 

@@ -660,7 +660,40 @@ describe("SwapAssetService", () => {
         cryptoReceived: request.cryptoQuantity,
         tradeID: quoteID,
         tradePrice: 1,
-        quote: null,
+        quote: {
+          discountsGiven: {
+            creditCardFeeDiscount: 0,
+            networkFeeDiscount: 0,
+            nobaFeeDiscount: 0,
+            processingFeeDiscount: 0,
+            spreadDiscount: 0,
+          },
+          nonDiscountedQuote: {
+            amountPreSpread: 500,
+            fiatCurrency: "USD",
+            networkFeeInFiat: 0,
+            nobaFeeInFiat: 0,
+            perUnitCryptoPriceWithSpread: 1.6,
+            perUnitCryptoPriceWithoutSpread: 1,
+            processingFeeInFiat: 0,
+            quotedFiatAmount: 312.5,
+            totalFiatAmount: 500,
+          },
+          quote: {
+            amountPreSpread: 500,
+            cryptoCurrency: "USDC.POLYGON",
+            fiatCurrency: "USD",
+            networkFeeInFiat: 0,
+            nobaFeeInFiat: 0,
+            perUnitCryptoPriceWithSpread: 1.6,
+            perUnitCryptoPriceWithoutSpread: 1,
+            processingFeeInFiat: 0,
+            quoteID: "FIXED",
+            quotedFiatAmount: 312.5,
+            totalCryptoQuantity: 312.5,
+            totalFiatAmount: 500,
+          },
+        },
       };
 
       const quoteResponse = await swapAssetService.executeQuoteForFundsAvailability(request);
