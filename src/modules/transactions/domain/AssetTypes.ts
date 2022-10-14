@@ -128,10 +128,10 @@ export interface NonDiscountedNobaQuote {
 export type CombinedNobaQuote = {
   quote: NobaQuote;
   nonDiscountedQuote: NonDiscountedNobaQuote;
-  discountsGiven: PartnerDiscounts;
+  discountsGiven: Discounts;
 };
 
-export interface PartnerDiscounts {
+export interface Discounts {
   creditCardFeeDiscount: number;
   nobaFeeDiscount: number;
   processingFeeDiscount: number;

@@ -68,10 +68,10 @@ export interface TransactionProps extends VersioningInfo {
   lastStatusUpdateTimestamp: number;
 
   transactionExceptions?: TransactionEvent[];
-  discounts?: PartnerDiscounts;
+  discounts?: Discounts;
 }
 
-export interface PartnerDiscounts {
+export interface Discounts {
   fixedCreditCardFeeDiscount: number;
   nobaFeeDiscount: number;
   dynamicCreditCardFeeDiscount: number;
