@@ -6,12 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import {
-  KYCStatus,
-  DocumentVerificationStatus,
-  WalletStatus,
-  RiskLevel,
-} from "../../consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus, WalletStatus } from "../../consumer/domain/VerificationStatus";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
