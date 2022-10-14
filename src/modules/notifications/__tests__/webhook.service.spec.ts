@@ -5,7 +5,6 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { deepEqual, instance, when } from "ts-mockito";
 import { PartnerService } from "../../../modules/partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
-import { SENDGRID_API_KEY, SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { WebhookService } from "../webhook.service";
 import { SendOtpEvent } from "../events/SendOtpEvent";
 import { Partner } from "../../../modules/partner/domain/Partner";
@@ -48,14 +47,7 @@ describe("ConfigurationsProviderService", () => {
     };
 
     const app: TestingModule = await Test.createTestingModule({
-      imports: [
-        TestConfigModule.registerAsync({
-          [SENDGRID_CONFIG_KEY]: {
-            [SENDGRID_API_KEY]: "SG.fake_api_key",
-          },
-        }),
-        getTestWinstonModule(),
-      ],
+      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
       providers: [
         WebhookService,
