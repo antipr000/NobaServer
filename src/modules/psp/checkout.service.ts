@@ -6,8 +6,7 @@ import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
-import { PaymentMethod } from "../consumer/domain/PaymentMethod";
-import { PaymentProviders } from "../consumer/domain/PaymentProviderDetails";
+import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
 import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
 import {
@@ -26,6 +25,7 @@ import { PaymentRequestResponse, CheckoutPaymentStatus, FiatTransactionStatus } 
 import { Utils } from "../../core/utils/Utils";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { PaymentProvider } from "../consumer/domain/PaymentProvider";
 
 @Injectable()
 export class CheckoutService {
@@ -54,7 +54,7 @@ export class CheckoutService {
     partnerId: string,
   ): Promise<AddPaymentMethodResponse> {
     const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
-      paymentProviderAccount => paymentProviderAccount.providerID === PaymentProviders.CHECKOUT,
+      paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
     );
 
     let checkoutCustomerID: string;
@@ -186,15 +186,18 @@ export class CheckoutService {
       // TODO - we don't currently have a use case for FLAGGED
     } else {
       const newPaymentMethod: PaymentMethod = {
-        cardName: paymentMethod.cardName,
-        cardType: cardType,
-        first6Digits: paymentMethod.cardNumber.substring(0, 6),
-        last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+        name: paymentMethod.cardName,
+        type: PaymentMethodType.CARD,
+        cardData: {
+          cardType: cardType,
+          first6Digits: paymentMethod.cardNumber.substring(0, 6),
+          last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+          authCode: response.responseCode,
+          authReason: response.responseSummary,
+        },
         imageUri: paymentMethod.imageUri,
-        paymentProviderID: PaymentProviders.CHECKOUT,
+        paymentProviderID: PaymentProvider.CHECKOUT,
         paymentToken: instrumentID,
-        authCode: response.responseCode,
-        authReason: response.responseSummary,
       };
 
       if (response.paymentMethodStatus) {
@@ -214,7 +217,7 @@ export class CheckoutService {
           paymentProviderAccounts: [
             ...consumer.props.paymentProviderAccounts,
             {
-              providerID: PaymentProviders.CHECKOUT,
+              providerID: PaymentProvider.CHECKOUT,
               providerCustomerID: checkoutCustomerID,
             },
           ],
@@ -399,7 +402,7 @@ export class CheckoutService {
           sessionID: sessionID,
           transactionID: transactionID,
           paymentToken: instrumentID,
-          processor: PaymentProviders.CHECKOUT,
+          processor: PaymentProvider.CHECKOUT,
           responseCode: response.responseCode,
           responseSummary: response.responseCode,
         });

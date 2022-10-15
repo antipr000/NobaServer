@@ -6,7 +6,6 @@ import { ConsumerController } from "../consumer.controller";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
 import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
-import { PaymentProviders } from "../domain/PaymentProviderDetails";
 import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "../dto/ConsumerDTO";
 import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
@@ -17,6 +16,8 @@ import { WalletStatus } from "../domain/VerificationStatus";
 import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
 import { Partner } from "../../../modules/partner/domain/Partner";
 import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
+import { PaymentProvider } from "../domain/PaymentProvider";
+import { PaymentMethodType } from "../domain/PaymentMethod";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -373,12 +374,15 @@ describe("ConsumerController", () => {
           ...consumer.props,
           paymentMethods: [
             {
-              paymentProviderID: PaymentProviders.CHECKOUT,
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
               paymentToken: "faketoken1234",
-              cardName: paymentMethodRequest.cardName,
-              cardType: "VISA",
-              first6Digits: "123456",
-              last4Digits: "1234",
+              name: paymentMethodRequest.cardName,
+              cardData: {
+                cardType: "VISA",
+                first6Digits: "123456",
+                last4Digits: "1234",
+              },
               imageUri: "testimage",
             },
           ],
@@ -426,11 +430,14 @@ describe("ConsumerController", () => {
           ...consumer.props,
           paymentMethods: [
             {
-              paymentProviderID: PaymentProviders.CHECKOUT,
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
               paymentToken: "faketoken1234",
-              cardType: "VISA",
-              first6Digits: "123456",
-              last4Digits: "1234",
+              cardData: {
+                cardType: "VISA",
+                first6Digits: "123456",
+                last4Digits: "1234",
+              },
               imageUri: "testimage",
             },
           ],

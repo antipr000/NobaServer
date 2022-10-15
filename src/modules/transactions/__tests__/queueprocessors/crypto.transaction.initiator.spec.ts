@@ -18,7 +18,7 @@ import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
-import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProviderDetails";
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
 import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
 import { VerificationService } from "../../../../modules/verification/verification.service";

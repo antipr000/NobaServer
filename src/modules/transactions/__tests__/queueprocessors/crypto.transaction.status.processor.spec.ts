@@ -34,7 +34,7 @@ import {
 } from "../../mocks/mock.asset.service";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
-import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProviderDetails";
 import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
 import { NotificationService } from "../../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../../modules/notifications/mocks/mock.notification.service";

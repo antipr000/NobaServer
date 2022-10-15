@@ -1,8 +1,6 @@
-export enum PaymentProviders {
-  CHECKOUT = "Checkout",
-}
+import { PaymentProvider } from "./PaymentProvider";
 
 export type PaymentProviderDetails = {
-  providerID: PaymentProviders;
+  providerID: PaymentProvider;
   providerCustomerID: string;
 };

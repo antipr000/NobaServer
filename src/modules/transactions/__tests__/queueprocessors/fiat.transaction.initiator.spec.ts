@@ -29,7 +29,7 @@ import { PaymentMethodStatus } from "../../../../modules/consumer/domain/Verific
 import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { ObjectType } from "../../../../modules/common/domain/ObjectType";
-import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProviderDetails";
 import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
 import {
   CardFailureExceptionText,
