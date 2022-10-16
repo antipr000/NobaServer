@@ -4,13 +4,18 @@ import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
 export class MongoDBConsumerRepo implements IConsumerRepo {
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
+
   private readonly consumerMapper = new ConsumerMapper();
 
   constructor(private readonly dbProvider: DBProvider, private readonly kmsService: KmsService) {}

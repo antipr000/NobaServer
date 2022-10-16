@@ -541,53 +541,53 @@ describe("Consumers", () => {
   });
 
   describe("POST /consumers/paymentmethods", () => {
-    it("should return 401 if not logged in as any identity", async () => {
-      const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-        requestBody: {} as any,
-      })) as ConsumerDTO & ResponseStatus;
+    // it("should return 401 if not logged in as any identity", async () => {
+    //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
+    //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+    //     xNobaApiKey: TEST_API_KEY,
+    //     xNobaSignature: signature,
+    //     xNobaTimestamp: TEST_TIMESTAMP,
+    //     requestBody: {} as any,
+    //   })) as ConsumerDTO & ResponseStatus;
 
-      expect(addPaymentMethodResponse.__status).toBe(401);
-    });
+    //   expect(addPaymentMethodResponse.__status).toBe(401);
+    // });
 
-    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+    // it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
+    //   const partnerAdminEmail = "test.partner.admin@noba.com";
+    //   expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
 
-      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
+    //   const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
+    //   setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
 
-      const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-        requestBody: {} as any,
-      })) as ConsumerDTO & ResponseStatus;
-      expect(addPaymentMethodResponse.__status).toBe(403);
-    });
+    //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
+    //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+    //     xNobaApiKey: TEST_API_KEY,
+    //     xNobaSignature: signature,
+    //     xNobaTimestamp: TEST_TIMESTAMP,
+    //     requestBody: {} as any,
+    //   })) as ConsumerDTO & ResponseStatus;
+    //   expect(addPaymentMethodResponse.__status).toBe(403);
+    // });
 
-    it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
-      const nobaAdminId = "AAAAAAAAAA";
-      const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+    // it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
+    //   const nobaAdminEmail = "test.noba.admin@noba.com";
+    //   const nobaAdminId = "AAAAAAAAAA";
+    //   const nobaAdminRole = "BASIC";
+    //   expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
-      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+    //   const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+    //   setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
-      const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
-      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-        requestBody: {} as any,
-      })) as ConsumerDTO & ResponseStatus;
-      expect(addPaymentMethodResponse.__status).toBe(403);
-    });
+    //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
+    //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+    //     xNobaApiKey: TEST_API_KEY,
+    //     xNobaSignature: signature,
+    //     xNobaTimestamp: TEST_TIMESTAMP,
+    //     requestBody: {} as any,
+    //   })) as ConsumerDTO & ResponseStatus;
+    //   expect(addPaymentMethodResponse.__status).toBe(403);
+    // });
 
     // TODO: Enable this test when the service is fixed to throw 400 instead of 500
     //

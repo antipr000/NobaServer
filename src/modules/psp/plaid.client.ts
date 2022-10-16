@@ -7,7 +7,6 @@ import {
   PlaidEnvironments,
   LinkTokenCreateRequest as PlaidLinkTokenCreateRequest,
   LinkTokenCreateResponse as PlaidLinkTokenCreateResponse,
-  LinkTokenCreateRequest,
   CountryCode as PlaidCountryCode,
   Products as PlaidProducts,
 } from "plaid";
@@ -15,7 +14,7 @@ import { AxiosResponse } from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PlaidConfigs } from "../../config/configtypes/PlaidConfigs";
-import { PLAID_CONFIG_KEY } from "src/config/ConfigurationUtils";
+import { PLAID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class PlaidClient {
@@ -40,7 +39,7 @@ export class PlaidClient {
 
   public async generateLinkToken(request: GenerateLinkTokenRequest): Promise<string> {
     try {
-      const createLinkRequest: LinkTokenCreateRequest = {
+      const createLinkRequest: PlaidLinkTokenCreateRequest = {
         user: {
           client_user_id: request.userID,
         },
