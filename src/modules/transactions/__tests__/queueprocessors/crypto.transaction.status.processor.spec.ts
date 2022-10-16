@@ -34,10 +34,10 @@ import {
 } from "../../mocks/mock.asset.service";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
-import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProviderDetails";
-import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodType } from "../../../../modules/consumer/domain/PaymentMethod";
 import { NotificationService } from "../../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../../modules/notifications/mocks/mock.notification.service";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -408,11 +408,14 @@ describe("CryptoTransactionStatusProcessor", () => {
     when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
     const paymentMethod: PaymentMethod = {
       status: PaymentMethodStatus.APPROVED,
-      first6Digits: "123456",
-      last4Digits: "4321",
+      type: PaymentMethodType.CARD,
+      cardData: {
+        first6Digits: "123456",
+        last4Digits: "4321",
+      },
       imageUri: "...",
       paymentToken: "XXXXXXXXXX",
-      paymentProviderID: PaymentProviders.CHECKOUT,
+      paymentProviderID: PaymentProvider.CHECKOUT,
     };
     when(consumerService.getConsumer(transaction.props.userId)).thenResolve(
       Consumer.createConsumer({

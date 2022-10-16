@@ -164,9 +164,12 @@ export class FiatTransactionInitiator extends MessageProcessor {
 
     this.consumerService.updatePaymentMethod(consumer.props._id, {
       ...paymentMethod,
+      cardData: {
+        ...paymentMethod.cardData,
+        authCode: errorCode,
+        authReason: errorDescription,
+      },
       status: status,
-      authCode: errorCode,
-      authReason: errorDescription,
     });
 
     if (updateSardine) {
