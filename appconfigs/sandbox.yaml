@@ -109,6 +109,16 @@ configuration:
 partner:
   embedSecretKey: "D43az5QS5g1A53B4rk/2FPtLC9FR9NeVtV7qGcubNsSqQ6ftAARCC/7vliyQ2woM+AU+0KsAi2X+JXTloF//1A=="
 
+plaid:
+  env: "sandbox"
+  version: "2020-09-14"
+  redirectUri: "http://localhost:8080/plaid/redirect_uri"
+  awsSecretNameForRedirectUri: ""
+  clientID: ""
+  awsSecretNameForClientID: "SANDBOX_PLAID_CLIENT_ID"
+  secretKey: ""
+  awsSecretNameForSecretKey: "SANDBOX_PLAID_SECRET_KEY"
+
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"
 assetsBucketName: "prod-noba-assets"

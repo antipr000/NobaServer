@@ -14,22 +14,24 @@ import {
 import { AxiosResponse } from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { PlaidConfigs } from "../../config/configtypes/PlaidConfigs";
+import { PLAID_CONFIG_KEY } from "src/config/ConfigurationUtils";
 
 @Injectable()
 export class PlaidClient {
   private plaidApi: PlaidApi;
+  private plaidConfigs: PlaidConfigs;
 
-  constructor(
-    private readonly configService: CustomConfigService,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {
+  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+    this.plaidConfigs = configService.get<PlaidConfigs>(PLAID_CONFIG_KEY);
+
     const plaidConfiguration: PlaidConfiguration = new PlaidConfiguration({
-      basePath: PlaidEnvironments["sandbox"],
+      basePath: PlaidEnvironments[this.plaidConfigs.env],
       baseOptions: {
         headers: {
-          "PLAID-CLIENT-ID": "62432d096685bc0013d030a8",
-          "PLAID-SECRET": "___",
-          "Plaid-Version": "2020-09-14",
+          "PLAID-CLIENT-ID": this.plaidConfigs.clientID,
+          "PLAID-SECRET": this.plaidConfigs.secretKey,
+          "Plaid-Version": this.plaidConfigs.version,
         },
       },
     });
@@ -46,7 +48,7 @@ export class PlaidClient {
         products: [PlaidProducts.Auth],
         country_codes: [PlaidCountryCode.Us],
         language: "en",
-        redirect_uri: "http://localhost:8080/plaid/redirect_uri", // TODO: Fill this based on the frontend
+        redirect_uri: this.plaidConfigs.redirectUri,
       };
 
       const createTokenResponse: AxiosResponse<PlaidLinkTokenCreateResponse> = await this.plaidApi.linkTokenCreate(
