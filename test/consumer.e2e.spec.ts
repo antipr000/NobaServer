@@ -29,6 +29,7 @@ import {
   TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
+import { PlaidTokenDTO } from "./api_client";
 
 describe("Consumers", () => {
   jest.setTimeout(20000);
@@ -59,6 +60,85 @@ describe("Consumers", () => {
     await app.close();
     await mongoServer.stop();
     clearAccessTokenForNextRequests();
+  });
+
+  describe("GET /consumers/paymentmethods/plaid/token", () => {
+    it("should return 401 if not logged in as any identity", async () => {
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/paymentmethods/plaid/token", JSON.stringify({}));
+      const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as PlaidTokenDTO & ResponseStatus;
+
+      expect(generatePlaidTokenResponse.__status).toBe(401);
+    });
+
+    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
+      const partnerAdminEmail = "test.partner.admin@noba.com";
+      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+
+      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
+      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/paymentmethods/plaid/token",
+        JSON.stringify({}),
+      );
+      const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as PlaidTokenDTO & ResponseStatus;
+
+      expect(generatePlaidTokenResponse.__status).toBe(403);
+    });
+
+    it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
+      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminId = "AAAAAAAAAA";
+      const nobaAdminRole = "BASIC";
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/paymentmethods/plaid/token",
+        JSON.stringify({}),
+      );
+      const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as PlaidTokenDTO & ResponseStatus;
+      expect(generatePlaidTokenResponse.__status).toBe(403);
+    });
+
+    it("should allow Consumer identity to call this API", async () => {
+      const consumerEmail = "test.consumer@noba.com";
+
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/paymentmethods/plaid/token",
+        JSON.stringify({}),
+      );
+      const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as PlaidTokenDTO & ResponseStatus;
+
+      expect(generatePlaidTokenResponse.__status).toBe(200);
+      expect(generatePlaidTokenResponse.token).toBeDefined();
+    });
   });
 
   describe("GET /consumers", () => {

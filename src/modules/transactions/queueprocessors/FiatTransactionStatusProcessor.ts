@@ -9,7 +9,7 @@ import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
-import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 export class FiatTransactionStatusProcessor extends MessageProcessor {
   constructor(
