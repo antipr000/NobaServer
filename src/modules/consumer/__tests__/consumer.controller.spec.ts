@@ -18,11 +18,14 @@ import { Partner } from "../../../modules/partner/domain/Partner";
 import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
 import { PaymentProvider } from "../domain/PaymentProvider";
 import { PaymentMethodType } from "../domain/PaymentMethod";
+import { PlaidClient } from "../../../modules/psp/plaid.client";
+import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
   let consumerService: ConsumerService;
   let partnerService: PartnerService;
+  let plaidClient: PlaidClient;
 
   const consumerMapper = new ConsumerMapper();
 
@@ -31,6 +34,7 @@ describe("ConsumerController", () => {
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
+    plaidClient = getMockPlaidClientWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -43,6 +47,10 @@ describe("ConsumerController", () => {
         {
           provide: PartnerService,
           useFactory: () => instance(partnerService),
+        },
+        {
+          provide: PlaidClient,
+          useFactory: () => instance(plaidClient),
         },
       ],
     }).compile();
