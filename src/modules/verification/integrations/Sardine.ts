@@ -89,7 +89,7 @@ export class Sardine implements IDVProvider {
     }
 
     if (consumerInfo.phoneNumber) {
-      sardineRequest.customer.phone = consumerInfo.phoneNumber;
+      sardineRequest.customer.phone = consumerInfo.phoneNumber.replace(/ /g, "");
       sardineRequest.customer.isPhoneVerified = false;
     }
 

@@ -105,7 +105,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   phone: Joi.string()
     .optional()
     .allow(null)
-    .meta({ _mongoose: { index: true } }), //TODO phone number validation, how do we want to store phone number? country code + phone number?
+    .meta({ _mongoose: { index: true } }),
   isAdmin: Joi.boolean().default(false),
   dateOfBirth: Joi.string().optional(),
   address: Joi.object().keys(addressValidationJoiKeys).optional(),

@@ -114,7 +114,7 @@ describe("SardineTests", () => {
         },
         dateOfBirth: "1860-03-03",
         email: "test+user@noba.com",
-        phoneNumber: "+123456789",
+        phoneNumber: "+1 234 567 8900", // Spaces to be replaced in code
         nationalID: {
           type: NationalIDTypes.SOCIAL_SECURITY,
           number: "000000002",
@@ -136,7 +136,7 @@ describe("SardineTests", () => {
             postalCode: consumerInformation.address.postalCode,
             countryCode: consumerInformation.address.countryCode,
           },
-          phone: consumerInformation.phoneNumber,
+          phone: "+12345678900",
           isPhoneVerified: false,
           emailAddress: consumerInformation.email,
           isEmailVerified: true,
