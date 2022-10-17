@@ -143,9 +143,9 @@ export abstract class DefaultAssetService implements AssetService {
       processingFeeInFiat: totalCreditCardFeeInFiat.value,
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.value,
       quotedFiatAmount: fiatAmountAfterAllChargesWithSpread.value,
-      totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
-      perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.value),
-      perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread.value),
+      totalFiatAmount: request.fiatAmount,
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.value,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.value,
     };
 
     const discountedNobaQuote: NobaQuote = {
@@ -157,9 +157,9 @@ export abstract class DefaultAssetService implements AssetService {
       amountPreSpread: fiatAmountAfterAllChargesWithoutSpread.discountedValue,
       totalCryptoQuantity: discountedTotalCryptoQuantity,
       quotedFiatAmount: fiatAmountAfterAllChargesWithSpread.discountedValue,
-      totalFiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
-      perUnitCryptoPriceWithSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithSpread.discountedValue),
-      perUnitCryptoPriceWithoutSpread: Utils.roundTo2DecimalNumber(perUnitCryptoCostWithoutSpread.discountedValue),
+      totalFiatAmount: request.fiatAmount,
+      perUnitCryptoPriceWithSpread: perUnitCryptoCostWithSpread.discountedValue,
+      perUnitCryptoPriceWithoutSpread: perUnitCryptoCostWithoutSpread.discountedValue,
       quoteID: zhQuoteWithDiscount.quoteID,
     };
 
@@ -203,7 +203,7 @@ export abstract class DefaultAssetService implements AssetService {
     }
   `);
 
-    return {
+    const result: CombinedNobaQuote = {
       quote: discountedNobaQuote,
       nonDiscountedQuote: nonDiscountedNobaQuote,
       discountsGiven: {
@@ -223,14 +223,8 @@ export abstract class DefaultAssetService implements AssetService {
             fiatAmountAfterAllChargesWithSpread.discountedValue),
       },
     };
-  }
 
-  async roundToProperDecimalsForCryptocurrency(cryptocurrency: string, cryptoAmount: number): Promise<number> {
-    const currencyDTO = await this.currencyService.getCryptocurrency(cryptocurrency);
-    if (currencyDTO == null) {
-      throw new Error(`Unknown cryptocurrency: ${cryptocurrency}`);
-    }
-    return Utils.roundToSpecifiedDecimalNumber(cryptoAmount, currencyDTO.precision);
+    return this.roundCombinedNobaQuoteFiatAmounts(result);
   }
 
   async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<CombinedNobaQuote> {
@@ -398,18 +392,25 @@ export abstract class DefaultAssetService implements AssetService {
       },
     };
 
+    return this.roundCombinedNobaQuoteFiatAmounts(result);
+  }
+
+  private roundCombinedNobaQuoteFiatAmounts(combinedNobaQuote: CombinedNobaQuote): CombinedNobaQuote {
     const fiatFieldsOfQuoteForTwoPlaceRounding = [
       "networkFeeInFiat",
       "nobaFeeInFiat",
       "processingFeeInFiat",
       "quotedFiatAmount",
       "totalFiatAmount",
+      "amountPreSpread",
       "perUnitCryptoPriceWithSpread",
       "perUnitCryptoPriceWithoutSpread",
     ];
     fiatFieldsOfQuoteForTwoPlaceRounding.forEach(field => {
-      result.quote[field] = Utils.roundTo2DecimalNumber(result.quote[field]);
-      result.nonDiscountedQuote[field] = Utils.roundTo2DecimalNumber(result.nonDiscountedQuote[field]);
+      combinedNobaQuote.quote[field] = Utils.roundTo2DecimalNumber(combinedNobaQuote.quote[field]);
+      combinedNobaQuote.nonDiscountedQuote[field] = Utils.roundTo2DecimalNumber(
+        combinedNobaQuote.nonDiscountedQuote[field],
+      );
     });
 
     const fiatFieldsOfDiscounts = [
@@ -420,10 +421,18 @@ export abstract class DefaultAssetService implements AssetService {
       "spreadDiscount",
     ];
     fiatFieldsOfDiscounts.forEach(field => {
-      result.discountsGiven[field] = Utils.roundTo2DecimalNumber(result.discountsGiven[field]);
+      combinedNobaQuote.discountsGiven[field] = Utils.roundTo2DecimalNumber(combinedNobaQuote.discountsGiven[field]);
     });
 
-    return result;
+    return combinedNobaQuote;
+  }
+
+  async roundToProperDecimalsForCryptocurrency(cryptocurrency: string, cryptoAmount: number): Promise<number> {
+    const currencyDTO = await this.currencyService.getCryptocurrency(cryptocurrency);
+    if (currencyDTO == null) {
+      throw new Error(`Unknown cryptocurrency: ${cryptocurrency}`);
+    }
+    return Utils.roundToSpecifiedDecimalNumber(cryptoAmount, currencyDTO.precision);
   }
 
   abstract executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote>;

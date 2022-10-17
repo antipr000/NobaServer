@@ -23,6 +23,7 @@ import {
   CombinedNobaQuote,
 } from "../domain/AssetTypes";
 import { CurrencyService } from "../../../modules/common/currency.service";
+import { PartnerService } from "../../../modules/partner/partner.service";
 
 export class CryptoTransactionInitiator extends MessageProcessor {
   constructor(
@@ -33,6 +34,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     transactionService: TransactionService,
     lockService: LockService,
     private readonly assetServiceFactory: AssetServiceFactory,
+    private readonly partnerService: PartnerService,
     private readonly currencyService: CurrencyService,
   ) {
     super(
@@ -58,6 +60,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    const partner = await this.partnerService.getPartner(transaction.props.partnerID);
     const assetService: AssetService = await this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     // Did we already execute the trade?
@@ -80,6 +83,14 @@ export class CryptoTransactionInitiator extends MessageProcessor {
 
         transactionCreationTimestamp: transaction.props.transactionTimestamp,
         transactionID: transaction.props._id,
+
+        discount: {
+          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
+          networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
+          nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
+          nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
+          processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
+        },
       };
 
       try {

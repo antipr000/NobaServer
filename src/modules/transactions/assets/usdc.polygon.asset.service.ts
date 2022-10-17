@@ -29,6 +29,7 @@ import { ZeroHashService } from "../zerohash.service";
 import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class USDCPolygonAssetService extends DefaultAssetService {
@@ -88,11 +89,35 @@ export class USDCPolygonAssetService extends DefaultAssetService {
   }
 
   async executeQuoteForFundsAvailability(request: ExecuteQuoteRequest): Promise<ExecutedQuote> {
+    // TODO(#): Remove this once all the clients are aware about "discount"
+    if (request.discount === undefined || request.discount === null) {
+      request.discount = {
+        fixedCreditCardFeeDiscountPercent: 0,
+        networkFeeDiscountPercent: 0,
+        nobaFeeDiscountPercent: 0,
+        nobaSpreadDiscountPercent: 0,
+        processingFeeDiscountPercent: 0,
+      };
+    }
+
+    const nobaQuote = await this.getQuoteForSpecifiedFiatAmount({
+      cryptoCurrency: request.cryptoCurrency,
+      fiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
+      fiatCurrency: request.fiatCurrency,
+      discount: {
+        fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+        networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
+        nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
+        nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
+        processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
+      },
+    });
+
     return {
       tradeID: TRADE_TYPE_FIXED,
       tradePrice: 1,
       cryptoReceived: request.cryptoQuantity,
-      quote: null,
+      quote: nobaQuote,
     };
   }
 

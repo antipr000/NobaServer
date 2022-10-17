@@ -26,6 +26,7 @@ import {
   insertNobaAdmin,
   insertPartnerAdmin,
   setAccessTokenForTheNextRequests,
+  setupCustomPartner,
   setupPartner,
   TEST_API_KEY,
 } from "./common";
@@ -122,6 +123,79 @@ describe("Authentication", () => {
       expect(loggedInConsumer.__status).toBe(200);
       expect(loggedInConsumer._id).toBe(userId);
       expect(loggedInConsumer.email).toBe(consumerEmail);
+    });
+
+    it("should not allow jwt for same consumer issued with different partner", async () => {
+      const apiKey = "dummy-api-key-2";
+      const secretKey = "dummy-secret-key-2";
+      await setupCustomPartner(mongoUri, "new-dummy-partner", "Dummy Partner 2", apiKey, secretKey);
+
+      // Login with new partner
+      const consumerEmail = "test+consumer@noba.com";
+
+      const loginRequestBody: LoginRequestDTO = {
+        email: consumerEmail,
+        identityType: "CONSUMER",
+      };
+
+      const loginSignature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify(loginRequestBody),
+        apiKey,
+        secretKey,
+      );
+
+      const loginResponse = await AuthenticationService.loginUser({
+        xNobaApiKey: apiKey,
+        xNobaSignature: loginSignature,
+        xNobaTimestamp: timestamp,
+        requestBody: loginRequestBody,
+      });
+      expect(loginResponse.__status).toBe(201);
+
+      const verifyOtpRequestBody: VerifyOtpRequestDTO = {
+        emailOrPhone: consumerEmail,
+        otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
+        identityType: "CONSUMER",
+      };
+
+      const verifyOtpSignature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify(verifyOtpRequestBody),
+        apiKey,
+        secretKey,
+      );
+
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+        xNobaApiKey: apiKey,
+        xNobaSignature: verifyOtpSignature,
+        xNobaTimestamp: timestamp,
+        requestBody: verifyOtpRequestBody,
+      })) as VerifyOtpResponseDTO & ResponseStatus;
+      console.log(verifyOtpResponse);
+
+      const accessToken = verifyOtpResponse.access_token;
+      const userId = verifyOtpResponse.user_id;
+
+      expect(verifyOtpResponse.__status).toBe(201);
+      expect(accessToken).toBeDefined();
+      expect(userId).toBeDefined();
+
+      setAccessTokenForTheNextRequests(accessToken);
+
+      // Make request with first partner now
+      const getConsumerSignature = computeSignature(timestamp, "GET", "/v1/consumers", JSON.stringify({}));
+      const loggedInConsumer = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: getConsumerSignature,
+        xNobaTimestamp: timestamp,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(loggedInConsumer.__status).toBe(401);
     });
 
     it("should be successful with different cases", async () => {
