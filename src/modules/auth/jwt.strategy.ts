@@ -15,6 +15,7 @@ import { PartnerAdminService } from "../partner/partneradmin.service";
 import { AuthenticatedUser } from "./domain/AuthenticatedUser";
 import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "./domain/HeaderConstants";
 import { HeaderValidationService } from "./header.validation.service";
+import { PartnerService } from "../partner/partner.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -24,6 +25,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private adminService: AdminService;
   @Inject()
   private partnerAdminService: PartnerAdminService;
+
+  @Inject()
+  private partnerService: PartnerService;
 
   @Inject()
   private headerValidationService: HeaderValidationService;
@@ -39,10 +43,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // TODO: Move all the payload related logic to a single file.
   async validate(request: Request, payload: any): Promise<AuthenticatedUser> {
+    const apiKey = request.headers[X_NOBA_API_KEY];
+    const signature = request.headers[X_NOBA_SIGNATURE];
+    const timestamp = request.headers[X_NOBA_TIMESTAMP];
     try {
-      const apiKey = request.headers[X_NOBA_API_KEY];
-      const signature = request.headers[X_NOBA_SIGNATURE];
-      const timestamp = request.headers[X_NOBA_TIMESTAMP];
       await this.headerValidationService.validateApiKeyAndSignature(
         apiKey,
         timestamp,
@@ -54,6 +58,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     } catch (e) {
       throw new ForbiddenException("Signature mismatch or header fields missing!");
     }
+
+    const partner = await this.partnerService.getPartnerFromApiKey(apiKey);
+    if (partner.props._id !== payload.partnerId) {
+      throw new UnauthorizedException();
+    }
+
     return this.getIdentityDomain(payload.id, payload.identityType, payload.partnerId);
   }
 

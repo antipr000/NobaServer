@@ -133,16 +133,42 @@ export const setupPartner = async (mongoUri: string, partnerId: string) => {
   return true;
 };
 
+export const setupCustomPartner = async (
+  mongoUri: string,
+  partnerId: string,
+  name: string,
+  apiKey: string,
+  secretKey: string,
+) => {
+  const mongoClient = new MongoClient(mongoUri);
+  await mongoClient.connect();
+
+  const partnersCollection = mongoClient.db("").collection("partners");
+  await partnersCollection.insertOne({
+    _id: partnerId as any,
+    name: name,
+    apiKey: apiKey,
+    secretKey: secretKey,
+    isAPIEnabled: true,
+    isEmbedEnabled: true,
+  });
+
+  await mongoClient.close();
+  return true;
+};
+
 export const computeSignature = (
   timestamp: string,
   requestMethod: string,
   requestPath: string,
   requestBody: string,
+  apiKey = TEST_API_KEY,
+  secretKey = TEST_SECRET_KEY,
 ) => {
   const signatureString = CryptoJS.enc.Utf8.parse(
-    `${timestamp}${TEST_API_KEY}${requestMethod}${requestPath.split("?")[0]}${requestBody}`,
+    `${timestamp}${apiKey}${requestMethod}${requestPath.split("?")[0]}${requestBody}`,
   );
-  return CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(signatureString, CryptoJS.enc.Utf8.parse(TEST_SECRET_KEY)));
+  return CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(signatureString, CryptoJS.enc.Utf8.parse(secretKey)));
 };
 
 export const dropAllCollections = async (mongoUri: string) => {
