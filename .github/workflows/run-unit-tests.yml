@@ -6,7 +6,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   pass-secrets-to-workflow:
-    uses: ./.github/workflows/commit-workflow.yml
+    uses: ./.github/workflows/run-unit-tests.yml
     secrets: inherit
 
   test:
