@@ -1,0 +1,28 @@
+name: Commit Workflow
+
+on:
+  pull_request:
+    branches: [main]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  setup-environment:
+    uses: nobapay/NobaServer/.github/workflows/setup.yml@665-streamline-github-actions
+
+  run-linters:
+    uses: nobapay/NobaServer/.github/workflows/run-linters.yml@665-streamline-github-actions
+    needs: [setup-environment]
+
+  run-unit-tests:
+    uses: nobapay/NobaServer/.github/workflows/run-unit-tests.yml@665-streamline-github-actions
+    needs: [setup-environment]
+
+  run-e2e-tests:
+    uses: nobapay/NobaServer/.github/workflows/run-e2e-tests.yml@665-streamline-github-actions
+    needs: [setup-environment]
+
+  sonarcloud-scan:
+    uses: nobapay/NobaServer/.github/workflows/run-sonar-scan.yml@665-streamline-github-actions
+    needs: [setup-environment, run-unit-tests]

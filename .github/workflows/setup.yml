@@ -1,0 +1,27 @@
+name: Environment Setup
+
+# Controls when the workflow will run
+on:
+  workflow_call:
+
+jobs:
+  setup:
+  runs-on: ubuntu-latest
+  steps:
+    # Checks out the repository under $GITHUB_WORKSPACE, so the job can access it
+    - uses: actions/checkout@v2
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v2.4.0
+      with:
+        node-version: 16.x
+
+    - name: Setup Yarn
+      uses: mskelton/setup-yarn@v1.0.1
+      with:
+        node-version: 16.x
+
+    - name: Install all packages
+      run: |
+        yarn install
+        echo [SUCCESS] yarn install succeeded.
