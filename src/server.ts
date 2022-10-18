@@ -20,6 +20,7 @@ import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { VerificationModule } from "./modules/verification/verification.module";
 import { SeederService } from "./infraproviders/seeders/seeder.service";
 import { PartnerModule } from "./modules/partner/partner.module";
+import { MigratorService } from "./infraproviders/migrators/migrator.service";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
@@ -37,6 +38,12 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   const seeder = await app.get(SeederService);
   await seeder.seedData();
   console.log("Completed seeding data");
+
+  // Migrating document schemas dbs
+  console.log("Migrating the schemas of collections (if any) ...");
+  const migrator = await app.get(MigratorService);
+  await migrator.migrateData();
+  console.log("Completed schema migration!");
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
