@@ -115,9 +115,9 @@ plaid:
   redirectUri: "http://localhost:8080/plaid/redirect_uri"
   awsSecretNameForRedirectUri: ""
   clientID: ""
-  awsSecretNameForClientID: "SANDBOX_PLAID_CLIENT_ID"
+  awsSecretNameForClientID: "62432d096685bc0013d030a8"
   secretKey: ""
-  awsSecretNameForSecretKey: "SANDBOX_PLAID_SECRET_KEY"
+  awsSecretNameForSecretKey: "3efe6f2aef4a7ab5d609149f96a35b"
 
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"
