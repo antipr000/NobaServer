@@ -9,7 +9,7 @@ on:
 
 jobs:
   setup-environment:
-    uses: nobapay/NobaServer/.github/workflows/setup.yml@665-streamline-github-actions
+    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@665-streamline-github-actions
 
   run-linters:
     uses: nobapay/NobaServer/.github/workflows/run-linters.yml@665-streamline-github-actions
