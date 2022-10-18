@@ -32,14 +32,13 @@ export class NobaPartnerSeed {
       );
       await Promise.all(promises);
 
-      if (allPartners.filter(partner => this.partnerId === partner.props._id)) {
+      if (allPartners.filter(partner => this.partnerId === partner.props._id).length > 0) {
         console.log("Noba partner already exists");
         return;
       }
     } catch (e) {
       // pass through
     }
-
     console.log("Seeding Noba Partner");
     const partner = Partner.createPartner({
       _id: this.partnerId,
