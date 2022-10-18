@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checks out the repository under $GITHUB_WORKSPACE, so the job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          node-version: 16.x
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.0
