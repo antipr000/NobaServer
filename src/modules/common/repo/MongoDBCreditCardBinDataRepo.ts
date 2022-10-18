@@ -27,6 +27,18 @@ export class MongoDBCreditCardBinDataRepo implements CreditCardBinDataRepo {
     }
   }
 
+  async addOrUpdate(creditCardBinData: CreditCardBinData): Promise<CreditCardBinData> {
+    const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();
+    const result = await creditCardBinDataModel.updateOne(
+      { bin: creditCardBinData.props.bin },
+      { $set: creditCardBinData.props },
+      { new: true, upsert: true },
+    );
+
+    const creditCardBinDataProps: CreditCardBinDataProps = convertDBResponseToJsObject(result);
+    return CreditCardBinData.createCreditCardBinDataObject(creditCardBinDataProps);
+  }
+
   async update(creditCardBinData: CreditCardBinData): Promise<CreditCardBinData> {
     try {
       const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();

@@ -27,6 +27,23 @@ import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "../consumer/domain/PaymentProvider";
 
+type CheckoutResponse = {
+  response_code: string;
+  response_summary: string;
+  risk: {
+    flagged: boolean;
+  };
+
+  cardData?: {
+    mask: string;
+    issuer: string;
+    network: string;
+    digits: number;
+    cvvDigits: number;
+    bin: string;
+  }
+};
+
 @Injectable()
 export class CheckoutService {
   private readonly checkoutApi: Checkout;
@@ -87,8 +104,12 @@ export class CheckoutService {
     }
 
     let instrumentID: string;
-    let cardType: string;
+    let scheme: string;
     let checkoutResponse;
+    let bin: string;
+    let issuer: string;
+    let cardType: string;
+    
     try {
       // To add payment method, we first need to tokenize the card
       // Token is only valid for 15 mins
@@ -110,7 +131,10 @@ export class CheckoutService {
       });
 
       instrumentID = instrument["id"];
-      cardType = instrument["scheme"];
+      scheme = instrument["scheme"];
+      bin = instrument["bin"];
+      issuer = instrument["issuer"];
+      cardType = instrument["card_type"];
     } catch (err) {
       this.logger.error(`Failed to add card card: ${err}`);
       throw new BadRequestException({ message: "Failed to add card" });
@@ -122,32 +146,53 @@ export class CheckoutService {
       throw new BadRequestException({ message: "Card already added" });
     }
 
+
+
     // Before calling checkout, check against our BIN list
-    const validity = await this.creditCardService.isBINSupported(paymentMethod.cardNumber);
+    const validity = await this.creditCardService.isBINSupported(bin);
     if (validity == BINValidity.NOT_SUPPORTED) {
       // Bypass checkout call entirely
       throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
-    }
+    } else if (validity === BINValidity.SUPPORTED) {
+      checkoutResponse = {
+        response_code: "10000",
+        response_summary: "",
+        risk: {
+          flagged: false
+        },
 
-    try {
-      // Check if added payment method is valid
-      checkoutResponse = await this.checkoutApi.payments.request({
-        amount: 1, // 1 cent (amount field is denominated in cents not a decimal dollar)
-        currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
-        source: {
-          type: "id",
-          id: instrumentID,
-        },
-        description: "Noba Customer card validation at UTC " + Date.now(),
-        metadata: {
-          order_id: "test_order_1",
-        },
-        capture: false,
-      });
-    } catch (err) {
-      //pass
-      this.logger.error(`Error validating card instrument ${instrumentID}: ${err}`);
-      throw new BadRequestException("Card validation error");
+        cardData: {
+          mask: "",
+          issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
+          network: scheme,
+          digits: paymentMethod.cardNumber.length,
+          cvvDigits: paymentMethod.cvv.length,
+          bin: bin
+        }
+      };
+
+    } else {
+      // Record not in our BIN list. We will make the $1 charge
+      try {
+        // Check if added payment method is valid
+        checkoutResponse = await this.checkoutApi.payments.request({
+          amount: 1, // 1 cent (amount field is denominated in cents not a decimal dollar)
+          currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
+          source: {
+            type: "id",
+            id: instrumentID,
+          },
+          description: "Noba Customer card validation at UTC " + Date.now(),
+          metadata: {
+            order_id: "test_order_1",
+          },
+          capture: false,
+        });
+      } catch (err) {
+        //pass
+        this.logger.error(`Error validating card instrument ${instrumentID}: ${err}`);
+        throw new BadRequestException("Card validation error");
+      }
     }
 
     let response: CheckoutResponseData;
@@ -304,7 +349,7 @@ export class CheckoutService {
 
   private async handleCheckoutResponse(
     consumer: Consumer,
-    checkoutResponse: string,
+    checkoutResponse: CheckoutResponse,
     instrumentID: string,
     cardNumber: string,
     sessionID: string,
@@ -329,9 +374,12 @@ export class CheckoutService {
           const validity: BINValidity = await this.creditCardService.isBINSupported(cardNumber);
           if (validity === BINValidity.NOT_SUPPORTED) {
             response.paymentMethodStatus = PaymentMethodStatus.UNSUPPORTED;
-          } else {
-            // supported or unknown
+          } else if (validity === BINValidity.SUPPORTED) {
             response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
+            await this.creditCardService.
+          } else {
+            // unknown
+
           }
         } else {
           response.paymentMethodStatus = PaymentMethodStatus.APPROVED;

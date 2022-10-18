@@ -8,6 +8,11 @@ export class CreditCardService {
   @Inject("CreditCardBinDataRepo")
   private readonly creditCardBinDataRepo: CreditCardBinDataRepo;
 
+  async addOrUpdateBinData(binData: CreditCardBinData): Promise<CreditCardDTO> {
+    const creditCardBinData = await this.creditCardBinDataRepo.addOrUpdate(binData);
+    return creditCardBinData.props;
+  }
+
   async getBINReport(): Promise<BINReportDetails> {
     return this.creditCardBinDataRepo.getBINReport();
   }
