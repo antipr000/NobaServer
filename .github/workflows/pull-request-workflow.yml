@@ -5,6 +5,10 @@ on:
   pull_request:
     branches: main
 
+  # Run whenever we push to main
+  push:
+    branches: main
+
   # Allow running manually from GitHub
   workflow_dispatch:
 
