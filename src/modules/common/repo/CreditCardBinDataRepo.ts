@@ -6,7 +6,7 @@ export interface CreditCardBinDataRepo {
   update(creditCardBinData: CreditCardBinData): Promise<CreditCardBinData>;
   deleteByID(id: string): Promise<void>;
   findByID(id: string): Promise<CreditCardBinData>;
-  findCardByBINPrefix(binPrefix: string): Promise<CreditCardBinData>;
+  findCardByExactBIN(binPrefix: string): Promise<CreditCardBinData>;
   findAll(): Promise<Array<CreditCardBinData>>;
   getBINReport(): Promise<BINReportDetails>;
 }

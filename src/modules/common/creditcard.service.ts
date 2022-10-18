@@ -13,7 +13,7 @@ export class CreditCardService {
   }
 
   async getBINDetails(requestedBIN: string): Promise<CreditCardDTO> {
-    const binDetails: CreditCardBinData = await this.creditCardBinDataRepo.findCardByBINPrefix(requestedBIN);
+    const binDetails: CreditCardBinData = await this.creditCardBinDataRepo.findCardByExactBIN(requestedBIN);
     if (!binDetails) return null;
     return binDetails.props;
   }
