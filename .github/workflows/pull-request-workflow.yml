@@ -10,23 +10,23 @@ on:
 
 jobs:
   setup-environment:
-    uses: ./.github/workflows/setup-environment.yml
+    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@main
 
   run-linters:
-    uses: ./.github/workflows/run-linters.yml
+    uses: nobapay/NobaServer/.github/workflows/run-linters.yml@main
     needs: [setup-environment]
 
   run-unit-tests:
-    uses: ./.github/workflows/run-unit-tests.yml
+    uses: nobapay/NobaServer/.github/workflows/run-unit-tests.yml@main
     secrets: inherit
     needs: [setup-environment]
 
   run-e2e-tests:
-    uses: ./.github/workflows/run-e2e-tests.yml
+    uses: nobapay/NobaServer/.github/workflows/run-e2e-tests.yml@main
     secrets: inherit
     needs: [setup-environment]
 
   sonarcloud-scan:
-    uses: ./.github/workflows/run-sonar-scan.yml
+    uses: nobapay/NobaServer/.github/workflows/run-sonar-scan.yml@main
     secrets: inherit
     needs: [setup-environment, run-unit-tests]
