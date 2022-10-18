@@ -7,7 +7,7 @@ import { KeysRequired } from "../../common/domain/Types";
 import { Address } from "./Address";
 import { CryptoWallet } from "./CryptoWallet";
 import { PartnerDetails } from "./PartnerDetails";
-import { PaymentMethod } from "./PaymentMethod";
+import { CardData, PaymentMethod } from "./PaymentMethod";
 import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
 import { DocumentVerificationStatus, KYCStatus } from "./VerificationStatus";
@@ -58,17 +58,23 @@ const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
   pepLevel: Joi.string().optional(),
 };
 
-const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethod> = {
-  cardName: Joi.string().optional().allow(""),
+const paymentMethodCardDataValidationJoiKeys: KeysRequired<CardData> = {
   cardType: Joi.string().optional(),
-  first6Digits: Joi.string().optional(),
-  last4Digits: Joi.string().optional(),
+  first6Digits: Joi.string().required(),
+  last4Digits: Joi.string().required(),
+  authCode: Joi.string().optional(),
+  authReason: Joi.string().optional(),
+};
+
+const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethod> = {
+  name: Joi.string().optional().allow(""),
+  type: Joi.string().required(),
+  cardData: Joi.object().keys(paymentMethodCardDataValidationJoiKeys).optional(),
+  achData: Joi.object().optional(),
   imageUri: Joi.string().optional(),
   paymentToken: Joi.string().required(),
   paymentProviderID: Joi.string().required(),
   status: Joi.string().optional(),
-  authCode: Joi.string().optional(),
-  authReason: Joi.string().optional(),
 };
 
 const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {

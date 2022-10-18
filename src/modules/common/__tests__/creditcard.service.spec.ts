@@ -56,12 +56,12 @@ describe("CreditCardService", () => {
   });
 
   describe("isBINSupported", () => {
-    it("BIN with prefix 401795 should be supported", async () => {
-      when(creditCardBinDataRepo.findCardByBINPrefix("401795")).thenResolve(
+    it("BIN 401795 should be supported", async () => {
+      when(creditCardBinDataRepo.findCardByExactBIN("401795")).thenResolve(
         CreditCardBinData.createCreditCardBinDataObject({
           _id: "fake-id",
           issuer: "chase",
-          bin: "401795223",
+          bin: "401795",
           type: CardType.CREDIT,
           network: "VISA",
           mask: "1234XXXXXXXXX",
@@ -74,8 +74,50 @@ describe("CreditCardService", () => {
       expect(isSupported).toEqual(BINValidity.SUPPORTED);
     });
 
-    it("BIN with prefix 123 should be unsupported", async () => {
-      when(creditCardBinDataRepo.findCardByBINPrefix("123")).thenResolve(
+    it("Partial BIN 4017 should be unknown", async () => {
+      when(creditCardBinDataRepo.findCardByExactBIN("4017")).thenResolve(
+        CreditCardBinData.createCreditCardBinDataObject({
+          _id: "fake-id",
+          issuer: "chase",
+          bin: "401795", // Regular BIN but we're testing a subset
+          type: CardType.CREDIT,
+          network: "VISA",
+          mask: "1234XXXXXXXXX",
+          supported: BINValidity.UNKNOWN,
+          digits: 16,
+          cvvDigits: 4,
+        }),
+      );
+      const isSupported = await creditCardService.isBINSupported("4017");
+      expect(isSupported).toEqual(BINValidity.UNKNOWN);
+    });
+
+    it("Extra long BIN 4017951234 should be unknown", async () => {
+      when(creditCardBinDataRepo.findCardByExactBIN("4017951234")).thenResolve(
+        CreditCardBinData.createCreditCardBinDataObject({
+          _id: "fake-id",
+          issuer: "chase",
+          bin: "401795", // Regular BIN but we're testing a longer value
+          type: CardType.CREDIT,
+          network: "VISA",
+          mask: "1234XXXXXXXXX",
+          supported: BINValidity.UNKNOWN,
+          digits: 16,
+          cvvDigits: 4,
+        }),
+      );
+      const isSupported = await creditCardService.isBINSupported("4017951234");
+      expect(isSupported).toEqual(BINValidity.UNKNOWN);
+    });
+
+    it("Extra long BIN 4017951234 should be unknown", async () => {
+      when(creditCardBinDataRepo.findCardByExactBIN("12345")).thenResolve(null);
+      const isSupported = await creditCardService.isBINSupported("12345");
+      expect(isSupported).toEqual(BINValidity.UNKNOWN);
+    });
+
+    it("BIN 123 should be unsupported", async () => {
+      when(creditCardBinDataRepo.findCardByExactBIN("123")).thenResolve(
         CreditCardBinData.createCreditCardBinDataObject({
           _id: "fake-id",
           issuer: "chase",

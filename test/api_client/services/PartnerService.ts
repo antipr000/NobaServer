@@ -270,7 +270,7 @@ export class PartnerService {
    * @returns TransactionsQueryResultsDTO All transactions for the partner
    * @throws ApiError
    */
-  public static getTransactions({
+  public static getPartnerTransactions({
     xNobaApiKey,
     xNobaSignature,
     xNobaTimestamp,
@@ -385,7 +385,7 @@ export class PartnerService {
    * @returns TransactionDTO Details of a transaction
    * @throws ApiError
    */
-  public static getTransaction({
+  public static getPartnerTransaction({
     xNobaApiKey,
     transactionId,
     xNobaSignature,

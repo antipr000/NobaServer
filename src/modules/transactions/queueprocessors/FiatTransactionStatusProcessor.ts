@@ -9,7 +9,7 @@ import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
-import { PaymentProviders } from "../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 export class FiatTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -40,7 +40,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       return;
     }
 
-    const paymentProvider: PaymentProviders = await this.consumerService.getPaymentMethodProvider(
+    const paymentProvider: PaymentProvider = await this.consumerService.getPaymentMethodProvider(
       transaction.props.userId,
       transaction.props.paymentMethodID,
     );

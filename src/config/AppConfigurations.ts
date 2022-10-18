@@ -96,6 +96,15 @@ import {
   CCBIN_DATA_FILE_NAME_MASK,
   PARTNER_CONFIG_KEY,
   PARTNER_CONFIG_EMBED_SECRET_KEY,
+  PLAID_CONFIG_KEY,
+  PLAID_CLIENT_ID,
+  PLAID_AWS_SECRET_KEY_FOR_CLIENT_ID,
+  PLAID_SECRET_KEY,
+  PLAID_AWS_SECRET_KEY_FOR_SECRET_KEY,
+  PLAID_REDIRECT_URI,
+  PLAID_AWS_SECRET_KEY_FOR_REDIRECT_URI,
+  PLAID_ENVIRONMENT,
+  PLAID_VERSION,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -112,6 +121,7 @@ import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 import { EllipticConfigs } from "./configtypes/EllipticConfig";
 import { SquidConfigs } from "./configtypes/SquidConfigs";
 import { PartnerConfigs } from "./configtypes/PartnerConfigs";
+import { PlaidConfigs } from "./configtypes/PlaidConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -257,6 +267,7 @@ async function configureAllVendorCredentials(
     configureEllipticCredentials,
     configureSquidCredentials,
     configurePartnerConfigurations,
+    configurePlaidCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -508,6 +519,36 @@ async function configureZerohashCredentials(
   );
 
   configs[ZEROHASH_CONFIG_KEY] = zerohashConfigs;
+  return configs;
+}
+
+async function configurePlaidCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const plaidConfigs: PlaidConfigs = configs[PLAID_CONFIG_KEY];
+  if (plaidConfigs === undefined) {
+    const errorMessage =
+      "\n'Plaid' configurations are required. Please configure the Plaid credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${PLAID_CONFIG_KEY}" and populate ` +
+      `("${PLAID_AWS_SECRET_KEY_FOR_CLIENT_ID}" or "${PLAID_CLIENT_ID}"), ` +
+      `("${PLAID_AWS_SECRET_KEY_FOR_SECRET_KEY}" or "${PLAID_SECRET_KEY}"), ` +
+      `("${PLAID_AWS_SECRET_KEY_FOR_REDIRECT_URI}" or "${PLAID_REDIRECT_URI}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n" +
+      `Also make sure '${PLAID_ENVIRONMENT}' AND '${PLAID_VERSION}' are also populated correctly.`;
+
+    throw Error(errorMessage);
+  }
+  plaidConfigs.secretKey = await getParameterValue(plaidConfigs.awsSecretNameForSecretKey, plaidConfigs.secretKey);
+
+  plaidConfigs.clientID = await getParameterValue(plaidConfigs.awsSecretNameForClientID, plaidConfigs.clientID);
+
+  plaidConfigs.redirectUri = await getParameterValue(
+    plaidConfigs.awsSecretNameForRedirectUri,
+    plaidConfigs.redirectUri,
+  );
+
+  configs[PLAID_CONFIG_KEY] = plaidConfigs;
   return configs;
 }
 

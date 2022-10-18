@@ -17,8 +17,7 @@ import { ObjectType } from "../../../../modules/common/domain/ObjectType";
 import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
-import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
-import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentMethod, PaymentMethodType } from "../../../../modules/consumer/domain/PaymentMethod";
 import { PaymentMethodStatus } from "../../../../modules/consumer/domain/VerificationStatus";
 import { getMockVerificationServiceWithDefaults } from "../../../../modules/verification/mocks/mock.verification.service";
 import { VerificationService } from "../../../../modules/verification/verification.service";
@@ -40,6 +39,7 @@ import { SqsClient } from "../../queueprocessors/sqs.client";
 import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../../transaction.service";
 import { getMockCurrencyServiceWithDefaults } from "../../../../modules/common/mocks/mock.currency.service";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
 import { getMockPartnerServiceWithDefaults } from "../../../../modules/partner/mocks/mock.partner.service";
 import { PartnerService } from "../../../../modules/partner/partner.service";
 import { Partner } from "../../../../modules/partner/domain/Partner";
@@ -206,12 +206,15 @@ describe("CryptoTransactionInitiator", () => {
     lastStatusUpdateTimestamp: Date.now().valueOf(),
   });
   const paymentMethod: PaymentMethod = {
+    type: PaymentMethodType.CARD,
     status: PaymentMethodStatus.APPROVED,
-    first6Digits: "123456",
-    last4Digits: "4321",
+    cardData: {
+      first6Digits: "123456",
+      last4Digits: "4321",
+    },
     imageUri: "...",
     paymentToken: "XXXXXXXXXX",
-    paymentProviderID: PaymentProviders.CHECKOUT,
+    paymentProviderID: PaymentProvider.CHECKOUT,
   };
   const consumer: Consumer = Consumer.createConsumer({
     _id: consumerID,

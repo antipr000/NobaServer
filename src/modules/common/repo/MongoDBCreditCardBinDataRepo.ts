@@ -71,14 +71,14 @@ export class MongoDBCreditCardBinDataRepo implements CreditCardBinDataRepo {
     }
   }
 
-  async findCardByBINPrefix(binPrefix: string): Promise<CreditCardBinData> {
+  async findCardByExactBIN(bin: string): Promise<CreditCardBinData> {
     try {
       const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();
-      const result = await creditCardBinDataModel.findOne({ bin: { $regex: `^${binPrefix}` } });
+      const result = await creditCardBinDataModel.findOne({ bin: bin });
       const creditCardBinDataProps: CreditCardBinDataProps = convertDBResponseToJsObject(result);
       return CreditCardBinData.createCreditCardBinDataObject(creditCardBinDataProps);
     } catch (e) {
-      this.logger.error(`Failed to find CreditCardBinData with iin ${binPrefix}. ${JSON.stringify(e)}`);
+      this.logger.error(`Failed to find CreditCardBinData with iin ${bin}. ${JSON.stringify(e)}`);
       return null;
     }
   }

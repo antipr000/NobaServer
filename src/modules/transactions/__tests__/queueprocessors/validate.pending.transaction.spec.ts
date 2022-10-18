@@ -26,7 +26,7 @@ import { getMockTransactionServiceWithDefaults } from "../../mocks/mock.transact
 import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 import { ValidatePendingTransactionProcessor } from "../../queueprocessors/ValidatePendingTransactionProcessor";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
-import { PaymentMethod } from "../../../../modules/consumer/domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodType } from "../../../../modules/consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../../../../modules/consumer/domain/Types";
 import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
@@ -162,11 +162,14 @@ describe("ValidatePendingTransaction", () => {
     });
 
     const paymentMethod: PaymentMethod = {
-      first6Digits: "123456",
-      last4Digits: "7890",
+      type: PaymentMethodType.CARD,
+      cardData: {
+        first6Digits: "123456",
+        last4Digits: "7890",
+      },
       paymentToken: "ABCDE12345",
       imageUri: "xxx",
-      paymentProviderID: "xxx",
+      paymentProviderID: "xxx" as any,
     };
 
     //const consumerProps: ConsumerProps = ;

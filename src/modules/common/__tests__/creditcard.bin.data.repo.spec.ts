@@ -131,25 +131,25 @@ describe("CreditCardBinDataRepo", () => {
     });
   });
 
-  describe("findCardByBINPrefix", () => {
-    it("should return proper creditCardBinData which matches bin as prefix", async () => {
+  describe("findCardByExactBIN()", () => {
+    it("should return proper creditCardBinData which matches bin", async () => {
       insertFakeCreditCardBinData("22123456", "fake-id-2345");
-      insertFakeCreditCardBinData("1234567", "fake-id-1234");
+      insertFakeCreditCardBinData("123456", "fake-id-1234");
 
-      const creditCardBinData = await creditCardBinDataRepo.findCardByBINPrefix("1234");
+      const creditCardBinData = await creditCardBinDataRepo.findCardByExactBIN("123456");
       expect(creditCardBinData.props._id).toBe("fake-id-1234");
     });
 
-    it("returns null if it doesn't find creditCardBinData with proper prefix", async () => {
+    it("returns null if it doesn't find creditCardBinData with exact BIN", async () => {
       insertFakeCreditCardBinData("22123456", "fake-id-2345");
       insertFakeCreditCardBinData("1234567", "fake-id-1234");
 
-      const result = await creditCardBinDataRepo.findCardByBINPrefix("34");
+      const result = await creditCardBinDataRepo.findCardByExactBIN("34");
       expect(result).toBe(null);
     });
   });
 
-  describe("getBinReport", () => {
+  describe("getBINReport", () => {
     it("should return report of supported and unsupported bins", async () => {
       insertFakeCreditCardBinData("123456", "fake-123456", BINValidity.SUPPORTED);
       insertFakeCreditCardBinData("234566", "fake-234566", BINValidity.NOT_SUPPORTED);
