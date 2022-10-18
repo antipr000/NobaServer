@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run E2E Tests
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
 jobs:
   e2e_test:
     runs-on: ubuntu-latest
-    name: E2E Tests
+    name: Run E2E Tests
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Restore environment from cache
