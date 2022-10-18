@@ -66,7 +66,10 @@ export class EllipticService {
 
   public async transactionAnalysis(transaction: Transaction): Promise<WalletExposureResponse> {
     const assetType: string = transaction.props.leg2.toUpperCase();
-    if (this.awsSecretNameForApiKey != "PROD_ELLIPTIC_KEY" || !ellipticSupportedCurrencies.includes(assetType)) {
+    if (
+      ["PROD_ELLIPTIC_KEY", "E2E_KEY"].includes(this.awsSecretNameForApiKey) ||
+      !ellipticSupportedCurrencies.includes(assetType)
+    ) {
       return {
         // Return -1 risk for non-prod runs for elliptic as elliptic doesn't run on testnet.
         riskScore: -1,

@@ -97,7 +97,7 @@ zerohash:
   proxyServerPort:
 
 elliptic:
-  awsSecretNameForApiKey: ""
+  awsSecretNameForApiKey: "E2E_KEY"
   awsSecretNameForSecretKey: ""
   apiKey: "57073bf78dd8254f2cc34b187017bfa9"
   secretKey: "63a1e25708177ca72113ac07f659ea50"
