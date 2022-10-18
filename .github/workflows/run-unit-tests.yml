@@ -11,18 +11,18 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - name: Restore environment from cache
-        id: restore-environment
-        uses: actions/cache@v3
-        env:
-          cache-name: ${{ env.GITHUB_REF_NAME }}
-        with:
-          path: ./
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
-          restore-key: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-            
+      id: restore-environment
+      uses: actions/cache@v3
+      env:
+        cache-name: ${{ env.GITHUB_REF_NAME }}
+      with:
+        path: ./
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+        restore-key: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
       - name: Unit tests with coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
