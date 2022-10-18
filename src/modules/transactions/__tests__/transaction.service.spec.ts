@@ -27,7 +27,7 @@ import { EllipticService } from "../../../modules/common/elliptic.service";
 import { getMockEllipticServiceWithDefaults } from "../../../modules/common/mocks/mock.elliptic.service";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { CryptoWallet } from "../../../modules/consumer/domain/CryptoWallet";
-import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../../../modules/consumer/domain/Types";
 import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { Partner } from "../../../modules/partner/domain/Partner";
@@ -265,10 +265,13 @@ describe("TransactionService", () => {
     });
 
     const paymentMethod: PaymentMethod = {
-      first6Digits: "123456",
-      last4Digits: "7890",
+      type: PaymentMethodType.CARD,
+      cardData: {
+        first6Digits: "123456",
+        last4Digits: "7890",
+      },
       imageUri: "xxx",
-      paymentProviderID: "12345",
+      paymentProviderID: "12345" as any,
       paymentToken: paymentMethodID,
     };
 

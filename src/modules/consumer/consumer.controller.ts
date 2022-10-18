@@ -39,6 +39,8 @@ import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { PartnerService } from "../partner/partner.service";
 import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
+import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
+import { PlaidClient } from "../psp/plaid.client";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -51,7 +53,11 @@ export class ConsumerController {
 
   private readonly consumerMapper: ConsumerMapper;
 
-  constructor(private readonly consumerService: ConsumerService, private readonly partnerService: PartnerService) {
+  constructor(
+    private readonly consumerService: ConsumerService,
+    private readonly partnerService: PartnerService,
+    private readonly plaidClient: PlaidClient,
+  ) {
     this.consumerMapper = new ConsumerMapper();
   }
 
@@ -107,6 +113,26 @@ export class ConsumerController {
     };
     const res = await this.consumerService.updateConsumer(consumerProps);
     return this.consumerMapper.toDTO(res);
+  }
+
+  @Get("/paymentmethods/plaid/token")
+  @ApiOperation({ summary: "Generates a token to connect to Plaid UI" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: PlaidTokenDTO,
+    description: "Plaid token",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  async generatePlaidToken(@Request() request): Promise<PlaidTokenDTO> {
+    const user: AuthenticatedUser = request.user;
+    const consumer = user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    return {
+      token: await this.plaidClient.generateLinkToken({ userID: consumer.props._id }),
+    };
   }
 
   @Post("/paymentmethods")

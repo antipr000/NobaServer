@@ -100,8 +100,8 @@ export class TransactionFailedProcessor extends MessageProcessor {
         orderFailedParams: {
           transactionID: transaction.props.transactionID,
           transactionTimestamp: transaction.props.transactionTimestamp,
-          paymentMethod: paymentMethod.cardType,
-          last4Digits: paymentMethod.last4Digits,
+          paymentMethod: paymentMethod.cardData.cardType,
+          last4Digits: paymentMethod.cardData.last4Digits,
           fiatCurrency: transaction.props.leg1,
           conversionRate: transaction.props.exchangeRate,
           processingFee: transaction.props.processingFee,

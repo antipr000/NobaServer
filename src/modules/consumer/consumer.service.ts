@@ -15,7 +15,6 @@ import { CardFailureExceptionText } from "./CardProcessingException";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { PaymentMethod } from "./domain/PaymentMethod";
-import { PaymentProviders } from "./domain/PaymentProviderDetails";
 import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
@@ -23,6 +22,7 @@ import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { PaymentProvider } from "./domain/PaymentProvider";
 
 @Injectable()
 export class ConsumerService {
@@ -147,8 +147,8 @@ export class ConsumerService {
         lastName: consumer.props.lastName,
         nobaUserID: consumer.props._id,
         email: consumer.props.displayEmail,
-        cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardType,
-        last4Digits: addPaymentMethodResponse.newPaymentMethod.last4Digits,
+        cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
+        last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
       });
       return result;
     }
@@ -167,7 +167,7 @@ export class ConsumerService {
     */
 
     const paymentProvider = await this.getPaymentMethodProvider(consumer.props._id, transaction.props.paymentMethodID);
-    if (paymentProvider === PaymentProviders.CHECKOUT) {
+    if (paymentProvider === PaymentProvider.CHECKOUT) {
       return this.checkoutService.requestCheckoutPayment(consumer, transaction);
     } else {
       this.logger.error(
@@ -189,7 +189,7 @@ export class ConsumerService {
 
     const paymentProviderID = paymentMethod[0].paymentProviderID;
 
-    if (paymentProviderID === PaymentProviders.CHECKOUT) {
+    if (paymentProviderID === PaymentProvider.CHECKOUT) {
       await this.checkoutService.removePaymentMethod(paymentToken);
     } else {
       throw new NotFoundException("Payment provider not found");
@@ -211,21 +211,21 @@ export class ConsumerService {
       lastName: consumer.props.lastName,
       nobaUserID: consumer.props._id,
       email: consumer.props.displayEmail,
-      cardNetwork: paymentMethod[0].cardType,
-      last4Digits: paymentMethod[0].last4Digits,
+      cardNetwork: paymentMethod[0].cardData.cardType,
+      last4Digits: paymentMethod[0].cardData.last4Digits,
     });
     return result;
   }
 
-  async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProviders): Promise<FiatTransactionStatus> {
-    if (paymentProvider === PaymentProviders.CHECKOUT) {
+  async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProvider): Promise<FiatTransactionStatus> {
+    if (paymentProvider === PaymentProvider.CHECKOUT) {
       return this.checkoutService.getFiatPaymentStatus(paymentId);
     } else {
       throw new BadRequestException("Payment provider is not supported");
     }
   }
 
-  async getPaymentMethodProvider(consumerId: string, paymentToken: string): Promise<PaymentProviders> {
+  async getPaymentMethodProvider(consumerId: string, paymentToken: string): Promise<PaymentProvider> {
     const consumer = await this.getConsumer(consumerId);
     const paymentMethod = consumer.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken === paymentToken,
@@ -234,7 +234,7 @@ export class ConsumerService {
       throw new NotFoundException(`Payment method with token ${paymentToken} not found for consumer: ${consumerId}`);
     }
 
-    return paymentMethod[0].paymentProviderID as PaymentProviders;
+    return paymentMethod[0].paymentProviderID as PaymentProvider;
   }
 
   async updatePaymentMethod(consumerID: string, paymentMethod: PaymentMethod): Promise<Consumer> {

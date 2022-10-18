@@ -46,12 +46,12 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
   public toPaymentMethodsDTO(paymentMethod: PaymentMethod): PaymentMethodsDTO {
     return {
-      cardName: paymentMethod.cardName,
-      cardType: paymentMethod.cardType,
+      cardName: paymentMethod.name,
+      cardType: paymentMethod.cardData.cardType,
       imageUri: paymentMethod.imageUri,
       paymentToken: paymentMethod.paymentToken,
-      first6Digits: paymentMethod.first6Digits,
-      last4Digits: paymentMethod.last4Digits,
+      first6Digits: paymentMethod.cardData.first6Digits,
+      last4Digits: paymentMethod.cardData.last4Digits,
       status: paymentMethod.status,
     };
   }

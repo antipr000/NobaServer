@@ -6,6 +6,7 @@ import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
+import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -76,6 +77,37 @@ export class ConsumerService {
       mediaType: "application/json",
       errors: {
         400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Generates a token to connect to Plaid UI
+   * @returns PlaidTokenDTO Plaid token
+   * @throws ApiError
+   */
+  public static generatePlaidToken({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<PlaidTokenDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/paymentmethods/plaid/token",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
         403: `Logged-in user is not a Consumer`,
       },
     });

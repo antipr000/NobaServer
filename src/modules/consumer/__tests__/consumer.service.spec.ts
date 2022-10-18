@@ -10,7 +10,6 @@ import { SanctionedCryptoWalletService } from "../../../modules/common/sanctione
 import { KmsService } from "../../../modules/common/kms.service";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
-import { PaymentProviders } from "../domain/PaymentProviderDetails";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { Result } from "../../../core/logic/Result";
@@ -23,7 +22,7 @@ import { AddPaymentMethodResponse } from "../../../modules/common/domain/AddPaym
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
-import { PaymentMethod } from "../domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
 import { Otp } from "../../../modules/auth/domain/Otp";
 import { PartnerService } from "../../partner/partner.service";
 import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
@@ -33,6 +32,7 @@ import { CryptoWallet } from "../domain/CryptoWallet";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { PaymentProvider } from "../domain/PaymentProvider";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -110,7 +110,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -151,7 +151,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -192,7 +192,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -224,7 +224,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -261,7 +261,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -324,7 +324,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -371,8 +371,8 @@ describe("ConsumerService", () => {
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props._id,
             email: consumer.props.email,
-            cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardType,
-            last4Digits: addPaymentMethodResponse.newPaymentMethod.last4Digits,
+            cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
+            last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
           }),
         ),
       ).once();
@@ -390,7 +390,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -450,7 +450,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -461,10 +461,13 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: paymentToken,
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
             imageUri: "fake-uri",
           },
         ],
@@ -513,7 +516,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -524,10 +527,13 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: paymentProvider,
+            type: PaymentMethodType.CARD,
+            paymentProviderID: paymentProvider as any,
             paymentToken: paymentToken,
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
             imageUri: "fake-uri",
           },
         ],
@@ -582,7 +588,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -593,10 +599,13 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "fake-token-2",
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
             imageUri: "fake-uri",
           },
         ],
@@ -625,7 +634,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -636,10 +645,13 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "FakeProvider",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: "FakeProvider" as any,
             paymentToken: paymentToken,
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
             imageUri: "fake-uri",
           },
         ],
@@ -668,7 +680,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -679,13 +691,16 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: paymentToken,
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [],
@@ -712,8 +727,8 @@ describe("ConsumerService", () => {
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props._id,
             email: consumer.props.email,
-            cardNetwork: consumer.props.paymentMethods[0].cardType,
-            last4Digits: consumer.props.paymentMethods[0].last4Digits,
+            cardNetwork: consumer.props.paymentMethods[0].cardData.cardType,
+            last4Digits: consumer.props.paymentMethods[0].cardData.last4Digits,
           }),
         ),
       ).once();
@@ -723,7 +738,7 @@ describe("ConsumerService", () => {
   describe("getFiatPaymentStatus", () => {
     it("returns fiat payment status successfully", async () => {
       const paymentToken = "fake-token";
-      const paymentProvider = PaymentProviders.CHECKOUT;
+      const paymentProvider = PaymentProvider.CHECKOUT;
 
       when(checkoutService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
@@ -739,7 +754,7 @@ describe("ConsumerService", () => {
       when(checkoutService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
       try {
-        await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider as PaymentProviders);
+        await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider as PaymentProvider);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
         expect(e.message).toBe("Payment provider is not supported");
@@ -761,7 +776,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -772,26 +787,32 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: paymentToken,
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [],
       });
 
       const updatedPaymentMethod: PaymentMethod = {
-        paymentProviderID: "Checkout",
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
         paymentToken: paymentToken,
-        first6Digits: "123456",
-        last4Digits: "7890",
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+          cardType: "VISA",
+        },
         imageUri: "fake-uri",
-        cardName: "New Fake Name",
-        cardType: "VISA",
+        name: "New Fake Name",
       };
 
       const updatedConsumer = Consumer.createConsumer({
@@ -821,7 +842,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -832,26 +853,32 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: paymentToken,
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [],
       });
 
       const updatedPaymentMethod: PaymentMethod = {
-        paymentProviderID: "Checkout",
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
         paymentToken: "new-token",
-        first6Digits: "123456",
-        last4Digits: "7890",
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+          cardType: "VISA",
+        },
         imageUri: "fake-uri",
-        cardName: "New Fake Name",
-        cardType: "VISA",
+        name: "New Fake Name",
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -895,7 +922,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -906,13 +933,16 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "fake-token",
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [
@@ -979,7 +1009,7 @@ describe("ConsumerService", () => {
     //     paymentProviderAccounts: [
     //       {
     //         providerCustomerID: "test-customer-1",
-    //         providerID: PaymentProviders.CHECKOUT,
+    //         providerID: PaymentProvider.CHECKOUT,
     //       },
     //     ],
     //     partners: [
@@ -1070,7 +1100,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1081,13 +1111,16 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "fake-token",
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [
@@ -1133,7 +1166,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1144,13 +1177,16 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "fake-token",
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [
@@ -1180,7 +1216,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1191,13 +1227,16 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "fake-token",
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [
@@ -1230,7 +1269,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1241,13 +1280,16 @@ describe("ConsumerService", () => {
         isAdmin: false,
         paymentMethods: [
           {
-            paymentProviderID: "Checkout",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "fake-token",
-            first6Digits: "123456",
-            last4Digits: "7890",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
             imageUri: "fake-uri",
-            cardName: "Fake card",
-            cardType: "VISA",
+            name: "Fake card",
           },
         ],
         cryptoWallets: [
@@ -1287,7 +1329,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1345,7 +1387,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1396,7 +1438,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1463,7 +1505,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1527,7 +1569,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1601,7 +1643,7 @@ describe("ConsumerService", () => {
         paymentProviderAccounts: [
           {
             providerCustomerID: "test-customer-1",
-            providerID: PaymentProviders.CHECKOUT,
+            providerID: PaymentProvider.CHECKOUT,
           },
         ],
         partners: [
@@ -1664,11 +1706,14 @@ function constructAddPaymentMethodResponse(
     ...consumer.props,
     paymentMethods: [
       {
-        first6Digits: "123456",
-        last4Digits: "7890",
+        type: PaymentMethodType.CARD,
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+        },
         imageUri: "fake-uri",
         paymentToken: "fake-token",
-        paymentProviderID: "Checkout",
+        paymentProviderID: PaymentProvider.CHECKOUT,
       },
     ],
   });

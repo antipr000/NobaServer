@@ -26,7 +26,7 @@ import { FiatTransactionStatus } from "../../../../modules/consumer/domain/Types
 import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { ObjectType } from "../../../../modules/common/domain/ObjectType";
-import { PaymentProviders } from "../../../../modules/consumer/domain/PaymentProviderDetails";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -156,8 +156,8 @@ describe("FiatTransactionInitiator", () => {
     });
     when(
       consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
-    ).thenResolve(PaymentProviders.CHECKOUT);
-    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProviders.CHECKOUT)).thenResolve(
+    ).thenResolve(PaymentProvider.CHECKOUT);
+    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.CAPTURED,
     );
     when(sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transaction.props._id)).thenResolve("");
@@ -239,8 +239,8 @@ describe("FiatTransactionInitiator", () => {
     });
     when(
       consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
-    ).thenResolve(PaymentProviders.CHECKOUT);
-    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProviders.CHECKOUT)).thenResolve(
+    ).thenResolve(PaymentProvider.CHECKOUT);
+    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.FAILED,
     );
     when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
@@ -283,8 +283,8 @@ describe("FiatTransactionInitiator", () => {
 
     when(
       consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
-    ).thenResolve(PaymentProviders.CHECKOUT);
-    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProviders.CHECKOUT)).thenResolve(
+    ).thenResolve(PaymentProvider.CHECKOUT);
+    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.PENDING,
     );
 

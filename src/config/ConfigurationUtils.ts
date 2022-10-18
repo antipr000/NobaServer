@@ -136,6 +136,16 @@ export const COMMON_CONFIG_FIAT_IMAGE_BASE_URL = "fiatImageBaseUrl";
 export const PARTNER_CONFIG_KEY = "partner";
 export const PARTNER_CONFIG_EMBED_SECRET_KEY = "embedSecretKey";
 
+export const PLAID_CONFIG_KEY = "plaid";
+export const PLAID_ENVIRONMENT = "env";
+export const PLAID_VERSION = "version";
+export const PLAID_REDIRECT_URI = "redirectUri";
+export const PLAID_CLIENT_ID = "clientID";
+export const PLAID_SECRET_KEY = "secretKey";
+export const PLAID_AWS_SECRET_KEY_FOR_REDIRECT_URI = "awsSecretNameForRedirectUri";
+export const PLAID_AWS_SECRET_KEY_FOR_SECRET_KEY = "awsSecretNameForSecretKey";
+export const PLAID_AWS_SECRET_KEY_FOR_CLIENT_ID = "awsSecretNameForClientID";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),
