@@ -1,16 +1,17 @@
 name: Sonar
 on:
+  pull_request:
+    types: [opened, synchronize, reopened]
   push:
     branches:
       - main
-    pull_request:
-      types: [opened, synchronize, reopened]
+
 
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build
+    name: Sonar
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -41,9 +42,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
+      - name: SonarQube Quality Gate Check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
