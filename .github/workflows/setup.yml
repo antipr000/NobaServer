@@ -25,3 +25,16 @@ jobs:
         run: |
           yarn install
           echo [SUCCESS] yarn install succeeded.
+
+      - name: Cache environment
+        id: cache-environment
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ env.GITHUB_REF_NAME }}
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+          restore-key: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
