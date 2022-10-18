@@ -5,7 +5,7 @@ import { RouteResponse } from "./domain/SwapServiceProviderTypes";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { SQUID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { SquidConfigs } from "src/config/configtypes/SquidConfigs";
-import { Squid, Config, GetRoute, Route, TokenData, ChainsData, ChainData } from "@0xsquid/sdk";
+import { Squid, Config, GetRoute, Route, TokenData } from "@0xsquid/sdk";
 import { SwapServiceProvider } from "./domain/swap.service.provider";
 import { formatUnits, parseUnits } from "@ethersproject/units";
 import { BigNumber } from "@ethersproject/bignumber";

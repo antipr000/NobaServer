@@ -62,7 +62,7 @@ describe("Elliptic Tests", () => {
         id: "b7535048-76f8-4f60-bdd3-9d659298f9e7",
         type: "source_of_funds",
         analysed_at: "2022-09-14T03:07:26Z",
-        risk_score: 9.038007,
+        risk_score: -1,
         predictive: false,
         customer: {
           id: "fake-consumer",
@@ -85,8 +85,6 @@ describe("Elliptic Tests", () => {
           asset: transaction.props.leg2,
           type: "transaction",
           hash: transaction.props.blockchainTransactionId,
-          output_type: "address",
-          output_address: transaction.props.destinationWalletAddress,
         },
         type: "destination_of_funds",
         customer_reference: transaction.props.userId,

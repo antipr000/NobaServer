@@ -19,7 +19,6 @@ import {
   ConsumerWalletTransferRequest,
   ExecutedQuote,
   ExecuteQuoteRequest,
-  NobaQuote,
   PollStatus,
 } from "../../domain/AssetTypes";
 import { getMockZerohashServiceWithDefaults } from "../../mocks/mock.zerohash.service";

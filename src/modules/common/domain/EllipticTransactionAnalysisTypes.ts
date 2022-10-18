@@ -1,11 +1,28 @@
+export const ellipticSupportedCurrenciesWithOutputType = [
+  "ALGO",
+  "BCH",
+  "BNB",
+  "BTC",
+  "DOT",
+  "LTC",
+  "XLM",
+  "XTZ",
+  "ZEC",
+  "ZEN",
+];
+export const ellipticSupportedCurrenciesWithoutOutputType = ["ETH", "ERC20", "XRP", "ZIL", "ZRC2"];
+export const ellipticSupportedCurrencies = [
+  ...ellipticSupportedCurrenciesWithOutputType,
+  ...ellipticSupportedCurrenciesWithoutOutputType,
+];
+
 export type EllipticTransactionAnalysisRequest = {
   subject: {
     asset: string;
-    blockchain?: string;
     type: string;
     hash: string;
-    output_type: string;
-    output_address: string;
+    output_type?: string;
+    output_address?: string;
   };
   type: string;
   customer_reference: string;

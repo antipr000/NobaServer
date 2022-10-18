@@ -1,17 +1,19 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import axios, { AxiosResponse } from "axios";
+import { createHmac } from "crypto";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { EllipticConfigs } from "../../config/configtypes/EllipticConfig";
 import { ELLIPTIC_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import axios, { AxiosResponse } from "axios";
-import { WalletExposureResponse } from "./domain/WalletExposureResponse";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Transaction } from "../transactions/domain/Transaction";
 import {
+  ellipticSupportedCurrencies,
+  ellipticSupportedCurrenciesWithOutputType,
   EllipticTransactionAnalysisRequest,
   EllipticTransactionAnalysisResponse,
 } from "./domain/EllipticTransactionAnalysisTypes";
-import { createHmac } from "crypto";
+import { WalletExposureResponse } from "./domain/WalletExposureResponse";
 
 @Injectable()
 export class EllipticService {
@@ -20,9 +22,11 @@ export class EllipticService {
   private apiKey: string;
   private secretKey: string;
   private baseUrl: string;
+  private awsSecretNameForApiKey: string;
 
   constructor(private readonly configService: CustomConfigService) {
     this.apiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).apiKey;
+    this.awsSecretNameForApiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).awsSecretNameForApiKey;
     this.secretKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).secretKey;
     this.baseUrl = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).baseUrl;
   }
@@ -61,13 +65,27 @@ export class EllipticService {
   }
 
   public async transactionAnalysis(transaction: Transaction): Promise<WalletExposureResponse> {
-    const requestBody: EllipticTransactionAnalysisRequest = {
-      subject: {
-        asset: transaction.props.leg2,
-        type: "transaction",
-        hash: transaction.props.blockchainTransactionId,
+    const assetType: string = transaction.props.leg2.toUpperCase();
+    if (this.awsSecretNameForApiKey != "PROD_ELLIPTIC_KEY" || !ellipticSupportedCurrencies.includes(assetType)) {
+      return {
+        // Return -1 risk for non-prod runs for elliptic as elliptic doesn't run on testnet.
+        riskScore: -1,
+      };
+    }
+    let output_params = {};
+    if (ellipticSupportedCurrenciesWithOutputType.includes(assetType)) {
+      output_params = {
         output_type: "address",
         output_address: transaction.props.destinationWalletAddress,
+      };
+    }
+
+    const requestBody: EllipticTransactionAnalysisRequest = {
+      subject: {
+        asset: assetType,
+        type: "transaction",
+        hash: transaction.props.blockchainTransactionId,
+        ...output_params,
       },
       type: "destination_of_funds",
       customer_reference: transaction.props.userId,

@@ -161,7 +161,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 
 import { SquidService } from "../squid.service";
-import { formatUnits, parseUnits } from "@ethersproject/units";
+import { parseUnits } from "@ethersproject/units";
 import { BadRequestException } from "@nestjs/common";
 
 describe("SquidService", () => {

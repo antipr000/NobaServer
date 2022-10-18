@@ -43,7 +43,6 @@ import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProv
 import { getMockPartnerServiceWithDefaults } from "../../../../modules/partner/mocks/mock.partner.service";
 import { PartnerService } from "../../../../modules/partner/partner.service";
 import { Partner } from "../../../../modules/partner/domain/Partner";
-import { CurrencyType } from "../../../../modules/common/domain/Types";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
