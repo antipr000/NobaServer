@@ -110,7 +110,7 @@ partner:
   embedSecretKey: "7sjoNYZiZ3c6Z99wzVp2OLh0XbyRGtz9wj48MV6XfNscpY9W14kE4RDies/HuKsyCw7UJxz+RZAFoPx4t974Lw=="
 
 plaid:
-  env: "sandbox"
+  env: "development"
   version: "2020-09-14"
   redirectUri: ""
   awsSecretNameForRedirectUri: "TEST_PLAID_REDIRECT_URI"
