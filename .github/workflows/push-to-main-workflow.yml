@@ -10,14 +10,14 @@ on:
 
 jobs:
   setup-environment:
-    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml
+    uses: ./.github/workflows/setup-environment.yml
 
   run-unit-tests:
-    uses: nobapay/NobaServer/.github/workflows/run-unit-tests.yml
+    uses: ./.github/workflows/run-unit-tests.yml
     secrets: inherit
     needs: [setup-environment]
 
   sonarcloud-scan:
-    uses: nobapay/NobaServer/.github/workflows/run-sonar-scan.yml
+    uses: ./.github/workflows/run-sonar-scan.yml
     secrets: inherit
     needs: [setup-environment, run-unit-tests]
