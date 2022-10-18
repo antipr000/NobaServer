@@ -43,7 +43,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   console.log("Migrating the schemas of collections (if any) ...");
   const migrator = await app.get(MigratorService);
   await migrator.migrateData();
-  console.log("Completed schema migration!");
+  console.log("Completed schema migration");
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type

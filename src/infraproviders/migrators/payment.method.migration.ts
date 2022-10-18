@@ -1,19 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import { MongoConfigs } from "../../config/configtypes/MongoConfigs";
-import { MONGO_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { DBProvider } from "../DBProvider";
-import { MongoClient, Collection } from "mongodb";
+import { Collection } from "mongodb";
 import { Consumer } from "../../modules/consumer/domain/Consumer";
 import { PaymentMethod, PaymentMethodType } from "../../modules/consumer/domain/PaymentMethod";
 
 @Injectable()
 export class PaymentMethodsMigrator {
-  private mongoUri: string;
-
-  constructor(private readonly dbProvider: DBProvider, configService: CustomConfigService) {
-    this.mongoUri = configService.get<MongoConfigs>(MONGO_CONFIG_KEY).uri;
-  }
+  constructor(private readonly dbProvider: DBProvider) {}
 
   private async saveDocumentToConsumerCollection(consumer: Consumer) {
     const consumerModel = await this.dbProvider.getUserModel();
@@ -75,14 +68,11 @@ export class PaymentMethodsMigrator {
   public async migrate() {
     console.log("Migrating the 'PaymentMethods' field of 'Consumer' collection ...");
 
-    // Setup a mongodb client for interacting with "admins" collection.
-    const mongoClient = new MongoClient(this.mongoUri);
-    await mongoClient.connect();
+    const consumerModel = await this.dbProvider.getUserModel();
 
-    const consumerCollection: Collection = mongoClient.db("").collection("consumers");
+    const consumerCollection: Collection = consumerModel.collection;
     const allMigratedRecords: Consumer[] = await this.readAndConvertTheEntireCollection(consumerCollection);
 
-    await mongoClient.close();
     console.log(`Read ${allMigratedRecords.length} records. Saving them to database ...`);
 
     const allOperations = [];
