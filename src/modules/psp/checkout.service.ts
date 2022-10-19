@@ -16,7 +16,7 @@ import {
   REASON_CODE_SOFT_DECLINE_NO_CRYPTO,
 } from "../transactions/domain/CheckoutConstants";
 import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
-import { BINValidity } from "../common/dto/CreditCardDTO";
+import { BINValidity, CardType, CreditCardDTO } from "../common/dto/CreditCardDTO";
 import { CreditCardService } from "../common/creditcard.service";
 import { CheckoutResponseData } from "../common/domain/CheckoutResponseData";
 import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
@@ -26,6 +26,7 @@ import { Utils } from "../../core/utils/Utils";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "../consumer/domain/PaymentProvider";
+import { CreditCardBinData } from "../common/domain/CreditCardBinData";
 
 type CheckoutResponse = {
   response_code: string;
@@ -33,15 +34,6 @@ type CheckoutResponse = {
   risk: {
     flagged: boolean;
   };
-
-  cardData?: {
-    mask: string;
-    issuer: string;
-    network: string;
-    digits: number;
-    cvvDigits: number;
-    bin: string;
-  }
 };
 
 @Injectable()
@@ -76,6 +68,7 @@ export class CheckoutService {
 
     let checkoutCustomerID: string;
     let hasCustomerIDSaved = true;
+    let creditCardBinData: CreditCardDTO;
 
     if (checkoutCustomerData.length === 0) {
       // new customer. Create customer id
@@ -156,21 +149,13 @@ export class CheckoutService {
     } else if (validity === BINValidity.SUPPORTED) {
       checkoutResponse = {
         response_code: "10000",
-        response_summary: "",
+        response_summary: "Approved",
         risk: {
           flagged: false
-        },
-
-        cardData: {
-          mask: "",
-          issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
-          network: scheme,
-          digits: paymentMethod.cardNumber.length,
-          cvvDigits: paymentMethod.cvv.length,
-          bin: bin
         }
       };
 
+      creditCardBinData = await this.creditCardService.getBINDetails(bin)
     } else {
       // Record not in our BIN list. We will make the $1 charge
       try {
@@ -188,6 +173,17 @@ export class CheckoutService {
           },
           capture: false,
         });
+
+        creditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
+          issuer: issuer,
+          bin: bin,
+          type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
+          network: scheme,
+          mask: "",
+          supported: BINValidity.NOT_SUPPORTED,
+          digits: paymentMethod.cardNumber.length,
+          cvvDigits: paymentMethod.cvv.length
+        }).props;
       } catch (err) {
         //pass
         this.logger.error(`Error validating card instrument ${instrumentID}: ${err}`);
@@ -205,6 +201,7 @@ export class CheckoutService {
         "verification",
         "verification",
         partnerId,
+        creditCardBinData
       );
     } catch (e) {
       if (e instanceof CardProcessingException) {
@@ -281,6 +278,7 @@ export class CheckoutService {
 
   async requestCheckoutPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
     let checkoutResponse;
+    let bin: string;
     try {
       checkoutResponse = await this.checkoutApi.payments.request(
         {
@@ -297,12 +295,16 @@ export class CheckoutService {
         },
         /*idempotencyKey=*/ transaction.props._id,
       );
+
+      bin = checkoutResponse["source"]["bin"];
     } catch (err) {
       this.logger.error(
         `Exception while requesting checkout payment for transaction id ${transaction.props._id}: ${err.message}`,
       );
       throw err;
     }
+
+    const creditCardBinData = await this.creditCardService.getBINDetails(bin);
 
     const response = await this.handleCheckoutResponse(
       consumer,
@@ -312,6 +314,7 @@ export class CheckoutService {
       transaction.props.sessionKey,
       transaction.props.transactionID,
       transaction.props.partnerID,
+      creditCardBinData
     );
 
     switch (response.paymentMethodStatus) {
@@ -355,6 +358,7 @@ export class CheckoutService {
     sessionID: string,
     transactionID: string,
     partnerID: string,
+    creditCardBinData: CreditCardDTO
   ): Promise<CheckoutResponseData> {
     const response: CheckoutResponseData = new CheckoutResponseData();
     response.responseCode = checkoutResponse["response_code"];
