@@ -18,6 +18,7 @@ jobs:
 
   run-linters:
     uses: nobapay/NobaServer/.github/workflows/run-linters.yml@main
+    secrets: inherit
     needs: [setup-environment]
 
   run-unit-tests:
