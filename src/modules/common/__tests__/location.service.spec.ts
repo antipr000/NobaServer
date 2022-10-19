@@ -2,6 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { LocationService } from "../location.service";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { NotFoundException } from "@nestjs/common";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
@@ -15,6 +16,7 @@ describe("LocationService", () => {
     process.env = {
       ...process.env,
       NODE_ENV: "development",
+      LOCATION_DATA_FILE_PATH: __dirname.split("src")[0] + "/appconfigs/countries+states.json",
     };
 
     const app: TestingModule = await Test.createTestingModule({
@@ -41,20 +43,21 @@ describe("LocationService", () => {
       expect(us.subdivisions).toBeUndefined();
     });
 
-    /*  it("should obtain 205 countries with subdivisions", async () => {
+    it("should obtain 205 countries with subdivisions", async () => {
       const locations = locationService.getLocations(true);
 
       expect(Object.keys(locations).length).toEqual(205);
 
       // Pick one country and validate mappings
-      const us = locations["US"];
+      const us = locations.find(element => element.countryISOCode === "US");
 
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(Object.keys(us.subdivisions).length).toBe(66);
-      expect(us.subdivisions["WA"].code).toBe("WA");
-      expect(us.subdivisions["WA"].name).toBe("Washington");
+      expect(Object.keys(us.subdivisions).length).toBe(52);
+      const subdivision = us.subdivisions.find(subdivision => subdivision.code === "WA");
+      expect(subdivision.code).toBe("WA");
+      expect(subdivision.name).toBe("Washington");
     });
 
     it("should return the deatils of a single country with subdivisions", async () => {
@@ -63,9 +66,14 @@ describe("LocationService", () => {
       expect(us.countryISOCode).toBe("US");
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
-      expect(Object.keys(us.subdivisions).length).toBe(66);
-      expect(us.subdivisions["WA"].code).toBe("WA");
-      expect(us.subdivisions["WA"].name).toBe("Washington");
-    });*/
+      expect(Object.keys(us.subdivisions).length).toBe(52);
+      const subdivision = us.subdivisions.find(subdivision => subdivision.code === "WA");
+      expect(subdivision.code).toBe("WA");
+      expect(subdivision.name).toBe("Washington");
+    });
+
+    it("should throw NotFoundException if the country code doesn't exist", async () => {
+      expect(locationService.getLocationDetails("XX")).rejects.toThrow(NotFoundException);
+    });
   });
 });
