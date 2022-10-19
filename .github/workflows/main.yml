@@ -30,6 +30,14 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Restore environment from cache
+        id: restore-environment
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}
 
       # Generates a build_info file which can be shown in buildInfo controller of the server
       - name: Generate build info file
