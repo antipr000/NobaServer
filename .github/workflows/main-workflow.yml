@@ -3,11 +3,11 @@ name: Main Workflow
 on:
   # Run whenever a PR that targets main is created or updated
   pull_request:
-    branches: main
+    branches: [main]
 
   # Run whenever we push to main
   push:
-    branches: main
+    branches: [main]
 
   # Allow running manually from GitHub
   workflow_dispatch:
