@@ -1,4 +1,4 @@
-name: Pull Request Workflow
+name: Main Workflow
 
 on:
   # Run whenever a PR that targets main is created or updated

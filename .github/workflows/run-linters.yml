@@ -1,4 +1,4 @@
-name: Run Linters
+name: _Run Linters
 
 on:
   workflow_call:
