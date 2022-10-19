@@ -14,12 +14,12 @@ jobs:
         id: restore-environment
         uses: actions/cache@v3
         env:
-          cache-name: ${{ env.GITHUB_REF_NAME }}
+          cache-name: ${{ github.run_number }}
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ env.GITHUB_REF_NAME }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-build-${{ github.run_number }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.GITHUB_REF_NAME }}-
+            ${{ runner.os }}-build-${{ github.run_number }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
