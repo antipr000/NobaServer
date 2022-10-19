@@ -3,10 +3,6 @@ name: _Run Linters
 on:
   workflow_call:
 
-permissions:
-  checks: write
-  contents: write
-
 jobs:
   linters:
     runs-on: ubuntu-latest

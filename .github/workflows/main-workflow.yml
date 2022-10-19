@@ -12,33 +12,26 @@ on:
   # Allow running manually from GitHub
   workflow_dispatch:
 
-permissions:
-  checks: write
-  contents: write
-
 jobs:
   setup-environment:
-    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@fix-failing-linters
+    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@main
 
   run-linters:
-    uses: nobapay/NobaServer/.github/workflows/run-linters.yml@fix-failing-linters
+    uses: nobapay/NobaServer/.github/workflows/run-linters.yml@main
     secrets: inherit
-    permissions:
-      checks: write
-      contents: write
     needs: [setup-environment]
 
   run-unit-tests:
-    uses: nobapay/NobaServer/.github/workflows/run-unit-tests.yml@fix-failing-linters
+    uses: nobapay/NobaServer/.github/workflows/run-unit-tests.yml@main
     secrets: inherit
     needs: [setup-environment]
 
   run-e2e-tests:
-    uses: nobapay/NobaServer/.github/workflows/run-e2e-tests.yml@fix-failing-linters
+    uses: nobapay/NobaServer/.github/workflows/run-e2e-tests.yml@main
     secrets: inherit
     needs: [setup-environment]
 
   sonarcloud-scan:
-    uses: nobapay/NobaServer/.github/workflows/run-sonar-scan.yml@fix-failing-linters
+    uses: nobapay/NobaServer/.github/workflows/run-sonar-scan.yml@main
     secrets: inherit
     needs: [setup-environment, run-unit-tests]

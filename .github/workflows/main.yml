@@ -20,12 +20,13 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   setup-environment:
-    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@fix-failing-linters
+    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@main
 
   builddeploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 15 # we expect it to complete much before 15 minutes
+    needs: [setup-environment]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
