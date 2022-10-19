@@ -14,7 +14,7 @@ jobs:
           cache-name: ${{ github.run_number }}-tests
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-${{ github.run_number }}-tests
+          key: ${{ runner.os }}-build-${{ github.run_number }}-tests
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master

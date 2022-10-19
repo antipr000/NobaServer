@@ -19,7 +19,9 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  setup-environment:
+    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@fix-failing-linters
+
   builddeploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -27,31 +29,6 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2.4.0
-        with:
-          node-version: 16.x
-
-      - name: Setup Yarn
-        uses: mskelton/setup-yarn@v1.0.1
-        with:
-          node-version: 16.x
-
-      # Runs a single command using the runners shell
-      - name: Install all packages
-        run: |
-          yarn install
-          echo [SUCCESS] yarn install succeeded.
-
-      #       # Run all tests first to prevent broken builds,
-      #       #commented as there is a separate workflow to run tests and it's fine to not run tests other than PR as all changes are supposed to go in main through a PR
-      #       - name: Run tests
-      #         run: |
-      #           yarn run test
-      #           echo [SUCCESS] tests successfully passed
 
       # Generates a build_info file which can be shown in buildInfo controller of the server
       - name: Generate build info file
