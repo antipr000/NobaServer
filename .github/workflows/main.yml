@@ -59,7 +59,7 @@ jobs:
             version_label="${refName}-${shortSHA}"
           fi
             
-          echo ::set-output name=version_label::$version_label
+          echo "version_label=$version_label" >> $GITHUB_OUTPUT
 
       # Runs a set of commands using the runners shell
       - name: Build
@@ -88,14 +88,14 @@ jobs:
 
           echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
 
-          echo ::set-output name=ebEnvironment::$ebEnvironment
+          echo "ebEnvironment=:$ebEnvironment" >> $GITHUB_OUTPUT
 
       - name: Check If should deploy to sandbox environment based on pull request labels
         id: check-deploy-sandbox
         if: "contains(github.event.pull_request.labels.*.name, 'deploy-sandbox')"
         run: |
           ebEnvironment=sandbox
-          echo ::set-output name=ebEnvironment::sandbox
+          echo "ebEnvironment=sandbox" >> $GITHUB_OUTPUT
 
       - name: Deploy to EB
         if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
