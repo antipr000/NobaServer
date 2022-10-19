@@ -10,7 +10,7 @@ export interface CreditCardBinDataProps extends VersioningInfo {
   bin: string;
   type: CardType;
   network: string;
-  mask: string;
+  mask?: string;
   supported: BINValidity;
   digits: number;
   cvvDigits: number;
@@ -22,10 +22,10 @@ export const creditCardBinDataKeys: KeysRequired<CreditCardBinDataProps> = {
   issuer: Joi.string().required(),
   bin: Joi.string()
     .required()
-    .meta({ _mongoose: { index: true } }),
+    .meta({ _mongoose: { index: true, unique: true } }),
   type: Joi.string().default(CardType.CREDIT),
   network: Joi.string().required(),
-  mask: Joi.string().required(),
+  mask: Joi.string().optional(),
   supported: Joi.string().default(BINValidity.NOT_SUPPORTED),
   digits: Joi.number().default(16),
   cvvDigits: Joi.number().default(3),

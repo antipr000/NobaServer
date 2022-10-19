@@ -102,7 +102,7 @@ export class CheckoutService {
     let bin: string;
     let issuer: string;
     let cardType: string;
-    
+
     try {
       // To add payment method, we first need to tokenize the card
       // Token is only valid for 15 mins
@@ -139,8 +139,6 @@ export class CheckoutService {
       throw new BadRequestException({ message: "Card already added" });
     }
 
-
-
     // Before calling checkout, check against our BIN list
     const validity = await this.creditCardService.isBINSupported(bin);
     if (validity == BINValidity.NOT_SUPPORTED) {
@@ -151,11 +149,11 @@ export class CheckoutService {
         response_code: "10000",
         response_summary: "Approved",
         risk: {
-          flagged: false
-        }
+          flagged: false,
+        },
       };
 
-      creditCardBinData = await this.creditCardService.getBINDetails(bin)
+      creditCardBinData = await this.creditCardService.getBINDetails(bin);
     } else {
       // Record not in our BIN list. We will make the $1 charge
       try {
@@ -175,14 +173,14 @@ export class CheckoutService {
         });
 
         creditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
-          issuer: issuer,
+          issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
           bin: bin,
           type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
           network: scheme,
           mask: "",
-          supported: BINValidity.NOT_SUPPORTED,
+          supported: BINValidity.UNKNOWN,
           digits: paymentMethod.cardNumber.length,
-          cvvDigits: paymentMethod.cvv.length
+          cvvDigits: paymentMethod.cvv.length,
         }).props;
       } catch (err) {
         //pass
@@ -201,7 +199,7 @@ export class CheckoutService {
         "verification",
         "verification",
         partnerId,
-        creditCardBinData
+        creditCardBinData,
       );
     } catch (e) {
       if (e instanceof CardProcessingException) {
@@ -304,7 +302,28 @@ export class CheckoutService {
       throw err;
     }
 
-    const creditCardBinData = await this.creditCardService.getBINDetails(bin);
+    let creditCardBinData = await this.creditCardService.getBINDetails(bin);
+
+    if (creditCardBinData === null) {
+      // Record is not in our db. Fetch payment method details from checkout and add entry
+      const paymentMethodResponse = await this.checkoutApi.instruments.get(transaction.props.paymentMethodID);
+      const cardType = paymentMethodResponse["card_type"];
+      const bin = paymentMethodResponse["bin"];
+      const scheme = paymentMethodResponse["scheme"];
+      const issuer = paymentMethodResponse["issuer"];
+
+      creditCardBinData = {
+        issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
+        bin: bin,
+        type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
+        network: scheme,
+        supported: BINValidity.SUPPORTED,
+        digits: 0,
+        cvvDigits: 0,
+      };
+
+      creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);
+    }
 
     const response = await this.handleCheckoutResponse(
       consumer,
@@ -314,7 +333,7 @@ export class CheckoutService {
       transaction.props.sessionKey,
       transaction.props.transactionID,
       transaction.props.partnerID,
-      creditCardBinData
+      creditCardBinData,
     );
 
     switch (response.paymentMethodStatus) {
@@ -358,7 +377,7 @@ export class CheckoutService {
     sessionID: string,
     transactionID: string,
     partnerID: string,
-    creditCardBinData: CreditCardDTO
+    binData: CreditCardDTO,
   ): Promise<CheckoutResponseData> {
     const response: CheckoutResponseData = new CheckoutResponseData();
     response.responseCode = checkoutResponse["response_code"];
@@ -366,24 +385,21 @@ export class CheckoutService {
     let sendNobaEmail = false;
 
     try {
+      const creditCardBinData = await this.creditCardService.getBINDetails(binData.bin);
       if (!response.responseCode) {
         this.logger.error(`No response code received validating card instrument ${instrumentID}`);
         throw new CardProcessingException(CardFailureExceptionText.ERROR);
       } else if (response.responseCode.startsWith("10")) {
-        // If all else was good, we must also check against the list of cards which we know
-        // don't accept crypto as that may change *OUR* decision as to whether or not to
-        // accept the card.
-        if (cardNumber != null) {
-          // Don't know it at transaction time
-          const validity: BINValidity = await this.creditCardService.isBINSupported(cardNumber);
-          if (validity === BINValidity.NOT_SUPPORTED) {
-            response.paymentMethodStatus = PaymentMethodStatus.UNSUPPORTED;
-          } else if (validity === BINValidity.SUPPORTED) {
-            response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
-            await this.creditCardService.
+        // If reqeust payment was successful
+        if (cardNumber !== null) {
+          if (creditCardBinData === null) {
+            // Record is not there in our db. Add it
+            binData.supported = BINValidity.SUPPORTED;
+            await this.creditCardService.addBinData(binData);
           } else {
-            // unknown
-
+            // Record is already there. Update bin validity
+            creditCardBinData.supported = BINValidity.SUPPORTED;
+            await this.creditCardService.updateBinData(creditCardBinData);
           }
         } else {
           response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
@@ -404,7 +420,14 @@ export class CheckoutService {
             response.responseSummary,
           );
         } else if (REASON_CODE_SOFT_DECLINE_NO_CRYPTO.indexOf(response.responseCode) > -1) {
-          // TODO(#593): Update BIN list here
+          if (creditCardBinData === null) {
+            // Bin data is not there. Add it
+            binData.supported = BINValidity.NOT_SUPPORTED;
+            await this.creditCardService.addBinData(binData);
+          } else {
+            creditCardBinData.supported = BINValidity.NOT_SUPPORTED;
+            await this.creditCardService.updateBinData(creditCardBinData);
+          }
           throw new CardProcessingException(
             CardFailureExceptionText.NO_CRYPTO,
             response.responseCode,

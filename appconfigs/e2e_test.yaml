@@ -132,6 +132,7 @@ plaid:
 
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"
+dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
 supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens.csv"
 sanctionedCryptoWalletsFileBucketPath: "assets/data/sanctioned_wallets.csv"

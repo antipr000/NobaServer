@@ -129,6 +129,96 @@ describe("CreditCardBinDataRepo", () => {
       delete addedBinData.props["updatedTimestamp"];
       expect(addedBinData).toStrictEqual(newCreditCardBinData);
     });
+
+    it("should return null when adding new creditCardBinData fails", async () => {
+      await insertFakeCreditCardBinData("12345", "fake-id-1234");
+      const newCreditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
+        _id: "fake-id-1234",
+        issuer: "chase",
+        bin: "fake-bin",
+        type: CardType.CREDIT,
+        network: "VISA",
+        mask: "1234XXXXXXXXX",
+        supported: BINValidity.NOT_SUPPORTED,
+        digits: 16,
+        cvvDigits: 4,
+      });
+
+      const response = await creditCardBinDataRepo.add(newCreditCardBinData);
+      expect(response).toBeNull();
+    });
+  });
+
+  describe("update", () => {
+    it("should update creditCardBinData", async () => {
+      await insertFakeCreditCardBinData("12345", "fake-bin-1234", BINValidity.NOT_SUPPORTED);
+
+      const updatedCreditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
+        _id: "fake-bin-1234",
+        issuer: "chase",
+        bin: "12345",
+        type: CardType.CREDIT,
+        network: "VISA",
+        mask: "1234XXXXXXXXX",
+        supported: BINValidity.SUPPORTED,
+        digits: 16,
+        cvvDigits: 4,
+      });
+
+      const response = await creditCardBinDataRepo.update(updatedCreditCardBinData);
+
+      delete response.props["__v"];
+      delete response.props["createdTimestamp"];
+      delete response.props["updatedTimestamp"];
+
+      expect(response).toStrictEqual(updatedCreditCardBinData);
+    });
+
+    it("should update creditCardBinData", async () => {
+      const updatedCreditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
+        _id: "fake-bin-1234",
+        issuer: "chase",
+        bin: "12345",
+        type: CardType.CREDIT,
+        network: "VISA",
+        mask: "1234XXXXXXXXX",
+        supported: BINValidity.SUPPORTED,
+        digits: 16,
+        cvvDigits: 4,
+      });
+
+      const response = await creditCardBinDataRepo.update(updatedCreditCardBinData);
+
+      expect(response).toBeNull();
+    });
+  });
+
+  describe("delete", () => {
+    it("should delete bin data", async () => {
+      await insertFakeCreditCardBinData("12345", "fake-bin-1234", BINValidity.NOT_SUPPORTED);
+
+      await creditCardBinDataRepo.deleteByID("fake-bin-1234");
+
+      const data = await getAllRecordsInCreditCardBinDataCollection(creditCardBinDataCollection);
+      expect(data.length).toBe(0);
+    });
+  });
+
+  describe("findById", () => {
+    it("should find bin data", async () => {
+      await insertFakeCreditCardBinData("12345", "fake-bin-1234", BINValidity.NOT_SUPPORTED);
+
+      const binData = await creditCardBinDataRepo.findByID("fake-bin-1234");
+
+      expect(binData.props.bin).toBe("12345");
+      expect(binData.props.supported).toBe(BINValidity.NOT_SUPPORTED);
+    });
+
+    it("should return null when bin data is not found", async () => {
+      const binData = await creditCardBinDataRepo.findByID("fake-bin-1234");
+
+      expect(binData).toBeNull();
+    });
   });
 
   describe("findCardByExactBIN()", () => {

@@ -2,11 +2,12 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { CreditCardService } from "../creditcard.service";
-import { BINValidity, CardType, unsupportedIssuers } from "../dto/CreditCardDTO";
+import { BINValidity, CardType, CreditCardDTO, unsupportedIssuers } from "../dto/CreditCardDTO";
 import { CreditCardBinDataRepo } from "../repo/CreditCardBinDataRepo";
 import { getMockCreditCardBinDataRepoMockWithDefaults } from "../mocks/mock.creditcard.bin.data.repo";
-import { instance, when } from "ts-mockito";
+import { anything, deepEqual, instance, when } from "ts-mockito";
 import { CreditCardBinData } from "../domain/CreditCardBinData";
+import { BadRequestException } from "@nestjs/common";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
@@ -132,6 +133,175 @@ describe("CreditCardService", () => {
       );
       const isSupported = await creditCardService.isBINSupported("123");
       expect(isSupported).toEqual(BINValidity.NOT_SUPPORTED);
+    });
+  });
+
+  describe("addBinData", () => {
+    it("adds new bin data record", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "454347",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
+
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(null);
+      when(creditCardBinDataRepo.add(anything())).thenResolve(creditCardData);
+
+      const response = await creditCardService.addBinData(creditCardDTO);
+
+      expect(response).toStrictEqual(creditCardDTO);
+    });
+
+    it("should throw error when already exists", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "454347",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
+
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(creditCardData);
+      when(creditCardBinDataRepo.add(anything())).thenResolve(creditCardData);
+      try {
+        await creditCardService.addBinData(creditCardDTO);
+        expect(true).toBeFalsy();
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("BIN already exists");
+      }
+    });
+
+    it("should throw error when adding bin data fails", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "454347",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(null);
+      when(creditCardBinDataRepo.add(anything())).thenResolve(null);
+      try {
+        await creditCardService.addBinData(creditCardDTO);
+        expect(true).toBeFalsy();
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("Failed to add bin data");
+      }
+    });
+  });
+
+  describe("updateBinData", () => {
+    it("updated credit card data", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "454347",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
+
+      const updatedCreditCardData = CreditCardBinData.createCreditCardBinDataObject({
+        ...creditCardData.props,
+        supported: BINValidity.NOT_SUPPORTED,
+      });
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(creditCardData);
+      when(creditCardBinDataRepo.update(deepEqual(updatedCreditCardData))).thenResolve(updatedCreditCardData);
+
+      const response = await creditCardService.updateBinData({
+        ...creditCardDTO,
+        supported: BINValidity.NOT_SUPPORTED,
+      });
+
+      const expectedResponse = updatedCreditCardData.props;
+
+      delete expectedResponse._id;
+      delete expectedResponse.mask;
+      delete expectedResponse.version;
+
+      expect(response).toStrictEqual(expectedResponse);
+    });
+
+    it("should throw when bin data is not present", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "454347",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
+
+      const updatedCreditCardData = CreditCardBinData.createCreditCardBinDataObject({
+        ...creditCardData.props,
+        supported: BINValidity.NOT_SUPPORTED,
+      });
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(null);
+      when(creditCardBinDataRepo.update(deepEqual(updatedCreditCardData))).thenResolve(updatedCreditCardData);
+
+      try {
+        await creditCardService.updateBinData({
+          ...creditCardDTO,
+          supported: BINValidity.NOT_SUPPORTED,
+        });
+        expect(true).toBeFalsy();
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("Bin data not found!");
+      }
+    });
+
+    it("should throw when update fails", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "454347",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
+
+      const updatedCreditCardData = CreditCardBinData.createCreditCardBinDataObject({
+        ...creditCardData.props,
+        supported: BINValidity.NOT_SUPPORTED,
+      });
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(creditCardData);
+      when(creditCardBinDataRepo.update(deepEqual(updatedCreditCardData))).thenResolve(null);
+
+      try {
+        await creditCardService.updateBinData({
+          ...creditCardDTO,
+          supported: BINValidity.NOT_SUPPORTED,
+        });
+        expect(true).toBeFalsy();
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(e.message).toBe("Failed to update bin data");
+      }
     });
   });
 });
