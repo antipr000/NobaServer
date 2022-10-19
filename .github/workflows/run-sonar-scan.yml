@@ -11,10 +11,10 @@ jobs:
         id: restore-environment
         uses: actions/cache@v3
         env:
-          cache-name: ${{ github.run_number }}
+          cache-name: ${{ github.run_number }}-tests
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-build-${{ github.run_number }}-${{ github.run_number }}-tests
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master

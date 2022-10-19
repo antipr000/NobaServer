@@ -18,15 +18,14 @@ jobs:
           cache-name: ${{ github.run_number }}
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-build-${{ github.run_number }}
 
       - name: Run linters
         uses: wearerequired/lint-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           eslint: true
           prettier: true
           auto_fix: false
           eslint_auto_fix: false
           prettier_auto_fix: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}

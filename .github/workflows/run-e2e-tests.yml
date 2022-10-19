@@ -17,7 +17,7 @@ jobs:
           cache-name: ${{ github.run_number }}
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-build-${{ github.run_number }}
 
       - name: E2E tests
         env:

@@ -17,7 +17,7 @@ jobs:
           cache-name: ${{ github.run_number }}
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-build-${{ github.run_number }}
 
       - name: Unit tests with coverage
         env:
@@ -25,3 +25,12 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: yarn jest --verbose --silent --coverage --runInBand
+
+      - name: Cache test results
+        id: cache-test-results
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}-tests
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}-tests
