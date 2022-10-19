@@ -19,6 +19,9 @@ jobs:
   run-linters:
     uses: nobapay/NobaServer/.github/workflows/run-linters.yml@fix-failing-linters
     secrets: inherit
+    permissions:
+      checks: write
+      contents: write
     needs: [setup-environment]
 
   run-unit-tests:
