@@ -14,9 +14,9 @@ jobs:
           cache-name: ${{ env.GITHUB_REF_NAME }}
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-build-${{ env.GITHUB_REF_NAME }}-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-${{ env.GITHUB_REF_NAME }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 

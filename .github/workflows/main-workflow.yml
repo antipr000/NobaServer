@@ -14,7 +14,7 @@ on:
 
 jobs:
   setup-environment:
-    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@main
+    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@fix-failing-linters
 
   run-linters:
     uses: nobapay/NobaServer/.github/workflows/run-linters.yml@fix-failing-linters
@@ -25,16 +25,16 @@ jobs:
     needs: [setup-environment]
 
   run-unit-tests:
-    uses: nobapay/NobaServer/.github/workflows/run-unit-tests.yml@main
+    uses: nobapay/NobaServer/.github/workflows/run-unit-tests.yml@fix-failing-linters
     secrets: inherit
     needs: [setup-environment]
 
   run-e2e-tests:
-    uses: nobapay/NobaServer/.github/workflows/run-e2e-tests.yml@main
+    uses: nobapay/NobaServer/.github/workflows/run-e2e-tests.yml@fix-failing-linters
     secrets: inherit
     needs: [setup-environment]
 
   sonarcloud-scan:
-    uses: nobapay/NobaServer/.github/workflows/run-sonar-scan.yml@main
+    uses: nobapay/NobaServer/.github/workflows/run-sonar-scan.yml@fix-failing-linters
     secrets: inherit
     needs: [setup-environment, run-unit-tests]
