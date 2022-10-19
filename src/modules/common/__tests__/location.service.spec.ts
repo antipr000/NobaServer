@@ -60,7 +60,7 @@ describe("LocationService", () => {
       expect(subdivision.name).toBe("Washington");
     });
 
-    it("should return the deatils of a single country with subdivisions", async () => {
+    it("should return the details of a single country with subdivisions", async () => {
       const us = locationService.getLocationDetails("US");
 
       expect(us.countryISOCode).toBe("US");
@@ -73,7 +73,9 @@ describe("LocationService", () => {
     });
 
     it("should throw NotFoundException if the country code doesn't exist", async () => {
-      expect(locationService.getLocationDetails("XX")).rejects.toThrow(NotFoundException);
+      expect(async () => {
+        const result = locationService.getLocationDetails("XX");
+      }).rejects.toThrow(NotFoundException);
     });
   });
 });

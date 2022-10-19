@@ -18,10 +18,6 @@ jobs:
         with:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ github.run_number }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       - name: Unit tests with coverage
         env:

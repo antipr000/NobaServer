@@ -99,6 +99,7 @@ export class LocationService {
 
     // If requesting location details, we always want to include subdivision data
     const requestedLocation = this.locationsWithSubdivisions.find(element => element.countryISOCode === countryCode);
+
     if (requestedLocation === undefined) {
       throw new NotFoundException({ description: "Country code not found" });
     }

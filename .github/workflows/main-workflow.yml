@@ -12,6 +12,10 @@ on:
   # Allow running manually from GitHub
   workflow_dispatch:
 
+permissions:
+  checks: write
+  contents: write
+
 jobs:
   setup-environment:
     uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@fix-failing-linters
