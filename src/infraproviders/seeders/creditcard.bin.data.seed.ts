@@ -51,7 +51,6 @@ export class CreditCardBinDataSeeder {
 
   toDomain(data: any): CreditCardBinData {
     return CreditCardBinData.createCreditCardBinDataObject({
-      _id: data._id,
       issuer: data.issuer,
       bin: data.bin,
       type: data.type,
@@ -64,11 +63,11 @@ export class CreditCardBinDataSeeder {
   }
 
   async seed() {
-    console.log("Started seeding credit card bin data");
     const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();
 
     const result = await creditCardBinDataModel.findOne().exec();
     if (result === null) {
+      console.log("Started seeding credit card bin data");
       // dbUri is of form uri/dbName
       const fileName = "creditcardbindata.json";
 
@@ -81,9 +80,9 @@ export class CreditCardBinDataSeeder {
       const recordsToInsert = allRecords.map(record => this.toDomain(record).props);
 
       await creditCardBinDataModel.insertMany(recordsToInsert, { ordered: false });
+      console.log("Completed seeding credit card bin data");
     } else {
       console.log("Credit card bin data already seeded");
     }
-    console.log("Completed seeding credit card bin data");
   }
 }
