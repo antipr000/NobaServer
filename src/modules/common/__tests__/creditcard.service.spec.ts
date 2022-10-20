@@ -141,7 +141,7 @@ describe("CreditCardService", () => {
       const creditCardDTO: CreditCardDTO = {
         issuer: "bank_of_america",
         network: "VISA",
-        bin: "454347",
+        bin: "42424",
         type: CardType.CREDIT,
         supported: BINValidity.SUPPORTED,
         digits: 10,

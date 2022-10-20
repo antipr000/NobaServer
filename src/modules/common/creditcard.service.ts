@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { creditCardMaskGenerator } from "src/core/utils/CreditCardMaskGenerator";
+import { creditCardMaskGenerator } from "../../core/utils/CreditCardMaskGenerator";
 import { CreditCardBinData } from "./domain/CreditCardBinData";
 import { CreditCardDTO, BINValidity, BINReportDetails } from "./dto/CreditCardDTO";
 import { CreditCardBinDataRepo } from "./repo/CreditCardBinDataRepo";

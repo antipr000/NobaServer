@@ -3,6 +3,7 @@ import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../co
 import { KeysRequired } from "./Types";
 import Joi from "joi";
 import { BINValidity, CardType } from "../dto/CreditCardDTO";
+import { creditCardMaskGenerator } from "../../../core/utils/CreditCardMaskGenerator";
 
 export interface CreditCardBinDataProps extends VersioningInfo {
   _id: string;
@@ -42,7 +43,8 @@ export class CreditCardBinData extends AggregateRoot<CreditCardBinDataProps> {
     creditCardBinDataProps: Partial<CreditCardBinDataProps>,
   ): CreditCardBinData {
     if (!creditCardBinDataProps._id) creditCardBinDataProps._id = Entity.getNewID();
-    if (!creditCardBinDataProps.mask) creditCardBinDataProps.mask = creditCardBinDataProps.bin + "XXXXXXXX";
+    if (!creditCardBinDataProps.mask)
+      creditCardBinDataProps.mask = creditCardMaskGenerator(creditCardBinDataProps.bin, creditCardBinDataProps.digits);
     return new CreditCardBinData(Joi.attempt(creditCardBinDataProps, creditCardBinDataJoiSchema));
   }
 }
