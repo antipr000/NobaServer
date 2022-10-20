@@ -88,7 +88,7 @@ jobs:
 
           echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
 
-          echo "ebEnvironment=:$ebEnvironment" >> $GITHUB_OUTPUT
+          echo "ebEnvironment=$ebEnvironment" >> $GITHUB_OUTPUT
 
       - name: Check If should deploy to sandbox environment based on pull request labels
         id: check-deploy-sandbox
