@@ -1994,6 +1994,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/credit-card-type@^9.0.0":
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/@types/credit-card-type/-/credit-card-type-9.0.0.tgz#dcf6b0a59441a8800e0bda222c113a7da636bdf7"
+  integrity sha512-izINkgpBkXk1xytJex8ahr8emyZvKz/XWHNvMju7mkS45S6vzadn59ibGOmYeaVSY9VfW4QIXqKlPQdajVZiaw==
+  dependencies:
+    credit-card-type "*"
+
 "@types/crypto-js@^4.1.1":
   version "4.1.1"
   resolved "https://registry.npmjs.org/@types/crypto-js/-/crypto-js-4.1.1.tgz"
@@ -3585,6 +3592,11 @@ create-require@^1.1.0:
   version "1.1.1"
   resolved "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz"
   integrity sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
+
+credit-card-type@*, credit-card-type@^9.1.0:
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/credit-card-type/-/credit-card-type-9.1.0.tgz#54dd96c93b6579623e9c8656e6798fc2b93f5f05"
+  integrity sha512-CpNFuLxiPFxuZqhSKml3M+t0K/484pMAnfYWH14JoD7OZMnmC0Lmo+P7JX9SobqFpRoo7ifA18kOHdxJywYPEA==
 
 cron@2.0.0:
   version "2.0.0"

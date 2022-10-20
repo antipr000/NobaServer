@@ -27,6 +27,7 @@ import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "../consumer/domain/PaymentProvider";
 import { CreditCardBinData } from "../common/domain/CreditCardBinData";
+import creditCardType from "credit-card-type";
 
 type CheckoutResponse = {
   response_code: string;
@@ -35,6 +36,27 @@ type CheckoutResponse = {
     flagged: boolean;
   };
 };
+
+function getCodeTypeFromCardScheme(scheme: string): string {
+  switch (scheme) {
+    case "visa":
+      return "CVV";
+    case "mastercard":
+      return "CVC";
+    case "american-express":
+      return "CID";
+    case "diners-club":
+      return "CVV";
+    case "discover":
+      return "CID";
+    case "jcb":
+      return "CVV";
+    case "unionpay":
+      return "CVN";
+    case "maestro":
+      return "CVV";
+  }
+}
 
 @Injectable()
 export class CheckoutService {
@@ -123,10 +145,11 @@ export class CheckoutService {
         },
       });
 
+      console.log(instrument);
       instrumentID = instrument["id"];
       scheme = instrument["scheme"];
       bin = instrument["bin"];
-      issuer = instrument["issuer"];
+      issuer = instrument["issuer"] ?? "";
       cardType = instrument["card_type"];
     } catch (err) {
       this.logger.error(`Failed to add card card: ${err}`);
@@ -177,7 +200,6 @@ export class CheckoutService {
           bin: bin,
           type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
           network: scheme,
-          mask: "",
           supported: BINValidity.UNKNOWN,
           digits: paymentMethod.cardNumber.length,
           cvvDigits: paymentMethod.cvv.length,
@@ -310,7 +332,15 @@ export class CheckoutService {
       const cardType = paymentMethodResponse["card_type"];
       const bin = paymentMethodResponse["bin"];
       const scheme = paymentMethodResponse["scheme"];
-      const issuer = paymentMethodResponse["issuer"];
+      const issuer = paymentMethodResponse["issuer"] ?? "";
+
+      const possibleCards = creditCardType(bin);
+
+      if (possibleCards.length > 1) {
+        console.log("More than one possible card type for given bin: " + JSON.stringify(possibleCards));
+      }
+
+      const card = possibleCards[0];
 
       creditCardBinData = {
         issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
@@ -318,8 +348,8 @@ export class CheckoutService {
         type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
         network: scheme,
         supported: BINValidity.SUPPORTED,
-        digits: 0,
-        cvvDigits: 0,
+        digits: card.lengths[0],
+        cvvDigits: card.code[getCodeTypeFromCardScheme(card.type)],
       };
 
       creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);

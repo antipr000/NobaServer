@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { creditCardMaskGenerator } from "src/core/utils/CreditCardMaskGenerator";
 import { CreditCardBinData } from "./domain/CreditCardBinData";
 import { CreditCardDTO, BINValidity, BINReportDetails } from "./dto/CreditCardDTO";
 import { CreditCardBinDataRepo } from "./repo/CreditCardBinDataRepo";
@@ -12,6 +13,8 @@ export class CreditCardService {
     if (await this.creditCardBinDataRepo.findCardByExactBIN(binData.bin)) {
       throw new BadRequestException("BIN already exists");
     }
+
+    binData.mask = creditCardMaskGenerator(binData.bin, binData.digits);
     const creditCardBinData = await this.creditCardBinDataRepo.add(
       CreditCardBinData.createCreditCardBinDataObject(binData),
     );
