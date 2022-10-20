@@ -74,7 +74,7 @@ describe("LocationService", () => {
 
     it("should throw NotFoundException if the country code doesn't exist", async () => {
       expect(async () => {
-        const result = locationService.getLocationDetails("XX");
+        await locationService.getLocationDetails("XX");
       }).rejects.toThrow(NotFoundException);
     });
   });
