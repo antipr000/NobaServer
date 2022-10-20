@@ -16,11 +16,13 @@ import {
 import { BadRequestException } from "@nestjs/common";
 import { createHmac } from "crypto";
 import { WalletExposureResponse } from "../domain/WalletExposureResponse";
+import * as ConfigurationUtils from "../../../config/ConfigurationUtils";
 
 describe("Elliptic Tests", () => {
   jest.setTimeout(10000);
   let ellipticService: EllipticService;
   let currencyService: CurrencyService;
+
   const systemTime = 2000000;
   let dateSpy;
   beforeAll(async () => {
@@ -55,6 +57,7 @@ describe("Elliptic Tests", () => {
   });
 
   describe("transactionAnalysis", () => {
+    jest.spyOn(ConfigurationUtils, "isProductionEnvironment").mockImplementation(() => true);
     it("Should return risk score obtained from elliptic for transaction without output type", async () => {
       const transaction = Transaction.createTransaction({
         _id: "1111111111",
@@ -338,6 +341,41 @@ describe("Elliptic Tests", () => {
         await ellipticService.transactionAnalysis(transaction);
         expect(axios.post).toHaveBeenCalled();
       }).rejects.toThrowError(BadRequestException);
+    });
+  });
+
+  describe("transactionAnalysis - non-prod", () => {
+    it("Should not call the Elliptic API in non-prod environments", async () => {
+      jest.spyOn(ConfigurationUtils, "isProductionEnvironment").mockImplementation(() => false);
+
+      const transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: "fake-consumer",
+        sessionKey: "fake-session",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
+        paymentMethodID: "fake-payment-method",
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        destinationWalletAddress: "fake-wallet",
+        partnerID: "12345",
+        blockchainTransactionId: "fake-crypto-transaction-id",
+      });
+
+      when(currencyService.getCryptocurrency("ETH")).thenResolve({
+        iconPath: "",
+        name: "",
+        ticker: "ETH",
+        precision: 6,
+        type: "Base",
+      });
+
+      axios.post = jest.fn();
+
+      await ellipticService.transactionAnalysis(transaction);
+
+      expect(axios.post).toHaveBeenCalledTimes(0);
     });
   });
 });

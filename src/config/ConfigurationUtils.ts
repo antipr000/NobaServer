@@ -167,6 +167,10 @@ export function isLocalDevEnvironment(): boolean {
   return getEnvironmentName() == AppEnvironment.DEV;
 }
 
+export function isProductionEnvironment(): boolean {
+  return getEnvironmentName() == AppEnvironment.PROD;
+}
+
 export function getPropertyFromEnvironment(key: string) {
   return process.env[key];
 }

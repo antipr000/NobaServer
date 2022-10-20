@@ -19,6 +19,7 @@ import { bootstrap } from "../src/server";
 import { EllipticService } from "../src/modules/common/elliptic.service";
 import { Transaction } from "../src/modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../src/modules/transactions/domain/Types";
+import * as ConfigurationUtils from "../src/config/ConfigurationUtils";
 
 describe("Elliptic Integration Test", () => {
   jest.setTimeout(20000);
@@ -50,6 +51,7 @@ describe("Elliptic Integration Test", () => {
   });
 
   it("should call elliptic and return risk score", async () => {
+    jest.spyOn(ConfigurationUtils, "isProductionEnvironment").mockImplementation(() => true);
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
       userId: "fake-consumer",

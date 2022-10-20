@@ -4,7 +4,7 @@ import { createHmac } from "crypto";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { EllipticConfigs } from "../../config/configtypes/EllipticConfig";
-import { ELLIPTIC_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { ELLIPTIC_CONFIG_KEY, isProductionEnvironment } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Transaction } from "../transactions/domain/Transaction";
 import { CHAINTYPE_ERC20, CurrencyService } from "./currency.service";
@@ -106,17 +106,20 @@ export class EllipticService {
       customer_reference: transaction.props.userId,
     };
 
-    try {
-      const { data }: { data: EllipticTransactionAnalysisResponse } = await this.makeRequest(
-        "/v2/analyses/synchronous",
-        requestBody,
-      );
-      return {
-        riskScore: data.risk_score,
-      };
-    } catch (e) {
-      this.logger.error(`Request to elliptic failed: Error: ${JSON.stringify(e)}`);
-      throw new BadRequestException(e.message);
+    const path = "/v2/analyses/synchronous";
+    if (isProductionEnvironment()) {
+      this.logger.info(`Posting to elliptic (${path}): ${JSON.stringify(requestBody)}`);
+      try {
+        const { data }: { data: EllipticTransactionAnalysisResponse } = await this.makeRequest(path, requestBody);
+        return {
+          riskScore: data.risk_score,
+        };
+      } catch (e) {
+        this.logger.error(`Request to elliptic failed: Error: ${JSON.stringify(e)}`);
+        throw new BadRequestException(e.message);
+      }
+    } else {
+      this.logger.info(`Bypassing to elliptic in lower environment (${path}): ${JSON.stringify(requestBody)}`);
     }
   }
 }
