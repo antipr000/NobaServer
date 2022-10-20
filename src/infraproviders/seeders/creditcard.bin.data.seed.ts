@@ -5,6 +5,7 @@ import { DBProvider } from "../DBProvider";
 import { S3 } from "aws-sdk";
 import { tmpdir } from "os";
 import { createWriteStream, existsSync, mkdir, readFileSync } from "fs";
+import { CreditCardBinData } from "../../modules/common/domain/CreditCardBinData";
 
 // TODO(#633): Change to seeding from dump once prod database has BIN data
 @Injectable()
@@ -48,6 +49,20 @@ export class CreditCardBinDataSeeder {
     });
   }
 
+  toDomain(data: any): CreditCardBinData {
+    return CreditCardBinData.createCreditCardBinDataObject({
+      _id: data._id,
+      issuer: data.issuer,
+      bin: data.bin,
+      type: data.type,
+      network: data.network,
+      mask: data.mask,
+      supported: data.supported,
+      digits: data.digits,
+      cvvDigits: data.cvvDigits,
+    });
+  }
+
   async seed() {
     console.log("Started seeding credit card bin data");
     const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();
@@ -61,9 +76,11 @@ export class CreditCardBinDataSeeder {
 
       console.log("Completed downloading file from s3");
 
-      const allRecords = JSON.parse(readFileSync(`${this.destinationFilePath}/${fileName}`, "utf-8"));
+      const allRecords = JSON.parse(readFileSync(`${this.destinationFilePath}/${fileName}`, "utf8"));
 
-      await creditCardBinDataModel.insertMany(allRecords);
+      const recordsToInsert = allRecords.map(record => this.toDomain(record).props);
+
+      await creditCardBinDataModel.insertMany(recordsToInsert, { ordered: false });
     } else {
       console.log("Credit card bin data already seeded");
     }
