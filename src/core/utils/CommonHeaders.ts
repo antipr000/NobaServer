@@ -1,6 +1,6 @@
 import { ApiHeaderOptions } from "@nestjs/swagger";
 import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "../../modules/auth/domain/HeaderConstants";
-import { isProductionEnvironment, getEnvironmentName } from "../../config/ConfigurationUtils";
+import { isProductionEnvironment } from "../../config/ConfigurationUtils";
 
 export function getCommonHeaders(): ApiHeaderOptions[] {
   return [

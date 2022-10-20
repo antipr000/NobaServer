@@ -85,7 +85,7 @@ export class EllipticService {
   }
 
   public async transactionAnalysis(transaction: Transaction): Promise<WalletExposureResponse> {
-    let assetType: string = await this.getAssetType(transaction.props.leg2);
+    const assetType: string = await this.getAssetType(transaction.props.leg2);
 
     let output_params = {};
     if (ellipticSupportedCurrenciesWithOutputType.includes(assetType)) {
