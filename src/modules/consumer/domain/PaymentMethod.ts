@@ -34,6 +34,6 @@ export type ACHData = {
   accessToken: string;
   // Identifier known to Plaid for referencing this account.
   itemID: string;
-  // Last 4 digits of linked account number.
-  last4Digits: string;
+  // // Last 4 digits of linked account number.
+  // last4Digits: string;
 };

@@ -5,7 +5,7 @@ import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { Result } from "../../core/logic/Result";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
 import { CheckoutService } from "../psp/checkout.service";
-import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
+import { AddCreditCardPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { Partner } from "../partner/domain/Partner";
@@ -14,15 +14,17 @@ import { Transaction } from "../transactions/domain/Transaction";
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
-import { PaymentMethod } from "./domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodType } from "./domain/PaymentMethod";
 import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
-import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "./domain/PaymentProvider";
+import { PlaidClient } from "../psp/plaid.client";
+import { RetrieveAuthDataResponse, TokenProcessor } from "../psp/domain/PlaidTypes";
 
 @Injectable()
 export class ConsumerService {
@@ -49,6 +51,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly partnerService: PartnerService;
+
+  @Inject()
+  private readonly plaidClient: PlaidClient;
 
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
@@ -126,31 +131,94 @@ export class ConsumerService {
   }
 
   async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO, partnerId: string): Promise<Consumer> {
-    const addPaymentMethodResponse: AddPaymentMethodResponse = await this.checkoutService.addPaymentMethod(
-      consumer,
-      paymentMethod,
-      partnerId,
-    );
+    switch (paymentMethod.type) {
+      case PaymentType.CARD: {
+        const addPaymentMethodResponse: AddCreditCardPaymentMethodResponse =
+          await this.checkoutService.addCreditCardPaymentMethod(consumer, paymentMethod, partnerId);
 
-    if (addPaymentMethodResponse.updatedConsumerData) {
-      const result = await this.updateConsumer(addPaymentMethodResponse.updatedConsumerData);
+        if (addPaymentMethodResponse.updatedConsumerData) {
+          const result = await this.updateConsumer(addPaymentMethodResponse.updatedConsumerData);
 
-      if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
-        // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
-        // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
-        // we may want to let the user know some day when their bank allows crypto.
-        throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+          if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
+            // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
+            // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
+            // we may want to let the user know some day when their bank allows crypto.
+            throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+          }
+
+          await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
+            email: consumer.props.displayEmail,
+            cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
+            last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
+          });
+          return result;
+        }
       }
+      case PaymentType.ACH: {
+        const accessToken: string = await this.plaidClient.exchangeForAccessToken({
+          publicToken: paymentMethod.achDetails.token,
+        });
+        const authData: RetrieveAuthDataResponse = await this.plaidClient.retrieveAuthData({
+          accessToken: accessToken,
+        });
+        const processorToken: string = await this.plaidClient.createProcessorToken({
+          accessToken: accessToken,
+          accountID: authData.accountID,
+          tokenProcessor: TokenProcessor.CHECKOUT,
+        });
 
-      await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
-        email: consumer.props.displayEmail,
-        cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
-        last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
-      });
-      return result;
+        const checkoutCustomerID: string = await this.checkoutService.createCheckoutCustomer(consumer);
+        const instrumentID: string = await this.checkoutService.addInstrument({
+          checkoutCustomerID: checkoutCustomerID,
+          checkoutToken: processorToken,
+        });
+
+        const newPaymentMethod: PaymentMethod = {
+          name: paymentMethod.name,
+          type: PaymentMethodType.ACH,
+          achData: {
+            // TODO: Encrypt it.
+            accessToken: accessToken,
+            accountID: authData.accountID,
+            itemID: authData.itemID,
+          },
+          imageUri: paymentMethod.imageUri,
+          paymentProviderID: PaymentProvider.CHECKOUT,
+          paymentToken: instrumentID,
+          status: PaymentMethodStatus.APPROVED,
+        };
+
+        const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
+          paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
+        );
+        const hasCustomerIDSaved = checkoutCustomerData.length > 0;
+
+        let updatedConsumerProps: ConsumerProps;
+        if (hasCustomerIDSaved) {
+          updatedConsumerProps = {
+            ...consumer.props,
+            paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+          };
+        } else {
+          updatedConsumerProps = {
+            ...consumer.props,
+            paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+            paymentProviderAccounts: [
+              ...consumer.props.paymentProviderAccounts,
+              {
+                providerID: PaymentProvider.CHECKOUT,
+                providerCustomerID: checkoutCustomerID,
+              },
+            ],
+          };
+        }
+
+        const result = await this.updateConsumer(updatedConsumerProps);
+        return result;
+      }
     }
   }
 

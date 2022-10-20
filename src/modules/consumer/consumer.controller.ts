@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -32,7 +33,7 @@ import { Consumer } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { WalletStatus } from "./domain/VerificationStatus";
 import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO } from "./dto/AddCryptoWalletDTO";
-import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "./dto/ConsumerDTO";
 import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
@@ -150,6 +151,26 @@ export class ConsumerController {
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
+
+    const requiredFields = [];
+    switch (requestBody.type) {
+      case PaymentType.CARD:
+        requiredFields.push("cardDetails");
+        break;
+
+      case PaymentType.ACH:
+        requiredFields.push("achDetails");
+        break;
+
+      default:
+        throw new BadRequestException(`"type" should be one of "${PaymentType.CARD}" or "${PaymentType.ACH}".`);
+    }
+    requiredFields.forEach(field => {
+      if (requestBody[field] === undefined || requestBody[field] === null) {
+        throw new BadRequestException(`"${field}" is required field when "type" is "${requestBody.type}".`);
+      }
+    });
+
     const res = await this.consumerService.addPaymentMethod(consumer, requestBody, user.partnerId);
     return this.consumerMapper.toDTO(res);
   }

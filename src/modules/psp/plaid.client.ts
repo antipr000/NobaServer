@@ -1,6 +1,4 @@
 import { Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { GenerateLinkTokenRequest } from "./domain/PlaidTypes";
 import {
   Configuration as PlaidConfiguration,
   PlaidApi,
@@ -9,12 +7,25 @@ import {
   LinkTokenCreateResponse as PlaidLinkTokenCreateResponse,
   CountryCode as PlaidCountryCode,
   Products as PlaidProducts,
+  ItemPublicTokenExchangeResponse,
+  AuthGetResponse,
+  ProcessorTokenCreateRequestProcessorEnum,
+  ProcessorTokenCreateResponse,
 } from "plaid";
 import { AxiosResponse } from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PlaidConfigs } from "../../config/configtypes/PlaidConfigs";
 import { PLAID_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import {
+  CreateProcessorTokenRequest,
+  ExchangeForAccessTokenRequest,
+  GenerateLinkTokenRequest,
+  RetrieveAuthDataRequest,
+  RetrieveAuthDataResponse,
+  TokenProcessor,
+} from "./domain/PlaidTypes";
 
 @Injectable()
 export class PlaidClient {
@@ -65,6 +76,74 @@ export class PlaidClient {
       throw new InternalServerErrorException("Service unavailable. Please try again.");
     }
   }
-}
 
-// 'client is not authorized to access the following products: ["transfer"]'
+  public async exchangeForAccessToken(request: ExchangeForAccessTokenRequest): Promise<string> {
+    try {
+      const tokenResponse: AxiosResponse<ItemPublicTokenExchangeResponse> = await this.plaidApi.itemPublicTokenExchange(
+        {
+          public_token: request.publicToken,
+        },
+      );
+
+      this.logger.info(`"itemPublicTokenExchange" succeeds with request_id: "${tokenResponse.data.request_id}"`);
+
+      return tokenResponse.data.access_token;
+    } catch (err) {
+      this.logger.error(`Error while exchanging public token: ${JSON.stringify(err.response.data)}`);
+      throw new InternalServerErrorException("Failed to authorize. Please try again.");
+    }
+  }
+
+  // TODO: Consider moving this to an asynchronous flow because as per Plaid documentation -
+  // "This request may take some time because Plaid must communicate directly with the
+  //  institution to retrieve the data."
+  public async retrieveAuthData(request: RetrieveAuthDataRequest): Promise<RetrieveAuthDataResponse> {
+    try {
+      const authData: AxiosResponse<AuthGetResponse> = await this.plaidApi.authGet({
+        access_token: request.accessToken,
+      });
+      this.logger.info(`"authGet" succeeds with request_id: "${authData.data.request_id}"`);
+
+      if (authData.data.accounts.length === 0) {
+        this.logger.error(`Empty account list from Plaid API.`);
+        throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
+      }
+
+      return {
+        accountID: authData.data.accounts[0].account_id,
+        itemID: authData.data.item.item_id,
+      };
+    } catch (err) {
+      this.logger.error(`Error while fetching auth data: ${JSON.stringify(err.response.data)}`);
+      throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
+    }
+  }
+
+  public async createProcessorToken(request: CreateProcessorTokenRequest): Promise<string> {
+    try {
+      let tokenProcessor: ProcessorTokenCreateRequestProcessorEnum;
+      switch (request.tokenProcessor) {
+        case TokenProcessor.CHECKOUT:
+          tokenProcessor = ProcessorTokenCreateRequestProcessorEnum.Checkout;
+          break;
+
+        default:
+          this.logger.error(`Invalid token processor: "${request.tokenProcessor}".`);
+          throw new InternalServerErrorException("Internal server error.");
+      }
+
+      const processorTokenResponse: AxiosResponse<ProcessorTokenCreateResponse> =
+        await this.plaidApi.processorTokenCreate({
+          access_token: request.accessToken,
+          account_id: request.accountID,
+          processor: tokenProcessor,
+        });
+      this.logger.info(`"processorTokenCreate" succeeds with request_id: "${processorTokenResponse.data.request_id}"`);
+
+      return processorTokenResponse.data.processor_token;
+    } catch (err) {
+      this.logger.error(`Error while creating processor token: ${JSON.stringify(err.response.data)}`);
+      throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
+    }
+  }
+}

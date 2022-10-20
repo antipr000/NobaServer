@@ -15,10 +15,10 @@ import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { Result } from "../../../core/logic/Result";
 import { getMockCheckoutServiceWithDefaults } from "../../psp/mocks/mock.checkout.service";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
 import { PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
-import { AddPaymentMethodResponse } from "../../../modules/common/domain/AddPaymentMethodResponse";
+import { AddCreditCardPaymentMethodResponse } from "../../../modules/common/domain/AddPaymentMethodResponse";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
@@ -33,6 +33,8 @@ import { getMockNotificationServiceWithDefaults } from "../../../modules/notific
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { PaymentProvider } from "../domain/PaymentProvider";
+import { PlaidClient } from "../../psp/plaid.client";
+import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -42,6 +44,7 @@ describe("ConsumerService", () => {
   let checkoutService: CheckoutService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
   let partnerService: PartnerService;
+  let plaidClient: PlaidClient;
 
   jest.setTimeout(30000);
 
@@ -51,6 +54,7 @@ describe("ConsumerService", () => {
     mockOtpRepo = getMockOtpRepoWithDefaults();
     checkoutService = getMockCheckoutServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
+    plaidClient = getMockPlaidClientWithDefaults();
 
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
 
@@ -92,6 +96,10 @@ describe("ConsumerService", () => {
         {
           provide: PartnerService,
           useFactory: () => instance(partnerService),
+        },
+        {
+          provide: PlaidClient,
+          useFactory: () => instance(plaidClient),
         },
         KmsService,
       ],
@@ -338,20 +346,23 @@ describe("ConsumerService", () => {
       });
 
       const addPaymentMethod: AddPaymentMethodDTO = {
-        cardNumber: "1234567890",
-        expiryMonth: 8,
-        expiryYear: 2023,
-        cvv: "123",
-      };
+        type: PaymentType.CARD,
+        cardDetails: {
+          cardNumber: "1234567890",
+          expiryMonth: 8,
+          expiryYear: 2023,
+          cvv: "123",
+        },
+      } as any;
 
-      const addPaymentMethodResponse: AddPaymentMethodResponse = constructAddPaymentMethodResponse(
+      const addPaymentMethodResponse: AddCreditCardPaymentMethodResponse = constructAddPaymentMethodResponse(
         consumer,
         PaymentMethodStatus.APPROVED,
       );
 
-      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
-        addPaymentMethodResponse,
-      );
+      when(
+        checkoutService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
+      ).thenResolve(addPaymentMethodResponse);
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
 
@@ -404,20 +415,23 @@ describe("ConsumerService", () => {
       });
 
       const addPaymentMethod: AddPaymentMethodDTO = {
-        cardNumber: "1234567890",
-        expiryMonth: 8,
-        expiryYear: 2023,
-        cvv: "123",
-      };
+        type: PaymentType.CARD,
+        cardDetails: {
+          cardNumber: "1234567890",
+          expiryMonth: 8,
+          expiryYear: 2023,
+          cvv: "123",
+        },
+      } as any;
 
-      const addPaymentMethodResponse: AddPaymentMethodResponse = constructAddPaymentMethodResponse(
+      const addPaymentMethodResponse: AddCreditCardPaymentMethodResponse = constructAddPaymentMethodResponse(
         consumer,
         PaymentMethodStatus.UNSUPPORTED,
       );
 
-      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
-        addPaymentMethodResponse,
-      );
+      when(
+        checkoutService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
+      ).thenResolve(addPaymentMethodResponse);
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
 
@@ -1701,7 +1715,7 @@ describe("ConsumerService", () => {
 function constructAddPaymentMethodResponse(
   consumer: Consumer,
   paymentMethodStatus: PaymentMethodStatus,
-): AddPaymentMethodResponse {
+): AddCreditCardPaymentMethodResponse {
   const updatedConsumer = Consumer.createConsumer({
     ...consumer.props,
     paymentMethods: [

@@ -6,7 +6,7 @@ import { ConsumerController } from "../consumer.controller";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
 import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
-import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "../dto/ConsumerDTO";
 import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
@@ -355,12 +355,15 @@ describe("ConsumerController", () => {
 
     it("should add a payment method", async () => {
       const paymentMethodRequest: AddPaymentMethodDTO = {
-        cardName: "Fake Card",
-        cardNumber: "12345678901234",
-        expiryMonth: 2,
-        expiryYear: 2023,
-        cvv: "765",
-      };
+        type: PaymentType.CARD,
+        name: "Fake Card",
+        cardDetails: {
+          cardNumber: "12345678901234",
+          expiryMonth: 2,
+          expiryYear: 2023,
+          cvv: "765",
+        },
+      } as any;
 
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -385,7 +388,7 @@ describe("ConsumerController", () => {
               type: PaymentMethodType.CARD,
               paymentProviderID: PaymentProvider.CHECKOUT,
               paymentToken: "faketoken1234",
-              name: paymentMethodRequest.cardName,
+              name: paymentMethodRequest.name,
               cardData: {
                 cardType: "VISA",
                 first6Digits: "123456",
@@ -406,17 +409,20 @@ describe("ConsumerController", () => {
 
       expect(result._id).toBe(consumer.props._id);
       expect(result.paymentMethods.length).toBe(1);
-      expect(result.paymentMethods[0].cardName).toBe(paymentMethodRequest.cardName);
+      expect(result.paymentMethods[0].cardName).toBe(paymentMethodRequest.name);
     });
 
     it("should add a payment method with missing cardName or nick name", async () => {
       const paymentMethodRequest: AddPaymentMethodDTO = {
-        cardName: "",
-        cardNumber: "12345678901234",
-        expiryMonth: 2,
-        expiryYear: 2023,
-        cvv: "765",
-      };
+        name: "",
+        type: PaymentType.CARD,
+        cardDetails: {
+          cardNumber: "12345678901234",
+          expiryMonth: 2,
+          expiryYear: 2023,
+          cvv: "765",
+        },
+      } as any;
 
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Inject } from "@nestjs/common";
+import { Injectable, BadRequestException, Inject, InternalServerErrorException } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -7,7 +7,7 @@ import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
-import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
 import {
   REASON_CODE_SOFT_DECLINE_BANK_ERROR,
@@ -19,7 +19,7 @@ import { CardFailureExceptionText, CardProcessingException } from "../consumer/C
 import { BINValidity } from "../common/dto/CreditCardDTO";
 import { CreditCardService } from "../common/creditcard.service";
 import { CheckoutResponseData } from "../common/domain/CheckoutResponseData";
-import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
+import { AddCreditCardPaymentMethodResponse, AddInstrumentRequest } from "../common/domain/AddPaymentMethodResponse";
 import { Transaction } from "../transactions/domain/Transaction";
 import { PaymentRequestResponse, CheckoutPaymentStatus, FiatTransactionStatus } from "../consumer/domain/Types";
 import { Utils } from "../../core/utils/Utils";
@@ -48,43 +48,64 @@ export class CheckoutService {
     });
   }
 
-  public async addPaymentMethod(
-    consumer: Consumer,
-    paymentMethod: AddPaymentMethodDTO,
-    partnerId: string,
-  ): Promise<AddPaymentMethodResponse> {
+  public async createCheckoutCustomer(consumer: Consumer): Promise<string> {
+    // TODO: Move this to the service layer as this is business logic.
     const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
       paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
     );
 
-    let checkoutCustomerID: string;
-    let hasCustomerIDSaved = true;
+    if (checkoutCustomerData.length !== 0) return checkoutCustomerData[0].providerCustomerID;
 
-    if (checkoutCustomerData.length === 0) {
-      // new customer. Create customer id
-      hasCustomerIDSaved = false;
-      try {
-        const checkoutCustomer = await this.checkoutApi.customers.create({
-          email: consumer.props.email,
-          metadata: {
-            coupon_code: this.configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).couponCode,
-            partner_id: this.configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).partnerId,
-          },
-        });
+    // New customer. Create customer id
+    try {
+      const checkoutCustomer = await this.checkoutApi.customers.create({
+        email: consumer.props.email,
+        metadata: {
+          coupon_code: this.configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).couponCode,
+          partner_id: this.configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).partnerId,
+        },
+      });
 
-        checkoutCustomerID = checkoutCustomer["id"];
-      } catch (e) {
-        if (e.body["error_codes"].filter(errorCode => errorCode === "customer_email_already_exists").length > 0) {
-          // existing customer
-          const checkoutCustomer = await this.checkoutApi.customers.get(consumer.props.email);
-          checkoutCustomerID = checkoutCustomer["id"];
-        } else {
-          throw new BadRequestException("Failed to create checkout customer");
-        }
+      return checkoutCustomer["id"];
+    } catch (e) {
+      if (e.body["error_codes"].filter(errorCode => errorCode === "customer_email_already_exists").length > 0) {
+        // existing customer
+        const checkoutCustomer = await this.checkoutApi.customers.get(consumer.props.email);
+        return checkoutCustomer["id"];
+      } else {
+        throw new BadRequestException("Failed to create checkout customer");
       }
-    } else {
-      checkoutCustomerID = checkoutCustomerData[0].providerCustomerID;
     }
+  }
+
+  public async addInstrument(request: AddInstrumentRequest): Promise<string> {
+    const instrument = await this.checkoutApi.instruments.create({
+      token: request.checkoutToken,
+      customer: {
+        id: request.checkoutCustomerID,
+      },
+    });
+
+    return instrument["id"];
+  }
+
+  public async addCreditCardPaymentMethod(
+    consumer: Consumer,
+    paymentMethod: AddPaymentMethodDTO,
+    partnerId: string,
+  ): Promise<AddCreditCardPaymentMethodResponse> {
+    if (paymentMethod.type !== PaymentType.CARD) {
+      this.logger.error(
+        `"addCreditCardPaymentMethod" was called for payment method type "${paymentMethod.type}" which is unexpected.`,
+      );
+      throw new InternalServerErrorException("Internal server error. Please try again.");
+    }
+
+    const checkoutCustomerID: string = await this.createCheckoutCustomer(consumer);
+    const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
+      paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
+    );
+    const hasCustomerIDSaved = checkoutCustomerData.length > 0;
 
     let instrumentID: string;
     let cardType: string;
@@ -94,10 +115,10 @@ export class CheckoutService {
       // Token is only valid for 15 mins
       const token = await this.checkoutApi.tokens.request({
         type: "card",
-        number: paymentMethod.cardNumber,
-        expiry_month: paymentMethod.expiryMonth,
-        expiry_year: paymentMethod.expiryYear,
-        cvv: paymentMethod.cvv,
+        number: paymentMethod.cardDetails.cardNumber,
+        expiry_month: paymentMethod.cardDetails.expiryMonth,
+        expiry_year: paymentMethod.cardDetails.expiryYear,
+        cvv: paymentMethod.cardDetails.cvv,
       });
 
       // Now create instrument
@@ -123,7 +144,7 @@ export class CheckoutService {
     }
 
     // Before calling checkout, check against our BIN list
-    const validity = await this.creditCardService.isBINSupported(paymentMethod.cardNumber);
+    const validity = await this.creditCardService.isBINSupported(paymentMethod.cardDetails.cardNumber);
     if (validity == BINValidity.NOT_SUPPORTED) {
       // Bypass checkout call entirely
       throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
@@ -156,7 +177,7 @@ export class CheckoutService {
         consumer,
         checkoutResponse,
         instrumentID,
-        paymentMethod.cardNumber,
+        paymentMethod.cardDetails.cardNumber,
         "verification",
         "verification",
         partnerId,
@@ -178,7 +199,7 @@ export class CheckoutService {
           lastName: consumer.props.lastName,
           nobaUserID: consumer.props._id,
           email: consumer.props.displayEmail,
-          last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+          last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
         },
       );
       throw new BadRequestException(CardFailureExceptionText.DECLINE);
@@ -186,12 +207,12 @@ export class CheckoutService {
       // TODO - we don't currently have a use case for FLAGGED
     } else {
       const newPaymentMethod: PaymentMethod = {
-        name: paymentMethod.cardName,
+        name: paymentMethod.name,
         type: PaymentMethodType.CARD,
         cardData: {
           cardType: cardType,
-          first6Digits: paymentMethod.cardNumber.substring(0, 6),
-          last4Digits: paymentMethod.cardNumber.substring(paymentMethod.cardNumber.length - 4),
+          first6Digits: paymentMethod.cardDetails.cardNumber.substring(0, 6),
+          last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
           authCode: response.responseCode,
           authReason: response.responseSummary,
         },
