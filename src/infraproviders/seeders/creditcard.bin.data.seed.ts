@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { DB_DUMP_FILES_BUCKET_PATH, MONGO_CONFIG_KEY, ASSETS_BUCKET_NAME } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { DBProvider } from "../DBProvider";
-import { exec } from "child_process";
+import { spawnSync } from "child_process";
 import { MongoConfigs } from "../../config/configtypes/MongoConfigs";
 import { S3 } from "aws-sdk";
 import { tmpdir } from "os";
@@ -44,11 +44,11 @@ export class CreditCardBinDataSeeder {
 
       const readStream = s3.getObject(options).createReadStream();
       readStream
-        .pipe(file)
         .on("end", () => {
           return resolve();
         })
-        .on("error", err => reject(err));
+        .on("error", err => reject(err))
+        .pipe(file);
     });
   }
 
@@ -65,17 +65,12 @@ export class CreditCardBinDataSeeder {
 
       await this.downloadDumpFileFromS3(this.dbDumpBucketPath, fileName);
       console.log("Completed downloading file from s3");
-      exec(
+      spawnSync(
         `mongorestore --uri=${uri} --db=${dbName} --collection=creditcardbindata ${this.destinationFilePath}/${fileName}`,
+        { shell: true },
       );
     } else {
       console.log("Credit card bin data already seeded");
-    }
-
-    while ((await creditCardBinDataModel.findOne({}).exec()) === null) {
-      // Sleep for 2 seconds
-      console.log("Credit card bin data not loaded yet");
-      await new Promise(r => setTimeout(r, 2000));
     }
     console.log("Completed seeding credit card bin data");
   }

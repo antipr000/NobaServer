@@ -391,6 +391,7 @@ export class CheckoutService {
         throw new CardProcessingException(CardFailureExceptionText.ERROR);
       } else if (response.responseCode.startsWith("10")) {
         // If reqeust payment was successful
+        response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
         if (cardNumber !== null) {
           if (creditCardBinData === null) {
             // Record is not there in our db. Add it
@@ -401,8 +402,6 @@ export class CheckoutService {
             creditCardBinData.supported = BINValidity.SUPPORTED;
             await this.creditCardService.updateBinData(creditCardBinData);
           }
-        } else {
-          response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
         }
       } else if (response.responseCode.startsWith("20")) {
         // Soft decline, with several categories
