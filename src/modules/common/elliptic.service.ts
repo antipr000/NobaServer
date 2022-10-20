@@ -7,6 +7,7 @@ import { EllipticConfigs } from "../../config/configtypes/EllipticConfig";
 import { ELLIPTIC_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Transaction } from "../transactions/domain/Transaction";
+import { CHAINTYPE_ERC20, CurrencyService } from "./currency.service";
 import {
   ellipticSupportedCurrencies,
   ellipticSupportedCurrenciesWithOutputType,
@@ -22,59 +23,70 @@ export class EllipticService {
   private apiKey: string;
   private secretKey: string;
   private baseUrl: string;
-  private awsSecretNameForApiKey: string;
 
-  constructor(private readonly configService: CustomConfigService) {
+  constructor(private readonly configService: CustomConfigService, private readonly currencyService: CurrencyService) {
     this.apiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).apiKey;
-    this.awsSecretNameForApiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).awsSecretNameForApiKey;
     this.secretKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).secretKey;
     this.baseUrl = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).baseUrl;
   }
 
-  private async makeRequest(requestMethod: string, requestPath: string, requestBody: any): Promise<AxiosResponse<any>> {
+  private async makeRequest(requestPath: string, requestBody: any): Promise<AxiosResponse<any>> {
     const url = `${this.baseUrl}${requestPath}`;
     const timestamp = Date.now(); // Same as new Date().getTime() but makes mocking easier
 
-    const signaturePlainText = `${timestamp}${requestMethod}${requestPath}${JSON.stringify(requestBody)}`;
+    const signaturePlainText = `${timestamp}POST${requestPath}${JSON.stringify(requestBody)}`;
 
     const signature = createHmac("sha256", Buffer.from(this.secretKey, "base64"))
       .update(signaturePlainText)
       .digest("base64");
 
-    if (requestMethod === "POST") {
-      try {
-        const response = await axios.post(url, requestBody, {
-          headers: {
-            "x-access-key": this.apiKey,
-            "x-access-sign": signature,
-            "x-access-timestamp": timestamp,
-          },
-        });
-        return response;
-      } catch (e) {
-        this.logger.error(
-          `Error with Elliptic ${requestMethod} ${requestPath} API call with payload ${JSON.stringify(
-            requestBody,
-          )}. ${JSON.stringify(e)}`,
-        );
-        throw e;
-      }
-    } else {
-      throw new Error(`${requestMethod} is not valid for calling Elliptic.`);
+    const headers = {
+      headers: {
+        "x-access-key": this.apiKey,
+        "x-access-sign": signature,
+        "x-access-timestamp": timestamp,
+      },
+    };
+
+    try {
+      const response = await axios.post(url, requestBody, headers);
+      return response;
+    } catch (e) {
+      this.logger.error(
+        `Error with Elliptic POST ${requestPath} API call with payload ${JSON.stringify(requestBody)}. ${JSON.stringify(
+          e,
+        )}`,
+      );
+      throw e;
     }
   }
 
-  public async transactionAnalysis(transaction: Transaction): Promise<WalletExposureResponse> {
-    const assetType: string = transaction.props.leg2.toUpperCase();
-    if (
-      ["PROD_ELLIPTIC_KEY", "E2E_KEY"].includes(this.awsSecretNameForApiKey) ||
-      !ellipticSupportedCurrencies.includes(assetType)
-    ) {
-      return {
-        // Return -1 risk for non-prod runs for elliptic as elliptic doesn't run on testnet.
-        riskScore: -1,
-      };
+  private async getAssetType(cryptocurrencyTicker: string): Promise<string> {
+    let assetType: string = cryptocurrencyTicker;
+    if (cryptocurrencyTicker.indexOf(".") > -1) {
+      // Trim everything starting with the . to convert to base cryptocurrency name
+      assetType = cryptocurrencyTicker.substring(0, cryptocurrencyTicker.indexOf(".") - 1);
     }
+
+    // If the cryptocurrency isn't in the list of supported Elliptic cryptocurrencies,
+    // check if it's a ERC20 chain type which is also supported
+    if (!ellipticSupportedCurrencies.includes(assetType)) {
+      const cryptocurrency = await this.currencyService.getCryptocurrency(cryptocurrencyTicker);
+      if (cryptocurrency === null) {
+        throw new Error(`Unknown Cryptocurrency: ${cryptocurrencyTicker}`); // Should never happen
+      }
+
+      if (cryptocurrency.type === CHAINTYPE_ERC20) {
+        assetType = CHAINTYPE_ERC20;
+      }
+    }
+
+    return assetType;
+  }
+
+  public async transactionAnalysis(transaction: Transaction): Promise<WalletExposureResponse> {
+    let assetType: string = await this.getAssetType(transaction.props.leg2);
+
     let output_params = {};
     if (ellipticSupportedCurrenciesWithOutputType.includes(assetType)) {
       output_params = {
@@ -96,7 +108,6 @@ export class EllipticService {
 
     try {
       const { data }: { data: EllipticTransactionAnalysisResponse } = await this.makeRequest(
-        "POST",
         "/v2/analyses/synchronous",
         requestBody,
       );
