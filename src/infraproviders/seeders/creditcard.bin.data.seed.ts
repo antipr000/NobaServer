@@ -74,7 +74,7 @@ export class CreditCardBinDataSeeder {
       await this.downloadDumpFileFromS3(this.dbDumpBucketPath, fileName);
 
       console.log("Completed downloading file from s3");
-
+      await new Promise(resolve => setTimeout(resolve, 5000));
       const allRecords = JSON.parse(readFileSync(`${this.destinationFilePath}/${fileName}`).toString());
 
       const recordsToInsert = allRecords.map(record => this.toDomain(record).props);
