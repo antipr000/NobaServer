@@ -20,6 +20,7 @@ import { PaymentProvider } from "../domain/PaymentProvider";
 import { PaymentMethodType } from "../domain/PaymentMethod";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
+import { BadRequestException } from "@nestjs/common";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -353,7 +354,7 @@ describe("ConsumerController", () => {
       );
     });
 
-    it("should add a payment method", async () => {
+    it("should add a payment method with 'Card' type", async () => {
       const paymentMethodRequest: AddPaymentMethodDTO = {
         type: PaymentType.CARD,
         name: "Fake Card",
@@ -410,6 +411,79 @@ describe("ConsumerController", () => {
       expect(result._id).toBe(consumer.props._id);
       expect(result.paymentMethods.length).toBe(1);
       expect(result.paymentMethods[0].cardName).toBe(paymentMethodRequest.name);
+    });
+
+    it("should throw 400 error if 'cardDetails' is not present for 'CARD' type", async () => {
+      const paymentMethodRequest: AddPaymentMethodDTO = {
+        type: PaymentType.CARD,
+        name: "Fake Card",
+        achDetails: {
+          token: "fake-token",
+        },
+      } as any;
+
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "mock-consumer-id",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      try {
+        await consumerController.addPaymentMethod(paymentMethodRequest, {
+          user: {
+            entity: consumer,
+            partnerId: "partner-1",
+          } as AuthenticatedUser,
+        });
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("should throw 400 error if 'achDetails' is not present for 'ACH' type", async () => {
+      const paymentMethodRequest: AddPaymentMethodDTO = {
+        type: PaymentType.ACH,
+        name: "Fake Bank Account",
+        cardDetails: {
+          cardNumber: "1234567890",
+          cvv: "122",
+          expiryMonth: 12,
+          expiryYear: 2024,
+        },
+      } as any;
+
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "mock-consumer-id",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      try {
+        await consumerController.addPaymentMethod(paymentMethodRequest, {
+          user: {
+            entity: consumer,
+            partnerId: "partner-1",
+          } as AuthenticatedUser,
+        });
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(BadRequestException);
+      }
     });
 
     it("should add a payment method with missing cardName or nick name", async () => {

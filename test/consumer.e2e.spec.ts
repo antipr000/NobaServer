@@ -628,11 +628,14 @@ describe("Consumers", () => {
         "POST",
         "/v1/consumers/paymentmethods",
         JSON.stringify({
-          cardName: "Tester",
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          name: "Tester",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         }),
       );
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
@@ -640,11 +643,14 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          cardName: "Tester",
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          name: "Tester",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);
@@ -685,10 +691,13 @@ describe("Consumers", () => {
         "POST",
         "/v1/consumers/paymentmethods",
         JSON.stringify({
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         }),
       );
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
@@ -696,10 +705,13 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);

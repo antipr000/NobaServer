@@ -157,6 +157,7 @@ export class ConsumerService {
           return result;
         }
       }
+
       case PaymentType.ACH: {
         const accessToken: string = await this.plaidClient.exchangeForAccessToken({
           publicToken: paymentMethod.achDetails.token,
