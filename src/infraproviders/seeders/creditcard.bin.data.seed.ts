@@ -75,7 +75,7 @@ export class CreditCardBinDataSeeder {
 
       console.log("Completed downloading file from s3");
 
-      const allRecords = JSON.parse(readFileSync(`${this.destinationFilePath}/${fileName}`, "utf8"));
+      const allRecords = JSON.parse(readFileSync(`${this.destinationFilePath}/${fileName}`).toString());
 
       const recordsToInsert = allRecords.map(record => this.toDomain(record).props);
 
