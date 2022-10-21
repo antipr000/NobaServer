@@ -39,7 +39,7 @@ describe("Consumers", () => {
   let app: INestApplication;
   let TEST_TIMESTAMP;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
@@ -55,12 +55,23 @@ describe("Consumers", () => {
     TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
+  });
+
+  afterEach(async () => {
     clearAccessTokenForNextRequests();
   });
+
+  function getRandomEmail(base: string): string {
+    return `base.${Math.random()}@noba.com`;
+  }
+
+  function getRandomID(base: string): string {
+    return `base${Math.random()}`;
+  }
 
   describe("GET /consumers/paymentmethods/plaid/token", () => {
     it("should return 401 if not logged in as any identity", async () => {
@@ -75,8 +86,10 @@ describe("Consumers", () => {
     });
 
     it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
 
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
@@ -96,8 +109,8 @@ describe("Consumers", () => {
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
-      const nobaAdminId = "AAAAAAAAAA";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
+      const nobaAdminId = getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
@@ -119,7 +132,7 @@ describe("Consumers", () => {
     });
 
     it("should allow Consumer identity to call this API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
@@ -154,8 +167,10 @@ describe("Consumers", () => {
     });
 
     it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
 
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
@@ -169,8 +184,8 @@ describe("Consumers", () => {
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
-      const nobaAdminId = "AAAAAAAAAA";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
+      const nobaAdminId = getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
@@ -187,7 +202,7 @@ describe("Consumers", () => {
     });
 
     it("should allow Consumer identity to call this API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
@@ -212,7 +227,7 @@ describe("Consumers", () => {
     });
 
     it("should allow signature to validate even with extra request params", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
@@ -251,8 +266,10 @@ describe("Consumers", () => {
     });
 
     it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
 
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
@@ -268,8 +285,8 @@ describe("Consumers", () => {
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
-      const nobaAdminId = "AAAAAAAAAA";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
+      const nobaAdminId = getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
@@ -287,7 +304,7 @@ describe("Consumers", () => {
     });
 
     it("should updates 'firstName' if Consumer identity calls this API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -329,7 +346,7 @@ describe("Consumers", () => {
     });
 
     it("should updates 'lastName' if Consumer identity calls this API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -371,7 +388,7 @@ describe("Consumers", () => {
     });
 
     it("should updates 'dateOfBirth' if Consumer identity calls this API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -413,7 +430,7 @@ describe("Consumers", () => {
     });
 
     it("should fail with 400 for invalid 'dateOfBirth'", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -437,7 +454,7 @@ describe("Consumers", () => {
     });
 
     it("should updates multiple-fields at once if Consumer identity calls this API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -483,7 +500,7 @@ describe("Consumers", () => {
     });
 
     it("should updates 'address' if Consumer identity calls this API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -609,7 +626,7 @@ describe("Consumers", () => {
     // });
 
     it("should successfully add the payment method when Consumer identity calls the API", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -666,7 +683,7 @@ describe("Consumers", () => {
     });
 
     it("should allow addition of payment method when cardName is not provided", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
