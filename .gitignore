@@ -408,3 +408,8 @@ package-lock.json
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# DB dumps
+*.bson
+*dump/
+*dumps/

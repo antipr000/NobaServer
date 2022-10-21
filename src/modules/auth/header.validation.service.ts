@@ -4,7 +4,7 @@ import { PartnerService } from "../partner/partner.service";
 import { Partner } from "../partner/domain/Partner";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
-import { AppEnvironment, getEnvironmentName, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { isProductionEnvironment, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
 
@@ -70,14 +70,6 @@ export class HeaderValidationService {
   }
 
   private shouldValidateHeaders(apiKey: string, timestamp: string, signature: string) {
-    const appEnvironment: AppEnvironment = getEnvironmentName();
-
-    if (appEnvironment === AppEnvironment.PROD) {
-      return true;
-    } else if (apiKey && timestamp && signature) {
-      return true;
-    }
-
-    return false;
+    return isProductionEnvironment() || (apiKey && timestamp && signature);
   }
 }

@@ -10,6 +10,7 @@ import {
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyDTO } from "../../modules/common/dto/CurrencyDTO";
 
+export const CHAINTYPE_ERC20 = "ERC20";
 @Injectable()
 export class CurrencyService {
   private currencies: Array<CurrencyDTO>;

@@ -1,8 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class CreditCardDTO {
-  @ApiProperty()
-  issuer: string;
+  @ApiPropertyOptional()
+  issuer?: string;
 
   @ApiProperty()
   network: string;
@@ -21,6 +21,9 @@ export class CreditCardDTO {
 
   @ApiProperty()
   cvvDigits: number;
+
+  @ApiPropertyOptional()
+  mask?: string;
 }
 
 export class BINReportDetails {

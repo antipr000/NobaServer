@@ -4,7 +4,6 @@ import {
   FundsAvailabilityResponse,
   QuoteRequestForFixedFiat,
   QuoteRequestForFixedCrypto,
-  NobaQuote,
   FundsAvailabilityRequest,
   ExecutedQuote,
   ExecutedQuoteStatus,

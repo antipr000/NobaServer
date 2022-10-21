@@ -25,6 +25,7 @@ export const LOCATION_DATA_FILE_PATH = "LOCATION_DATA_FILE_PATH";
 export const CCBIN_DATA_FILE_NAME_MASK = "ccBINDataFileNameMask";
 export const CCBIN_DATA_FILE_PATH = "CCBIN_DATA_FILE_PATH";
 export const ASSETS_BUCKET_NAME = "assetsBucketName";
+export const DB_DUMP_FILES_BUCKET_PATH = "dbDumpFilesBucketPath";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH = "supportedCryptoFileBucketPath";
 export const SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH = "sanctionedCryptoWalletsFileBucketPath";
 
@@ -165,6 +166,10 @@ export function getEnvironmentName(): AppEnvironment {
 
 export function isLocalDevEnvironment(): boolean {
   return getEnvironmentName() == AppEnvironment.DEV;
+}
+
+export function isProductionEnvironment(): boolean {
+  return getEnvironmentName() == AppEnvironment.PROD;
 }
 
 export function getPropertyFromEnvironment(key: string) {

@@ -38,7 +38,7 @@ describe("CryptoCurrencies & Locations", () => {
   let app: INestApplication;
   let TEST_TIMESTAMP;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
@@ -54,11 +54,14 @@ describe("CryptoCurrencies & Locations", () => {
     TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
-  afterEach(async () => {
-    clearAccessTokenForNextRequests();
+  afterAll(async () => {
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
+  });
+
+  afterEach(async () => {
+    clearAccessTokenForNextRequests();
   });
 
   describe("GET /cryptocurrencies", () => {

@@ -31,6 +31,7 @@ import {
   TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
+import { getRandomEmail, getRandomID } from "./TestUtils";
 
 describe("Authentication", () => {
   jest.setTimeout(20000);
@@ -41,7 +42,7 @@ describe("Authentication", () => {
   const partnerId = "dummy-partner";
   let timestamp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
@@ -57,16 +58,19 @@ describe("Authentication", () => {
     timestamp = new Date().getTime().toString();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
+  });
+
+  afterEach(async () => {
     clearAccessTokenForNextRequests();
   });
 
   describe("SignUp or Login as CONSUMER", () => {
     it("should be successful", async () => {
-      const consumerEmail = "test+consumer@noba.com";
+      const consumerEmail = getRandomEmail("test+consumer");
 
       const loginRequestBody: LoginRequestDTO = {
         email: consumerEmail,
@@ -131,7 +135,7 @@ describe("Authentication", () => {
       await setupCustomPartner(mongoUri, "new-dummy-partner", "Dummy Partner 2", apiKey, secretKey);
 
       // Login with new partner
-      const consumerEmail = "test+consumer@noba.com";
+      const consumerEmail = getRandomEmail("test+consumer");
 
       const loginRequestBody: LoginRequestDTO = {
         email: consumerEmail,
@@ -199,7 +203,7 @@ describe("Authentication", () => {
     });
 
     it("should be successful with different cases", async () => {
-      const consumerEmail = "Test+Consumer@noba.com";
+      const consumerEmail = getRandomEmail("TEsT+ConSUMer");
       let signature = computeSignature(
         timestamp,
         "POST",
@@ -242,7 +246,7 @@ describe("Authentication", () => {
         },
       })) as VerifyOtpResponseDTO & ResponseStatus;
 
-      const newRequestConsumerEmail = "test+consumer@noba.com";
+      const newRequestConsumerEmail = consumerEmail.toLowerCase();
 
       signature = computeSignature(
         timestamp,
@@ -310,7 +314,7 @@ describe("Authentication", () => {
     });
 
     it("signup with invalid 'identityType' throws 400 error", async () => {
-      const consumerEmail = "test+consumer@noba.com";
+      const consumerEmail = getRandomEmail("test+consumer");
       const signature = computeSignature(
         timestamp,
         "POST",
@@ -335,7 +339,7 @@ describe("Authentication", () => {
 
   describe("NobaAdmin login", () => {
     it("shouldn't be successful for an unregistered NobaAdmin", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
       const signature = computeSignature(
         timestamp,
         "POST",
@@ -359,7 +363,7 @@ describe("Authentication", () => {
     });
 
     it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
-      const consumerEmail = "consumer@noba.com";
+      const consumerEmail = getRandomEmail("consumer");
       const signature = computeSignature(
         timestamp,
         "POST",
@@ -393,9 +397,11 @@ describe("Authentication", () => {
     });
 
     it("shouldn't be successful for a SignedUp PartnerAdmin with same email", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
 
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
       const signature = computeSignature(
         timestamp,
         "POST",
@@ -418,9 +424,11 @@ describe("Authentication", () => {
     });
 
     it("shouldn't be successful if PartnerAdmin with same email just generates an OTP", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
 
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
 
       let signature = computeSignature(
         timestamp,
@@ -469,7 +477,7 @@ describe("Authentication", () => {
     });
 
     it("should be successful for registered NobaAdmin", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
 
       let signature = computeSignature(
         timestamp,
@@ -481,7 +489,7 @@ describe("Authentication", () => {
         }),
       );
 
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, getRandomID("AAAAAAAAAA"), "BASIC")).toBe(true);
 
       const loginResponse = (await AuthenticationService.loginUser({
         xNobaApiKey: TEST_API_KEY,
@@ -525,7 +533,7 @@ describe("Authentication", () => {
   // TODO: Decide if same user can be associated with multiple partners & add proper tests.
   describe("PartnerAdmin login", () => {
     it("shouldn't be successful for an unregistered PartnerAdmin", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
 
       const signature = computeSignature(
         timestamp,
@@ -551,7 +559,7 @@ describe("Authentication", () => {
     });
 
     it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
-      const consumerEmail = "consumer@noba.com";
+      const consumerEmail = getRandomEmail("consumer");
 
       let signature = computeSignature(
         timestamp,
@@ -597,9 +605,9 @@ describe("Authentication", () => {
     });
 
     it("shouldn't be successful for a SignedUp NobaAdmin with same email", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
 
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, getRandomID("AAAAAAAAAA"), "BASIC")).toBe(true);
 
       const signature = computeSignature(
         timestamp,
@@ -624,9 +632,9 @@ describe("Authentication", () => {
     });
 
     it("shouldn't be successful if NobaAdmin with same email just generates an OTP", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
 
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, getRandomID("AAAAAAAAAA"), "BASIC")).toBe(true);
 
       let signature = computeSignature(
         timestamp,
@@ -676,9 +684,11 @@ describe("Authentication", () => {
     });
 
     it("should be successful for registered PartnerAdmin", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
 
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
 
       let signature = computeSignature(
         timestamp,

@@ -8,7 +8,6 @@ export function getMockCreditCardBinDataRepoMockWithDefaults(): CreditCardBinDat
   when(mockCreditCardBinDataRepo.add(anything())).thenReject(new Error("Not implemented!"));
   when(mockCreditCardBinDataRepo.deleteByID(anyString())).thenReject(new Error("Not implemented!"));
   when(mockCreditCardBinDataRepo.findByID(anyString())).thenReject(new Error("Not implemented!"));
-  when(mockCreditCardBinDataRepo.findAll()).thenReject(new Error("Not implemented!"));
   when(mockCreditCardBinDataRepo.update(anything())).thenReject(new Error("Not implemented!"));
   when(mockCreditCardBinDataRepo.findCardByExactBIN(anyString())).thenReject(new Error("Not implemented!"));
   when(mockCreditCardBinDataRepo.getBINReport()).thenReject(new Error("Not implemented!"));

@@ -50,13 +50,8 @@ export class MongoDBCreditCardBinDataRepo implements CreditCardBinDataRepo {
   }
 
   async deleteByID(id: string): Promise<void> {
-    try {
-      const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();
-      await creditCardBinDataModel.findByIdAndDelete(id);
-    } catch (e) {
-      this.logger.error(`Failed to delete CreditCardBinData. ${JSON.stringify(e)}`);
-      return null;
-    }
+    const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();
+    await creditCardBinDataModel.findByIdAndDelete(id);
   }
 
   async findByID(id: string): Promise<CreditCardBinData> {
@@ -81,10 +76,6 @@ export class MongoDBCreditCardBinDataRepo implements CreditCardBinDataRepo {
       this.logger.error(`Failed to find CreditCardBinData with iin ${bin}. ${JSON.stringify(e)}`);
       return null;
     }
-  }
-
-  async findAll(): Promise<Array<CreditCardBinData>> {
-    throw new Error("Not implemented");
   }
 
   async getBINReport(): Promise<BINReportDetails> {

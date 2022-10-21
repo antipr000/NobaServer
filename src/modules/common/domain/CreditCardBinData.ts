@@ -3,14 +3,15 @@ import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../co
 import { KeysRequired } from "./Types";
 import Joi from "joi";
 import { BINValidity, CardType } from "../dto/CreditCardDTO";
+import { creditCardMaskGenerator } from "../../../core/utils/CreditCardMaskGenerator";
 
 export interface CreditCardBinDataProps extends VersioningInfo {
   _id: string;
-  issuer: string;
+  issuer?: string;
   bin: string;
   type: CardType;
   network: string;
-  mask: string;
+  mask?: string;
   supported: BINValidity;
   digits: number;
   cvvDigits: number;
@@ -19,13 +20,13 @@ export interface CreditCardBinDataProps extends VersioningInfo {
 export const creditCardBinDataKeys: KeysRequired<CreditCardBinDataProps> = {
   ...versioningInfoJoiSchemaKeys,
   _id: Joi.string().required(),
-  issuer: Joi.string().required(),
+  issuer: Joi.string().optional().allow("", null),
   bin: Joi.string()
     .required()
-    .meta({ _mongoose: { index: true } }),
+    .meta({ _mongoose: { index: true, unique: true } }),
   type: Joi.string().default(CardType.CREDIT),
   network: Joi.string().required(),
-  mask: Joi.string().required(),
+  mask: Joi.string().optional().allow("", null),
   supported: Joi.string().default(BINValidity.NOT_SUPPORTED),
   digits: Joi.number().default(16),
   cvvDigits: Joi.number().default(3),
@@ -42,6 +43,8 @@ export class CreditCardBinData extends AggregateRoot<CreditCardBinDataProps> {
     creditCardBinDataProps: Partial<CreditCardBinDataProps>,
   ): CreditCardBinData {
     if (!creditCardBinDataProps._id) creditCardBinDataProps._id = Entity.getNewID();
+    if (!creditCardBinDataProps.mask)
+      creditCardBinDataProps.mask = creditCardMaskGenerator(creditCardBinDataProps.bin, creditCardBinDataProps.digits);
     return new CreditCardBinData(Joi.attempt(creditCardBinDataProps, creditCardBinDataJoiSchema));
   }
 }

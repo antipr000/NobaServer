@@ -20,7 +20,6 @@ import {
   ExecuteQuoteRequest,
   FundsAvailabilityRequest,
   FundsAvailabilityResponse,
-  NobaQuote,
   PollStatus,
 } from "../../domain/AssetTypes";
 import { getMockZerohashServiceWithDefaults } from "../../mocks/mock.zerohash.service";

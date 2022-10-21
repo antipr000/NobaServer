@@ -81,6 +81,6 @@ export class PaymentMethodsMigrator {
     });
 
     await Promise.all(allOperations);
-    console.log(`Updated all the documents successfully!`);
+    console.log("Updated all the documents successfully!");
   }
 }

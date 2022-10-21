@@ -1,103 +1,88 @@
 import { Injectable } from "@nestjs/common";
-import { CCBIN_DATA_FILE_PATH } from "../../config/ConfigurationUtils";
+import { DB_DUMP_FILES_BUCKET_PATH, ASSETS_BUCKET_NAME } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { parse } from "csv";
-import { createReadStream } from "fs";
-import path from "path";
-import { unsupportedIssuers, BINValidity, CardType } from "../../modules/common/dto/CreditCardDTO";
 import { DBProvider } from "../DBProvider";
+import { S3 } from "aws-sdk";
+import { tmpdir } from "os";
+import { createWriteStream, existsSync, mkdir, readFileSync } from "fs";
 import { CreditCardBinData } from "../../modules/common/domain/CreditCardBinData";
 
 // TODO(#633): Change to seeding from dump once prod database has BIN data
 @Injectable()
 export class CreditCardBinDataSeeder {
-  private readonly binDataFilePath: string;
+  private readonly dbDumpBucketPath: string;
+  private readonly s3BucketName: string;
+  private readonly destinationFilePath: string;
   constructor(private readonly dbProvider: DBProvider, configService: CustomConfigService) {
-    this.binDataFilePath = configService.get(CCBIN_DATA_FILE_PATH);
+    this.dbDumpBucketPath = configService.get(DB_DUMP_FILES_BUCKET_PATH);
+    this.s3BucketName = configService.get(ASSETS_BUCKET_NAME);
+    this.destinationFilePath = tmpdir + "/dump";
   }
 
-  private async loadCreditCardBINFile(): Promise<Array<CreditCardBinData>> {
+  private async downloadDumpFileFromS3(bucketPath: string, fileName: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const results = new Array<CreditCardBinData>();
-      const parser = parse({ delimiter: ",", columns: true });
-
-      createReadStream(path.resolve(this.binDataFilePath))
-        .pipe(parser)
-        .on("data", data => {
-          const issuer = `${data["Issuer"]}`.trim();
-          const iin = `${data["IIN"]}`.trim();
-          const type = `${data["Type"]}`.trim();
-          const network = `${data["Scheme"]}`;
-          const mask = `${data["Format"]}`.trim();
-          const cardType = Object.values(CardType).filter(enumType => enumType.toUpperCase() === type.toUpperCase())[0];
-          // A card BIN is supported if it's a debit card or not on the unsupportedIssuers list
-          const supported =
-            unsupportedIssuers.indexOf(issuer) == -1 || cardType == CardType.DEBIT
-              ? BINValidity.SUPPORTED
-              : BINValidity.NOT_SUPPORTED;
-          const digits = mask.replace(/ /g, "").length; // Replace all spaces and count the characters
-          const cvvDigits = network === "Amex" ? 4 : 3; // TODO: are there others?
-
-          // Handle ranges
-          if (iin.indexOf("-") > 0) {
-            const range = iin.match(/(\d*)\s*-\s*(\d*)/);
-            const start = Number(range[1]);
-            const end = Number(range[2]);
-
-            for (let i = start; i <= end; i++) {
-              results.push(
-                CreditCardBinData.createCreditCardBinDataObject({
-                  bin: String(i),
-                  issuer: issuer,
-                  supported: supported,
-                  network: network,
-                  digits: digits,
-                  type: cardType,
-                  cvvDigits: cvvDigits,
-                  mask: mask,
-                }),
-              );
-            }
-          } else {
-            results.push(
-              CreditCardBinData.createCreditCardBinDataObject({
-                bin: iin,
-                issuer: issuer,
-                supported: supported,
-                network: network,
-                digits: digits,
-                type: cardType,
-                cvvDigits: cvvDigits,
-                mask: mask,
-              }),
-            );
+      const s3 = new S3();
+      const options = {
+        Bucket: this.s3BucketName,
+        Key: `${bucketPath}/${fileName}`,
+      };
+      if (!existsSync(this.destinationFilePath)) {
+        mkdir(this.destinationFilePath, err => {
+          if (err) {
+            reject(err);
           }
-        })
-        .on("error", err => {
-          reject(err);
-        })
-        .on("end", () => {
-          resolve(results);
         });
+      }
+      const file = createWriteStream(`${this.destinationFilePath}/${fileName}`);
+
+      console.log(
+        `Downloading file from S3 bucket: ${JSON.stringify(options)} to ${this.destinationFilePath}/${fileName}`,
+      );
+
+      const readStream = s3.getObject(options).createReadStream();
+      readStream
+        .on("end", () => {
+          return resolve();
+        })
+        .on("error", err => reject(err))
+        .pipe(file);
+    });
+  }
+
+  toDomain(data: any): CreditCardBinData {
+    return CreditCardBinData.createCreditCardBinDataObject({
+      issuer: data.issuer,
+      bin: data.bin,
+      type: data.type,
+      network: data.network,
+      mask: data.mask,
+      supported: data.supported,
+      digits: data.digits,
+      cvvDigits: data.cvvDigits,
     });
   }
 
   async seed() {
-    console.log("Started seeding credit card bin data");
-    const data: Array<CreditCardBinData> = await this.loadCreditCardBINFile();
-    console.log(data.length);
     const creditCardBinDataModel = await this.dbProvider.getCreditCardBinDataModel();
-    if (data.length === 0) {
-      console.log("Nothing to load");
-      return;
-    }
-    const result = await creditCardBinDataModel.findOne({ bin: data[0].props.bin }).exec();
+
+    const result = await creditCardBinDataModel.findOne().exec();
     if (result === null) {
-      const dataToAdd = data.map(binData => binData.props);
-      await creditCardBinDataModel.insertMany(dataToAdd);
+      console.log("Started seeding credit card bin data");
+      // dbUri is of form uri/dbName
+      const fileName = "creditcardbindata.json";
+
+      await this.downloadDumpFileFromS3(this.dbDumpBucketPath, fileName);
+
+      console.log("Completed downloading file from s3");
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      const allRecords = JSON.parse(readFileSync(`${this.destinationFilePath}/${fileName}`).toString());
+
+      const recordsToInsert = allRecords.map(record => this.toDomain(record).props);
+
+      await creditCardBinDataModel.insertMany(recordsToInsert, { ordered: false });
+      console.log("Completed seeding credit card bin data");
     } else {
       console.log("Credit card bin data already seeded");
     }
-    console.log("Completed seeding credit card bin data");
   }
 }
