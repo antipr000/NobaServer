@@ -29,6 +29,7 @@ import {
   setupPartner,
   TEST_API_KEY,
 } from "./common";
+import { getRandomEmail, getRandomID } from "./TestUtils";
 
 describe("Noba Admin", () => {
   jest.setTimeout(20000);
@@ -38,7 +39,7 @@ describe("Noba Admin", () => {
   let app: INestApplication;
   let TEST_TIMESTAMP;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
@@ -54,11 +55,14 @@ describe("Noba Admin", () => {
     TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
-  afterEach(async () => {
-    clearAccessTokenForNextRequests();
+  afterAll(async () => {
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
+  });
+
+  afterEach(async () => {
+    clearAccessTokenForNextRequests();
   });
 
   describe("GET /admins", () => {
@@ -74,9 +78,11 @@ describe("Noba Admin", () => {
     });
 
     it("Should return 403 if requested with PartnerAdmin credentials with same EMAIL", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
 
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
 
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
@@ -91,7 +97,7 @@ describe("Noba Admin", () => {
     });
 
     it("Should return 403 if requested with Consumer credentials with same EMAIL", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
@@ -106,7 +112,7 @@ describe("Noba Admin", () => {
     });
 
     it("Should return the details of currently logged in Noba Admin", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
       const nobaAdminId = "AAAAAAAAAA";
       const nobaAdminRole = "BASIC";
 
@@ -132,9 +138,11 @@ describe("Noba Admin", () => {
 
   describe("POST /admins", () => {
     it("shouldn't allow requests with PartnerAdmin credentials", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
 
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
       const partnerLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerLoginResponse.access_token);
 
@@ -164,7 +172,7 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests with Consumer credentials", async () => {
-      const consumerEmail = "test.user@noba.com";
+      const consumerEmail = getRandomEmail("test.user");
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
@@ -196,9 +204,9 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
 
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAAA", "BASIC")).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, getRandomID("AAAAAAAAAAA"), "BASIC")).toBe(true);
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
@@ -229,9 +237,9 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
 
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAAA", "INTERMEDIATE")).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, getRandomID("AAAAAAAAAAA"), "INTERMEDIATE")).toBe(true);
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
@@ -262,13 +270,13 @@ describe("Noba Admin", () => {
     });
 
     it("should create NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
-      const nobaAdminEmail = "test.noba.admin@noba.com";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
 
-      const newNobaAdminEmail = "test.noba.admin.2@noba.com";
+      const newNobaAdminEmail = getRandomEmail("test.noba.admin.2");
       const newNobaAdminName = "Test Admin 2";
       const newNobaAdminRole = "BASIC";
 
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, "AAAAAAAAAAA", "ADMIN")).toBe(true);
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, getRandomID("AAAAAAAAAAA"), "ADMIN")).toBe(true);
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
 
@@ -310,13 +318,15 @@ describe("Noba Admin", () => {
 
   describe("PATCH /admins/{id}", () => {
     it("shouldn't allow requests with PartnerAdmin credentials", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
 
-      const nobaAdminEmail = "test.noba.admin.2@noba.com";
-      const nobaAdminId = "A2A2A2A2A2A2";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const nobaAdminId = getRandomID("A2A2A2A2A2A2");
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
 
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
       const partnerLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
       setAccessTokenForTheNextRequests(partnerLoginResponse.access_token);
 
@@ -345,10 +355,10 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests with Consumer credentials", async () => {
-      const consumerEmail = "test.user@noba.com";
+      const consumerEmail = getRandomEmail("test.user");
 
-      const nobaAdminEmail = "test.noba.admin.2@noba.com";
-      const nobaAdminId = "A2A2A2A2A2A2";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const nobaAdminId = getRandomID("A2A2A2A2A2A2");
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       console.log(consumerLoginResponse);
@@ -379,12 +389,12 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "BASIC";
 
-      const toUpdateNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toUpdateNobaAdminId = "AUAUAUAUAUAUA";
+      const toUpdateNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toUpdateNobaAdminId = getRandomID("AUAUAUAUAUAUA");
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
@@ -423,12 +433,12 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "INTERMEDIATE";
 
-      const toUpdateNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toUpdateNobaAdminId = "AUAUAUAUAUAUA";
+      const toUpdateNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toUpdateNobaAdminId = getRandomID("AUAUAUAUAUAUA");
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
@@ -467,8 +477,8 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests to update the currently logged-in NobaAdmin itself", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "ADMIN";
 
       expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(
@@ -501,12 +511,12 @@ describe("Noba Admin", () => {
     });
 
     it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "ADMIN";
 
-      const toUpdateNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toUpdateNobaAdminId = "AUAUAUAUAUAUA";
+      const toUpdateNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toUpdateNobaAdminId = getRandomID("AUAUAUAUAUAUA");
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
@@ -542,12 +552,12 @@ describe("Noba Admin", () => {
     });
 
     it("should update 'role' of NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "ADMIN";
 
-      const toUpdateNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toUpdateNobaAdminId = "AUAUAUAUAUAUA";
+      const toUpdateNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toUpdateNobaAdminId = getRandomID("AUAUAUAUAUAUA");
       const toUpdateNobaAdminUpdatedName = "Updated Noba Admin";
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
@@ -589,12 +599,12 @@ describe("Noba Admin", () => {
     });
 
     it("should update 'name' of NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "ADMIN";
 
-      const toUpdateNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toUpdateNobaAdminId = "AUAUAUAUAUAUA";
+      const toUpdateNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toUpdateNobaAdminId = getRandomID("AUAUAUAUAUAUA");
       const toUpdateNobaAdminUpdatedName = "Updated Noba Admin";
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
@@ -636,12 +646,12 @@ describe("Noba Admin", () => {
     });
 
     it("should update both 'name' & 'role' of NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "ADMIN";
 
-      const toUpdateNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toUpdateNobaAdminId = "AUAUAUAUAUAUA";
+      const toUpdateNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toUpdateNobaAdminId = getRandomID("AUAUAUAUAUAUA");
       const toUpdateNobaAdminUpdatedName = "Updated Noba Admin";
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
@@ -687,11 +697,13 @@ describe("Noba Admin", () => {
 
   describe("DELETE /admins/{id}", () => {
     it("shouldn't allow requests with PartnerAdmin credentials", async () => {
-      const partnerAdminEmail = "test.partner.admin@noba.com";
-      expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
 
-      const nobaAdminEmail = "test.noba.admin.2@noba.com";
-      const nobaAdminId = "A2A2A2A2A2A2";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const nobaAdminId = getRandomID("A2A2A2A2A2A2");
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
 
       const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
@@ -710,10 +722,10 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests with Consumer credentials", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
 
-      const nobaAdminEmail = "test.noba.admin.2@noba.com";
-      const nobaAdminId = "A2A2A2A2A2A2";
+      const nobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const nobaAdminId = getRandomID("A2A2A2A2A2A2");
       expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
 
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
@@ -731,11 +743,11 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "BASIC")).toBe(true);
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, getRandomID("AAAAAAAAAA"), "BASIC")).toBe(true);
 
-      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+      const toDeleteNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toDeleteNobaAdminId = getRandomID("A2A2A2A2A2A2");
       expect(await insertNobaAdmin(mongoUri, toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
@@ -759,11 +771,13 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "INTERMEDIATE")).toBe(true);
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, getRandomID("AAAAAAAAAA"), "INTERMEDIATE")).toBe(
+        true,
+      );
 
-      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+      const toDeleteNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toDeleteNobaAdminId = getRandomID("A2A2A2A2A2A2");
       expect(await insertNobaAdmin(mongoUri, toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
@@ -786,11 +800,11 @@ describe("Noba Admin", () => {
     });
 
     it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "ADMIN")).toBe(true);
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, getRandomID("AAAAAAAAAA"), "ADMIN")).toBe(true);
 
-      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+      const toDeleteNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toDeleteNobaAdminId = getRandomID("A2A2A2A2A2A2");
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
@@ -812,11 +826,11 @@ describe("Noba Admin", () => {
     });
 
     it("should delete NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, "AAAAAAAAAA", "ADMIN")).toBe(true);
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, getRandomID("AAAAAAAAAA"), "ADMIN")).toBe(true);
 
-      const toDeleteNobaAdminEmail = "test.noba.admin.2@noba.com";
-      const toDeleteNobaAdminId = "A2A2A2A2A2A2";
+      const toDeleteNobaAdminEmail = getRandomEmail("test.noba.admin.2");
+      const toDeleteNobaAdminId = getRandomID("A2A2A2A2A2A2");
       expect(await insertNobaAdmin(mongoUri, toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
@@ -840,8 +854,8 @@ describe("Noba Admin", () => {
     });
 
     it("shouldn't allow requests to delete the currently logged-in NobaAdmin itself", async () => {
-      const loggedInNobaAdminEmail = "test.noba.admin@noba.com";
-      const loggedInNobaAdminId = "AAAAAAAAAAA";
+      const loggedInNobaAdminEmail = getRandomEmail("test.noba.admin");
+      const loggedInNobaAdminId = getRandomID("AAAAAAAAAAA");
       expect(await insertNobaAdmin(mongoUri, loggedInNobaAdminEmail, loggedInNobaAdminId, "ADMIN")).toBe(true);
 
       const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, loggedInNobaAdminEmail, "NOBA_ADMIN");
