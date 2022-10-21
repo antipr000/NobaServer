@@ -629,7 +629,7 @@ describe("Consumers", () => {
         "/v1/consumers/paymentmethods",
         JSON.stringify({
           cardName: "Tester",
-          cardNumber: "2222400070000005",
+          cardNumber: "4242424242424242",
           expiryMonth: 3,
           expiryYear: 2030,
           cvv: "737",
@@ -641,7 +641,7 @@ describe("Consumers", () => {
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
           cardName: "Tester",
-          cardNumber: "2222400070000005",
+          cardNumber: "4242424242424242",
           expiryMonth: 3,
           expiryYear: 2030,
           cvv: "737",
@@ -685,7 +685,7 @@ describe("Consumers", () => {
         "POST",
         "/v1/consumers/paymentmethods",
         JSON.stringify({
-          cardNumber: "2222400070000005",
+          cardNumber: "4242424242424242",
           expiryMonth: 3,
           expiryYear: 2030,
           cvv: "737",
@@ -696,7 +696,7 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          cardNumber: "2222400070000005",
+          cardNumber: "4242424242424242",
           expiryMonth: 3,
           expiryYear: 2030,
           cvv: "737",
