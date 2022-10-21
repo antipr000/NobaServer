@@ -29,7 +29,7 @@ describe("Elliptic Integration Test", () => {
   let app: INestApplication;
   let ellipticService: EllipticService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server

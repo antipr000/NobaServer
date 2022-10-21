@@ -38,9 +38,9 @@ import {
   VerificationWebhooksService,
 } from "./api_client";
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Multer } from "multer";
 import { FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE } from "../src/modules/verification/integrations/fakes/FakeSardineResponses";
 import crypto_ts from "crypto";
+import { getRandomEmail } from "./TestUtils";
 
 describe("Verification", () => {
   jest.setTimeout(20000);
@@ -50,7 +50,7 @@ describe("Verification", () => {
   let app: INestApplication;
   let TEST_TIMESTAMP;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
@@ -66,10 +66,13 @@ describe("Verification", () => {
     TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await mongoose.disconnect();
     await app.close();
     await mongoServer.stop();
+  });
+
+  afterEach(async () => {
     clearAccessTokenForNextRequests();
   });
 
@@ -89,7 +92,7 @@ describe("Verification", () => {
     });
 
     it("should return sessionKey when user is logged in", async () => {
-      const consumerEmail = "test.consumer@noba.com";
+      const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -118,7 +121,7 @@ describe("Verification", () => {
       dateOfBirth: "1988-09-09",
     };
 
-    const consumerEmail = "test.consumer@noba.com";
+    const consumerEmail = getRandomEmail("test.consumer");
     const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
     setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
@@ -232,7 +235,7 @@ describe("Verification", () => {
       const secretKey = "bogus-value"; // SecretKey is bogus-value in yaml for E2E test
 
       // Create consumer
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, "fake+consumer@noba.com", "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, getRandomEmail("fake+consumer"), "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       let getConsumerResponse = (await ConsumerService.getConsumer({
@@ -315,7 +318,7 @@ describe("Verification", () => {
       const secretKey = "bogus-value"; // SecretKey is bogus-value in yaml for E2E test
 
       // Create consumer
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, "fake+consumer@noba.com", "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, getRandomEmail("fake+consumer"), "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
       let signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       let getConsumerResponse = (await ConsumerService.getConsumer({
