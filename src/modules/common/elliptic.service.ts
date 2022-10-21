@@ -119,7 +119,9 @@ export class EllipticService {
         throw new BadRequestException(e.message);
       }
     } else {
-      this.logger.info(`Bypassing to elliptic in lower environment (${path}): ${JSON.stringify(requestBody)}`);
+      this.logger.info(
+        `Bypassing call to elliptic in lower environment but would've sent (${path}): ${JSON.stringify(requestBody)}`,
+      );
     }
   }
 }

@@ -298,10 +298,6 @@ describe("Elliptic Tests", () => {
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
-      const walletExposureResponse: WalletExposureResponse = {
-        riskScore: -1,
-      };
-
       when(currencyService.getCryptocurrency("XXX")).thenResolve(null);
 
       expect(async () => {
