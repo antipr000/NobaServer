@@ -30,6 +30,7 @@ import {
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 import { PlaidTokenDTO } from "./api_client";
+import { getRandomEmail, getRandomID } from "./TestUtils";
 
 describe("Consumers", () => {
   jest.setTimeout(20000);
@@ -64,14 +65,6 @@ describe("Consumers", () => {
   afterEach(async () => {
     clearAccessTokenForNextRequests();
   });
-
-  function getRandomEmail(base: string): string {
-    return `base.${Math.random()}@noba.com`;
-  }
-
-  function getRandomID(base: string): string {
-    return `base${Math.random()}`;
-  }
 
   describe("GET /consumers/paymentmethods/plaid/token", () => {
     it("should return 401 if not logged in as any identity", async () => {
