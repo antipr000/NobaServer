@@ -62,7 +62,7 @@ export class PlaidClient {
         account_filters: {
           depository: { account_subtypes: [DepositoryAccountSubtype.Checking] },
         },
-        redirect_uri: this.plaidConfigs.redirectUri,
+        //redirect_uri: this.plaidConfigs.redirectUri,
       };
 
       const createTokenResponse: AxiosResponse<PlaidLinkTokenCreateResponse> = await this.plaidApi.linkTokenCreate(
