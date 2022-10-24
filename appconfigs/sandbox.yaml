@@ -110,14 +110,14 @@ partner:
   embedSecretKey: "D43az5QS5g1A53B4rk/2FPtLC9FR9NeVtV7qGcubNsSqQ6ftAARCC/7vliyQ2woM+AU+0KsAi2X+JXTloF//1A=="
 
 plaid:
-  env: "sandbox"
+  env: "development"
   version: "2020-09-14"
-  redirectUri: "http://localhost:8080/plaid/redirect_uri"
+  redirectUri: "https://api-sandbox.noba.com/plaid/redirect_uri"
   awsSecretNameForRedirectUri: ""
   clientID: ""
   awsSecretNameForClientID: "62432d096685bc0013d030a8"
   secretKey: ""
-  awsSecretNameForSecretKey: "3efe6f2aef4a7ab5d609149f96a35b"
+  awsSecretNameForSecretKey: "99620996e7364d528111e410e62cec"
 
 locationDataFileName: "countries+states.json"
 ccBINDataFileNameMask: "all_bins.csv"

@@ -110,14 +110,22 @@ export class CheckoutService {
   }
 
   public async addInstrument(request: AddInstrumentRequest): Promise<string> {
-    const instrument = await this.checkoutApi.instruments.create({
+    const checkoutReq = {
+      type: "token",
       token: request.checkoutToken,
       customer: {
         id: request.checkoutCustomerID,
       },
-    });
-
-    return instrument["id"];
+    };
+    console.log(`Adding instrument: ${JSON.stringify(checkoutReq, null, 1)}`);
+    try {
+      const instrument = await this.checkoutApi.instruments.create(checkoutReq);
+      console.log("Added instrument");
+      return instrument["id"];
+    } catch (e) {
+      console.log(`Error adding instrument: ${JSON.stringify(e, null, 1)}`);
+      throw e;
+    }
   }
 
   public async addCreditCardPaymentMethod(

@@ -11,6 +11,7 @@ import {
   AuthGetResponse,
   ProcessorTokenCreateRequestProcessorEnum,
   ProcessorTokenCreateResponse,
+  DepositoryAccountSubtype,
 } from "plaid";
 import { AxiosResponse } from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -58,6 +59,9 @@ export class PlaidClient {
         products: [PlaidProducts.Auth],
         country_codes: [PlaidCountryCode.Us],
         language: "en",
+        account_filters: {
+          depository: { account_subtypes: [DepositoryAccountSubtype.Checking] },
+        },
         redirect_uri: this.plaidConfigs.redirectUri,
       };
 
@@ -138,7 +142,9 @@ export class PlaidClient {
           account_id: request.accountID,
           processor: tokenProcessor,
         });
-      this.logger.info(`"processorTokenCreate" succeeds with request_id: "${processorTokenResponse.data.request_id}"`);
+      this.logger.info(
+        `"processorTokenCreate" succeeds with request_id: "${processorTokenResponse.data.request_id}" and token ${processorTokenResponse.data.processor_token}`,
+      );
 
       return processorTokenResponse.data.processor_token;
     } catch (err) {
