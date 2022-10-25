@@ -319,6 +319,7 @@ describe("ConsumerController", () => {
 
       const requestData: UpdateConsumerRequestDTO = {
         firstName: "New Mock",
+        phone: "123456789",
         dateOfBirth: "1999-02-02",
       };
 

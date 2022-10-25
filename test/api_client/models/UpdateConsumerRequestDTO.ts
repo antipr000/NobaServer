@@ -6,5 +6,6 @@ export type UpdateConsumerRequestDTO = {
   firstName?: string;
   lastName?: string;
   address?: any;
+  phone?: string;
   dateOfBirth?: string;
 };
