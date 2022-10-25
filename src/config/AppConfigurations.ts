@@ -92,8 +92,6 @@ import {
   SQUID_INTERMEDIARY_LEG,
   SQUID_TEMPORARY_WALLET_ADDRESS,
   SQUID_SLIPPAGE,
-  CCBIN_DATA_FILE_PATH,
-  CCBIN_DATA_FILE_NAME_MASK,
   PARTNER_CONFIG_KEY,
   PARTNER_CONFIG_EMBED_SECRET_KEY,
   PLAID_CONFIG_KEY,
@@ -181,7 +179,6 @@ export default async function loadAppConfigs() {
 
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
-  configs[CCBIN_DATA_FILE_PATH] = join(configsDir, configs[CCBIN_DATA_FILE_NAME_MASK]);
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);

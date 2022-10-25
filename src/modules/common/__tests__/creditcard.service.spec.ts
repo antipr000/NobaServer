@@ -50,7 +50,6 @@ describe("CreditCardService", () => {
 
       const reportDetails = await creditCardService.getBINReport();
 
-      expect(unsupportedIssuers.length).toEqual(45);
       expect(reportDetails.supported).toEqual(4);
       expect(reportDetails.unsupported).toEqual(2);
     });
