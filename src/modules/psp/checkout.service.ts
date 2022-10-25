@@ -280,7 +280,7 @@ export class CheckoutService {
         name: paymentMethod.name,
         type: PaymentMethodType.CARD,
         cardData: {
-          cardType: cardType,
+          cardType: scheme,
           first6Digits: paymentMethod.cardDetails.cardNumber.substring(0, 6),
           last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
           authCode: response.responseCode,
