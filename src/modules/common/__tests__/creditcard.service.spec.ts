@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { CreditCardService } from "../creditcard.service";
-import { BINValidity, CardType, CreditCardDTO, unsupportedIssuers } from "../dto/CreditCardDTO";
+import { BINValidity, CardType, CreditCardDTO } from "../dto/CreditCardDTO";
 import { CreditCardBinDataRepo } from "../repo/CreditCardBinDataRepo";
 import { getMockCreditCardBinDataRepoMockWithDefaults } from "../mocks/mock.creditcard.bin.data.repo";
 import { anything, deepEqual, instance, when } from "ts-mockito";
