@@ -554,7 +554,7 @@ export const FAKE_FRAUDULENT_TRANSACTION = {
   },
 };
 
-export const FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE: DocumentVerificationSardineResponse = {
+export const FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE: DocumentVerificationSardineResponse = {
   verificationId: "fake-verification-1234",
   status: SardineDocumentProcessingStatus.COMPLETE,
   documentData: {
@@ -581,7 +581,7 @@ export const FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE: DocumentVerificationS
   errorCodes: [],
 };
 
-export const FAKE_DOCUMENT_VERIFiCATION_FRAUDULENT_DOCUMENT_RESPONSE: DocumentVerificationSardineResponse = {
+export const FAKE_DOCUMENT_VERIFICATION_FRAUDULENT_DOCUMENT_RESPONSE: DocumentVerificationSardineResponse = {
   verificationId: "fake-verification-1234",
   status: SardineDocumentProcessingStatus.COMPLETE,
   documentData: {
@@ -608,7 +608,7 @@ export const FAKE_DOCUMENT_VERIFiCATION_FRAUDULENT_DOCUMENT_RESPONSE: DocumentVe
   errorCodes: [],
 };
 
-export const FAKE_DOCUMENT_VERIFiCATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE: DocumentVerificationSardineResponse = {
+export const FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE: DocumentVerificationSardineResponse = {
   verificationId: "fake-verification-1234",
   status: SardineDocumentProcessingStatus.ERROR,
   documentData: {

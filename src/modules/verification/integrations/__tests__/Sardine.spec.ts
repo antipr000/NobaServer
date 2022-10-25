@@ -12,9 +12,9 @@ import {
 import {
   FAKE_DEVICE_INFORMATION_RESPONSE,
   FAKE_DOCUMENT_SUBMISSION_RESPONSE,
-  FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
-  FAKE_DOCUMENT_VERIFiCATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
-  FAKE_DOCUMENT_VERIFiCATION_FRAUDULENT_DOCUMENT_RESPONSE,
+  FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
+  FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
+  FAKE_DOCUMENT_VERIFICATION_FRAUDULENT_DOCUMENT_RESPONSE,
   FAKE_FRAUDULENT_TRANSACTION,
   FAKE_GOOD_TRANSACTION,
   FAKE_HIGH_RISK_TRANSACTION,
@@ -31,9 +31,6 @@ import { VerificationProviders } from "../../../../modules/consumer/domain/Verif
 import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { DocumentInformation } from "../../domain/DocumentInformation";
 import { DocumentTypes } from "../../domain/DocumentTypes";
-import { Express } from "express";
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { Multer } from "multer";
 import { Readable } from "stream";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../../domain/VerificationResult";
 import { NationalIDTypes } from "../../domain/NationalIDTypes";
@@ -43,6 +40,9 @@ import {
   SardineDocumentProcessingStatus,
   SardineRiskLevels,
 } from "../SardineTypeDefinitions";
+import { anyString, when } from "ts-mockito";
+import { PaymentMethodType } from "../../../../modules/consumer/domain/PaymentMethod";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
 
 //TODO: Add assertions for request body
 describe("SardineTests", () => {
@@ -315,14 +315,12 @@ describe("SardineTests", () => {
       mockAxios.reset();
     });
 
-    it("Should return status APPROVED when transaction is low risk", async () => {
+    it("Should return status APPROVED when transaction is low risk (card)", async () => {
       const transactionInformation: TransactionInformation = {
         transactionID: "transaction-1",
         amount: 100,
         currencyCode: "USD",
-        first6DigitsOfCard: "123456",
-        last4DigitsOfCard: "7890",
-        cardID: "card-1234",
+        paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
         partnerName: "Fake partner",
@@ -334,6 +332,78 @@ describe("SardineTests", () => {
         partners: [
           {
             partnerID: "fake-partner",
+          },
+        ],
+        paymentMethods: [
+          {
+            imageUri: "image-uri",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: transactionInformation.paymentMethodID,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          verificationProvider: VerificationProviders.SARDINE,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+        },
+      });
+
+      const responsePromise = sardine.transactionVerification(
+        FAKE_GOOD_TRANSACTION.data.sessionKey,
+        consumer,
+        transactionInformation,
+      );
+
+      expect(mockAxios.post).toHaveBeenCalled();
+
+      mockAxios.mockResponse(FAKE_GOOD_TRANSACTION);
+
+      const response = await responsePromise;
+
+      expect(response.status).toBe(KYCStatus.APPROVED);
+      expect(response.idvProviderRiskLevel).toBe("low");
+      expect(response.pepLevel).toBeFalsy();
+      expect(response.sanctionLevel).toBeFalsy();
+      expect(response.walletStatus).toBe(WalletStatus.APPROVED);
+    });
+
+    it("Should return status APPROVED when transaction is low risk (ACH)", async () => {
+      const transactionInformation: TransactionInformation = {
+        transactionID: "transaction-1",
+        amount: 100,
+        currencyCode: "USD",
+        paymentMethodID: "card-1234",
+        cryptoCurrencyCode: "ETH",
+        walletAddress: "good+wallet",
+        partnerName: "Fake partner",
+      };
+
+      const consumer = Consumer.createConsumer({
+        _id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
+        partners: [
+          {
+            partnerID: "fake-partner",
+          },
+        ],
+        paymentMethods: [
+          {
+            imageUri: "image-uri",
+            type: PaymentMethodType.ACH,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: transactionInformation.paymentMethodID,
+            achData: {
+              accessToken: "access-token",
+              accountID: "account-id",
+              accountType: "checking",
+              itemID: "item-id",
+              mask: "mask",
+            },
           },
         ],
         verificationData: {
@@ -367,9 +437,7 @@ describe("SardineTests", () => {
         transactionID: "transaction-1",
         amount: 100,
         currencyCode: "USD",
-        first6DigitsOfCard: "123456",
-        last4DigitsOfCard: "7890",
-        cardID: "card-1234",
+        paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "risk+wallet",
         partnerName: "Fake partner",
@@ -381,6 +449,18 @@ describe("SardineTests", () => {
         partners: [
           {
             partnerID: "fake-partner",
+          },
+        ],
+        paymentMethods: [
+          {
+            imageUri: "image-uri",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: transactionInformation.paymentMethodID,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
           },
         ],
         verificationData: {
@@ -414,9 +494,7 @@ describe("SardineTests", () => {
         transactionID: "transaction-1",
         amount: 100,
         currencyCode: "USD",
-        first6DigitsOfCard: "123456",
-        last4DigitsOfCard: "7890",
-        cardID: "card-1234",
+        paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
         partnerName: "Fake partner",
@@ -428,6 +506,18 @@ describe("SardineTests", () => {
         partners: [
           {
             partnerID: "fake-partner",
+          },
+        ],
+        paymentMethods: [
+          {
+            imageUri: "image-uri",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: transactionInformation.paymentMethodID,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
           },
         ],
         verificationData: {
@@ -461,9 +551,7 @@ describe("SardineTests", () => {
         transactionID: "transaction-1",
         amount: 100,
         currencyCode: "USD",
-        first6DigitsOfCard: "123456",
-        last4DigitsOfCard: "7890",
-        cardID: "card-1234",
+        paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
         partnerName: "Fake partner",
@@ -475,6 +563,18 @@ describe("SardineTests", () => {
         partners: [
           {
             partnerID: "fake-partner",
+          },
+        ],
+        paymentMethods: [
+          {
+            imageUri: "image-uri",
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: transactionInformation.paymentMethodID,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
           },
         ],
         verificationData: {
@@ -517,7 +617,7 @@ describe("SardineTests", () => {
       expect(mockAxios.get).toHaveBeenCalled();
 
       mockAxios.mockResponse({
-        data: FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
+        data: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
       });
 
       const result = await responsePromise;
@@ -824,14 +924,14 @@ describe("SardineTests", () => {
 
   describe("processDocumentVerificationResult", () => {
     it("should return status APPROVED when document verification response specifies low risk", async () => {
-      const response = sardine.processDocumentVerificationResult(FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE);
+      const response = sardine.processDocumentVerificationResult(FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE);
       expect(response.status).toBe(DocumentVerificationStatus.APPROVED);
       expect(response.riskRating).toBe("low");
     });
 
     it("should return status REJECTED when uploaded document is not proper and recapture is needed", async () => {
       const response = sardine.processDocumentVerificationResult(
-        FAKE_DOCUMENT_VERIFiCATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
+        FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
       );
       expect(response.status).toBe(DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE);
       expect(response.riskRating).toBe("high");
@@ -839,28 +939,28 @@ describe("SardineTests", () => {
 
     it("should return status PENDING when uploaded document is identified as high risk", async () => {
       const response = sardine.processDocumentVerificationResult(
-        FAKE_DOCUMENT_VERIFiCATION_FRAUDULENT_DOCUMENT_RESPONSE,
+        FAKE_DOCUMENT_VERIFICATION_FRAUDULENT_DOCUMENT_RESPONSE,
       );
       expect(response.status).toBe(DocumentVerificationStatus.PENDING);
       expect(response.riskRating).toBe("high");
     });
 
     it("should return status PENDING when uploaded document status is PENDING", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.PENDING;
       const response = sardine.processDocumentVerificationResult(documentVerificationResponse);
       expect(response.status).toBe(DocumentVerificationStatus.PENDING);
     });
 
     it("should return status PENDING when uploaded document status is PROCESSING", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.PROCESSING;
       const response = sardine.processDocumentVerificationResult(documentVerificationResponse);
       expect(response.status).toBe(DocumentVerificationStatus.PENDING);
     });
 
     it("should return status PENDING and risk level UNKNOWN when uploaded document status is COMPLETE but risk level is UNKNOWN", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.COMPLETE;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.UNKNOWN;
       const response = sardine.processDocumentVerificationResult(documentVerificationResponse);
@@ -869,7 +969,7 @@ describe("SardineTests", () => {
     });
 
     it("should return status APPROVED and risk level MEDIUM when uploaded document status is COMPLETE and risk level is MEDIUM", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.COMPLETE;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.MEDIUM;
       const response = sardine.processDocumentVerificationResult(documentVerificationResponse);
@@ -878,7 +978,7 @@ describe("SardineTests", () => {
     });
 
     it("should throw InternalServerErrorException when status is COMPLETE and riskLevel is not proper", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.COMPLETE;
       documentVerificationResponse.verification.riskLevel = "fake" as any;
       try {
@@ -889,7 +989,7 @@ describe("SardineTests", () => {
     });
 
     it("should return status REJECTED_DOCUMENT_POOR_QUALITY document status is DOCUMENT_UNRECOGNIZABLE", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.ERROR;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.HIGH;
       documentVerificationResponse.errorCodes = [DocumentVerificationErrorCodes.DOCUMENT_UNRECOGNIZABLE];
@@ -899,7 +999,7 @@ describe("SardineTests", () => {
     });
 
     it("should return status REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE document status is DOCUMENT_BAD_SIZE_OR_TYPE", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.ERROR;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.HIGH;
       documentVerificationResponse.errorCodes = [DocumentVerificationErrorCodes.DOCUMENT_BAD_SIZE_OR_TYPE];
@@ -909,7 +1009,7 @@ describe("SardineTests", () => {
     });
 
     it("should throw InternalServerErrorException when status is REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE and error code is not proper", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.ERROR;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.HIGH;
       documentVerificationResponse.errorCodes = ["fake" as any];
@@ -921,7 +1021,7 @@ describe("SardineTests", () => {
     });
 
     it("should throw InternalServerErrorException when status is REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE and error code does not exist", async () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.ERROR;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.HIGH;
       documentVerificationResponse.errorCodes = [];
@@ -933,7 +1033,7 @@ describe("SardineTests", () => {
     });
 
     it("should return status REJECTED when document verification result is REJECTED", () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = SardineDocumentProcessingStatus.REJECTED;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.HIGH;
 
@@ -943,7 +1043,7 @@ describe("SardineTests", () => {
     });
 
     it("should return status PENDING when document verification status is not one of COMPLETE, ERROR, REJECTED, PENDING, PROCESSING", () => {
-      const documentVerificationResponse = FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE;
+      const documentVerificationResponse = FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE;
       documentVerificationResponse.status = "fakeStatus" as any;
       documentVerificationResponse.verification.riskLevel = SardineRiskLevels.HIGH;
 

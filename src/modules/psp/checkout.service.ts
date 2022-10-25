@@ -325,18 +325,37 @@ export class CheckoutService {
     };
   }
 
-  async requestCheckoutPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
+  async requestCheckoutPayment(
+    consumer: Consumer,
+    transaction: Transaction,
+    paymentMethod: PaymentMethod,
+  ): Promise<PaymentRequestResponse> {
     let checkoutResponse;
     let bin: string;
+
+    let checkoutSource = {};
+    if (paymentMethod.type === PaymentMethodType.CARD) {
+      checkoutSource = {
+        type: "id",
+        id: transaction.props.paymentMethodID,
+      };
+    } else if (paymentMethod.type === PaymentMethodType.ACH) {
+      checkoutSource = {
+        type: "provider_token",
+        payment_method: "ach",
+        token: paymentMethod.paymentToken,
+        account_holder: {
+          type: "individual",
+        },
+      };
+    }
+
     try {
       checkoutResponse = await this.checkoutApi.payments.request(
         {
           amount: Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
           currency: transaction.props.leg1,
-          source: {
-            type: "id",
-            id: transaction.props.paymentMethodID,
-          },
+          source: checkoutSource,
           description: "Noba Customer Payment at UTC " + Date.now(),
           metadata: {
             order_id: transaction.props._id,
@@ -344,8 +363,6 @@ export class CheckoutService {
         },
         /*idempotencyKey=*/ transaction.props._id,
       );
-
-      bin = checkoutResponse["source"]["bin"];
     } catch (err) {
       this.logger.error(
         `Exception while requesting checkout payment for transaction id ${transaction.props._id}: ${err.message}`,
@@ -353,59 +370,72 @@ export class CheckoutService {
       throw err;
     }
 
-    let creditCardBinData = await this.creditCardService.getBINDetails(bin);
+    if (paymentMethod.type === PaymentMethodType.CARD) {
+      bin = checkoutResponse["source"]["bin"];
+      let creditCardBinData = await this.creditCardService.getBINDetails(bin);
 
-    if (creditCardBinData === null) {
-      // Record is not in our db. Fetch payment method details from checkout and add entry
-      const paymentMethodResponse = await this.checkoutApi.instruments.get(transaction.props.paymentMethodID);
-      const cardType = paymentMethodResponse["card_type"];
-      const bin = paymentMethodResponse["bin"];
-      const scheme = paymentMethodResponse["scheme"];
-      const issuer = paymentMethodResponse["issuer"] ?? "";
+      if (creditCardBinData === null) {
+        // Record is not in our db. Fetch payment method details from checkout and add entry
+        const paymentMethodResponse = await this.checkoutApi.instruments.get(transaction.props.paymentMethodID);
+        const cardType = paymentMethodResponse["card_type"];
+        const bin = paymentMethodResponse["bin"];
+        const scheme = paymentMethodResponse["scheme"];
+        const issuer = paymentMethodResponse["issuer"] ?? "";
 
-      const possibleCards = creditCardType(bin);
+        const possibleCards = creditCardType(bin);
 
-      if (possibleCards.length > 1) {
-        console.log("More than one possible card type for given bin: " + JSON.stringify(possibleCards));
+        if (possibleCards.length > 1) {
+          console.log("More than one possible card type for given bin: " + JSON.stringify(possibleCards));
+        }
+
+        const card = possibleCards[0];
+
+        creditCardBinData = {
+          issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
+          bin: bin,
+          type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
+          network: scheme,
+          supported: BINValidity.SUPPORTED,
+          digits: card.lengths[0],
+          cvvDigits: card.code[getCodeTypeFromCardScheme(card.type)],
+        };
+
+        creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);
       }
 
-      const card = possibleCards[0];
+      const response = await this.handleCheckoutResponse(
+        consumer,
+        checkoutResponse,
+        transaction.props.paymentMethodID,
+        null,
+        transaction.props.sessionKey,
+        transaction.props.transactionID,
+        transaction.props.partnerID,
+        creditCardBinData,
+      );
 
-      creditCardBinData = {
-        issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
-        bin: bin,
-        type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
-        network: scheme,
-        supported: BINValidity.SUPPORTED,
-        digits: card.lengths[0],
-        cvvDigits: card.code[getCodeTypeFromCardScheme(card.type)],
-      };
-
-      creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);
-    }
-
-    const response = await this.handleCheckoutResponse(
-      consumer,
-      checkoutResponse,
-      transaction.props.paymentMethodID,
-      null,
-      transaction.props.sessionKey,
-      transaction.props.transactionID,
-      transaction.props.partnerID,
-      creditCardBinData,
-    );
-
-    switch (response.paymentMethodStatus) {
-      case PaymentMethodStatus.APPROVED:
-        return { status: response.paymentMethodStatus, paymentID: checkoutResponse["id"] };
-      case PaymentMethodStatus.REJECTED:
+      switch (response.paymentMethodStatus) {
+        case PaymentMethodStatus.APPROVED:
+          return { status: response.paymentMethodStatus, paymentID: checkoutResponse["id"] };
+        case PaymentMethodStatus.REJECTED:
+          return {
+            status: response.paymentMethodStatus,
+            responseCode: response.responseCode,
+            responseSummary: response.responseSummary,
+          };
+        case PaymentMethodStatus.FLAGGED:
+        // TODO: Don't yet have a use for this?
+      }
+    } else if (paymentMethod.type === PaymentMethodType.ACH) {
+      // TODO(Plaid) Handle various statuses and response codes: https://www.checkout-docs-private-beta.com/docs/four/ach
+      console.log(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
+      const status = checkoutResponse["status"];
+      if (status === "Pending") {
         return {
-          status: response.paymentMethodStatus,
-          responseCode: response.responseCode,
-          responseSummary: response.responseSummary,
+          status: status,
+          responseCode: checkoutResponse["responseCode"],
         };
-      case PaymentMethodStatus.FLAGGED:
-      // TODO: Don't yet have a use for this?
+      }
     }
   }
 

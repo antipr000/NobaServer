@@ -1,7 +1,7 @@
 import { Mapper } from "../../../core/infra/Mapper";
 import { Consumer } from "../domain/Consumer";
 import { CryptoWallet } from "../domain/CryptoWallet";
-import { PaymentMethod } from "../domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
 import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 import { ConsumerDTO, ConsumerSimpleDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
 
@@ -44,16 +44,36 @@ export class ConsumerMapper implements Mapper<Consumer> {
     };
   }
 
+  // TODO(Plaid) figure out mapping
   public toPaymentMethodsDTO(paymentMethod: PaymentMethod): PaymentMethodsDTO {
-    return {
-      cardName: paymentMethod.name,
-      cardType: paymentMethod.cardData.cardType,
-      imageUri: paymentMethod.imageUri,
-      paymentToken: paymentMethod.paymentToken,
-      first6Digits: paymentMethod.cardData.first6Digits,
-      last4Digits: paymentMethod.cardData.last4Digits,
-      status: paymentMethod.status,
-    };
+    if (paymentMethod.type === PaymentMethodType.CARD) {
+      return {
+        type: PaymentMethodType.CARD,
+        name: paymentMethod.name,
+        imageUri: paymentMethod.imageUri,
+        paymentToken: paymentMethod.paymentToken,
+        status: paymentMethod.status,
+        cardData: {
+          first6Digits: paymentMethod.cardData.first6Digits,
+          last4Digits: paymentMethod.cardData.last4Digits,
+          cardType: paymentMethod.cardData.cardType,
+        },
+      };
+    } else if (paymentMethod.type === PaymentMethodType.ACH) {
+      return {
+        type: PaymentMethodType.ACH,
+        name: paymentMethod.name,
+        imageUri: paymentMethod.imageUri,
+        paymentToken: paymentMethod.paymentToken,
+        status: paymentMethod.status,
+        achData: {
+          accountMask: paymentMethod.achData.mask,
+          accountType: paymentMethod.achData.accountType,
+        },
+      };
+    } else {
+      throw Error(`Unknown payment method type: ${paymentMethod.type}`);
+    }
   }
 
   public toDTO(consumer: Consumer): ConsumerDTO {

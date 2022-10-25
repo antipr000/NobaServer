@@ -7,7 +7,7 @@ export function getMockPlaidClientWithDefaults(): PlaidClient {
   when(plaidClient.generateLinkToken(anything())).thenReject(new Error("Not implemented!"));
   when(plaidClient.createProcessorToken(anything())).thenReject(new Error("Not implemented!"));
   when(plaidClient.exchangeForAccessToken(anything())).thenReject(new Error("Not implemented!"));
-  when(plaidClient.retrieveAuthData(anything())).thenReject(new Error("Not implemented!"));
+  when(plaidClient.retrieveAccountData(anything())).thenReject(new Error("Not implemented!"));
 
   return plaidClient;
 }

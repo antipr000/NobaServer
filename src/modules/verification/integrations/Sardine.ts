@@ -35,6 +35,7 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -185,6 +186,31 @@ export class Sardine implements IDVProvider {
     consumer: Consumer,
     transactionInformation: TransactionInformation,
   ): Promise<ConsumerVerificationResult> {
+    let sardinePaymentMethodData;
+    const paymentMethod = consumer.getPaymentMethodByID(transactionInformation.paymentMethodID);
+    if (paymentMethod.type === PaymentMethodType.CARD) {
+      sardinePaymentMethodData = {
+        type: PaymentMethodTypes.CARD,
+        card: {
+          first6: paymentMethod.cardData.first6Digits,
+          last4: paymentMethod.cardData.last4Digits,
+          hash: transactionInformation.paymentMethodID,
+        },
+      };
+    } else if (paymentMethod.type === PaymentMethodType.ACH) {
+      // TODO(Plaid) Need to make a call to plaid to pull the account data in real-time
+      sardinePaymentMethodData = {
+        type: PaymentMethodTypes.BANK,
+        bank: {
+          accountNumber: "12345",
+          routingNumber: "123456789",
+          accountType: paymentMethod.type, // checking, savings, other
+          balance: 1234,
+          balanceCurrencyCode: "USD", // force to this when picking?
+        },
+      };
+    }
+
     const sanctionsCheckSardineRequest: SardineCustomerRequest = {
       flow: "payment-submission",
       sessionKey: sessionKey,
@@ -198,14 +224,7 @@ export class Sardine implements IDVProvider {
         amount: transactionInformation.amount,
         currencyCode: transactionInformation.currencyCode,
         actionType: "buy",
-        paymentMethod: {
-          type: PaymentMethodTypes.CARD,
-          card: {
-            first6: transactionInformation.first6DigitsOfCard,
-            last4: transactionInformation.last4DigitsOfCard,
-            hash: transactionInformation.cardID,
-          },
-        },
+        paymentMethod: sardinePaymentMethodData,
         recipient: {
           emailAddress: consumer.props.email,
           isKycVerified: consumer.props.verificationData.kycVerificationStatus === KYCStatus.APPROVED,

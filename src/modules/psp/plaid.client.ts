@@ -23,10 +23,11 @@ import {
   CreateProcessorTokenRequest,
   ExchangeForAccessTokenRequest,
   GenerateLinkTokenRequest,
-  RetrieveAuthDataRequest,
-  RetrieveAuthDataResponse,
+  RetrieveAccountDataRequest,
+  RetrieveAccountDataResponse,
   TokenProcessor,
 } from "./domain/PlaidTypes";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class PlaidClient {
@@ -62,7 +63,7 @@ export class PlaidClient {
         account_filters: {
           depository: { account_subtypes: [DepositoryAccountSubtype.Checking] },
         },
-        //redirect_uri: this.plaidConfigs.redirectUri,
+        redirect_uri: this.plaidConfigs.redirectUri,
       };
 
       const createTokenResponse: AxiosResponse<PlaidLinkTokenCreateResponse> = await this.plaidApi.linkTokenCreate(
@@ -101,24 +102,38 @@ export class PlaidClient {
   // TODO: Consider moving this to an asynchronous flow because as per Plaid documentation -
   // "This request may take some time because Plaid must communicate directly with the
   //  institution to retrieve the data."
-  public async retrieveAuthData(request: RetrieveAuthDataRequest): Promise<RetrieveAuthDataResponse> {
+  public async retrieveAccountData(request: RetrieveAccountDataRequest): Promise<RetrieveAccountDataResponse> {
     try {
+      console.log(`Calling authGet with token ${request.accessToken}`);
       const authData: AxiosResponse<AuthGetResponse> = await this.plaidApi.authGet({
         access_token: request.accessToken,
       });
+      if (authData == null) {
+        console.log("Why is authData null?");
+      }
+      console.log(`All authdata: ${JSON.stringify(authData.data, null, 1)}`);
       this.logger.info(`"authGet" succeeds with request_id: "${authData.data.request_id}"`);
 
-      if (authData.data.accounts.length === 0) {
-        this.logger.error(`Empty account list from Plaid API.`);
-        throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
+      if (authData.data.accounts.length != 1) {
+        const errorMessage = "Mismatch between access token and account id in Plaid AuthGet request.";
+        this.logger.error(errorMessage);
+        throw new InternalServerErrorException(errorMessage);
       }
 
       return {
         accountID: authData.data.accounts[0].account_id,
         itemID: authData.data.item.item_id,
+        availableBalance: Utils.roundTo2DecimalString(authData.data.accounts[0].balances.available / 100),
+        currencyCode: authData.data.accounts[0].balances.iso_currency_code,
+        mask: authData.data.accounts[0].mask,
+        name: authData.data.accounts[0].name,
+        subtype: authData.data.accounts[0].subtype,
+        accountNumber: authData.data.numbers.ach[0].account,
+        achRoutingNumber: authData.data.numbers.ach[0].routing,
+        wireRoutingNumber: authData.data.numbers.ach[0].wire_routing,
       };
     } catch (err) {
-      this.logger.error(`Error while fetching auth data: ${JSON.stringify(err.response.data)}`);
+      this.logger.error(`Error while fetching auth data: ${err}`);
       throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
     }
   }

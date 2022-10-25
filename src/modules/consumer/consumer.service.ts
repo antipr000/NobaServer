@@ -24,7 +24,7 @@ import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "./domain/PaymentProvider";
 import { PlaidClient } from "../psp/plaid.client";
-import { RetrieveAuthDataResponse, TokenProcessor } from "../psp/domain/PlaidTypes";
+import { RetrieveAccountDataResponse, TokenProcessor } from "../psp/domain/PlaidTypes";
 
 @Injectable()
 export class ConsumerService {
@@ -162,33 +162,33 @@ export class ConsumerService {
         const accessToken: string = await this.plaidClient.exchangeForAccessToken({
           publicToken: paymentMethod.achDetails.token,
         });
-        const authData: RetrieveAuthDataResponse = await this.plaidClient.retrieveAuthData({
+        const accountData: RetrieveAccountDataResponse = await this.plaidClient.retrieveAccountData({
           accessToken: accessToken,
         });
         const processorToken: string = await this.plaidClient.createProcessorToken({
           accessToken: accessToken,
-          accountID: authData.accountID,
+          accountID: accountData.accountID,
           tokenProcessor: TokenProcessor.CHECKOUT,
         });
 
+        // Create or get Customer ID - even though we don't need it here, this ensures we have one
+        // that we can use by the time we make a payment
         const checkoutCustomerID: string = await this.checkoutService.createCheckoutCustomer(consumer);
-        const instrumentID: string = await this.checkoutService.addInstrument({
-          checkoutCustomerID: checkoutCustomerID,
-          checkoutToken: processorToken,
-        });
 
         const newPaymentMethod: PaymentMethod = {
-          name: paymentMethod.name,
+          name: accountData.name,
           type: PaymentMethodType.ACH,
           achData: {
-            // TODO: Encrypt it.
+            // TODO(Plaid): Encrypt it.
             accessToken: accessToken,
-            accountID: authData.accountID,
-            itemID: authData.itemID,
+            accountID: accountData.accountID,
+            itemID: accountData.itemID,
+            mask: accountData.mask,
+            accountType: accountData.subtype,
           },
           imageUri: paymentMethod.imageUri,
           paymentProviderID: PaymentProvider.CHECKOUT,
-          paymentToken: instrumentID,
+          paymentToken: processorToken,
           status: PaymentMethodStatus.APPROVED,
         };
 
@@ -235,16 +235,16 @@ export class ConsumerService {
     }
     */
 
-    const paymentProvider = await this.getPaymentMethodProvider(consumer.props._id, transaction.props.paymentMethodID);
-    if (paymentProvider === PaymentProvider.CHECKOUT) {
-      return this.checkoutService.requestCheckoutPayment(consumer, transaction);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    if (paymentMethod.paymentProviderID === PaymentProvider.CHECKOUT) {
+      return this.checkoutService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     } else {
       this.logger.error(
-        `Error in making payment as payment provider ${paymentProvider} is not supported. Consumer: ${JSON.stringify(
-          consumer,
-        )}, Transaction: ${JSON.stringify(transaction)}`,
+        `Error in making payment as payment provider ${
+          paymentMethod.paymentProviderID
+        } is not supported. Consumer: ${JSON.stringify(consumer)}, Transaction: ${JSON.stringify(transaction)}`,
       );
-      throw new BadRequestException(`Payment provider ${paymentProvider} is not supported`);
+      throw new BadRequestException(`Payment provider ${paymentMethod.paymentProviderID} is not supported`);
     }
   }
 

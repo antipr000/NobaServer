@@ -410,7 +410,7 @@ describe("ConsumerController", () => {
 
       expect(result._id).toBe(consumer.props._id);
       expect(result.paymentMethods.length).toBe(1);
-      expect(result.paymentMethods[0].cardName).toBe(paymentMethodRequest.name);
+      expect(result.paymentMethods[0].name).toBe(paymentMethodRequest.name);
     });
 
     it("should throw 400 error if 'cardDetails' is not present for 'CARD' type", async () => {
