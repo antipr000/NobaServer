@@ -16,6 +16,11 @@ jobs:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}
           
+      # lint-action@v2 needs to do some git magic so git needs to be configured properly which @action/checkout@v3 is very good at.
+      # though before running this workflow we expect a workflow to already run @checkout but the config setup done by @checkout
+      # is not carried in the cache so we need to do fresh @checkout after loading the cached-environment to re-configure git but 
+      # we shouldn't lose the cached-environment (./node_modules etc.) so we do "clean: false". Also we should checkout after loading 
+      # the cache as cache will override the git-config files otherwise.
       - uses: actions/checkout@v3
         with: 
           clean: false
