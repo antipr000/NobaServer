@@ -24,8 +24,8 @@ import {
   DocumentVerificationWebhookRequest,
 } from "../integrations/SardineTypeDefinitions";
 import {
-  FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
-  FAKE_DOCUMENT_VERIFiCATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
+  FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
+  FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
 } from "../integrations/fakes/FakeSardineResponses";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { Express } from "express";
@@ -954,7 +954,7 @@ function getDocumentVerificationWebhookRequest(
             sessionKey: "fake-session-key",
             customerID: consumer.props._id,
           },
-          documentVerificationResult: FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
+          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
         },
       };
     case DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE:
@@ -970,7 +970,7 @@ function getDocumentVerificationWebhookRequest(
             sessionKey: "fake-session-key",
             customerID: consumer.props._id,
           },
-          documentVerificationResult: FAKE_DOCUMENT_VERIFiCATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
+          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
         },
       };
   }
@@ -981,9 +981,7 @@ function getFakeTransactionInformation(): TransactionInformation {
     transactionID: "fake-transaction-id",
     amount: 100,
     currencyCode: "USD",
-    first6DigitsOfCard: "1234",
-    last4DigitsOfCard: "5678",
-    cardID: "fake-card",
+    paymentMethodID: "fake-card",
     cryptoCurrencyCode: "ETH",
     walletAddress: "fake-wallet-address",
     partnerName: "fake-partner-name",

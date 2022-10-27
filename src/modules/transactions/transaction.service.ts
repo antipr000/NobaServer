@@ -408,14 +408,13 @@ export class TransactionService {
       transactionID: transaction.props._id,
       amount: transaction.props.leg1Amount,
       currencyCode: transaction.props.leg1,
-      first6DigitsOfCard: paymentMethod.cardData.first6Digits,
-      last4DigitsOfCard: paymentMethod.cardData.last4Digits,
-      cardID: paymentMethod.paymentToken,
+      paymentMethodID: paymentMethod.paymentToken,
       cryptoCurrencyCode: transaction.props.leg2,
       walletAddress: transaction.props.destinationWalletAddress,
       walletStatus: cryptoWallet.status,
       partnerName: partner.props.name,
     };
+
     const result = await this.verificationService.transactionVerification(
       transaction.props.sessionKey,
       consumer,

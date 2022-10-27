@@ -38,7 +38,7 @@ import {
   VerificationWebhooksService,
 } from "./api_client";
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE } from "../src/modules/verification/integrations/fakes/FakeSardineResponses";
+import { FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE } from "../src/modules/verification/integrations/fakes/FakeSardineResponses";
 import crypto_ts from "crypto";
 import { getRandomEmail } from "./TestUtils";
 
@@ -252,7 +252,7 @@ describe("Verification", () => {
         type: "fake-type",
         timestamp: new Date().toISOString(),
         data: {
-          documentVerificationResult: FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
+          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
           case: {
             sessionKey: "test-session-key",
             customerID: getConsumerResponse._id,
@@ -289,7 +289,7 @@ describe("Verification", () => {
         type: "fake-type",
         timestamp: new Date().toISOString(),
         data: {
-          documentVerificationResult: FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
+          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
           case: {
             sessionKey: "test-session-key",
             customerID: "fake-consumer",

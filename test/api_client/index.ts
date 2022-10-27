@@ -43,6 +43,8 @@ export type { NationalIDDTO } from "./models/NationalIDDTO";
 export type { NobaAdminDTO } from "./models/NobaAdminDTO";
 export type { PartnerAdminDTO } from "./models/PartnerAdminDTO";
 export type { PartnerDTO } from "./models/PartnerDTO";
+export type { PaymentMethodACHDataDTO } from "./models/PaymentMethodACHDataDTO";
+export type { PaymentMethodCardDataDTO } from "./models/PaymentMethodCardDataDTO";
 export type { PaymentMethodsDTO } from "./models/PaymentMethodsDTO";
 export type { PeriodLimit } from "./models/PeriodLimit";
 export type { PlaidTokenDTO } from "./models/PlaidTokenDTO";

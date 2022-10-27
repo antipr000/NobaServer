@@ -670,7 +670,7 @@ describe("Consumers", () => {
       expect(addedCardDetails.paymentToken).toBeDefined();
       // TODO: Enable this test once the service is fixed.
       // expect(addedCardDetails.cardType).toBe("Mastercard");
-      expect(addedCardDetails.cardName).toBe("Tester");
+      expect(addedCardDetails.name).toBe("Tester");
 
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
