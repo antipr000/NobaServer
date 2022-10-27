@@ -24,4 +24,4 @@ jobs:
           auto_fix: false
           eslint_auto_fix: false
           prettier_auto_fix: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+#           github_token: ${{ secrets.GITHUB_TOKEN }}
