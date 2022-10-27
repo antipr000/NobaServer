@@ -172,10 +172,9 @@ export class ConsumerService {
         });
 
         const checkoutCustomerID: string = await this.checkoutService.createCheckoutCustomer(consumer);
-        const instrumentID: string = await this.checkoutService.addInstrument({
-          checkoutCustomerID: checkoutCustomerID,
-          checkoutToken: processorToken,
-        });
+
+        // const checkoutResponse = await this.checkoutService.performOneDollarACHTransaction(processorToken);
+        // console.log(checkoutResponse);
 
         const newPaymentMethod: PaymentMethod = {
           name: paymentMethod.name,
@@ -188,7 +187,9 @@ export class ConsumerService {
           },
           imageUri: paymentMethod.imageUri,
           paymentProviderID: PaymentProvider.CHECKOUT,
-          paymentToken: instrumentID,
+
+          paymentToken: processorToken,
+
           status: PaymentMethodStatus.APPROVED,
         };
 

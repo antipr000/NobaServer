@@ -110,14 +110,42 @@ export class CheckoutService {
   }
 
   public async addInstrument(request: AddInstrumentRequest): Promise<string> {
-    const instrument = await this.checkoutApi.instruments.create({
-      token: request.checkoutToken,
-      customer: {
-        id: request.checkoutCustomerID,
-      },
-    });
+    try {
+      const instrument = await this.checkoutApi.instruments.create({
+        token: request.checkoutToken,
+        customer: {
+          id: request.checkoutCustomerID,
+        },
+      });
 
-    return instrument["id"];
+      return instrument["id"];
+    } catch (err) {
+      console.log(err);
+      this.logger.error(`Checkout intrument creation failed - ${JSON.stringify(err)}`);
+      throw err;
+    }
+  }
+
+  public async performOneDollarACHTransaction(paymentToken: string) {
+    try {
+      const checkoutResponse = await this.checkoutApi.payments.request({
+        amount: "1", // 1 cent (amount field is denominated in cents not a decimal dollar)
+        currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
+        processing_channel_id: "pc_ka6ij3qluenufp5eovqqtw4xdu",
+        source: {
+          type: "provider_token",
+          token: paymentToken,
+          payment_method: "ach",
+          account_holder: {
+            type: "individual",
+          },
+        },
+      });
+      console.log(checkoutResponse);
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   }
 
   public async addCreditCardPaymentMethod(

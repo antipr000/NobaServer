@@ -455,7 +455,6 @@ describe("ConsumerService", () => {
       const partnerId = "partner-1";
 
       const checkoutCustomerID = "checkout-customer-for-mock-consumer";
-      const checkoutInstrumentIdForPlaid = "checkout-intrument-id-for-plaid-token";
 
       const plaidPublicToken = "public-token-by-plain-embed-ui";
       const plaidAccessToken = "plaid-access-token-for-public-token";
@@ -514,14 +513,6 @@ describe("ConsumerService", () => {
       ).thenResolve(plaidCheckoutProcessorToken);
 
       when(checkoutService.createCheckoutCustomer(deepEqual(consumer))).thenResolve(checkoutCustomerID);
-      when(
-        checkoutService.addInstrument(
-          deepEqual({
-            checkoutCustomerID: checkoutCustomerID,
-            checkoutToken: plaidCheckoutProcessorToken,
-          }),
-        ),
-      ).thenResolve(checkoutInstrumentIdForPlaid);
 
       const expectedConsumerProps: ConsumerProps = {
         _id: "mock-consumer-1",
@@ -551,7 +542,7 @@ describe("ConsumerService", () => {
               itemID: plaidAuthGetItemID,
             },
             paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: checkoutInstrumentIdForPlaid,
+            paymentToken: plaidCheckoutProcessorToken,
             imageUri: "https://noba.com",
             status: PaymentMethodStatus.APPROVED,
           },
@@ -572,7 +563,6 @@ describe("ConsumerService", () => {
       const partnerId = "partner-1";
 
       const checkoutCustomerID = "checkout-customer-for-mock-consumer";
-      const checkoutInstrumentIdForPlaid = "checkout-intrument-id-for-plaid-token";
 
       const plaidPublicToken = "public-token-by-plain-embed-ui";
       const plaidAccessToken = "plaid-access-token-for-public-token";
@@ -626,14 +616,6 @@ describe("ConsumerService", () => {
       ).thenResolve(plaidCheckoutProcessorToken);
 
       when(checkoutService.createCheckoutCustomer(deepEqual(consumer))).thenResolve(checkoutCustomerID);
-      when(
-        checkoutService.addInstrument(
-          deepEqual({
-            checkoutCustomerID: checkoutCustomerID,
-            checkoutToken: plaidCheckoutProcessorToken,
-          }),
-        ),
-      ).thenResolve(checkoutInstrumentIdForPlaid);
 
       const expectedConsumerProps: ConsumerProps = {
         _id: "mock-consumer-1",
@@ -663,7 +645,7 @@ describe("ConsumerService", () => {
               itemID: plaidAuthGetItemID,
             },
             paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: checkoutInstrumentIdForPlaid,
+            paymentToken: plaidCheckoutProcessorToken,
             imageUri: "https://noba.com",
             status: PaymentMethodStatus.APPROVED,
           },

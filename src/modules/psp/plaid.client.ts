@@ -140,6 +140,7 @@ export class PlaidClient {
         });
       this.logger.info(`"processorTokenCreate" succeeds with request_id: "${processorTokenResponse.data.request_id}"`);
 
+      console.log(processorTokenResponse);
       return processorTokenResponse.data.processor_token;
     } catch (err) {
       this.logger.error(`Error while creating processor token: ${JSON.stringify(err.response.data)}`);
