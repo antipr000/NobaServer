@@ -27,3 +27,5 @@ jobs:
           eslint_auto_fix: false
           prettier_auto_fix: false
           github_token: ${{ github.token }}
+        env:
+          INPUT_GITHUB_TOKEN: ${{ github.token }}
