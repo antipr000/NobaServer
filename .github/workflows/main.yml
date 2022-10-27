@@ -20,7 +20,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   setup-environment:
-    uses: nobapay/NobaServer/.github/workflows/setup-environment.yml@main
+    uses: ./.github/workflows/setup-environment.yml
 
   builddeploy:
     # The type of runner that the job will run on
