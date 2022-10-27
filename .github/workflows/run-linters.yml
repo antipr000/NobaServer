@@ -7,6 +7,8 @@ jobs:
   linters:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      
       - name: Restore environment from cache
         id: restore-environment
         uses: actions/cache@v3
