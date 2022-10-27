@@ -27,6 +27,15 @@ jobs:
         run: |
           yarn install
           echo [SUCCESS] yarn install succeeded.
+          
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          eslint: true
+          prettier: true
+          auto_fix: false
+          eslint_auto_fix: false
+          prettier_auto_fix: false
 
       - name: Cache environment
         id: cache-environment
