@@ -7,16 +7,16 @@ jobs:
   linters:
     runs-on: ubuntu-latest
     steps:
+      - name: Restore environment from cache
+        id: restore-environment
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}
+          
       - uses: actions/checkout@v3
-      
-#       - name: Restore environment from cache
-#         id: restore-environment
-#         uses: actions/cache@v3
-#         env:
-#           cache-name: ${{ github.run_number }}
-#         with:
-#           path: ./
-#           key: ${{ runner.os }}-build-${{ github.run_number }}
 
       - name: Run linters
         uses: wearerequired/lint-action@v2
@@ -27,5 +27,3 @@ jobs:
           eslint_auto_fix: false
           prettier_auto_fix: false
           github_token: ${{ github.token }}
-        env:
-          INPUT_GITHUB_TOKEN: ${{ github.token }}
