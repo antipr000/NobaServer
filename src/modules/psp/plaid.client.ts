@@ -12,6 +12,7 @@ import {
   ProcessorTokenCreateRequestProcessorEnum,
   ProcessorTokenCreateResponse,
   DepositoryAccountSubtype,
+  AccountSubtype,
 } from "plaid";
 import { AxiosResponse } from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -20,6 +21,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PlaidConfigs } from "../../config/configtypes/PlaidConfigs";
 import { PLAID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import {
+  BankAccountType,
   CreateProcessorTokenRequest,
   ExchangeForAccessTokenRequest,
   GenerateLinkTokenRequest,
@@ -120,6 +122,20 @@ export class PlaidClient {
         throw new InternalServerErrorException(errorMessage);
       }
 
+      let type: BankAccountType;
+      switch (authData.data.accounts[0].subtype) {
+        case AccountSubtype.Checking:
+          type = BankAccountType.CHECKING;
+          break;
+
+        case AccountSubtype.Savings:
+          type = BankAccountType.SAVINGS;
+          break;
+
+        default:
+          type = BankAccountType.OTHERS;
+      }
+
       return {
         accountID: authData.data.accounts[0].account_id,
         itemID: authData.data.item.item_id,
@@ -127,7 +143,7 @@ export class PlaidClient {
         currencyCode: authData.data.accounts[0].balances.iso_currency_code,
         mask: authData.data.accounts[0].mask,
         name: authData.data.accounts[0].name,
-        subtype: authData.data.accounts[0].subtype,
+        accountType: type,
         accountNumber: authData.data.numbers.ach[0].account,
         achRoutingNumber: authData.data.numbers.ach[0].routing,
         wireRoutingNumber: authData.data.numbers.ach[0].wire_routing,

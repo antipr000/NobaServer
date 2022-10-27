@@ -187,7 +187,7 @@ export class ConsumerService {
             accountID: accountData.accountID,
             itemID: accountData.itemID,
             mask: accountData.mask,
-            accountType: accountData.subtype,
+            accountType: accountData.accountType,
           },
           imageUri: paymentMethod.imageUri,
           paymentProviderID: PaymentProvider.CHECKOUT,

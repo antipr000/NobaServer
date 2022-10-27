@@ -35,7 +35,7 @@ import { NotificationEventType } from "../../../modules/notifications/domain/Not
 import { PaymentProvider } from "../domain/PaymentProvider";
 import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
-import { TokenProcessor } from "../../../modules/psp/domain/PlaidTypes";
+import { BankAccountType, TokenProcessor } from "../../../modules/psp/domain/PlaidTypes";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -507,7 +507,7 @@ describe("ConsumerService", () => {
         currencyCode: "USD",
         mask: "7890",
         name: "Bank Account",
-        subtype: "checking",
+        accountType: BankAccountType.CHECKING,
         wireRoutingNumber: "987654321",
       });
       when(
@@ -549,7 +549,7 @@ describe("ConsumerService", () => {
               accountID: plaidAccountID,
               itemID: plaidAuthGetItemID,
               mask: "7890",
-              accountType: "checking",
+              accountType: BankAccountType.CHECKING,
             },
             paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: plaidCheckoutProcessorToken,
@@ -621,7 +621,7 @@ describe("ConsumerService", () => {
         currencyCode: "USD",
         mask: "7890",
         name: "Bank Account",
-        subtype: "checking",
+        accountType: BankAccountType.CHECKING,
         wireRoutingNumber: "987654321",
       });
       when(
@@ -663,7 +663,7 @@ describe("ConsumerService", () => {
               accountID: plaidAccountID,
               itemID: plaidAuthGetItemID,
               mask: "7890",
-              accountType: "checking",
+              accountType: BankAccountType.CHECKING,
             },
             paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: plaidCheckoutProcessorToken,

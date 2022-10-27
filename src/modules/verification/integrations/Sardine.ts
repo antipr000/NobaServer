@@ -36,6 +36,8 @@ import { TransactionInformation } from "../domain/TransactionInformation";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
+import { PlaidClient } from "src/modules/psp/plaid.client";
+import { RetrieveAccountDataResponse, BankAccountType } from "src/modules/psp/domain/PlaidTypes";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -43,7 +45,7 @@ export class Sardine implements IDVProvider {
   private readonly logger: Logger;
 
   BASE_URI: string;
-  constructor(private readonly configService: CustomConfigService) {
+  constructor(private readonly configService: CustomConfigService, private readonly plaidClient: PlaidClient) {
     this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
   }
 
@@ -198,15 +200,34 @@ export class Sardine implements IDVProvider {
         },
       };
     } else if (paymentMethod.type === PaymentMethodType.ACH) {
-      // TODO(Plaid) Need to make a call to plaid to pull the account data in real-time
+      const accountData: RetrieveAccountDataResponse = await this.plaidClient.retrieveAccountData({
+        accessToken: paymentMethod.achData.accessToken,
+      });
+
+      let accountType: string = "";
+      switch (accountData.accountType) {
+        case BankAccountType.CHECKING:
+          accountType = "checking";
+          break;
+
+        case BankAccountType.SAVINGS:
+          accountType = "savings";
+          break;
+
+        default:
+          accountType = "other";
+      }
+
       sardinePaymentMethodData = {
+        // TODO(Sardine): Only allowed value as per documentation is "crypto". So, why "BANK"/"CARD"?
         type: PaymentMethodTypes.BANK,
         bank: {
-          accountNumber: "12345",
-          routingNumber: "123456789",
-          accountType: paymentMethod.type, // checking, savings, other
-          balance: 1234,
-          balanceCurrencyCode: "USD", // force to this when picking?
+          accountNumber: accountData.accountNumber,
+          // TODO(Sardine): Whether it should be 'achRoutingNumber' or 'wireRoutingNumber'?
+          routingNumber: accountData.achRoutingNumber,
+          accountType: accountType,
+          balance: parseFloat(accountData.availableBalance),
+          balanceCurrencyCode: accountData.currencyCode,
         },
       };
     }
@@ -273,7 +294,7 @@ export class Sardine implements IDVProvider {
         idvProviderRiskLevel: data.level,
       };
     } catch (e) {
-      this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
+      this.logger.error(`Sardine request failed for Transaction validation: ${e}, ${e.response.data}`);
       throw new BadRequestException(e.message);
     }
   }

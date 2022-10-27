@@ -17,11 +17,17 @@ export type RetrieveAccountDataResponse = {
   currencyCode: string;
   mask: string;
   name: string;
-  subtype: string; // Should only ever be "checking"
+  accountType: BankAccountType;
   accountNumber: string;
   achRoutingNumber: string;
   wireRoutingNumber: string;
 };
+
+export enum BankAccountType {
+  SAVINGS = "Savings",
+  CHECKING = "Checking",
+  OTHERS = "Others",
+}
 
 export type CreateProcessorTokenRequest = {
   accountID: string;
