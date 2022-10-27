@@ -400,7 +400,7 @@ export class CheckoutService {
         const cardType = paymentMethodResponse["card_type"];
         const bin = paymentMethodResponse["bin"];
         const scheme = paymentMethodResponse["scheme"];
-        const issuer = paymentMethodResponse["issuer"] ?? "";
+        const issuer = paymentMethodResponse["issuer"]; // We will not always have an issuer in the instrument response
 
         const possibleCards = creditCardType(bin);
 
@@ -411,15 +411,21 @@ export class CheckoutService {
         const card = possibleCards[0];
 
         creditCardBinData = {
-          issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
+          issuer: issuer,
           bin: bin,
-          type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
+          type:
+            cardType === null || cardType === undefined
+              ? undefined
+              : cardType.toLocaleLowerCase() === "credit"
+              ? CardType.CREDIT
+              : CardType.DEBIT,
           network: scheme,
           supported: BINValidity.SUPPORTED,
           digits: card.lengths[0],
           cvvDigits: card.code[getCodeTypeFromCardScheme(card.type)],
         };
 
+        this.logger.info(`Adding BIN data: ${JSON.stringify(creditCardBinData, null, 1)}`);
         creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);
       }
 

@@ -120,7 +120,6 @@ plaid:
   awsSecretNameForSecretKey: "3efe6f2aef4a7ab5d609149f96a35b"
 
 locationDataFileName: "countries+states.json"
-ccBINDataFileNameMask: "all_bins.csv"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
 supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens.csv"

@@ -90,7 +90,6 @@ describe("CurrencyService for e2e test", () => {
     it("Should return ETH DTO", async () => {
       const eth = await currencyService.getCryptocurrency("ETH");
 
-      // These assertions should change every time we update CreditCardDTO.unsupportedIssuers or all_bins.csv
       expect(eth).toEqual({
         name: "Ethereum",
         ticker: "ETH",
@@ -133,7 +132,6 @@ describe("CurrencyService for e2e test", () => {
     it("Should return USD DTO", async () => {
       const usd = await currencyService.getFiatCurrency("USD");
 
-      // These assertions should change every time we update CreditCardDTO.unsupportedIssuers or all_bins.csv
       expect(usd).toEqual({
         name: "US Dollar",
         ticker: "USD",
