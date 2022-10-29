@@ -455,14 +455,20 @@ export class CheckoutService {
       }
     } else if (paymentMethod.type === PaymentMethodType.ACH) {
       // TODO(Plaid) Handle various statuses and response codes: https://www.checkout-docs-private-beta.com/docs/four/ach
-      console.log(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
+      this.logger.info(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
+
       const status = checkoutResponse["status"];
-      if (status === "Pending") {
+      if (status !== "Pending") {
         return {
-          status: status,
+          status: PaymentMethodStatus.REJECTED,
           responseCode: checkoutResponse["responseCode"],
         };
       }
+      return {
+        paymentID: checkoutResponse["id"],
+        status: PaymentMethodStatus.APPROVED,
+        responseCode: checkoutResponse["responseCode"],
+      };
     }
   }
 
