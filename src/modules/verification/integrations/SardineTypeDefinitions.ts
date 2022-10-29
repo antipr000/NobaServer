@@ -33,10 +33,19 @@ export type Crypto = {
   address?: string;
 };
 
+export type Bank = {
+  accountNumber: string;
+  routingNumber: string;
+  accountType: string;
+  balance: number;
+  balanceCurrencyCode: string;
+}
+
 export type PaymentMethod = {
   type: PaymentMethodTypes;
   card?: Card;
   crypto?: Crypto;
+  bank?: Bank;
 };
 
 export type Recipient = {

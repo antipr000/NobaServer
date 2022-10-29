@@ -1,14 +1,14 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
-import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { ConsumerInformation } from "../../domain/ConsumerInformation";
-import { Sardine } from "../Sardine";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { ConsumerInformation } from "../domain/ConsumerInformation";
+import { Sardine } from "../integrations/Sardine";
 import mockAxios from "jest-mock-axios";
 import {
   DocumentVerificationStatus,
   KYCStatus,
   WalletStatus,
-} from "../../../../modules/consumer/domain/VerificationStatus";
+} from "../../consumer/domain/VerificationStatus";
 import {
   FAKE_DEVICE_INFORMATION_RESPONSE,
   FAKE_DOCUMENT_SUBMISSION_RESPONSE,
@@ -24,31 +24,43 @@ import {
   KYC_SSN_HIGH_RISK,
   KYC_SSN_LOW_RISK,
   KYC_SSN_VERY_HIGH_RISK,
-} from "../fakes/FakeSardineResponses";
-import { TransactionInformation } from "../../domain/TransactionInformation";
-import { Consumer } from "../../../../modules/consumer/domain/Consumer";
-import { VerificationProviders } from "../../../../modules/consumer/domain/VerificationData";
+} from "../integrations/fakes/FakeSardineResponses";
+import { TransactionInformation } from "../domain/TransactionInformation";
+import { Consumer } from "../../consumer/domain/Consumer";
+import { VerificationProviders } from "../../consumer/domain/VerificationData";
 import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { DocumentInformation } from "../../domain/DocumentInformation";
-import { DocumentTypes } from "../../domain/DocumentTypes";
+import { DocumentInformation } from "../domain/DocumentInformation";
+import { DocumentTypes } from "../domain/DocumentTypes";
 import { Readable } from "stream";
-import { ConsumerVerificationResult, DocumentVerificationResult } from "../../domain/VerificationResult";
-import { NationalIDTypes } from "../../domain/NationalIDTypes";
+import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
+import { NationalIDTypes } from "../domain/NationalIDTypes";
 import {
   DocumentVerificationErrorCodes,
+  PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDocumentProcessingStatus,
   SardineRiskLevels,
-} from "../SardineTypeDefinitions";
-import { anyString, when } from "ts-mockito";
-import { PaymentMethodType } from "../../../../modules/consumer/domain/PaymentMethod";
-import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
+} from "../integrations/SardineTypeDefinitions";
+import { anyNumber, anyString, anything, capture, deepEqual, instance, spy, when } from "ts-mockito";
+import { PaymentMethodType } from "../../consumer/domain/PaymentMethod";
+import { PaymentProvider } from "../../consumer/domain/PaymentProvider";
+import { BankAccountType } from "../../psp/domain/PlaidTypes";
+import { PlaidClient } from "../../psp/plaid.client";
+import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
+import axios from "axios";
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 //TODO: Add assertions for request body
 describe("SardineTests", () => {
+  let plaidClient: PlaidClient;
+
   jest.setTimeout(10000);
   let sardine: Sardine;
+
   beforeEach(async () => {
+    plaidClient = getMockPlaidClientWithDefaults();
+
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
@@ -61,17 +73,23 @@ describe("SardineTests", () => {
         getTestWinstonModule(),
       ],
       controllers: [],
-      providers: [Sardine],
+      providers: [
+        {
+          provide: PlaidClient,
+          useFactory: () => instance(plaidClient),
+        },
+        Sardine,
+      ],
     }).compile();
 
     sardine = app.get<Sardine>(Sardine);
   });
 
-  describe("verifyConsumerInformation", () => {
-    afterEach(() => {
-      mockAxios.reset();
-    });
+  afterEach(() => {
+    mockAxios.reset();
+  });
 
+  describe("verifyConsumerInformation", () => {
     it("Should return status APPROVED if risk level is 'low'", async () => {
       const consumerInformation: ConsumerInformation = {
         userID: "test-user-1234",
@@ -311,11 +329,7 @@ describe("SardineTests", () => {
   });
 
   describe("transactionVerification", () => {
-    afterEach(() => {
-      mockAxios.reset();
-    });
-
-    it("Should return status APPROVED when transaction is low risk (card)", async () => {
+    it("[CARD] Should return status APPROVED when transaction is low risk (card)", async () => {
       const transactionInformation: TransactionInformation = {
         transactionID: "transaction-1",
         amount: 100,
@@ -372,12 +386,21 @@ describe("SardineTests", () => {
       expect(response.walletStatus).toBe(WalletStatus.APPROVED);
     });
 
-    it("Should return status APPROVED when transaction is low risk (ACH)", async () => {
+    it("[BANK] Should return status APPROVED when transaction is low risk (ACH)", async () => {
+      const plaidAccessToken = "plaid-access-token-for-public-token";
+      const plaidAuthGetItemID = "plaid-itemID-for-auth-get-request";
+      const plaidAccountID = "plaid-account-id-for-the-consumer-bank-account";
+      const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
+
+      const consumerAccountNumber = "1111111111";
+      const achRoutingNumber = "9999999999";
+      const wireRoutingNumber = "2222222222";
+
       const transactionInformation: TransactionInformation = {
         transactionID: "transaction-1",
         amount: 100,
         currencyCode: "USD",
-        paymentMethodID: "card-1234",
+        paymentMethodID: plaidCheckoutProcessorToken,
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
         partnerName: "Fake partner",
@@ -393,17 +416,18 @@ describe("SardineTests", () => {
         ],
         paymentMethods: [
           {
-            imageUri: "image-uri",
             type: PaymentMethodType.ACH,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: transactionInformation.paymentMethodID,
+            name: "Bank Account",
             achData: {
-              accessToken: "access-token",
-              accountID: "account-id",
-              accountType: "checking",
-              itemID: "item-id",
-              mask: "mask",
+              accessToken: plaidAccessToken,
+              accountID: plaidAccountID,
+              itemID: plaidAuthGetItemID,
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
             },
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: plaidCheckoutProcessorToken,
+            imageUri: "https://noba.com",
           },
         ],
         verificationData: {
@@ -413,17 +437,81 @@ describe("SardineTests", () => {
         },
       });
 
+      jest.spyOn(global.Date, 'now').mockImplementation(() => 555555555);
+      const expectedSanctionsCheckSardineRequest: SardineCustomerRequest = {
+        flow: "payment-submission",
+        sessionKey: "aml-123",
+        customer: {
+          id: consumer.props._id,
+        },
+        transaction: {
+          id: "transaction-1",
+          status: "accepted",
+          createdAtMillis: 555555555,
+          amount: 100,
+          currencyCode: "USD",
+          actionType: "buy",
+          paymentMethod: {
+            type: PaymentMethodTypes.BANK,
+            bank: {
+              accountNumber: consumerAccountNumber,
+              routingNumber: achRoutingNumber,
+              accountType: "checking",
+              balance: 100.23,
+              balanceCurrencyCode: "INR",
+            },
+          },
+          recipient: {
+            emailAddress: "fake+consumer@noba.com",
+            isKycVerified: true,
+            paymentMethod: {
+              type: PaymentMethodTypes.CRYPTO,
+              crypto: {
+                currencyCode: transactionInformation.cryptoCurrencyCode,
+                address: transactionInformation.walletAddress,
+              },
+            },
+          },
+        },
+        partnerId: transactionInformation.partnerName,
+        checkpoints: ["aml", "payment"],
+      };
+
+      when(plaidClient.retrieveAccountData(anything())).thenResolve({
+        accountID: plaidAccountID,
+        accountNumber: consumerAccountNumber,
+        accountType: BankAccountType.CHECKING,
+        achRoutingNumber: achRoutingNumber,
+        wireRoutingNumber: wireRoutingNumber,
+        availableBalance: "100.23",
+        currencyCode: "INR",
+        itemID: plaidAuthGetItemID,
+        mask: "7890",
+        name: "account-name",
+      });
+
+      // ******************* SETUP EXCEPT AXIOS ENDS  *******************
+      //
+      // *********************** REQUEST STARTS *************************
+
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
         consumer,
         transactionInformation,
       );
-
-      expect(mockAxios.post).toHaveBeenCalled();
+      // This sleep helps the flow to reach the 'axios.post()' call. 
+      //
+      // Until https://github.com/knee-cola/jest-mock-axios/issues/46 is resolved, 
+      // this is the only way I found.
+      await sleep(500);
 
       mockAxios.mockResponse(FAKE_GOOD_TRANSACTION);
-
       const response = await responsePromise;
+      expect(mockAxios.post).toHaveBeenCalledWith(
+        "http://localhost:8080/sardine/v1/customers",
+        expectedSanctionsCheckSardineRequest,
+        { auth: { password: "test-secret-key", username: "test-client-id" } }
+      );
 
       expect(response.status).toBe(KYCStatus.APPROVED);
       expect(response.idvProviderRiskLevel).toBe("low");
@@ -591,7 +679,6 @@ describe("SardineTests", () => {
       );
 
       expect(mockAxios.post).toHaveBeenCalled();
-
       mockAxios.mockError({
         message: "Network Error",
       });
@@ -607,10 +694,6 @@ describe("SardineTests", () => {
   });
 
   describe("getDocumentVerificationResult", () => {
-    afterEach(() => {
-      mockAxios.reset();
-    });
-
     it("should return status APPROVED for valid documents", async () => {
       const responsePromise = sardine.getDocumentVerificationResult("fake-verification-id");
 
@@ -639,10 +722,6 @@ describe("SardineTests", () => {
   });
 
   describe("verifyDocument", () => {
-    afterEach(() => {
-      mockAxios.reset();
-    });
-
     it("should submit document front image successfully and return verification id", async () => {
       const fileData: Express.Multer.File = {
         fieldname: "fake-field",
@@ -884,13 +963,11 @@ describe("SardineTests", () => {
         expect(e).toBeInstanceOf(BadRequestException);
       }
     });
+
+
   });
 
   describe("getDeviceVerificationResult", () => {
-    afterEach(() => {
-      mockAxios.reset();
-    });
-
     it("should return device verification result for particular session", async () => {
       const sessionKey = FAKE_DEVICE_INFORMATION_RESPONSE.sessionKey;
       const responsePromise = sardine.getDeviceVerificationResult(sessionKey);

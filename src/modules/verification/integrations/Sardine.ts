@@ -36,16 +36,18 @@ import { TransactionInformation } from "../domain/TransactionInformation";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
-import { PlaidClient } from "src/modules/psp/plaid.client";
-import { RetrieveAccountDataResponse, BankAccountType } from "src/modules/psp/domain/PlaidTypes";
+import { PlaidClient } from "../../../modules/psp/plaid.client";
+import { RetrieveAccountDataResponse, BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
 
 @Injectable()
 export class Sardine implements IDVProvider {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
+  private BASE_URI: string;
 
-  BASE_URI: string;
-  constructor(private readonly configService: CustomConfigService, private readonly plaidClient: PlaidClient) {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: CustomConfigService,
+    private readonly plaidClient: PlaidClient
+  ) {
     this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
   }
 
@@ -241,7 +243,7 @@ export class Sardine implements IDVProvider {
       transaction: {
         id: transactionInformation.transactionID,
         status: "accepted",
-        createdAtMillis: new Date().getTime(),
+        createdAtMillis: Date.now(),
         amount: transactionInformation.amount,
         currencyCode: transactionInformation.currencyCode,
         actionType: "buy",
@@ -294,7 +296,7 @@ export class Sardine implements IDVProvider {
         idvProviderRiskLevel: data.level,
       };
     } catch (e) {
-      this.logger.error(`Sardine request failed for Transaction validation: ${e}, ${e.response.data}`);
+      this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
       throw new BadRequestException(e.message);
     }
   }
