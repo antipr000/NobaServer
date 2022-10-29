@@ -33,6 +33,7 @@ checkout:
   secretKey: "bogus-value"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
 
 twilio:
   awsSecretNameForSID: ""

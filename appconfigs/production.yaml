@@ -47,6 +47,7 @@ checkout:
   secretKey: "bogus-value"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_v5hfxdz7txiuflbqrb6a4aa5qq"
 
 mongo:
   awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"

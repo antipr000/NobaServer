@@ -61,6 +61,7 @@ function getCodeTypeFromCardScheme(scheme: string): string {
 @Injectable()
 export class CheckoutService {
   private readonly checkoutApi: Checkout;
+  private readonly checkoutConfigs: CheckoutConfigs;
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
@@ -72,10 +73,9 @@ export class CheckoutService {
   private readonly creditCardService: CreditCardService;
 
   constructor(private configService: CustomConfigService) {
-    const checkoutSecretKey = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).secretKey;
-    const checkoutPublicKey = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).publicKey;
-    this.checkoutApi = new Checkout(checkoutSecretKey, {
-      pk: checkoutPublicKey,
+    this.checkoutConfigs = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY);
+    this.checkoutApi = new Checkout(this.checkoutConfigs.secretKey, {
+      pk: this.checkoutConfigs.publicKey,
     });
   }
 
@@ -376,6 +376,7 @@ export class CheckoutService {
           amount: Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
           currency: transaction.props.leg1,
           source: checkoutSource,
+          processing_channel_id: this.checkoutConfigs.processingChannelId,
           description: "Noba Customer Payment at UTC " + Date.now(),
           metadata: {
             order_id: transaction.props._id,

@@ -44,6 +44,7 @@ export const CHECKOUT_PUBLIC_KEY = "publicKey";
 export const CHECKOUT_SECRET_KEY = "secretKey";
 export const CHECKOUT_COUPON_CODE = "couponCode";
 export const CHECKOUT_PARTNER_ID = "partnerId";
+export const CHECKOUT_PROCESSING_CHANNEL_ID = "processingChannelId";
 
 export const TWILIO_CONFIG_KEY = "twilio";
 export const TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR = "awsSecretNameForSID";

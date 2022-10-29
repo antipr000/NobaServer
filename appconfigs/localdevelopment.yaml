@@ -37,6 +37,7 @@ checkout:
   secretKey: "sk_sbox_xdhkcai4bosm32intni46my5x4j"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
 
 twilio:
   awsSecretNameForSID: ""

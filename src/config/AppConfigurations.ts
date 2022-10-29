@@ -103,6 +103,7 @@ import {
   PLAID_AWS_SECRET_KEY_FOR_REDIRECT_URI,
   PLAID_ENVIRONMENT,
   PLAID_VERSION,
+  CHECKOUT_PROCESSING_CHANNEL_ID,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -281,8 +282,10 @@ async function configureCheckoutCredentials(
   if (checkoutConfigs === undefined) {
     const errorMessage =
       "\n'checkout' configurations are required. Please configure the checkout credentials in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure ${CHECKOUT_CONFIG_KEY} with sub-values for ${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY} or ${CHECKOUT_PUBLIC_KEY}\n" ` +
-      `as well as either ${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY} or ${CHECKOUT_SECRET_KEY}.`;
+      `You should configure ${CHECKOUT_CONFIG_KEY} with sub-values for ` +
+      `(${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY} or ${CHECKOUT_PUBLIC_KEY}), ` +
+      `(${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY} or ${CHECKOUT_SECRET_KEY}), and ` +
+      `${CHECKOUT_PROCESSING_CHANNEL_ID}.`;
 
     throw Error(errorMessage);
   }
@@ -298,6 +301,7 @@ async function configureCheckoutCredentials(
 
   checkoutConfigs.couponCode = await getParameterValue(null, checkoutConfigs.couponCode);
   checkoutConfigs.partnerId = parseInt(await getParameterValue(null, checkoutConfigs.partnerId.toString()));
+  checkoutConfigs.processingChannelId = await getParameterValue(null, checkoutConfigs.processingChannelId);
 
   configs[CHECKOUT_CONFIG_KEY] = checkoutConfigs;
   return configs;
