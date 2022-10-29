@@ -39,7 +39,7 @@ export type Bank = {
   accountType: string;
   balance: number;
   balanceCurrencyCode: string;
-}
+};
 
 export type PaymentMethod = {
   type: PaymentMethodTypes;

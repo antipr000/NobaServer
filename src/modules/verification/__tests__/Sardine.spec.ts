@@ -4,11 +4,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { Sardine } from "../integrations/Sardine";
 import mockAxios from "jest-mock-axios";
-import {
-  DocumentVerificationStatus,
-  KYCStatus,
-  WalletStatus,
-} from "../../consumer/domain/VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus, WalletStatus } from "../../consumer/domain/VerificationStatus";
 import {
   FAKE_DEVICE_INFORMATION_RESPONSE,
   FAKE_DOCUMENT_SUBMISSION_RESPONSE,
@@ -49,7 +45,7 @@ import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import axios from "axios";
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 //TODO: Add assertions for request body
 describe("SardineTests", () => {
@@ -437,7 +433,7 @@ describe("SardineTests", () => {
         },
       });
 
-      jest.spyOn(global.Date, 'now').mockImplementation(() => 555555555);
+      jest.spyOn(global.Date, "now").mockImplementation(() => 555555555);
       const expectedSanctionsCheckSardineRequest: SardineCustomerRequest = {
         flow: "payment-submission",
         sessionKey: "aml-123",
@@ -499,9 +495,9 @@ describe("SardineTests", () => {
         consumer,
         transactionInformation,
       );
-      // This sleep helps the flow to reach the 'axios.post()' call. 
+      // This sleep helps the flow to reach the 'axios.post()' call.
       //
-      // Until https://github.com/knee-cola/jest-mock-axios/issues/46 is resolved, 
+      // Until https://github.com/knee-cola/jest-mock-axios/issues/46 is resolved,
       // this is the only way I found.
       await sleep(500);
 
@@ -510,7 +506,7 @@ describe("SardineTests", () => {
       expect(mockAxios.post).toHaveBeenCalledWith(
         "http://localhost:8080/sardine/v1/customers",
         expectedSanctionsCheckSardineRequest,
-        { auth: { password: "test-secret-key", username: "test-client-id" } }
+        { auth: { password: "test-secret-key", username: "test-client-id" } },
       );
 
       expect(response.status).toBe(KYCStatus.APPROVED);
@@ -963,8 +959,6 @@ describe("SardineTests", () => {
         expect(e).toBeInstanceOf(BadRequestException);
       }
     });
-
-
   });
 
   describe("getDeviceVerificationResult", () => {
