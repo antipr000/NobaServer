@@ -295,10 +295,10 @@ export class PartnerController {
     @Request() request,
   ): Promise<PartnerDTO> {
     const requestUser = request.user.entity;
-    // if (!(requestUser instanceof PartnerAdmin)) {
-    //   throw new ForbiddenException("Only partner admins can access this endpoint");
-    // }
-    // if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
+    if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
     const partner: Partner = await this.partnerService.uploadPartnerLogo("d4KZqfVKwSHWueOJhmgN-", files);
     return this.partnerMapper.toDTO(partner);
   }
