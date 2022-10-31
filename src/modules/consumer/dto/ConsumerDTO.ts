@@ -1,13 +1,33 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Address } from "../domain/Address";
+import { PaymentMethodType } from "../domain/PaymentMethod";
 import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+
+export class PaymentMethodCardDataDTO {
+  @ApiPropertyOptional()
+  cardType?: string;
+
+  @ApiProperty()
+  first6Digits: string;
+
+  @ApiProperty()
+  last4Digits: string;
+}
+
+export class PaymentMethodACHDataDTO {
+  @ApiProperty()
+  accountMask: string;
+
+  @ApiPropertyOptional()
+  accountType?: string;
+}
 
 export class PaymentMethodsDTO {
   @ApiPropertyOptional()
-  cardName?: string;
+  name?: string;
 
-  @ApiPropertyOptional()
-  cardType?: string;
+  @ApiProperty({ enum: PaymentMethodType })
+  type: PaymentMethodType;
 
   @ApiPropertyOptional()
   imageUri?: string;
@@ -15,14 +35,14 @@ export class PaymentMethodsDTO {
   @ApiProperty()
   paymentToken: string;
 
-  @ApiProperty()
-  first6Digits: string;
-
-  @ApiProperty()
-  last4Digits: string;
-
   @ApiProperty({ enum: PaymentMethodStatus })
   status: PaymentMethodStatus;
+
+  @ApiPropertyOptional()
+  cardData?: PaymentMethodCardDataDTO;
+
+  @ApiPropertyOptional()
+  achData?: PaymentMethodACHDataDTO;
 }
 
 export class CryptoWalletsDTO {

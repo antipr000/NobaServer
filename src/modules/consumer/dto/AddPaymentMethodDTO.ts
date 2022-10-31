@@ -1,9 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
-export class AddPaymentMethodDTO {
-  @ApiPropertyOptional()
-  cardName?: string;
-
+export class CardDetailsDTO {
   @ApiProperty()
   cardNumber: string;
 
@@ -15,6 +12,30 @@ export class AddPaymentMethodDTO {
 
   @ApiProperty()
   cvv: string;
+}
+
+export class ACHDetailsDTO {
+  @ApiProperty()
+  token: string;
+}
+
+export enum PaymentType {
+  CARD = "CARD",
+  ACH = "ACH",
+}
+
+export class AddPaymentMethodDTO {
+  @ApiPropertyOptional()
+  name?: string;
+
+  @ApiProperty({ enum: PaymentType })
+  type: PaymentType;
+
+  @ApiPropertyOptional({ type: CardDetailsDTO })
+  cardDetails: CardDetailsDTO;
+
+  @ApiPropertyOptional({ type: ACHDetailsDTO })
+  achDetails: ACHDetailsDTO;
 
   @ApiPropertyOptional()
   imageUri?: string;

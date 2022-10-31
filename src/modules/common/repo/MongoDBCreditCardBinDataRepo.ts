@@ -73,7 +73,7 @@ export class MongoDBCreditCardBinDataRepo implements CreditCardBinDataRepo {
       const creditCardBinDataProps: CreditCardBinDataProps = convertDBResponseToJsObject(result);
       return CreditCardBinData.createCreditCardBinDataObject(creditCardBinDataProps);
     } catch (e) {
-      this.logger.error(`Failed to find CreditCardBinData with iin ${bin}. ${JSON.stringify(e)}`);
+      this.logger.info(`Unknown BIN: ${bin}.`);
       return null;
     }
   }
