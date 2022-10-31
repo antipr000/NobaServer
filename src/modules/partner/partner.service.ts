@@ -159,7 +159,11 @@ export class PartnerService {
 
     const updatedPartner = Partner.createPartner({
       ...partner.props,
-      config: { ...partner.props.config, logo: new_logo_link, logoSmall: new_small_logo_link },
+      config: {
+        ...partner.props.config,
+        logo: new_logo_link ?? partner.props.config.logo,
+        logoSmall: new_small_logo_link ?? partner.props.config.logoSmall,
+      },
     });
 
     return await this.partnerRepo.updatePartner(updatedPartner);
