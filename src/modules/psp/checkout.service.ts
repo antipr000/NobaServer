@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { CheckoutPaymentStatus } from "../consumer/domain/Types";
+import { CheckoutPaymentStatus } from "./domain/CheckoutTypes";
 import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
 import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodResponse";
 import { PspPaymentResponse } from "./domain/PspPaymentResponse";
