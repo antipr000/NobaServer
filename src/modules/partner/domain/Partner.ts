@@ -39,8 +39,8 @@ export type PartnerConfig = {
   cryptocurrencyAllowList?: string[];
   fees: PartnerFees;
   notificationConfig: NotificationConfiguration[];
-  logo: string; // s3 ui for logo
-  logoSmall: string; //s3 uri for small logo
+  logo?: string; // s3 ui for logo
+  logoSmall?: string; //s3 uri for small logo
 };
 
 export type PartnerFees = {
