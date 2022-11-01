@@ -10,7 +10,7 @@ import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { AuthenticatedUser } from "src/modules/auth/domain/AuthenticatedUser";
 
 describe("VerificationController", () => {
@@ -288,6 +288,65 @@ describe("VerificationController", () => {
         user: { entity: consumer, partnerId: "partner-1" } as AuthenticatedUser,
       });
       expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
+    });
+  });
+
+  describe("GET /document/url", () => {
+    it("should get the URL for redirect to identity verification", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
+        firstName: "Fake",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "fake-partner",
+          },
+        ],
+        address: {
+          streetLine1: "Fake Street",
+          streetLine2: "Fake Street Line 2",
+          countryCode: "US",
+          city: "Maintown",
+          postalCode: "123456",
+          regionCode: "CA",
+        },
+        dateOfBirth: "1960-12-12",
+      });
+
+      const url = "http://id-verification-url";
+      when(
+        verificationService.getDocumentVerificationURL("session-id", consumer.props._id, true, true, true),
+      ).thenResolve(url);
+
+      const result = await verificationController.getIdentityDocumentVerificationURL(
+        {
+          user: { entity: consumer, partnerId: "fake-partner" } as AuthenticatedUser,
+        },
+        "session-id",
+        true,
+        true,
+        true,
+      );
+      expect(result).toBe(url);
+    });
+
+    it("should get the URL for redirect to identity verification", async () => {
+      const url = "http://id-verification-url";
+
+      try {
+        await verificationController.getIdentityDocumentVerificationURL(
+          {
+            user: { entity: undefined, partnerId: "fake-partner" } as AuthenticatedUser,
+          },
+          "session-id",
+          true,
+          true,
+          true,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
     });
   });
 });

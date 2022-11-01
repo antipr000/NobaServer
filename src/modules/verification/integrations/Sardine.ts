@@ -22,6 +22,8 @@ import {
   FeedbackRequest,
   FeedbackStatus,
   FeedbackType,
+  IdentityDocumentURLRequest,
+  IdentityDocumentURLResponse,
   PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDeviceInformationResponse,
@@ -182,6 +184,45 @@ export class Sardine implements IDVProvider {
     } catch (e) {
       this.logger.error(`Sardine request failed for get document result: ${e}`);
       throw new NotFoundException();
+    }
+  }
+
+  async getIdentityDocumentVerificationURL(
+    sessionKey: string,
+    consumer: Consumer,
+    idBack: boolean,
+    selfie: boolean,
+    poa: boolean,
+  ): Promise<string> {
+    try {
+      const requestData: IdentityDocumentURLRequest = {
+        sessionKey: sessionKey,
+        idback: idBack,
+        selfie: selfie,
+        poa: poa,
+        locale: "en-US", // Hard-code for English language for now
+        inputData: {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          address: {
+            street1: consumer.props.address.streetLine1,
+            city: consumer.props.address.city,
+            region: consumer.props.address.regionCode,
+            postalCode: consumer.props.address.postalCode,
+            countryCode: consumer.props.address.countryCode,
+          },
+        },
+      };
+
+      const { data } = await axios.post(
+        this.BASE_URI + "/v1/identity-documents/urls",
+        requestData,
+        this.getAxiosConfig(),
+      );
+      return (data as IdentityDocumentURLResponse).link.url;
+    } catch (e) {
+      this.logger.error(`Sardine request failed for get identity document URL. Result: ${e}`);
+      throw new InternalServerErrorException("Unable to retrieve URL at this time");
     }
   }
 

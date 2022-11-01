@@ -267,6 +267,17 @@ export class VerificationService {
     return result;
   }
 
+  async getDocumentVerificationURL(
+    sessionKey: string,
+    consumerID: string,
+    idBack: boolean,
+    selfie: boolean,
+    poa: boolean,
+  ) {
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+    return await this.idvProvider.getIdentityDocumentVerificationURL(sessionKey, consumer, idBack, selfie, poa);
+  }
+
   async processDocumentVerificationWebhookResult(
     documentVerificationResult: DocumentVerificationWebhookRequest,
   ): Promise<DocumentVerificationResult> {

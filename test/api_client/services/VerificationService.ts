@@ -196,6 +196,51 @@ export class VerificationService {
   }
 
   /**
+   * Submits information to retrieve a URL for identity verification
+   * @returns string Document verification KYC URL
+   * @throws ApiError
+   */
+  public static getIdentityDocumentVerificationUrl({
+    xNobaApiKey,
+    sessionKey,
+    requestBack,
+    requestSelfie,
+    requestPoa,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    sessionKey: string;
+    requestBack: boolean;
+    requestSelfie: boolean;
+    requestPoa: boolean;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<string> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/verify/document/url",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        sessionKey: sessionKey,
+        requestBack: requestBack,
+        requestSelfie: requestSelfie,
+        requestPOA: requestPoa,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+      },
+    });
+  }
+
+  /**
    * Gets device verification result
    * @returns DeviceVerificationResponseDTO Device verification result
    * @throws ApiError
