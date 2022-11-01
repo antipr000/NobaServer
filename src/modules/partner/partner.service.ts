@@ -45,8 +45,8 @@ export class PartnerService {
     this.s3BucketUrl = `https://${this.partnerDataS3Bucket}.s3.amazonaws.com/`;
   }
 
-  async getPartner(partnerId: string): Promise<Partner> {
-    const partner: Partner = await this.partnerRepo.getPartner(partnerId);
+  async getPartner(partnerID: string): Promise<Partner> {
+    const partner: Partner = await this.partnerRepo.getPartner(partnerID);
     return partner;
   }
 
@@ -85,8 +85,8 @@ export class PartnerService {
     return partnerResult;
   }
 
-  async updatePartner(partnerId: string, partnerUpdateRequest: UpdatePartnerRequestDTO): Promise<Partner> {
-    const partner = await this.getPartner(partnerId);
+  async updatePartner(partnerID: string, partnerUpdateRequest: UpdatePartnerRequestDTO): Promise<Partner> {
+    const partner = await this.getPartner(partnerID);
     const updatedPartner = Partner.createPartner({
       ...partner.props,
       name: partnerUpdateRequest.name ?? partner.props.name,
@@ -142,20 +142,20 @@ export class PartnerService {
     return this.transactionMapper.toDTO(transaction);
   }
 
-  async uploadPartnerLogo(partnerId: string, partnerLogoRequest: PartnerLogoUploadRequestDTO): Promise<Partner> {
-    const partner = await this.getPartner(partnerId);
-    let new_small_logo_link;
-    let new_logo_link;
+  async uploadPartnerLogo(partnerID: string, partnerLogoRequest: PartnerLogoUploadRequestDTO): Promise<Partner> {
+    const partner = await this.getPartner(partnerID);
+    let newSmallLogoLink: string;
+    let newLogoLink: string;
 
     if (!partnerLogoRequest.logo && !partnerLogoRequest.logoSmall) {
       throw new BadRequestException("No logo or small logo provided");
     }
 
     if (partnerLogoRequest.logo) {
-      new_logo_link = await this.transformAndUploadLogoToS3(partner, partnerLogoRequest.logo[0], 800, 200, "logo");
+      newLogoLink = await this.transformAndUploadLogoToS3(partner, partnerLogoRequest.logo[0], 800, 200, "logo");
     }
     if (partnerLogoRequest.logoSmall) {
-      new_small_logo_link = await this.transformAndUploadLogoToS3(
+      newSmallLogoLink = await this.transformAndUploadLogoToS3(
         partner,
         partnerLogoRequest.logoSmall[0],
         200,
@@ -168,8 +168,8 @@ export class PartnerService {
       ...partner.props,
       config: {
         ...partner.props.config,
-        logo: new_logo_link ?? partner.props.config.logo,
-        logoSmall: new_small_logo_link ?? partner.props.config.logoSmall,
+        logo: newLogoLink ?? partner.props.config.logo,
+        logoSmall: newSmallLogoLink ?? partner.props.config.logoSmall,
       },
     });
 
@@ -184,8 +184,8 @@ export class PartnerService {
     filename: string,
   ): Promise<string> {
     const transformedFile = await this.transformLogo(file, width, height);
-    const s3_data: any = await this.uploadLogo(partner, transformedFile, filename);
-    return s3_data.Location.replace(this.s3BucketUrl, this.cloudfrontUrl); // cloudfront distro images are public
+    const s3Data: any = await this.uploadLogo(partner, transformedFile, filename);
+    return s3Data.Location.replace(this.s3BucketUrl, this.cloudfrontUrl); // cloudfront distro images are public
   }
 
   private async transformLogo(file: Express.Multer.File, width: number, height: number) {
@@ -205,12 +205,12 @@ export class PartnerService {
 
   private async uploadLogo(partner: Partner, file: Express.Multer.File, filename: string) {
     const s3BucketName = this.partnerDataS3Bucket;
-    const file_format = file.mimetype.split("/")[1];
+    const fileFormat = file.mimetype.split("/")[1];
     const s3Params: S3.Types.PutObjectRequest = {
       Bucket: s3BucketName,
       Key: `${getEnvironmentName()}/${partner.props.name.toLowerCase().split(" ").join("-")}_${
         partner.props._id
-      }/${filename}_${Entity.getNewID()}.${file_format}`,
+      }/${filename}_${Entity.getNewID()}.${fileFormat}`,
       Body: file.buffer,
       ContentType: file.mimetype,
     };
