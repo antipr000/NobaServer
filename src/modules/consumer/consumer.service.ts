@@ -177,6 +177,7 @@ export class ConsumerService {
         // const checkoutResponse = await this.checkoutService.performOneDollarACHTransaction(processorToken);
         // console.log(checkoutResponse);
 
+        //TODO: Similar to card logic. Move the entire logic to payment.service and reuse for card and ACH addition
         const newPaymentMethod: PaymentMethod = {
           name: accountData.name,
           type: PaymentMethodType.ACH,

@@ -11,7 +11,7 @@ import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodRespons
 import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
 
 @Injectable()
-export class CheckoutService {
+export class CheckoutClient {
   private readonly checkoutApi: Checkout;
   private readonly checkoutConfigs: CheckoutConfigs;
 
@@ -104,7 +104,6 @@ export class CheckoutService {
     currency: string,
     paymentMethodId: string,
     transactionId: string,
-    isOneDollarTransaction: boolean,
   ): Promise<PspACHPaymentResponse> {
     try {
       const checkoutResponse = await this.checkoutApi.payments.request(
@@ -120,9 +119,7 @@ export class CheckoutService {
             },
           },
           description: "Noba Customer Payment at UTC " + Date.now(),
-          processing_channel_id: isOneDollarTransaction /* TODO: Remove this if not needed */
-            ? "pc_ka6ij3qluenufp5eovqqtw4xdu"
-            : this.checkoutConfigs.processingChannelId,
+          processing_channel_id: this.checkoutConfigs.processingChannelId,
           metadata: {
             order_id: transactionId,
           },

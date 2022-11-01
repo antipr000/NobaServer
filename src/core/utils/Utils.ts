@@ -42,4 +42,25 @@ export class Utils {
   static generateBase64String(numBytes: number): string {
     return randomBytes(numBytes).toString("base64");
   }
+
+  static getCodeTypeFromCardScheme(scheme: string): string {
+    switch (scheme) {
+      case "visa":
+        return "CVV";
+      case "mastercard":
+        return "CVC";
+      case "american-express":
+        return "CID";
+      case "diners-club":
+        return "CVV";
+      case "discover":
+        return "CID";
+      case "jcb":
+        return "CVV";
+      case "unionpay":
+        return "CVN";
+      case "maestro":
+        return "CVV";
+    }
+  }
 }

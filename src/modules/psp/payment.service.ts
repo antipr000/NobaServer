@@ -24,31 +24,10 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { PaymentProvider } from "../consumer/domain/PaymentProvider";
 import { CreditCardBinData } from "../common/domain/CreditCardBinData";
 import creditCardType from "credit-card-type";
-import { CheckoutService } from "./checkout.service";
+import { CheckoutClient } from "./checkout.client";
 import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodResponse";
 import { HandlePaymentResponse } from "./domain/CardServiceTypes";
 import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
-
-function getCodeTypeFromCardScheme(scheme: string): string {
-  switch (scheme) {
-    case "visa":
-      return "CVV";
-    case "mastercard":
-      return "CVC";
-    case "american-express":
-      return "CID";
-    case "diners-club":
-      return "CVV";
-    case "discover":
-      return "CID";
-    case "jcb":
-      return "CVV";
-    case "unionpay":
-      return "CVN";
-    case "maestro":
-      return "CVV";
-  }
-}
 
 @Injectable()
 export class PaymentService {
@@ -62,7 +41,7 @@ export class PaymentService {
   private readonly creditCardService: CreditCardService;
 
   @Inject()
-  private readonly checkoutService: CheckoutService;
+  private readonly checkoutService: CheckoutClient;
 
   /**
    * Checks if consumer already has account with PSP. If not creates the account
@@ -101,7 +80,7 @@ export class PaymentService {
     // Check if this card already exists for the consumer
     const existingPaymentMethod = consumer.getPaymentMethodByID(addPaymentMethodResponse.instrumentID);
     if (existingPaymentMethod) {
-      throw new BadRequestException({ message: "Card already added" });
+      throw new BadRequestException("Card already added");
     }
 
     // Before calling checkout, check against our BIN list
@@ -229,9 +208,6 @@ export class PaymentService {
         newPaymentMethod: newPaymentMethod,
       };
     }
-    return {
-      checkoutResponseData: response,
-    };
   }
 
   async requestCheckoutPayment(
@@ -277,7 +253,7 @@ export class PaymentService {
           network: scheme,
           supported: BINValidity.SUPPORTED,
           digits: card.lengths[0],
-          cvvDigits: card.code[getCodeTypeFromCardScheme(card.type)],
+          cvvDigits: card.code[Utils.getCodeTypeFromCardScheme(card.type)],
         };
 
         this.logger.info(`Adding BIN data: ${JSON.stringify(creditCardBinData, null, 1)}`);
@@ -313,7 +289,6 @@ export class PaymentService {
         /* currency= */ transaction.props.leg1,
         /* paymentMethodId= */ transaction.props.paymentMethodID,
         /* transactionId= */ transaction.props._id,
-        /* isOneDollarTransaction= */ false,
       );
 
       if (response.status !== "Pending") {
