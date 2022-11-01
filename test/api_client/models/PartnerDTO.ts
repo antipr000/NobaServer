@@ -10,4 +10,6 @@ export type PartnerDTO = {
   verificationData?: KybStatusInfoDTO;
   apiKey: string;
   secretKey: string;
+  logoSmall?: string;
+  logo?: string;
 };

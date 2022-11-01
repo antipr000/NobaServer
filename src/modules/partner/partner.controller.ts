@@ -12,10 +12,14 @@ import {
   Post,
   Query,
   Request,
+  UploadedFiles,
+  UseInterceptors,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiForbiddenResponse,
   ApiHeaders,
   ApiNotFoundResponse,
@@ -40,6 +44,8 @@ import { UpdatePartnerAdminRequestDTO } from "./dto/UpdatePartnerAdminRequestDTO
 import { TransactionsQueryResultsDTO } from "../transactions/dto/TransactionsQueryResultsDTO";
 import { TransactionFilterOptions } from "../transactions/domain/Types";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { PartnerLogoUploadRequestDTO } from "./dto/PartnerLogoUploadRequestDTO";
 
 @ApiBearerAuth("JWT-auth")
 @Controller("partners")
@@ -252,5 +258,48 @@ export class PartnerController {
       throw new NotFoundException("Transaction does not exist");
     }
     return transactionDTO;
+  }
+
+  @Post("/logo")
+  @ApiConsumes("multipart/form-data")
+  @ApiOperation({ summary: "Adds or updates partner logo" })
+  @ApiResponse({
+    status: HttpStatus.ACCEPTED,
+    type: PartnerDTO,
+    description: "Updated Partner Info after adding or updating the logos",
+  })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        logo: {
+          type: "string",
+          format: "binary",
+        },
+        logoSmall: {
+          type: "string",
+          format: "binary",
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: "logoSmall", maxCount: 1 },
+      { name: "logo", maxCount: 1 },
+    ]),
+  )
+  async uploadPartnerLogo(
+    @UploadedFiles() files: PartnerLogoUploadRequestDTO,
+    @Request() request,
+  ): Promise<PartnerDTO> {
+    const requestUser = request.user.entity;
+    // if (!(requestUser instanceof PartnerAdmin)) {
+    //   throw new ForbiddenException("Only partner admins can access this endpoint");
+    // }
+    // if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
+    const partner: Partner = await this.partnerService.uploadPartnerLogo("d4KZqfVKwSHWueOJhmgN-", files);
+    return this.partnerMapper.toDTO(partner);
   }
 }

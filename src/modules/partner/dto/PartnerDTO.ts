@@ -24,4 +24,10 @@ export class PartnerDTO {
 
   @ApiProperty()
   secretKey: string;
+
+  @ApiPropertyOptional()
+  logoSmall?: string;
+
+  @ApiPropertyOptional()
+  logo?: string;
 }

@@ -39,6 +39,8 @@ export type PartnerConfig = {
   cryptocurrencyAllowList?: string[];
   fees: PartnerFees;
   notificationConfig: NotificationConfiguration[];
+  logo: string; // s3 ui for logo
+  logoSmall: string; //s3 uri for small logo
 };
 
 export type PartnerFees = {
@@ -90,6 +92,8 @@ export const partnerConfigKeys: KeysRequired<PartnerConfig> = {
   cryptocurrencyAllowList: Joi.array().items(Joi.string()).default([]),
   fees: Joi.object().optional(),
   notificationConfig: Joi.array().items(notificationConfigKeys).default([]),
+  logo: Joi.string().optional(),
+  logoSmall: Joi.string().optional(),
 };
 
 export const partnerFees: KeysRequired<PartnerFees> = {

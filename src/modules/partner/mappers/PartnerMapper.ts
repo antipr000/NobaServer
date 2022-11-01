@@ -15,6 +15,8 @@ export class PartnerMapper implements Mapper<Partner> {
       verificationData: p.verificationData,
       apiKey: p.apiKey,
       secretKey: p.secretKey,
+      logo: (p.config ?? {}).logo,
+      logoSmall: (p.config ?? {}).logoSmall,
     };
   }
 }
