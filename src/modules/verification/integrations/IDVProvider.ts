@@ -6,7 +6,6 @@ import { ConsumerVerificationResult, DocumentVerificationResult } from "../domai
 import {
   CaseNotificationWebhookRequest,
   DocumentVerificationSardineResponse,
-  IdentityDocumentURLResponse,
   SardineDeviceInformationResponse,
 } from "./SardineTypeDefinitions";
 
