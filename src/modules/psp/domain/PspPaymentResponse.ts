@@ -1,4 +1,4 @@
-export type PspPaymentResponse = {
+export type PspCardPaymentResponse = {
   id: string;
   response_code: string;
   response_summary: string;
@@ -6,4 +6,10 @@ export type PspPaymentResponse = {
     flagged: boolean;
   };
   bin: string;
+};
+
+export type PspACHPaymentResponse = {
+  id: string;
+  status: string;
+  response_code: string;
 };

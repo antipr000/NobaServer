@@ -5,7 +5,7 @@ import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito
 import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { CardService } from "../../psp/card.service";
+import { PaymentService } from "../../psp/payment.service";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { ConsumerService } from "../consumer.service";
@@ -17,7 +17,7 @@ import { BadRequestException, NotFoundException, UnauthorizedException } from "@
 import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
 import { PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
-import { AddCreditCardPaymentMethodResponse } from "../../../modules/common/domain/AddPaymentMethodResponse";
+import { AddCreditCardPaymentMethodResponse } from "../../psp/domain/AddPaymentMethodResponse";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
@@ -32,20 +32,17 @@ import { getMockNotificationServiceWithDefaults } from "../../../modules/notific
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { PaymentProvider } from "../domain/PaymentProvider";
-<<<<<<< HEAD
 import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { BankAccountType, TokenProcessor } from "../../../modules/psp/domain/PlaidTypes";
-=======
-import { getMockCardServiceWithDefaults } from "src/modules/psp/mocks/mock.card.service";
->>>>>>> 6d1bd335 (Fixed usages of checkoutservice and added tests for cardService)
+import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
   let consumerRepo: IConsumerRepo;
   let notificationService: NotificationService;
   let mockOtpRepo: IOTPRepo;
-  let cardService: CardService;
+  let paymentService: PaymentService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
   let partnerService: PartnerService;
   let plaidClient: PlaidClient;
@@ -56,7 +53,7 @@ describe("ConsumerService", () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
-    cardService = getMockCardServiceWithDefaults();
+    paymentService = getMockPaymentServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
 
@@ -90,8 +87,8 @@ describe("ConsumerService", () => {
           useFactory: () => instance(mockOtpRepo),
         },
         {
-          provide: CardService,
-          useFactory: () => instance(cardService),
+          provide: PaymentService,
+          useFactory: () => instance(paymentService),
         },
         {
           provide: SanctionedCryptoWalletService,
@@ -364,15 +361,9 @@ describe("ConsumerService", () => {
         PaymentMethodStatus.APPROVED,
       );
 
-<<<<<<< HEAD
       when(
-        checkoutService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
+        paymentService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
       ).thenResolve(addPaymentMethodResponse);
-=======
-      when(cardService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
-        addPaymentMethodResponse,
-      );
->>>>>>> 6d1bd335 (Fixed usages of checkoutservice and added tests for cardService)
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
 
@@ -439,15 +430,9 @@ describe("ConsumerService", () => {
         PaymentMethodStatus.UNSUPPORTED,
       );
 
-<<<<<<< HEAD
       when(
-        checkoutService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
+        paymentService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
       ).thenResolve(addPaymentMethodResponse);
-=======
-      when(cardService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
-        addPaymentMethodResponse,
-      );
->>>>>>> 6d1bd335 (Fixed usages of checkoutservice and added tests for cardService)
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
 
@@ -535,7 +520,7 @@ describe("ConsumerService", () => {
         ),
       ).thenResolve(plaidCheckoutProcessorToken);
 
-      when(checkoutService.createCheckoutCustomer(deepEqual(consumer))).thenResolve(checkoutCustomerID);
+      when(paymentService.createPspConsumerAccount(deepEqual(consumer))).thenResolve([checkoutCustomerID, true]);
 
       const expectedConsumerProps: ConsumerProps = {
         _id: "mock-consumer-1",
@@ -649,7 +634,7 @@ describe("ConsumerService", () => {
         ),
       ).thenResolve(plaidCheckoutProcessorToken);
 
-      when(checkoutService.createCheckoutCustomer(deepEqual(consumer))).thenResolve(checkoutCustomerID);
+      when(paymentService.createPspConsumerAccount(deepEqual(consumer))).thenResolve([checkoutCustomerID, false]);
 
       const expectedConsumerProps: ConsumerProps = {
         _id: "mock-consumer-2",
@@ -755,15 +740,9 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-<<<<<<< HEAD
       when(
-        checkoutService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
+        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
       ).thenResolve(paymentRequestResponse);
-=======
-      when(cardService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction))).thenResolve(
-        paymentRequestResponse,
-      );
->>>>>>> 6d1bd335 (Fixed usages of checkoutservice and added tests for cardService)
 
       const response = await consumerService.requestPayment(consumer, transaction);
       expect(response).toStrictEqual(paymentRequestResponse);
@@ -826,15 +805,9 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-<<<<<<< HEAD
       when(
-        checkoutService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
+        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
       ).thenResolve(paymentRequestResponse);
-=======
-      when(cardService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction))).thenResolve(
-        paymentRequestResponse,
-      );
->>>>>>> 6d1bd335 (Fixed usages of checkoutservice and added tests for cardService)
 
       try {
         await consumerService.requestPayment(consumer, transaction);
@@ -984,7 +957,7 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(cardService.removePaymentMethod(paymentToken)).thenResolve();
+      when(paymentService.removePaymentMethod(paymentToken)).thenResolve();
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
 
       const response = await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
@@ -1012,7 +985,7 @@ describe("ConsumerService", () => {
       const paymentToken = "fake-token";
       const paymentProvider = PaymentProvider.CHECKOUT;
 
-      when(cardService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
+      when(paymentService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
       const response = await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider);
 
@@ -1023,7 +996,7 @@ describe("ConsumerService", () => {
       const paymentToken = "fake-token";
       const paymentProvider = "FakeProvider";
 
-      when(cardService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
+      when(paymentService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
       try {
         await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider as PaymentProvider);

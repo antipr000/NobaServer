@@ -6,9 +6,9 @@ import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CheckoutPaymentStatus } from "./domain/CheckoutTypes";
-import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMethodDTO";
 import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodResponse";
-import { PspPaymentResponse } from "./domain/PspPaymentResponse";
+import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
 
 @Injectable()
 export class CheckoutService {
@@ -47,10 +47,13 @@ export class CheckoutService {
     }
   }
 
-  public async addPaymentMethod(
+  public async addCreditCardPaymentMethod(
     paymentMethod: AddPaymentMethodDTO,
     checkoutCustomerID: string,
   ): Promise<PspAddPaymentMethodResponse> {
+    if (paymentMethod.type !== PaymentType.CARD) {
+      throw new BadRequestException(`Payment type ${paymentMethod.type} is not supported for addCreditCard`);
+    }
     try {
       // To add payment method, we first need to tokenize the card
       // Token is only valid for 15 mins
@@ -96,15 +99,62 @@ export class CheckoutService {
     };
   }
 
-  public async makePayment(
+  public async makeACHPayment(
     amount: number,
     currency: string,
     paymentMethodId: string,
     transactionId: string,
-  ): Promise<PspPaymentResponse> {
-    let checkoutResponse;
+    isOneDollarTransaction: boolean,
+  ): Promise<PspACHPaymentResponse> {
     try {
-      checkoutResponse = await this.checkoutApi.payments.request(
+      const checkoutResponse = await this.checkoutApi.payments.request(
+        {
+          amount: amount,
+          currency: currency,
+          source: {
+            type: "provider_token",
+            payment_method: "ach",
+            token: paymentMethodId,
+            account_holder: {
+              type: "individual",
+            },
+          },
+          description: "Noba Customer Payment at UTC " + Date.now(),
+          processing_channel_id: isOneDollarTransaction /* TODO: Remove this if not needed */
+            ? "pc_ka6ij3qluenufp5eovqqtw4xdu"
+            : this.checkoutConfigs.processingChannelId,
+          metadata: {
+            order_id: transactionId,
+          },
+        },
+        /*idempotencyKey=*/ transactionId,
+      );
+
+      this.logger.info(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
+
+      const status = checkoutResponse["status"];
+
+      return {
+        id: checkoutResponse["id"],
+        status: status,
+        response_code: checkoutResponse["responseCode"],
+      };
+    } catch (e) {
+      this.logger.error(
+        `Exception while requesting checkout payment for transaction id ${transactionId}: ${e.message}`,
+      );
+      throw e;
+    }
+  }
+
+  public async makeCardPayment(
+    amount: number,
+    currency: string,
+    paymentMethodId: string,
+    transactionId: string,
+  ): Promise<PspCardPaymentResponse> {
+    try {
+      const checkoutResponse = await this.checkoutApi.payments.request(
         {
           amount: amount,
           currency: currency,

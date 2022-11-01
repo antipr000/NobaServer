@@ -1,10 +1,10 @@
 import { CreditCardDTO } from "../../../modules/common/dto/CreditCardDTO";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
-import { PspPaymentResponse } from "./PspPaymentResponse";
+import { PspCardPaymentResponse } from "./PspPaymentResponse";
 
 export type HandlePaymentResponse = {
   consumer: Consumer;
-  paymentResponse: PspPaymentResponse;
+  paymentResponse: PspCardPaymentResponse;
   instrumentID: string;
   cardNumber: string;
   sessionID: string;

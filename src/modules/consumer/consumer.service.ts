@@ -4,8 +4,8 @@ import { Logger } from "winston";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { Result } from "../../core/logic/Result";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
-import { CardService } from "../psp/card.service";
-import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
+import { PaymentService } from "../psp/payment.service";
+import { AddCreditCardPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { Partner } from "../partner/domain/Partner";
@@ -41,7 +41,7 @@ export class ConsumerService {
   private readonly kmsService: KmsService;
 
   @Inject()
-  private readonly cardService: CardService;
+  private readonly paymentService: PaymentService;
 
   @Inject()
   private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService;
@@ -131,22 +131,32 @@ export class ConsumerService {
   }
 
   async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO, partnerId: string): Promise<Consumer> {
-    const addPaymentMethodResponse: AddPaymentMethodResponse = await this.cardService.addPaymentMethod(
-      consumer,
-      paymentMethod,
-      partnerId,
-    );
+    switch (paymentMethod.type) {
+      case PaymentType.CARD: {
+        const addPaymentMethodResponse: AddCreditCardPaymentMethodResponse =
+          await this.paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, partnerId);
 
-    if (addPaymentMethodResponse.updatedConsumerData) {
-      const result = await this.updateConsumer(addPaymentMethodResponse.updatedConsumerData);
+        if (addPaymentMethodResponse.updatedConsumerData) {
+          const result = await this.updateConsumer(addPaymentMethodResponse.updatedConsumerData);
 
-      if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
-        // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
-        // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
-        // we may want to let the user know some day when their bank allows crypto.
-        throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+          if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
+            // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
+            // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
+            // we may want to let the user know some day when their bank allows crypto.
+            throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+          }
+
+          await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            nobaUserID: consumer.props._id,
+            email: consumer.props.displayEmail,
+            cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
+            last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
+          });
+          return result;
+        }
       }
-
       case PaymentType.ACH: {
         const accessToken: string = await this.plaidClient.exchangeForAccessToken({
           publicToken: paymentMethod.achDetails.token,
@@ -162,7 +172,7 @@ export class ConsumerService {
 
         // Create or get Customer ID - even though we don't need it here, this ensures we have one
         // that we can use by the time we make a payment
-        const checkoutCustomerID: string = await this.checkoutService.createCheckoutCustomer(consumer);
+        const [checkoutCustomerID, hasCustomerIDSaved] = await this.paymentService.createPspConsumerAccount(consumer);
 
         // const checkoutResponse = await this.checkoutService.performOneDollarACHTransaction(processorToken);
         // console.log(checkoutResponse);
@@ -183,11 +193,6 @@ export class ConsumerService {
           paymentToken: processorToken,
           status: PaymentMethodStatus.APPROVED,
         };
-
-        const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
-          paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
-        );
-        const hasCustomerIDSaved = checkoutCustomerData.length > 0;
 
         let updatedConsumerProps: ConsumerProps;
         if (hasCustomerIDSaved) {
@@ -227,9 +232,9 @@ export class ConsumerService {
     }
     */
 
-    const paymentProvider = await this.getPaymentMethodProvider(consumer.props._id, transaction.props.paymentMethodID);
-    if (paymentProvider === PaymentProvider.CHECKOUT) {
-      return this.cardService.requestCheckoutPayment(consumer, transaction);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    if (paymentMethod.paymentProviderID === PaymentProvider.CHECKOUT) {
+      return this.paymentService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     } else {
       this.logger.error(
         `Error in making payment as payment provider ${
@@ -251,7 +256,7 @@ export class ConsumerService {
     const paymentProviderID = paymentMethod[0].paymentProviderID;
 
     if (paymentProviderID === PaymentProvider.CHECKOUT) {
-      await this.cardService.removePaymentMethod(paymentToken);
+      await this.paymentService.removePaymentMethod(paymentToken);
     } else {
       throw new NotFoundException("Payment provider not found");
     }
@@ -280,7 +285,7 @@ export class ConsumerService {
 
   async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProvider): Promise<FiatTransactionStatus> {
     if (paymentProvider === PaymentProvider.CHECKOUT) {
-      return this.cardService.getFiatPaymentStatus(paymentId);
+      return this.paymentService.getFiatPaymentStatus(paymentId);
     } else {
       throw new BadRequestException("Payment provider is not supported");
     }
