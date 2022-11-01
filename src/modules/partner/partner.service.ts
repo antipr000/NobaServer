@@ -15,8 +15,10 @@ import { PartnerLogoUploadRequestDTO } from "./dto/PartnerLogoUploadRequestDTO";
 import { S3 } from "aws-sdk";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import sharp from "sharp";
-import { getEnvironmentName } from "../../config/ConfigurationUtils";
+import { getEnvironmentName, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { Entity } from "../../core/domain/Entity";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
 
 @Injectable()
 export class PartnerService {
@@ -31,12 +33,16 @@ export class PartnerService {
 
   private readonly transactionMapper: TransactionMapper;
 
-  private readonly NOBA_PARTNER_DATA_BUCKET = "noba-partner-data";
-  private readonly CLOUDFRONT_URL = "https://d1we8r7iaq9rpl.cloudfront.net/";
-  private readonly S3_BUCKET_URL = "https://noba-partner-data.s3.amazonaws.com/";
+  readonly partnerDataS3Bucket;
+  readonly cloudfrontUrl;
+  readonly s3BucketUrl;
 
-  constructor() {
+  constructor(private readonly configService: CustomConfigService) {
     this.transactionMapper = new TransactionMapper();
+    const partnerConfig: PartnerConfigs = this.configService.get<PartnerConfigs>(PARTNER_CONFIG_KEY);
+    this.partnerDataS3Bucket = partnerConfig.publicS3Bucket;
+    this.cloudfrontUrl = partnerConfig.publicDataCloudfrontUrl;
+    this.s3BucketUrl = `https://${this.partnerDataS3Bucket}.s3.amazonaws.com/`;
   }
 
   async getPartner(partnerId: string): Promise<Partner> {
@@ -140,21 +146,22 @@ export class PartnerService {
     const partner = await this.getPartner(partnerId);
     let new_small_logo_link;
     let new_logo_link;
+
+    if (!partnerLogoRequest.logo && !partnerLogoRequest.logoSmall) {
+      throw new BadRequestException("No logo or small logo provided");
+    }
+
     if (partnerLogoRequest.logo) {
-      new_logo_link = await this.transform_and_upload_logo_to_s3(partner, partnerLogoRequest.logo[0], 800, 200, "logo");
+      new_logo_link = await this.transformAndUploadLogoToS3(partner, partnerLogoRequest.logo[0], 800, 200, "logo");
     }
     if (partnerLogoRequest.logoSmall) {
-      new_small_logo_link = await this.transform_and_upload_logo_to_s3(
+      new_small_logo_link = await this.transformAndUploadLogoToS3(
         partner,
         partnerLogoRequest.logoSmall[0],
         200,
         200,
         "logo_small",
       );
-    }
-
-    if (!new_logo_link && !new_small_logo_link) {
-      throw new BadRequestException("No logo or small logo provided");
     }
 
     const updatedPartner = Partner.createPartner({
@@ -169,19 +176,19 @@ export class PartnerService {
     return await this.partnerRepo.updatePartner(updatedPartner);
   }
 
-  async transform_and_upload_logo_to_s3(
+  private async transformAndUploadLogoToS3(
     partner: Partner,
     file: Express.Multer.File,
     width: number,
     height: number,
     filename: string,
   ): Promise<string> {
-    const transformedFile = await this.transform_logo(file, width, height);
-    const s3_data: any = await this.upload_logo(partner, transformedFile, filename);
-    return s3_data.Location.replace(this.S3_BUCKET_URL, this.CLOUDFRONT_URL); // cloudfront distro images are public
+    const transformedFile = await this.transformLogo(file, width, height);
+    const s3_data: any = await this.uploadLogo(partner, transformedFile, filename);
+    return s3_data.Location.replace(this.s3BucketUrl, this.cloudfrontUrl); // cloudfront distro images are public
   }
 
-  async transform_logo(file: Express.Multer.File, width: number, height: number) {
+  private async transformLogo(file: Express.Multer.File, width: number, height: number) {
     const isJpgOrPng = file.mimetype === "image/jpeg" || file.mimetype === "image/png";
     if (!isJpgOrPng) {
       throw new BadRequestError({ messageForClient: "logo file needs to be jpeg or png" });
@@ -189,19 +196,15 @@ export class PartnerService {
 
     const buffer = file.buffer;
 
-    const compressedImage = await sharp(buffer)
-      .rotate()
-      .resize(width, height, { fit: sharp.fit.inside })
-      .jpeg()
-      .toBuffer();
+    const compressedImage = await sharp(buffer).resize(width, height, { fit: sharp.fit.inside }).toBuffer();
 
     file.buffer = compressedImage;
 
     return file;
   }
 
-  async upload_logo(partner: Partner, file: Express.Multer.File, filename: string) {
-    const s3BucketName = this.NOBA_PARTNER_DATA_BUCKET;
+  private async uploadLogo(partner: Partner, file: Express.Multer.File, filename: string) {
+    const s3BucketName = this.partnerDataS3Bucket;
     const file_format = file.mimetype.split("/")[1];
     const s3Params: S3.Types.PutObjectRequest = {
       Bucket: s3BucketName,
@@ -213,13 +216,6 @@ export class PartnerService {
     };
 
     const s3 = new S3();
-    return new Promise((resolve, reject) => {
-      s3.upload(s3Params, (err, data) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(data);
-      });
-    });
+    return await s3.upload(s3Params).promise();
   }
 }

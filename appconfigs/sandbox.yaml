@@ -109,6 +109,8 @@ configuration:
 
 partner:
   embedSecretKey: "D43az5QS5g1A53B4rk/2FPtLC9FR9NeVtV7qGcubNsSqQ6ftAARCC/7vliyQ2woM+AU+0KsAi2X+JXTloF//1A=="
+  publicS3Bucket: "noba-partner-data"
+  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "sandbox"

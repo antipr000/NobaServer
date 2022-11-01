@@ -18,6 +18,28 @@ import { TransactionMapper } from "../../../modules/transactions/mapper/Transact
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { PartnerLogoUploadRequestDTO } from "../dto/PartnerLogoUploadRequestDTO";
+
+jest.mock("sharp", () => jest.fn());
+import sharp from "sharp";
+import {
+  PARTNER_CONFIG_KEY,
+  PARTNER_PUBLIC_DATA_S3_BUCKET_KEY,
+  PARTNER_PUBLIC_CLOUDFRONT_URL_KEY,
+} from "../../../config/ConfigurationUtils";
+
+const mS3Instance: any = {};
+
+jest.mock("aws-sdk", () => {
+  return { S3: jest.fn(() => mS3Instance) };
+});
+
+const defaultEnvironmentVariables = {
+  [PARTNER_CONFIG_KEY]: {
+    [PARTNER_PUBLIC_DATA_S3_BUCKET_KEY]: "noba-partner-data",
+    [PARTNER_PUBLIC_CLOUDFRONT_URL_KEY]: "https://d1we8r7iaq9rpl.cloudfront.net/",
+  },
+};
 
 describe("PartnerService", () => {
   let partnerService: PartnerService;
@@ -37,7 +59,7 @@ describe("PartnerService", () => {
       useFactory: () => instance(partnerRepo),
     };
     const app: TestingModule = await Test.createTestingModule({
-      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
+      imports: [TestConfigModule.registerAsync(defaultEnvironmentVariables), getTestWinstonModule()],
       controllers: [],
       providers: [
         PartnerRepoProvider,
@@ -450,6 +472,92 @@ describe("PartnerService", () => {
         expect(e).toBeInstanceOf(BadRequestException);
         expect(e.message).toBe("Unknown partner ID");
       }
+    });
+  });
+
+  describe("uploadPartnerLogo", () => {
+    const partner = Partner.createPartner({
+      _id: "mock-partner-1",
+      name: "Mock Partner",
+      apiKey: "mockPublicKey",
+      secretKey: "mockPrivateKey",
+      apiKeyForEmbed: "mockApiKeyForEmbed",
+      webhookClientID: "mockClientID",
+      webhookSecret: "mockWebhookSecret",
+      webhooks: [],
+    });
+
+    const NOBA_BUCKET = "noba-partner-data";
+
+    it("should throw exception when no logo was sent in the requeest", async () => {
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+
+      try {
+        await partnerService.uploadPartnerLogo(partner.props._id, {});
+        expect(true).toBe(false);
+      } catch (e) {
+        console.log(e);
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("should update partner logo", async () => {
+      mS3Instance.upload = jest.fn().mockReturnThis();
+      mS3Instance.promise = jest
+        .fn()
+        .mockReturnValueOnce({ Location: `${partnerService.s3BucketUrl}mock-location-logo` })
+        .mockReturnValueOnce({ Location: `${partnerService.s3BucketUrl}mock-location-logo-small` });
+
+      when(partnerRepo.getPartner(partner.props._id)).thenResolve(partner);
+
+      const testBuffer = Buffer.from("test");
+
+      const multer_file: Express.Multer.File = {
+        originalname: "sample.name",
+        mimetype: "image/png",
+        buffer: testBuffer,
+      } as any;
+
+      const logoRequest: PartnerLogoUploadRequestDTO = {
+        logo: [multer_file],
+        logoSmall: [multer_file],
+      };
+
+      const toBuffer = jest.fn(() => testBuffer);
+      const resize = jest.fn(() => ({ toBuffer }));
+      (sharp as any).mockImplementation(() => ({ resize }));
+      (sharp as any).fit = { inside: jest.fn() };
+
+      const updatedPartner = Partner.createPartner({
+        ...partner.props,
+        config: {
+          ...partner.props.config,
+          logo: `${partnerService.cloudfrontUrl}mock-location-logo`,
+          logoSmall: `${partnerService.cloudfrontUrl}mock-location-logo-small`,
+        },
+      });
+
+      when(partnerRepo.updatePartner(deepEqual(updatedPartner))).thenResolve(updatedPartner);
+
+      // ***  finally calling ***
+      await partnerService.uploadPartnerLogo(partner.props._id, logoRequest);
+
+      // ***  checking ***
+      expect(mS3Instance.upload).toBeCalledTimes(2);
+      // expect(mS3Instance.upload).nthCalledWith(1, {})
+      const firstCall = mS3Instance.upload.mock.calls[0][0];
+      console.log(firstCall);
+      const secondCall = mS3Instance.upload.mock.calls[1][0];
+
+      expect(firstCall.Body).toBe(testBuffer);
+      expect(firstCall.Bucket).toBe(NOBA_BUCKET);
+      expect(firstCall.Key).toMatch(/^e2e_test\/mock\-partner_mock\-partner-1\/logo_.+\.png/);
+      expect(firstCall.ContentType).toBe("image/png");
+
+      expect(secondCall.Body).toBe(testBuffer);
+      expect(secondCall.Bucket).toBe(NOBA_BUCKET);
+      expect(secondCall.Key).toMatch(/^e2e_test\/mock\-partner_mock\-partner-1\/logo_small.+\.png/);
+      expect(secondCall.ContentType).toBe("image/png");
     });
   });
 });

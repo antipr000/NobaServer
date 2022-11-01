@@ -1,5 +1,11 @@
-import { PARTNER_CONFIG_EMBED_SECRET_KEY } from "../ConfigurationUtils";
+import {
+  PARTNER_CONFIG_EMBED_SECRET_KEY,
+  PARTNER_PUBLIC_CLOUDFRONT_URL_KEY,
+  PARTNER_PUBLIC_DATA_S3_BUCKET_KEY,
+} from "../ConfigurationUtils";
 
 export interface PartnerConfigs {
   [PARTNER_CONFIG_EMBED_SECRET_KEY]: string;
+  [PARTNER_PUBLIC_DATA_S3_BUCKET_KEY]: string;
+  [PARTNER_PUBLIC_CLOUDFRONT_URL_KEY]: string;
 }

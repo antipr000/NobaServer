@@ -1101,5 +1101,36 @@ describe("PartnerController", () => {
         }
       });
     });
+    describe("POST /partners/logo", () => {
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+      it("should throw Exception if user isn't entitled", async () => {
+        requestingPartnerAdmin.canUpdatePartnerDetails = () => false;
+        try {
+          await partnerController.uploadPartnerLogo(undefined, { user: { entity: requestingPartnerAdmin } });
+          expect(true).toBe(false);
+        } catch (e) {
+          expect(e).toBeInstanceOf(ForbiddenException);
+        }
+      });
+
+      it("should throw Exception if user isn't entitled", async () => {
+        requestingPartnerAdmin.canUpdatePartnerDetails = () => true;
+        const partner = Partner.createPartner({
+          _id: requestingPartnerAdmin.props.partnerId,
+          name: "Noba",
+          apiKeyForEmbed: "fake-api-key",
+        });
+        when(partnerService.uploadPartnerLogo(requestingPartnerAdmin.props.partnerId, undefined)).thenResolve(partner);
+        const partnerDTO = await partnerController.uploadPartnerLogo(undefined, {
+          user: { entity: requestingPartnerAdmin },
+        });
+        expect(partnerDTO).toStrictEqual(partnerMapper.toDTO(partner));
+      });
+    });
   });
 });

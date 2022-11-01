@@ -299,7 +299,7 @@ export class PartnerController {
       throw new ForbiddenException("Only partner admins can access this endpoint");
     }
     if (!requestUser.canUpdatePartnerDetails()) throw new ForbiddenException();
-    const partner: Partner = await this.partnerService.uploadPartnerLogo("d4KZqfVKwSHWueOJhmgN-", files);
+    const partner: Partner = await this.partnerService.uploadPartnerLogo(requestUser.props.partnerId, files);
     return this.partnerMapper.toDTO(partner);
   }
 }
