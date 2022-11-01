@@ -106,4 +106,10 @@ describe("LocationService", () => {
       expect(async () => await cardService.getFiatPaymentStatus(paymentId)).rejects.toThrow(BadRequestException);
     });
   });
+
+  describe("requestCheckoutPayment", () => {
+    it("should make payment using PSP", async () => {
+      
+    });
+  });
 });
