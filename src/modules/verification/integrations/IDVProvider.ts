@@ -22,6 +22,14 @@ export interface IDVProvider {
     transactionInformation: TransactionInformation,
   ): Promise<ConsumerVerificationResult>;
 
+  getIdentityDocumentVerificationURL(
+    sessionKey: string,
+    consumer: Consumer,
+    idBack: boolean,
+    selfie: boolean,
+    poa: boolean,
+  ): Promise<string>;
+
   getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse>;
 
   processDocumentVerificationResult(

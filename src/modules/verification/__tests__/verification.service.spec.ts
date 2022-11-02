@@ -517,6 +517,29 @@ describe("VerificationService", () => {
     });
   });
 
+  describe("getDocumentVerificationURL", () => {
+    it("should look up the consumer and return a URL", async () => {
+      const consumer = getFakeConsumerWithCountryCode("US");
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      const sessionKey = "session-key";
+
+      const url = "http://id-verification-url";
+      when(idvProvider.getIdentityDocumentVerificationURL(sessionKey, consumer, true, true, true)).thenResolve(url);
+
+      const result = await verificationService.getDocumentVerificationURL(
+        sessionKey,
+        consumer.props._id,
+        true,
+        true,
+        true,
+      );
+
+      expect(result).toEqual(url);
+    });
+  });
+
   describe("processDocumentVerificationWebhookResult", () => {
     it("should return status APPROVED when document verification is successful", async () => {
       const consumer = getFakeConsumer();

@@ -32,10 +32,10 @@ export class AddPaymentMethodDTO {
   type: PaymentType;
 
   @ApiPropertyOptional({ type: CardDetailsDTO })
-  cardDetails: CardDetailsDTO;
+  cardDetails?: CardDetailsDTO;
 
   @ApiPropertyOptional({ type: ACHDetailsDTO })
-  achDetails: ACHDetailsDTO;
+  achDetails?: ACHDetailsDTO;
 
   @ApiPropertyOptional()
   imageUri?: string;

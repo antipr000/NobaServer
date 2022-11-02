@@ -5,7 +5,7 @@ import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito
 import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { CheckoutService } from "../../psp/checkout.service";
+import { PaymentService } from "../../psp/payment.service";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { ConsumerService } from "../consumer.service";
@@ -13,12 +13,11 @@ import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { Result } from "../../../core/logic/Result";
-import { getMockCheckoutServiceWithDefaults } from "../../psp/mocks/mock.checkout.service";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
 import { PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
-import { AddCreditCardPaymentMethodResponse } from "../../../modules/common/domain/AddPaymentMethodResponse";
+import { AddCreditCardPaymentMethodResponse } from "../../psp/domain/AddPaymentMethodResponse";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
@@ -36,13 +35,14 @@ import { PaymentProvider } from "../domain/PaymentProvider";
 import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { BankAccountType, TokenProcessor } from "../../../modules/psp/domain/PlaidTypes";
+import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
   let consumerRepo: IConsumerRepo;
   let notificationService: NotificationService;
   let mockOtpRepo: IOTPRepo;
-  let checkoutService: CheckoutService;
+  let paymentService: PaymentService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
   let partnerService: PartnerService;
   let plaidClient: PlaidClient;
@@ -53,7 +53,7 @@ describe("ConsumerService", () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
-    checkoutService = getMockCheckoutServiceWithDefaults();
+    paymentService = getMockPaymentServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
 
@@ -87,8 +87,8 @@ describe("ConsumerService", () => {
           useFactory: () => instance(mockOtpRepo),
         },
         {
-          provide: CheckoutService,
-          useFactory: () => instance(checkoutService),
+          provide: PaymentService,
+          useFactory: () => instance(paymentService),
         },
         {
           provide: SanctionedCryptoWalletService,
@@ -362,7 +362,7 @@ describe("ConsumerService", () => {
       );
 
       when(
-        checkoutService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
+        paymentService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
       ).thenResolve(addPaymentMethodResponse);
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -431,7 +431,7 @@ describe("ConsumerService", () => {
       );
 
       when(
-        checkoutService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
+        paymentService.addCreditCardPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId),
       ).thenResolve(addPaymentMethodResponse);
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -520,7 +520,7 @@ describe("ConsumerService", () => {
         ),
       ).thenResolve(plaidCheckoutProcessorToken);
 
-      when(checkoutService.createCheckoutCustomer(deepEqual(consumer))).thenResolve(checkoutCustomerID);
+      when(paymentService.createPspConsumerAccount(deepEqual(consumer))).thenResolve([checkoutCustomerID, true]);
 
       const expectedConsumerProps: ConsumerProps = {
         _id: "mock-consumer-1",
@@ -634,7 +634,7 @@ describe("ConsumerService", () => {
         ),
       ).thenResolve(plaidCheckoutProcessorToken);
 
-      when(checkoutService.createCheckoutCustomer(deepEqual(consumer))).thenResolve(checkoutCustomerID);
+      when(paymentService.createPspConsumerAccount(deepEqual(consumer))).thenResolve([checkoutCustomerID, false]);
 
       const expectedConsumerProps: ConsumerProps = {
         _id: "mock-consumer-2",
@@ -741,7 +741,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(
-        checkoutService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
+        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
       ).thenResolve(paymentRequestResponse);
 
       const response = await consumerService.requestPayment(consumer, transaction);
@@ -806,7 +806,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(
-        checkoutService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
+        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
       ).thenResolve(paymentRequestResponse);
 
       try {
@@ -957,7 +957,7 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(checkoutService.removePaymentMethod(paymentToken)).thenResolve();
+      when(paymentService.removePaymentMethod(paymentToken)).thenResolve();
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
 
       const response = await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
@@ -985,7 +985,7 @@ describe("ConsumerService", () => {
       const paymentToken = "fake-token";
       const paymentProvider = PaymentProvider.CHECKOUT;
 
-      when(checkoutService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
+      when(paymentService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
       const response = await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider);
 
@@ -996,7 +996,7 @@ describe("ConsumerService", () => {
       const paymentToken = "fake-token";
       const paymentProvider = "FakeProvider";
 
-      when(checkoutService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
+      when(paymentService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
       try {
         await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider as PaymentProvider);

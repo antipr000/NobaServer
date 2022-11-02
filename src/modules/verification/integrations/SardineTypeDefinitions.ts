@@ -128,6 +128,33 @@ export type DeviceGpsLocation = {
   mockLevel?: string;
 };
 
+export type IdentityDocumentURLRequest = {
+  sessionKey: string;
+  idback: boolean;
+  selfie: boolean;
+  poa: boolean;
+  locale: string;
+  inputData: {
+    firstName: string;
+    lastName: string;
+    address: {
+      street1: string;
+      city: string;
+      region: string;
+      postalCode: string;
+      countryCode: string;
+    };
+  };
+};
+
+export type IdentityDocumentURLResponse = {
+  id: string;
+  link: {
+    expiredAt: string;
+    url: string;
+  };
+};
+
 export type SardineDeviceInformationResponse = {
   id: string;
   level: SardineRiskLevels;

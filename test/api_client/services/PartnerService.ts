@@ -415,4 +415,42 @@ export class PartnerService {
       },
     });
   }
+
+  /**
+   * Adds or updates partner logo
+   * @returns PartnerDTO Updated Partner Info after adding or updating the logos
+   * @throws ApiError
+   */
+  public static uploadPartnerLogo({
+    xNobaApiKey,
+    formData,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    formData: {
+      logo?: Blob;
+      logoSmall?: Blob;
+    };
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<PartnerDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/partners/logo",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      formData: formData,
+      mediaType: "multipart/form-data",
+      errors: {
+        400: `Invalid request parameters`,
+      },
+    });
+  }
 }

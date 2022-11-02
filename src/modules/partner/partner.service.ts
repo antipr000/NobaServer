@@ -11,6 +11,14 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
 import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
+import { PartnerLogoUploadRequestDTO } from "./dto/PartnerLogoUploadRequestDTO";
+import { S3 } from "aws-sdk";
+import { BadRequestError } from "../../core/exception/CommonAppException";
+import sharp from "sharp";
+import { getEnvironmentName, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { Entity } from "../../core/domain/Entity";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
 
 @Injectable()
 export class PartnerService {
@@ -25,12 +33,20 @@ export class PartnerService {
 
   private readonly transactionMapper: TransactionMapper;
 
-  constructor() {
+  readonly partnerDataS3Bucket;
+  readonly cloudfrontUrl;
+  readonly s3BucketUrl;
+
+  constructor(private readonly configService: CustomConfigService) {
     this.transactionMapper = new TransactionMapper();
+    const partnerConfig: PartnerConfigs = this.configService.get<PartnerConfigs>(PARTNER_CONFIG_KEY);
+    this.partnerDataS3Bucket = partnerConfig.publicS3Bucket;
+    this.cloudfrontUrl = partnerConfig.publicDataCloudfrontUrl;
+    this.s3BucketUrl = `https://${this.partnerDataS3Bucket}.s3.amazonaws.com/`;
   }
 
-  async getPartner(partnerId: string): Promise<Partner> {
-    const partner: Partner = await this.partnerRepo.getPartner(partnerId);
+  async getPartner(partnerID: string): Promise<Partner> {
+    const partner: Partner = await this.partnerRepo.getPartner(partnerID);
     return partner;
   }
 
@@ -69,8 +85,8 @@ export class PartnerService {
     return partnerResult;
   }
 
-  async updatePartner(partnerId: string, partnerUpdateRequest: UpdatePartnerRequestDTO): Promise<Partner> {
-    const partner = await this.getPartner(partnerId);
+  async updatePartner(partnerID: string, partnerUpdateRequest: UpdatePartnerRequestDTO): Promise<Partner> {
+    const partner = await this.getPartner(partnerID);
     const updatedPartner = Partner.createPartner({
       ...partner.props,
       name: partnerUpdateRequest.name ?? partner.props.name,
@@ -124,5 +140,82 @@ export class PartnerService {
   async getTransaction(transactionID: string): Promise<TransactionDTO> {
     const transaction = await this.transactionRepo.getTransaction(transactionID);
     return this.transactionMapper.toDTO(transaction);
+  }
+
+  async uploadPartnerLogo(partnerID: string, partnerLogoRequest: PartnerLogoUploadRequestDTO): Promise<Partner> {
+    const partner = await this.getPartner(partnerID);
+    let newSmallLogoLink: string;
+    let newLogoLink: string;
+
+    if (!partnerLogoRequest.logo && !partnerLogoRequest.logoSmall) {
+      throw new BadRequestException("No logo or small logo provided");
+    }
+
+    if (partnerLogoRequest.logo) {
+      newLogoLink = await this.transformAndUploadLogoToS3(partner, partnerLogoRequest.logo[0], 800, 200, "logo");
+    }
+    if (partnerLogoRequest.logoSmall) {
+      newSmallLogoLink = await this.transformAndUploadLogoToS3(
+        partner,
+        partnerLogoRequest.logoSmall[0],
+        200,
+        200,
+        "logo_small",
+      );
+    }
+
+    const updatedPartner = Partner.createPartner({
+      ...partner.props,
+      config: {
+        ...partner.props.config,
+        logo: newLogoLink ?? partner.props.config.logo,
+        logoSmall: newSmallLogoLink ?? partner.props.config.logoSmall,
+      },
+    });
+
+    return await this.partnerRepo.updatePartner(updatedPartner);
+  }
+
+  private async transformAndUploadLogoToS3(
+    partner: Partner,
+    file: Express.Multer.File,
+    width: number,
+    height: number,
+    filename: string,
+  ): Promise<string> {
+    const transformedFile = await this.transformLogo(file, width, height);
+    const s3Data: any = await this.uploadLogo(partner, transformedFile, filename);
+    return s3Data.Location.replace(this.s3BucketUrl, this.cloudfrontUrl); // cloudfront distro images are public
+  }
+
+  private async transformLogo(file: Express.Multer.File, width: number, height: number) {
+    const isJpgOrPng = file.mimetype === "image/jpeg" || file.mimetype === "image/png";
+    if (!isJpgOrPng) {
+      throw new BadRequestError({ messageForClient: "logo file needs to be jpeg or png" });
+    }
+
+    const buffer = file.buffer;
+
+    const compressedImage = await sharp(buffer).resize(width, height, { fit: sharp.fit.inside }).toBuffer();
+
+    file.buffer = compressedImage;
+
+    return file;
+  }
+
+  private async uploadLogo(partner: Partner, file: Express.Multer.File, filename: string) {
+    const s3BucketName = this.partnerDataS3Bucket;
+    const fileFormat = file.mimetype.split("/")[1];
+    const s3Params: S3.Types.PutObjectRequest = {
+      Bucket: s3BucketName,
+      Key: `${getEnvironmentName()}/${partner.props.name.toLowerCase().split(" ").join("-")}_${
+        partner.props._id
+      }/${filename}_${Entity.getNewID()}.${fileFormat}`,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    };
+
+    const s3 = new S3();
+    return await s3.upload(s3Params).promise();
   }
 }

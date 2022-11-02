@@ -27,6 +27,7 @@ import {
   ApiTags,
   ApiBody,
   ApiHeaders,
+  ApiQuery,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -157,8 +158,7 @@ export class VerificationController {
     @Request() request,
   ): Promise<string> {
     const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer))
-      throw new BadRequestException("verifyConsumer is only allowed for consumer");
+    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
     const result = await this.verificationService.verifyDocument(
       consumer.props._id,
@@ -190,14 +190,47 @@ export class VerificationController {
     @Request() request,
   ): Promise<DocumentVerificationResultDTO> {
     const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer))
-      throw new BadRequestException("verifyConsumer is only allowed for consumer");
+    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
     if (id !== consumer.props.verificationData.documentVerificationTransactionID) {
       throw new NotFoundException("No verification record is found for the user with the given id");
     }
     const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id, user.partnerId);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
+  }
+
+  @Get("/document/url")
+  @ApiOperation({ summary: "Retrieves a URL for identity verification" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: String,
+    description: "Document verification KYC URL",
+  })
+  @ApiQuery({ name: "sessionKey", description: "Unique verification key for this session" })
+  @ApiQuery({ name: "requestBack", description: "Request photo of back of ID" })
+  @ApiQuery({ name: "requestSelfie", description: "Request a selfie photo" })
+  @ApiQuery({ name: "requestPOA", description: "Request proof of address" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getIdentityDocumentVerificationURL(
+    @Request() request,
+    @Query("sessionKey") sessionKey: string,
+    @Query("requestBack") idBack: boolean,
+    @Query("requestSelfie") selfie: boolean,
+    @Query("requestPOA") poa: boolean,
+  ): Promise<string> {
+    const user: AuthenticatedUser = request.user;
+    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
+    const consumer: Consumer = user.entity;
+
+    const result = await this.verificationService.getDocumentVerificationURL(
+      sessionKey,
+      consumer.props._id,
+      idBack === true, // This and the next 2 lines are a way of getting around params coming through as strings even though declared as booleans
+      selfie === true,
+      poa === true,
+    );
+
+    return result;
   }
 
   @Public()

@@ -689,6 +689,87 @@ describe("SardineTests", () => {
     });
   });
 
+  describe("getIdentityDocumentVerificationURL", () => {
+    it("should return a URL to the identity provider", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
+        firstName: "Fake",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "fake-partner",
+          },
+        ],
+        address: {
+          streetLine1: "Fake Street",
+          streetLine2: "Fake Street Line 2",
+          countryCode: "US",
+          city: "Maintown",
+          postalCode: "123456",
+          regionCode: "CA",
+        },
+        dateOfBirth: "1960-12-12",
+      });
+
+      const responsePromise = sardine.getIdentityDocumentVerificationURL("session-key", consumer, true, true, true);
+
+      expect(mockAxios.post).toHaveBeenCalled();
+
+      const url = "http://url-to-nowhere";
+      const response = {
+        id: "id",
+        link: {
+          expiredAt: "1234567890",
+          url: url,
+        },
+      };
+
+      mockAxios.mockResponse({
+        data: response,
+      });
+
+      const result = await responsePromise;
+      expect(result).toBe(url);
+    });
+
+    it("should throw an Internal Server Error", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
+        firstName: "Fake",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "fake-partner",
+          },
+        ],
+        address: {
+          streetLine1: "Fake Street",
+          streetLine2: "Fake Street Line 2",
+          countryCode: "US",
+          city: "Maintown",
+          postalCode: "123456",
+          regionCode: "CA",
+        },
+        dateOfBirth: "1960-12-12",
+      });
+
+      mockAxios.post.mockRejectedValueOnce(new Error("Network Error"));
+
+      const responsePromise = sardine.getIdentityDocumentVerificationURL("session-key", consumer, true, true, true);
+
+      expect(mockAxios.post).toHaveBeenCalled();
+
+      try {
+        await responsePromise;
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServerErrorException);
+      }
+    });
+  });
+
   describe("getDocumentVerificationResult", () => {
     it("should return status APPROVED for valid documents", async () => {
       const responsePromise = sardine.getDocumentVerificationResult("fake-verification-id");
@@ -1142,10 +1223,6 @@ describe("SardineTests", () => {
   });
 
   describe("postCustomerFeedback", () => {
-    beforeEach(() => {
-      mockAxios.reset();
-    });
-
     it("should call feedback API successfully", async () => {
       const consumerVerificationResult: ConsumerVerificationResult = {
         status: KYCStatus.APPROVED,
@@ -1176,10 +1253,6 @@ describe("SardineTests", () => {
   });
 
   describe("postDocumentFeedback", () => {
-    beforeEach(() => {
-      mockAxios.reset();
-    });
-
     it("should call feedback API successfully", async () => {
       const documentVerificationResult: DocumentVerificationResult = {
         status: DocumentVerificationStatus.APPROVED,
@@ -1210,10 +1283,6 @@ describe("SardineTests", () => {
   });
 
   describe("postTransactionFeedback", () => {
-    beforeEach(() => {
-      mockAxios.reset();
-    });
-
     it("should call feedback API successfully", async () => {
       sardine.postTransactionFeedback("fake-session", "fake-error", "Fake Error", "fake-transaction", "checkout");
       expect(mockAxios.post).toHaveBeenCalled();

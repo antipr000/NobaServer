@@ -1,13 +1,9 @@
-import { Injectable, BadRequestException, Inject, InternalServerErrorException } from "@nestjs/common";
-import Checkout from "checkout-sdk-node";
+import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
-import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
-import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
 import {
   REASON_CODE_SOFT_DECLINE_BANK_ERROR,
@@ -19,50 +15,22 @@ import { CardFailureExceptionText, CardProcessingException } from "../consumer/C
 import { BINValidity, CardType, CreditCardDTO } from "../common/dto/CreditCardDTO";
 import { CreditCardService } from "../common/creditcard.service";
 import { CheckoutResponseData } from "../common/domain/CheckoutResponseData";
-import { AddCreditCardPaymentMethodResponse, AddInstrumentRequest } from "../common/domain/AddPaymentMethodResponse";
+import { AddCreditCardPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
 import { Transaction } from "../transactions/domain/Transaction";
-import { PaymentRequestResponse, CheckoutPaymentStatus, FiatTransactionStatus } from "../consumer/domain/Types";
+import { PaymentRequestResponse, FiatTransactionStatus } from "../consumer/domain/Types";
 import { Utils } from "../../core/utils/Utils";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "../consumer/domain/PaymentProvider";
 import { CreditCardBinData } from "../common/domain/CreditCardBinData";
 import creditCardType from "credit-card-type";
-
-type CheckoutResponse = {
-  response_code: string;
-  response_summary: string;
-  risk: {
-    flagged: boolean;
-  };
-};
-
-function getCodeTypeFromCardScheme(scheme: string): string {
-  switch (scheme) {
-    case "visa":
-      return "CVV";
-    case "mastercard":
-      return "CVC";
-    case "american-express":
-      return "CID";
-    case "diners-club":
-      return "CVV";
-    case "discover":
-      return "CID";
-    case "jcb":
-      return "CVV";
-    case "unionpay":
-      return "CVN";
-    case "maestro":
-      return "CVV";
-  }
-}
+import { CheckoutClient } from "./checkout.client";
+import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodResponse";
+import { HandlePaymentResponse } from "./domain/CardServiceTypes";
+import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
 
 @Injectable()
-export class CheckoutService {
-  private readonly checkoutApi: Checkout;
-  private readonly checkoutConfigs: CheckoutConfigs;
-
+export class PaymentService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
@@ -72,79 +40,26 @@ export class CheckoutService {
   @Inject()
   private readonly creditCardService: CreditCardService;
 
-  constructor(private configService: CustomConfigService) {
-    this.checkoutConfigs = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY);
-    this.checkoutApi = new Checkout(this.checkoutConfigs.secretKey, {
-      pk: this.checkoutConfigs.publicKey,
-    });
-  }
+  @Inject()
+  private readonly checkoutService: CheckoutClient;
 
-  public async createCheckoutCustomer(consumer: Consumer): Promise<string> {
-    // TODO: Move this to the service layer as this is business logic.
+  /**
+   * Checks if consumer already has account with PSP. If not creates the account
+   * @param consumer Details of the consumer
+   * @returns [string, boolean]: Array of 2 values. The first element represents the customer id of the account created in PSP
+   * The second value represents whether account was already created or a new account has been created. Returns true if account
+   * existed else false
+   */
+  public async createPspConsumerAccount(consumer: Consumer): Promise<[string, boolean]> {
     const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
       paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
     );
 
-    if (checkoutCustomerData.length !== 0) return checkoutCustomerData[0].providerCustomerID;
-
-    // New customer. Create customer id
-    try {
-      const checkoutCustomer = await this.checkoutApi.customers.create({
-        email: consumer.props.email,
-        metadata: {
-          coupon_code: this.configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).couponCode,
-          partner_id: this.configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY).partnerId,
-        },
-      });
-
-      return checkoutCustomer["id"];
-    } catch (e) {
-      if (e.body["error_codes"].filter(errorCode => errorCode === "customer_email_already_exists").length > 0) {
-        // existing customer
-        const checkoutCustomer = await this.checkoutApi.customers.get(consumer.props.email);
-        return checkoutCustomer["id"];
-      } else {
-        throw new BadRequestException("Failed to create checkout customer");
-      }
-    }
-  }
-
-  public async addInstrument(request: AddInstrumentRequest): Promise<string> {
-    try {
-      const instrument = await this.checkoutApi.instruments.create({
-        token: request.checkoutToken,
-        customer: {
-          id: request.checkoutCustomerID,
-        },
-      });
-
-      return instrument["id"];
-    } catch (err) {
-      console.log(err);
-      this.logger.error(`Checkout intrument creation failed - ${JSON.stringify(err)}`);
-      throw err;
-    }
-  }
-
-  public async performOneDollarACHTransaction(paymentToken: string) {
-    try {
-      const checkoutResponse = await this.checkoutApi.payments.request({
-        amount: "1", // 1 cent (amount field is denominated in cents not a decimal dollar)
-        currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
-        processing_channel_id: "pc_ka6ij3qluenufp5eovqqtw4xdu",
-        source: {
-          type: "provider_token",
-          token: paymentToken,
-          payment_method: "ach",
-          account_holder: {
-            type: "individual",
-          },
-        },
-      });
-      console.log(checkoutResponse);
-    } catch (err) {
-      console.log(err);
-      throw err;
+    if (checkoutCustomerData.length === 0) {
+      // new customer. Create customer id
+      return [await this.checkoutService.createConsumer(consumer.props.email), false];
+    } else {
+      return [checkoutCustomerData[0].providerCustomerID, true];
     }
   }
 
@@ -153,125 +68,78 @@ export class CheckoutService {
     paymentMethod: AddPaymentMethodDTO,
     partnerId: string,
   ): Promise<AddCreditCardPaymentMethodResponse> {
-    if (paymentMethod.type !== PaymentType.CARD) {
-      this.logger.error(
-        `"addCreditCardPaymentMethod" was called for payment method type "${paymentMethod.type}" which is unexpected.`,
-      );
-      throw new InternalServerErrorException("Internal server error. Please try again.");
-    }
-
-    const checkoutCustomerID: string = await this.createCheckoutCustomer(consumer);
-    const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
-      paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
-    );
-    const hasCustomerIDSaved = checkoutCustomerData.length > 0;
-
     let creditCardBinData: CreditCardDTO;
-    let instrumentID: string;
-    let scheme: string;
-    let checkoutResponse;
-    let bin: string;
-    let issuer: string;
-    let cardType: string;
 
-    try {
-      // To add payment method, we first need to tokenize the card
-      // Token is only valid for 15 mins
-      const token = await this.checkoutApi.tokens.request({
-        type: "card",
-        number: paymentMethod.cardDetails.cardNumber,
-        expiry_month: paymentMethod.cardDetails.expiryMonth,
-        expiry_year: paymentMethod.cardDetails.expiryYear,
-        cvv: paymentMethod.cardDetails.cvv,
-      });
+    const [checkoutCustomerID, hasCustomerIDSaved] = await this.createPspConsumerAccount(consumer);
 
-      // Now create instrument
-      const instrument = await this.checkoutApi.instruments.create({
-        // infered type "token",
-        token: token["token"], // Generated by Checkout.Frames
-        customer: {
-          id: checkoutCustomerID,
-        },
-      });
-
-      console.log(instrument);
-      instrumentID = instrument["id"];
-      scheme = instrument["scheme"];
-      bin = instrument["bin"];
-      issuer = instrument["issuer"] ?? "";
-      cardType = instrument["card_type"];
-    } catch (err) {
-      this.logger.error(`Failed to add card card: ${err}`);
-      throw new BadRequestException({ message: "Failed to add card" });
-    }
+    const addPaymentMethodResponse: PspAddPaymentMethodResponse = await this.checkoutService.addCreditCardPaymentMethod(
+      paymentMethod,
+      checkoutCustomerID,
+    );
 
     // Check if this card already exists for the consumer
-    const existingPaymentMethod = consumer.getPaymentMethodByID(instrumentID);
+    const existingPaymentMethod = consumer.getPaymentMethodByID(addPaymentMethodResponse.instrumentID);
     if (existingPaymentMethod) {
-      throw new BadRequestException({ message: "Card already added" });
+      throw new BadRequestException("Card already added");
     }
 
     // Before calling checkout, check against our BIN list
-    const validity = await this.creditCardService.isBINSupported(bin);
+    const validity = await this.creditCardService.isBINSupported(addPaymentMethodResponse.bin);
+
+    let paymentResponse: PspCardPaymentResponse;
+
     if (validity == BINValidity.NOT_SUPPORTED) {
       // Bypass checkout call entirely
       throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
     } else if (validity === BINValidity.SUPPORTED) {
-      checkoutResponse = {
+      paymentResponse = {
+        id: null,
         response_code: "10000",
         response_summary: "Approved",
         risk: {
           flagged: false,
         },
+        bin: addPaymentMethodResponse.bin,
       };
-
-      creditCardBinData = await this.creditCardService.getBINDetails(bin);
+      creditCardBinData = await this.creditCardService.getBINDetails(addPaymentMethodResponse.bin);
     } else {
       // Record not in our BIN list. We will make the $1 charge
       try {
         // Check if added payment method is valid
-        checkoutResponse = await this.checkoutApi.payments.request({
-          amount: 1, // 1 cent (amount field is denominated in cents not a decimal dollar)
-          currency: "USD", // TODO: Figure out if we need to move to non hardcoded value
-          source: {
-            type: "id",
-            id: instrumentID,
-          },
-          description: "Noba Customer card validation at UTC " + Date.now(),
-          metadata: {
-            order_id: "test_order_1",
-          },
-          capture: false,
-        });
+        paymentResponse = await this.checkoutService.makeCardPayment(
+          /* amount= */ 1,
+          /* currency= */ "USD",
+          /* paymentMethodId= */ addPaymentMethodResponse.instrumentID,
+          /* transactionId= */ "test_order_1",
+        );
 
         creditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
-          issuer: issuer.toLocaleLowerCase().split(" ").join("_"),
-          bin: bin,
-          type: cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
-          network: scheme,
+          issuer: addPaymentMethodResponse.issuer.toLocaleLowerCase().split(" ").join("_"),
+          bin: addPaymentMethodResponse.bin,
+          type: addPaymentMethodResponse.cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT,
+          network: addPaymentMethodResponse.scheme,
           supported: BINValidity.UNKNOWN,
           digits: paymentMethod.cardDetails.cardNumber.length,
           cvvDigits: paymentMethod.cardDetails.cvv.length,
         }).props;
       } catch (err) {
-        //pass
-        this.logger.error(`Error validating card instrument ${instrumentID}: ${err}`);
+        this.logger.error(`Error validating card instrument ${addPaymentMethodResponse.instrumentID}: ${err}`);
         throw new BadRequestException("Card validation error");
       }
     }
 
     let response: CheckoutResponseData;
     try {
-      response = await this.handleCheckoutResponse(
-        consumer,
-        checkoutResponse,
-        instrumentID,
-        paymentMethod.cardDetails.cardNumber,
-        "verification",
-        "verification",
-        partnerId,
-        creditCardBinData,
-      );
+      response = await this.handlePaymentResponse({
+        consumer: consumer,
+        paymentResponse: paymentResponse,
+        instrumentID: addPaymentMethodResponse.instrumentID,
+        cardNumber: paymentMethod.cardDetails.cardNumber,
+        sessionID: "verification",
+        transactionID: "verification",
+        partnerID: partnerId,
+        binData: creditCardBinData,
+      });
     } catch (e) {
       if (e instanceof CardProcessingException) {
         throw new BadRequestException(e.disposition);
@@ -300,7 +168,7 @@ export class CheckoutService {
         name: paymentMethod.name,
         type: PaymentMethodType.CARD,
         cardData: {
-          cardType: scheme,
+          cardType: addPaymentMethodResponse.cardType,
           first6Digits: paymentMethod.cardDetails.cardNumber.substring(0, 6),
           last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
           authCode: response.responseCode,
@@ -308,7 +176,7 @@ export class CheckoutService {
         },
         imageUri: paymentMethod.imageUri,
         paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: instrumentID,
+        paymentToken: addPaymentMethodResponse.instrumentID,
       };
 
       if (response.paymentMethodStatus) {
@@ -340,9 +208,6 @@ export class CheckoutService {
         newPaymentMethod: newPaymentMethod,
       };
     }
-    return {
-      checkoutResponseData: response,
-    };
   }
 
   async requestCheckoutPayment(
@@ -350,58 +215,23 @@ export class CheckoutService {
     transaction: Transaction,
     paymentMethod: PaymentMethod,
   ): Promise<PaymentRequestResponse> {
-    let checkoutResponse;
-    let bin: string;
-
-    let checkoutSource = {};
     if (paymentMethod.type === PaymentMethodType.CARD) {
-      checkoutSource = {
-        type: "id",
-        id: transaction.props.paymentMethodID,
-      };
-    } else if (paymentMethod.type === PaymentMethodType.ACH) {
-      checkoutSource = {
-        type: "provider_token",
-        payment_method: "ach",
-        token: paymentMethod.paymentToken,
-        account_holder: {
-          type: "individual",
-        },
-      };
-    }
-
-    try {
-      checkoutResponse = await this.checkoutApi.payments.request(
-        {
-          amount: Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100, // this is amount in cents so if we write 1 here it means 0.01 USD
-          currency: transaction.props.leg1,
-          source: checkoutSource,
-          processing_channel_id: this.checkoutConfigs.processingChannelId,
-          description: "Noba Customer Payment at UTC " + Date.now(),
-          metadata: {
-            order_id: transaction.props._id,
-          },
-        },
-        /*idempotencyKey=*/ transaction.props._id,
+      const paymentResponse: PspCardPaymentResponse = await this.checkoutService.makeCardPayment(
+        /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
+        /* currency= */ transaction.props.leg1,
+        /* paymentMethodId= */ transaction.props.paymentMethodID,
+        /* transactionId= */ transaction.props._id,
       );
-    } catch (err) {
-      this.logger.error(
-        `Exception while requesting checkout payment for transaction id ${transaction.props._id}: ${err.message}`,
-      );
-      throw err;
-    }
 
-    if (paymentMethod.type === PaymentMethodType.CARD) {
-      bin = checkoutResponse["source"]["bin"];
-      let creditCardBinData = await this.creditCardService.getBINDetails(bin);
+      let creditCardBinData = await this.creditCardService.getBINDetails(paymentResponse.bin);
 
       if (creditCardBinData === null) {
         // Record is not in our db. Fetch payment method details from checkout and add entry
-        const paymentMethodResponse = await this.checkoutApi.instruments.get(transaction.props.paymentMethodID);
-        const cardType = paymentMethodResponse["card_type"];
-        const bin = paymentMethodResponse["bin"];
-        const scheme = paymentMethodResponse["scheme"];
-        const issuer = paymentMethodResponse["issuer"]; // We will not always have an issuer in the instrument response
+        const paymentMethodResponse = await this.checkoutService.getPaymentMethod(transaction.props.paymentMethodID);
+        const cardType = paymentMethodResponse.cardType;
+        const bin = paymentMethodResponse.bin;
+        const scheme = paymentMethodResponse.scheme;
+        const issuer = paymentMethodResponse.issuer; // We will not always have an issuer in the instrument response
 
         const possibleCards = creditCardType(bin);
 
@@ -423,27 +253,27 @@ export class CheckoutService {
           network: scheme,
           supported: BINValidity.SUPPORTED,
           digits: card.lengths[0],
-          cvvDigits: card.code[getCodeTypeFromCardScheme(card.type)],
+          cvvDigits: card.code[Utils.getCodeTypeFromCardScheme(card.type)],
         };
 
         this.logger.info(`Adding BIN data: ${JSON.stringify(creditCardBinData, null, 1)}`);
         creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);
       }
 
-      const response = await this.handleCheckoutResponse(
-        consumer,
-        checkoutResponse,
-        transaction.props.paymentMethodID,
-        null,
-        transaction.props.sessionKey,
-        transaction.props.transactionID,
-        transaction.props.partnerID,
-        creditCardBinData,
-      );
+      const response = await this.handlePaymentResponse({
+        consumer: consumer,
+        paymentResponse: paymentResponse,
+        instrumentID: transaction.props.paymentMethodID,
+        cardNumber: null,
+        sessionID: transaction.props.sessionKey,
+        transactionID: transaction.props.transactionID,
+        partnerID: transaction.props.partnerID,
+        binData: creditCardBinData,
+      });
 
       switch (response.paymentMethodStatus) {
         case PaymentMethodStatus.APPROVED:
-          return { status: response.paymentMethodStatus, paymentID: checkoutResponse["id"] };
+          return { status: response.paymentMethodStatus, paymentID: paymentResponse.id };
         case PaymentMethodStatus.REJECTED:
           return {
             status: response.paymentMethodStatus,
@@ -453,58 +283,57 @@ export class CheckoutService {
         case PaymentMethodStatus.FLAGGED:
         // TODO: Don't yet have a use for this?
       }
-    } else if (paymentMethod.type === PaymentMethodType.ACH) {
-      // TODO(Plaid) Handle various statuses and response codes: https://www.checkout-docs-private-beta.com/docs/four/ach
-      this.logger.info(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
+    } else {
+      const response: PspACHPaymentResponse = await this.checkoutService.makeACHPayment(
+        /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
+        /* currency= */ transaction.props.leg1,
+        /* paymentMethodId= */ transaction.props.paymentMethodID,
+        /* transactionId= */ transaction.props._id,
+      );
 
-      const status = checkoutResponse["status"];
-      if (status !== "Pending") {
+      if (response.status !== "Pending") {
         return {
+          paymentID: response.id,
           status: PaymentMethodStatus.REJECTED,
-          responseCode: checkoutResponse["responseCode"],
+          responseCode: response.response_code,
         };
       }
+
       return {
-        paymentID: checkoutResponse["id"],
+        paymentID: response.id,
         status: PaymentMethodStatus.APPROVED,
-        responseCode: checkoutResponse["responseCode"],
+        responseCode: response.response_code,
       };
     }
   }
 
   async getFiatPaymentStatus(paymentId: string): Promise<FiatTransactionStatus> {
-    try {
-      const payment = await this.checkoutApi.payments.get(paymentId);
-      const status: CheckoutPaymentStatus = payment.status;
-      console.log(payment);
-      if (status === "Authorized" || status === "Paid") return FiatTransactionStatus.AUTHORIZED;
-      if (status === "Captured" || status === "Partially Captured") return FiatTransactionStatus.CAPTURED;
-      if (status === "Pending") return FiatTransactionStatus.PENDING;
+    const status = await this.checkoutService.getPaymentDetails(paymentId);
+    if (status === "Authorized" || status === "Paid") return FiatTransactionStatus.AUTHORIZED;
+    if (status === "Captured" || status === "Partially Captured") return FiatTransactionStatus.CAPTURED;
+    if (status === "Pending") return FiatTransactionStatus.PENDING;
 
-      this.logger.error(`Payment ${paymentId} failed fiat processing with status ${status}`);
-      return FiatTransactionStatus.FAILED;
-    } catch (err) {
-      throw new Error("Error while checking payment status from payment id " + paymentId + " " + err);
-    }
+    this.logger.error(`Payment ${paymentId} failed fiat processing with status ${status}`);
+    return FiatTransactionStatus.FAILED;
   }
 
   async removePaymentMethod(paymentToken: string): Promise<void> {
-    await this.checkoutApi.instruments.delete(paymentToken);
+    await this.checkoutService.removePaymentMethod(paymentToken);
   }
 
-  private async handleCheckoutResponse(
-    consumer: Consumer,
-    checkoutResponse: CheckoutResponse,
-    instrumentID: string,
-    cardNumber: string,
-    sessionID: string,
-    transactionID: string,
-    partnerID: string,
-    binData: CreditCardDTO,
-  ): Promise<CheckoutResponseData> {
+  private async handlePaymentResponse({
+    consumer,
+    paymentResponse,
+    instrumentID,
+    cardNumber,
+    sessionID,
+    transactionID,
+    partnerID,
+    binData,
+  }: HandlePaymentResponse): Promise<CheckoutResponseData> {
     const response: CheckoutResponseData = new CheckoutResponseData();
-    response.responseCode = checkoutResponse["response_code"];
-    response.responseSummary = checkoutResponse["response_summary"];
+    response.responseCode = paymentResponse.response_code;
+    response.responseSummary = paymentResponse.response_summary;
     let sendNobaEmail = false;
 
     try {
@@ -574,7 +403,7 @@ export class CheckoutService {
         // Hard decline
         sendNobaEmail = true;
         response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
-      } else if (response.responseCode.startsWith("40") || checkoutResponse["risk"]["flagged"]) {
+      } else if (response.responseCode.startsWith("40") || paymentResponse.risk.flagged) {
         // Risk
         sendNobaEmail = true;
         response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
