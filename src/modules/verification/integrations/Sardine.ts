@@ -268,7 +268,6 @@ export class Sardine implements IDVProvider {
         type: PaymentMethodTypes.BANK,
         bank: {
           accountNumber: accountData.accountNumber,
-          // TODO(Sardine): Whether it should be 'achRoutingNumber' or 'wireRoutingNumber'?
           routingNumber: accountData.achRoutingNumber,
           accountType: accountType,
           balance: parseFloat(accountData.availableBalance),
