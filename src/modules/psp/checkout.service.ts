@@ -418,8 +418,8 @@ export class CheckoutService {
             cardType === null || cardType === undefined
               ? undefined
               : cardType.toLocaleLowerCase() === "credit"
-                ? CardType.CREDIT
-                : CardType.DEBIT,
+              ? CardType.CREDIT
+              : CardType.DEBIT,
           network: scheme,
           supported: BINValidity.SUPPORTED,
           digits: card.lengths[0],

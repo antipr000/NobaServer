@@ -8,7 +8,7 @@ class MockPlaidConfiguration {
   constructor(options) {
     MockPlaidConfiguration.intializers.push(options);
   }
-};
+}
 
 class MockPlaidApi {
   public static intializers: Array<any> = [];
@@ -19,8 +19,8 @@ class MockPlaidApi {
       status: 200,
       data: {
         link_token: "link-token",
-      }
-    }
+      },
+    },
   };
 
   static reset() {
@@ -32,8 +32,8 @@ class MockPlaidApi {
         status: 200,
         data: {
           link_token: "link-token",
-        }
-      }
+        },
+      },
     };
   }
 
@@ -49,7 +49,7 @@ class MockPlaidApi {
     MockPlaidApi.linkTokenCreateParams.incomingRequest = request;
     return MockPlaidApi.linkTokenCreateParams.outputResponse;
   }
-};
+}
 
 jest.mock("plaid", () => {
   return {
@@ -62,17 +62,24 @@ jest.mock("plaid", () => {
       Us: "us",
     },
     DepositoryAccountSubtype: {
-      "Checking": "checking",
+      Checking: "checking",
     },
     PlaidEnvironments: {
-      "sandbox": "sandbox",
-    }
+      sandbox: "sandbox",
+    },
   };
 });
 
 import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { PLAID_CLIENT_ID, PLAID_CONFIG_KEY, PLAID_ENVIRONMENT, PLAID_REDIRECT_URI, PLAID_SECRET_KEY, PLAID_VERSION } from "../../../config/ConfigurationUtils";
+import {
+  PLAID_CLIENT_ID,
+  PLAID_CONFIG_KEY,
+  PLAID_ENVIRONMENT,
+  PLAID_REDIRECT_URI,
+  PLAID_SECRET_KEY,
+  PLAID_VERSION,
+} from "../../../config/ConfigurationUtils";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { PlaidClient } from "../plaid.client";
@@ -97,16 +104,13 @@ describe("PlaidClientTests", () => {
         getTestWinstonModule(),
       ],
       controllers: [],
-      providers: [
-        PlaidClient
-      ],
+      providers: [PlaidClient],
     }).compile();
 
     plaidClient = app.get<PlaidClient>(PlaidClient);
   });
 
-  afterEach(() => {
-  });
+  afterEach(() => {});
 
   describe("generateLinkToken()", () => {
     it("should return linkToken if Plaid returns success", async () => {
@@ -126,11 +130,11 @@ describe("PlaidClientTests", () => {
         language: "en",
         account_filters: {
           depository: {
-            account_subtypes: ["checking"]
-          }
+            account_subtypes: ["checking"],
+          },
         },
         redirect_uri: "https://tests.noba.com",
-      }
+      };
       expect(receivedLinkToken).toBe(MockPlaidApi.linkTokenCreateParams.outputResponse.data.link_token);
       expect(MockPlaidApi.linkTokenCreateParams.incomingRequest).toStrictEqual(expectedCreateLinkRequest);
     });
@@ -157,11 +161,11 @@ describe("PlaidClientTests", () => {
           language: "en",
           account_filters: {
             depository: {
-              account_subtypes: ["checking"]
-            }
+              account_subtypes: ["checking"],
+            },
           },
           redirect_uri: "https://tests.noba.com",
-        }
+        };
         expect(MockPlaidApi.linkTokenCreateParams.incomingRequest).toStrictEqual(expectedCreateLinkRequest);
       }
     });
