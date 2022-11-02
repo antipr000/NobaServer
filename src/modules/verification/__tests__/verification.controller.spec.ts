@@ -12,6 +12,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { AuthenticatedUser } from "src/modules/auth/domain/AuthenticatedUser";
+import { IDVerificationURLRequestLocale, IDVerificationURLResponseDTO } from "../dto/IDVerificationRequestURLDTO";
 
 describe("VerificationController", () => {
   let verificationController: VerificationController;
@@ -314,21 +315,43 @@ describe("VerificationController", () => {
         dateOfBirth: "1960-12-12",
       });
 
+      const id = "request-id";
       const url = "http://id-verification-url";
+      const expiration = new Date().toISOString();
       when(
-        verificationService.getDocumentVerificationURL("session-id", consumer.props._id, true, true, true),
-      ).thenResolve(url);
+        verificationService.getDocumentVerificationURL(
+          "session-id",
+          consumer.props._id,
+          IDVerificationURLRequestLocale.EN_US,
+          true,
+          true,
+          true,
+        ),
+      ).thenResolve({
+        id: id,
+        link: {
+          expiredAt: expiration,
+          url: url,
+        },
+      });
+
+      const expectedResult: IDVerificationURLResponseDTO = {
+        id: id,
+        expiration: Date.parse(expiration),
+        url: url,
+      };
 
       const result = await verificationController.getIdentityDocumentVerificationURL(
         {
           user: { entity: consumer, partnerId: "fake-partner" } as AuthenticatedUser,
         },
         "session-id",
-        true,
-        true,
-        true,
+        IDVerificationURLRequestLocale.EN_US,
+        "true",
+        "true",
+        "true",
       );
-      expect(result).toBe(url);
+      expect(result).toStrictEqual(expectedResult);
     });
 
     it("should get the URL for redirect to identity verification", async () => {
@@ -340,9 +363,10 @@ describe("VerificationController", () => {
             user: { entity: undefined, partnerId: "fake-partner" } as AuthenticatedUser,
           },
           "session-id",
-          true,
-          true,
-          true,
+          IDVerificationURLRequestLocale.EN_US,
+          "true",
+          "true",
+          "true",
         );
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
