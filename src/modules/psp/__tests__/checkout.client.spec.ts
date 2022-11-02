@@ -190,5 +190,9 @@ describe("CheckoutClient", () => {
       await checkoutClient.removePaymentMethod(paymentToken);
       await deleteConsumer(checkoutConsumerId);
     });
+
+    it("should throw error when payment id is wrong", async () => {
+      expect(async () => await checkoutClient.getPaymentDetails("fake-id")).rejects.toThrow(BadRequestException);
+    });
   });
 });
