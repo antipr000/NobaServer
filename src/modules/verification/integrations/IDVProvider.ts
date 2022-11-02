@@ -3,9 +3,11 @@ import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
+import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import {
   CaseNotificationWebhookRequest,
   DocumentVerificationSardineResponse,
+  IdentityDocumentURLResponse,
   SardineDeviceInformationResponse,
 } from "./SardineTypeDefinitions";
 
@@ -25,10 +27,11 @@ export interface IDVProvider {
   getIdentityDocumentVerificationURL(
     sessionKey: string,
     consumer: Consumer,
+    locale: IDVerificationURLRequestLocale,
     idBack: boolean,
     selfie: boolean,
     poa: boolean,
-  ): Promise<string>;
+  ): Promise<IdentityDocumentURLResponse>;
 
   getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse>;
 

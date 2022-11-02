@@ -51,6 +51,7 @@ import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificatio
 import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";
 import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
+import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -203,21 +204,27 @@ export class VerificationController {
   @ApiOperation({ summary: "Retrieves a URL for identity verification" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: String,
-    description: "Document verification KYC URL",
+    type: IDVerificationURLResponseDTO,
+    description: "Document verification KYC URL details",
   })
   @ApiQuery({ name: "sessionKey", description: "Unique verification key for this session" })
-  @ApiQuery({ name: "requestBack", description: "Request photo of back of ID" })
-  @ApiQuery({ name: "requestSelfie", description: "Request a selfie photo" })
-  @ApiQuery({ name: "requestPOA", description: "Request proof of address" })
+  @ApiQuery({
+    name: "locale",
+    enum: IDVerificationURLRequestLocale,
+    description: "Unique verification key for this session",
+  })
+  @ApiQuery({ name: "requestBack", type: "boolean", description: "Request photo of back of ID" })
+  @ApiQuery({ name: "requestSelfie", type: "boolean", description: "Request a selfie photo" })
+  @ApiQuery({ name: "requestPOA", type: "boolean", description: "Request proof of address" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getIdentityDocumentVerificationURL(
     @Request() request,
     @Query("sessionKey") sessionKey: string,
-    @Query("requestBack") idBack: boolean,
-    @Query("requestSelfie") selfie: boolean,
-    @Query("requestPOA") poa: boolean,
-  ): Promise<string> {
+    @Query("locale") locale: IDVerificationURLRequestLocale,
+    @Query("requestBack") idBack = "false",
+    @Query("requestSelfie") selfie = "false",
+    @Query("requestPOA") poa = "false",
+  ): Promise<IDVerificationURLResponseDTO> {
     const user: AuthenticatedUser = request.user;
     if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
@@ -225,12 +232,17 @@ export class VerificationController {
     const result = await this.verificationService.getDocumentVerificationURL(
       sessionKey,
       consumer.props._id,
-      idBack === true, // This and the next 2 lines are a way of getting around params coming through as strings even though declared as booleans
-      selfie === true,
-      poa === true,
+      locale,
+      idBack === "true", // This and the next 2 lines are a way of getting around params coming through as strings even though declared as booleans
+      selfie === "true",
+      poa === "true",
     );
 
-    return result;
+    return {
+      id: result.id,
+      expiration: Date.parse(result.link.expiredAt),
+      url: result.link.url,
+    };
   }
 
   @Public()
