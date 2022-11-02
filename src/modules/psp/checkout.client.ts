@@ -189,7 +189,7 @@ export class CheckoutClient {
       const status: CheckoutPaymentStatus = payment.status;
       return status;
     } catch (err) {
-      throw new Error("Error while checking payment status from payment id " + paymentId + " " + err);
+      throw new BadRequestException("Error while checking payment status from payment id " + paymentId + " " + err);
     }
   }
 

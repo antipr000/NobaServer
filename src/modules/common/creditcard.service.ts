@@ -9,6 +9,14 @@ export class CreditCardService {
   @Inject("CreditCardBinDataRepo")
   private readonly creditCardBinDataRepo: CreditCardBinDataRepo;
 
+  async addOrUpdateBinData(binData: CreditCardDTO): Promise<CreditCardDTO> {
+    if (await this.getBINDetails(binData.bin)) {
+      return this.updateBinData(binData);
+    } else {
+      return this.addBinData(binData);
+    }
+  }
+
   async addBinData(binData: CreditCardDTO): Promise<CreditCardDTO> {
     if (await this.creditCardBinDataRepo.findCardByExactBIN(binData.bin)) {
       throw new BadRequestException("BIN already exists");
