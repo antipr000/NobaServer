@@ -11,7 +11,7 @@ import { getMockNotificationServiceWithDefaults } from "../../notifications/mock
 import { getMockCreditCardServiceWithDefaults } from "../../common/mocks/mock.creditcard.service";
 import { FiatTransactionStatus } from "../../consumer/domain/Types";
 import { BadRequestException } from "@nestjs/common";
-import { Consumer } from "../../consumer/domain/Consumer";
+import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { PaymentMethod, PaymentMethodType } from "../../consumer/domain/PaymentMethod";
 import { PaymentProvider } from "../../consumer/domain/PaymentProvider";
 import { PaymentMethodStatus } from "../../consumer/domain/VerificationStatus";
@@ -22,6 +22,9 @@ import { BINValidity, CardType } from "../../common/dto/CreditCardDTO";
 import { PaymentProviderDetails } from "../../consumer/domain/PaymentProviderDetails";
 import { Utils } from "../../../core/utils/Utils";
 import { CardProcessingException } from "../../consumer/CardProcessingException";
+import { PlaidClient } from "../plaid.client";
+import { getMockPlaidClientWithDefaults } from "../mocks/mock.plaid.client";
+import { BankAccountType, TokenProcessor } from "../domain/PlaidTypes";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
@@ -31,6 +34,7 @@ describe("PaymentService", () => {
   let checkoutClient: CheckoutClient;
   let notificationService: NotificationService;
   let creditCardService: CreditCardService;
+  let plaidClient: PlaidClient;
 
   jest.setTimeout(10000);
 
@@ -38,6 +42,7 @@ describe("PaymentService", () => {
     checkoutClient = getMockCheckoutClientWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
     creditCardService = getMockCreditCardServiceWithDefaults();
+    plaidClient = getMockPlaidClientWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -54,6 +59,10 @@ describe("PaymentService", () => {
         {
           provide: CreditCardService,
           useFactory: () => instance(creditCardService),
+        },
+        {
+          provide: PlaidClient,
+          useFactory: () => instance(plaidClient),
         },
         PaymentService,
       ],
@@ -118,6 +127,229 @@ describe("PaymentService", () => {
     });
   });
 
+  describe("addACHPaymentMethod", () => {
+    it("adds a payment method of 'ACH' type", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+
+      const checkoutCustomerID = "checkout-customer-for-mock-consumer";
+
+      const plaidPublicToken = "public-token-by-plain-embed-ui";
+      const plaidAccessToken = "plaid-access-token-for-public-token";
+      const plaidAuthGetItemID = "plaid-itemID-for-auth-get-request";
+      const plaidAccountID = "plaid-account-id-for-the-consumer-bank-account";
+      const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
+
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: checkoutCustomerID,
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [],
+        cryptoWallets: [],
+      });
+
+      const addPaymentMethod: AddPaymentMethodDTO = {
+        type: PaymentType.ACH,
+        name: "Bank Account",
+        achDetails: {
+          token: plaidPublicToken,
+        },
+        imageUri: "https://noba.com",
+      } as any;
+
+      when(plaidClient.exchangeForAccessToken(deepEqual({ publicToken: plaidPublicToken }))).thenResolve(
+        plaidAccessToken,
+      );
+      when(plaidClient.retrieveAccountData(deepEqual({ accessToken: plaidAccessToken }))).thenResolve({
+        accountID: plaidAccountID,
+        itemID: plaidAuthGetItemID,
+        accountNumber: "1234567890",
+        achRoutingNumber: "123456789",
+        availableBalance: "1234.56",
+        currencyCode: "USD",
+        mask: "7890",
+        name: "Bank Account",
+        accountType: BankAccountType.CHECKING,
+        wireRoutingNumber: "987654321",
+      });
+      when(
+        plaidClient.createProcessorToken(
+          deepEqual({
+            accessToken: plaidAccessToken,
+            accountID: plaidAccountID,
+            tokenProcessor: TokenProcessor.CHECKOUT,
+          }),
+        ),
+      ).thenResolve(plaidCheckoutProcessorToken);
+
+      const expectedConsumerProps: ConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: checkoutCustomerID,
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            name: "Bank Account",
+            type: PaymentMethodType.ACH,
+            achData: {
+              accessToken: plaidAccessToken,
+              accountID: plaidAccountID,
+              itemID: plaidAuthGetItemID,
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
+            },
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: plaidCheckoutProcessorToken,
+            imageUri: "https://noba.com",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [],
+      };
+
+      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+
+      expect(response.updatedConsumerData).toBeTruthy();
+      expect(response.updatedConsumerData).toStrictEqual(expectedConsumerProps);
+    });
+
+    it("adds a payment method of 'ACH' type AFTER creating Checkout customer if this is the first payment method", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+
+      const checkoutCustomerID = "checkout-customer-for-mock-consumer";
+
+      const plaidPublicToken = "public-token-by-plain-embed-ui";
+      const plaidAccessToken = "plaid-access-token-for-public-token";
+      const plaidAuthGetItemID = "plaid-itemID-for-auth-get-request";
+      const plaidAccountID = "plaid-account-id-for-the-consumer-bank-account";
+      const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
+
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-2",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [],
+        cryptoWallets: [],
+      });
+
+      const addPaymentMethod: AddPaymentMethodDTO = {
+        type: PaymentType.ACH,
+        name: "Bank Account",
+        achDetails: {
+          token: plaidPublicToken,
+        },
+        imageUri: "https://noba.com",
+      } as any;
+
+      when(plaidClient.exchangeForAccessToken(deepEqual({ publicToken: plaidPublicToken }))).thenResolve(
+        plaidAccessToken,
+      );
+      when(plaidClient.retrieveAccountData(deepEqual({ accessToken: plaidAccessToken }))).thenResolve({
+        accountID: plaidAccountID,
+        itemID: plaidAuthGetItemID,
+        accountNumber: "1234567890",
+        achRoutingNumber: "123456789",
+        availableBalance: "1234.56",
+        currencyCode: "USD",
+        mask: "7890",
+        name: "Bank Account",
+        accountType: BankAccountType.CHECKING,
+        wireRoutingNumber: "987654321",
+      });
+      when(
+        plaidClient.createProcessorToken(
+          deepEqual({
+            accessToken: plaidAccessToken,
+            accountID: plaidAccountID,
+            tokenProcessor: TokenProcessor.CHECKOUT,
+          }),
+        ),
+      ).thenResolve(plaidCheckoutProcessorToken);
+
+      when(checkoutClient.createConsumer(consumer.props.email)).thenResolve(checkoutCustomerID);
+
+      const expectedConsumerProps: ConsumerProps = {
+        _id: "mock-consumer-2",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: checkoutCustomerID,
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.ACH,
+            name: "Bank Account",
+            achData: {
+              accessToken: plaidAccessToken,
+              accountID: plaidAccountID,
+              itemID: plaidAuthGetItemID,
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
+            },
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: plaidCheckoutProcessorToken,
+            imageUri: "https://noba.com",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [],
+      };
+
+      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+
+      expect(response.updatedConsumerData).toBeTruthy();
+      expect(response.updatedConsumerData).toStrictEqual(expectedConsumerProps);
+    });
+  });
+
   describe("addCreditCardPaymentMethod", () => {
     it("should add a new card for exisiting checkout customer", async () => {
       const paymentMethod: AddPaymentMethodDTO = createFakePaymentMethodRequest();
@@ -154,7 +386,7 @@ describe("PaymentService", () => {
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
       when(creditCardService.updateBinData(anything())).thenResolve();
 
-      const response = await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.newPaymentMethod).toBeTruthy();
@@ -206,10 +438,10 @@ describe("PaymentService", () => {
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
 
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow(BadRequestException);
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow("SOFT-DECLINE");
     });
 
@@ -248,7 +480,7 @@ describe("PaymentService", () => {
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
 
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow(BadRequestException);
 
       // verify(
@@ -289,7 +521,7 @@ describe("PaymentService", () => {
       // ).once();
 
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow("DECLINE");
     });
 
@@ -330,11 +562,11 @@ describe("PaymentService", () => {
       });
 
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow(BadRequestException);
 
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow("Card already added");
     });
 
@@ -361,11 +593,11 @@ describe("PaymentService", () => {
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.NOT_SUPPORTED);
 
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow(BadRequestException);
 
       expect(
-        async () => await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
+        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
       ).rejects.toThrow("NO-CRYPTO");
     });
 
@@ -401,7 +633,7 @@ describe("PaymentService", () => {
       });
       when(creditCardService.updateBinData(anything())).thenResolve();
 
-      const response = await paymentService.addCreditCardPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.newPaymentMethod).toBeTruthy();
