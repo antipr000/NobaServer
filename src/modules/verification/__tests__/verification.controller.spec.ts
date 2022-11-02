@@ -354,6 +354,64 @@ describe("VerificationController", () => {
       expect(result).toStrictEqual(expectedResult);
     });
 
+    it("should use default false values for the booleans if not provided", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
+        firstName: "Fake",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "fake-partner",
+          },
+        ],
+        address: {
+          streetLine1: "Fake Street",
+          streetLine2: "Fake Street Line 2",
+          countryCode: "US",
+          city: "Maintown",
+          postalCode: "123456",
+          regionCode: "CA",
+        },
+        dateOfBirth: "1960-12-12",
+      });
+
+      const id = "request-id";
+      const url = "http://id-verification-url";
+      const expiration = new Date().toISOString();
+      when(
+        verificationService.getDocumentVerificationURL(
+          "session-id",
+          consumer.props._id,
+          IDVerificationURLRequestLocale.EN_US,
+          false,
+          false,
+          false,
+        ),
+      ).thenResolve({
+        id: id,
+        link: {
+          expiredAt: expiration,
+          url: url,
+        },
+      });
+
+      const expectedResult: IDVerificationURLResponseDTO = {
+        id: id,
+        expiration: Date.parse(expiration),
+        url: url,
+      };
+
+      const result = await verificationController.getIdentityDocumentVerificationURL(
+        {
+          user: { entity: consumer, partnerId: "fake-partner" } as AuthenticatedUser,
+        },
+        "session-id",
+        IDVerificationURLRequestLocale.EN_US,
+      );
+      expect(result).toStrictEqual(expectedResult);
+    });
+
     it("should get the URL for redirect to identity verification", async () => {
       const url = "http://id-verification-url";
 

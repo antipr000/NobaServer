@@ -276,7 +276,6 @@ export class VerificationService {
     selfie: boolean,
     poa: boolean,
   ) {
-    console.log(`idback: ${idBack}`);
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     return await this.idvProvider.getIdentityDocumentVerificationURL(sessionKey, consumer, locale, idBack, selfie, poa);
   }
