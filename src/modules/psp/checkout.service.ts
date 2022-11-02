@@ -418,8 +418,8 @@ export class CheckoutService {
             cardType === null || cardType === undefined
               ? undefined
               : cardType.toLocaleLowerCase() === "credit"
-              ? CardType.CREDIT
-              : CardType.DEBIT,
+                ? CardType.CREDIT
+                : CardType.DEBIT,
           network: scheme,
           supported: BINValidity.SUPPORTED,
           digits: card.lengths[0],
@@ -476,6 +476,7 @@ export class CheckoutService {
     try {
       const payment = await this.checkoutApi.payments.get(paymentId);
       const status: CheckoutPaymentStatus = payment.status;
+      console.log(payment);
       if (status === "Authorized" || status === "Paid") return FiatTransactionStatus.AUTHORIZED;
       if (status === "Captured" || status === "Partially Captured") return FiatTransactionStatus.CAPTURED;
       if (status === "Pending") return FiatTransactionStatus.PENDING;
