@@ -427,9 +427,11 @@ export class ConsumerService {
   }
 
   async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string, partnerID: string): Promise<Consumer> {
+    // You can have the same wallet for multiple partners so we want to be sure to only delete the one for the
+    // current partner.
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
       existingCryptoWallet =>
-        existingCryptoWallet.address !== cryptoWalletAddress && existingCryptoWallet.partnerID !== partnerID,
+        existingCryptoWallet.address !== cryptoWalletAddress || existingCryptoWallet.partnerID !== partnerID,
     );
 
     const updatedConsumer = await this.updateConsumer({

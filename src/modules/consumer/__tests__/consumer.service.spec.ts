@@ -1500,10 +1500,11 @@ describe("ConsumerService", () => {
   });
 
   describe("removeCryptoWallet", () => {
-    it("Removes crypto wallet for user", async () => {
+    it("Removes crypto wallet for user without touching other wallets", async () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
+      const partnerID = "partner-1";
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1519,7 +1520,7 @@ describe("ConsumerService", () => {
         ],
         partners: [
           {
-            partnerID: "partner-1",
+            partnerID: partnerID,
           },
         ],
         isAdmin: false,
@@ -1543,13 +1544,43 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: partnerID,
+          },
+          {
+            walletName: "Other wallet 1",
+            address: walletAddress + "1",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: partnerID,
+          },
+          {
+            walletName: "Other wallet 2",
+            address: walletAddress + "2",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: "54321",
           },
         ],
       });
 
       const updatedConsumer = Consumer.createConsumer({
         ...consumer.props,
-        cryptoWallets: [],
+        cryptoWallets: [
+          {
+            walletName: "Other wallet 1",
+            address: walletAddress + "1",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: partnerID,
+          },
+          {
+            walletName: "Other wallet 2",
+            address: walletAddress + "2",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: "54321",
+          },
+        ],
       });
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
