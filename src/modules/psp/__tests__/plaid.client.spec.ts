@@ -63,6 +63,7 @@ jest.mock("plaid", () => {
     },
     DepositoryAccountSubtype: {
       Checking: "checking",
+      Savings: "savings",
     },
     PlaidEnvironments: {
       sandbox: "sandbox",
@@ -130,7 +131,7 @@ describe("PlaidClientTests", () => {
         language: "en",
         account_filters: {
           depository: {
-            account_subtypes: ["checking"],
+            account_subtypes: ["checking", "savings"],
           },
         },
         redirect_uri: "https://tests.noba.com",
@@ -161,7 +162,7 @@ describe("PlaidClientTests", () => {
           language: "en",
           account_filters: {
             depository: {
-              account_subtypes: ["checking"],
+              account_subtypes: ["checking", "savings"],
             },
           },
           redirect_uri: "https://tests.noba.com",

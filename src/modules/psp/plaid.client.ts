@@ -63,7 +63,9 @@ export class PlaidClient {
         country_codes: [PlaidCountryCode.Us],
         language: "en",
         account_filters: {
-          depository: { account_subtypes: [DepositoryAccountSubtype.Checking] },
+          depository: {
+            account_subtypes: [DepositoryAccountSubtype.Checking, DepositoryAccountSubtype.Savings],
+          },
         },
         redirect_uri: this.plaidConfigs.redirectUri,
       };
