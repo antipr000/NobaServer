@@ -1,4 +1,4 @@
-import { Admin, AdminProps } from "../domain/Admin";
+import { Admin, AdminProps, NOBA_ADMIN_ROLE_TYPES } from "../domain/Admin";
 import { Mapper } from "../../../core/infra/Mapper";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
 import { Injectable } from "@nestjs/common";
@@ -23,7 +23,7 @@ export class AdminMapper implements Mapper<Admin> {
     dto._id = nobaAdmin.props._id;
     dto.email = nobaAdmin.props.email;
     dto.name = nobaAdmin.props.name;
-    dto.role = nobaAdmin.props.role;
+    dto.role = NOBA_ADMIN_ROLE_TYPES[nobaAdmin.props.role];
 
     return dto;
   }

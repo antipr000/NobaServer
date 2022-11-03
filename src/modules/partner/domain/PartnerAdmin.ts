@@ -1,8 +1,7 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
-import { Entity } from "../../../core/domain/Entity";
 
 const Permissions = {
   UPDATE_PARTNER_DETAILS: "UPDATE_PARTNER_DETAILS",
@@ -15,6 +14,12 @@ const Permissions = {
   VIEW_ALL_USERS: "VIEW_ALL_USERS",
   VIEW_STATS: "VIEW_STATS",
 };
+
+export enum PARTNER_ADMIN_ROLE_TYPES {
+  BASIC = "BASIC",
+  INTERMEDIATE = "INTERMEDIATE",
+  ALL = "ALL",
+}
 
 const PartnerAdminRolePrivileges = {
   BASIC: {

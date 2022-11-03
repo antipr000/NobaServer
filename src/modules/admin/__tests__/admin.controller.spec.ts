@@ -3,7 +3,7 @@ import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { AdminService } from "../admin.service";
-import { Admin } from "../domain/Admin";
+import { Admin, NOBA_ADMIN_ROLE_TYPES } from "../domain/Admin";
 import { AdminController } from "../admin.controller";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
@@ -11,7 +11,7 @@ import { ConflictException, ForbiddenException, NotFoundException } from "@nestj
 import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
 import { UpdateNobaAdminDTO } from "../dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
-import { PartnerAdmin } from "../../../../src/modules/partner/domain/PartnerAdmin";
+import { PartnerAdmin, PARTNER_ADMIN_ROLE_TYPES } from "../../../../src/modules/partner/domain/PartnerAdmin";
 import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { PartnerAdminService } from "../../../../src/modules/partner/partneradmin.service";
 import { getMockPartnerAdminServiceWithDefaults } from "../../../../src/modules/partner/mocks/mock.partner.admin.service";
@@ -83,7 +83,7 @@ describe("AdminController", () => {
     it("Consumers shouldn't be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         name: "Admin",
       };
       const authenticatedConsumer: Consumer = Consumer.createConsumer({
@@ -107,13 +107,13 @@ describe("AdminController", () => {
     it("PartnerAdmin with most priveged role shouldn't be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         name: "Admin",
       };
       const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
         partnerId: "PPPPPPPPPP",
       });
 
@@ -128,13 +128,13 @@ describe("AdminController", () => {
     it("NobaAdmin with 'BASIC' role shouldn't be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         name: "Admin",
       };
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       try {
@@ -148,13 +148,13 @@ describe("AdminController", () => {
     it("NobaAdmin with 'INTERMEDIATE' role shouldn't be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         name: "Admin",
       };
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       try {
@@ -168,13 +168,13 @@ describe("AdminController", () => {
     it("NobaAdmin with 'ADMIN' role should be able to create a new NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: NEW_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         name: "Admin",
       };
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockAdminService.addNobaAdmin(anything())).thenResolve(
@@ -205,13 +205,13 @@ describe("AdminController", () => {
     it("should return AlreadyExists error if email matches with an existing NobaAdmin", async () => {
       const newNobaAdmin: NobaAdminDTO = {
         email: EXISTING_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         name: "Admin",
       };
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockAdminService.addNobaAdmin(anything())).thenResolve(undefined);
@@ -249,7 +249,7 @@ describe("AdminController", () => {
       const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: "partner.admin@noba.com",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
         partnerId: "PPPPPPPPPP",
       });
 
@@ -266,7 +266,7 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const queriedNobaAdmin = await adminController.getNobaAdmin({ user: { entity: authenticatedNobaAdmin } });
@@ -281,7 +281,7 @@ describe("AdminController", () => {
   describe("updateNobaAdminPrivileges", () => {
     it("Consumer shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
-      const UPDATED_ROLE = "INTERMEDIATE";
+      const UPDATED_ROLE = NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE;
       const authenticatedConsumer: Consumer = Consumer.createConsumer({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
@@ -305,11 +305,11 @@ describe("AdminController", () => {
 
     it("PartnerAdmin with most privileged role shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
-      const UPDATED_ROLE = "INTERMEDIATE";
+      const UPDATED_ROLE = NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE;
       const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
         partnerId: "PPPPPPPPPP",
       });
 
@@ -326,11 +326,11 @@ describe("AdminController", () => {
 
     it("NobaAdmin with 'BASIC' role shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
-      const UPDATED_ROLE = "INTERMEDIATE";
+      const UPDATED_ROLE = NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE;
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       try {
@@ -346,11 +346,11 @@ describe("AdminController", () => {
 
     it("NobaAdmin with 'INTERMEDIATE' role shouldn't be able to update the role of the an admin", async () => {
       const ADMIN_ID = "1111111111";
-      const UPDATED_ROLE = "INTERMEDIATE";
+      const UPDATED_ROLE = NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE;
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       try {
@@ -367,13 +367,13 @@ describe("AdminController", () => {
     it("NobaAdmin with 'ADMIN' role should be able to update the role of the an admin", async () => {
       const TARGET_ADMIN_ID = "1111111111";
       const TARGET_ADMIN_EMAIL = "admin.to.update@noba.com";
-      const UPDATED_ROLE = "INTERMEDIATE";
-      const CURRENT_ROLE = "BASIC";
+      const UPDATED_ROLE = NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE;
+      const CURRENT_ROLE = NOBA_ADMIN_ROLE_TYPES.BASIC;
 
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockAdminService.getAdminById(TARGET_ADMIN_ID)).thenResolve(
@@ -420,7 +420,7 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockAdminService.getAdminById(TARGET_ADMIN_ID)).thenResolve(
@@ -428,16 +428,16 @@ describe("AdminController", () => {
           _id: TARGET_ADMIN_ID,
           name: CURRENT_NAME,
           email: TARGET_ADMIN_EMAIL,
-          role: "BASIC",
+          role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         }),
       );
 
-      when(mockAdminService.updateNobaAdmin(TARGET_ADMIN_ID, "BASIC", UPDATED_NAME)).thenResolve(
+      when(mockAdminService.updateNobaAdmin(TARGET_ADMIN_ID, NOBA_ADMIN_ROLE_TYPES.BASIC, UPDATED_NAME)).thenResolve(
         Admin.createAdmin({
           _id: TARGET_ADMIN_ID,
           name: UPDATED_NAME,
           email: TARGET_ADMIN_EMAIL,
-          role: "BASIC",
+          role: NOBA_ADMIN_ROLE_TYPES.BASIC,
         }),
       );
 
@@ -454,7 +454,7 @@ describe("AdminController", () => {
         _id: TARGET_ADMIN_ID,
         name: UPDATED_NAME,
         email: TARGET_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
     });
 
@@ -464,13 +464,13 @@ describe("AdminController", () => {
 
       const UPDATED_NAME = "New Admin Name";
       const CURRENT_NAME = "Admin Name";
-      const UPDATE_ROLE = "BASIC";
-      const CURRENT_ROLE = "INTERMEDIATE";
+      const UPDATE_ROLE = NOBA_ADMIN_ROLE_TYPES.BASIC;
+      const CURRENT_ROLE = NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE;
 
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockAdminService.getAdminById(TARGET_ADMIN_ID)).thenResolve(
@@ -511,11 +511,11 @@ describe("AdminController", () => {
 
     it("NobaAdmin shouldn't be able to update it's own role", async () => {
       const ADMIN_ID = "1111111111";
-      const UPDATED_ROLE = "INTERMEDIATE";
+      const UPDATED_ROLE = NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE;
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: ADMIN_ID,
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       try {
@@ -535,14 +535,14 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockAdminService.getAdminById(ADMIN_ID)).thenReject(new NotFoundException());
 
       try {
         const request: UpdateNobaAdminDTO = {
-          role: "INTERMEDIATE",
+          role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
         };
         await adminController.updateNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, ADMIN_ID, request);
         expect(true).toBe(false);
@@ -576,7 +576,7 @@ describe("AdminController", () => {
       const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
         partnerId: "PPPPPPPPPP",
       });
 
@@ -593,7 +593,7 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       try {
@@ -609,7 +609,7 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       try {
@@ -625,7 +625,7 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       const adminId = "1111111111";
@@ -643,7 +643,7 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       const adminId = "1111111111";
@@ -661,7 +661,7 @@ describe("AdminController", () => {
       const authenticatedNobaAdmin: Admin = Admin.createAdmin({
         _id: "XXXXXXXXXX",
         email: LOGGED_IN_ADMIN_EMAIL,
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       try {
@@ -698,7 +698,7 @@ describe("AdminController", () => {
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
         email: newPartnerAdminEmail,
         name: "Partner Admin A",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       };
 
       try {
@@ -722,13 +722,13 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
         email: newPartnerAdminEmail,
         name: "Partner Admin A",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       };
 
       try {
@@ -750,13 +750,13 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const addPartnerAdminRequest: AddPartnerAdminRequestDTO = {
         email: newPartnerAdminEmail,
         name: "Partner Admin A",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       };
 
       try {
@@ -774,12 +774,12 @@ describe("AdminController", () => {
       const partnerId = "PPPPPPPPPP";
       const newPartnerAdminEmail = "partner.admin@noba.com";
       const newPartnerAdminName = "Partner Admin A";
-      const newPartnerAdminRole = "ALL";
+      const newPartnerAdminRole = PARTNER_ADMIN_ROLE_TYPES.ALL;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(
@@ -823,12 +823,12 @@ describe("AdminController", () => {
       const partnerId = "PPPPPPPPPP";
       const newPartnerAdminEmail = "partner.admin@noba.com";
       const newPartnerAdminName = "Partner Admin A";
-      const newPartnerAdminRole = "ALL";
+      const newPartnerAdminRole = PARTNER_ADMIN_ROLE_TYPES.ALL;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(
@@ -903,7 +903,7 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       try {
@@ -925,7 +925,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       try {
@@ -944,12 +944,12 @@ describe("AdminController", () => {
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
       const partnerAdminName = "Partner Admin A";
-      const partnerAdminRole = "ALL";
+      const partnerAdminRole = PARTNER_ADMIN_ROLE_TYPES.ALL;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(mockPartnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId)).thenResolve(
@@ -982,12 +982,12 @@ describe("AdminController", () => {
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
       const partnerAdminName = "Partner Admin A";
-      const partnerAdminRole = "ALL";
+      const partnerAdminRole = PARTNER_ADMIN_ROLE_TYPES.ALL;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(mockPartnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId)).thenResolve(
@@ -1021,7 +1021,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(mockPartnerAdminService.deleteAdminForPartner(partnerId, partnerAdminId)).thenReject(
@@ -1059,7 +1059,7 @@ describe("AdminController", () => {
       try {
         const updatePartnerAdminRequest: UpdatePartnerAdminRequestDTO = {
           name: "New Admin",
-          role: "ALL",
+          role: PARTNER_ADMIN_ROLE_TYPES.ALL,
         };
         await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
           user: { entity: requestingConsumer },
@@ -1080,13 +1080,13 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       try {
         const updatePartnerAdminRequest: UpdatePartnerAdminRequestDTO = {
           name: "New Admin",
-          role: "ALL",
+          role: PARTNER_ADMIN_ROLE_TYPES.ALL,
         };
         await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
           user: { entity: requestingPartnerAdmin },
@@ -1106,13 +1106,13 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       try {
         const updatePartnerAdminRequest: UpdatePartnerAdminRequestDTO = {
           name: "New Admin",
-          role: "ALL",
+          role: PARTNER_ADMIN_ROLE_TYPES.ALL,
         };
         await adminController.updateAdminForPartners(partnerId, partnerAdminId, updatePartnerAdminRequest, {
           user: { entity: requestingNobaAdmin },
@@ -1129,12 +1129,12 @@ describe("AdminController", () => {
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
       const partnerAdminNewName = "New Partner Admin";
-      const partnerAdminNewRole = "BASIC";
+      const partnerAdminNewRole = NOBA_ADMIN_ROLE_TYPES.BASIC;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const updatePartnerAdminRequest: UpdatePartnerAdminRequestDTO = {
@@ -1180,12 +1180,12 @@ describe("AdminController", () => {
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
       const partnerAdminNewName = "New Partner Admin";
-      const partnerAdminNewRole = "BASIC";
+      const partnerAdminNewRole = NOBA_ADMIN_ROLE_TYPES.BASIC;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const updatePartnerAdminRequest: UpdatePartnerAdminRequestDTO = {
@@ -1232,7 +1232,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(mockPartnerAdminService.updateAdminForPartner(partnerId, partnerAdminId, anything())).thenReject(
@@ -1292,7 +1292,7 @@ describe("AdminController", () => {
         email: "partner.admin@noba.com",
         name: "Partner Admin",
         partnerId: partnerId,
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       try {
@@ -1315,7 +1315,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "BASIC",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
       });
 
       try {
@@ -1339,7 +1339,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "INTERMEDIATE",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(mockPartnerService.createPartner(anything())).thenResolve(
@@ -1379,7 +1379,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockPartnerService.createPartner(anything())).thenResolve(
@@ -1419,7 +1419,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       when(mockPartnerService.createPartner(anything())).thenResolve(
@@ -1471,7 +1471,7 @@ describe("AdminController", () => {
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: "ADMIN",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
       const consumerProps: ConsumerProps = {

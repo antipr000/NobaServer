@@ -5,5 +5,5 @@
 export type AddPartnerAdminRequestDTO = {
   email: string;
   name: string;
-  role: string;
+  role: "BASIC" | "INTERMEDIATE" | "ALL";
 };

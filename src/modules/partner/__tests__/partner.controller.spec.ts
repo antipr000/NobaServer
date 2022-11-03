@@ -9,7 +9,7 @@ import { PartnerAdminService } from "../partneradmin.service";
 import { PartnerMapper } from "../mappers/PartnerMapper";
 import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
 import { PartnerController } from "../partner.controller";
-import { PartnerAdmin } from "../domain/PartnerAdmin";
+import { PartnerAdmin, PARTNER_ADMIN_ROLE_TYPES } from "../domain/PartnerAdmin";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Partner } from "../domain/Partner";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
@@ -86,7 +86,7 @@ describe("PartnerController", () => {
         {
           email: partnerAdminToAdd.props.email,
           name: partnerAdminToAdd.props.name,
-          role: partnerAdminToAdd.props.role,
+          role: PARTNER_ADMIN_ROLE_TYPES[partnerAdminToAdd.props.role],
         },
         mockRequest,
       );
@@ -127,7 +127,7 @@ describe("PartnerController", () => {
           {
             email: partnerAdminToAdd.props.email,
             name: partnerAdminToAdd.props.name,
-            role: partnerAdminToAdd.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[partnerAdminToAdd.props.role],
           },
           mockRequest,
         );
@@ -170,7 +170,7 @@ describe("PartnerController", () => {
           {
             email: partnerAdminToAdd.props.email,
             name: partnerAdminToAdd.props.name,
-            role: partnerAdminToAdd.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[partnerAdminToAdd.props.role],
           },
           mockRequest,
         );
