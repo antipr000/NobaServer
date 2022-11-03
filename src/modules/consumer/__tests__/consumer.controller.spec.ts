@@ -12,7 +12,7 @@ import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { getMockConsumerServiceWithDefaults } from "../mocks/mock.consumer.service";
 import { PartnerService } from "../../partner/partner.service";
-import { WalletStatus } from "../domain/VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
 import { Partner } from "../../../modules/partner/domain/Partner";
 import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
@@ -21,6 +21,8 @@ import { PaymentMethodType } from "../domain/PaymentMethod";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
 import { BadRequestException } from "@nestjs/common";
+import { VerificationProviders } from "../domain/VerificationData";
+import { UserState } from "../domain/ExternalStates";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -397,6 +399,7 @@ describe("ConsumerController", () => {
                 last4Digits: "1234",
               },
               imageUri: "testimage",
+              status: PaymentMethodStatus.APPROVED,
             },
           ],
         }),
@@ -528,6 +531,7 @@ describe("ConsumerController", () => {
                 last4Digits: "1234",
               },
               imageUri: "testimage",
+              status: PaymentMethodStatus.APPROVED,
             },
           ],
         }),
@@ -542,6 +546,64 @@ describe("ConsumerController", () => {
 
       expect(result._id).toBe(consumer.props._id);
       expect(result.paymentMethods.length).toBe(1);
+    });
+  });
+
+  describe("external state mapping tests", () => {
+    it("should return UserState as APPROVED when all are Approved", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.APPROVED,
+            isPrivate: false,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.APPROVED);
     });
   });
 });
