@@ -37,7 +37,7 @@ import {
   SardineDocumentProcessingStatus,
   SardineRiskLevels,
 } from "../integrations/SardineTypeDefinitions";
-import { anyNumber, anyString, anything, capture, deepEqual, instance, spy, when } from "ts-mockito";
+import { anything, instance, when } from "ts-mockito";
 import { PaymentMethodType } from "../../consumer/domain/PaymentMethod";
 import { PaymentProvider } from "../../consumer/domain/PaymentProvider";
 import { BankAccountType } from "../../psp/domain/PlaidTypes";

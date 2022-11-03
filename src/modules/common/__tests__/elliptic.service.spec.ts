@@ -15,7 +15,6 @@ import {
 } from "../domain/EllipticTransactionAnalysisTypes";
 import { BadRequestException } from "@nestjs/common";
 import { createHmac } from "crypto";
-import { WalletExposureResponse } from "../domain/WalletExposureResponse";
 import * as ConfigurationUtils from "../../../config/ConfigurationUtils";
 
 describe("Elliptic Tests", () => {

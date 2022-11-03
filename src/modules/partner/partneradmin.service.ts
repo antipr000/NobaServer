@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException, NotImplementedException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { PartnerAdmin, PartnerAdminProps } from "./domain/PartnerAdmin";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -72,10 +72,6 @@ export class PartnerAdminService {
   async getAllPartnerAdmins(partnerId: string): Promise<PartnerAdmin[]> {
     const partnerAdmins: PartnerAdmin[] = await this.partnerAdminRepo.getAllAdminsForPartner(partnerId);
     return partnerAdmins;
-  }
-
-  async getAllConsumersForPartner(partnerId: string): Promise<any> {
-    throw new NotImplementedException("Method not implemented");
   }
 
   async getAllTransactionsForPartner(partnerId: string): Promise<TransactionDTO[]> {
