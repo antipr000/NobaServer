@@ -43,7 +43,6 @@ import { PaymentProvider } from "../../consumer/domain/PaymentProvider";
 import { BankAccountType } from "../../psp/domain/PlaidTypes";
 import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
-import axios from "axios";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
