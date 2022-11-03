@@ -12,6 +12,7 @@ import type { UpdatePartnerRequestDTO } from "../models/UpdatePartnerRequestDTO"
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
+import { ConsumerDTO } from "src/modules/consumer/dto/ConsumerDTO";
 
 export class PartnerService {
   /**
@@ -246,7 +247,7 @@ export class PartnerService {
        * Timestamp in milliseconds, use: new Date().getTime().toString()
        */
       xNobaTimestamp?: string;
-    }): CancelablePromise<Array<PartnerAdminDTO>> {
+    }): CancelablePromise<Array<ConsumerDTO>> {
       return __request(OpenAPI, {
         method: "GET",
         url: "/v1/partners/customers",
