@@ -1129,12 +1129,12 @@ describe("AdminController", () => {
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
       const partnerAdminNewName = "New Partner Admin";
-      const partnerAdminNewRole = NOBA_ADMIN_ROLE_TYPES.BASIC;
+      const partnerAdminNewRole = PARTNER_ADMIN_ROLE_TYPES.BASIC;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: "AAAAAAAAAA",
         email: "admin@noba.com",
-        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const updatePartnerAdminRequest: UpdatePartnerAdminRequestDTO = {
@@ -1180,12 +1180,12 @@ describe("AdminController", () => {
       const partnerAdminId = "PAPAPAPAPAPA";
       const partnerAdminEmail = "partner.admin@noba.com";
       const partnerAdminNewName = "New Partner Admin";
-      const partnerAdminNewRole = NOBA_ADMIN_ROLE_TYPES.BASIC;
+      const partnerAdminNewRole = PARTNER_ADMIN_ROLE_TYPES.BASIC;
 
       const requestingNobaAdmin = Admin.createAdmin({
         _id: adminId,
         email: "admin@noba.com",
-        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const updatePartnerAdminRequest: UpdatePartnerAdminRequestDTO = {
