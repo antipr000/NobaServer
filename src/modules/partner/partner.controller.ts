@@ -47,10 +47,6 @@ import { PartnerAdminMapper } from "./mappers/PartnerAdminMapper";
 import { PartnerMapper } from "./mappers/PartnerMapper";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
-import { UpdatePartnerAdminRequestDTO } from "./dto/UpdatePartnerAdminRequestDTO";
-import { TransactionsQueryResultsDTO } from "../transactions/dto/TransactionsQueryResultsDTO";
-import { TransactionFilterOptions } from "../transactions/domain/Types";
-import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { PartnerLogoUploadRequestDTO } from "./dto/PartnerLogoUploadRequestDTO";
 
