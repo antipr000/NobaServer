@@ -1,7 +1,7 @@
 name: Link PR to Jira Issue
 on:
   pull_request:
-    types: [opened]
+    types: [opened,edited]
 
 jobs:
   update_pr:
@@ -22,7 +22,7 @@ jobs:
           head-branch-regex: '^([A-Za-z])+-\d+'
           title-template: '[%headbranch%] '
           body-template: |
-            Jira issue: %headbranch%
+            Jira issue: [%headbranch%](https://noba.atlassian.net/browse/%headbranch%)
             ---
           body-update-action: 'prefix'
           body-uppercase-base-match: false
