@@ -12,7 +12,6 @@ export const getMockPartnerAdminServiceWithDefaults = () => {
   );
   when(mockPartnerAdminService.getAllPartnerAdmins(anything())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAdminService.getAllTransactionsForPartner(anything())).thenReject(new Error("Not implemented!"));
-  when(mockPartnerAdminService.getAllConsumersForPartner(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAdminService.getPartnerAdmin(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAdminService.getPartnerAdminFromEmail(anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAdminService.addAdminForPartner(anyString(), anyString(), anyString(), anyString())).thenReject(

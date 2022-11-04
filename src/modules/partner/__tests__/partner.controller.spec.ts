@@ -1,29 +1,31 @@
-import { TestingModule, Test } from "@nestjs/testing";
+import { ForbiddenException, NotFoundException } from "@nestjs/common";
+import { Test, TestingModule } from "@nestjs/testing";
 import { deepEqual, instance, when } from "ts-mockito";
-import { PartnerService } from "../partner.service";
-import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
-import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { ConsumerMapper } from "../../../../src/modules/consumer/mappers/ConsumerMapper";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { PartnerAdminService } from "../partneradmin.service";
 import { PartnerMapper } from "../mappers/PartnerMapper";
 import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
 import { PartnerController } from "../partner.controller";
 import { PartnerAdmin, PARTNER_ADMIN_ROLE_TYPES } from "../domain/PartnerAdmin";
-import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Partner } from "../domain/Partner";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
-import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
-import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
-import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
+import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
+import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
+import { PartnerService } from "../partner.service";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
   let partnerService: PartnerService;
   let partnerAdminService: PartnerAdminService;
   const partnerMapper: PartnerMapper = new PartnerMapper();
+  const consumerMapper: ConsumerMapper = new ConsumerMapper();
   const partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
   const transactionMapper = new TransactionMapper();
 
@@ -54,6 +56,86 @@ describe("PartnerController", () => {
   });
 
   describe("partner service tests", () => {
+    it("should get consumers for a partner with ALL permissions", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "mock2@partner.com",
+        partnerId: partner.props._id,
+        role: "ALL",
+      });
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "mock-partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+      });
+      const consumers: Consumer[] = [consumer];
+      when(partnerService.getAllPartnerConsumers(partner.props._id)).thenResolve(consumers);
+
+      const result = await partnerController.getAllPartnerConsumers({
+        user: {
+          entity: requestingPartnerAdmin,
+        },
+      });
+      const expectedResult = consumers.map(partnerConsumer => consumerMapper.toDTO(partnerConsumer));
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should raise Forbidden consumers for a partner with just BASIC permissions", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "mock2@partner.com",
+        partnerId: partner.props._id,
+        role: "BASIC",
+      });
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "mock-partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+      });
+      const consumers: Consumer[] = [consumer];
+      when(partnerService.getAllPartnerConsumers(partner.props._id)).thenResolve(consumers);
+
+      try {
+        const result = await partnerController.getAllPartnerConsumers({
+          user: {
+            entity: requestingPartnerAdmin,
+          },
+        });
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
     it("should add admin when admin with all access requests", async () => {
       const partnerAdminToAdd = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-1",

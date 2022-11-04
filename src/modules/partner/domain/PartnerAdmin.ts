@@ -9,6 +9,7 @@ const Permissions = {
   ADD_PARTNER_ADMIN: "ADD_PARTNER_ADMIN",
   REMOVE_PARTNER_ADMIN: "REMOVE_PARTNER_ADMIN",
   GET_ALL_ADMINS: "GET_ALL_ADMINS",
+  GET_ALL_CONSUMERS: "GET_ALL_CONSUMERS",
   UPDATE_PARTNER_ADMIN: "UPDATE_PARTNER_ADMIN",
   VIEW_ALL_TRANSACTIONS: "VIEW_ALL_TRANSACTIONS",
   VIEW_ALL_USERS: "VIEW_ALL_USERS",
@@ -40,6 +41,7 @@ const PartnerAdminRolePrivileges = {
       Permissions.ADD_PARTNER_ADMIN,
       Permissions.REMOVE_PARTNER_ADMIN,
       Permissions.GET_ALL_ADMINS,
+      Permissions.GET_ALL_CONSUMERS,
       Permissions.UPDATE_PARTNER_ADMIN,
       Permissions.VIEW_ALL_TRANSACTIONS,
       Permissions.VIEW_ALL_USERS,
@@ -106,6 +108,10 @@ export class PartnerAdmin extends AggregateRoot<PartnerAdminProps> {
 
   public canGetAllAdmins(): boolean {
     return this.hasPermission(Permissions.GET_ALL_ADMINS);
+  }
+
+  public canGetAllConsumers(): boolean {
+    return this.hasPermission(Permissions.GET_ALL_CONSUMERS);
   }
 
   public canViewAllTransactions(): boolean {

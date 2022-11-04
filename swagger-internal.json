@@ -672,6 +672,37 @@
         "security": [{ "JWT-auth": [] }]
       }
     },
+    "/v1/partners/consumers": {
+      "get": {
+        "operationId": "getAllPartnerConsumers",
+        "summary": "Gets all consumers for the partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All consumers of the partner",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PartnerAdminDTO" } }
+              }
+            }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to retrieve partner admin list" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
     "/v1/partners/transactions": {
       "get": {
         "operationId": "getPartnerTransactions",
@@ -1384,13 +1415,6 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "locale",
-            "required": true,
-            "in": "query",
-            "description": "Unique verification key for this session",
-            "schema": { "enum": ["en-us", "es-419"], "type": "string" }
-          },
-          {
             "name": "requestPOA",
             "required": true,
             "in": "query",
@@ -1410,6 +1434,13 @@
             "in": "query",
             "description": "Request photo of back of ID",
             "schema": { "type": "boolean" }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "query",
+            "description": "Unique verification key for this session",
+            "schema": { "enum": ["en-us", "es-419"], "type": "string" }
           }
         ],
         "responses": {
@@ -1896,7 +1927,7 @@
   },
   "info": {
     "title": "Noba Server",
-    "description": "Noba Server API (Internal) (E2E_TEST)",
+    "description": "Noba Server API (Internal) (DEVELOPMENT)",
     "version": "1.0",
     "contact": {}
   },
