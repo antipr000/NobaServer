@@ -151,7 +151,7 @@ describe("MongoDBConsumerRepoTests", () => {
 
   describe("getUserByPhone", () => {
     it("get a user by phone", async () => {
-      const phone = "8242525124";
+      const phone = "+18242525124";
       const consumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
@@ -173,7 +173,7 @@ describe("MongoDBConsumerRepoTests", () => {
       const result = await consumerRepo.getConsumer(savedConsumer.props._id);
       expect(result.props.phone).toBe(undefined);
 
-      const phone = "134242424";
+      const phone = "+134242424";
       const updatedConsumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
       await consumerRepo.updateConsumer(updatedConsumer);
 
