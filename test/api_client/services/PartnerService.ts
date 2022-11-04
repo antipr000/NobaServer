@@ -12,6 +12,7 @@ import type { UpdatePartnerRequestDTO } from "../models/UpdatePartnerRequestDTO"
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
+import { ConsumerDTO } from "src/modules/consumer/dto/ConsumerDTO";
 
 export class PartnerService {
   /**
@@ -225,6 +226,38 @@ export class PartnerService {
       errors: {
         400: `Invalid request parameters`,
         403: `User lacks permission to retrieve partner admin list`,
+      },
+    });
+  }
+
+  /**
+   * Gets all consumers for the partner
+   * @returns ConsumerDTO All consumers of the partner
+   * @throws ApiError
+   */
+  public static getAllPartnerConsumers({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<ConsumerDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/partners/consumers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+        403: `User lacks permission to retrieve partner consumers list`,
       },
     });
   }

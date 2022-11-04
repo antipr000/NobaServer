@@ -1,6 +1,6 @@
 import { Repo } from "../../../core/infra/Repo";
-import { PartnerAdmin } from "../domain/PartnerAdmin";
 import { Result } from "../../../core/logic/Result";
+import { PartnerAdmin } from "../domain/PartnerAdmin";
 
 export interface IPartnerAdminRepo extends Repo<any> {
   getPartnerAdmin(partnerAdminId: string): Promise<Result<PartnerAdmin>>;

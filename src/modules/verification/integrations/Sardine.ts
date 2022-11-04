@@ -249,7 +249,7 @@ export class Sardine implements IDVProvider {
         accessToken: paymentMethod.achData.accessToken,
       });
 
-      let accountType: string = "";
+      let accountType = "";
       switch (accountData.accountType) {
         case BankAccountType.CHECKING:
           accountType = "checking";
