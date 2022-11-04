@@ -230,39 +230,38 @@ export class PartnerService {
     });
   }
 
-
-    /**
+  /**
    * Gets all consumers for the partner
    * @returns ConsumerDTO All consumers of the partner
    * @throws ApiError
    */
-    public static getAllPartnerConsumers({
-      xNobaApiKey,
-      xNobaSignature,
-      xNobaTimestamp,
-    }: {
-      xNobaApiKey: string;
-      xNobaSignature?: string;
-      /**
-       * Timestamp in milliseconds, use: new Date().getTime().toString()
-       */
-      xNobaTimestamp?: string;
-    }): CancelablePromise<Array<ConsumerDTO>> {
-      return __request(OpenAPI, {
-        method: "GET",
-        url: "/v1/partners/consumers",
-        headers: {
-          "x-noba-api-key": xNobaApiKey,
-          "x-noba-signature": xNobaSignature,
-          "x-noba-timestamp": xNobaTimestamp,
-        },
-        errors: {
-          400: `Invalid request parameters`,
-          403: `User lacks permission to retrieve partner consumers list`,
-        },
-      });
-    }
-  
+  public static getAllPartnerConsumers({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<ConsumerDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/partners/consumers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+        403: `User lacks permission to retrieve partner consumers list`,
+      },
+    });
+  }
+
   /**
    * Adds a new partner admin
    * @returns PartnerAdminDTO New partner admin record
