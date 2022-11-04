@@ -20,7 +20,7 @@ import { PaymentProvider } from "../domain/PaymentProvider";
 import { PaymentMethodType } from "../domain/PaymentMethod";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { PhoneVerificationOtpRequest } from "../../../../test/api_client/models/PhoneVerificationOtpRequest";
 import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
 import { VerificationProviders } from "../domain/VerificationData";
@@ -426,6 +426,17 @@ describe("ConsumerController", () => {
       expect(result.paymentMethods[0].name).toBe(paymentMethodRequest.name);
     });
 
+    it("should reject the request for non-consumers", async () => {
+      expect(async () => {
+        await consumerController.addPaymentMethod(undefined, {
+          user: {
+            entity: undefined,
+            partnerId: "partner-1",
+          } as AuthenticatedUser,
+        });
+      }).rejects.toThrow(ForbiddenException);
+    });
+
     it("should throw 400 error if 'cardDetails' is not present for 'CARD' type", async () => {
       const paymentMethodRequest: AddPaymentMethodDTO = {
         type: PaymentType.CARD,
@@ -594,6 +605,20 @@ describe("ConsumerController", () => {
 
       verify(consumerService.sendOtpToPhone(phone)).called();
     });
+
+    it("should reject the request for non-consumers", async () => {
+      expect(async () => {
+        await consumerController.requestOtpToUpdatePhone(
+          {
+            user: {
+              entity: undefined,
+              partnerId: "partner-1",
+            } as AuthenticatedUser,
+          },
+          undefined,
+        );
+      }).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe("phone", () => {
@@ -639,6 +664,20 @@ describe("ConsumerController", () => {
       verify(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).called();
 
       expect(updatedConsumer).toEqual(consumerMapper.toDTO(expectedUpdatedConsumer));
+    });
+
+    it("should reject the request for non-consumers", async () => {
+      expect(async () => {
+        await consumerController.updatePhone(
+          {
+            user: {
+              entity: undefined,
+              partnerId: "partner-1",
+            } as AuthenticatedUser,
+          },
+          undefined,
+        );
+      }).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -690,6 +729,21 @@ describe("ConsumerController", () => {
 
       verify(consumerService.sendOtpToEmail(email, consumer, partnerID)).called();
     });
+
+    it("should reject the request for non-consumers", async () => {
+      expect(async () => {
+        await consumerController.requestOtpToUpdateEmail(
+          {
+            user: {
+              entity: undefined,
+              partnerId: "partner-1",
+            } as AuthenticatedUser,
+          },
+          undefined,
+          undefined,
+        );
+      }).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe("email", () => {
@@ -736,6 +790,20 @@ describe("ConsumerController", () => {
       verify(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).called();
 
       expect(updatedConsumer).toEqual(consumerMapper.toDTO(expectedUpdatedConsumer));
+    });
+
+    it("should reject the request for non-consumers", async () => {
+      expect(async () => {
+        await consumerController.updateEmail(
+          {
+            user: {
+              entity: undefined,
+              partnerId: "partner-1",
+            } as AuthenticatedUser,
+          },
+          undefined,
+        );
+      }).rejects.toThrow(ForbiddenException);
     });
   });
 
