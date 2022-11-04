@@ -85,15 +85,17 @@ export class ConsumerService {
         throw new BadRequestException(`Consumer with email ${emailOrPhone} doesn't exist, please signup first`);
       }
 
-      if (!isEmail) {
+      // Commented this out. We want to allow phone-based account creation on the app. Will need
+      // to implement a check for whether or not we are on the app or web so this can be made conditional.
+      /*if (!isEmail) {
         throw new BadRequestException(
           "User should be registered with email first and add their phone number before being able to login with phone number",
         );
-      }
+      }*/
 
       const newConsumer = Consumer.createConsumer({
-        email: email.toLowerCase(),
-        displayEmail: email,
+        email: email ? email.toLowerCase() : undefined,
+        displayEmail: email ?? undefined,
         phone,
         partners: [
           {
@@ -103,12 +105,14 @@ export class ConsumerService {
         ],
       });
       const result = await this.consumerRepo.createConsumer(newConsumer);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
-        email: emailOrPhone,
-        firstName: result.props.firstName,
-        lastName: result.props.lastName,
-        nobaUserID: result.props._id,
-      });
+      if (isEmail) {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
+          email: emailOrPhone,
+          firstName: result.props.firstName,
+          lastName: result.props.lastName,
+          nobaUserID: result.props._id,
+        });
+      }
       return result;
     } else if (
       consumerResult.getValue().props.partners.filter(partner => partner.partnerID === partnerID).length === 0

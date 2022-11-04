@@ -118,11 +118,11 @@ export class ConsumerController {
   }
 
   @Patch("/phone")
-  @ApiOperation({ summary: "add or updates phone number of logged in user with otp" })
+  @ApiOperation({ summary: "Adds or updates phone number of logged in user with OTP" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: ConsumerDTO,
-    description: "Updates the user's phone number",
+    description: "Updated the user's phone number",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
@@ -136,11 +136,11 @@ export class ConsumerController {
     return this.consumerMapper.toDTO(res);
   }
 
-  @Post("/phoneUpdateOtpRequest")
-  @ApiOperation({ summary: "send otp to user's phone to verify to update in user profile record" })
+  @Post("/phone/verify")
+  @ApiOperation({ summary: "Sends OTP to user's phone to verify update of user profile" })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: "Send otp to user's phone number to verify to update phone number",
+    description: "OTP sent to user's phone",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })

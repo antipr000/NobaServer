@@ -85,8 +85,8 @@ export class ConsumerService {
   }
 
   /**
-   * add or updates phone number of logged in user with otp
-   * @returns ConsumerDTO Updates the user's phone number
+   * Adds or updates phone number of logged in user with OTP
+   * @returns ConsumerDTO Updated the user's phone number
    * @throws ApiError
    */
   public static updatePhone({
@@ -121,8 +121,8 @@ export class ConsumerService {
   }
 
   /**
-   * add or updates phone number of logged in user with otp
-   * @returns any Updated consumer record
+   * Sends OTP to user's phone to verify update of user profile
+   * @returns any OTP sent to user's phone
    * @throws ApiError
    */
   public static requestOtpToUpdatePhone({
@@ -141,7 +141,7 @@ export class ConsumerService {
   }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/v1/consumers/phoneUpdateOtpRequest",
+      url: "/v1/consumers/phone/verify",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
