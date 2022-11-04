@@ -232,11 +232,11 @@ export class PartnerService {
 
 
     /**
-   * Gets all customers for the partner
-   * @returns CustomerDTO All customers of the partner
+   * Gets all consumers for the partner
+   * @returns ConsumerDTO All consumers of the partner
    * @throws ApiError
    */
-    public static getAllPartnerCustomers({
+    public static getAllPartnerConsumers({
       xNobaApiKey,
       xNobaSignature,
       xNobaTimestamp,
@@ -250,7 +250,7 @@ export class PartnerService {
     }): CancelablePromise<Array<ConsumerDTO>> {
       return __request(OpenAPI, {
         method: "GET",
-        url: "/v1/partners/customers",
+        url: "/v1/partners/consumers",
         headers: {
           "x-noba-api-key": xNobaApiKey,
           "x-noba-signature": xNobaSignature,
@@ -258,7 +258,7 @@ export class PartnerService {
         },
         errors: {
           400: `Invalid request parameters`,
-          403: `User lacks permission to retrieve partner customers list`,
+          403: `User lacks permission to retrieve partner consumers list`,
         },
       });
     }

@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { KmsService } from "src/modules/common/kms.service";
+import { KmsService } from "../../../../src/modules/common/kms.service";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { MongoDBConsumerRepo } from "./MongoDBConsumerRepo";
 
