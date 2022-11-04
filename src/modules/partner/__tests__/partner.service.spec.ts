@@ -73,6 +73,10 @@ describe("PartnerService", () => {
           provide: "TransactionRepo",
           useFactory: () => instance(transactionRepo),
         },
+        {
+          provide: "ConsumerRepo",
+          useFactory: () => instance(consumerRepo),
+        },
       ],
     }).compile();
 
