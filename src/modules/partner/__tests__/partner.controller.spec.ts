@@ -595,7 +595,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -603,14 +603,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       when(
@@ -628,7 +628,7 @@ describe("PartnerController", () => {
         partnerAdmin.props._id,
         {
           name: updatedPartnerAdmin.props.name,
-          role: updatedPartnerAdmin.props.role,
+          role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
         },
         {
           user: {
@@ -646,7 +646,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-2",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -654,14 +654,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-2",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       when(
@@ -680,7 +680,7 @@ describe("PartnerController", () => {
           partnerAdmin.props._id,
           {
             name: updatedPartnerAdmin.props.name,
-            role: updatedPartnerAdmin.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
           },
           {
             user: {
@@ -700,7 +700,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -708,14 +708,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       when(
@@ -734,7 +734,7 @@ describe("PartnerController", () => {
           partnerAdmin.props._id,
           {
             name: updatedPartnerAdmin.props.name,
-            role: updatedPartnerAdmin.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
           },
           {
             user: {
@@ -754,7 +754,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -762,14 +762,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(
@@ -788,7 +788,7 @@ describe("PartnerController", () => {
           partnerAdmin.props._id,
           {
             name: updatedPartnerAdmin.props.name,
-            role: updatedPartnerAdmin.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
           },
           {
             user: {
