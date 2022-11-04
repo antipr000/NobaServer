@@ -35,6 +35,7 @@ export type { DocumentVerificationDTO } from "./models/DocumentVerificationDTO";
 export type { DocumentVerificationResultDTO } from "./models/DocumentVerificationResultDTO";
 export type { DocumentVerificationWebhookRequestDTO } from "./models/DocumentVerificationWebhookRequestDTO";
 export type { IDVerificationRequestDTO } from "./models/IDVerificationRequestDTO";
+export type { IDVerificationURLResponseDTO } from "./models/IDVerificationURLResponseDTO";
 export type { KybStatusInfoDTO } from "./models/KybStatusInfoDTO";
 export type { KycVerificationDTO } from "./models/KycVerificationDTO";
 export type { LocationDTO } from "./models/LocationDTO";

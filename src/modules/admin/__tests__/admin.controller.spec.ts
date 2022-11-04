@@ -25,7 +25,8 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KYCStatus, DocumentVerificationStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
-import { CreatePartnerRequestDTO } from "src/modules/partner/dto/CreatePartnerRequestDTO";
+import { CreatePartnerRequestDTO } from "../../../modules/partner/dto/CreatePartnerRequestDTO";
+import { DocumentVerificationState, KycVerificationState } from "../../../modules/consumer/domain/ExternalStates";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -1530,12 +1531,8 @@ describe("AdminController", () => {
       );
 
       expect(result._id).toBe(consumerProps._id);
-      expect(result.kycVerificationData.kycVerificationStatus).toBe(
-        updatedConsumerProps.verificationData.kycVerificationStatus,
-      );
-      expect(result.documentVerificationData.documentVerificationStatus).toBe(
-        updatedConsumerProps.verificationData.documentVerificationStatus,
-      );
+      expect(result.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
+      expect(result.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.VERIFIED);
     });
   });
 });

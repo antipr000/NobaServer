@@ -22,7 +22,13 @@ import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
 import { BadRequestException } from "@nestjs/common";
 import { VerificationProviders } from "../domain/VerificationData";
-import { UserState } from "../domain/ExternalStates";
+import {
+  UserState,
+  AggregatedPaymentMethodState,
+  AggregatedWalletState,
+  KycVerificationState,
+  DocumentVerificationState,
+} from "../domain/ExternalStates";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -550,7 +556,7 @@ describe("ConsumerController", () => {
   });
 
   describe("external state mapping tests", () => {
-    it("should return UserState as APPROVED when all are Approved", async () => {
+    it("should return status as APPROVED, walletStatus and paymentMethodStatus as APPROVED and all payment methods and wallets when all are Approved", async () => {
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
@@ -604,6 +610,201 @@ describe("ConsumerController", () => {
       );
 
       expect(response.status).toBe(UserState.APPROVED);
+      expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
+      expect(response.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.VERIFIED);
+      expect(response.walletStatus).toBe(AggregatedWalletState.APPROVED);
+      expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
+    });
+
+    it("should return user status as ACTION_REQUIRED and walletStatus as NOT_SUBMITTED and filtered wallet list when one wallet is REJECTED", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.APPROVED,
+            isPrivate: false,
+          },
+          {
+            address: "wallet-2",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.REJECTED,
+            isPrivate: false,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.ACTION_REQUIRED);
+      expect(response.walletStatus).toBe(AggregatedWalletState.NOT_SUBMITTED);
+      expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
+      expect(response.cryptoWallets.length).toBe(1);
+    });
+
+    it("should return user status as PENDING, paymentMethodStatus as PENDING and filtered payment method list when payment method is Flagged", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.APPROVED,
+            isPrivate: false,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.FLAGGED,
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.PENDING);
+      expect(response.walletStatus).toBe(AggregatedWalletState.APPROVED);
+      expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.PENDING);
+      expect(response.paymentMethods.length).toBe(0);
+      expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
+      expect(response.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.NOT_REQUIRED);
+    });
+
+    it("tests REJECTED kycVerificationStatus, NOT_SUBMITTED documentVerificationStatus, ACH payment method with APPROVED state", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.APPROVED,
+            isPrivate: false,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.ACH,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            achData: {
+              mask: "fake-mask",
+              accountType: "fake-type",
+              accessToken: "fake-token",
+              accountID: "fake-acc-id",
+              itemID: "fake-item",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.REJECTED,
+          documentVerificationStatus: DocumentVerificationStatus.REQUIRED,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.ACTION_REQUIRED);
+      expect(response.walletStatus).toBe(AggregatedWalletState.APPROVED);
+      expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
+      expect(response.paymentMethods.length).toBe(1);
+      expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.ACTION_REQUIRED);
+      expect(response.documentVerificationData.documentVerificationStatus).toBe(
+        DocumentVerificationState.NOT_SUBMITTED,
+      );
     });
   });
 });

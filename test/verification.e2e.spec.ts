@@ -155,7 +155,7 @@ describe("Verification", () => {
     expect(getConsumerResponse.address).toStrictEqual(consumerInformation.address);
     expect(getConsumerResponse.dateOfBirth).toBe(consumerInformation.dateOfBirth);
     expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
-    expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("Required");
+    expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
   });
 
   // it("POST /verifyDocument", async () => {
@@ -279,7 +279,7 @@ describe("Verification", () => {
       })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
-      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("Approved");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("Verified");
     });
 
     it("should throw error if signature does not match", async () => {
