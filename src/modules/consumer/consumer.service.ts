@@ -24,7 +24,6 @@ import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "./domain/PaymentProvider";
 import { PlaidClient } from "../psp/plaid.client";
-import { RetrieveAccountDataResponse, TokenProcessor } from "../psp/domain/PlaidTypes";
 import { Utils } from "../../core/utils/Utils";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
