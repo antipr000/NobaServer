@@ -3,10 +3,10 @@
 /* eslint-disable */
 
 export type LoginRequestDTO = {
-  emailOrPhone: string;
+  emailOrPhone?: string;
   /**
    * This attribute is deprecated and will be removed in future, please use emailOrPhone instead
    */
-  email: string;
+  email?: string;
   identityType: "CONSUMER" | "PARTNER_ADMIN" | "NOBA_ADMIN";
 };
