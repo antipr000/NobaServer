@@ -27,8 +27,8 @@ import {
   PARTNER_PUBLIC_DATA_S3_BUCKET_KEY,
   PARTNER_PUBLIC_CLOUDFRONT_URL_KEY,
 } from "../../../config/ConfigurationUtils";
-import { IConsumerRepo } from "src/modules/consumer/repos/ConsumerRepo";
-import { getMockConsumerRepoWithDefaults } from "src/modules/consumer/mocks/mock.consumer.repo";
+import { IConsumerRepo } from "../../../../src/modules/consumer/repos/ConsumerRepo";
+import { getMockConsumerRepoWithDefaults } from "../../../../src/modules/consumer/mocks/mock.consumer.repo";
 
 const mS3Instance: any = {};
 
