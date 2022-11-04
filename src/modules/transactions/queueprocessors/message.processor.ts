@@ -49,11 +49,19 @@ export abstract class MessageProcessor {
     this.logger.error(err.stack);
   }
 
-  protected async processFailure(status: TransactionStatus, reason: string, transaction: Transaction) {
+  protected async processFailure(
+    status: TransactionStatus,
+    reason: string,
+    transaction: Transaction,
+    details?: string,
+  ) {
     const existingExceptions = transaction.props.transactionExceptions;
 
+    reason = reason ?? "Processing Error";
+    details = details ?? reason;
+
     // TODO (#332) Improve population of details (internal details, not to be viewed by consumer)
-    const error: TransactionEvent = { timestamp: new Date(), message: reason, details: reason };
+    const error: TransactionEvent = { timestamp: new Date(), message: reason, details: details };
 
     transaction = await this.transactionRepo.updateTransaction(
       Transaction.createTransaction({

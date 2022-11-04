@@ -9,6 +9,7 @@ import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
+import { TransactionSubmissionException } from "../exceptions/TransactionSubmissionException";
 
 export class ValidatePendingTransactionProcessor extends MessageProcessor {
   constructor(
@@ -63,11 +64,17 @@ export class ValidatePendingTransactionProcessor extends MessageProcessor {
         await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, transactionId);
       }
     } catch (e) {
-      await this.processFailure(
-        TransactionStatus.VALIDATION_FAILED,
-        e.reasonSummary, // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
-        transaction,
-      );
+      this.logger.error(`Error in ValidatePendingTransactionProcessor: ${JSON.stringify(e)}`);
+      if (e instanceof TransactionSubmissionException) {
+        await this.processFailure(
+          TransactionStatus.VALIDATION_FAILED,
+          e.reasonCode, // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+          transaction,
+          e.reasonSummary,
+        );
+      } else {
+        await this.processFailure(TransactionStatus.VALIDATION_FAILED, "Validation Failure", transaction, e.message);
+      }
     }
     // This logic should be idempotent so we don't need to check whether we failed between here and transaction update
   }

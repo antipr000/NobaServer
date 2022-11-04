@@ -10,7 +10,6 @@ export type PaymentMethodsDTO = {
   type: "Card" | "ACH";
   imageUri?: string;
   paymentToken: string;
-  status: "Flagged" | "Rejected" | "Approved" | "Unsupported";
   cardData?: PaymentMethodCardDataDTO;
   achData?: PaymentMethodACHDataDTO;
 };
