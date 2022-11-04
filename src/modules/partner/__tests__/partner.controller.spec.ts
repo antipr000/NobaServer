@@ -18,12 +18,14 @@ import { TransactionMapper } from "../../../modules/transactions/mapper/Transact
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { ConsumerMapper } from "../../../../src/modules/consumer/mappers/ConsumerMapper";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
   let partnerService: PartnerService;
   let partnerAdminService: PartnerAdminService;
   const partnerMapper: PartnerMapper = new PartnerMapper();
+  const consumerMapper: ConsumerMapper = new ConsumerMapper();
   const partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
   const transactionMapper = new TransactionMapper();
 
@@ -54,6 +56,45 @@ describe("PartnerController", () => {
   });
 
   describe("partner service tests", () => {
+    it("should get consumers for a partner", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "mock2@partner.com",
+        partnerId: partner.props._id,
+        role: "BASIC",
+      });
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "mock-partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+      });
+      const consumers: Consumer[] = [consumer];
+      when(partnerService.getAllPartnerConsumers(partner.props._id)).thenResolve(consumers);
+
+      const result = await partnerController.getAllPartnerConsumers({
+        user: {
+          entity: requestingPartnerAdmin,
+        },
+      });
+      const expectedResult = consumers.map(partnerConsumer => consumerMapper.toDTO(partnerConsumer));
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
     it("should add admin when admin with all access requests", async () => {
       const partnerAdminToAdd = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-1",
