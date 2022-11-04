@@ -12,7 +12,7 @@ jobs:
         id: check-branch
         run: |
           if [[ ${{ github.head_ref }} =~ ^[A-Za-z]+-[0-9]+.*$ ]]; then
-              echo "{match}={true}" >> $GITHUB_OUTPUT
+              echo "match=true" >> $GITHUB_OUTPUT
           fi
       - uses: tzkhan/pr-update-action@v2
         if: steps.check-branch.outputs.match == 'true'
