@@ -1,7 +1,9 @@
 name: Link PR to Jira Issue
 on:
   pull_request:
-    types: [opened,edited,synchronize]
+    types: [opened]
+
+# This action adapted from https://dev.fandom.com/wiki/User_blog:Ritaly-dev/Auto_linking_Jira_ticket_in_PR_description_via_Github_Action
 
 jobs:
   update_pr:
