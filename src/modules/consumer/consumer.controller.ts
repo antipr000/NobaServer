@@ -137,10 +137,10 @@ export class ConsumerController {
   }
 
   @Post("/phoneUpdateOtpRequest")
-  @ApiOperation({ summary: "add or updates phone number of logged in user with otp" })
+  @ApiOperation({ summary: "send otp to user's phone to verify to update in user profile record" })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: "Updated consumer record",
+    description: "Send otp to user's phone number to verify to update phone number",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
