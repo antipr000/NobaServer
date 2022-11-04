@@ -15,11 +15,11 @@ export class SMSService {
     // console.log("print twilio configs", this.twilioConfigs);
   }
 
-  public async sendOtp(recipientPhoneNumber: string, otp: string) {
+  public async sendSMS(recipientPhoneNumber: string, smsBody: string) {
     const smsResponse = await this.twilioClient.messages.create({
       from: this.twilioConfigs.fromPhoneNumber,
       to: recipientPhoneNumber,
-      body: `${otp} is your one time password for Noba Pay login.`,
+      body: smsBody,
     });
     // console.log(smsResponse.sid);
   }

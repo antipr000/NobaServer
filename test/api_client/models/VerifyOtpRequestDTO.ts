@@ -4,6 +4,10 @@
 
 export type VerifyOtpRequestDTO = {
   emailOrPhone: string;
-  otp: number;
+  /**
+   * This attribute is deprecated and will be removed in future, please use emailOrPhone instead
+   */
+  email: string;
   identityType: "CONSUMER" | "PARTNER_ADMIN" | "NOBA_ADMIN";
+  otp: number;
 };

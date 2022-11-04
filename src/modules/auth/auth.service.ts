@@ -9,6 +9,7 @@ import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PartnerService } from "../partner/partner.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export abstract class AuthService {
@@ -37,6 +38,7 @@ export abstract class AuthService {
     emailOrPhone: string,
     enteredOtp: number,
     partnerID: string,
+    createUserIfNotExist = true,
     partnerUserID?: string,
   ): Promise<string> {
     if (!partnerID || partnerID.length == 0) {
@@ -49,7 +51,7 @@ export abstract class AuthService {
       throw new UnauthorizedException();
     } else {
       await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
-      return this.getUserId(emailOrPhone, actualOtp.props.partnerID, partnerUserID);
+      return this.getUserId(emailOrPhone, actualOtp.props.partnerID, createUserIfNotExist, partnerUserID);
     }
   }
 
@@ -77,21 +79,20 @@ export abstract class AuthService {
     await this.otpRepo.saveOTP(emailOrPhone, otp, this.getIdentityType(), partnerID);
   }
 
-  // TODO: try to separate 'emailOrPhone' by introducing an interface.
   async sendOtp(emailOrPhone: string, otp: string, partnerId: string): Promise<void> {
-    const isEmail = emailOrPhone.includes("@");
+    const isEmail = Utils.isEmail(emailOrPhone);
     if (isEmail) {
       await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerId, {
         email: emailOrPhone,
         otp: otp,
       });
     } else {
-      await this.smsService.sendOtp(emailOrPhone, otp);
+      await this.smsService.sendSMS(emailOrPhone, `${otp} is your one time password for Noba Pay login.`);
     }
   }
 
   public createOtp(): number {
-    return Math.floor(100000 + Math.random() * 900000);
+    return Utils.createOtp();
   }
 
   async verifyUserExistence(emailOrPhone: string): Promise<boolean> {
@@ -104,6 +105,11 @@ export abstract class AuthService {
 
   protected abstract getIdentityType();
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
-  protected abstract getUserId(emailOrPhone: string, partnerID: string, partnerUserID?: string): Promise<string>;
+  protected abstract getUserId(
+    emailOrPhone: string,
+    partnerID: string,
+    createUserIfNotExist: boolean,
+    partnerUserID?: string,
+  ): Promise<string>;
   protected abstract isUserSignedUp(emailOrPhone: string): Promise<boolean>;
 }

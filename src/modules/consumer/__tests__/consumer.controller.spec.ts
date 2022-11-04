@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { deepEqual, instance, when } from "ts-mockito";
+import { deepEqual, instance, verify, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerController } from "../consumer.controller";
@@ -21,6 +21,8 @@ import { PaymentMethodType } from "../domain/PaymentMethod";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
 import { BadRequestException } from "@nestjs/common";
+import { PhoneVerificationOtpRequest } from "../../../../test/api_client/models/PhoneVerificationOtpRequest";
+import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
 import { VerificationProviders } from "../domain/VerificationData";
 import {
   UserState,
@@ -328,7 +330,6 @@ describe("ConsumerController", () => {
 
       const requestData: UpdateConsumerRequestDTO = {
         firstName: "New Mock",
-        phone: "123456789",
         dateOfBirth: "1999-02-02",
       };
 
@@ -552,6 +553,83 @@ describe("ConsumerController", () => {
 
       expect(result._id).toBe(consumer.props._id);
       expect(result.paymentMethods.length).toBe(1);
+    });
+  });
+
+  describe("phoneUpdateOtpRequest", () => {
+    it("should send a phone update OTP request", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      const phone = "+1234567890";
+
+      const phoneUpdateOtpRequest: PhoneVerificationOtpRequest = {
+        phone: phone,
+      };
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.sendOtpToPhone(phone)).thenResolve();
+
+      await consumerController.requestOtpToUpdatePhone(
+        {
+          user: {
+            entity: consumer,
+            partnerId: "partner-1",
+          } as AuthenticatedUser,
+        },
+        phoneUpdateOtpRequest,
+      );
+
+      verify(consumerService.sendOtpToPhone(phone)).called();
+    });
+  });
+
+  describe("phone", () => {
+    it("should add or update phone", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      const phone = "+1234567890";
+
+      const phoneUpdateRequest: UserPhoneUpdateRequest = {
+        phone: phone,
+        otp: 123456,
+      };
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenResolve(consumer);
+
+      await consumerController.updatePhone(
+        {
+          user: {
+            entity: consumer,
+            partnerId: "partner-1",
+          } as AuthenticatedUser,
+        },
+        phoneUpdateRequest,
+      );
+
+      verify(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).called();
     });
   });
 

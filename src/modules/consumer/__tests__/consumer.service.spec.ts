@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getMockOtpRepoWithDefaults } from "../../../modules/auth/mocks/MockOtpRepo";
 import { IOTPRepo } from "../../../modules/auth/repo/OTPRepo";
-import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
@@ -35,10 +35,15 @@ import { PaymentProvider } from "../domain/PaymentProvider";
 import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
+import { SMSService } from "../../common/sms.service";
+import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
+import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
+import { IdentityType } from "../../auth/domain/IdentityType";
 import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
+  let smsService: SMSService;
   let consumerRepo: IConsumerRepo;
   let notificationService: NotificationService;
   let mockOtpRepo: IOTPRepo;
@@ -56,7 +61,7 @@ describe("ConsumerService", () => {
     paymentService = getMockPaymentServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
-
+    smsService = getMockSmsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
 
     const ConsumerRepoProvider = {
@@ -81,6 +86,10 @@ describe("ConsumerService", () => {
         {
           provide: NotificationService,
           useFactory: () => instance(notificationService),
+        },
+        {
+          provide: SMSService,
+          useFactory: () => instance(smsService),
         },
         {
           provide: "OTPRepo",
@@ -135,7 +144,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
       when(consumerRepo.createConsumer(anything())).thenResolve(consumer);
 
-      const response = await consumerService.createConsumerIfFirstTimeLogin(email, partnerId);
+      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
       expect(response).toStrictEqual(consumer);
       verify(
         notificationService.sendNotification(
@@ -188,7 +197,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumerData);
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
 
-      const response = await consumerService.createConsumerIfFirstTimeLogin(email, partnerId);
+      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
       expect(response).toStrictEqual(updatedConsumerData);
     });
 
@@ -216,7 +225,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.ok(consumer));
 
-      const response = await consumerService.createConsumerIfFirstTimeLogin(email, partnerId);
+      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
 
       expect(response).toStrictEqual(consumer);
     });
@@ -1945,6 +1954,77 @@ describe("ConsumerService", () => {
         partnerID: partnerId,
         isPrivate: false,
       });
+    });
+  });
+
+  describe("sendOtpToPhone", () => {
+    it("should send otp to given phone number with given context", async () => {
+      const phone = "+12434252";
+      when(smsService.sendSMS(phone, anyString())).thenResolve();
+      when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
+      await consumerService.sendOtpToPhone(phone);
+      verify(smsService.sendSMS(phone, anyString())).once();
+      verify(mockOtpRepo.saveOTPObject(anything())).once();
+    });
+  });
+
+  describe("updateConsumerPhone", () => {
+    it("incorrect and correct otp", async () => {
+      const phone = "+12434252";
+      const email = "a@noba.com";
+      const partnerId = "fake-partner-id";
+      const otp = 123456;
+      const otpObject = Otp.createOtp({
+        otp: otp,
+        emailOrPhone: phone,
+        identityType: IdentityType.consumer,
+      });
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        email: email,
+        displayEmail: email,
+
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+      });
+
+      const phoneUpdateRequest: UserPhoneUpdateRequest = {
+        phone: phone,
+        otp: 123458, //incorrect otp
+      };
+
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer)).thenResolve(otpObject);
+
+      try {
+        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
+        expect(true).toBe(false);
+      } catch (err) {
+        console.log(err);
+        expect(err).toBeInstanceOf(BadRequestException);
+      }
+
+      phoneUpdateRequest.otp = otp; //correct otp
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(anything())).thenResolve(consumer);
+
+      await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
+      verify(consumerRepo.updateConsumer(anything())).once();
+      const [requestArg] = capture(consumerRepo.updateConsumer).last();
+      expect(requestArg.props.phone).toBe(phone);
     });
   });
 });

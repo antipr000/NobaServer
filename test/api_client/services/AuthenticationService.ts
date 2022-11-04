@@ -47,7 +47,7 @@ export class AuthenticationService {
 
   /**
    * Logs user in and sends one-time passcode (OTP) to the provided email address
-   * @returns any Email successfully sent
+   * @returns any OTP successfully sent.
    * @throws ApiError
    */
   public static loginUser({

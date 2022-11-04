@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Utils } from "../../core/utils/Utils";
 import { AdminService } from "../admin/admin.service";
 import { Admin } from "../admin/domain/Admin";
 import { AuthService } from "./auth.service";
@@ -16,15 +17,22 @@ export class AdminAuthService extends AuthService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async getUserId(emailOrPhone: string, _?: string): Promise<string> {
+  protected async getUserId(emailOrPhone: string, _: string, createUserIfNotExist: boolean): Promise<string> {
+    const isEmail = Utils.isEmail(emailOrPhone);
+    if (!isEmail) throw new Error("Admin can only login with email");
     const admin: Admin = await this.adminService.getAdminByEmail(emailOrPhone);
     return admin.props._id;
   }
 
-  protected async isUserSignedUp(email: string): Promise<boolean> {
+  protected async isUserSignedUp(emailOrPhone: string): Promise<boolean> {
+    const isEmail = Utils.isEmail(emailOrPhone);
     try {
-      const nobaAdmin: Admin = await this.adminService.getAdminByEmail(email);
-      return nobaAdmin !== null && nobaAdmin !== undefined;
+      if (isEmail) {
+        const nobaAdmin: Admin = await this.adminService.getAdminByEmail(emailOrPhone);
+        return nobaAdmin !== null && nobaAdmin !== undefined;
+      } else {
+        return false; //admins can only login with email
+      }
     } catch (err) {
       if (err instanceof NotFoundException) return false;
       throw err;

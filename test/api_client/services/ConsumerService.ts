@@ -6,8 +6,10 @@ import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
+import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
 import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
+import type { UserPhoneUpdateRequest } from "../models/UserPhoneUpdateRequest";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -68,6 +70,78 @@ export class ConsumerService {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/consumers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * add or updates phone number of logged in user with otp
+   * @returns ConsumerDTO Updates the user's phone number
+   * @throws ApiError
+   */
+  public static updatePhone({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: UserPhoneUpdateRequest;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/consumers/phone",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * add or updates phone number of logged in user with otp
+   * @returns any Updated consumer record
+   * @throws ApiError
+   */
+  public static requestOtpToUpdatePhone({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: PhoneVerificationOtpRequest;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/phoneUpdateOtpRequest",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,

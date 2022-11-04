@@ -1,13 +1,10 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { allIdentities } from "../domain/IdentityType";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { LoginRequestDTO } from "./LoginRequest";
 
-export class VerifyOtpRequestDTO {
-  @ApiProperty()
-  emailOrPhone: string;
-
+export class VerifyOtpRequestDTO extends LoginRequestDTO {
   @ApiProperty()
   otp: number;
 
-  @ApiProperty({ enum: allIdentities })
-  identityType: string;
+  @ApiPropertyOptional({ description: "Creates a user account if user doesn't exist already" })
+  createAccountIfNotExists?: boolean;
 }

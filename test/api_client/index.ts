@@ -48,6 +48,7 @@ export type { PaymentMethodACHDataDTO } from "./models/PaymentMethodACHDataDTO";
 export type { PaymentMethodCardDataDTO } from "./models/PaymentMethodCardDataDTO";
 export type { PaymentMethodsDTO } from "./models/PaymentMethodsDTO";
 export type { PeriodLimit } from "./models/PeriodLimit";
+export type { PhoneVerificationOtpRequest } from "./models/PhoneVerificationOtpRequest";
 export type { PlaidTokenDTO } from "./models/PlaidTokenDTO";
 export type { SubdivisionDTO } from "./models/SubdivisionDTO";
 export type { TransactionAmountsDTO } from "./models/TransactionAmountsDTO";
@@ -59,6 +60,7 @@ export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";
 export type { UpdatePartnerAdminRequestDTO } from "./models/UpdatePartnerAdminRequestDTO";
 export type { UpdatePartnerRequestDTO } from "./models/UpdatePartnerRequestDTO";
+export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";
 export type { VerificationResultDTO } from "./models/VerificationResultDTO";
 export type { VerifyOtpRequestDTO } from "./models/VerifyOtpRequestDTO";

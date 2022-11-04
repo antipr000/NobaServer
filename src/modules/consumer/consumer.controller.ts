@@ -42,6 +42,7 @@ import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
 import { PlaidClient } from "../psp/plaid.client";
+import { PhoneVerificationOtpRequest, UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -114,6 +115,42 @@ export class ConsumerController {
     };
     const res = await this.consumerService.updateConsumer(consumerProps);
     return this.consumerMapper.toDTO(res);
+  }
+
+  @Patch("/phone")
+  @ApiOperation({ summary: "add or updates phone number of logged in user with otp" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerDTO,
+    description: "Updates the user's phone number",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async updatePhone(@Request() request, @Body() requestBody: UserPhoneUpdateRequest): Promise<ConsumerDTO> {
+    const consumer = request.user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    const res = await this.consumerService.updateConsumerPhone(consumer, requestBody);
+    return this.consumerMapper.toDTO(res);
+  }
+
+  @Post("/phoneUpdateOtpRequest")
+  @ApiOperation({ summary: "add or updates phone number of logged in user with otp" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Updated consumer record",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async requestOtpToUpdatePhone(@Request() request, @Body() requestBody: PhoneVerificationOtpRequest) {
+    const consumer = request.user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    await this.consumerService.sendOtpToPhone(requestBody.phone);
   }
 
   @Get("/paymentmethods/plaid/token")

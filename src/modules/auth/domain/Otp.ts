@@ -3,6 +3,7 @@ import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../co
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 import { allIdentities } from "./IdentityType";
+import { otpConstants } from "../constants";
 
 export interface OtpProps extends VersioningInfo {
   _id: string;
@@ -11,6 +12,9 @@ export interface OtpProps extends VersioningInfo {
   otpExpiryTime?: number;
   identityType: string;
   partnerID?: string;
+  // any context related to the otp to make sure the latest otp is being used in the same context as it was generated
+  // consumer-business-logic of this attribute is free to put any sort of data in this field to make sure they are using the same otp they generated
+  otpContext?: any;
 }
 
 export const otpValidationKeys: KeysRequired<OtpProps> = {
@@ -21,6 +25,7 @@ export const otpValidationKeys: KeysRequired<OtpProps> = {
   otpExpiryTime: Joi.number().required(),
   identityType: Joi.string().valid(...allIdentities),
   partnerID: Joi.string().optional(),
+  otpContext: Joi.any().optional(),
 };
 
 export const otpJoiSchema = Joi.object(otpValidationKeys).options({ allowUnknown: true });
@@ -32,6 +37,11 @@ export class Otp extends AggregateRoot<OtpProps> {
 
   public static createOtp(otpProps: Partial<OtpProps>): Otp {
     if (!otpProps._id) otpProps._id = Entity.getNewID();
+    if (!otpProps.otpExpiryTime) otpProps.otpExpiryTime = Otp.getOTPExpirtyTime().getTime();
     return new Otp(Joi.attempt(otpProps, otpJoiSchema));
+  }
+
+  public static getOTPExpirtyTime(expiryTimeInMinutes = otpConstants.EXPIRY_TIME_IN_MINUTES): Date {
+    return new Date(new Date().getTime() + expiryTimeInMinutes * 60000);
   }
 }

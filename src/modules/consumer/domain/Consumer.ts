@@ -109,6 +109,8 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
     .meta({ _mongoose: { index: true } }),
   displayEmail: Joi.string().email().optional(),
   phone: Joi.string()
+    .pattern(/^\+[0-9]+$/)
+    .max(15)
     .optional()
     .allow(null)
     .meta({ _mongoose: { index: true } }),

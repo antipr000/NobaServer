@@ -23,6 +23,13 @@ import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "./domain/PaymentProvider";
+import { PlaidClient } from "../psp/plaid.client";
+import { RetrieveAccountDataResponse, TokenProcessor } from "../psp/domain/PlaidTypes";
+import { Utils } from "../../core/utils/Utils";
+import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
+import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
+import { SMSService } from "../common/sms.service";
+import { Otp } from "../auth/domain/Otp";
 
 @Injectable()
 export class ConsumerService {
@@ -50,21 +57,41 @@ export class ConsumerService {
   @Inject()
   private readonly partnerService: PartnerService;
 
+  @Inject()
+  private readonly plaidClient: PlaidClient;
+
+  @Inject()
+  private readonly smsService: SMSService;
+
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
-  async createConsumerIfFirstTimeLogin(
+  // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
+  async getOrCreateConsumerConditionally(
     emailOrPhone: string,
     partnerID: string,
+    createIfNotExists = true,
     partnerUserID?: string,
   ): Promise<Consumer> {
-    const isEmail = emailOrPhone.includes("@");
+    const isEmail = Utils.isEmail(emailOrPhone);
     const email = isEmail ? emailOrPhone : null;
     const phone = !isEmail ? emailOrPhone : null;
 
     const consumerResult = await this.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumerResult.isFailure) {
+      // consumer doesn't exist will create one if createIfNotExists is true
+
+      if (!createIfNotExists) {
+        throw new BadRequestException(`Consumer with email ${emailOrPhone} doesn't exist, please signup first`);
+      }
+
+      if (!isEmail) {
+        throw new BadRequestException(
+          "User should be registered with email first and add their phone number before being able to login with phone number",
+        );
+      }
+
       const newConsumer = Consumer.createConsumer({
         email: email.toLowerCase(),
         displayEmail: email,
@@ -113,8 +140,29 @@ export class ConsumerService {
     return updatedConsumer;
   }
 
+  async sendOtpToPhone(phone: string) {
+    const otp = Utils.createOtp();
+    await this.smsService.sendSMS(phone, `${otp} is OTP to verify your phone number with Noba.`);
+    const otpObject = Otp.createOtp({ emailOrPhone: phone, identityType: consumerIdentityIdentifier, otp });
+    this.otpRepo.saveOTPObject(otpObject);
+  }
+
+  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest): Promise<Consumer> {
+    const otpResult = await this.otpRepo.getOTP(reqData.phone, consumerIdentityIdentifier);
+
+    if (otpResult.props.otp !== reqData.otp) {
+      throw new BadRequestException("Otp is incorrect");
+    }
+
+    const updatedConsumer = await this.updateConsumer({
+      _id: consumer.props._id,
+      phone: reqData.phone,
+    });
+    return updatedConsumer;
+  }
+
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
-    const isEmail = emailOrPhone.includes("@");
+    const isEmail = Utils.isEmail(emailOrPhone);
     const consumerResult = isEmail
       ? await this.consumerRepo.getConsumerByEmail(emailOrPhone.toLowerCase())
       : await this.consumerRepo.getConsumerByPhone(emailOrPhone);
