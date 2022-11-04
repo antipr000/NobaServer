@@ -87,7 +87,7 @@ export abstract class AuthService {
         otp: otp,
       });
     } else {
-      await this.smsService.sendSMS(emailOrPhone, `${otp} is your one time password for Noba Pay login.`);
+      await this.smsService.sendSMS(emailOrPhone, `${otp} is your one-time password for Noba login.`);
     }
   }
 

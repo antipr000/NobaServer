@@ -34,6 +34,7 @@ export type { DeviceVerificationResponseDTO } from "./models/DeviceVerificationR
 export type { DocumentVerificationDTO } from "./models/DocumentVerificationDTO";
 export type { DocumentVerificationResultDTO } from "./models/DocumentVerificationResultDTO";
 export type { DocumentVerificationWebhookRequestDTO } from "./models/DocumentVerificationWebhookRequestDTO";
+export type { EmailVerificationOtpRequest } from "./models/EmailVerificationOtpRequest";
 export type { IDVerificationRequestDTO } from "./models/IDVerificationRequestDTO";
 export type { IDVerificationURLResponseDTO } from "./models/IDVerificationURLResponseDTO";
 export type { KybStatusInfoDTO } from "./models/KybStatusInfoDTO";
@@ -60,6 +61,7 @@ export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";
 export type { UpdatePartnerAdminRequestDTO } from "./models/UpdatePartnerAdminRequestDTO";
 export type { UpdatePartnerRequestDTO } from "./models/UpdatePartnerRequestDTO";
+export type { UserEmailUpdateRequest } from "./models/UserEmailUpdateRequest";
 export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";
 export type { VerificationResultDTO } from "./models/VerificationResultDTO";

@@ -29,6 +29,8 @@ import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
 import { SMSService } from "../common/sms.service";
 import { Otp } from "../auth/domain/Otp";
+import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
+import { SendOtpEvent } from "../notifications/events/SendOtpEvent";
 
 @Injectable()
 export class ConsumerService {
@@ -145,7 +147,8 @@ export class ConsumerService {
 
   async sendOtpToPhone(phone: string) {
     const otp = Utils.createOtp();
-    await this.smsService.sendSMS(phone, `${otp} is OTP to verify your phone number with Noba.`);
+    await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier);
+    await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
     const otpObject = Otp.createOtp({ emailOrPhone: phone, identityType: consumerIdentityIdentifier, otp });
     this.otpRepo.saveOTPObject(otpObject);
   }
@@ -154,12 +157,39 @@ export class ConsumerService {
     const otpResult = await this.otpRepo.getOTP(reqData.phone, consumerIdentityIdentifier);
 
     if (otpResult.props.otp !== reqData.otp) {
-      throw new BadRequestException("Otp is incorrect");
+      throw new BadRequestException("OTP is incorrect");
     }
 
     const updatedConsumer = await this.updateConsumer({
       _id: consumer.props._id,
       phone: reqData.phone,
+    });
+    return updatedConsumer;
+  }
+
+  async sendOtpToEmail(email: string, consumer: Consumer, partnerID: string) {
+    const otp = Utils.createOtp();
+    await this.otpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier);
+    await this.otpRepo.saveOTP(email, otp, consumerIdentityIdentifier);
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
+      email: email,
+      otp: otp.toString(),
+      firstName: consumer.props.firstName ?? undefined,
+    });
+  }
+
+  async updateConsumerEmail(consumer: Consumer, reqData: UserEmailUpdateRequest): Promise<Consumer> {
+    const otpResult = await this.otpRepo.getOTP(reqData.email, consumerIdentityIdentifier);
+
+    if (otpResult.props.otp !== reqData.otp) {
+      throw new BadRequestException("OTP is incorrect");
+    }
+
+    const updatedConsumer = await this.updateConsumer({
+      _id: consumer.props._id,
+      email: reqData.email.toLowerCase(),
+      displayEmail: reqData.email,
     });
     return updatedConsumer;
   }
@@ -315,8 +345,8 @@ export class ConsumerService {
 
   async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string, partnerId: string) {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
-    await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, "CONSUMER");
-    await this.otpRepo.saveOTP(consumer.props.email, otp, "CONSUMER");
+    await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier);
+    await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier);
     await this.notificationService.sendNotification(
       NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       partnerId,
@@ -332,7 +362,7 @@ export class ConsumerService {
 
   async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number) {
     // Verify if the otp is correct
-    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, "CONSUMER");
+    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier);
     const currentDateTime: number = new Date().getTime();
 
     if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {

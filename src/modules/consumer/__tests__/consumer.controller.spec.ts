@@ -31,6 +31,8 @@ import {
   KycVerificationState,
   DocumentVerificationState,
 } from "../domain/ExternalStates";
+import { EmailVerificationOtpRequest } from "../dto/EmailVerificationDTO";
+import { UserEmailUpdateRequest } from "test/api_client";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -616,10 +618,15 @@ describe("ConsumerController", () => {
         otp: 123456,
       };
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenResolve(consumer);
+      const expectedUpdatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        phone: phone,
+      });
 
-      await consumerController.updatePhone(
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenResolve(expectedUpdatedConsumer);
+
+      const updatedConsumer = await consumerController.updatePhone(
         {
           user: {
             entity: consumer,
@@ -630,6 +637,105 @@ describe("ConsumerController", () => {
       );
 
       verify(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).called();
+
+      expect(updatedConsumer).toEqual(consumerMapper.toDTO(expectedUpdatedConsumer));
+    });
+  });
+
+  describe("emailUpdateOtpRequest", () => {
+    it("should send an email update OTP request", async () => {
+      const partnerID = "partner-1234";
+      const partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerID,
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
+
+      const email = "rosie@noba.com";
+
+      const emailUpdateOtpRequest: EmailVerificationOtpRequest = {
+        email: email,
+      };
+
+      const apiKey = "1234567890";
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.sendOtpToEmail(email, consumer, partnerID)).thenResolve();
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+
+      await consumerController.requestOtpToUpdateEmail(
+        {
+          user: {
+            entity: consumer,
+            partnerId: partnerID,
+          } as AuthenticatedUser,
+        },
+        {
+          "x-noba-api-key": apiKey,
+        },
+        emailUpdateOtpRequest,
+      );
+
+      verify(consumerService.sendOtpToEmail(email, consumer, partnerID)).called();
+    });
+  });
+
+  describe("email", () => {
+    it("should add or update email", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
+
+      const email = "Rosie@Noba.com";
+
+      const emailUpdateRequest: UserEmailUpdateRequest = {
+        email: email,
+        otp: 123456,
+      };
+
+      const expectedUpdatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        email: email.toLowerCase(),
+        displayEmail: email,
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).thenResolve(expectedUpdatedConsumer);
+
+      const updatedConsumer = await consumerController.updateEmail(
+        {
+          user: {
+            entity: consumer,
+            partnerId: "partner-1",
+          } as AuthenticatedUser,
+        },
+        emailUpdateRequest,
+      );
+
+      verify(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).called();
+
+      expect(updatedConsumer).toEqual(consumerMapper.toDTO(expectedUpdatedConsumer));
     });
   });
 

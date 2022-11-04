@@ -38,8 +38,10 @@ import { BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
 import { SMSService } from "../../common/sms.service";
 import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
 import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
-import { IdentityType } from "../../auth/domain/IdentityType";
+import { consumerIdentityIdentifier, IdentityType } from "../../auth/domain/IdentityType";
 import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
+import { Utils } from "../../../core/utils/Utils";
+import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -1962,6 +1964,7 @@ describe("ConsumerService", () => {
       const phone = "+12434252";
       when(smsService.sendSMS(phone, anyString())).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier)).thenResolve();
       await consumerService.sendOtpToPhone(phone);
       verify(smsService.sendSMS(phone, anyString())).once();
       verify(mockOtpRepo.saveOTPObject(anything())).once();
@@ -2006,6 +2009,11 @@ describe("ConsumerService", () => {
         otp: 123458, //incorrect otp
       };
 
+      const expectedUpdatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        phone: phone,
+      });
+
       when(mockOtpRepo.getOTP(phone, IdentityType.consumer)).thenResolve(otpObject);
 
       try {
@@ -2019,12 +2027,108 @@ describe("ConsumerService", () => {
       phoneUpdateRequest.otp = otp; //correct otp
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anything())).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
 
-      await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
+      const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
       verify(consumerRepo.updateConsumer(anything())).once();
       const [requestArg] = capture(consumerRepo.updateConsumer).last();
       expect(requestArg.props.phone).toBe(phone);
+      expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
+    });
+  });
+
+  describe("sendOtpToEmail", () => {
+    it("should send otp to given email address with given context", async () => {
+      const email = "Rosie@Noba.com";
+      const partnerID = "Partner-123456789";
+      const firstName = "Rosie";
+      const otp = 654321;
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: firstName,
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerID,
+          },
+        ],
+        isAdmin: false,
+        phone: "+15559993333",
+      });
+
+      const addStub = jest.spyOn(Utils, "createOtp").mockReturnValueOnce(otp);
+      when(
+        notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
+          email: email,
+          otp: otp.toString(),
+          firstName: "Rosie",
+        }),
+      ).thenResolve();
+      when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier)).thenResolve();
+      await consumerService.sendOtpToEmail(email, consumer, partnerID);
+      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier)).once();
+    });
+  });
+
+  describe("updateConsumerEmail", () => {
+    it("incorrect and correct otp", async () => {
+      const phone = "+12434252";
+      const email = "Rosie@Noba.com";
+      const partnerId = "fake-partner-id";
+      const otp = 123456;
+      const otpObject = Otp.createOtp({
+        otp: otp,
+        emailOrPhone: phone,
+        identityType: IdentityType.consumer,
+      });
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        phone: phone,
+      });
+
+      const emailUpdateRequest: UserEmailUpdateRequest = {
+        email: email,
+        otp: 123458, //incorrect otp
+      };
+
+      when(mockOtpRepo.getOTP(email, IdentityType.consumer)).thenResolve(otpObject);
+
+      try {
+        await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
+        expect(true).toBe(false);
+      } catch (err) {
+        console.log(err);
+        expect(err).toBeInstanceOf(BadRequestException);
+      }
+
+      emailUpdateRequest.otp = otp; //correct otp
+
+      const expectedUpdatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        email: email.toLowerCase(),
+        displayEmail: email,
+      });
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
+
+      const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
+      verify(consumerRepo.updateConsumer(anything())).once();
+      const [requestArg] = capture(consumerRepo.updateConsumer).last();
+      expect(requestArg.props.email).toBe(email.toLowerCase());
+      expect(requestArg.props.displayEmail).toBe(email);
+      expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
     });
   });
 });
