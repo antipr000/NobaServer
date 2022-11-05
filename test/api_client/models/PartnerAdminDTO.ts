@@ -7,5 +7,5 @@ export type PartnerAdminDTO = {
   name?: string;
   email: string;
   partnerID: string;
-  role: string;
+  role: "BASIC" | "INTERMEDIATE" | "ALL";
 };

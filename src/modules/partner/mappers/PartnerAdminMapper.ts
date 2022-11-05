@@ -1,4 +1,4 @@
-import { PartnerAdmin } from "../domain/PartnerAdmin";
+import { PartnerAdmin, PARTNER_ADMIN_ROLE_TYPES } from "../domain/PartnerAdmin";
 import { PartnerAdminDTO } from "../dto/PartnerAdminDTO";
 import { Mapper } from "../../../core/infra/Mapper";
 
@@ -14,7 +14,7 @@ export class PartnerAdminMapper implements Mapper<PartnerAdmin> {
       name: p.name,
       partnerID: p.partnerId,
       email: p.email,
-      role: p.role,
+      role: PARTNER_ADMIN_ROLE_TYPES[p.role],
     };
   }
 }

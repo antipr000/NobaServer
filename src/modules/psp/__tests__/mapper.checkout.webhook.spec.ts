@@ -16,7 +16,7 @@ describe("CheckoutWebhooksMapperTests", () => {
     checkoutWebhooksMapper = app.get<CheckoutWebhooksMapper>(CheckoutWebhooksMapper);
   });
 
-  afterEach(() => { });
+  afterEach(() => {});
 
   it("'convertRawPaymentPendingWebhook' should map all the fields correctly", () => {
     const paymentPendingCompleteWebhookResponse = {
@@ -30,30 +30,32 @@ describe("CheckoutWebhooksMapperTests", () => {
         currency: "USD",
         processed_on: "2022-11-03T16:57:37.169651Z",
         metadata: {
-          order_id: "zpjR4dkqc-K6_LSsijsLv"
+          order_id: "zpjR4dkqc-K6_LSsijsLv",
         },
         event_links: {
           payment: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji",
-          payment_actions: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions"
-        }
+          payment_actions: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions",
+        },
       },
       _links: {
         self: {
-          href: "https://api.sandbox.checkout.com/workflows/events/evt_3anivkerwvgetnqszdhepxu2cy"
+          href: "https://api.sandbox.checkout.com/workflows/events/evt_3anivkerwvgetnqszdhepxu2cy",
         },
         subject: {
-          href: "https://api.sandbox.checkout.com/workflows/events/subject/pay_7qnriezymq4unojyzmc2zwvuji"
+          href: "https://api.sandbox.checkout.com/workflows/events/subject/pay_7qnriezymq4unojyzmc2zwvuji",
         },
         payment: {
-          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji"
+          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji",
         },
         payment_actions: {
-          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions"
-        }
-      }
+          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions",
+        },
+      },
     };
 
-    const convertedData: PaymentPendingWebhookData = checkoutWebhooksMapper.convertRawPaymentPendingWebhook(paymentPendingCompleteWebhookResponse.data);
+    const convertedData: PaymentPendingWebhookData = checkoutWebhooksMapper.convertRawPaymentPendingWebhook(
+      paymentPendingCompleteWebhookResponse.data,
+    );
 
     expect(convertedData).toStrictEqual({
       paymentID: "pay_7qnriezymq4unojyzmc2zwvuji",
@@ -76,31 +78,32 @@ describe("CheckoutWebhooksMapperTests", () => {
         amount: 5000,
         processed_on: "2022-11-03T16:57:39.250567+00:00",
         metadata: {
-          order_id: "zpjR4dkqc-K6_LSsijsLv"
+          order_id: "zpjR4dkqc-K6_LSsijsLv",
         },
         currency: "USD",
         event_links: {
           payment: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji",
-          payment_actions: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions"
-        }
+          payment_actions: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions",
+        },
       },
       _links: {
         self: {
-          href: "https://api.sandbox.checkout.com/workflows/events/evt_yyvffzmke7cuzgpbimbojave7a"
+          href: "https://api.sandbox.checkout.com/workflows/events/evt_yyvffzmke7cuzgpbimbojave7a",
         },
         subject: {
-          href: "https://api.sandbox.checkout.com/workflows/events/subject/pay_7qnriezymq4unojyzmc2zwvuji"
+          href: "https://api.sandbox.checkout.com/workflows/events/subject/pay_7qnriezymq4unojyzmc2zwvuji",
         },
         payment: {
-          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji"
+          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji",
         },
         payment_actions: {
-          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions"
-        }
-      }
+          href: "https://api.sandbox.checkout.com/payments/pay_7qnriezymq4unojyzmc2zwvuji/actions",
+        },
+      },
     };
 
-    const convertedData: PaymentCapturePendingWebhookData = checkoutWebhooksMapper.convertRawPaymentCapturePendingWebhook(paymentCapturePendingCompleteWebhookResponse.data);
+    const convertedData: PaymentCapturePendingWebhookData =
+      checkoutWebhooksMapper.convertRawPaymentCapturePendingWebhook(paymentCapturePendingCompleteWebhookResponse.data);
 
     expect(convertedData).toStrictEqual({
       paymentID: "pay_7qnriezymq4unojyzmc2zwvuji",

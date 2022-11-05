@@ -4,6 +4,7 @@
 import type { DeviceVerificationResponseDTO } from "../models/DeviceVerificationResponseDTO";
 import type { DocumentVerificationResultDTO } from "../models/DocumentVerificationResultDTO";
 import type { IDVerificationRequestDTO } from "../models/IDVerificationRequestDTO";
+import type { IDVerificationURLResponseDTO } from "../models/IDVerificationURLResponseDTO";
 import type { VerificationResultDTO } from "../models/VerificationResultDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -196,32 +197,49 @@ export class VerificationService {
   }
 
   /**
-   * Submits information to retrieve a URL for identity verification
-   * @returns string Document verification KYC URL
+   * Retrieves a URL for identity verification
+   * @returns IDVerificationURLResponseDTO Document verification KYC URL details
    * @throws ApiError
    */
   public static getIdentityDocumentVerificationUrl({
     xNobaApiKey,
     sessionKey,
-    requestBack,
-    requestSelfie,
     requestPoa,
+    requestSelfie,
+    requestBack,
+    locale,
     xNobaSignature,
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
+    /**
+     * Unique verification key for this session
+     */
     sessionKey: string;
-    requestBack: boolean;
-    requestSelfie: boolean;
+    /**
+     * Request proof of address
+     */
     requestPoa: boolean;
+    /**
+     * Request a selfie photo
+     */
+    requestSelfie: boolean;
+    /**
+     * Request photo of back of ID
+     */
+    requestBack: boolean;
+    /**
+     * Unique verification key for this session
+     */
+    locale: "en-us" | "es-419";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<string> {
+  }): CancelablePromise<IDVerificationURLResponseDTO> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "GET",
       url: "/v1/verify/document/url",
       headers: {
         "x-noba-api-key": xNobaApiKey,
@@ -230,9 +248,10 @@ export class VerificationService {
       },
       query: {
         sessionKey: sessionKey,
-        requestBack: requestBack,
-        requestSelfie: requestSelfie,
         requestPOA: requestPoa,
+        requestSelfie: requestSelfie,
+        requestBack: requestBack,
+        locale: locale,
       },
       errors: {
         400: `Invalid request parameters`,

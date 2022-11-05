@@ -22,6 +22,7 @@ import {
   CaseNotificationWebhookRequest,
   CaseStatus,
   DocumentVerificationWebhookRequest,
+  IdentityDocumentURLResponse,
 } from "../integrations/SardineTypeDefinitions";
 import {
   FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
@@ -37,6 +38,7 @@ import { DocumentTypes } from "../domain/DocumentTypes";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -525,18 +527,43 @@ describe("VerificationService", () => {
 
       const sessionKey = "session-key";
 
+      const id = "request-id";
+      const timestamp = new Date().toISOString();
       const url = "http://id-verification-url";
-      when(idvProvider.getIdentityDocumentVerificationURL(sessionKey, consumer, true, true, true)).thenResolve(url);
+      when(
+        idvProvider.getIdentityDocumentVerificationURL(
+          sessionKey,
+          consumer,
+          IDVerificationURLRequestLocale.EN_US,
+          true,
+          true,
+          true,
+        ),
+      ).thenResolve({
+        id: id,
+        link: {
+          expiredAt: timestamp,
+          url: url,
+        },
+      });
 
+      const expectedResult: IdentityDocumentURLResponse = {
+        id: id,
+        link: {
+          expiredAt: timestamp,
+          url: url,
+        },
+      };
       const result = await verificationService.getDocumentVerificationURL(
         sessionKey,
         consumer.props._id,
+        IDVerificationURLRequestLocale.EN_US,
         true,
         true,
         true,
       );
 
-      expect(result).toEqual(url);
+      expect(result).toEqual(expectedResult);
     });
   });
 

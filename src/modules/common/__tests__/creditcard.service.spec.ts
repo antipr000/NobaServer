@@ -5,7 +5,7 @@ import { CreditCardService } from "../creditcard.service";
 import { BINValidity, CardType, CreditCardDTO } from "../dto/CreditCardDTO";
 import { CreditCardBinDataRepo } from "../repo/CreditCardBinDataRepo";
 import { getMockCreditCardBinDataRepoMockWithDefaults } from "../mocks/mock.creditcard.bin.data.repo";
-import { anything, deepEqual, instance, when } from "ts-mockito";
+import { anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { CreditCardBinData } from "../domain/CreditCardBinData";
 import { BadRequestException } from "@nestjs/common";
 
@@ -132,6 +132,46 @@ describe("CreditCardService", () => {
       );
       const isSupported = await creditCardService.isBINSupported("123");
       expect(isSupported).toEqual(BINValidity.NOT_SUPPORTED);
+    });
+  });
+
+  describe("addOrUpdateBinData", () => {
+    it("should call addBinData when bin data does not exist", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "42424",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(undefined);
+
+      when(creditCardBinDataRepo.add(anything())).thenResolve(creditCardData);
+
+      await creditCardService.addOrUpdateBinData(creditCardDTO);
+      verify(creditCardBinDataRepo.add(deepEqual(creditCardData))).once();
+    });
+
+    it("should call updateBINData when bin data does not exist", async () => {
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "42424",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+      };
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(creditCardData);
+
+      when(creditCardBinDataRepo.update(anything())).thenResolve(creditCardData);
+
+      await creditCardService.addOrUpdateBinData(creditCardDTO);
+      verify(creditCardBinDataRepo.update(deepEqual(creditCardData))).once();
     });
   });
 

@@ -2,6 +2,7 @@ import { MongoClient } from "mongodb";
 import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
 import CryptoJS from "crypto-js";
+import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
 
 export const fetchOtpFromDb = async (mongoUri: string, email: string, identityType: string): Promise<number> => {
   // Setup a mongodb client for interacting with "admins" collection.
@@ -114,6 +115,20 @@ export const loginAndGetResponse = async (
     requestBody: verifyOtpRequestBody,
   })) as VerifyOtpResponseDTO & ResponseStatus;
 };
+
+export async function patchConsumer(consumer: Partial<ConsumerProps>, mongoUri: string) {
+  const mongoClient = new MongoClient(mongoUri);
+  await mongoClient.connect();
+
+  const consumersCollection = mongoClient.db("").collection("consumers");
+  await consumersCollection.findOneAndUpdate(
+    { email: consumer.email },
+    {
+      $set: consumer,
+    },
+  );
+  await mongoClient.close();
+}
 
 export const setupPartner = async (mongoUri: string, partnerId: string) => {
   const mongoClient = new MongoClient(mongoUri);

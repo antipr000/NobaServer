@@ -3,15 +3,6 @@
 /* eslint-disable */
 
 export type DocumentVerificationDTO = {
-  documentVerificationStatus?:
-    | "NotRequired"
-    | "Required"
-    | "Pending"
-    | "Approved"
-    | "Rejected"
-    | "Rejected_RequiresRecapture"
-    | "Rejected_PoorQuality"
-    | "Rejected_SizeOrType"
-    | "LivePhotoVerified";
+  documentVerificationStatus?: "NotRequired" | "NotSubmitted" | "Pending" | "Verified";
   updatedTimestamp?: number;
 };

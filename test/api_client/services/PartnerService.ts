@@ -266,6 +266,38 @@ export class PartnerService {
   }
 
   /**
+   * Gets all consumers for the partner
+   * @returns PartnerAdminDTO All consumers of the partner
+   * @throws ApiError
+   */
+  public static getAllPartnerConsumers({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<PartnerAdminDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/partners/consumers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+        403: `User lacks permission to retrieve partner admin list`,
+      },
+    });
+  }
+
+  /**
    * Get all transactions for the given partner
    * @returns TransactionsQueryResultsDTO All transactions for the partner
    * @throws ApiError

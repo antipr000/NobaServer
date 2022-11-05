@@ -77,7 +77,7 @@ export interface FiatPaymentInfo {
   paymentID?: string;
   isSettled: boolean;
   details: ACHPaymentStatus[];
-};
+}
 
 export interface ACHPaymentStatus {
   status: ACHStatus;
@@ -85,7 +85,7 @@ export interface ACHPaymentStatus {
   amount: number;
   currency: string;
   otherDetails: string;
-};
+}
 
 export enum ACHStatus {
   // Checkout ACKed the payment

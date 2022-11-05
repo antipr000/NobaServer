@@ -40,6 +40,7 @@ import { Logger } from "winston";
 import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { RetrieveAccountDataResponse, BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
+import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -190,17 +191,18 @@ export class Sardine implements IDVProvider {
   async getIdentityDocumentVerificationURL(
     sessionKey: string,
     consumer: Consumer,
+    locale: IDVerificationURLRequestLocale,
     idBack: boolean,
     selfie: boolean,
     poa: boolean,
-  ): Promise<string> {
+  ): Promise<IdentityDocumentURLResponse> {
     try {
       const requestData: IdentityDocumentURLRequest = {
         sessionKey: sessionKey,
         idback: idBack,
         selfie: selfie,
         poa: poa,
-        locale: "en-US", // Hard-code for English language for now
+        locale: locale,
         inputData: {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
@@ -219,7 +221,7 @@ export class Sardine implements IDVProvider {
         requestData,
         this.getAxiosConfig(),
       );
-      return (data as IdentityDocumentURLResponse).link.url;
+      return data as IdentityDocumentURLResponse;
     } catch (e) {
       this.logger.error(`Sardine request failed for get identity document URL. Result: ${e}`);
       throw new InternalServerErrorException("Unable to retrieve URL at this time");
@@ -247,7 +249,7 @@ export class Sardine implements IDVProvider {
         accessToken: paymentMethod.achData.accessToken,
       });
 
-      let accountType: string = "";
+      let accountType = "";
       switch (accountData.accountType) {
         case BankAccountType.CHECKING:
           accountType = "checking";

@@ -7,7 +7,7 @@ import { CheckoutClient } from "./checkout.client";
 import { PlaidClient } from "./plaid.client";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
-// This is made to ensure that the "webhooks" are correctly registered 
+// This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
 export const CheckoutClientProvider: Provider = {
   provide: CheckoutClient,
@@ -19,8 +19,8 @@ export const CheckoutClientProvider: Provider = {
     console.log("Something ...");
     return checkoutClient;
   },
-  inject: [CustomConfigService]
-}
+  inject: [CustomConfigService],
+};
 
 @Module({
   imports: [ConfigModule, CommonModule, NotificationsModule],
@@ -28,4 +28,4 @@ export const CheckoutClientProvider: Provider = {
   providers: [CheckoutClientProvider, PlaidClient, PaymentService],
   exports: [CheckoutClient, PlaidClient, PaymentService],
 })
-export class PspModule { }
+export class PspModule {}

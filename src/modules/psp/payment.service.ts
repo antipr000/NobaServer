@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
-import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
 import {
   REASON_CODE_SOFT_DECLINE_BANK_ERROR,
@@ -15,7 +15,7 @@ import { CardFailureExceptionText, CardProcessingException } from "../consumer/C
 import { BINValidity, CardType, CreditCardDTO } from "../common/dto/CreditCardDTO";
 import { CreditCardService } from "../common/creditcard.service";
 import { CheckoutResponseData } from "../common/domain/CheckoutResponseData";
-import { AddCreditCardPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
+import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
 import { Transaction } from "../transactions/domain/Transaction";
 import { PaymentRequestResponse, FiatTransactionStatus } from "../consumer/domain/Types";
 import { Utils } from "../../core/utils/Utils";
@@ -28,6 +28,8 @@ import { CheckoutClient } from "./checkout.client";
 import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodResponse";
 import { HandlePaymentResponse } from "./domain/CardServiceTypes";
 import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
+import { PlaidClient } from "./plaid.client";
+import { RetrieveAccountDataResponse, TokenProcessor } from "./domain/PlaidTypes";
 
 @Injectable()
 export class PaymentService {
@@ -42,6 +44,9 @@ export class PaymentService {
 
   @Inject()
   private readonly checkoutService: CheckoutClient;
+
+  @Inject()
+  private readonly plaidClient: PlaidClient;
 
   /**
    * Checks if consumer already has account with PSP. If not creates the account
@@ -63,11 +68,24 @@ export class PaymentService {
     }
   }
 
-  public async addCreditCardPaymentMethod(
+  public async addPaymentMethod(
     consumer: Consumer,
     paymentMethod: AddPaymentMethodDTO,
     partnerId: string,
-  ): Promise<AddCreditCardPaymentMethodResponse> {
+  ): Promise<AddPaymentMethodResponse> {
+    switch (paymentMethod.type) {
+      case PaymentType.CARD:
+        return this.addCreditCardPaymentMethod(consumer, paymentMethod, partnerId);
+      case PaymentType.ACH:
+        return this.addACHPaymentMethod(consumer, paymentMethod);
+    }
+  }
+
+  private async addCreditCardPaymentMethod(
+    consumer: Consumer,
+    paymentMethod: AddPaymentMethodDTO,
+    partnerId: string,
+  ): Promise<AddPaymentMethodResponse> {
     let creditCardBinData: CreditCardDTO;
 
     const [checkoutCustomerID, hasCustomerIDSaved] = await this.createPspConsumerAccount(consumer);
@@ -183,128 +201,169 @@ export class PaymentService {
         newPaymentMethod.status = response.paymentMethodStatus;
       }
 
-      let updatedConsumerProps: ConsumerProps;
-      if (hasCustomerIDSaved) {
-        updatedConsumerProps = {
-          ...consumer.props,
-          paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
-        };
-      } else {
-        updatedConsumerProps = {
-          ...consumer.props,
-          paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
-          paymentProviderAccounts: [
-            ...consumer.props.paymentProviderAccounts,
-            {
-              providerID: PaymentProvider.CHECKOUT,
-              providerCustomerID: checkoutCustomerID,
-            },
-          ],
-        };
-      }
-      return {
-        checkoutResponseData: response,
-        updatedConsumerData: updatedConsumerProps,
-        newPaymentMethod: newPaymentMethod,
-      };
+      return this.prepareAddPaymentMethodResponse(
+        consumer,
+        newPaymentMethod,
+        hasCustomerIDSaved,
+        checkoutCustomerID,
+        response,
+      );
     }
   }
 
-  async requestCheckoutPayment(
+  private async addACHPaymentMethod(
+    consumer: Consumer,
+    paymentMethod: AddPaymentMethodDTO,
+  ): Promise<AddPaymentMethodResponse> {
+    const accessToken: string = await this.plaidClient.exchangeForAccessToken({
+      publicToken: paymentMethod.achDetails.token,
+    });
+    const accountData: RetrieveAccountDataResponse = await this.plaidClient.retrieveAccountData({
+      accessToken: accessToken,
+    });
+    const processorToken: string = await this.plaidClient.createProcessorToken({
+      accessToken: accessToken,
+      accountID: accountData.accountID,
+      tokenProcessor: TokenProcessor.CHECKOUT,
+    });
+
+    // Create or get Customer ID - even though we don't need it here, this ensures we have one
+    // that we can use by the time we make a payment
+    const [checkoutCustomerID, hasCustomerIDSaved] = await this.createPspConsumerAccount(consumer);
+
+    // const checkoutResponse = await this.checkoutService.performOneDollarACHTransaction(processorToken);
+    // console.log(checkoutResponse);
+    const newPaymentMethod: PaymentMethod = {
+      name: accountData.name,
+      type: PaymentMethodType.ACH,
+      achData: {
+        // TODO(Plaid): Encrypt it.
+        accessToken: accessToken,
+        accountID: accountData.accountID,
+        itemID: accountData.itemID,
+        mask: accountData.mask,
+        accountType: accountData.accountType,
+      },
+      imageUri: paymentMethod.imageUri,
+      paymentProviderID: PaymentProvider.CHECKOUT,
+      paymentToken: processorToken,
+      status: PaymentMethodStatus.APPROVED,
+    };
+
+    return this.prepareAddPaymentMethodResponse(
+      consumer,
+      newPaymentMethod,
+      hasCustomerIDSaved,
+      checkoutCustomerID,
+      null,
+    );
+  }
+
+  public async requestCheckoutPayment(
     consumer: Consumer,
     transaction: Transaction,
     paymentMethod: PaymentMethod,
   ): Promise<PaymentRequestResponse> {
-    if (paymentMethod.type === PaymentMethodType.CARD) {
-      const paymentResponse: PspCardPaymentResponse = await this.checkoutService.makeCardPayment(
-        /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
-        /* currency= */ transaction.props.leg1,
-        /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
-        /* transactionId= */ transaction.props._id,
+    switch (paymentMethod.type) {
+      case PaymentMethodType.CARD:
+        return this.makeCardPayment(consumer, transaction);
+      case PaymentMethodType.ACH:
+        return this.makeACHPayment(consumer, transaction);
+    }
+  }
+
+  private async makeCardPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
+    const paymentResponse: PspCardPaymentResponse = await this.checkoutService.makeCardPayment(
+      /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
+      /* currency= */ transaction.props.leg1,
+      /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
+      /* transactionId= */ transaction.props._id,
+    );
+
+    let creditCardBinData = await this.creditCardService.getBINDetails(paymentResponse.bin);
+
+    if (creditCardBinData === null) {
+      // Record is not in our db. Fetch payment method details from checkout and add entry
+      const paymentMethodResponse = await this.checkoutService.getPaymentMethod(
+        transaction.props.fiatPaymentInfo.paymentMethodID,
       );
+      let cardType = paymentMethodResponse.cardType;
+      const bin = paymentMethodResponse.bin;
+      const scheme = paymentMethodResponse.scheme;
+      const issuer = paymentMethodResponse.issuer; // We will not always have an issuer in the instrument response
 
-      let creditCardBinData = await this.creditCardService.getBINDetails(paymentResponse.bin);
+      const possibleCards = creditCardType(bin);
 
-      if (creditCardBinData === null) {
-        // Record is not in our db. Fetch payment method details from checkout and add entry
-        const paymentMethodResponse = await this.checkoutService.getPaymentMethod(transaction.props.fiatPaymentInfo.paymentMethodID);
-        const cardType = paymentMethodResponse.cardType;
-        const bin = paymentMethodResponse.bin;
-        const scheme = paymentMethodResponse.scheme;
-        const issuer = paymentMethodResponse.issuer; // We will not always have an issuer in the instrument response
-
-        const possibleCards = creditCardType(bin);
-
-        if (possibleCards.length > 1) {
-          console.log("More than one possible card type for given bin: " + JSON.stringify(possibleCards));
-        }
-
-        const card = possibleCards[0];
-
-        creditCardBinData = {
-          issuer: issuer,
-          bin: bin,
-          type:
-            cardType === null || cardType === undefined
-              ? undefined
-              : cardType.toLocaleLowerCase() === "credit"
-                ? CardType.CREDIT
-                : CardType.DEBIT,
-          network: scheme,
-          supported: BINValidity.SUPPORTED,
-          digits: card.lengths[0],
-          cvvDigits: card.code[Utils.getCodeTypeFromCardScheme(card.type)],
-        };
-
-        this.logger.info(`Adding BIN data: ${JSON.stringify(creditCardBinData, null, 1)}`);
-        creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);
+      if (possibleCards.length > 1) {
+        console.log("More than one possible card type for given bin: " + JSON.stringify(possibleCards));
       }
 
-      const response = await this.handlePaymentResponse({
-        consumer: consumer,
-        paymentResponse: paymentResponse,
-        instrumentID: transaction.props.fiatPaymentInfo.paymentMethodID,
-        cardNumber: null,
-        sessionID: transaction.props.sessionKey,
-        transactionID: transaction.props.transactionID,
-        partnerID: transaction.props.partnerID,
-        binData: creditCardBinData,
-      });
+      const card = possibleCards[0];
 
-      switch (response.paymentMethodStatus) {
-        case PaymentMethodStatus.APPROVED:
-          return { status: response.paymentMethodStatus, paymentID: paymentResponse.id };
-        case PaymentMethodStatus.REJECTED:
-          return {
-            status: response.paymentMethodStatus,
-            responseCode: response.responseCode,
-            responseSummary: response.responseSummary,
-          };
-        case PaymentMethodStatus.FLAGGED:
-        // TODO: Don't yet have a use for this?
+      if (cardType) {
+        cardType = cardType.toLocaleLowerCase() === "credit" ? CardType.CREDIT : CardType.DEBIT;
       }
-    } else {
-      const response: PspACHPaymentResponse = await this.checkoutService.makeACHPayment(
-        /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
-        /* currency= */ transaction.props.leg1,
-        /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
-        /* transactionId= */ transaction.props._id,
-      );
 
-      if (response.status !== "Pending") {
+      creditCardBinData = {
+        issuer: issuer,
+        bin: bin,
+        type: cardType as CardType,
+        network: scheme,
+        supported: BINValidity.SUPPORTED,
+        digits: card.lengths[0],
+        cvvDigits: card.code[Utils.getCodeTypeFromCardScheme(card.type)],
+      };
+
+      this.logger.info(`Adding BIN data: ${JSON.stringify(creditCardBinData, null, 1)}`);
+      creditCardBinData = await this.creditCardService.addBinData(creditCardBinData);
+    }
+
+    const response = await this.handlePaymentResponse({
+      consumer: consumer,
+      paymentResponse: paymentResponse,
+      instrumentID: transaction.props.fiatPaymentInfo.paymentMethodID,
+      cardNumber: null,
+      sessionID: transaction.props.sessionKey,
+      transactionID: transaction.props.transactionID,
+      partnerID: transaction.props.partnerID,
+      binData: creditCardBinData,
+    });
+
+    switch (response.paymentMethodStatus) {
+      case PaymentMethodStatus.APPROVED:
+        return { status: response.paymentMethodStatus, paymentID: paymentResponse.id };
+      case PaymentMethodStatus.REJECTED:
         return {
-          paymentID: response.id,
-          status: PaymentMethodStatus.REJECTED,
-          responseCode: response.response_code,
+          status: response.paymentMethodStatus,
+          responseCode: response.responseCode,
+          responseSummary: response.responseSummary,
         };
-      }
+      case PaymentMethodStatus.FLAGGED:
+      // TODO: Don't yet have a use for this?
+    }
+  }
 
+  private async makeACHPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
+    const response: PspACHPaymentResponse = await this.checkoutService.makeACHPayment(
+      /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
+      /* currency= */ transaction.props.leg1,
+      /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
+      /* transactionId= */ transaction.props._id,
+    );
+
+    if (response.status !== "Pending") {
       return {
         paymentID: response.id,
-        status: PaymentMethodStatus.APPROVED,
+        status: PaymentMethodStatus.REJECTED,
         responseCode: response.response_code,
       };
     }
+
+    return {
+      paymentID: response.id,
+      status: PaymentMethodStatus.APPROVED,
+      responseCode: response.response_code,
+    };
   }
 
   async getFiatPaymentStatus(paymentId: string): Promise<FiatTransactionStatus> {
@@ -320,6 +379,39 @@ export class PaymentService {
 
   async removePaymentMethod(paymentToken: string): Promise<void> {
     await this.checkoutService.removePaymentMethod(paymentToken);
+  }
+
+  private async prepareAddPaymentMethodResponse(
+    consumer: Consumer,
+    newPaymentMethod: PaymentMethod,
+    hasCustomerIDSaved: boolean,
+    checkoutCustomerID: string,
+    checkoutResponse: CheckoutResponseData,
+  ): Promise<AddPaymentMethodResponse> {
+    let updatedConsumerProps: ConsumerProps;
+    if (hasCustomerIDSaved) {
+      updatedConsumerProps = {
+        ...consumer.props,
+        paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+      };
+    } else {
+      updatedConsumerProps = {
+        ...consumer.props,
+        paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+        paymentProviderAccounts: [
+          ...consumer.props.paymentProviderAccounts,
+          {
+            providerID: PaymentProvider.CHECKOUT,
+            providerCustomerID: checkoutCustomerID,
+          },
+        ],
+      };
+    }
+    return {
+      checkoutResponseData: checkoutResponse,
+      updatedConsumerData: updatedConsumerProps,
+      newPaymentMethod: newPaymentMethod,
+    };
   }
 
   private async handlePaymentResponse({
@@ -338,48 +430,35 @@ export class PaymentService {
     let sendNobaEmail = false;
 
     try {
-      const creditCardBinData = await this.creditCardService.getBINDetails(binData.bin);
+      let creditCardBinData = await this.creditCardService.getBINDetails(binData.bin);
+      if (!creditCardBinData) creditCardBinData = binData;
+
       if (!response.responseCode) {
         this.logger.error(`No response code received validating card instrument ${instrumentID}`);
         throw new CardProcessingException(CardFailureExceptionText.ERROR);
       } else if (response.responseCode.startsWith("10")) {
         // If reqeust payment was successful
         response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
-        if (cardNumber !== null) {
-          if (creditCardBinData === null) {
-            // Record is not there in our db. Add it
-            binData.supported = BINValidity.SUPPORTED;
-            await this.creditCardService.addBinData(binData);
-          } else {
-            // Record is already there. Update bin validity
-            creditCardBinData.supported = BINValidity.SUPPORTED;
-            await this.creditCardService.updateBinData(creditCardBinData);
-          }
+        if (cardNumber) {
+          creditCardBinData.supported = BINValidity.SUPPORTED;
+          await this.creditCardService.addOrUpdateBinData(creditCardBinData);
         }
       } else if (response.responseCode.startsWith("20")) {
         // Soft decline, with several categories
-        if (REASON_CODE_SOFT_DECLINE_CARD_ERROR.indexOf(response.responseCode) > -1) {
+        if (
+          [...REASON_CODE_SOFT_DECLINE_CARD_ERROR, ...REASON_CODE_SOFT_DECLINE_BANK_ERROR].indexOf(
+            response.responseCode,
+          ) > -1
+        ) {
           // Card error, possibly bad number, user should confirm details
           throw new CardProcessingException(
             CardFailureExceptionText.SOFT_DECLINE,
             response.responseCode,
             response.responseSummary,
           );
-        } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR.indexOf(response.responseCode) > -1) {
-          throw new CardProcessingException(
-            CardFailureExceptionText.SOFT_DECLINE,
-            response.responseCode,
-            response.responseSummary,
-          );
         } else if (REASON_CODE_SOFT_DECLINE_NO_CRYPTO.indexOf(response.responseCode) > -1) {
-          if (creditCardBinData === null) {
-            // Bin data is not there. Add it
-            binData.supported = BINValidity.NOT_SUPPORTED;
-            await this.creditCardService.addBinData(binData);
-          } else {
-            creditCardBinData.supported = BINValidity.NOT_SUPPORTED;
-            await this.creditCardService.updateBinData(creditCardBinData);
-          }
+          creditCardBinData.supported = BINValidity.NOT_SUPPORTED;
+          await this.creditCardService.addOrUpdateBinData(creditCardBinData);
           throw new CardProcessingException(
             CardFailureExceptionText.NO_CRYPTO,
             response.responseCode,

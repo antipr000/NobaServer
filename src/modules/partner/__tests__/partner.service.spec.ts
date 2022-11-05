@@ -28,6 +28,8 @@ import {
   PARTNER_PUBLIC_CLOUDFRONT_URL_KEY,
 } from "../../../config/ConfigurationUtils";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
+import { IConsumerRepo } from "../../../../src/modules/consumer/repos/ConsumerRepo";
+import { getMockConsumerRepoWithDefaults } from "../../../../src/modules/consumer/mocks/mock.consumer.repo";
 
 const mS3Instance: any = {};
 
@@ -46,6 +48,8 @@ describe("PartnerService", () => {
   let partnerService: PartnerService;
   let partnerRepo: IPartnerRepo;
   let transactionRepo: ITransactionRepo;
+  let consumerRepo: IConsumerRepo;
+
   const transactionMapper = new TransactionMapper();
 
   jest.setTimeout(20000);
@@ -54,6 +58,7 @@ describe("PartnerService", () => {
   beforeEach(async () => {
     partnerRepo = getMockPartnerRepoWithDefaults();
     transactionRepo = getMockTransactionRepoWithDefaults();
+    consumerRepo = getMockConsumerRepoWithDefaults();
 
     const PartnerRepoProvider = {
       provide: "PartnerRepo",
@@ -68,6 +73,10 @@ describe("PartnerService", () => {
         {
           provide: "TransactionRepo",
           useFactory: () => instance(transactionRepo),
+        },
+        {
+          provide: "ConsumerRepo",
+          useFactory: () => instance(consumerRepo),
         },
       ],
     }).compile();

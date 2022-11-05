@@ -1,14 +1,14 @@
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Result } from "../../../core/logic/Result";
+import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { DBProvider } from "../../../infraproviders/DBProvider";
+import { KmsService } from "../../../modules/common/kms.service";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
-import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { KmsService } from "../../../modules/common/kms.service";
-import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Logger } from "winston";
 
 //TODO figure out a way to create indices using joi schema and joigoose
 @Injectable()
@@ -102,5 +102,16 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
       return this.consumerMapper.toDomain(consumerProps);
     }
+  }
+
+  async getAllConsumersForPartner(partnerID: string): Promise<Consumer[]> {
+    const userModel = await this.dbProvider.getUserModel();
+    const result: any = await userModel
+      .find({
+        "partners.partnerID": partnerID,
+      })
+      .exec();
+    const consumers: Consumer[] = result.map(obj => this.consumerMapper.toDomain(convertDBResponseToJsObject(obj)));
+    return consumers;
   }
 }

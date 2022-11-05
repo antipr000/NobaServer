@@ -42,6 +42,8 @@ import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
 import { PlaidClient } from "../psp/plaid.client";
+import { PhoneVerificationOtpRequest, UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
+import { EmailVerificationOtpRequest, UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -114,6 +116,83 @@ export class ConsumerController {
     };
     const res = await this.consumerService.updateConsumer(consumerProps);
     return this.consumerMapper.toDTO(res);
+  }
+
+  @Patch("/phone")
+  @ApiOperation({ summary: "Adds or updates phone number of logged in user with OTP" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerDTO,
+    description: "Updated the user's phone number",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async updatePhone(@Request() request, @Body() requestBody: UserPhoneUpdateRequest): Promise<ConsumerDTO> {
+    const consumer = request.user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    const res = await this.consumerService.updateConsumerPhone(consumer, requestBody);
+    return this.consumerMapper.toDTO(res);
+  }
+
+  @Post("/phone/verify")
+  @ApiOperation({ summary: "Sends OTP to user's phone to verify update of user profile" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "OTP sent to user's phone",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async requestOtpToUpdatePhone(@Request() request, @Body() requestBody: PhoneVerificationOtpRequest) {
+    const consumer = request.user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    await this.consumerService.sendOtpToPhone(requestBody.phone);
+  }
+
+  @Patch("/email")
+  @ApiOperation({ summary: "Adds or updates email address of logged in user with OTP" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerDTO,
+    description: "Updated the user's email address",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async updateEmail(@Request() request, @Body() requestBody: UserEmailUpdateRequest): Promise<ConsumerDTO> {
+    const consumer = request.user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    const res = await this.consumerService.updateConsumerEmail(consumer, requestBody);
+    return this.consumerMapper.toDTO(res);
+  }
+
+  @Post("/email/verify")
+  @ApiOperation({ summary: "Sends OTP to user's email to verify update of user profile" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "OTP sent to user's email address",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async requestOtpToUpdateEmail(
+    @Request() request,
+    @Headers() headers,
+    @Body() requestBody: EmailVerificationOtpRequest,
+  ) {
+    const consumer = request.user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+    const partnerID = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY])).props._id;
+
+    await this.consumerService.sendOtpToEmail(requestBody.email, consumer, partnerID);
   }
 
   @Get("/paymentmethods/plaid/token")

@@ -38,7 +38,7 @@ twilio:
   awsSecretNameForAuthToken: "PROD_TWILIO_SECRET"
   SID: "bogus-value"
   authToken: "bogus-value"
-  fromPhoneNumber: "+19894557345"
+  fromPhoneNumber: "+17863055237"
 
 checkout:
   awsSecretNameForPublicKey: "PROD_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

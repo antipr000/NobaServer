@@ -21,6 +21,7 @@ import { VerificationModule } from "./modules/verification/verification.module";
 import { SeederService } from "./infraproviders/seeders/seeder.service";
 import { PartnerModule } from "./modules/partner/partner.module";
 import { MigratorService } from "./infraproviders/migrators/migrator.service";
+import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
@@ -50,7 +51,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   const configService = app.get(CustomConfigService);
 
   const apiPrefix = configService.get<string>("apiPrefix");
-  const appEnvType = configService.get<string>("envType");
+  const appEnvType: AppEnvironment = getEnvironmentName();
   winstonLogger.info("Setting API prefix to " + apiPrefix + ", app environment is " + appEnvType);
 
   app.enableCors(); //allowing all origins for now but in future we can dynamically set allowed origins based on the environment (localhost:3000, noba.com etc)
@@ -66,8 +67,28 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
 
   // https://docs.nestjs.com/openapi/introduction
 
+  const apiSubDomain = `api-${appEnvType == AppEnvironment.AWSDEV ? "dev" : appEnvType}`; // configured in api-gateway
+
+  winstonLogger.info("Api subdomain for current environment is " + apiSubDomain);
+
   // Config and doc generation options for PUBLIC-facing APIs
   const publicConfig = new DocumentBuilder()
+    .setTitle("Noba Server")
+    .setDescription(`Noba Server API (${appEnvType.toUpperCase()})`)
+    .setVersion("1.0")
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+      "JWT-auth",
+    )
+    .addServer(`https://${apiSubDomain}.noba.com/`)
+    .build();
+
+  // need to generate swagger doc for to generate api docs for partners from generated swagger so need to hardcode the server path
+  const partnerConfig = new DocumentBuilder()
     .setTitle("Noba Server")
     .setDescription(`Noba Server API (${appEnvType.toUpperCase()})`)
     .setVersion("1.0")
@@ -108,6 +129,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
 
+  const swaggerDocumentPartner = generateSwaggerDoc("swagger-partner.json", app, partnerConfig, publicOptions);
   const swaggerDocumentPublic = generateSwaggerDoc("swagger.json", app, publicConfig, publicOptions);
   const swaggerDocumentPrivate = generateSwaggerDoc("swagger-internal.json", app, privateConfig, privateOptions);
 

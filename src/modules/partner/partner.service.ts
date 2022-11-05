@@ -1,24 +1,26 @@
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { Partner, PartnerWebhook } from "./domain/Partner";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Logger } from "winston";
-import { IPartnerRepo } from "./repo/PartnerRepo";
-import { WebhookType } from "./domain/WebhookTypes";
-import { CreatePartnerRequest } from "./dto/ServiceTypes";
-import { UpdatePartnerRequestDTO } from "./dto/UpdatePartnerRequestDTO";
-import { TransactionFilterOptions } from "../transactions/domain/Types";
-import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { TransactionDTO } from "../transactions/dto/TransactionDTO";
-import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
-import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
-import { PartnerLogoUploadRequestDTO } from "./dto/PartnerLogoUploadRequestDTO";
 import { S3 } from "aws-sdk";
-import { BadRequestError } from "../../core/exception/CommonAppException";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import sharp from "sharp";
+import { Logger } from "winston";
+import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
 import { getEnvironmentName, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { Entity } from "../../core/domain/Entity";
+import { BadRequestError } from "../../core/exception/CommonAppException";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
+import { Consumer } from "../consumer/domain/Consumer";
+import { IConsumerRepo } from "../consumer/repos/ConsumerRepo";
+import { TransactionFilterOptions } from "../transactions/domain/Types";
+import { TransactionDTO } from "../transactions/dto/TransactionDTO";
+import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
+import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
+import { Partner, PartnerWebhook } from "./domain/Partner";
+import { WebhookType } from "./domain/WebhookTypes";
+import { PartnerLogoUploadRequestDTO } from "./dto/PartnerLogoUploadRequestDTO";
+import { CreatePartnerRequest } from "./dto/ServiceTypes";
+import { UpdatePartnerRequestDTO } from "./dto/UpdatePartnerRequestDTO";
+import { IPartnerRepo } from "./repo/PartnerRepo";
 
 @Injectable()
 export class PartnerService {
@@ -30,6 +32,9 @@ export class PartnerService {
 
   @Inject("TransactionRepo")
   private readonly transactionRepo: ITransactionRepo;
+
+  @Inject("ConsumerRepo")
+  private readonly consumerRepo: IConsumerRepo;
 
   private readonly transactionMapper: TransactionMapper;
 
@@ -217,5 +222,10 @@ export class PartnerService {
 
     const s3 = new S3();
     return await s3.upload(s3Params).promise();
+  }
+
+  async getAllPartnerConsumers(partnerId: string): Promise<Consumer[]> {
+    const partnerConsumers: Consumer[] = await this.consumerRepo.getAllConsumersForPartner(partnerId);
+    return partnerConsumers;
   }
 }

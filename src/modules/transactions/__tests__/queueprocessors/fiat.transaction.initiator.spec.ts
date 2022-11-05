@@ -95,7 +95,7 @@ describe("FiatTransactionInitiator", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiator, anything())).thenReturn({
-      start: () => { },
+      start: () => {},
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({

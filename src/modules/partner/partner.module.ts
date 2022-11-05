@@ -1,16 +1,17 @@
 import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { ConfigModule } from "@nestjs/config";
+import { ConsumerRepoModule } from "../consumer/repos/consumer.repo.module";
+import { TransactionRepoModule } from "../transactions/repo/transaction.repo.module";
+import { PartnerController } from "./partner.controller";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
-import { PartnerController } from "./partner.controller";
-import { MongoDBPartnerRepo } from "./repo/MongoDBPartnerRepo";
 import { MongoDBPartnerAdminRepo } from "./repo/MongoDBPartnerAdminRepo";
-import { TransactionRepoModule } from "../transactions/repo/transaction.repo.module";
+import { MongoDBPartnerRepo } from "./repo/MongoDBPartnerRepo";
 
 @Module({
-  imports: [InfraProvidersModule, ConfigModule, TransactionRepoModule],
+  imports: [InfraProvidersModule, ConfigModule, TransactionRepoModule, ConsumerRepoModule],
   controllers: [PartnerController],
   providers: [
     DBProvider,

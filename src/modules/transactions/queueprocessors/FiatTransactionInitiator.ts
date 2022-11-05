@@ -132,7 +132,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
       } else {
         await this.processFailure(
           TransactionStatus.FIAT_INCOMING_FAILED,
-          `Error processing fiat transaction`,
+          "Error processing fiat transaction",
           transaction,
         );
       }

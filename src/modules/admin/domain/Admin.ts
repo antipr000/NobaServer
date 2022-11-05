@@ -17,6 +17,12 @@ const Permissions = {
   updateConsumerData: "UPDATE_CONSUMER_DATA",
 };
 
+export enum NOBA_ADMIN_ROLE_TYPES {
+  BASIC = "BASIC",
+  INTERMEDIATE = "INTERMEDIATE",
+  ADMIN = "ADMIN",
+}
+
 const AdminRolesWithTheirPrivileges = {
   BASIC: {
     permissions: [Permissions.viewNobaDashboard, Permissions.viewConsumerSupportTickets],

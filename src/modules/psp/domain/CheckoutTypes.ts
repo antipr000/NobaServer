@@ -13,14 +13,13 @@ export type CheckoutPaymentStatus =
   | "Expired"
   | "Paid";
 
-
 // https://api-reference.checkout.com/#tag/Workflows/paths/~1workflows/get
 export type WorkflowMetadata = {
   id: string;
   name: string;
   active: boolean;
   _links: any;
-}
+};
 
 export type PaymentPendingWebhookData = {
   paymentID: string;
@@ -28,7 +27,7 @@ export type PaymentPendingWebhookData = {
   currency: string;
   processedOn: Date;
   idempotencyID: string;
-}
+};
 
 export type PaymentCapturePendingWebhookData = {
   paymentID: string;
@@ -37,4 +36,4 @@ export type PaymentCapturePendingWebhookData = {
   currency: string;
   processedOn: Date;
   idempotencyID: string;
-}
+};

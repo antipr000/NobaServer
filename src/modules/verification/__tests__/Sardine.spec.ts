@@ -37,13 +37,13 @@ import {
   SardineDocumentProcessingStatus,
   SardineRiskLevels,
 } from "../integrations/SardineTypeDefinitions";
-import { anyNumber, anyString, anything, capture, deepEqual, instance, spy, when } from "ts-mockito";
+import { anything, instance, when } from "ts-mockito";
 import { PaymentMethodType } from "../../consumer/domain/PaymentMethod";
 import { PaymentProvider } from "../../consumer/domain/PaymentProvider";
 import { BankAccountType } from "../../psp/domain/PlaidTypes";
 import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
-import axios from "axios";
+import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -712,7 +712,14 @@ describe("SardineTests", () => {
         dateOfBirth: "1960-12-12",
       });
 
-      const responsePromise = sardine.getIdentityDocumentVerificationURL("session-key", consumer, true, true, true);
+      const responsePromise = sardine.getIdentityDocumentVerificationURL(
+        "session-key",
+        consumer,
+        IDVerificationURLRequestLocale.EN_US,
+        true,
+        true,
+        true,
+      );
 
       expect(mockAxios.post).toHaveBeenCalled();
 
@@ -730,7 +737,7 @@ describe("SardineTests", () => {
       });
 
       const result = await responsePromise;
-      expect(result).toBe(url);
+      expect(result).toBe(response);
     });
 
     it("should throw an Internal Server Error", async () => {
@@ -757,7 +764,14 @@ describe("SardineTests", () => {
 
       mockAxios.post.mockRejectedValueOnce(new Error("Network Error"));
 
-      const responsePromise = sardine.getIdentityDocumentVerificationURL("session-key", consumer, true, true, true);
+      const responsePromise = sardine.getIdentityDocumentVerificationURL(
+        "session-key",
+        consumer,
+        IDVerificationURLRequestLocale.EN_US,
+        true,
+        true,
+        true,
+      );
 
       expect(mockAxios.post).toHaveBeenCalled();
 

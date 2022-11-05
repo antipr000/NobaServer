@@ -28,22 +28,25 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import { Consumer } from "../consumer/domain/Consumer";
+import { ConsumerDTO } from "../consumer/dto/ConsumerDTO";
+import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
+import { TransactionFilterOptions } from "../transactions/domain/Types";
+import { TransactionDTO } from "../transactions/dto/TransactionDTO";
+import { TransactionsQueryResultsDTO } from "../transactions/dto/TransactionsQueryResultsDTO";
 import { Partner } from "./domain/Partner";
 import { PartnerAdmin } from "./domain/PartnerAdmin";
 import { AddPartnerAdminRequestDTO } from "./dto/AddPartnerAdminRequestDTO";
 import { PartnerAdminDTO } from "./dto/PartnerAdminDTO";
 import { PartnerDTO } from "./dto/PartnerDTO";
+import { UpdatePartnerAdminRequestDTO } from "./dto/UpdatePartnerAdminRequestDTO";
 import { UpdatePartnerRequestDTO } from "./dto/UpdatePartnerRequestDTO";
 import { PartnerAdminMapper } from "./mappers/PartnerAdminMapper";
 import { PartnerMapper } from "./mappers/PartnerMapper";
 import { PartnerService } from "./partner.service";
 import { PartnerAdminService } from "./partneradmin.service";
-import { UpdatePartnerAdminRequestDTO } from "./dto/UpdatePartnerAdminRequestDTO";
-import { TransactionsQueryResultsDTO } from "../transactions/dto/TransactionsQueryResultsDTO";
-import { TransactionFilterOptions } from "../transactions/domain/Types";
-import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { PartnerLogoUploadRequestDTO } from "./dto/PartnerLogoUploadRequestDTO";
 
@@ -56,12 +59,15 @@ export class PartnerController {
   private readonly logger: Logger;
   private readonly partnerMapper: PartnerMapper;
   private readonly partnerAdminMapper: PartnerAdminMapper;
+  private readonly consumerMapper: ConsumerMapper;
+
   constructor(
     private readonly partnerService: PartnerService,
     private readonly partnerAdminService: PartnerAdminService,
   ) {
     this.partnerMapper = new PartnerMapper();
     this.partnerAdminMapper = new PartnerAdminMapper();
+    this.consumerMapper = new ConsumerMapper();
   }
 
   @Get("/")
@@ -204,6 +210,25 @@ export class PartnerController {
       partnerAdminID,
     );
     return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
+  }
+
+  @Get("/consumers")
+  @ApiOperation({ summary: "Gets all consumers for the partner" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [PartnerAdminDTO],
+    description: "All consumers of the partner",
+  })
+  @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin list" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getAllPartnerConsumers(@Request() request): Promise<ConsumerDTO[]> {
+    const requestUser = request.user.entity;
+    if (!(requestUser instanceof PartnerAdmin)) {
+      throw new ForbiddenException("Only partner admins can access this endpoint");
+    }
+    if (!requestUser.canGetAllConsumers()) throw new ForbiddenException();
+    const partnerConsumers: Consumer[] = await this.partnerService.getAllPartnerConsumers(requestUser.props.partnerId);
+    return partnerConsumers.map(partnerConsumer => this.consumerMapper.toDTO(partnerConsumer));
   }
 
   @Get("/transactions")

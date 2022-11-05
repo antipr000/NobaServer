@@ -85,7 +85,7 @@ describe("FiatTransactionInitiator", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiated, anything())).thenReturn({
-      start: () => { },
+      start: () => {},
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -160,7 +160,10 @@ describe("FiatTransactionInitiator", () => {
       _id: transaction.props._id as any,
     });
     when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.fiatPaymentInfo.paymentMethodID),
+      consumerService.getPaymentMethodProvider(
+        transaction.props.userId,
+        transaction.props.fiatPaymentInfo.paymentMethodID,
+      ),
     ).thenResolve(PaymentProvider.CHECKOUT);
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.CAPTURED,
@@ -254,7 +257,10 @@ describe("FiatTransactionInitiator", () => {
       _id: transaction.props._id as any,
     });
     when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.fiatPaymentInfo.paymentMethodID),
+      consumerService.getPaymentMethodProvider(
+        transaction.props.userId,
+        transaction.props.fiatPaymentInfo.paymentMethodID,
+      ),
     ).thenResolve(PaymentProvider.CHECKOUT);
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.FAILED,
@@ -303,7 +309,10 @@ describe("FiatTransactionInitiator", () => {
     });
 
     when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.fiatPaymentInfo.paymentMethodID),
+      consumerService.getPaymentMethodProvider(
+        transaction.props.userId,
+        transaction.props.fiatPaymentInfo.paymentMethodID,
+      ),
     ).thenResolve(PaymentProvider.CHECKOUT);
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.PENDING,

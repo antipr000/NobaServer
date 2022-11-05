@@ -1,5 +1,5 @@
-import { Consumer } from "../domain/Consumer";
 import { Result } from "../../../core/logic/Result";
+import { Consumer } from "../domain/Consumer";
 
 export interface IConsumerRepo {
   getConsumer(consumerID: string): Promise<Consumer>;
@@ -9,4 +9,5 @@ export interface IConsumerRepo {
   getConsumerByEmail(email: string): Promise<Result<Consumer>>;
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
   updateConsumer(consumer: Consumer): Promise<Consumer>;
+  getAllConsumersForPartner(partnerID: string): Promise<Consumer[]>;
 }

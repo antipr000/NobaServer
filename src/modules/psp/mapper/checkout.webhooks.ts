@@ -30,4 +30,4 @@ export class CheckoutWebhooksMapper {
       idempotencyID: data.metadata.order_id,
     };
   }
-};
+}

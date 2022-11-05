@@ -1442,27 +1442,29 @@ describe("TransactionService", () => {
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
-        _id: consumerId,
-        email: "test@noba.com",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
+      when(consumerService.getConsumer(consumerId)).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerId,
+          email: "test@noba.com",
+          partners: [
+            {
+              partnerID: partnerId,
             },
-            imageUri: "fake-uri",
-          },
-        ]
-      }));
+          ],
+          paymentMethods: [
+            {
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
+              paymentToken: paymentToken,
+              cardData: {
+                first6Digits: "123456",
+                last4Digits: "7890",
+              },
+              imageUri: "fake-uri",
+            },
+          ],
+        }),
+      );
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -1508,27 +1510,29 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
-        _id: consumerId,
-        email: "test@noba.com",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
+      when(consumerService.getConsumer(consumerId)).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerId,
+          email: "test@noba.com",
+          partners: [
+            {
+              partnerID: partnerId,
             },
-            imageUri: "fake-uri",
-          },
-        ]
-      }));
+          ],
+          paymentMethods: [
+            {
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
+              paymentToken: paymentToken,
+              cardData: {
+                first6Digits: "123456",
+                last4Digits: "7890",
+              },
+              imageUri: "fake-uri",
+            },
+          ],
+        }),
+      );
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1647,27 +1651,29 @@ describe("TransactionService", () => {
       const exchangeRate = 1000;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
-        _id: consumerId,
-        email: "test@noba.com",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
+      when(consumerService.getConsumer(consumerId)).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerId,
+          email: "test@noba.com",
+          partners: [
+            {
+              partnerID: partnerId,
             },
-            imageUri: "fake-uri",
-          },
-        ]
-      }));
+          ],
+          paymentMethods: [
+            {
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
+              paymentToken: paymentToken,
+              cardData: {
+                first6Digits: "123456",
+                last4Digits: "7890",
+              },
+              imageUri: "fake-uri",
+            },
+          ],
+        }),
+      );
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1828,27 +1834,29 @@ describe("TransactionService", () => {
       const exchangeRate = 1000;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
-        _id: consumerId,
-        email: "test@noba.com",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
+      when(consumerService.getConsumer(consumerId)).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerId,
+          email: "test@noba.com",
+          partners: [
+            {
+              partnerID: partnerId,
             },
-            imageUri: "fake-uri",
-          },
-        ]
-      }));
+          ],
+          paymentMethods: [
+            {
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
+              paymentToken: paymentToken,
+              cardData: {
+                first6Digits: "123456",
+                last4Digits: "7890",
+              },
+              imageUri: "fake-uri",
+            },
+          ],
+        }),
+      );
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -2012,27 +2020,29 @@ describe("TransactionService", () => {
       const initialQuotedConversionRate = 1600;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
-        _id: consumerId,
-        email: "test@noba.com",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
+      when(consumerService.getConsumer(consumerId)).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerId,
+          email: "test@noba.com",
+          partners: [
+            {
+              partnerID: partnerId,
             },
-            imageUri: "fake-uri",
-          },
-        ]
-      }));
+          ],
+          paymentMethods: [
+            {
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
+              paymentToken: paymentToken,
+              cardData: {
+                first6Digits: "123456",
+                last4Digits: "7890",
+              },
+              imageUri: "fake-uri",
+            },
+          ],
+        }),
+      );
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -2195,27 +2205,29 @@ describe("TransactionService", () => {
       const initialQuotedConversionRate = 1600;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
-        _id: consumerId,
-        email: "test@noba.com",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
+      when(consumerService.getConsumer(consumerId)).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerId,
+          email: "test@noba.com",
+          partners: [
+            {
+              partnerID: partnerId,
             },
-            imageUri: "fake-uri",
-          },
-        ]
-      }));
+          ],
+          paymentMethods: [
+            {
+              type: PaymentMethodType.CARD,
+              paymentProviderID: PaymentProvider.CHECKOUT,
+              paymentToken: paymentToken,
+              cardData: {
+                first6Digits: "123456",
+                last4Digits: "7890",
+              },
+              imageUri: "fake-uri",
+            },
+          ],
+        }),
+      );
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,

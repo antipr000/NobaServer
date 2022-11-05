@@ -11,6 +11,7 @@ import { OtpMapper } from "../mapper/OtpMapper";
 import { MongoDBOtpRepo } from "../repo/MongoDBOtpRepo";
 import { IdentityType } from "../domain/IdentityType";
 import { NotFoundException } from "@nestjs/common";
+import { Otp } from "../domain/Otp";
 
 const DEFAULT_PARTNER_ID = "partener_id";
 
@@ -70,6 +71,23 @@ describe("MongoDBOtpRepoTests", () => {
       const emailID = "user@noba.com";
       const otp = 123457;
       await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_PARTNER_ID);
+      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_PARTNER_ID);
+      expect(savedOtp.props.emailOrPhone).toBe(emailID);
+      expect(savedOtp.props.otp).toBe(otp);
+    });
+  });
+
+  describe("saveOTPObject", () => {
+    it("should save an otp object", async () => {
+      const emailID = "user@noba.com";
+      const otp = 123457;
+      const otpObject = Otp.createOtp({
+        emailOrPhone: emailID,
+        otp,
+        identityType: IdentityType.consumer,
+        partnerID: DEFAULT_PARTNER_ID,
+      });
+      await otpRepo.saveOTPObject(otpObject);
       const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_PARTNER_ID);
       expect(savedOtp.props.emailOrPhone).toBe(emailID);
       expect(savedOtp.props.otp).toBe(otp);

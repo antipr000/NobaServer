@@ -14,6 +14,7 @@ Noba server-side code.
 - Install [Format Code Action](https://marketplace.visualstudio.com/items?itemName=rohit-gohri.format-code-action) extension
 - Install [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extension
 - Install [Coverage Gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters) extension
+- Install [Atlassian](https://marketplace.visualstudio.com/items?itemName=Atlassian.atlascode) extension
 
 ## Deployment/Release Instructions
 

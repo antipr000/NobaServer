@@ -107,7 +107,7 @@ describe("TransactionFailedProcessor", () => {
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.TransactionFailed, anything())).thenReturn({
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      start: () => { },
+      start: () => {},
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
