@@ -57,7 +57,12 @@ describe("Elliptic Integration Test", () => {
       userId: "fake-consumer",
       sessionKey: "fake-session",
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-      paymentMethodID: "fake-payment-method",
+      fiatPaymentInfo: {
+        paymentMethodID: "fake-payment-method",
+        isSettled: false,
+        details: [],
+        paymentProvider: "Checkout" as any,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",
