@@ -36,11 +36,11 @@ checkout:
   processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
 
 twilio:
-  awsSecretNameForSID: ""
-  awsSecretNameForAuthToken: ""
-  SID: "AC4efa22156849ec40b383a80f45525409"
-  authToken: "c34165debbb0a77e3507884e86b88772"
-  fromPhoneNumber: "+19894557345"
+  awsSecretNameForSID: "TEST_TWILIO_SID"
+  awsSecretNameForAuthToken: "TEST_TWILIO_SECRET"
+  SID: ""
+  authToken: ""
+  fromPhoneNumber: "+14246553925"
 
 mongo:
   awsSecretNameForUri: "DEV_DOCUMENT_DB_URI"
