@@ -34,6 +34,8 @@ checkout:
   couponCode: "NY2018"
   partnerId: 123989
   processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
+  webhookSignatureKey: "secret"
+  awsSecretNameForWebhookSignatureKey: ""
 
 twilio:
   awsSecretNameForSID: "TEST_TWILIO_SID"

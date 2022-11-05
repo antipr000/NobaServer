@@ -105,7 +105,6 @@ export class TransactionService {
         if (assetService.needsIntermediaryLeg())
           quoteRequest.intermediateCryptoCurrency = assetService.getIntermediaryLeg();
 
-        console.log(quoteRequest);
         nobaQuote = (await assetService.getQuoteForSpecifiedFiatAmount(quoteRequest)).quote;
         break;
 

@@ -104,6 +104,8 @@ import {
   PLAID_ENVIRONMENT,
   PLAID_VERSION,
   CHECKOUT_PROCESSING_CHANNEL_ID,
+  CHECKOUT_AWS_SECRET_NAME_FOR_WEBHOOK_SIGNATURE_KEY,
+  CHECKOUT_WEBHOOK_SIGNATURE_KEY,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -284,6 +286,7 @@ async function configureCheckoutCredentials(
       "\n'checkout' configurations are required. Please configure the checkout credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure ${CHECKOUT_CONFIG_KEY} with sub-values for ` +
       `(${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY} or ${CHECKOUT_PUBLIC_KEY}), ` +
+      `(${CHECKOUT_AWS_SECRET_NAME_FOR_WEBHOOK_SIGNATURE_KEY} or ${CHECKOUT_WEBHOOK_SIGNATURE_KEY}), ` +
       `(${CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_SECRET_KEY} or ${CHECKOUT_SECRET_KEY}), and ` +
       `${CHECKOUT_PROCESSING_CHANNEL_ID}.`;
 
@@ -297,6 +300,10 @@ async function configureCheckoutCredentials(
   checkoutConfigs.secretKey = await getParameterValue(
     checkoutConfigs.awsSecretNameForSecretKey,
     checkoutConfigs.secretKey,
+  );
+  checkoutConfigs.webhookSignatureKey = await getParameterValue(
+    checkoutConfigs.awsSecretNameForWebhookSignatureKey,
+    checkoutConfigs.webhookSignatureKey,
   );
 
   checkoutConfigs.couponCode = await getParameterValue(null, checkoutConfigs.couponCode);

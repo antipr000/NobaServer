@@ -6,6 +6,8 @@ import { PaymentService } from "./payment.service";
 import { CheckoutClient } from "./checkout.client";
 import { PlaidClient } from "./plaid.client";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { PaymentWebhooksController } from "./payment.webhook.controller";
+import { CheckoutWebhooksMapper } from "./mapper/checkout.webhooks";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
@@ -24,8 +26,8 @@ export const CheckoutClientProvider: Provider = {
 
 @Module({
   imports: [ConfigModule, CommonModule, NotificationsModule],
-  controllers: [],
-  providers: [CheckoutClientProvider, PlaidClient, PaymentService],
+  controllers: [PaymentWebhooksController],
+  providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper],
   exports: [CheckoutClient, PlaidClient, PaymentService],
 })
 export class PspModule {}
