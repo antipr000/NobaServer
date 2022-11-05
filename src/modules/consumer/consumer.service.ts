@@ -233,13 +233,12 @@ export class ConsumerService {
     }
     */
 
-    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
     if (paymentMethod.paymentProviderID === PaymentProvider.CHECKOUT) {
       return this.paymentService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     } else {
       this.logger.error(
-        `Error in making payment as payment provider ${
-          paymentMethod.paymentProviderID
+        `Error in making payment as payment provider ${paymentMethod.paymentProviderID
         } is not supported. Consumer: ${JSON.stringify(consumer)}, Transaction: ${JSON.stringify(transaction)}`,
       );
       throw new BadRequestException(`Payment provider ${paymentMethod.paymentProviderID} is not supported`);

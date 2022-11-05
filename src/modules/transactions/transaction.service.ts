@@ -75,7 +75,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
         `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
     }
 
@@ -105,6 +105,7 @@ export class TransactionService {
         if (assetService.needsIntermediaryLeg())
           quoteRequest.intermediateCryptoCurrency = assetService.getIntermediaryLeg();
 
+        console.log(quoteRequest);
         nobaQuote = (await assetService.getQuoteForSpecifiedFiatAmount(quoteRequest)).quote;
         break;
 
@@ -220,7 +221,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
       this.logger.debug(
         `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
@@ -236,12 +237,12 @@ export class TransactionService {
       transactionRequest.leg2Amount,
     );
 
+    const consumer = await this.consumerService.getConsumer(consumerID);
     // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as FLAGGED
     const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(
       transactionRequest.destinationWalletAddress,
     );
     if (isSanctionedWallet) {
-      const consumer = await this.consumerService.getConsumer(consumerID);
       const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transactionRequest.destinationWalletAddress);
       cryptoWallet.status = WalletStatus.FLAGGED;
       await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
@@ -257,7 +258,13 @@ export class TransactionService {
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
       sessionKey: sessionKey,
-      paymentMethodID: transactionRequest.paymentToken,
+      fiatPaymentInfo: {
+        paymentMethodID: transactionRequest.paymentToken,
+        isSettled: false,
+        details: [],
+        paymentID: undefined,
+        paymentProvider: consumer.getPaymentMethodByID(transactionRequest.paymentToken).paymentProviderID,
+      },
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
       leg1Amount: fiatAmount,
       leg2Amount: cryptoAmount,
@@ -370,7 +377,7 @@ export class TransactionService {
     consumer: Consumer,
     transaction: Transaction,
   ): Promise<PendingTransactionValidationStatus> {
-    const paymentMethod: PaymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    const paymentMethod: PaymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
 
     if (!paymentMethod) {
       this.logger.error(
@@ -506,8 +513,7 @@ export class TransactionService {
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
     this.logger.debug(
-      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
-        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
     );
 

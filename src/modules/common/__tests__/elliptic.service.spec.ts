@@ -17,6 +17,7 @@ import { BadRequestException } from "@nestjs/common";
 import { createHmac } from "crypto";
 import { WalletExposureResponse } from "../domain/WalletExposureResponse";
 import * as ConfigurationUtils from "../../../config/ConfigurationUtils";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 describe("Elliptic Tests", () => {
   jest.setTimeout(10000);
@@ -64,7 +65,12 @@ describe("Elliptic Tests", () => {
         userId: "fake-consumer",
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-        paymentMethodID: "fake-payment-method",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-token",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 1000,
         leg2Amount: 1,
         leg1: "USD",
@@ -138,7 +144,12 @@ describe("Elliptic Tests", () => {
         userId: "fake-consumer",
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-        paymentMethodID: "fake-payment-method",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-method",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 1000,
         leg2Amount: 1,
         leg1: "USD",
@@ -214,7 +225,12 @@ describe("Elliptic Tests", () => {
         userId: "fake-consumer",
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-        paymentMethodID: "fake-payment-method",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-method",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 1000,
         leg2Amount: 1,
         leg1: "USD",
@@ -288,7 +304,12 @@ describe("Elliptic Tests", () => {
         userId: "fake-consumer",
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-        paymentMethodID: "fake-payment-method",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-method",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 1000,
         leg2Amount: 1,
         leg1: "USD",
@@ -311,7 +332,12 @@ describe("Elliptic Tests", () => {
         userId: "fake-consumer",
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-        paymentMethodID: "fake-payment-method",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-method",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 1000,
         leg2Amount: 1,
         leg1: "USD",
@@ -349,7 +375,12 @@ describe("Elliptic Tests", () => {
         userId: "fake-consumer",
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-        paymentMethodID: "fake-payment-method",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-token",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 1000,
         leg2Amount: 1,
         leg1: "USD",

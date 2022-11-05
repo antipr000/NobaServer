@@ -18,6 +18,7 @@ import {
 } from "../domain/Types";
 import { CurrencyType } from "../../../../src/modules/common/domain/Types";
 import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 const TRANSACTION_ID_PREFIX = "transaction_id_prefix";
 const TEST_NUMBER = 5;
@@ -720,8 +721,13 @@ const getRandomTransaction = (
     type: TransactionType.ONRAMP,
     leg1Amount: TEST_NUMBER,
     leg2Amount: TEST_NUMBER,
-    paymentMethodID: "paymentMethodID",
-    checkoutPaymentID: "checkoutPaymentID",
+    fiatPaymentInfo: {
+      details: [],
+      isSettled: true,
+      paymentMethodID: "paymentMethodID",
+      paymentID: "checkoutPaymentID",
+      paymentProvider: PaymentProvider.CHECKOUT,
+    },
     cryptoTransactionId: "cryptoTransactionId",
     destinationWalletAddress: "destinationWalletAddress",
     transactionTimestamp: new Date(),

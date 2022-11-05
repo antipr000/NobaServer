@@ -85,7 +85,7 @@ describe("FiatTransactionInitiator", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiated, anything())).thenReturn({
-      start: () => {},
+      start: () => { },
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -140,12 +140,17 @@ describe("FiatTransactionInitiator", () => {
       _id: "1111111111",
       userId: "UUUUUUUUU",
       transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      paymentMethodID: "XXXXXXXXXX",
+      fiatPaymentInfo: {
+        paymentMethodID: "XXXXXXXXXX",
+        paymentID: initiatedPaymentId,
+        isSettled: false,
+        details: [],
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",
       leg2: "ETH",
-      checkoutPaymentID: initiatedPaymentId,
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       partnerID: "12345",
     });
@@ -155,7 +160,7 @@ describe("FiatTransactionInitiator", () => {
       _id: transaction.props._id as any,
     });
     when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
+      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.fiatPaymentInfo.paymentMethodID),
     ).thenResolve(PaymentProvider.CHECKOUT);
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.CAPTURED,
@@ -169,7 +174,7 @@ describe("FiatTransactionInitiator", () => {
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_COMPLETED);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
       transaction.props.lastStatusUpdateTimestamp,
     );
@@ -189,7 +194,13 @@ describe("FiatTransactionInitiator", () => {
       _id: "1111111111",
       userId: "UUUUUUUUU",
       transactionStatus: TransactionStatus.VALIDATION_PASSED,
-      paymentMethodID: "XXXXXXXXXX",
+      fiatPaymentInfo: {
+        paymentMethodID: "XXXXXXXXXX",
+        paymentID: initiatedPaymentId,
+        isSettled: false,
+        details: [],
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",
@@ -223,12 +234,17 @@ describe("FiatTransactionInitiator", () => {
       _id: "1111111111",
       userId: "UUUUUUUUU",
       transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      paymentMethodID: "XXXXXXXXXX",
+      fiatPaymentInfo: {
+        paymentMethodID: "XXXXXXXXXX",
+        paymentID: initiatedPaymentId,
+        isSettled: false,
+        details: [],
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",
       leg2: "ETH",
-      checkoutPaymentID: initiatedPaymentId,
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       partnerID: "12345",
     });
@@ -238,7 +254,7 @@ describe("FiatTransactionInitiator", () => {
       _id: transaction.props._id as any,
     });
     when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
+      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.fiatPaymentInfo.paymentMethodID),
     ).thenResolve(PaymentProvider.CHECKOUT);
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.FAILED,
@@ -252,7 +268,7 @@ describe("FiatTransactionInitiator", () => {
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
 
     const [queueName, transactionId] = capture(sqsClient.enqueue).last();
@@ -266,12 +282,17 @@ describe("FiatTransactionInitiator", () => {
       _id: "1111111111",
       userId: "UUUUUUUUU",
       transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      paymentMethodID: "XXXXXXXXXX",
+      fiatPaymentInfo: {
+        paymentMethodID: "XXXXXXXXXX",
+        paymentID: initiatedPaymentId,
+        isSettled: false,
+        details: [],
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",
       leg2: "ETH",
-      checkoutPaymentID: initiatedPaymentId,
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       partnerID: "12345",
     });
@@ -282,7 +303,7 @@ describe("FiatTransactionInitiator", () => {
     });
 
     when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
+      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.fiatPaymentInfo.paymentMethodID),
     ).thenResolve(PaymentProvider.CHECKOUT);
     when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
       FiatTransactionStatus.PENDING,
@@ -294,7 +315,7 @@ describe("FiatTransactionInitiator", () => {
 
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
   });
 });

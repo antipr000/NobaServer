@@ -755,7 +755,12 @@ function createFakeTransaction(consumer: Consumer, paymentMethod: PaymentMethod)
     _id: "1111111111",
     userId: consumer.props._id,
     transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-    paymentMethodID: paymentMethod.paymentToken,
+    fiatPaymentInfo: {
+      paymentMethodID: paymentMethod.paymentToken,
+      isSettled: false,
+      details: [],
+      paymentProvider: PaymentProvider.CHECKOUT,
+    },
     leg1Amount: 1000,
     leg2Amount: 0.01,
     leg1: "USD",

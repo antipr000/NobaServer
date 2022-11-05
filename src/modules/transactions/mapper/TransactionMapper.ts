@@ -14,7 +14,7 @@ export class TransactionMapper implements Mapper<Transaction> {
       transactionTimestamp: props.transactionTimestamp,
       destinationWalletAddress: props.destinationWalletAddress,
       partnerID: props.partnerID,
-      paymentMethodID: props.paymentMethodID,
+      paymentMethodID: props.fiatPaymentInfo.paymentMethodID,
       amounts: {
         baseAmount: props.leg1Amount, // Will need a new actual baseAmount property when we take other fiat currencies
         fiatAmount: props.leg1Amount,

@@ -95,7 +95,7 @@ describe("FiatTransactionInitiator", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiator, anything())).thenReturn({
-      start: () => {},
+      start: () => { },
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -151,7 +151,12 @@ describe("FiatTransactionInitiator", () => {
     _id: "1111111111",
     userId: consumerID,
     transactionStatus: TransactionStatus.VALIDATION_PASSED,
-    paymentMethodID: paymentMethodID,
+    fiatPaymentInfo: {
+      paymentMethodID: paymentMethodID,
+      isSettled: false,
+      details: [],
+      paymentProvider: PaymentProvider.CHECKOUT,
+    },
     leg1Amount: 1000,
     leg2Amount: 1,
     leg1: "USD",
@@ -199,7 +204,7 @@ describe("FiatTransactionInitiator", () => {
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.PENDING);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBeUndefined();
+    expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBeUndefined();
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
   });
 
@@ -228,7 +233,7 @@ describe("FiatTransactionInitiator", () => {
     const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
     expect(allTransactionsInDb).toHaveLength(1);
     expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
+    expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
       transaction.props.lastStatusUpdateTimestamp,
     );
@@ -421,7 +426,7 @@ async function performFailureAssertions(transactionCollection, sqsClient: SqsCli
   const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
   expect(allTransactionsInDb).toHaveLength(1);
   expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
-  expect(allTransactionsInDb[0].checkoutPaymentID).toBeUndefined();
+  expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBeUndefined();
 
   const [queueName, transactionId] = capture(sqsClient.enqueue).last();
   expect(queueName).toBe(TransactionQueueName.TransactionFailed);

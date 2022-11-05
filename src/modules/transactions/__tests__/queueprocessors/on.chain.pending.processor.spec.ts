@@ -108,7 +108,7 @@ describe("OnChainPendingProcessor", () => {
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.OnChainPendingTransaction, anything())).thenReturn({
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      start: () => {},
+      start: () => { },
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -174,7 +174,13 @@ describe("OnChainPendingProcessor", () => {
     _id: "1111111111",
     userId: consumerID,
     transactionStatus: TransactionStatus.VALIDATION_PASSED,
-    paymentMethodID: paymentMethodID,
+    fiatPaymentInfo: {
+      paymentMethodID: paymentMethodID,
+      isSettled: false,
+      details: [],
+      paymentID: "checkout-id",
+      paymentProvider: PaymentProvider.CHECKOUT,
+    },
     leg1Amount: 1000,
     leg2Amount: cryptoAmount,
     leg1: "USD",

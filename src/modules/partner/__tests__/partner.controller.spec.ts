@@ -18,6 +18,7 @@ import { TransactionMapper } from "../../../modules/transactions/mapper/Transact
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
@@ -908,7 +909,12 @@ describe("PartnerController", () => {
           _id: "fake-transaction-id",
           userId: "user-id-1",
           sessionKey: "fake-session-key",
-          paymentMethodID: "fake-payment-token",
+          fiatPaymentInfo: {
+            paymentMethodID: "fake-payment-token",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 100,
           leg2Amount: 0.1,
           leg1: "USD",
@@ -998,7 +1004,12 @@ describe("PartnerController", () => {
           _id: "fake-transaction-id",
           userId: "user-id-1",
           sessionKey: "fake-session-key",
-          paymentMethodID: "fake-payment-token",
+          fiatPaymentInfo: {
+            paymentMethodID: "fake-payment-token",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 100,
           leg2Amount: 0.1,
           leg1: "USD",
@@ -1074,7 +1085,12 @@ describe("PartnerController", () => {
           _id: "fake-transaction-id",
           userId: "user-id-1",
           sessionKey: "fake-session-key",
-          paymentMethodID: "fake-payment-token",
+          fiatPaymentInfo: {
+            paymentMethodID: "fake-payment-token",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 100,
           leg2Amount: 0.1,
           leg1: "USD",

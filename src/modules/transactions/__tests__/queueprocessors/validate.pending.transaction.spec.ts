@@ -35,6 +35,7 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "../../exceptions/TransactionSubmissionException";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -95,7 +96,7 @@ describe("ValidatePendingTransaction", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.PendingTransactionValidation, anything())).thenReturn({
-      start: () => {},
+      start: () => { },
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -151,7 +152,13 @@ describe("ValidatePendingTransaction", () => {
       userId: consumerID,
       sessionKey: "12345",
       transactionStatus: TransactionStatus.PENDING,
-      paymentMethodID: "XXXXXXXXXX",
+      fiatPaymentInfo: {
+        paymentMethodID: "XXXXXXXXXX",
+        isSettled: false,
+        details: [],
+        paymentID: undefined,
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",

@@ -40,31 +40,26 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       return;
     }
 
-    const paymentProvider: PaymentProvider = await this.consumerService.getPaymentMethodProvider(
-      transaction.props.userId,
-      transaction.props.paymentMethodID,
-    );
-
     let newStatus: TransactionStatus;
     // check transaction status here
     const paymentStatus = await this.consumerService.getFiatPaymentStatus(
-      transaction.props.checkoutPaymentID,
-      paymentProvider, // TODO add payment method provider in the transaction itself
+      transaction.props.fiatPaymentInfo.paymentID,
+      transaction.props.fiatPaymentInfo.paymentProvider,
     );
 
     if (paymentStatus === FiatTransactionStatus.CAPTURED || paymentStatus === FiatTransactionStatus.AUTHORIZED) {
       this.logger.info(
-        `${transactionId}: Transaction is ${paymentStatus} with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_COMPLETED}`,
+        `${transactionId}: Transaction is ${paymentStatus} with paymentID ${transaction.props.fiatPaymentInfo.paymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_COMPLETED}`,
       );
       newStatus = TransactionStatus.FIAT_INCOMING_COMPLETED; // update transaction status
     } else if (paymentStatus === FiatTransactionStatus.PENDING) {
       this.logger.info(
-        `${transactionId}: Transaction is stilling Pending paymentID ${transaction.props.checkoutPaymentID}`,
+        `${transactionId}: Transaction is stilling Pending paymentID ${transaction.props.fiatPaymentInfo.paymentID}`,
       );
       return;
     } else if (paymentStatus === FiatTransactionStatus.FAILED) {
       this.logger.info(
-        `${transactionId}: Transaction failed with paymentID ${transaction.props.checkoutPaymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
+        `${transactionId}: Transaction failed with paymentID ${transaction.props.fiatPaymentInfo.paymentID}, updating status to ${TransactionStatus.FIAT_INCOMING_FAILED}`,
       );
       await this.processFailure(
         TransactionStatus.FIAT_INCOMING_FAILED,

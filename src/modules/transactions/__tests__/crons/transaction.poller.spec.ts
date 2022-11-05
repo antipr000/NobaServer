@@ -9,6 +9,7 @@ import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 import { getMockTransactionRepoWithDefaults } from "../../mocks/mock.transactions.repo";
 import { SqsClient } from "../../queueprocessors/sqs.client";
 import { ITransactionRepo } from "../../repo/TransactionRepo";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
 
 describe("TransactionPoller", () => {
   jest.setTimeout(10000);
@@ -39,7 +40,7 @@ describe("TransactionPoller", () => {
     transactionPoller = app.get<TransactionPollerService>(TransactionPollerService);
   });
 
-  afterEach(async () => {});
+  afterEach(async () => { });
 
   const setupGetValidTransactionsToProcessMocks = (transactionsPerStaus: Record<string, Transaction[]>) => {
     /**
@@ -97,7 +98,12 @@ describe("TransactionPoller", () => {
           _id: id,
           userId: "UUUUUUUUU",
           transactionStatus: TransactionStatus.PENDING,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -135,7 +141,12 @@ describe("TransactionPoller", () => {
           _id: id,
           userId: "UUUUUUUUU",
           transactionStatus: TransactionStatus.VALIDATION_PASSED,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -167,7 +178,12 @@ describe("TransactionPoller", () => {
           _id: id,
           userId: "UUUUUUUUU",
           transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -200,7 +216,12 @@ describe("TransactionPoller", () => {
           _id: id,
           userId: "UUUUUUUUU",
           transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -215,7 +236,12 @@ describe("TransactionPoller", () => {
           _id: id,
           userId: "UUUUUUUUU",
           transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -251,7 +277,12 @@ describe("TransactionPoller", () => {
           _id: id,
           userId: "UUUUUUUUU",
           transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -283,7 +314,12 @@ describe("TransactionPoller", () => {
           _id: id,
           userId: "UUUUUUUUU",
           transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -323,7 +359,12 @@ describe("TransactionPoller", () => {
           _id: transactionId,
           userId: "UUUUUUUUU",
           transactionStatus: status as any,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",
@@ -368,7 +409,12 @@ describe("TransactionPoller", () => {
           _id: transactionId,
           userId: "UUUUUUUUU",
           transactionStatus: status as any,
-          paymentMethodID: "XXXXXXXXXX",
+          fiatPaymentInfo: {
+            paymentMethodID: "XXXXXXXXXX",
+            isSettled: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 1000,
           leg2Amount: 1,
           leg1: "USD",

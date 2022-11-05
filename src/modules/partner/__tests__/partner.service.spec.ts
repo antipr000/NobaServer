@@ -27,6 +27,7 @@ import {
   PARTNER_PUBLIC_DATA_S3_BUCKET_KEY,
   PARTNER_PUBLIC_CLOUDFRONT_URL_KEY,
 } from "../../../config/ConfigurationUtils";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 const mS3Instance: any = {};
 
@@ -326,7 +327,12 @@ describe("PartnerService", () => {
         _id: "fake-transaction-id",
         userId: "user-id-1",
         sessionKey: "fake-session-key",
-        paymentMethodID: "fake-payment-token",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-token",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 100,
         leg2Amount: 0.1,
         leg1: "USD",
@@ -363,7 +369,12 @@ describe("PartnerService", () => {
         _id: "fake-transaction-id",
         userId: "user-id-1",
         sessionKey: "fake-session-key",
-        paymentMethodID: "fake-payment-token",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-token",
+          isSettled: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 100,
         leg2Amount: 0.1,
         leg1: "USD",

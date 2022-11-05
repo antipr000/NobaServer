@@ -106,7 +106,7 @@ export class ZeroHashService {
 
     try {
       const { data } = await axiosInstance.request(axiosConfig);
-      this.logger.debug(`Received response: ${JSON.stringify(data)}`);
+      this.logger.info(`Received response: ${JSON.stringify(data)}`);
       return data;
     } catch (err) {
       // WARNING: Do not JSON.stringify() 'err' as it results in a "circular structure" error message in the AWS envs w/ proxy

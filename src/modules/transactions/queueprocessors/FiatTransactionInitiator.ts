@@ -68,7 +68,10 @@ export class FiatTransactionInitiator extends MessageProcessor {
           TransactionStatus.FIAT_INCOMING_INITIATED,
           {
             ...transaction.props,
-            checkoutPaymentID: paymentResponse.paymentID,
+            fiatPaymentInfo: {
+              ...transaction.props.fiatPaymentInfo,
+              paymentID: paymentResponse.paymentID,
+            },
           },
         );
         // Move to initiated queue.
@@ -137,7 +140,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
     }
   }
 
-  async handleCheckoutFailure(
+  private async handleCheckoutFailure(
     errorCode: string,
     errorDescription: string,
     status: PaymentMethodStatus,
@@ -156,12 +159,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
       transaction,
     );
 
-    const paymentMethod = (
-      await this.consumerService.getConsumer(transaction.props.userId)
-    ).props.paymentMethods.filter(
-      currPaymentMethod => currPaymentMethod.paymentToken === transaction.props.paymentMethodID,
-    )[0];
-
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
     this.consumerService.updatePaymentMethod(consumer.props._id, {
       ...paymentMethod,
       cardData: {

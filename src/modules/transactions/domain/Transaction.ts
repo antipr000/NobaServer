@@ -4,6 +4,7 @@ import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
 import { CurrencyType, KeysRequired } from "../../common/domain/Types";
 import { TransactionStatus, TransactionType } from "./Types";
+import { PaymentProvider } from "src/modules/consumer/domain/PaymentProvider";
 
 export class TransactionEvent {
   timestamp: Date;
@@ -26,8 +27,7 @@ export interface TransactionProps extends VersioningInfo {
   transactionID: string;
   userId: string;
   sessionKey: string;
-  paymentMethodID: string;
-  checkoutPaymentID?: string;
+  fiatPaymentInfo: FiatPaymentInfo;
   sourceWalletAddress?: string;
   destinationWalletAddress?: string;
   leg1Amount: number;
@@ -71,6 +71,33 @@ export interface TransactionProps extends VersioningInfo {
   discounts?: Discounts;
 }
 
+export interface FiatPaymentInfo {
+  paymentMethodID: string;
+  paymentProvider: PaymentProvider;
+  paymentID?: string;
+  isSettled: boolean;
+  details: ACHPaymentStatus[];
+};
+
+export interface ACHPaymentStatus {
+  status: ACHStatus;
+  timestamp: Date;
+  amount: number;
+  currency: string;
+  otherDetails: string;
+};
+
+export enum ACHStatus {
+  // Checkout ACKed the payment
+  SUBMITTED = "submitted",
+  // Checkout verified the transaction parameters (not yet captured)
+  INITIAL_VERIFICATION_COMPLETED = "initial_verification_completed",
+  // Checkout CAPTURED the payment
+  COMPLETED = "completed",
+  // Checkout sent PAYMENT_RETURNED or PAYMENT_DECLIEND
+  FAILED = "failed",
+}
+
 export interface Discounts {
   fixedCreditCardFeeDiscount: number;
   nobaFeeDiscount: number;
@@ -89,7 +116,6 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
     .required()
     .meta({ _mongoose: { index: true } }),
   sessionKey: Joi.string().optional(), // TODO(#310) Make it required once we no longer have old txns in the database.
-  paymentMethodID: Joi.string().optional(), //TODO make it required
   transactionStatus: Joi.string()
     // .valid(...Object.values(TransactionStatus)) //TODO Change this
     .required(),
@@ -117,7 +143,6 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   diagnosis: Joi.string().optional(),
   sourceWalletAddress: Joi.string().optional(),
   destinationWalletAddress: Joi.string().optional(),
-  checkoutPaymentID: Joi.string().optional(),
   cryptoTransactionId: Joi.string().optional(),
   blockchainTransactionId: Joi.string().optional(),
   transactionTimestamp: Joi.date().optional(),
@@ -131,6 +156,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   lastStatusUpdateTimestamp: Joi.number().optional(),
   transactionExceptions: Joi.array().items(transactionEventJoiSchema).optional(),
   discounts: Joi.object().optional(),
+  fiatPaymentInfo: Joi.object().optional(),
 };
 
 export const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({ allowUnknown: true });

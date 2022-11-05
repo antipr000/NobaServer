@@ -67,6 +67,7 @@ import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -255,7 +256,13 @@ describe("TransactionService", () => {
       userId: consumerID,
       sessionKey: sessionKey,
       transactionStatus: TransactionStatus.PENDING,
-      paymentMethodID: paymentMethodID,
+      fiatPaymentInfo: {
+        paymentMethodID: paymentMethodID,
+        isSettled: false,
+        details: [],
+        paymentID: undefined,
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",
@@ -1276,6 +1283,7 @@ describe("TransactionService", () => {
         } as any,
       });
 
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
       when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
@@ -1410,6 +1418,7 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-2";
       const sessionKey = "fake-session-key";
+      const paymentToken = "fake-payment-token";
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1423,7 +1432,7 @@ describe("TransactionService", () => {
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
-        paymentToken: "fake-payment-token",
+        paymentToken: paymentToken,
         type: TransactionType.ONRAMP,
         leg1: "USD",
         leg2: "axlUSDCMoonbeam",
@@ -1432,6 +1441,28 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.CRYPTO,
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
+
+      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ]
+      }));
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -1475,6 +1506,29 @@ describe("TransactionService", () => {
       const consumerId = consumer.props._id;
       const partnerId = "fake-partner-124";
       const sessionKey = "fake-session-key";
+      const paymentToken = "fake-payment-token";
+
+      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ]
+      }));
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1488,7 +1542,7 @@ describe("TransactionService", () => {
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
-        paymentToken: "fake-payment-token",
+        paymentToken: paymentToken,
         type: TransactionType.ONRAMP,
         leg1: "USD",
         leg2: "ETH",
@@ -1591,6 +1645,29 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const exchangeRate = 1000;
+      const paymentToken = "fake-payment-token";
+
+      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ]
+      }));
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1611,7 +1688,7 @@ describe("TransactionService", () => {
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
-        paymentToken: "fake-payment-token",
+        paymentToken: paymentToken,
         type: TransactionType.ONRAMP,
         leg1: "USD",
         leg2: "ETH",
@@ -1703,7 +1780,13 @@ describe("TransactionService", () => {
         transactionID: "fake-transaction-id",
         userId: consumerId,
         sessionKey: sessionKey,
-        paymentMethodID: transactionRequest.paymentToken,
+        fiatPaymentInfo: {
+          paymentMethodID: transactionRequest.paymentToken,
+          isSettled: false,
+          details: [],
+          paymentID: undefined,
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: transactionRequest.leg1Amount,
         leg2Amount: transactionRequest.leg2Amount,
         leg1: transactionRequest.leg1,
@@ -1743,6 +1826,29 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const exchangeRate = 1000;
+      const paymentToken = "fake-payment-token";
+
+      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ]
+      }));
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1756,7 +1862,7 @@ describe("TransactionService", () => {
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
-        paymentToken: "fake-payment-token",
+        paymentToken: paymentToken,
         type: TransactionType.ONRAMP,
         leg1: "USD",
         leg2: "axlUSDCMoonbeam",
@@ -1858,7 +1964,13 @@ describe("TransactionService", () => {
         transactionID: "fake-transaction-id",
         userId: consumerId,
         sessionKey: sessionKey,
-        paymentMethodID: transactionRequest.paymentToken,
+        fiatPaymentInfo: {
+          paymentMethodID: transactionRequest.paymentToken,
+          isSettled: false,
+          details: [],
+          paymentID: undefined,
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: transactionRequest.leg1Amount,
         leg2Amount: transactionRequest.leg2Amount,
         leg1: transactionRequest.leg1,
@@ -1898,6 +2010,29 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const initialQuotedFiatAmount = 160;
       const initialQuotedConversionRate = 1600;
+      const paymentToken = "fake-payment-token";
+
+      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ]
+      }));
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1919,7 +2054,7 @@ describe("TransactionService", () => {
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
-        paymentToken: "fake-payment-token",
+        paymentToken: paymentToken,
         type: TransactionType.ONRAMP,
         leg1: "USD",
         leg2: "ETH",
@@ -2011,7 +2146,13 @@ describe("TransactionService", () => {
         transactionID: "fake-transaction-id",
         userId: consumerId,
         sessionKey: sessionKey,
-        paymentMethodID: transactionRequest.paymentToken,
+        fiatPaymentInfo: {
+          paymentMethodID: transactionRequest.paymentToken,
+          isSettled: false,
+          details: [],
+          paymentID: undefined,
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: transactionRequest.leg1Amount,
         leg2Amount: transactionRequest.leg2Amount,
         leg1: transactionRequest.leg1,
@@ -2052,6 +2193,29 @@ describe("TransactionService", () => {
       const sessionKey = "fake-session-key";
       const initialQuotedFiatAmount = 160;
       const initialQuotedConversionRate = 1600;
+      const paymentToken = "fake-payment-token";
+
+      when(consumerService.getConsumer(consumerId)).thenResolve(Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ]
+      }));
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -2073,7 +2237,7 @@ describe("TransactionService", () => {
       when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const transactionRequest: CreateTransactionDTO = {
-        paymentToken: "fake-payment-token",
+        paymentToken: paymentToken,
         type: TransactionType.ONRAMP,
         leg1: "USD",
         leg2: "ETH",
@@ -2188,7 +2352,13 @@ describe("TransactionService", () => {
         _id: "fake-transaction-id",
         userId: consumer.props._id,
         sessionKey: "fake-session-key",
-        paymentMethodID: "fake-payment-token",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-token",
+          isSettled: false,
+          details: [],
+          paymentID: undefined,
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 100,
         leg2Amount: 0.1,
         leg1: "USD",
@@ -2223,7 +2393,13 @@ describe("TransactionService", () => {
         _id: "fake-transaction-id",
         userId: consumer.props._id,
         sessionKey: "fake-session-key",
-        paymentMethodID: "fake-payment-token",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-token",
+          isSettled: false,
+          details: [],
+          paymentID: undefined,
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 100,
         leg2Amount: 0.1,
         leg1: "USD",
@@ -2273,7 +2449,13 @@ describe("TransactionService", () => {
         _id: "fake-transaction-id",
         userId: consumer.props._id,
         sessionKey: "fake-session-key",
-        paymentMethodID: "fake-payment-token",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-token",
+          isSettled: false,
+          details: [],
+          paymentID: undefined,
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 100,
         leg2Amount: 0.1,
         leg1: "USD",
@@ -2310,7 +2492,13 @@ describe("TransactionService", () => {
         userId: consumer.props._id,
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-        paymentMethodID: "fake-payment-method",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-method",
+          isSettled: false,
+          details: [],
+          paymentID: undefined,
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
         leg1Amount: 1000,
         leg2Amount: 1,
         leg1: "USD",

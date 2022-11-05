@@ -219,7 +219,7 @@ export class PaymentService {
       const paymentResponse: PspCardPaymentResponse = await this.checkoutService.makeCardPayment(
         /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
         /* currency= */ transaction.props.leg1,
-        /* paymentMethodId= */ transaction.props.paymentMethodID,
+        /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
         /* transactionId= */ transaction.props._id,
       );
 
@@ -227,7 +227,7 @@ export class PaymentService {
 
       if (creditCardBinData === null) {
         // Record is not in our db. Fetch payment method details from checkout and add entry
-        const paymentMethodResponse = await this.checkoutService.getPaymentMethod(transaction.props.paymentMethodID);
+        const paymentMethodResponse = await this.checkoutService.getPaymentMethod(transaction.props.fiatPaymentInfo.paymentMethodID);
         const cardType = paymentMethodResponse.cardType;
         const bin = paymentMethodResponse.bin;
         const scheme = paymentMethodResponse.scheme;
@@ -248,8 +248,8 @@ export class PaymentService {
             cardType === null || cardType === undefined
               ? undefined
               : cardType.toLocaleLowerCase() === "credit"
-              ? CardType.CREDIT
-              : CardType.DEBIT,
+                ? CardType.CREDIT
+                : CardType.DEBIT,
           network: scheme,
           supported: BINValidity.SUPPORTED,
           digits: card.lengths[0],
@@ -263,7 +263,7 @@ export class PaymentService {
       const response = await this.handlePaymentResponse({
         consumer: consumer,
         paymentResponse: paymentResponse,
-        instrumentID: transaction.props.paymentMethodID,
+        instrumentID: transaction.props.fiatPaymentInfo.paymentMethodID,
         cardNumber: null,
         sessionID: transaction.props.sessionKey,
         transactionID: transaction.props.transactionID,
@@ -287,7 +287,7 @@ export class PaymentService {
       const response: PspACHPaymentResponse = await this.checkoutService.makeACHPayment(
         /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
         /* currency= */ transaction.props.leg1,
-        /* paymentMethodId= */ transaction.props.paymentMethodID,
+        /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
         /* transactionId= */ transaction.props._id,
       );
 
@@ -309,6 +309,7 @@ export class PaymentService {
 
   async getFiatPaymentStatus(paymentId: string): Promise<FiatTransactionStatus> {
     const status = await this.checkoutService.getPaymentDetails(paymentId);
+    console.log(status);
     if (status === "Authorized" || status === "Paid") return FiatTransactionStatus.AUTHORIZED;
     if (status === "Captured" || status === "Partially Captured") return FiatTransactionStatus.CAPTURED;
     if (status === "Pending") return FiatTransactionStatus.PENDING;
