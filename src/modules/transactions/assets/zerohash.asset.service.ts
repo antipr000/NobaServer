@@ -11,6 +11,7 @@ import {
   ExecutedQuote,
   FundsAvailabilityRequest,
   ConsumerWalletTransferResponse,
+  ConsumerAccountBalance,
 } from "../domain/AssetTypes";
 import { ZeroHashService } from "../zerohash.service";
 import {
@@ -205,6 +206,23 @@ export class ZerohashAssetService extends DefaultAssetService {
 
   protected getLiquidityProviderTradeStatus(id: string): Promise<ZerohashTradeResponse> {
     return this.zerohashService.checkTradeStatus(id);
+  }
+
+  async getConsumerAccountBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
+    const zhBalances = await this.zerohashService.getParticipantBalance(participantID);
+
+    const consumerAccountBalances: ConsumerAccountBalance[] = new Array();
+    zhBalances.forEach(balance => {
+      consumerAccountBalances.push({
+        name: balance.accountLabel,
+        asset: balance.asset,
+        accountID: balance.accountID,
+        lastUpdate: balance.lastUpdate,
+        balance: balance.balance,
+        accountType: balance.accountType,
+      });
+    });
+    return consumerAccountBalances;
   }
 
   // TODO(#): Make this implementation idempotent.

@@ -17,7 +17,7 @@ import { TransactionInformation } from "../verification/domain/TransactionInform
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
-import { NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
+import { ConsumerAccountBalance, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -154,6 +154,10 @@ export class TransactionService {
   async getTransaction(transactionID: string): Promise<TransactionDTO> {
     const transaction = await this.transactionsRepo.getTransaction(transactionID);
     return this.transactionsMapper.toDTO(transaction);
+  }
+
+  async getParticipantBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
+    return await this.assetServiceFactory.getWalletService().getConsumerAccountBalance(participantID);
   }
 
   async getUserTransactions(

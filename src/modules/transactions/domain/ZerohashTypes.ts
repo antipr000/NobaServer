@@ -98,3 +98,22 @@ export interface ZerohashExecutedQuote {
   tradeID: string;
   cryptocurrency: string;
 }
+
+// Account types: https://seedcx.zendesk.com/hc/en-us/articles/360044996854 (most should be "Available")
+export enum ZerohashAccountType {
+  AVAILABLE = "available",
+  COLLATERAL = "collateral",
+  PAYABLE = "payable",
+  RECEIVABLE = "receivable",
+  COLLATERAL_DEFICIENCY = "collateral_deficiency",
+}
+export interface ZerohashAccountBalance {
+  asset: string;
+  accountOwner: string;
+  accountType: ZerohashAccountType;
+  accountGroup: string;
+  accountLabel: string;
+  balance: string;
+  accountID: string;
+  lastUpdate: number;
+}

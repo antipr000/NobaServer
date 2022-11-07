@@ -19,6 +19,7 @@ import {
   DiscountedAmount,
   NonDiscountedNobaQuote,
   CombinedNobaQuote,
+  ConsumerAccountBalance,
 } from "../domain/AssetTypes";
 import { AssetService } from "./asset.service";
 import {
@@ -38,9 +39,10 @@ import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 import { getDiscountedAmount } from "./AssetServiceHelper";
+import { WalletService } from "./wallet.service";
 
 @Injectable()
-export abstract class DefaultAssetService implements AssetService {
+export abstract class DefaultAssetService implements AssetService, WalletService {
   protected readonly nobaTransactionConfigs: NobaTransactionConfigs;
   constructor(
     protected readonly currencyService: CurrencyService,
@@ -570,6 +572,8 @@ export abstract class DefaultAssetService implements AssetService {
       };
     }
   }
+
+  abstract getConsumerAccountBalance(participantID: string): Promise<ConsumerAccountBalance[]>;
 
   // TODO(#): Make this implementation idempotent.
   abstract transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<ConsumerWalletTransferResponse>;

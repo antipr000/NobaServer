@@ -13,6 +13,7 @@ import {
   ExecutedQuoteStatus,
   ConsumerWalletTransferResponse,
   CombinedNobaQuote,
+  ConsumerAccountBalance,
 } from "../domain/AssetTypes";
 
 export interface AssetService {
