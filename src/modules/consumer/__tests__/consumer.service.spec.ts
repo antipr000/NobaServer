@@ -1975,7 +1975,7 @@ describe("ConsumerService", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";
       const email = "a@noba.com";
-      const partnerId = "fake-partner-id";
+      const partnerId = "fake-partner-id2";
       const otp = 123456;
       const otpObject = Otp.createOtp({
         otp: otp,
