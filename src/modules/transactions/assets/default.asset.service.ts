@@ -39,10 +39,9 @@ import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 import { getDiscountedAmount } from "./AssetServiceHelper";
-import { WalletService } from "./wallet.service";
 
 @Injectable()
-export abstract class DefaultAssetService implements AssetService, WalletService {
+export abstract class DefaultAssetService implements AssetService {
   protected readonly nobaTransactionConfigs: NobaTransactionConfigs;
   constructor(
     protected readonly currencyService: CurrencyService,
