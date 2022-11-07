@@ -70,6 +70,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
           first6Digits: paymentMethod.cardData.first6Digits,
           last4Digits: paymentMethod.cardData.last4Digits,
           cardType: paymentMethod.cardData.cardType,
+          scheme: paymentMethod.cardData.scheme,
         },
       };
     } else if (paymentMethod.type === PaymentMethodType.ACH) {

@@ -20,7 +20,8 @@ export enum PaymentMethodType {
 }
 
 export type CardData = {
-  cardType?: string;
+  cardType?: string; // Debit, Credit, Prepaid, etc.
+  scheme?: string; // Visa, Mastercard, Discover, etc.
   first6Digits: string;
   last4Digits: string;
   authCode?: string;

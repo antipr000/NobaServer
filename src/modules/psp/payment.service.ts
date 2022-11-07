@@ -187,6 +187,7 @@ export class PaymentService {
         type: PaymentMethodType.CARD,
         cardData: {
           cardType: addPaymentMethodResponse.cardType,
+          scheme: addPaymentMethodResponse.scheme,
           first6Digits: paymentMethod.cardDetails.cardNumber.substring(0, 6),
           last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
           authCode: response.responseCode,

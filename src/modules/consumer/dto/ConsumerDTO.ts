@@ -13,6 +13,9 @@ export class PaymentMethodCardDataDTO {
   @ApiPropertyOptional()
   cardType?: string;
 
+  @ApiPropertyOptional()
+  scheme?: string;
+
   @ApiProperty()
   first6Digits: string;
 
