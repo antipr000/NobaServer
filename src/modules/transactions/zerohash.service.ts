@@ -379,8 +379,6 @@ export class ZeroHashService {
     }
 
     const withdrawalRequest = await this.makeRequest("/withdrawals/requests", "POST", requestData);
-    // TODO (mohit): I dont see id in the response? Is this even working? https://api.cert.zerohash.com/api-docs/#/Withdrawals/post_withdrawals_requests
-    // Should it be withdrawal_account_id instead?
     return String(withdrawalRequest["message"]["id"]);
   }
 
@@ -388,7 +386,6 @@ export class ZeroHashService {
     const withdrawal = await this.makeRequest(`/withdrawals/requests/${withdrawalID}`, "GET");
 
     const response: ZerohashWithdrawalResponse = {
-      // TODO (mohit): Confirm if message[0] is working fine in prod? Ideally, indexing should not be needed.
       gasPrice: withdrawal["message"][0]["gas_price"],
       requestedAmount: Number(withdrawal["message"][0]["requested_amount"]),
       settledAmount: Number(withdrawal["message"][0]["settled_amount"]),

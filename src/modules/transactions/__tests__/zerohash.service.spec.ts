@@ -127,7 +127,11 @@ describe("Zerohash Service", () => {
       const expectedResponse = getAccountsResponse(consumer);
 
       // The lib we use for sardine test i.e. jest-mock-axios didn't work, so we are going ahead with jest.SpyOn
-      // Reasons for the above are still unidentified though
+      // Summary (for future reference) - The reason is that "jest-mock-axios" doesn't handle more than 1 awaits in the mocked function.
+      // The reason for that is, the library assumes that the flow already is at axios.post(...) before we try to provide a mock (or verify the call) for it.
+      // So, if there are 2 or more await in the target function, the library would be waiting on the first "await" and expect it to be a axios call.
+      // Theoritically the test can be flaky as well because we are mocking all external dependencies, so flow can reach any of the await.
+      // So, the interim solution for that would be to add a timeout for 100 ms or so to make sure that the flow actually reaches the await call.
       const getSpy = jest.spyOn(axios, "request").mockResolvedValue(expectedResponse);
       const responsePromise = zerohashService.createParticipant(consumer.props, transactionTimestamp);
 
@@ -263,7 +267,6 @@ describe("Zerohash Service", () => {
 
       const response = await responsePromise;
       expect(getSpy).toHaveBeenCalledTimes(0);
-      console.log(`Response: ${response}`);
       expect(response).toBe(null);
     });
 
@@ -317,7 +320,6 @@ describe("Zerohash Service", () => {
 
       const response = await responsePromise;
       expect(getSpy).toHaveBeenCalledTimes(0);
-      console.log(`Response: ${response}`);
       expect(response).toBe(null);
     });
   });
