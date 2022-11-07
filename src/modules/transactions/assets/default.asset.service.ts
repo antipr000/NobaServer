@@ -572,8 +572,6 @@ export abstract class DefaultAssetService implements AssetService {
     }
   }
 
-  abstract getConsumerAccountBalance(participantID: string): Promise<ConsumerAccountBalance[]>;
-
   // TODO(#): Make this implementation idempotent.
   abstract transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<ConsumerWalletTransferResponse>;
 
