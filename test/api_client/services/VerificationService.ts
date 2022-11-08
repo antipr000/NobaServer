@@ -4,6 +4,7 @@
 import type { DeviceVerificationResponseDTO } from "../models/DeviceVerificationResponseDTO";
 import type { DocumentVerificationResultDTO } from "../models/DocumentVerificationResultDTO";
 import type { IDVerificationRequestDTO } from "../models/IDVerificationRequestDTO";
+import type { IDVerificationURLResponseDTO } from "../models/IDVerificationURLResponseDTO";
 import type { VerificationResultDTO } from "../models/VerificationResultDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -191,6 +192,69 @@ export class VerificationService {
       errors: {
         400: `Invalid request parameters`,
         404: `Document verification request not found`,
+      },
+    });
+  }
+
+  /**
+   * Retrieves a URL for identity verification
+   * @returns IDVerificationURLResponseDTO Document verification KYC URL details
+   * @throws ApiError
+   */
+  public static getIdentityDocumentVerificationUrl({
+    xNobaApiKey,
+    sessionKey,
+    requestPoa,
+    requestSelfie,
+    requestBack,
+    locale,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    /**
+     * Unique verification key for this session
+     */
+    sessionKey: string;
+    /**
+     * Request proof of address
+     */
+    requestPoa: boolean;
+    /**
+     * Request a selfie photo
+     */
+    requestSelfie: boolean;
+    /**
+     * Request photo of back of ID
+     */
+    requestBack: boolean;
+    /**
+     * Unique verification key for this session
+     */
+    locale: "en-us" | "es-419";
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<IDVerificationURLResponseDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/verify/document/url",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        sessionKey: sessionKey,
+        requestPOA: requestPoa,
+        requestSelfie: requestSelfie,
+        requestBack: requestBack,
+        locale: locale,
+      },
+      errors: {
+        400: `Invalid request parameters`,
       },
     });
   }

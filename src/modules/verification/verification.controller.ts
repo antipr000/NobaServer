@@ -27,6 +27,7 @@ import {
   ApiTags,
   ApiBody,
   ApiHeaders,
+  ApiQuery,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -50,6 +51,7 @@ import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificatio
 import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";
 import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
+import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -157,8 +159,7 @@ export class VerificationController {
     @Request() request,
   ): Promise<string> {
     const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer))
-      throw new BadRequestException("verifyConsumer is only allowed for consumer");
+    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
     const result = await this.verificationService.verifyDocument(
       consumer.props._id,
@@ -190,14 +191,58 @@ export class VerificationController {
     @Request() request,
   ): Promise<DocumentVerificationResultDTO> {
     const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer))
-      throw new BadRequestException("verifyConsumer is only allowed for consumer");
+    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
     if (id !== consumer.props.verificationData.documentVerificationTransactionID) {
       throw new NotFoundException("No verification record is found for the user with the given id");
     }
     const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id, user.partnerId);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
+  }
+
+  @Get("/document/url")
+  @ApiOperation({ summary: "Retrieves a URL for identity verification" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: IDVerificationURLResponseDTO,
+    description: "Document verification KYC URL details",
+  })
+  @ApiQuery({ name: "sessionKey", description: "Unique verification key for this session" })
+  @ApiQuery({
+    name: "locale",
+    enum: IDVerificationURLRequestLocale,
+    description: "Unique verification key for this session",
+  })
+  @ApiQuery({ name: "requestBack", type: "boolean", description: "Request photo of back of ID" })
+  @ApiQuery({ name: "requestSelfie", type: "boolean", description: "Request a selfie photo" })
+  @ApiQuery({ name: "requestPOA", type: "boolean", description: "Request proof of address" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getIdentityDocumentVerificationURL(
+    @Request() request,
+    @Query("sessionKey") sessionKey: string,
+    @Query("locale") locale: IDVerificationURLRequestLocale,
+    @Query("requestBack") idBack = "false",
+    @Query("requestSelfie") selfie = "false",
+    @Query("requestPOA") poa = "false",
+  ): Promise<IDVerificationURLResponseDTO> {
+    const user: AuthenticatedUser = request.user;
+    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
+    const consumer: Consumer = user.entity;
+
+    const result = await this.verificationService.getDocumentVerificationURL(
+      sessionKey,
+      consumer.props._id,
+      locale,
+      idBack === "true", // This and the next 2 lines are a way of getting around params coming through as strings even though declared as booleans
+      selfie === "true",
+      poa === "true",
+    );
+
+    return {
+      id: result.id,
+      expiration: Date.parse(result.link.expiredAt),
+      url: result.link.url,
+    };
   }
 
   @Public()

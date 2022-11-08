@@ -4,8 +4,8 @@ import { Logger } from "winston";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { Result } from "../../core/logic/Result";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
-import { CheckoutService } from "../psp/checkout.service";
-import { AddPaymentMethodResponse } from "../common/domain/AddPaymentMethodResponse";
+import { PaymentService } from "../psp/payment.service";
+import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { Partner } from "../partner/domain/Partner";
@@ -18,11 +18,18 @@ import { PaymentMethod } from "./domain/PaymentMethod";
 import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
-import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "./domain/PaymentProvider";
+import { PlaidClient } from "../psp/plaid.client";
+import { Utils } from "../../core/utils/Utils";
+import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
+import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
+import { SMSService } from "../common/sms.service";
+import { Otp } from "../auth/domain/Otp";
+import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 
 @Injectable()
 export class ConsumerService {
@@ -39,7 +46,7 @@ export class ConsumerService {
   private readonly kmsService: KmsService;
 
   @Inject()
-  private readonly checkoutService: CheckoutService;
+  private readonly paymentService: PaymentService;
 
   @Inject()
   private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService;
@@ -50,24 +57,46 @@ export class ConsumerService {
   @Inject()
   private readonly partnerService: PartnerService;
 
+  @Inject()
+  private readonly plaidClient: PlaidClient;
+
+  @Inject()
+  private readonly smsService: SMSService;
+
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
-  async createConsumerIfFirstTimeLogin(
+  // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
+  async getOrCreateConsumerConditionally(
     emailOrPhone: string,
     partnerID: string,
+    createIfNotExists = true,
     partnerUserID?: string,
   ): Promise<Consumer> {
-    const isEmail = emailOrPhone.includes("@");
+    const isEmail = Utils.isEmail(emailOrPhone);
     const email = isEmail ? emailOrPhone : null;
     const phone = !isEmail ? emailOrPhone : null;
 
     const consumerResult = await this.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumerResult.isFailure) {
+      // consumer doesn't exist will create one if createIfNotExists is true
+
+      if (!createIfNotExists) {
+        throw new BadRequestException(`Consumer with email ${emailOrPhone} doesn't exist, please signup first`);
+      }
+
+      // Commented this out. We want to allow phone-based account creation on the app. Will need
+      // to implement a check for whether or not we are on the app or web so this can be made conditional.
+      /*if (!isEmail) {
+        throw new BadRequestException(
+          "User should be registered with email first and add their phone number before being able to login with phone number",
+        );
+      }*/
+
       const newConsumer = Consumer.createConsumer({
-        email: email.toLowerCase(),
-        displayEmail: email,
+        email: email ? email.toLowerCase() : undefined,
+        displayEmail: email ?? undefined,
         phone,
         partners: [
           {
@@ -77,12 +106,14 @@ export class ConsumerService {
         ],
       });
       const result = await this.consumerRepo.createConsumer(newConsumer);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
-        email: emailOrPhone,
-        firstName: result.props.firstName,
-        lastName: result.props.lastName,
-        nobaUserID: result.props._id,
-      });
+      if (isEmail) {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
+          email: emailOrPhone,
+          firstName: result.props.firstName,
+          lastName: result.props.lastName,
+          nobaUserID: result.props._id,
+        });
+      }
       return result;
     } else if (
       consumerResult.getValue().props.partners.filter(partner => partner.partnerID === partnerID).length === 0
@@ -113,8 +144,69 @@ export class ConsumerService {
     return updatedConsumer;
   }
 
+  async sendOtpToPhone(phone: string) {
+    const otp = Utils.createOtp();
+    await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier);
+    await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
+    const otpObject = Otp.createOtp({ emailOrPhone: phone, identityType: consumerIdentityIdentifier, otp });
+    this.otpRepo.saveOTPObject(otpObject);
+  }
+
+  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest): Promise<Consumer> {
+    const otpResult = await this.otpRepo.getOTP(reqData.phone, consumerIdentityIdentifier);
+
+    if (otpResult.props.otp !== reqData.otp) {
+      throw new BadRequestException("OTP is incorrect");
+    }
+
+    const updatedConsumer = await this.updateConsumer({
+      _id: consumer.props._id,
+      phone: reqData.phone,
+    });
+    return updatedConsumer;
+  }
+
+  async sendOtpToEmail(email: string, consumer: Consumer, partnerID: string) {
+    const otp = Utils.createOtp();
+    await this.otpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier);
+    await this.otpRepo.saveOTP(email, otp, consumerIdentityIdentifier);
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
+      email: email,
+      otp: otp.toString(),
+      firstName: consumer.props.firstName ?? undefined,
+    });
+  }
+
+  async updateConsumerEmail(consumer: Consumer, reqData: UserEmailUpdateRequest): Promise<Consumer> {
+    const otpResult = await this.otpRepo.getOTP(reqData.email, consumerIdentityIdentifier);
+
+    if (otpResult.props.otp !== reqData.otp) {
+      throw new BadRequestException("OTP is incorrect");
+    }
+
+    const updatedConsumer = await this.updateConsumer({
+      _id: consumer.props._id,
+      email: reqData.email.toLowerCase(),
+      displayEmail: reqData.email,
+    });
+
+    if (!consumer.props.email) {
+      //email being added for the first time
+      this.logger.info(`User email updated for first time sending welcome note, userId: ${consumer.props._id}`);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, undefined, {
+        email: updatedConsumer.props.email,
+        firstName: updatedConsumer.props.firstName,
+        lastName: updatedConsumer.props.lastName,
+        nobaUserID: updatedConsumer.props._id,
+      });
+    }
+
+    return updatedConsumer;
+  }
+
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
-    const isEmail = emailOrPhone.includes("@");
+    const isEmail = Utils.isEmail(emailOrPhone);
     const consumerResult = isEmail
       ? await this.consumerRepo.getConsumerByEmail(emailOrPhone.toLowerCase())
       : await this.consumerRepo.getConsumerByPhone(emailOrPhone);
@@ -126,7 +218,7 @@ export class ConsumerService {
   }
 
   async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO, partnerId: string): Promise<Consumer> {
-    const addPaymentMethodResponse: AddPaymentMethodResponse = await this.checkoutService.addPaymentMethod(
+    const addPaymentMethodResponse: AddPaymentMethodResponse = await this.paymentService.addPaymentMethod(
       consumer,
       paymentMethod,
       partnerId,
@@ -135,21 +227,24 @@ export class ConsumerService {
     if (addPaymentMethodResponse.updatedConsumerData) {
       const result = await this.updateConsumer(addPaymentMethodResponse.updatedConsumerData);
 
-      if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
-        // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
-        // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
-        // we may want to let the user know some day when their bank allows crypto.
-        throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+      if (paymentMethod.type === PaymentType.CARD) {
+        if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
+          // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
+          // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
+          // we may want to let the user know some day when their bank allows crypto.
+          throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+        }
+
+        await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
+          email: consumer.props.displayEmail,
+          cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
+          last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
+        });
       }
 
-      await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
-        email: consumer.props.displayEmail,
-        cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
-        last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
-      });
       return result;
     }
   }
@@ -166,16 +261,16 @@ export class ConsumerService {
     }
     */
 
-    const paymentProvider = await this.getPaymentMethodProvider(consumer.props._id, transaction.props.paymentMethodID);
-    if (paymentProvider === PaymentProvider.CHECKOUT) {
-      return this.checkoutService.requestCheckoutPayment(consumer, transaction);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    if (paymentMethod.paymentProviderID === PaymentProvider.CHECKOUT) {
+      return this.paymentService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     } else {
       this.logger.error(
-        `Error in making payment as payment provider ${paymentProvider} is not supported. Consumer: ${JSON.stringify(
-          consumer,
-        )}, Transaction: ${JSON.stringify(transaction)}`,
+        `Error in making payment as payment provider ${
+          paymentMethod.paymentProviderID
+        } is not supported. Consumer: ${JSON.stringify(consumer)}, Transaction: ${JSON.stringify(transaction)}`,
       );
-      throw new BadRequestException(`Payment provider ${paymentProvider} is not supported`);
+      throw new BadRequestException(`Payment provider ${paymentMethod.paymentProviderID} is not supported`);
     }
   }
 
@@ -190,7 +285,7 @@ export class ConsumerService {
     const paymentProviderID = paymentMethod[0].paymentProviderID;
 
     if (paymentProviderID === PaymentProvider.CHECKOUT) {
-      await this.checkoutService.removePaymentMethod(paymentToken);
+      await this.paymentService.removePaymentMethod(paymentToken);
     } else {
       throw new NotFoundException("Payment provider not found");
     }
@@ -219,7 +314,7 @@ export class ConsumerService {
 
   async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProvider): Promise<FiatTransactionStatus> {
     if (paymentProvider === PaymentProvider.CHECKOUT) {
-      return this.checkoutService.getFiatPaymentStatus(paymentId);
+      return this.paymentService.getFiatPaymentStatus(paymentId);
     } else {
       throw new BadRequestException("Payment provider is not supported");
     }
@@ -261,8 +356,8 @@ export class ConsumerService {
 
   async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string, partnerId: string) {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
-    await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, "CONSUMER");
-    await this.otpRepo.saveOTP(consumer.props.email, otp, "CONSUMER");
+    await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier);
+    await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier);
     await this.notificationService.sendNotification(
       NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       partnerId,
@@ -278,7 +373,7 @@ export class ConsumerService {
 
   async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number) {
     // Verify if the otp is correct
-    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, "CONSUMER");
+    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier);
     const currentDateTime: number = new Date().getTime();
 
     if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {
@@ -360,9 +455,11 @@ export class ConsumerService {
   }
 
   async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string, partnerID: string): Promise<Consumer> {
+    // You can have the same wallet for multiple partners so we want to be sure to only delete the one for the
+    // current partner.
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
       existingCryptoWallet =>
-        existingCryptoWallet.address !== cryptoWalletAddress && existingCryptoWallet.partnerID !== partnerID,
+        existingCryptoWallet.address !== cryptoWalletAddress || existingCryptoWallet.partnerID !== partnerID,
     );
 
     const updatedConsumer = await this.updateConsumer({

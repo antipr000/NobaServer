@@ -1,13 +1,39 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Address } from "../domain/Address";
-import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import {
+  AggregatedPaymentMethodState,
+  AggregatedWalletState,
+  DocumentVerificationState,
+  KycVerificationState,
+  UserState,
+} from "../domain/ExternalStates";
+import { PaymentMethodType } from "../domain/PaymentMethod";
+
+export class PaymentMethodCardDataDTO {
+  @ApiPropertyOptional()
+  cardType?: string;
+
+  @ApiProperty()
+  first6Digits: string;
+
+  @ApiProperty()
+  last4Digits: string;
+}
+
+export class PaymentMethodACHDataDTO {
+  @ApiProperty()
+  accountMask: string;
+
+  @ApiPropertyOptional()
+  accountType?: string;
+}
 
 export class PaymentMethodsDTO {
   @ApiPropertyOptional()
-  cardName?: string;
+  name?: string;
 
-  @ApiPropertyOptional()
-  cardType?: string;
+  @ApiProperty({ enum: PaymentMethodType })
+  type: PaymentMethodType;
 
   @ApiPropertyOptional()
   imageUri?: string;
@@ -15,14 +41,11 @@ export class PaymentMethodsDTO {
   @ApiProperty()
   paymentToken: string;
 
-  @ApiProperty()
-  first6Digits: string;
+  @ApiPropertyOptional()
+  cardData?: PaymentMethodCardDataDTO;
 
-  @ApiProperty()
-  last4Digits: string;
-
-  @ApiProperty({ enum: PaymentMethodStatus })
-  status: PaymentMethodStatus;
+  @ApiPropertyOptional()
+  achData?: PaymentMethodACHDataDTO;
 }
 
 export class CryptoWalletsDTO {
@@ -38,24 +61,21 @@ export class CryptoWalletsDTO {
   @ApiPropertyOptional()
   isEVMCompatible?: boolean;
 
-  @ApiProperty({ enum: WalletStatus })
-  status: WalletStatus;
-
   // Keep from API as this should not be exposed to user
   //partnerID: string;
 }
 
 export class KycVerificationDTO {
-  @ApiProperty({ enum: KYCStatus })
-  kycVerificationStatus: KYCStatus;
+  @ApiProperty({ enum: KycVerificationState })
+  kycVerificationStatus: KycVerificationState;
 
   @ApiPropertyOptional()
   updatedTimestamp?: number;
 }
 
 export class DocumentVerificationDTO {
-  @ApiPropertyOptional({ enum: DocumentVerificationStatus })
-  documentVerificationStatus?: string;
+  @ApiPropertyOptional({ enum: DocumentVerificationState })
+  documentVerificationStatus?: DocumentVerificationState;
 
   @ApiPropertyOptional()
   updatedTimestamp?: number;
@@ -72,6 +92,9 @@ export class ConsumerDTO {
 
   @ApiProperty()
   email: string;
+
+  @ApiProperty({ enum: UserState })
+  status: UserState;
 
   @ApiProperty()
   kycVerificationData: KycVerificationDTO;
@@ -103,11 +126,11 @@ export class ConsumerDTO {
   @ApiPropertyOptional({ type: [CryptoWalletsDTO] })
   cryptoWallets?: CryptoWalletsDTO[];
 
-  @ApiPropertyOptional({ enum: PaymentMethodStatus })
-  paymentMethodStatus?: PaymentMethodStatus;
+  @ApiPropertyOptional({ enum: AggregatedPaymentMethodState })
+  paymentMethodStatus?: AggregatedPaymentMethodState;
 
-  @ApiPropertyOptional({ enum: WalletStatus })
-  walletStatus?: WalletStatus;
+  @ApiPropertyOptional({ enum: AggregatedWalletState })
+  walletStatus?: AggregatedWalletState;
 }
 
 export class ConsumerSimpleDTO {

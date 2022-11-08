@@ -11,6 +11,7 @@ import { TransactionService } from "../transaction.service";
 import { LockService } from "../../../modules/common/lock.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
 
 export class TransactionFailedProcessor extends MessageProcessor {
   constructor(
@@ -100,8 +101,14 @@ export class TransactionFailedProcessor extends MessageProcessor {
         orderFailedParams: {
           transactionID: transaction.props.transactionID,
           transactionTimestamp: transaction.props.transactionTimestamp,
-          paymentMethod: paymentMethod.cardData.cardType,
-          last4Digits: paymentMethod.cardData.last4Digits,
+          paymentMethod:
+            paymentMethod.type === PaymentMethodType.CARD
+              ? paymentMethod.cardData.cardType
+              : paymentMethod.achData.accountType,
+          last4Digits:
+            paymentMethod.type === PaymentMethodType.CARD
+              ? paymentMethod.cardData.last4Digits
+              : paymentMethod.achData.mask,
           fiatCurrency: transaction.props.leg1,
           conversionRate: transaction.props.exchangeRate,
           processingFee: transaction.props.processingFee,

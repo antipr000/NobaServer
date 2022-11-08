@@ -9,9 +9,10 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { CommonModule } from "../common/common.module";
 import { NotificationsModule } from "../notifications/notification.module";
+import { PspModule } from "../psp/psp.module";
 
 @Module({
-  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule],
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule, PspModule],
   controllers: [VerificationController],
   providers: [
     VerificationService,
@@ -30,7 +31,7 @@ import { NotificationsModule } from "../notifications/notification.module";
 export class VerificationModule {}
 
 @Module({
-  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule],
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule, PspModule],
   controllers: [VerificationWebhookController],
   providers: [
     VerificationService,

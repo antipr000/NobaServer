@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export type { ACHDetailsDTO } from "./models/ACHDetailsDTO";
 export type { ActionDTO } from "./models/ActionDTO";
 export type { AddCryptoWalletDTO } from "./models/AddCryptoWalletDTO";
 export type { AddNobaAdminDTO } from "./models/AddNobaAdminDTO";
@@ -9,12 +10,14 @@ export type { AddPartnerAdminRequestDTO } from "./models/AddPartnerAdminRequestD
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
+export type { CardDetailsDTO } from "./models/CardDetailsDTO";
 export type { CaseDTO } from "./models/CaseDTO";
 export type { CaseNotificationDataDTO } from "./models/CaseNotificationDataDTO";
 export type { CaseNotificationWebhookRequestDTO } from "./models/CaseNotificationWebhookRequestDTO";
 export type { CheckTransactionDTO } from "./models/CheckTransactionDTO";
 export type { ConfigurationsDTO } from "./models/ConfigurationsDTO";
 export type { ConfirmWalletUpdateDTO } from "./models/ConfirmWalletUpdateDTO";
+export type { ConsumerBalanceDTO } from "./models/ConsumerBalanceDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
 export type { ConsumerLimitsDTO } from "./models/ConsumerLimitsDTO";
 export type { CreatePartnerRequestDTO } from "./models/CreatePartnerRequestDTO";
@@ -32,7 +35,9 @@ export type { DeviceVerificationResponseDTO } from "./models/DeviceVerificationR
 export type { DocumentVerificationDTO } from "./models/DocumentVerificationDTO";
 export type { DocumentVerificationResultDTO } from "./models/DocumentVerificationResultDTO";
 export type { DocumentVerificationWebhookRequestDTO } from "./models/DocumentVerificationWebhookRequestDTO";
+export type { EmailVerificationOtpRequest } from "./models/EmailVerificationOtpRequest";
 export type { IDVerificationRequestDTO } from "./models/IDVerificationRequestDTO";
+export type { IDVerificationURLResponseDTO } from "./models/IDVerificationURLResponseDTO";
 export type { KybStatusInfoDTO } from "./models/KybStatusInfoDTO";
 export type { KycVerificationDTO } from "./models/KycVerificationDTO";
 export type { LocationDTO } from "./models/LocationDTO";
@@ -41,8 +46,11 @@ export type { NationalIDDTO } from "./models/NationalIDDTO";
 export type { NobaAdminDTO } from "./models/NobaAdminDTO";
 export type { PartnerAdminDTO } from "./models/PartnerAdminDTO";
 export type { PartnerDTO } from "./models/PartnerDTO";
+export type { PaymentMethodACHDataDTO } from "./models/PaymentMethodACHDataDTO";
+export type { PaymentMethodCardDataDTO } from "./models/PaymentMethodCardDataDTO";
 export type { PaymentMethodsDTO } from "./models/PaymentMethodsDTO";
 export type { PeriodLimit } from "./models/PeriodLimit";
+export type { PhoneVerificationOtpRequest } from "./models/PhoneVerificationOtpRequest";
 export type { PlaidTokenDTO } from "./models/PlaidTokenDTO";
 export type { SubdivisionDTO } from "./models/SubdivisionDTO";
 export type { TransactionAmountsDTO } from "./models/TransactionAmountsDTO";
@@ -54,6 +62,8 @@ export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";
 export type { UpdatePartnerAdminRequestDTO } from "./models/UpdatePartnerAdminRequestDTO";
 export type { UpdatePartnerRequestDTO } from "./models/UpdatePartnerRequestDTO";
+export type { UserEmailUpdateRequest } from "./models/UserEmailUpdateRequest";
+export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";
 export type { VerificationResultDTO } from "./models/VerificationResultDTO";
 export type { VerifyOtpRequestDTO } from "./models/VerifyOtpRequestDTO";

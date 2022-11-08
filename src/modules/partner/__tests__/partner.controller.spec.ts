@@ -1,29 +1,31 @@
-import { TestingModule, Test } from "@nestjs/testing";
+import { ForbiddenException, NotFoundException } from "@nestjs/common";
+import { Test, TestingModule } from "@nestjs/testing";
 import { deepEqual, instance, when } from "ts-mockito";
-import { PartnerService } from "../partner.service";
-import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
-import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { ConsumerMapper } from "../../../../src/modules/consumer/mappers/ConsumerMapper";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { PartnerAdminService } from "../partneradmin.service";
 import { PartnerMapper } from "../mappers/PartnerMapper";
 import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
 import { PartnerController } from "../partner.controller";
-import { PartnerAdmin } from "../domain/PartnerAdmin";
-import { ForbiddenException, NotFoundException } from "@nestjs/common";
+import { PartnerAdmin, PARTNER_ADMIN_ROLE_TYPES } from "../domain/PartnerAdmin";
 import { Partner } from "../domain/Partner";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
-import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
-import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
-import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
+import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
+import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
+import { PartnerService } from "../partner.service";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
   let partnerService: PartnerService;
   let partnerAdminService: PartnerAdminService;
   const partnerMapper: PartnerMapper = new PartnerMapper();
+  const consumerMapper: ConsumerMapper = new ConsumerMapper();
   const partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
   const transactionMapper = new TransactionMapper();
 
@@ -54,6 +56,86 @@ describe("PartnerController", () => {
   });
 
   describe("partner service tests", () => {
+    it("should get consumers for a partner with ALL permissions", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "mock2@partner.com",
+        partnerId: partner.props._id,
+        role: "ALL",
+      });
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "mock-partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+      });
+      const consumers: Consumer[] = [consumer];
+      when(partnerService.getAllPartnerConsumers(partner.props._id)).thenResolve(consumers);
+
+      const result = await partnerController.getAllPartnerConsumers({
+        user: {
+          entity: requestingPartnerAdmin,
+        },
+      });
+      const expectedResult = consumers.map(partnerConsumer => consumerMapper.toDTO(partnerConsumer));
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should raise Forbidden consumers for a partner with just BASIC permissions", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "mock2@partner.com",
+        partnerId: partner.props._id,
+        role: "BASIC",
+      });
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "mock-partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+      });
+      const consumers: Consumer[] = [consumer];
+      when(partnerService.getAllPartnerConsumers(partner.props._id)).thenResolve(consumers);
+
+      try {
+        const result = await partnerController.getAllPartnerConsumers({
+          user: {
+            entity: requestingPartnerAdmin,
+          },
+        });
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
     it("should add admin when admin with all access requests", async () => {
       const partnerAdminToAdd = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-1",
@@ -86,7 +168,7 @@ describe("PartnerController", () => {
         {
           email: partnerAdminToAdd.props.email,
           name: partnerAdminToAdd.props.name,
-          role: partnerAdminToAdd.props.role,
+          role: PARTNER_ADMIN_ROLE_TYPES[partnerAdminToAdd.props.role],
         },
         mockRequest,
       );
@@ -127,7 +209,7 @@ describe("PartnerController", () => {
           {
             email: partnerAdminToAdd.props.email,
             name: partnerAdminToAdd.props.name,
-            role: partnerAdminToAdd.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[partnerAdminToAdd.props.role],
           },
           mockRequest,
         );
@@ -170,7 +252,7 @@ describe("PartnerController", () => {
           {
             email: partnerAdminToAdd.props.email,
             name: partnerAdminToAdd.props.name,
-            role: partnerAdminToAdd.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[partnerAdminToAdd.props.role],
           },
           mockRequest,
         );
@@ -595,7 +677,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -603,14 +685,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       when(
@@ -628,7 +710,7 @@ describe("PartnerController", () => {
         partnerAdmin.props._id,
         {
           name: updatedPartnerAdmin.props.name,
-          role: updatedPartnerAdmin.props.role,
+          role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
         },
         {
           user: {
@@ -646,7 +728,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-2",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -654,14 +736,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-2",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "ALL",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
       });
 
       when(
@@ -680,7 +762,7 @@ describe("PartnerController", () => {
           partnerAdmin.props._id,
           {
             name: updatedPartnerAdmin.props.name,
-            role: updatedPartnerAdmin.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
           },
           {
             user: {
@@ -700,7 +782,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -708,14 +790,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       when(
@@ -734,7 +816,7 @@ describe("PartnerController", () => {
           partnerAdmin.props._id,
           {
             name: updatedPartnerAdmin.props.name,
-            role: updatedPartnerAdmin.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
           },
           {
             user: {
@@ -754,7 +836,7 @@ describe("PartnerController", () => {
         name: "Old Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "BASIC",
+        role: PARTNER_ADMIN_ROLE_TYPES.BASIC,
       });
 
       const updatedPartnerAdmin = PartnerAdmin.createPartnerAdmin({
@@ -762,14 +844,14 @@ describe("PartnerController", () => {
         name: "New Name",
         email: "mock@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
         email: "moc2k@partner.com",
         partnerId: "mock-partner-1",
-        role: "INTERMEDIATE",
+        role: PARTNER_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
 
       when(
@@ -788,7 +870,7 @@ describe("PartnerController", () => {
           partnerAdmin.props._id,
           {
             name: updatedPartnerAdmin.props.name,
-            role: updatedPartnerAdmin.props.role,
+            role: PARTNER_ADMIN_ROLE_TYPES[updatedPartnerAdmin.props.role],
           },
           {
             user: {
@@ -1099,6 +1181,37 @@ describe("PartnerController", () => {
           expect(e).toBeInstanceOf(NotFoundException);
           expect(e.message).toBe("Transaction does not exist");
         }
+      });
+    });
+    describe("POST /partners/logo", () => {
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "moc2k@partner.com",
+        partnerId: "mock-partner-1",
+        role: "ALL",
+      });
+      it("should throw Exception if user isn't entitled", async () => {
+        requestingPartnerAdmin.canUpdatePartnerDetails = () => false;
+        try {
+          await partnerController.uploadPartnerLogo(undefined, { user: { entity: requestingPartnerAdmin } });
+          expect(true).toBe(false);
+        } catch (e) {
+          expect(e).toBeInstanceOf(ForbiddenException);
+        }
+      });
+
+      it("should throw Exception if user isn't entitled", async () => {
+        requestingPartnerAdmin.canUpdatePartnerDetails = () => true;
+        const partner = Partner.createPartner({
+          _id: requestingPartnerAdmin.props.partnerId,
+          name: "Noba",
+          apiKeyForEmbed: "fake-api-key",
+        });
+        when(partnerService.uploadPartnerLogo(requestingPartnerAdmin.props.partnerId, undefined)).thenResolve(partner);
+        const partnerDTO = await partnerController.uploadPartnerLogo(undefined, {
+          user: { entity: requestingPartnerAdmin },
+        });
+        expect(partnerDTO).toStrictEqual(partnerMapper.toDTO(partner));
       });
     });
   });

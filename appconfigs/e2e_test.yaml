@@ -45,6 +45,7 @@ checkout:
   secretKey: "sk_sbox_xdhkcai4bosm32intni46my5x4j"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
 
 twilio:
   awsSecretNameForSID: ""
@@ -119,6 +120,8 @@ configuration:
 
 partner:
   embedSecretKey: "testsecretkey"
+  publicS3Bucket: "noba-partner-data"
+  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "sandbox"

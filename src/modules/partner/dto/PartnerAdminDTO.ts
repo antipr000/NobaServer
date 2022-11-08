@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PARTNER_ADMIN_ROLE_TYPES } from "../../partner/domain/PartnerAdmin";
 
 export class PartnerAdminDTO {
   @ApiProperty()
@@ -13,6 +14,6 @@ export class PartnerAdminDTO {
   @ApiProperty()
   partnerID: string;
 
-  @ApiProperty()
-  role: string;
+  @ApiProperty({ enum: PARTNER_ADMIN_ROLE_TYPES })
+  role: PARTNER_ADMIN_ROLE_TYPES;
 }

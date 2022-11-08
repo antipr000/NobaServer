@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { AdminProps } from "../domain/Admin";
+import { AdminProps, NOBA_ADMIN_ROLE_TYPES } from "../domain/Admin";
 
 export class AddNobaAdminDTO implements Partial<AdminProps> {
   @ApiProperty()
@@ -8,6 +8,6 @@ export class AddNobaAdminDTO implements Partial<AdminProps> {
   @ApiProperty()
   name: string;
 
-  @ApiProperty()
-  role: string;
+  @ApiProperty({ enum: NOBA_ADMIN_ROLE_TYPES })
+  role: NOBA_ADMIN_ROLE_TYPES;
 }

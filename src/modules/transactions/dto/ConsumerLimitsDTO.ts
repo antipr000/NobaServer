@@ -27,3 +27,23 @@ export class ConsumerLimitsDTO {
   @ApiPropertyOptional({ type: PeriodLimit })
   daily?: PeriodLimit;
 }
+
+export class ConsumerBalanceDTO {
+  @ApiProperty()
+  asset: string;
+
+  @ApiProperty()
+  balance: string;
+
+  @ApiPropertyOptional()
+  accountType?: string;
+
+  @ApiPropertyOptional()
+  accountID?: string;
+
+  @ApiPropertyOptional()
+  lastUpdate?: number;
+
+  @ApiPropertyOptional()
+  name?: string;
+}

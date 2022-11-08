@@ -5,6 +5,7 @@ import { SwapAssetService } from "./swap.asset.service";
 import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
 import { ZerohashAssetService } from "./zerohash.asset.service";
 import { SquidService } from "../squid.service";
+import { WalletProviderService } from "./wallet.provider.service";
 
 @Injectable()
 // TODO(#594): Rename to something proper
@@ -19,6 +20,10 @@ export class CommonAssetServiceFactory {
       return this.usdcPolygonAssetService;
     }
 
+    return this.zerohashAssetService;
+  }
+
+  getWalletProviderService(): WalletProviderService {
     return this.zerohashAssetService;
   }
 }
@@ -42,5 +47,9 @@ export class AssetServiceFactory {
     } else {
       return this.commonAssetServiceFactory.getAssetService(ticker);
     }
+  }
+
+  getWalletProviderService(): WalletProviderService {
+    return this.commonAssetServiceFactory.getWalletProviderService();
   }
 }

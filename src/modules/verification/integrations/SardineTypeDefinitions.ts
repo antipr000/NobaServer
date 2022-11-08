@@ -33,10 +33,19 @@ export type Crypto = {
   address?: string;
 };
 
+export type Bank = {
+  accountNumber: string;
+  routingNumber: string;
+  accountType: string;
+  balance: number;
+  balanceCurrencyCode: string;
+};
+
 export type PaymentMethod = {
   type: PaymentMethodTypes;
   card?: Card;
   crypto?: Crypto;
+  bank?: Bank;
 };
 
 export type Recipient = {
@@ -117,6 +126,33 @@ export type DeviceGpsLocation = {
   latitude?: string;
   longitude?: string;
   mockLevel?: string;
+};
+
+export type IdentityDocumentURLRequest = {
+  sessionKey: string;
+  idback: boolean;
+  selfie: boolean;
+  poa: boolean;
+  locale: string;
+  inputData: {
+    firstName: string;
+    lastName: string;
+    address: {
+      street1: string;
+      city: string;
+      region: string;
+      postalCode: string;
+      countryCode: string;
+    };
+  };
+};
+
+export type IdentityDocumentURLResponse = {
+  id: string;
+  link: {
+    expiredAt: string;
+    url: string;
+  };
 };
 
 export type SardineDeviceInformationResponse = {

@@ -37,13 +37,14 @@ checkout:
   secretKey: "sk_sbox_xdhkcai4bosm32intni46my5x4j"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
 
 twilio:
-  awsSecretNameForSID: ""
-  awsSecretNameForAuthToken: ""
-  SID: "AC4efa22156849ec40b383a80f45525409"
-  authToken: "c34165debbb0a77e3507884e86b88772"
-  fromPhoneNumber: "+19894557345"
+  awsSecretNameForSID: "TEST_TWILIO_SID"
+  awsSecretNameForAuthToken: "TEST_TWILIO_SECRET"
+  SID: ""
+  authToken: ""
+  fromPhoneNumber: "+14246553925"
 
 mongo:
   awsSecretNameForUri: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
@@ -111,6 +112,8 @@ configuration:
 
 partner:
   embedSecretKey: "QnZSDgPC1Z3BY+du+u1LYmvlKH3i9lDgFPEexRLgY33yDBGGtoseqkf5oXP7aRRvU0wMScP5YHvqsxS45e3l2A=="
+  publicS3Bucket: "noba-partner-data"
+  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "sandbox"

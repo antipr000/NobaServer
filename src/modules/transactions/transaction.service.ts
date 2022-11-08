@@ -17,7 +17,7 @@ import { TransactionInformation } from "../verification/domain/TransactionInform
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
-import { NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
+import { ConsumerAccountBalance, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -37,6 +37,7 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
 
 @Injectable()
 export class TransactionService {
@@ -153,6 +154,10 @@ export class TransactionService {
   async getTransaction(transactionID: string): Promise<TransactionDTO> {
     const transaction = await this.transactionsRepo.getTransaction(transactionID);
     return this.transactionsMapper.toDTO(transaction);
+  }
+
+  async getParticipantBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
+    return await this.assetServiceFactory.getWalletProviderService().getConsumerAccountBalance(participantID);
   }
 
   async getUserTransactions(
@@ -369,7 +374,7 @@ export class TransactionService {
     consumer: Consumer,
     transaction: Transaction,
   ): Promise<PendingTransactionValidationStatus> {
-    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    const paymentMethod: PaymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
 
     if (!paymentMethod) {
       this.logger.error(
@@ -408,14 +413,13 @@ export class TransactionService {
       transactionID: transaction.props._id,
       amount: transaction.props.leg1Amount,
       currencyCode: transaction.props.leg1,
-      first6DigitsOfCard: paymentMethod.cardData.first6Digits,
-      last4DigitsOfCard: paymentMethod.cardData.last4Digits,
-      cardID: paymentMethod.paymentToken,
+      paymentMethodID: paymentMethod.paymentToken,
       cryptoCurrencyCode: transaction.props.leg2,
       walletAddress: transaction.props.destinationWalletAddress,
       walletStatus: cryptoWallet.status,
       partnerName: partner.props.name,
     };
+
     const result = await this.verificationService.transactionVerification(
       transaction.props.sessionKey,
       consumer,
@@ -470,8 +474,14 @@ export class TransactionService {
           transactionInitiatedParams: {
             transactionID: transaction.props.transactionID,
             transactionTimestamp: transaction.props.transactionTimestamp,
-            paymentMethod: paymentMethod.cardData.cardType,
-            last4Digits: paymentMethod.cardData.last4Digits,
+            paymentMethod:
+              paymentMethod.type === PaymentMethodType.CARD
+                ? paymentMethod.cardData.cardType
+                : paymentMethod.achData.accountType,
+            last4Digits:
+              paymentMethod.type === PaymentMethodType.CARD
+                ? paymentMethod.cardData.last4Digits
+                : paymentMethod.achData.mask,
             fiatCurrency: transaction.props.leg1,
             conversionRate: transaction.props.exchangeRate,
             processingFee: transaction.props.processingFee,

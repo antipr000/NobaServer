@@ -44,6 +44,7 @@ export const CHECKOUT_PUBLIC_KEY = "publicKey";
 export const CHECKOUT_SECRET_KEY = "secretKey";
 export const CHECKOUT_COUPON_CODE = "couponCode";
 export const CHECKOUT_PARTNER_ID = "partnerId";
+export const CHECKOUT_PROCESSING_CHANNEL_ID = "processingChannelId";
 
 export const TWILIO_CONFIG_KEY = "twilio";
 export const TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR = "awsSecretNameForSID";
@@ -134,6 +135,8 @@ export const COMMON_CONFIG_FIAT_IMAGE_BASE_URL = "fiatImageBaseUrl";
 
 export const PARTNER_CONFIG_KEY = "partner";
 export const PARTNER_CONFIG_EMBED_SECRET_KEY = "embedSecretKey";
+export const PARTNER_PUBLIC_DATA_S3_BUCKET_KEY = "publicS3Bucket";
+export const PARTNER_PUBLIC_CLOUDFRONT_URL_KEY = "publicDataCloudfrontUrl";
 
 export const PLAID_CONFIG_KEY = "plaid";
 export const PLAID_ENVIRONMENT = "env";

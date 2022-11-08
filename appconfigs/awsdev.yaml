@@ -33,13 +33,14 @@ checkout:
   secretKey: "bogus-value"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
 
 twilio:
-  awsSecretNameForSID: ""
-  awsSecretNameForAuthToken: ""
-  SID: "AC4efa22156849ec40b383a80f45525409"
-  authToken: "c34165debbb0a77e3507884e86b88772"
-  fromPhoneNumber: "+19894557345"
+  awsSecretNameForSID: "TEST_TWILIO_SID"
+  awsSecretNameForAuthToken: "TEST_TWILIO_SECRET"
+  SID: ""
+  authToken: ""
+  fromPhoneNumber: "+14246553925"
 
 mongo:
   awsSecretNameForUri: "DEV_DOCUMENT_DB_URI"
@@ -108,16 +109,18 @@ configuration:
 
 partner:
   embedSecretKey: "QSCA2fUSwScK+zFdTsXPVf//j8NYtQ4DlL373Vvs0hCqnN7EbZl8da+adxDbO32ZxIVw7qG2RSeQj6fslfGDdg=="
+  publicS3Bucket: "noba-partner-data"
+  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "sandbox"
   version: "2020-09-14"
-  redirectUri: ""
-  awsSecretNameForRedirectUri: "http://localhost:8080/plaid/redirect_uri"
-  clientID: ""
-  awsSecretNameForClientID: "62432d096685bc0013d030a8"
-  secretKey: ""
-  awsSecretNameForSecretKey: "3efe6f2aef4a7ab5d609149f96a35b"
+  redirectUri: "http://localhost:8080/plaid/redirect_uri"
+  awsSecretNameForRedirectUri: ""
+  clientID: "62432d096685bc0013d030a8"
+  awsSecretNameForClientID: ""
+  secretKey: "3efe6f2aef4a7ab5d609149f96a35b"
+  awsSecretNameForSecretKey: ""
 
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"

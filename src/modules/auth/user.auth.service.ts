@@ -15,11 +15,15 @@ export class UserAuthService extends AuthService {
     return this.identityType;
   }
 
-  protected async getUserId(emailOrPhone: string, partnerID: string): Promise<string> {
+  protected async getUserId(emailOrPhone: string, partnerID: string, createUserIfNotExists: boolean): Promise<string> {
     if (!partnerID || partnerID.length == 0) {
       throw new BadRequestException("PartnerID is required");
     }
-    const consumer: Consumer = await this.consumerService.createConsumerIfFirstTimeLogin(emailOrPhone, partnerID);
+    const consumer: Consumer = await this.consumerService.getOrCreateConsumerConditionally(
+      emailOrPhone,
+      partnerID,
+      createUserIfNotExists,
+    );
     return consumer.props._id;
   }
 

@@ -2,12 +2,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { PaymentMethodACHDataDTO } from "./PaymentMethodACHDataDTO";
+import type { PaymentMethodCardDataDTO } from "./PaymentMethodCardDataDTO";
+
 export type PaymentMethodsDTO = {
-  cardName?: string;
-  cardType?: string;
+  name?: string;
+  type: "Card" | "ACH";
   imageUri?: string;
   paymentToken: string;
-  first6Digits: string;
-  last4Digits: string;
-  status: "Flagged" | "Rejected" | "Approved" | "Unsupported";
+  cardData?: PaymentMethodCardDataDTO;
+  achData?: PaymentMethodACHDataDTO;
 };

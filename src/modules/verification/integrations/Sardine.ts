@@ -22,6 +22,8 @@ import {
   FeedbackRequest,
   FeedbackStatus,
   FeedbackType,
+  IdentityDocumentURLRequest,
+  IdentityDocumentURLResponse,
   PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDeviceInformationResponse,
@@ -35,14 +37,20 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
+import { PlaidClient } from "../../../modules/psp/plaid.client";
+import { RetrieveAccountDataResponse, BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
+import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 
 @Injectable()
 export class Sardine implements IDVProvider {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
+  private BASE_URI: string;
 
-  BASE_URI: string;
-  constructor(private readonly configService: CustomConfigService) {
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: CustomConfigService,
+    private readonly plaidClient: PlaidClient,
+  ) {
     this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
   }
 
@@ -180,11 +188,94 @@ export class Sardine implements IDVProvider {
     }
   }
 
+  async getIdentityDocumentVerificationURL(
+    sessionKey: string,
+    consumer: Consumer,
+    locale: IDVerificationURLRequestLocale,
+    idBack: boolean,
+    selfie: boolean,
+    poa: boolean,
+  ): Promise<IdentityDocumentURLResponse> {
+    try {
+      const requestData: IdentityDocumentURLRequest = {
+        sessionKey: sessionKey,
+        idback: idBack,
+        selfie: selfie,
+        poa: poa,
+        locale: locale,
+        inputData: {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          address: {
+            street1: consumer.props.address.streetLine1,
+            city: consumer.props.address.city,
+            region: consumer.props.address.regionCode,
+            postalCode: consumer.props.address.postalCode,
+            countryCode: consumer.props.address.countryCode,
+          },
+        },
+      };
+
+      const { data } = await axios.post(
+        this.BASE_URI + "/v1/identity-documents/urls",
+        requestData,
+        this.getAxiosConfig(),
+      );
+      return data as IdentityDocumentURLResponse;
+    } catch (e) {
+      this.logger.error(`Sardine request failed for get identity document URL. Result: ${e}`);
+      throw new InternalServerErrorException("Unable to retrieve URL at this time");
+    }
+  }
+
   async transactionVerification(
     sessionKey: string,
     consumer: Consumer,
     transactionInformation: TransactionInformation,
   ): Promise<ConsumerVerificationResult> {
+    let sardinePaymentMethodData;
+    const paymentMethod = consumer.getPaymentMethodByID(transactionInformation.paymentMethodID);
+    if (paymentMethod.type === PaymentMethodType.CARD) {
+      sardinePaymentMethodData = {
+        type: PaymentMethodTypes.CARD,
+        card: {
+          first6: paymentMethod.cardData.first6Digits,
+          last4: paymentMethod.cardData.last4Digits,
+          hash: transactionInformation.paymentMethodID,
+        },
+      };
+    } else if (paymentMethod.type === PaymentMethodType.ACH) {
+      const accountData: RetrieveAccountDataResponse = await this.plaidClient.retrieveAccountData({
+        accessToken: paymentMethod.achData.accessToken,
+      });
+
+      let accountType = "";
+      switch (accountData.accountType) {
+        case BankAccountType.CHECKING:
+          accountType = "checking";
+          break;
+
+        case BankAccountType.SAVINGS:
+          accountType = "savings";
+          break;
+
+        default:
+          accountType = "other";
+      }
+
+      sardinePaymentMethodData = {
+        // TODO(Sardine): Only allowed value as per documentation is "crypto". So, why "BANK"/"CARD"?
+        type: PaymentMethodTypes.BANK,
+        bank: {
+          accountNumber: accountData.accountNumber,
+          routingNumber: accountData.achRoutingNumber,
+          accountType: accountType,
+          balance: parseFloat(accountData.availableBalance),
+          balanceCurrencyCode: accountData.currencyCode,
+        },
+      };
+    }
+
     const sanctionsCheckSardineRequest: SardineCustomerRequest = {
       flow: "payment-submission",
       sessionKey: sessionKey,
@@ -194,18 +285,11 @@ export class Sardine implements IDVProvider {
       transaction: {
         id: transactionInformation.transactionID,
         status: "accepted",
-        createdAtMillis: new Date().getTime(),
+        createdAtMillis: Date.now(),
         amount: transactionInformation.amount,
         currencyCode: transactionInformation.currencyCode,
         actionType: "buy",
-        paymentMethod: {
-          type: PaymentMethodTypes.CARD,
-          card: {
-            first6: transactionInformation.first6DigitsOfCard,
-            last4: transactionInformation.last4DigitsOfCard,
-            hash: transactionInformation.cardID,
-          },
-        },
+        paymentMethod: sardinePaymentMethodData,
         recipient: {
           emailAddress: consumer.props.email,
           isKycVerified: consumer.props.verificationData.kycVerificationStatus === KYCStatus.APPROVED,

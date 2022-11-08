@@ -38,7 +38,7 @@ import {
   VerificationWebhooksService,
 } from "./api_client";
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE } from "../src/modules/verification/integrations/fakes/FakeSardineResponses";
+import { FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE } from "../src/modules/verification/integrations/fakes/FakeSardineResponses";
 import crypto_ts from "crypto";
 import { getRandomEmail } from "./TestUtils";
 
@@ -155,7 +155,7 @@ describe("Verification", () => {
     expect(getConsumerResponse.address).toStrictEqual(consumerInformation.address);
     expect(getConsumerResponse.dateOfBirth).toBe(consumerInformation.dateOfBirth);
     expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
-    expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("Required");
+    expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
   });
 
   // it("POST /verifyDocument", async () => {
@@ -252,7 +252,7 @@ describe("Verification", () => {
         type: "fake-type",
         timestamp: new Date().toISOString(),
         data: {
-          documentVerificationResult: FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
+          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
           case: {
             sessionKey: "test-session-key",
             customerID: getConsumerResponse._id,
@@ -279,7 +279,7 @@ describe("Verification", () => {
       })) as ConsumerDTO & ResponseStatus;
 
       expect(getConsumerResponse.__status).toBe(200);
-      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("Approved");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("Verified");
     });
 
     it("should throw error if signature does not match", async () => {
@@ -289,7 +289,7 @@ describe("Verification", () => {
         type: "fake-type",
         timestamp: new Date().toISOString(),
         data: {
-          documentVerificationResult: FAKE_DOCUMENT_VERIFiCATION_APPROVED_RESPONSE,
+          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
           case: {
             sessionKey: "test-session-key",
             customerID: "fake-consumer",

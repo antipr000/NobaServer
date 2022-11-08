@@ -38,7 +38,7 @@ twilio:
   awsSecretNameForAuthToken: "PROD_TWILIO_SECRET"
   SID: "bogus-value"
   authToken: "bogus-value"
-  fromPhoneNumber: "+19894557345"
+  fromPhoneNumber: "+17863055237"
 
 checkout:
   awsSecretNameForPublicKey: "PROD_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
@@ -47,6 +47,7 @@ checkout:
   secretKey: "bogus-value"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_v5hfxdz7txiuflbqrb6a4aa5qq"
 
 mongo:
   awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"
@@ -115,6 +116,8 @@ configuration:
 
 partner:
   embedSecretKey: "Noba_Secret_1660782381688_28XX_BVWjNR8v67tmnVSJ"
+  publicS3Bucket: "noba-partner-data"
+  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "sandbox"

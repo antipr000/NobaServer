@@ -1,6 +1,4 @@
 import { Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { GenerateLinkTokenRequest } from "./domain/PlaidTypes";
 import {
   Configuration as PlaidConfiguration,
   PlaidApi,
@@ -9,12 +7,29 @@ import {
   LinkTokenCreateResponse as PlaidLinkTokenCreateResponse,
   CountryCode as PlaidCountryCode,
   Products as PlaidProducts,
+  ItemPublicTokenExchangeResponse,
+  AuthGetResponse,
+  ProcessorTokenCreateRequestProcessorEnum,
+  ProcessorTokenCreateResponse,
+  DepositoryAccountSubtype,
+  AccountSubtype,
 } from "plaid";
 import { AxiosResponse } from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PlaidConfigs } from "../../config/configtypes/PlaidConfigs";
 import { PLAID_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import {
+  BankAccountType,
+  CreateProcessorTokenRequest,
+  ExchangeForAccessTokenRequest,
+  GenerateLinkTokenRequest,
+  RetrieveAccountDataRequest,
+  RetrieveAccountDataResponse,
+  TokenProcessor,
+} from "./domain/PlaidTypes";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class PlaidClient {
@@ -47,6 +62,11 @@ export class PlaidClient {
         products: [PlaidProducts.Auth],
         country_codes: [PlaidCountryCode.Us],
         language: "en",
+        account_filters: {
+          depository: {
+            account_subtypes: [DepositoryAccountSubtype.Checking, DepositoryAccountSubtype.Savings],
+          },
+        },
         redirect_uri: this.plaidConfigs.redirectUri,
       };
 
@@ -65,6 +85,105 @@ export class PlaidClient {
       throw new InternalServerErrorException("Service unavailable. Please try again.");
     }
   }
-}
 
-// 'client is not authorized to access the following products: ["transfer"]'
+  public async exchangeForAccessToken(request: ExchangeForAccessTokenRequest): Promise<string> {
+    try {
+      const tokenResponse: AxiosResponse<ItemPublicTokenExchangeResponse> = await this.plaidApi.itemPublicTokenExchange(
+        {
+          public_token: request.publicToken,
+        },
+      );
+
+      this.logger.info(`"itemPublicTokenExchange" succeeds with request_id: "${tokenResponse.data.request_id}"`);
+
+      return tokenResponse.data.access_token;
+    } catch (err) {
+      this.logger.error(`Error while exchanging public token: ${JSON.stringify(err.response.data)}`);
+      throw new InternalServerErrorException("Failed to authorize. Please try again.");
+    }
+  }
+
+  // TODO: Consider moving this to an asynchronous flow because as per Plaid documentation -
+  // "This request may take some time because Plaid must communicate directly with the
+  //  institution to retrieve the data."
+  public async retrieveAccountData(request: RetrieveAccountDataRequest): Promise<RetrieveAccountDataResponse> {
+    try {
+      console.log(`Calling authGet with token ${request.accessToken}`);
+      const authData: AxiosResponse<AuthGetResponse> = await this.plaidApi.authGet({
+        access_token: request.accessToken,
+      });
+      if (authData == null) {
+        console.log("Why is authData null?");
+      }
+      console.log(`All authdata: ${JSON.stringify(authData.data, null, 1)}`);
+      this.logger.info(`"authGet" succeeds with request_id: "${authData.data.request_id}"`);
+
+      if (authData.data.accounts.length != 1) {
+        const errorMessage = "Mismatch between access token and account id in Plaid AuthGet request.";
+        this.logger.error(errorMessage);
+        throw new InternalServerErrorException(errorMessage);
+      }
+
+      let type: BankAccountType;
+      switch (authData.data.accounts[0].subtype) {
+        case AccountSubtype.Checking:
+          type = BankAccountType.CHECKING;
+          break;
+
+        case AccountSubtype.Savings:
+          type = BankAccountType.SAVINGS;
+          break;
+
+        default:
+          type = BankAccountType.OTHERS;
+      }
+
+      return {
+        accountID: authData.data.accounts[0].account_id,
+        itemID: authData.data.item.item_id,
+        availableBalance: Utils.roundTo2DecimalString(authData.data.accounts[0].balances.available / 100),
+        currencyCode: authData.data.accounts[0].balances.iso_currency_code,
+        mask: authData.data.accounts[0].mask,
+        name: authData.data.accounts[0].name,
+        accountType: type,
+        accountNumber: authData.data.numbers.ach[0].account,
+        achRoutingNumber: authData.data.numbers.ach[0].routing,
+        wireRoutingNumber: authData.data.numbers.ach[0].wire_routing,
+      };
+    } catch (err) {
+      this.logger.error(`Error while fetching auth data: ${err}`);
+      throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
+    }
+  }
+
+  public async createProcessorToken(request: CreateProcessorTokenRequest): Promise<string> {
+    try {
+      let tokenProcessor: ProcessorTokenCreateRequestProcessorEnum;
+      switch (request.tokenProcessor) {
+        case TokenProcessor.CHECKOUT:
+          tokenProcessor = ProcessorTokenCreateRequestProcessorEnum.Checkout;
+          break;
+
+        default:
+          this.logger.error(`Invalid token processor: "${request.tokenProcessor}".`);
+          throw new InternalServerErrorException("Internal server error.");
+      }
+
+      const processorTokenResponse: AxiosResponse<ProcessorTokenCreateResponse> =
+        await this.plaidApi.processorTokenCreate({
+          access_token: request.accessToken,
+          account_id: request.accountID,
+          processor: tokenProcessor,
+        });
+      this.logger.info(
+        `"processorTokenCreate" succeeds with request_id: "${processorTokenResponse.data.request_id}" and token ${processorTokenResponse.data.processor_token}`,
+      );
+
+      console.log(processorTokenResponse);
+      return processorTokenResponse.data.processor_token;
+    } catch (err) {
+      this.logger.error(`Error while creating processor token: ${JSON.stringify(err.response.data)}`);
+      throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
+    }
+  }
+}

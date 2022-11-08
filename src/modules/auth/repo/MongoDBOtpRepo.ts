@@ -1,7 +1,6 @@
 import { IOTPRepo } from "./OTPRepo";
 import { Otp, OtpProps } from "../domain/Otp";
 import { OtpMapper } from "../mapper/OtpMapper";
-import { otpConstants } from "../constants";
 import { Inject, Injectable, NotFoundException, Logger } from "@nestjs/common";
 import { convertDBResponseToJsObject } from "../../../../src/infra/mongodb/MongoDBUtils";
 import { DBProvider } from "../../../infraproviders/DBProvider";
@@ -50,31 +49,35 @@ export class MongoDBOtpRepo implements IOTPRepo {
     partnerID?: string,
     expiryTimeInMs?: number,
   ): Promise<void> {
-    const expiryTime = new Date(new Date().getTime() + (expiryTimeInMs ?? otpConstants.EXPIRY_TIME_IN_MINUTES * 60000));
     let otpInstance;
     if (identityType === consumerIdentityIdentifier) {
       otpInstance = Otp.createOtp({
         emailOrPhone: emailID,
         otp: otp,
-        otpExpiryTime: expiryTime.getTime(),
         identityType: identityType,
+        otpExpiryTime: expiryTimeInMs,
         partnerID: partnerID,
       });
     } else {
       otpInstance = Otp.createOtp({
         emailOrPhone: emailID,
         otp: otp,
-        otpExpiryTime: expiryTime.getTime(),
+        otpExpiryTime: expiryTimeInMs,
         identityType: identityType,
       });
     }
 
+    await this.saveOTPObject(otpInstance);
+  }
+
+  async saveOTPObject(otp: Otp): Promise<void> {
     const otpModel = await this.dbProvider.getOtpModel();
     try {
-      await otpModel.create(otpInstance.props);
+      await otpModel.create(otp.props);
     } catch (e) {
       // Already exists. We should update now
-      await otpModel.findByIdAndUpdate(emailID, otpInstance.props);
+      this.logger.warn(`Error while creating new OTP in db, assuming it already exists we are updating it, err: ${e}`);
+      await otpModel.findByIdAndUpdate(otp.props.emailOrPhone, otp.props);
     }
   }
 

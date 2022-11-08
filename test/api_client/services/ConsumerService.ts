@@ -4,10 +4,15 @@
 import type { AddCryptoWalletDTO } from "../models/AddCryptoWalletDTO";
 import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
+import type { ConsumerBalanceDTO } from "../models/ConsumerBalanceDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
+import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtpRequest";
+import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
 import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
+import type { UserEmailUpdateRequest } from "../models/UserEmailUpdateRequest";
+import type { UserPhoneUpdateRequest } from "../models/UserPhoneUpdateRequest";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -68,6 +73,150 @@ export class ConsumerService {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/consumers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Adds or updates phone number of logged in user with OTP
+   * @returns ConsumerDTO Updated the user's phone number
+   * @throws ApiError
+   */
+  public static updatePhone({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: UserPhoneUpdateRequest;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/consumers/phone",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Sends OTP to user's phone to verify update of user profile
+   * @returns any OTP sent to user's phone
+   * @throws ApiError
+   */
+  public static requestOtpToUpdatePhone({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: PhoneVerificationOtpRequest;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/phone/verify",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Adds or updates email address of logged in user with OTP
+   * @returns ConsumerDTO Updated the user's email address
+   * @throws ApiError
+   */
+  public static updateEmail({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: UserEmailUpdateRequest;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/consumers/email",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Sends OTP to user's email to verify update of user profile
+   * @returns any OTP sent to user's email address
+   * @throws ApiError
+   */
+  public static requestOtpToUpdateEmail({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: EmailVerificationOtpRequest;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/email/verify",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
@@ -290,6 +439,37 @@ export class ConsumerService {
       mediaType: "application/json",
       errors: {
         401: `Invalid OTP`,
+      },
+    });
+  }
+
+  /**
+   * Gets all balances for the logged-in consumer
+   * @returns ConsumerBalanceDTO Get all consumer balances
+   * @throws ApiError
+   */
+  public static getConsumerBalance({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<ConsumerBalanceDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/balances",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        400: `Invalid request parameters`,
       },
     });
   }

@@ -10,6 +10,7 @@ import { ConsumerService } from "./consumer.service";
 import { MongoDBConsumerRepo } from "./repos/MongoDBConsumerRepo";
 import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
+import { SMSService } from "../common/sms.service";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, PartnerModule, NotificationsModule, PspModule],
@@ -26,6 +27,7 @@ import { PspModule } from "../psp/psp.module";
       useClass: MongoDBOtpRepo,
     },
     SanctionedCryptoWalletService,
+    SMSService,
   ],
   exports: [ConsumerService],
 })

@@ -20,6 +20,7 @@ import {
 } from "./integrations/SardineTypeDefinitions";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 
 @Injectable()
 export class VerificationService {
@@ -265,6 +266,18 @@ export class VerificationService {
     }
 
     return result;
+  }
+
+  async getDocumentVerificationURL(
+    sessionKey: string,
+    consumerID: string,
+    locale: IDVerificationURLRequestLocale,
+    idBack: boolean,
+    selfie: boolean,
+    poa: boolean,
+  ) {
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+    return await this.idvProvider.getIdentityDocumentVerificationURL(sessionKey, consumer, locale, idBack, selfie, poa);
   }
 
   async processDocumentVerificationWebhookResult(

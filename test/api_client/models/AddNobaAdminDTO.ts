@@ -5,5 +5,5 @@
 export type AddNobaAdminDTO = {
   email: string;
   name: string;
-  role: string;
+  role: "BASIC" | "INTERMEDIATE" | "ADMIN";
 };

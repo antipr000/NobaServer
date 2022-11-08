@@ -24,6 +24,7 @@ import {
   insertNobaAdmin,
   insertPartnerAdmin,
   loginAndGetResponse,
+  patchConsumer,
   setAccessTokenForTheNextRequests,
   setupPartner,
   TEST_API_KEY,
@@ -31,6 +32,16 @@ import {
 import { ResponseStatus } from "./api_client/core/request";
 import { PlaidTokenDTO } from "./api_client";
 import { getRandomEmail, getRandomID } from "./TestUtils";
+import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
+import { VerificationProviders } from "../src/modules/consumer/domain/VerificationData";
+import {
+  DocumentVerificationStatus,
+  KYCStatus,
+  PaymentMethodStatus,
+  WalletStatus,
+} from "../src/modules/consumer/domain/VerificationStatus";
+import { PaymentMethodType } from "../src/modules/consumer/domain/PaymentMethod";
+import { PaymentProvider } from "../src/modules/consumer/domain/PaymentProvider";
 
 describe("Consumers", () => {
   jest.setTimeout(20000);
@@ -628,11 +639,14 @@ describe("Consumers", () => {
         "POST",
         "/v1/consumers/paymentmethods",
         JSON.stringify({
-          cardName: "Tester",
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          name: "Tester",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         }),
       );
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
@@ -640,11 +654,14 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          cardName: "Tester",
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          name: "Tester",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);
@@ -664,7 +681,7 @@ describe("Consumers", () => {
       expect(addedCardDetails.paymentToken).toBeDefined();
       // TODO: Enable this test once the service is fixed.
       // expect(addedCardDetails.cardType).toBe("Mastercard");
-      expect(addedCardDetails.cardName).toBe("Tester");
+      expect(addedCardDetails.name).toBe("Tester");
 
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
@@ -685,10 +702,13 @@ describe("Consumers", () => {
         "POST",
         "/v1/consumers/paymentmethods",
         JSON.stringify({
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         }),
       );
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
@@ -696,10 +716,13 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          cardNumber: "4242424242424242",
-          expiryMonth: 3,
-          expiryYear: 2030,
-          cvv: "737",
+          type: "CARD",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(addPaymentMethodResponse.__status).toBe(201);
@@ -716,6 +739,138 @@ describe("Consumers", () => {
       expect(getConsumerResponse.paymentMethods).toHaveLength(1);
       const addedCardDetails = getConsumerResponse.paymentMethods[0];
       expect(addedCardDetails.paymentToken).toBeDefined();
+    });
+
+    it("should map verification status properly when all status are approved", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const consumer: Partial<ConsumerProps> = {
+        email: consumerEmail,
+        verificationData: {
+          verificationProvider: VerificationProviders.SARDINE,
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+        },
+        paymentMethods: [
+          {
+            type: PaymentMethodType.ACH,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            achData: {
+              mask: "fake-mask",
+              accountType: "fake-type",
+              accessToken: "fake-token",
+              accountID: "fake-acc-id",
+              itemID: "fake-item",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "dummy-partner",
+            status: WalletStatus.APPROVED,
+            isPrivate: false,
+          },
+        ],
+      };
+
+      await patchConsumer(consumer, mongoUri);
+
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+
+      expect(getConsumerResponse.status).toBe("Approved");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("Verified");
+      expect(getConsumerResponse.paymentMethods.length).toBe(2);
+      expect(getConsumerResponse.cryptoWallets.length).toBe(1);
+      expect(getConsumerResponse.walletStatus).toBe("Approved");
+      expect(getConsumerResponse.paymentMethodStatus).toBe("Approved");
+    });
+
+    it("should map verification status properly when payment method is Flagged, wallet is not added and documentVerificationStatus is REJECTED", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const consumer: Partial<ConsumerProps> = {
+        email: consumerEmail,
+        verificationData: {
+          verificationProvider: VerificationProviders.SARDINE,
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
+        },
+        paymentMethods: [
+          {
+            type: PaymentMethodType.ACH,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            achData: {
+              mask: "fake-mask",
+              accountType: "fake-type",
+              accessToken: "fake-token",
+              accountID: "fake-acc-id",
+              itemID: "fake-item",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.FLAGGED,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+      };
+
+      await patchConsumer(consumer, mongoUri);
+
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+
+      expect(getConsumerResponse.status).toBe("ActionRequired");
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
+      expect(getConsumerResponse.paymentMethods.length).toBe(1);
+      expect(getConsumerResponse.cryptoWallets.length).toBe(0);
+      expect(getConsumerResponse.walletStatus).toBe("NotSubmitted");
+      expect(getConsumerResponse.paymentMethodStatus).toBe("Pending");
     });
   });
 });

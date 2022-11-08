@@ -5,5 +5,5 @@
 export type UpdatePartnerAdminRequestDTO = {
   email?: string;
   name?: string;
-  role?: string;
+  role?: "BASIC" | "INTERMEDIATE" | "ALL";
 };

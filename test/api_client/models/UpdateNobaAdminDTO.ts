@@ -4,5 +4,5 @@
 
 export type UpdateNobaAdminDTO = {
   name: string;
-  role: string;
+  role: "BASIC" | "INTERMEDIATE" | "ADMIN";
 };

@@ -33,13 +33,14 @@ checkout:
   secretKey: "bogus-value"
   couponCode: "NY2018"
   partnerId: 123989
+  processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
 
 twilio:
-  awsSecretNameForSID: ""
-  awsSecretNameForAuthToken: ""
-  SID: "AC4efa22156849ec40b383a80f45525409"
-  authToken: "c34165debbb0a77e3507884e86b88772"
-  fromPhoneNumber: "+19894557345"
+  awsSecretNameForSID: "TEST_TWILIO_SID"
+  awsSecretNameForAuthToken: "TEST_TWILIO_SECRET"
+  SID: ""
+  authToken: ""
+  fromPhoneNumber: "+14246553925"
 
 mongo:
   awsSecretNameForUri: "STAGING_DOCUMENT_DB_URI"
@@ -108,6 +109,8 @@ configuration:
 
 partner:
   embedSecretKey: "Noba_Secret_1660579071114_kP7KBfORrDVWmUsCcuBOX"
+  publicS3Bucket: "noba-partner-data"
+  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "development"

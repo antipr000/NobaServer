@@ -1,17 +1,17 @@
-import { TestingModule, Test } from "@nestjs/testing";
+import { NotFoundException } from "@nestjs/common";
+import { Test, TestingModule } from "@nestjs/testing";
+import { MongoClient } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
+import { KmsService } from "../../../../src/modules/common/kms.service";
+import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
-import mongoose from "mongoose";
-import { MongoClient } from "mongodb";
-import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { IConsumerRepo } from "../repos/ConsumerRepo";
-import { ConsumerMapper } from "../mappers/ConsumerMapper";
-import { MongoDBConsumerRepo } from "../repos/MongoDBConsumerRepo";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
-import { KmsService } from "../../../../src/modules/common/kms.service";
-import { NotFoundException } from "@nestjs/common";
+import { ConsumerMapper } from "../mappers/ConsumerMapper";
+import { IConsumerRepo } from "../repos/ConsumerRepo";
+import { MongoDBConsumerRepo } from "../repos/MongoDBConsumerRepo";
 
 const CONSUMER_ID_PREFIX = "consumer_id_prefix";
 const TEST_NUMBER = 5;
@@ -151,7 +151,7 @@ describe("MongoDBConsumerRepoTests", () => {
 
   describe("getUserByPhone", () => {
     it("get a user by phone", async () => {
-      const phone = "8242525124";
+      const phone = "+18242525124";
       const consumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
@@ -173,12 +173,23 @@ describe("MongoDBConsumerRepoTests", () => {
       const result = await consumerRepo.getConsumer(savedConsumer.props._id);
       expect(result.props.phone).toBe(undefined);
 
-      const phone = "134242424";
+      const phone = "+134242424";
       const updatedConsumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
       await consumerRepo.updateConsumer(updatedConsumer);
 
       const result1 = await consumerRepo.getConsumer(result.props._id);
       expect(result1.props.phone).toBe(phone);
+    });
+  });
+
+  describe("getAllConsumersForPartner", () => {
+    it("update a consumer", async () => {
+      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
+      const savedConsumer = await consumerRepo.createConsumer(consumer);
+
+      const result = await consumerRepo.getAllConsumersForPartner(DEFAULT_PARTNER_ID);
+      expect(result.length).toBe(1);
+      expect(result[0].props.email).toBe(savedConsumer.props.email);
     });
   });
 });

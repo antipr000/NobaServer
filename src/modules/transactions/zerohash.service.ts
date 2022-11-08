@@ -33,6 +33,9 @@ import {
   ZerohashTransfer,
   ZerohashTransferResponse,
   ZerohashWithdrawalResponse,
+  ZerohashTransferResponse,
+  ZerohashExecutedQuote,
+  ZerohashAccountBalance,
 } from "./domain/ZerohashTypes";
 
 const crypto_ts = require("crypto");
@@ -265,6 +268,34 @@ export class ZeroHashService {
       tradeID: executedQuote["message"].trade_id,
       cryptocurrency: executedQuote["message"]["quote"].underlying,
     };
+  }
+
+  // Execute a liquidity quote
+  async getParticipantBalance(participantID: string): Promise<ZerohashAccountBalance[]> {
+    const balances: ZerohashAccountBalance[] = new Array();
+
+    try {
+      const accounts = await this.makeRequest(`/accounts?account_owner=${participantID}`, "GET");
+
+      if (accounts != null && accounts["message"] != undefined) {
+        accounts["message"].forEach(element => {
+          balances.push({
+            asset: element["asset"],
+            accountGroup: element["account_group"],
+            accountType: element["account_type"],
+            accountOwner: element["account_owner"],
+            accountLabel: element["account_label"],
+            balance: element["balance"],
+            accountID: element["account_id"],
+            lastUpdate: new Date(element["last_update"]).getTime(),
+          });
+        });
+      }
+    } catch (e) {
+      this.logger.error(`Error retrieving balance from ZeroHash for ${participantID}: ${JSON.stringify(e)}`);
+    }
+
+    return balances;
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade

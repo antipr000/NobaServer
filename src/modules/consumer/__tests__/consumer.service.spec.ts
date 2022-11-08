@@ -1,24 +1,23 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getMockOtpRepoWithDefaults } from "../../../modules/auth/mocks/MockOtpRepo";
 import { IOTPRepo } from "../../../modules/auth/repo/OTPRepo";
-import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { CheckoutService } from "../../psp/checkout.service";
+import { PaymentService } from "../../psp/payment.service";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { ConsumerService } from "../consumer.service";
-import { Consumer } from "../domain/Consumer";
+import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { Result } from "../../../core/logic/Result";
-import { getMockCheckoutServiceWithDefaults } from "../../psp/mocks/mock.checkout.service";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { AddPaymentMethodDTO } from "../dto/AddPaymentMethodDTO";
+import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
 import { PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
-import { AddPaymentMethodResponse } from "../../../modules/common/domain/AddPaymentMethodResponse";
+import { AddPaymentMethodResponse } from "../../psp/domain/AddPaymentMethodResponse";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
@@ -33,15 +32,27 @@ import { getMockNotificationServiceWithDefaults } from "../../../modules/notific
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { PaymentProvider } from "../domain/PaymentProvider";
+import { PlaidClient } from "../../psp/plaid.client";
+import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
+import { BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
+import { SMSService } from "../../common/sms.service";
+import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
+import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
+import { consumerIdentityIdentifier, IdentityType } from "../../auth/domain/IdentityType";
+import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
+import { Utils } from "../../../core/utils/Utils";
+import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
+  let smsService: SMSService;
   let consumerRepo: IConsumerRepo;
   let notificationService: NotificationService;
   let mockOtpRepo: IOTPRepo;
-  let checkoutService: CheckoutService;
+  let paymentService: PaymentService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
   let partnerService: PartnerService;
+  let plaidClient: PlaidClient;
 
   jest.setTimeout(30000);
 
@@ -49,9 +60,10 @@ describe("ConsumerService", () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
-    checkoutService = getMockCheckoutServiceWithDefaults();
+    paymentService = getMockPaymentServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
-
+    plaidClient = getMockPlaidClientWithDefaults();
+    smsService = getMockSmsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
 
     const ConsumerRepoProvider = {
@@ -78,12 +90,16 @@ describe("ConsumerService", () => {
           useFactory: () => instance(notificationService),
         },
         {
+          provide: SMSService,
+          useFactory: () => instance(smsService),
+        },
+        {
           provide: "OTPRepo",
           useFactory: () => instance(mockOtpRepo),
         },
         {
-          provide: CheckoutService,
-          useFactory: () => instance(checkoutService),
+          provide: PaymentService,
+          useFactory: () => instance(paymentService),
         },
         {
           provide: SanctionedCryptoWalletService,
@@ -92,6 +108,10 @@ describe("ConsumerService", () => {
         {
           provide: PartnerService,
           useFactory: () => instance(partnerService),
+        },
+        {
+          provide: PlaidClient,
+          useFactory: () => instance(plaidClient),
         },
         KmsService,
       ],
@@ -126,7 +146,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
       when(consumerRepo.createConsumer(anything())).thenResolve(consumer);
 
-      const response = await consumerService.createConsumerIfFirstTimeLogin(email, partnerId);
+      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
       expect(response).toStrictEqual(consumer);
       verify(
         notificationService.sendNotification(
@@ -179,7 +199,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumerData);
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
 
-      const response = await consumerService.createConsumerIfFirstTimeLogin(email, partnerId);
+      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
       expect(response).toStrictEqual(updatedConsumerData);
     });
 
@@ -207,7 +227,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.ok(consumer));
 
-      const response = await consumerService.createConsumerIfFirstTimeLogin(email, partnerId);
+      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
 
       expect(response).toStrictEqual(consumer);
     });
@@ -312,7 +332,7 @@ describe("ConsumerService", () => {
   });
 
   describe("addPaymentMethod", () => {
-    it("adds a payment method for checkout", async () => {
+    it("adds a payment method of 'CARD' type", async () => {
       const email = "mock-user@noba.com";
       const partnerId = "partner-1";
       const consumer = Consumer.createConsumer({
@@ -338,18 +358,21 @@ describe("ConsumerService", () => {
       });
 
       const addPaymentMethod: AddPaymentMethodDTO = {
-        cardNumber: "1234567890",
-        expiryMonth: 8,
-        expiryYear: 2023,
-        cvv: "123",
-      };
+        type: PaymentType.CARD,
+        cardDetails: {
+          cardNumber: "1234567890",
+          expiryMonth: 8,
+          expiryYear: 2023,
+          cvv: "123",
+        },
+      } as any;
 
       const addPaymentMethodResponse: AddPaymentMethodResponse = constructAddPaymentMethodResponse(
         consumer,
         PaymentMethodStatus.APPROVED,
       );
 
-      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
+      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
         addPaymentMethodResponse,
       );
 
@@ -404,18 +427,21 @@ describe("ConsumerService", () => {
       });
 
       const addPaymentMethod: AddPaymentMethodDTO = {
-        cardNumber: "1234567890",
-        expiryMonth: 8,
-        expiryYear: 2023,
-        cvv: "123",
-      };
+        type: PaymentType.CARD,
+        cardDetails: {
+          cardNumber: "1234567890",
+          expiryMonth: 8,
+          expiryYear: 2023,
+          cvv: "123",
+        },
+      } as any;
 
       const addPaymentMethodResponse: AddPaymentMethodResponse = constructAddPaymentMethodResponse(
         consumer,
         PaymentMethodStatus.UNSUPPORTED,
       );
 
-      when(checkoutService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
+      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
         addPaymentMethodResponse,
       );
 
@@ -434,6 +460,124 @@ describe("ConsumerService", () => {
         ).once();
       }
     });
+
+    it("adds a payment method of 'ACH' type", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+
+      const checkoutCustomerID = "checkout-customer-for-mock-consumer";
+
+      const plaidPublicToken = "public-token-by-plain-embed-ui";
+      const plaidAccessToken = "plaid-access-token-for-public-token";
+      const plaidAuthGetItemID = "plaid-itemID-for-auth-get-request";
+      const plaidAccountID = "plaid-account-id-for-the-consumer-bank-account";
+      const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
+
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: checkoutCustomerID,
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [],
+        cryptoWallets: [],
+      });
+
+      const addPaymentMethod: AddPaymentMethodDTO = {
+        type: PaymentType.ACH,
+        name: "Bank Account",
+        achDetails: {
+          token: plaidPublicToken,
+        },
+        imageUri: "https://noba.com",
+      } as any;
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      const paymentMethod: PaymentMethod = {
+        name: "Bank Account",
+        type: PaymentMethodType.ACH,
+        achData: {
+          accessToken: plaidAccessToken,
+          accountID: plaidAccountID,
+          itemID: plaidAuthGetItemID,
+          mask: "7890",
+          accountType: BankAccountType.CHECKING,
+        },
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: plaidCheckoutProcessorToken,
+        imageUri: "https://noba.com",
+        status: PaymentMethodStatus.APPROVED,
+      };
+
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [paymentMethod],
+      });
+
+      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve({
+        checkoutResponseData: null,
+        updatedConsumerData: updatedConsumer.props,
+      });
+
+      const expectedConsumerProps: ConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: checkoutCustomerID,
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            name: "Bank Account",
+            type: PaymentMethodType.ACH,
+            achData: {
+              accessToken: plaidAccessToken,
+              accountID: plaidAccountID,
+              itemID: plaidAuthGetItemID,
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
+            },
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: plaidCheckoutProcessorToken,
+            imageUri: "https://noba.com",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [],
+      };
+
+      when(consumerRepo.updateConsumer(deepEqual(Consumer.createConsumer(expectedConsumerProps)))).thenResolve(
+        Consumer.createConsumer(expectedConsumerProps),
+      );
+
+      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+
+      expect(response).toStrictEqual(Consumer.createConsumer(expectedConsumerProps));
+    });
   });
 
   describe("requestPayment", () => {
@@ -441,6 +585,16 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const partnerId = "partner-1";
       const paymentToken = "fake-token";
+      const paymentMethod = {
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: paymentToken,
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+        },
+        imageUri: "fake-uri",
+      };
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -459,18 +613,7 @@ describe("ConsumerService", () => {
           },
         ],
         isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            imageUri: "fake-uri",
-          },
-        ],
+        paymentMethods: [paymentMethod],
         cryptoWallets: [],
       });
 
@@ -494,9 +637,9 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(checkoutService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction))).thenResolve(
-        paymentRequestResponse,
-      );
+      when(
+        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
+      ).thenResolve(paymentRequestResponse);
 
       const response = await consumerService.requestPayment(consumer, transaction);
       expect(response).toStrictEqual(paymentRequestResponse);
@@ -507,6 +650,16 @@ describe("ConsumerService", () => {
       const partnerId = "partner-1";
       const paymentToken = "fake-token";
       const paymentProvider = "FakeProvider";
+      const paymentMethod = {
+        type: PaymentMethodType.CARD,
+        paymentProviderID: paymentProvider as any,
+        paymentToken: paymentToken,
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+        },
+        imageUri: "fake-uri",
+      };
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -525,18 +678,7 @@ describe("ConsumerService", () => {
           },
         ],
         isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: paymentProvider as any,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            imageUri: "fake-uri",
-          },
-        ],
+        paymentMethods: [paymentMethod],
         cryptoWallets: [],
       });
 
@@ -560,9 +702,9 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(checkoutService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction))).thenResolve(
-        paymentRequestResponse,
-      );
+      when(
+        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
+      ).thenResolve(paymentRequestResponse);
 
       try {
         await consumerService.requestPayment(consumer, transaction);
@@ -712,7 +854,7 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(checkoutService.removePaymentMethod(paymentToken)).thenResolve();
+      when(paymentService.removePaymentMethod(paymentToken)).thenResolve();
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
 
       const response = await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
@@ -735,12 +877,101 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("getPaymentMethodProvider", () => {
+    it("get payment provider for payment method", async () => {
+      const paymentToken = "fake-payment-token";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fake+email@noba.com",
+        displayEmail: "fake+email@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: "fake-partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      const response = await consumerService.getPaymentMethodProvider(consumer.props._id, paymentToken);
+      expect(response).toBe(PaymentProvider.CHECKOUT);
+    });
+
+    it("throws NotFoundException when paymentToken does not exist for consumer", async () => {
+      const paymentToken = "fake-payment-token";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fake+email@noba.com",
+        displayEmail: "fake+email@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: "fake-partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      expect(
+        async () => await consumerService.getPaymentMethodProvider(consumer.props._id, "new-fake-payment-token"),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe("getFiatPaymentStatus", () => {
     it("returns fiat payment status successfully", async () => {
       const paymentToken = "fake-token";
       const paymentProvider = PaymentProvider.CHECKOUT;
 
-      when(checkoutService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
+      when(paymentService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
       const response = await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider);
 
@@ -751,7 +982,7 @@ describe("ConsumerService", () => {
       const paymentToken = "fake-token";
       const paymentProvider = "FakeProvider";
 
-      when(checkoutService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
+      when(paymentService.getFiatPaymentStatus(paymentToken)).thenResolve(FiatTransactionStatus.AUTHORIZED);
 
       try {
         await consumerService.getFiatPaymentStatus(paymentToken, paymentProvider as PaymentProvider);
@@ -1255,10 +1486,11 @@ describe("ConsumerService", () => {
   });
 
   describe("removeCryptoWallet", () => {
-    it("Removes crypto wallet for user", async () => {
+    it("Removes crypto wallet for user without touching other wallets", async () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
+      const partnerID = "partner-1";
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1274,7 +1506,7 @@ describe("ConsumerService", () => {
         ],
         partners: [
           {
-            partnerID: "partner-1",
+            partnerID: partnerID,
           },
         ],
         isAdmin: false,
@@ -1298,13 +1530,43 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: partnerID,
+          },
+          {
+            walletName: "Other wallet 1",
+            address: walletAddress + "1",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: partnerID,
+          },
+          {
+            walletName: "Other wallet 2",
+            address: walletAddress + "2",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: "54321",
           },
         ],
       });
 
       const updatedConsumer = Consumer.createConsumer({
         ...consumer.props,
-        cryptoWallets: [],
+        cryptoWallets: [
+          {
+            walletName: "Other wallet 1",
+            address: walletAddress + "1",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: partnerID,
+          },
+          {
+            walletName: "Other wallet 2",
+            address: walletAddress + "2",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+            partnerID: "54321",
+          },
+        ],
       });
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -1694,6 +1956,206 @@ describe("ConsumerService", () => {
         partnerID: partnerId,
         isPrivate: false,
       });
+    });
+  });
+
+  describe("sendOtpToPhone", () => {
+    it("should send otp to given phone number with given context", async () => {
+      const phone = "+12434252";
+      when(smsService.sendSMS(phone, anyString())).thenResolve();
+      when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier)).thenResolve();
+      await consumerService.sendOtpToPhone(phone);
+      verify(smsService.sendSMS(phone, anyString())).once();
+      verify(mockOtpRepo.saveOTPObject(anything())).once();
+    });
+  });
+
+  describe("updateConsumerPhone", () => {
+    it("incorrect and correct otp", async () => {
+      const phone = "+12434252";
+      const email = "a@noba.com";
+      const partnerId = "fake-partner-id2";
+      const otp = 123456;
+      const otpObject = Otp.createOtp({
+        otp: otp,
+        emailOrPhone: phone,
+        identityType: IdentityType.consumer,
+      });
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        email: email,
+        displayEmail: email,
+
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+      });
+
+      const phoneUpdateRequest: UserPhoneUpdateRequest = {
+        phone: phone,
+        otp: 123458, //incorrect otp
+      };
+
+      const expectedUpdatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        phone: phone,
+      });
+
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer)).thenResolve(otpObject);
+
+      try {
+        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
+        expect(true).toBe(false);
+      } catch (err) {
+        console.log(err);
+        expect(err).toBeInstanceOf(BadRequestException);
+      }
+
+      phoneUpdateRequest.otp = otp; //correct otp
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
+
+      const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
+      verify(consumerRepo.updateConsumer(anything())).once();
+      const [requestArg] = capture(consumerRepo.updateConsumer).last();
+      expect(requestArg.props.phone).toBe(phone);
+      expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
+    });
+  });
+
+  describe("sendOtpToEmail", () => {
+    it("should send otp to given email address with given context", async () => {
+      const email = "Rosie@Noba.com";
+      const partnerID = "Partner-123456789";
+      const firstName = "Rosie";
+      const otp = 654321;
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: firstName,
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerID,
+          },
+        ],
+        isAdmin: false,
+        phone: "+15559993333",
+      });
+
+      const addStub = jest.spyOn(Utils, "createOtp").mockReturnValueOnce(otp);
+      when(
+        notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
+          email: email,
+          otp: otp.toString(),
+          firstName: "Rosie",
+        }),
+      ).thenResolve();
+      when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier)).thenResolve();
+      await consumerService.sendOtpToEmail(email, consumer, partnerID);
+      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier)).once();
+    });
+  });
+
+  describe("updateConsumerEmail", () => {
+    it("incorrect and correct otp", async () => {
+      const phone = "+12434252";
+      const email = "Rosie@Noba.com";
+      const partnerId = "fake-partner-id";
+      const otp = 123456;
+      const otpObject = Otp.createOtp({
+        otp: otp,
+        emailOrPhone: phone,
+        identityType: IdentityType.consumer,
+      });
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        phone: phone,
+      });
+
+      const emailUpdateRequest: UserEmailUpdateRequest = {
+        email: email,
+        otp: 123458, //incorrect otp
+      };
+
+      when(mockOtpRepo.getOTP(email, IdentityType.consumer)).thenResolve(otpObject);
+
+      try {
+        await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
+        expect(true).toBe(false);
+      } catch (err) {
+        console.log(err);
+        expect(err).toBeInstanceOf(BadRequestException);
+      }
+
+      emailUpdateRequest.otp = otp; //correct otp
+
+      const expectedUpdatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        email: email.toLowerCase(),
+        displayEmail: email,
+      });
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
+      when(
+        notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, undefined, {
+          email: email,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props.firstName,
+        }),
+      ).thenResolve();
+
+      // update consumer
+      const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
+
+      verify(consumerRepo.updateConsumer(anything())).once();
+      const [requestArg] = capture(consumerRepo.updateConsumer).last();
+      expect(requestArg.props.email).toBe(email.toLowerCase());
+      expect(requestArg.props.displayEmail).toBe(email);
+      expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
+
+      verify(notificationService.sendNotification(anything(), anything(), anything())).once();
+      const [notificationType, notificationPartnerId, notificationUserArgs] = capture(
+        notificationService.sendNotification,
+      ).last();
+      expect(notificationType).toBe(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT);
+      expect(notificationPartnerId).toBe(undefined);
+      expect(notificationUserArgs).toStrictEqual({
+        email: email.toLowerCase(),
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+      });
+
+      //update consumer again, this time notification shouldn't be sent
+      await consumerService.updateConsumerEmail(updateConsumerResponse, emailUpdateRequest);
+      verify(notificationService.sendNotification(anything(), anything(), anything())).once(); //already called above
     });
   });
 });

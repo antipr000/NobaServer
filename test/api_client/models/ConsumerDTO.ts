@@ -12,6 +12,7 @@ export type ConsumerDTO = {
   firstName?: string;
   lastName?: string;
   email: string;
+  status: "Approved" | "Pending" | "ActionRequired";
   kycVerificationData: KycVerificationDTO;
   documentVerificationData: DocumentVerificationDTO;
   phone?: string;
@@ -22,6 +23,6 @@ export type ConsumerDTO = {
   isDisabled?: boolean;
   paymentMethods?: Array<PaymentMethodsDTO>;
   cryptoWallets?: Array<CryptoWalletsDTO>;
-  paymentMethodStatus?: "Flagged" | "Rejected" | "Approved" | "Unsupported";
-  walletStatus?: "Pending" | "Flagged" | "Rejected" | "Approved";
+  paymentMethodStatus?: "Approved" | "Pending" | "NotSubmitted";
+  walletStatus?: "Approved" | "Pending" | "NotSubmitted";
 };
