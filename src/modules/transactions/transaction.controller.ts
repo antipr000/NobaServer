@@ -39,7 +39,7 @@ import { Public } from "../auth/public.decorator";
 import { CsvService } from "../common/csv.service";
 import { Consumer } from "../consumer/domain/Consumer";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
-import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
+import { ConsumerBalanceDTO, ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
@@ -191,6 +191,33 @@ export class TransactionController {
       request.user.partnerId,
       transactionFilters,
     )) as TransactionsQueryResultsDTO;
+  }
+
+  @Get("/consumers/balances/")
+  @ApiTags("Consumer")
+  @ApiOperation({ summary: "Gets all wallet balances for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [ConsumerBalanceDTO],
+    description: "Get all consumer balances",
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getConsumerBalance(@AuthUser() authUser: Consumer): Promise<ConsumerBalanceDTO[]> {
+    const balances = await this.transactionService.getParticipantBalance(authUser.props.zhParticipantCode);
+
+    const dto: ConsumerBalanceDTO[] = new Array();
+    balances.forEach(balance => {
+      dto.push({
+        balance: balance.balance,
+        accountType: balance.accountType,
+        asset: balance.asset,
+        accountID: balance.accountID,
+        lastUpdate: balance.lastUpdate,
+        name: balance.name,
+      });
+    });
+
+    return dto;
   }
 
   @Get("/consumers/limits/")

@@ -28,6 +28,7 @@ import {
   OnChainState,
   TradeState,
   WithdrawalState,
+  ZerohashAccountType,
   ZerohashTradeRequest,
   ZerohashTradeResponse,
   ZerohashTransferResponse,
@@ -2373,6 +2374,66 @@ describe("ZerohashAssetService", () => {
       const transferStatus = await zerohashAssetService.pollAssetTransferToConsumerStatus(tradeID);
 
       expect(transferStatus).toEqual(expectedConsumerAccountTransferStatus);
+    });
+  });
+
+  describe("getConsumerAccountBalance()", () => {
+    // Not really much to do here!
+    it("gets the balances for the consumer", async () => {
+      const zhParticipantCode = "zh-participant-code";
+      const lastUpdateDate = new Date();
+
+      when(zerohashService.getParticipantBalance(zhParticipantCode)).thenResolve([
+        {
+          accountGroup: "acct-group-1",
+          accountID: "acct-id-1",
+          accountLabel: "acct-label-1",
+          accountOwner: "acct-owner-1",
+          accountType: ZerohashAccountType.AVAILABLE,
+          asset: "asset-1",
+          balance: "1000000",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+        {
+          accountGroup: "acct-group-2",
+          accountID: "acct-id-2",
+          accountLabel: "acct-label-2",
+          accountOwner: "acct-owner-2",
+          accountType: ZerohashAccountType.AVAILABLE,
+          asset: "asset-2",
+          balance: "2000000",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+      ]);
+
+      const returnedBalanceResponse = await zerohashAssetService.getConsumerAccountBalance(zhParticipantCode);
+      expect(returnedBalanceResponse).toEqual([
+        {
+          name: "acct-label-1",
+          asset: "asset-1",
+          accountType: ZerohashAccountType.AVAILABLE.toString(),
+          balance: "1000000",
+          accountID: "acct-id-1",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+        {
+          name: "acct-label-2",
+          asset: "asset-2",
+          accountType: ZerohashAccountType.AVAILABLE.toString(),
+          balance: "2000000",
+          accountID: "acct-id-2",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+      ]);
+    });
+
+    it("doesn't return an error if there's no balance info", async () => {
+      const zhParticipantCode = "zh-participant-code";
+
+      when(zerohashService.getParticipantBalance(zhParticipantCode)).thenResolve([]);
+
+      const returnedBalanceResponse = await zerohashAssetService.getConsumerAccountBalance(zhParticipantCode);
+      expect(returnedBalanceResponse).toEqual([]);
     });
   });
 

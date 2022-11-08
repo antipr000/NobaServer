@@ -45,7 +45,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
 
     switch (paymentMethod.type) {
       case PaymentMethodType.ACH: {
-        // Order of checks matter here. 
+        // Order of checks matter here.
         // If "failed" event comes before the "FiatTransactionStatusProcessor" proceeds
         // there is a chance to save the loss by stopping the transaction here.
 
@@ -55,7 +55,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
           transaction.props.fiatPaymentInfo.isCompleted = true;
           transaction.props.transactionStatus = TransactionStatus.FAILED;
         }
-        // Approved by Checkout but not yet rejected. 
+        // Approved by Checkout but not yet rejected.
         // Noba will take the risk and do the crypto transfers.
         else if (transaction.props.fiatPaymentInfo.isApproved) {
           transaction.props.transactionStatus = TransactionStatus.FIAT_INCOMING_COMPLETED;
@@ -80,13 +80,13 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
           transaction.props.transactionStatus = TransactionStatus.FIAT_INCOMING_COMPLETED;
         }
         // If transaction status is still "PENDING", the poller will push this state again
-        // and then we'll check the status again. 
+        // and then we'll check the status again.
         else if (paymentStatus === FiatTransactionStatus.PENDING) {
           this.logger.info(`Transaction '${transactionId}' is still "PENDING" on CARD transfer.`);
           return;
         }
         // Transaction is "FAILED".
-        // As "Noba" hasn't initiated the crypto transfer yet, there is no loss incurred and 
+        // As "Noba" hasn't initiated the crypto transfer yet, there is no loss incurred and
         // hence the "FIAT Transaction" is considered to be "completed".
         else if (paymentStatus === FiatTransactionStatus.FAILED) {
           transaction.props.fiatPaymentInfo.isCompleted = true;
@@ -118,11 +118,17 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
       }
       case TransactionStatus.FAILED: {
         // TODO (#332) get details from exception thrown by getFiatPaymentStatus()
-        await this.processFailure(TransactionStatus.FIAT_INCOMING_FAILED, "Need more details on the failure", transaction);
+        await this.processFailure(
+          TransactionStatus.FIAT_INCOMING_FAILED,
+          "Need more details on the failure",
+          transaction,
+        );
         break;
       }
       default: {
-        this.logger.error(`Transaction '${transactionId}' has an un-identified state '${transaction.props.transactionStatus}' after FiatTransactionStatusProcessor execution.`);
+        this.logger.error(
+          `Transaction '${transactionId}' has an un-identified state '${transaction.props.transactionStatus}' after FiatTransactionStatusProcessor execution.`,
+        );
       }
     }
   }

@@ -87,7 +87,7 @@ describe("FiatTransactionInitiator", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionInitiated, anything())).thenReturn({
-      start: () => { },
+      start: () => {},
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -314,7 +314,9 @@ describe("FiatTransactionInitiator", () => {
       expect(allTransactionsInDb).toHaveLength(1);
       expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
       expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
-      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(transaction.props.lastStatusUpdateTimestamp);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+        transaction.props.lastStatusUpdateTimestamp,
+      );
 
       const [queueName, transactionId] = capture(sqsClient.enqueue).last();
       expect(queueName).toBe(TransactionQueueName.TransactionFailed);
@@ -352,7 +354,6 @@ describe("FiatTransactionInitiator", () => {
         ...transaction.props,
         _id: transaction.props._id as any,
       });
-
 
       when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
       when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
@@ -411,7 +412,6 @@ describe("FiatTransactionInitiator", () => {
         _id: transaction.props._id as any,
       });
 
-
       when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
       when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
       when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
@@ -421,9 +421,7 @@ describe("FiatTransactionInitiator", () => {
       const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
       expect(allTransactionsInDb).toHaveLength(1);
       expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
-      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(
-        transaction.props.lastStatusUpdateTimestamp,
-      );
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
       expect(allTransactionsInDb[0].fiatPaymentInfo.isApproved).toBe(false);
       expect(allTransactionsInDb[0].fiatPaymentInfo.isFailed).toBe(false);
       expect(allTransactionsInDb[0].fiatPaymentInfo.isCompleted).toBe(false);
@@ -460,7 +458,6 @@ describe("FiatTransactionInitiator", () => {
         ...transaction.props,
         _id: transaction.props._id as any,
       });
-
 
       when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
       when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
@@ -517,7 +514,6 @@ describe("FiatTransactionInitiator", () => {
         _id: transaction.props._id as any,
       });
 
-
       when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
       when(sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transaction.props._id)).thenResolve("");
       when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
@@ -572,7 +568,6 @@ describe("FiatTransactionInitiator", () => {
         ...transaction.props,
         _id: transaction.props._id as any,
       });
-
 
       when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
       when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");

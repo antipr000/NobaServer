@@ -73,6 +73,15 @@ export interface ConsumerAccountTransferStatus {
   errorMessage: string;
 }
 
+export interface ConsumerAccountBalance {
+  name: string;
+  asset: string;
+  accountType: string;
+  balance: string;
+  accountID: string;
+  lastUpdate: number;
+}
+
 export interface ConsumerWalletTransferRequest {
   walletAddress: string;
   amount: number;

@@ -17,6 +17,7 @@ export type { CaseNotificationWebhookRequestDTO } from "./models/CaseNotificatio
 export type { CheckTransactionDTO } from "./models/CheckTransactionDTO";
 export type { ConfigurationsDTO } from "./models/ConfigurationsDTO";
 export type { ConfirmWalletUpdateDTO } from "./models/ConfirmWalletUpdateDTO";
+export type { ConsumerBalanceDTO } from "./models/ConsumerBalanceDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
 export type { ConsumerLimitsDTO } from "./models/ConsumerLimitsDTO";
 export type { CreatePartnerRequestDTO } from "./models/CreatePartnerRequestDTO";

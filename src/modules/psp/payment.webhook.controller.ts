@@ -60,7 +60,6 @@ export class PaymentWebhooksController {
       case "payment_pending": {
         const paymentPendingEvent: PaymentPendingWebhookData =
           this.checkoutWebhooksMapper.convertRawPaymentPendingWebhook(requestBody.data);
-
       }
 
       case "payment_capture_pending": {

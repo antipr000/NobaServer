@@ -40,7 +40,7 @@ describe("TransactionPoller", () => {
     transactionPoller = app.get<TransactionPollerService>(TransactionPollerService);
   });
 
-  afterEach(async () => { });
+  afterEach(async () => {});
 
   const setupGetValidTransactionsToProcessMocks = (transactionsPerStaus: Record<string, Transaction[]>) => {
     /**
