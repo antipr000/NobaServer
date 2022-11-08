@@ -37,3 +37,14 @@ export type PaymentCapturePendingWebhookData = {
   processedOn: Date;
   idempotencyID: string;
 };
+
+export type PaymentCapturedWebhookData = {
+  paymentID: string;
+  actionID: string;
+  amount: number;
+  currency: string;
+  processedOn: Date;
+  idempotencyID: string;
+  acquirerTransactionID: string;
+  acquirerReferenceNumber: string;
+};
