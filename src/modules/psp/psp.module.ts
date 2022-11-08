@@ -8,6 +8,7 @@ import { PlaidClient } from "./plaid.client";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PaymentWebhooksController } from "./payment.webhook.controller";
 import { CheckoutWebhooksMapper } from "./mapper/checkout.webhooks";
+import { TransactionRepoModule } from "../transactions/repo/transaction.repo.module";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
@@ -25,7 +26,7 @@ export const CheckoutClientProvider: Provider = {
 };
 
 @Module({
-  imports: [ConfigModule, CommonModule, NotificationsModule],
+  imports: [ConfigModule, CommonModule, NotificationsModule, TransactionRepoModule],
   controllers: [PaymentWebhooksController],
   providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper],
   exports: [CheckoutClient, PlaidClient, PaymentService],
