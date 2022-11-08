@@ -31,10 +31,10 @@ import { CurrencyType } from "../../../modules/common/domain/Types";
 import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 import { DefaultAssetService } from "./default.asset.service";
-import { WalletService } from "./wallet.service";
+import { WalletProviderService } from "./wallet.provider.service";
 
 @Injectable()
-export class ZerohashAssetService extends DefaultAssetService implements WalletService {
+export class ZerohashAssetService extends DefaultAssetService implements WalletProviderService {
   protected readonly nobaTransactionConfigs: NobaTransactionConfigs;
 
   constructor(

@@ -1,5 +1,5 @@
 import { ConsumerAccountBalance } from "../domain/AssetTypes";
 
-export interface WalletService {
+export interface WalletProviderService {
   getConsumerAccountBalance(participantID: string): Promise<ConsumerAccountBalance[]>;
 }

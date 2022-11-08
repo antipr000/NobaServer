@@ -5,7 +5,7 @@ import { SwapAssetService } from "./swap.asset.service";
 import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
 import { ZerohashAssetService } from "./zerohash.asset.service";
 import { SquidService } from "../squid.service";
-import { WalletService } from "./wallet.service";
+import { WalletProviderService } from "./wallet.provider.service";
 
 @Injectable()
 // TODO(#594): Rename to something proper
@@ -23,7 +23,7 @@ export class CommonAssetServiceFactory {
     return this.zerohashAssetService;
   }
 
-  getWalletService(): WalletService {
+  getWalletProviderService(): WalletProviderService {
     return this.zerohashAssetService;
   }
 }
@@ -49,7 +49,7 @@ export class AssetServiceFactory {
     }
   }
 
-  getWalletService(): WalletService {
-    return this.commonAssetServiceFactory.getWalletService();
+  getWalletProviderService(): WalletProviderService {
+    return this.commonAssetServiceFactory.getWalletProviderService();
   }
 }

@@ -157,7 +157,7 @@ export class TransactionService {
   }
 
   async getParticipantBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
-    return await this.assetServiceFactory.getWalletService().getConsumerAccountBalance(participantID);
+    return await this.assetServiceFactory.getWalletProviderService().getConsumerAccountBalance(participantID);
   }
 
   async getUserTransactions(
