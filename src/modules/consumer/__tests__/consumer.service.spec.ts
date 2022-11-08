@@ -1218,7 +1218,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp);
+      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId);
 
       expect(response).toStrictEqual(updatedConsumer);
 
@@ -1376,7 +1376,7 @@ describe("ConsumerService", () => {
       );
 
       try {
-        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp);
+        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp, "partner-1");
       } catch (e) {
         expect(e).toBeInstanceOf(UnauthorizedException);
       }
