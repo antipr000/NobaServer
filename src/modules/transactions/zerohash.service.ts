@@ -33,8 +33,6 @@ import {
   ZerohashTransfer,
   ZerohashTransferResponse,
   ZerohashWithdrawalResponse,
-  ZerohashTransferResponse,
-  ZerohashExecutedQuote,
   ZerohashAccountBalance,
 } from "./domain/ZerohashTypes";
 
