@@ -1427,11 +1427,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, walletAddress);
+      const response = await consumerService.getCryptoWallet(consumer, walletAddress, "partner-1");
       expect(response).toStrictEqual(consumer.props.cryptoWallets[0]);
     });
 
@@ -1477,11 +1478,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address");
+      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address", "partner-1");
       expect(response).toStrictEqual(null);
     });
   });

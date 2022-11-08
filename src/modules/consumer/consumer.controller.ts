@@ -345,13 +345,24 @@ export class ConsumerController {
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to confirm wallet add or update" })
   @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Verified wallet for consumer" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
-  async confirmWalletUpdate(@Body() requestBody: ConfirmWalletUpdateDTO, @Request() request): Promise<ConsumerDTO> {
+  async confirmWalletUpdate(
+    @Headers() headers,
+    @Body() requestBody: ConfirmWalletUpdateDTO,
+    @Request() request,
+  ): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
 
-    const res = await this.consumerService.confirmWalletUpdateOTP(consumer, requestBody.address, requestBody.otp);
+    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY]);
+
+    const res = await this.consumerService.confirmWalletUpdateOTP(
+      consumer,
+      requestBody.address,
+      requestBody.otp,
+      partner.props._id,
+    );
     return this.consumerMapper.toDTO(res);
   }
 }

@@ -371,14 +371,10 @@ export class ConsumerService {
     );
   }
 
-  async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number) {
+  async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number, partnerID: string) {
     // Verify if the otp is correct
-    const cryptoWallet = this.getCryptoWallet(consumer, walletAddress);
-    const actualOtp = await this.otpRepo.getOTP(
-      consumer.props.email,
-      consumerIdentityIdentifier,
-      cryptoWallet.partnerID,
-    );
+    const cryptoWallet = this.getCryptoWallet(consumer, walletAddress, partnerID);
+    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier, partnerID);
     const currentDateTime: number = new Date().getTime();
 
     if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {
@@ -406,8 +402,10 @@ export class ConsumerService {
     return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
   }
 
-  getCryptoWallet(consumer: Consumer, address: string): CryptoWallet {
-    const cryptoWallets = consumer.props.cryptoWallets.filter(wallet => wallet.address === address);
+  getCryptoWallet(consumer: Consumer, address: string, partnerID: string): CryptoWallet {
+    const cryptoWallets = consumer.props.cryptoWallets.filter(
+      wallet => wallet.address === address && wallet.partnerID === partnerID,
+    );
 
     if (cryptoWallets.length === 0) {
       return null;
