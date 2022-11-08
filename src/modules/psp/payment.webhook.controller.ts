@@ -1,7 +1,6 @@
 import { Body, Controller, Headers, HttpStatus, Inject, Post } from "@nestjs/common";
-import { ApiHeaders, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { getCommonHeaders } from "src/core/utils/CommonHeaders";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
@@ -10,16 +9,17 @@ import { CheckoutWebhooksMapper } from "./mapper/checkout.webhooks";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
 
 const crypto_ts = require("crypto");
 
 @Roles(Role.AppAdmin)
 @Controller()
-@ApiHeaders(getCommonHeaders())
 export class PaymentWebhooksController {
   private webhookSignatureKey: string;
 
   constructor(
+    @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     private readonly checkoutWebhooksMapper: CheckoutWebhooksMapper,
     configService: CustomConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -60,7 +60,7 @@ export class PaymentWebhooksController {
       case "payment_pending": {
         const paymentPendingEvent: PaymentPendingWebhookData =
           this.checkoutWebhooksMapper.convertRawPaymentPendingWebhook(requestBody.data);
-        // TODO: Identify if this is needed or can be removed based on the long-term approach.
+
       }
 
       case "payment_capture_pending": {

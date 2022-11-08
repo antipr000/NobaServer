@@ -75,7 +75,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
         `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
     }
 
@@ -220,7 +220,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
       this.logger.debug(
         `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
@@ -259,7 +259,9 @@ export class TransactionService {
       sessionKey: sessionKey,
       fiatPaymentInfo: {
         paymentMethodID: transactionRequest.paymentToken,
-        isSettled: false,
+        isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: undefined,
         paymentProvider: consumer.getPaymentMethodByID(transactionRequest.paymentToken).paymentProviderID,
@@ -514,8 +516,7 @@ export class TransactionService {
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
     this.logger.debug(
-      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
-        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
     );
 

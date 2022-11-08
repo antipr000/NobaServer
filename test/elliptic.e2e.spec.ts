@@ -59,7 +59,7 @@ describe("Elliptic Integration Test", () => {
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
       fiatPaymentInfo: {
         paymentMethodID: "fake-payment-method",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentProvider: "Checkout" as any,
       },

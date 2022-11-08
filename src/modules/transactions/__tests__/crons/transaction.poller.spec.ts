@@ -40,7 +40,7 @@ describe("TransactionPoller", () => {
     transactionPoller = app.get<TransactionPollerService>(TransactionPollerService);
   });
 
-  afterEach(async () => {});
+  afterEach(async () => { });
 
   const setupGetValidTransactionsToProcessMocks = (transactionsPerStaus: Record<string, Transaction[]>) => {
     /**
@@ -100,7 +100,9 @@ describe("TransactionPoller", () => {
           transactionStatus: TransactionStatus.PENDING,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -143,7 +145,9 @@ describe("TransactionPoller", () => {
           transactionStatus: TransactionStatus.VALIDATION_PASSED,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -180,7 +184,9 @@ describe("TransactionPoller", () => {
           transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -218,7 +224,9 @@ describe("TransactionPoller", () => {
           transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -238,7 +246,9 @@ describe("TransactionPoller", () => {
           transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -279,7 +289,9 @@ describe("TransactionPoller", () => {
           transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -316,7 +328,9 @@ describe("TransactionPoller", () => {
           transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -361,7 +375,9 @@ describe("TransactionPoller", () => {
           transactionStatus: status as any,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -411,7 +427,9 @@ describe("TransactionPoller", () => {
           transactionStatus: status as any,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
-            isSettled: false,
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },

@@ -623,7 +623,9 @@ describe("ConsumerService", () => {
         transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
         fiatPaymentInfo: {
           paymentMethodID: paymentToken,
-          isSettled: false,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
           details: [],
           paymentProvider: PaymentProvider.CHECKOUT,
         },
@@ -693,7 +695,9 @@ describe("ConsumerService", () => {
         transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
         fiatPaymentInfo: {
           paymentMethodID: paymentToken,
-          isSettled: false,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
           details: [],
           paymentProvider: PaymentProvider.CHECKOUT,
         },

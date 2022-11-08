@@ -75,8 +75,10 @@ export interface FiatPaymentInfo {
   paymentMethodID: string;
   paymentProvider: PaymentProvider;
   paymentID?: string;
-  isSettled: boolean;
-  details: ACHPaymentStatus[];
+  isCompleted: boolean;
+  isApproved: boolean;
+  isFailed: boolean;
+  details: any[];
 }
 
 export interface ACHPaymentStatus {

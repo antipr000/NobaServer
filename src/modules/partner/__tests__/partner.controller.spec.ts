@@ -993,7 +993,7 @@ describe("PartnerController", () => {
           sessionKey: "fake-session-key",
           fiatPaymentInfo: {
             paymentMethodID: "fake-payment-token",
-            isSettled: false,
+            isCompleted: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -1088,7 +1088,7 @@ describe("PartnerController", () => {
           sessionKey: "fake-session-key",
           fiatPaymentInfo: {
             paymentMethodID: "fake-payment-token",
-            isSettled: false,
+            isCompleted: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -1169,7 +1169,7 @@ describe("PartnerController", () => {
           sessionKey: "fake-session-key",
           fiatPaymentInfo: {
             paymentMethodID: "fake-payment-token",
-            isSettled: false,
+            isCompleted: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },

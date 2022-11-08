@@ -96,7 +96,7 @@ describe("ValidatePendingTransaction", () => {
     // As we are subscribing to the queue in the constructor of `MessageProcessor`, the call
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.PendingTransactionValidation, anything())).thenReturn({
-      start: () => {},
+      start: () => { },
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -154,7 +154,7 @@ describe("ValidatePendingTransaction", () => {
       transactionStatus: TransactionStatus.PENDING,
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentID: undefined,
         paymentProvider: PaymentProvider.CHECKOUT,

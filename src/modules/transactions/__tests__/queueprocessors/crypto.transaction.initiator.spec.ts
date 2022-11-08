@@ -113,7 +113,7 @@ describe("CryptoTransactionInitiator", () => {
     // to `sqsClient.subscribeToQueue()` will be made and we don't want that to fail :)
     when(sqsClient.subscribeToQueue(TransactionQueueName.FiatTransactionCompleted, anything())).thenReturn({
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      start: () => {},
+      start: () => { },
     } as any);
 
     const app: TestingModule = await Test.createTestingModule({
@@ -197,7 +197,9 @@ describe("CryptoTransactionInitiator", () => {
     transactionStatus: TransactionStatus.VALIDATION_PASSED,
     fiatPaymentInfo: {
       paymentMethodID: paymentMethodID,
-      isSettled: false,
+      isCompleted: false,
+      isApproved: false,
+      isFailed: false,
       details: [],
       paymentProvider: PaymentProvider.CHECKOUT,
     },

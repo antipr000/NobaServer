@@ -171,7 +171,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -236,7 +236,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -279,7 +279,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -342,7 +342,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -405,7 +405,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -478,7 +478,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
-        isSettled: false,
+        isCompleted: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,

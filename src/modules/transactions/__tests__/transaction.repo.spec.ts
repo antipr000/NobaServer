@@ -723,7 +723,9 @@ const getRandomTransaction = (
     leg2Amount: TEST_NUMBER,
     fiatPaymentInfo: {
       details: [],
-      isSettled: true,
+      isCompleted: true,
+      isApproved: true,
+      isFailed: false,
       paymentMethodID: "paymentMethodID",
       paymentID: "checkoutPaymentID",
       paymentProvider: PaymentProvider.CHECKOUT,

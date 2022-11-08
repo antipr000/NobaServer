@@ -989,7 +989,7 @@ function createFakeTransaction(consumer: Consumer, paymentMethod: PaymentMethod)
     transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
     fiatPaymentInfo: {
       paymentMethodID: paymentMethod.paymentToken,
-      isSettled: false,
+      isCompleted: false,
       details: [],
       paymentProvider: PaymentProvider.CHECKOUT,
     },
