@@ -155,6 +155,8 @@ describe("ValidatePendingTransaction", () => {
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: undefined,
         paymentProvider: PaymentProvider.CHECKOUT,

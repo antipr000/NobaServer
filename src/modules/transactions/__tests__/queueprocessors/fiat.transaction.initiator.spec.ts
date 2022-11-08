@@ -154,6 +154,8 @@ describe("FiatTransactionInitiator", () => {
     fiatPaymentInfo: {
       paymentMethodID: paymentMethodID,
       isCompleted: false,
+      isApproved: false,
+      isFailed: false,
       details: [],
       paymentProvider: PaymentProvider.CHECKOUT,
     },

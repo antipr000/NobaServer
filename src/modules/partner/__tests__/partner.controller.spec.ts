@@ -994,6 +994,8 @@ describe("PartnerController", () => {
           fiatPaymentInfo: {
             paymentMethodID: "fake-payment-token",
             isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -1089,6 +1091,8 @@ describe("PartnerController", () => {
           fiatPaymentInfo: {
             paymentMethodID: "fake-payment-token",
             isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },
@@ -1170,6 +1174,8 @@ describe("PartnerController", () => {
           fiatPaymentInfo: {
             paymentMethodID: "fake-payment-token",
             isCompleted: false,
+            isApproved: false,
+            isFailed: false,
             details: [],
             paymentProvider: PaymentProvider.CHECKOUT,
           },

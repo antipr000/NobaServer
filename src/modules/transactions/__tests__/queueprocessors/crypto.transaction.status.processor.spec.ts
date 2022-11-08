@@ -172,6 +172,8 @@ describe("CryptoTransactionStatusProcessor", () => {
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -237,6 +239,8 @@ describe("CryptoTransactionStatusProcessor", () => {
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -280,6 +284,8 @@ describe("CryptoTransactionStatusProcessor", () => {
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -343,6 +349,8 @@ describe("CryptoTransactionStatusProcessor", () => {
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -406,6 +414,8 @@ describe("CryptoTransactionStatusProcessor", () => {
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,
@@ -479,6 +489,8 @@ describe("CryptoTransactionStatusProcessor", () => {
       fiatPaymentInfo: {
         paymentMethodID: "XXXXXXXXXX",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentID: "checkout-id",
         paymentProvider: PaymentProvider.CHECKOUT,

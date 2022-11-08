@@ -990,6 +990,8 @@ function createFakeTransaction(consumer: Consumer, paymentMethod: PaymentMethod)
     fiatPaymentInfo: {
       paymentMethodID: paymentMethod.paymentToken,
       isCompleted: false,
+      isApproved: false,
+      isFailed: false,
       details: [],
       paymentProvider: PaymentProvider.CHECKOUT,
     },
