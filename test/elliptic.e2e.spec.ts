@@ -60,6 +60,8 @@ describe("Elliptic Integration Test", () => {
       fiatPaymentInfo: {
         paymentMethodID: "fake-payment-method",
         isCompleted: false,
+        isApproved: false,
+        isFailed: false,
         details: [],
         paymentProvider: "Checkout" as any,
       },
