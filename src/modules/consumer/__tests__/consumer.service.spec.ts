@@ -1203,7 +1203,7 @@ describe("ConsumerService", () => {
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
@@ -1360,11 +1360,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1")).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
