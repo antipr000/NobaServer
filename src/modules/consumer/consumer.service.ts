@@ -357,7 +357,7 @@ export class ConsumerService {
   async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string, partnerId: string) {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
     await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier);
-    await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier);
+    await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier, partnerId);
     await this.notificationService.sendNotification(
       NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       partnerId,
@@ -373,7 +373,12 @@ export class ConsumerService {
 
   async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number) {
     // Verify if the otp is correct
-    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier);
+    const cryptoWallet = this.getCryptoWallet(consumer, walletAddress);
+    const actualOtp = await this.otpRepo.getOTP(
+      consumer.props.email,
+      consumerIdentityIdentifier,
+      cryptoWallet.partnerID,
+    );
     const currentDateTime: number = new Date().getTime();
 
     if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {
@@ -384,10 +389,7 @@ export class ConsumerService {
       await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
     }
 
-    // Find the wallet and mark it verified
-    const cryptoWallet: CryptoWallet = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet => existingCryptoWallet.address == walletAddress,
-    )[0];
+    // mark the wallet verified
 
     const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(cryptoWallet.address);
     if (isSanctionedWallet) {
@@ -424,19 +426,10 @@ export class ConsumerService {
     const remainingWallets = allCryptoWallets.filter(
       wallet => !(wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID),
     );
-
-    // It's an add
-    if (selectedWallet.length === 0) {
-      allCryptoWallets.push(cryptoWallet);
-    } else {
-      allCryptoWallets = [...remainingWallets, cryptoWallet];
-    }
-
     // Send the verification OTP to the user
     if (cryptoWallet.status == WalletStatus.PENDING) {
       await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, cryptoWallet.partnerID);
     }
-
     const partner: Partner = await this.partnerService.getPartner(cryptoWallet.partnerID);
     if (partner.props.config === null || partner.props.config === undefined) {
       partner.props.config = {} as any;
@@ -446,6 +439,13 @@ export class ConsumerService {
       partner.props.config.privateWallets === null || partner.props.config.privateWallets === undefined
         ? true
         : partner.props.config.privateWallets;
+
+    // It's an add
+    if (selectedWallet.length === 0) {
+      allCryptoWallets.push(cryptoWallet);
+    } else {
+      allCryptoWallets = [...remainingWallets, cryptoWallet];
+    }
 
     const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
