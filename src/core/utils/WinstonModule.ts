@@ -20,10 +20,17 @@ export function getWinstonModule() {
       );
 
       return {
+        // https://github.com/winstonjs/winston/blob/master/docs/transports.md
         transports: [
           new winston.transports.Console({
             format: winstonFormat,
             level: process.env["WINSTON_LOG_LEVEL"] ?? "info",
+          }),
+          new winston.transports.File({
+            filename: logFilePath,
+            maxFiles: 5,
+            maxsize: 100 * 1024 * 1024, // 100 MBs
+            level: process.env["WINSTON_FILE_LOG_LEVEL"] ?? "info",
           }),
         ],
       };
