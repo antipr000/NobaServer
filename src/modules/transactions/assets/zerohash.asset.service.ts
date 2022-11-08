@@ -212,7 +212,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
   async getConsumerAccountBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
     const zhBalances = await this.zerohashService.getParticipantBalance(participantID);
 
-    const consumerAccountBalances: ConsumerAccountBalance[] = new Array();
+    const consumerAccountBalances: ConsumerAccountBalance[] = [];
     zhBalances.forEach(balance => {
       consumerAccountBalances.push({
         name: balance.accountLabel,

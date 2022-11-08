@@ -270,7 +270,7 @@ export class ZeroHashService {
 
   // Execute a liquidity quote
   async getParticipantBalance(participantID: string): Promise<ZerohashAccountBalance[]> {
-    const balances: ZerohashAccountBalance[] = new Array();
+    const balances: ZerohashAccountBalance[] = [];
 
     try {
       const accounts = await this.makeRequest(`/accounts?account_owner=${participantID}`, "GET");

@@ -19,7 +19,6 @@ import {
   DiscountedAmount,
   NonDiscountedNobaQuote,
   CombinedNobaQuote,
-  ConsumerAccountBalance,
 } from "../domain/AssetTypes";
 import { AssetService } from "./asset.service";
 import {
