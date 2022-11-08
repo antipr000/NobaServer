@@ -488,7 +488,7 @@ export class ZeroHashService {
       // Check trade_state every 3 seconds until it is terminated using setInterval
       const tradeData = await this.makeRequest(`/trades/${tradeId}`, "GET");
       const tradeState = tradeData["message"]["trade_state"];
-      const settledTimestamp = tradeData.message.settlement_timestamp;
+      const settledTimestamp = tradeData.message.settled_timestamp;
       let settlementState: string;
       tradeData.message.parties.forEach(party => {
         if (party.side === "sell") {
