@@ -934,7 +934,7 @@ describe("Zerohash Service", () => {
           comment: "Some comments about the trade for Zero Hash to store",
           parties_anonymous: true,
           settlement_price_index_id: null,
-          settlement_timestamp: 2554408627334,
+          settled_timestamp: 2554408627334,
           expiry_timestamp: 2554408627334,
           bank_fee: "1.00",
           parties: [
