@@ -30,7 +30,6 @@ import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
 import { SMSService } from "../common/sms.service";
 import { Otp } from "../auth/domain/Otp";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
-import { SendOtpEvent } from "../notifications/events/SendOtpEvent";
 
 @Injectable()
 export class ConsumerService {
@@ -191,6 +190,18 @@ export class ConsumerService {
       email: reqData.email.toLowerCase(),
       displayEmail: reqData.email,
     });
+
+    if (!consumer.props.email) {
+      //email being added for the first time
+      this.logger.info(`User email updated for first time sending welcome note, userId: ${consumer.props._id}`);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, undefined, {
+        email: updatedConsumer.props.email,
+        firstName: updatedConsumer.props.firstName,
+        lastName: updatedConsumer.props.lastName,
+        nobaUserID: updatedConsumer.props._id,
+      });
+    }
+
     return updatedConsumer;
   }
 
