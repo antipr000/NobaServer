@@ -1,12 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-
-export enum VerificationResultStatus {
-  APPROVED = "Approved",
-  NOT_APPROVED = "NotApproved",
-  PENDING = "Pending",
-}
+import { KycVerificationState } from "../../../modules/consumer/domain/ExternalStates";
 
 export class VerificationResultDTO {
-  @ApiProperty({ enum: VerificationResultStatus })
-  status: VerificationResultStatus;
+  @ApiProperty({ enum: KycVerificationState })
+  status: KycVerificationState;
 }

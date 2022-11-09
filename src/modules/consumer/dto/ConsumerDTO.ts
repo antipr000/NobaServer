@@ -3,6 +3,7 @@ import { Address } from "../domain/Address";
 import {
   AggregatedPaymentMethodState,
   AggregatedWalletState,
+  DocumentVerificationErrorReason,
   DocumentVerificationState,
   KycVerificationState,
   UserState,
@@ -76,6 +77,9 @@ export class KycVerificationDTO {
 export class DocumentVerificationDTO {
   @ApiPropertyOptional({ enum: DocumentVerificationState })
   documentVerificationStatus?: DocumentVerificationState;
+
+  @ApiPropertyOptional({ enum: DocumentVerificationErrorReason })
+  documentVerificationErrorReason?: DocumentVerificationErrorReason;
 
   @ApiPropertyOptional()
   updatedTimestamp?: number;

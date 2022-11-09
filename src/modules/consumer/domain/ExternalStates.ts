@@ -4,6 +4,8 @@ export enum UserState {
   APPROVED = "Approved",
   PENDING = "Pending",
   ACTION_REQUIRED = "ActionRequired",
+  TEMPORARY_HOLD = "TemporaryHold",
+  PERMANENT_HOLD = "PermanentHold",
 }
 
 export enum KycVerificationState {
@@ -26,6 +28,13 @@ export enum DocumentVerificationState {
   NOT_SUBMITTED = "NotSubmitted",
   PENDING = "Pending",
   VERIFIED = "Verified",
+  ACTION_REQUIRED = "ActionRequired",
+}
+
+export enum DocumentVerificationErrorReason {
+  REQUIRES_RECAPTURE = "RequiresRecapture",
+  POOR_QUALITY = "PoorQuality",
+  SIZE_OR_TYPE = "SizeOrType",
 }
 
 export const documentVerificationStatusToStateMap = {

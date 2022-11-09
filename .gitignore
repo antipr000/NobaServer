@@ -404,6 +404,7 @@ appconfigs/secrets.yaml
 dist
 package-lock.json
 *.pem
+.vscode/*
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
