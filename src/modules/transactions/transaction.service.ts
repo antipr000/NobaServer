@@ -74,7 +74,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
         `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
-        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
     }
 
@@ -223,13 +223,12 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
       this.logger.debug(
         `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
-        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
 
     const transactionType = transactionRequest.type;
-    const consumer = await this.consumerService.getConsumer(consumerID);
 
     if (transactionType == TransactionType.ONRAMP) {
       // Validate that destination wallet address is a valid address for given currency for an ONRAMP transaction
@@ -242,6 +241,7 @@ export class TransactionService {
         transactionRequest.destinationWalletAddress,
       );
       if (isSanctionedWallet) {
+        const consumer = await this.consumerService.getConsumer(consumerID);
         const cryptoWallet = this.consumerService.getCryptoWallet(
           consumer,
           transactionRequest.destinationWalletAddress,
@@ -264,6 +264,7 @@ export class TransactionService {
       transactionRequest.leg1Amount,
     );
 
+    const consumer = await this.consumerService.getConsumer(consumerID);
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
       sessionKey: sessionKey,
@@ -531,7 +532,8 @@ export class TransactionService {
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
     this.logger.debug(
-      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
+        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
     );
 
