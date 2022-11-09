@@ -113,7 +113,7 @@ describe("VerificationController", () => {
       expect(result.status).toBe("Approved");
     });
 
-    it("should return 'ActionRequired' for consumer info verification when details are not correct", async () => {
+    it("should return 'Rejected' for consumer info verification when details are not correct", async () => {
       const consumerInfo: ConsumerInformation = {
         userID: "testuser-1234",
         firstName: "Fake",
@@ -165,7 +165,7 @@ describe("VerificationController", () => {
         },
       );
 
-      expect(result.status).toBe("ActionRequired");
+      expect(result.status).toBe("Rejected");
     });
 
     it("should return 'PENDING' for consumer info verification when user is flagged", async () => {
