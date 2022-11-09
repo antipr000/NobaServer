@@ -23,7 +23,7 @@ export class StatesMapper {
       return WalletStatus.PENDING;
     } else if (wallets.length > 0) {
       return WalletStatus.APPROVED;
-    } else null;
+    } else return null;
   }
 
   private getAggregatedPaymentMethodStatus(paymentMethods: PaymentMethod[]): PaymentMethodStatus {

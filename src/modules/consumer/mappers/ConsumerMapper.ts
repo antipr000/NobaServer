@@ -81,9 +81,6 @@ export class ConsumerMapper implements Mapper<Consumer> {
       lastName: p.lastName,
       email: p.displayEmail ? p.displayEmail : p.email,
       phone: p.phone,
-      isSuspectedFraud: p.isSuspectedFraud,
-      isLocked: p.isLocked,
-      isDisabled: p.isDisabled,
       status: this.statesMapper.getUserState(consumer),
       kycVerificationData: {
         kycVerificationStatus: this.statesMapper.getKycVerificationState(

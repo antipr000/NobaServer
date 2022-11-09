@@ -115,15 +115,6 @@ export class ConsumerDTO {
   @ApiPropertyOptional()
   address?: Address;
 
-  @ApiProperty()
-  isSuspectedFraud: boolean;
-
-  @ApiProperty()
-  isLocked: boolean;
-
-  @ApiPropertyOptional()
-  isDisabled?: boolean;
-
   @ApiPropertyOptional({ type: [PaymentMethodsDTO] })
   paymentMethods?: PaymentMethodsDTO[];
 
