@@ -4,13 +4,20 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NobaConfigs, NobaTransactionConfigs } from "../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { Utils } from "../../core/utils/Utils";
 import { CurrencyService } from "../common/currency.service";
 import { CurrencyType } from "../common/domain/Types";
+import { EllipticService } from "../common/elliptic.service";
+import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
+import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { KYCStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { NotificationService } from "../notifications/notification.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerService } from "../partner/partner.service";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
@@ -19,7 +26,7 @@ import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
 import { ConsumerAccountBalance, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
-import { TransactionStatus } from "./domain/Types";
+import { TransactionFilterOptions, TransactionStatus, TransactionType } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
@@ -28,16 +35,8 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "./exceptions/TransactionSubmissionException";
-import { Utils } from "../../core/utils/Utils";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
-import { EllipticService } from "../common/elliptic.service";
-import { TransactionFilterOptions } from "./domain/Types";
-import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
-import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
 
 @Injectable()
 export class TransactionService {
@@ -75,7 +74,7 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
       throw new BadRequestException(
         `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
     }
 
@@ -224,14 +223,34 @@ export class TransactionService {
     if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
       this.logger.debug(
         `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
+        `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
       );
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
 
-    // Validate that destination wallet address is a valid address for given currency
-    if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
+    const transactionType = transactionRequest.type;
+    const consumer = await this.consumerService.getConsumer(consumerID);
+
+    if (transactionType == TransactionType.ONRAMP) {
+      // Validate that destination wallet address is a valid address for given currency for an ONRAMP transaction
+      if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
+        throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
+      }
+
+      // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as FLAGGED
+      const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(
+        transactionRequest.destinationWalletAddress,
+      );
+      if (isSanctionedWallet) {
+        const cryptoWallet = this.consumerService.getCryptoWallet(
+          consumer,
+          transactionRequest.destinationWalletAddress,
+        );
+        cryptoWallet.status = WalletStatus.FLAGGED;
+        await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+        this.logger.error("Failed to transact to a sanctioned wallet");
+        throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
+      }
     }
 
     // Validate & round to proper precision
@@ -239,19 +258,6 @@ export class TransactionService {
       transactionRequest.leg2,
       transactionRequest.leg2Amount,
     );
-
-    const consumer = await this.consumerService.getConsumer(consumerID);
-    // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as FLAGGED
-    const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(
-      transactionRequest.destinationWalletAddress,
-    );
-    if (isSanctionedWallet) {
-      const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transactionRequest.destinationWalletAddress);
-      cryptoWallet.status = WalletStatus.FLAGGED;
-      await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
-      this.logger.error("Failed to transact to a sanctioned wallet");
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
-    }
 
     const fiatAmount = await this.roundToProperDecimalsForFiatCurrency(
       transactionRequest.leg1,
@@ -397,6 +403,11 @@ export class TransactionService {
       );
     }
 
+    if (transaction.props.type == TransactionType.NOBA_WALLET) {
+      // Ignore wallet, sardine and partner check for NOBA WALLET transactions.
+      return PendingTransactionValidationStatus.PASS;
+    }
+
     const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
     if (cryptoWallet == null) {
       this.logger.error(
@@ -520,8 +531,7 @@ export class TransactionService {
       Math.abs(quotedPrice - currentPrice) <= this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice;
 
     this.logger.debug(
-      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${
-        this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
+      `Within slippage? Quote: ${quotedPrice}-${currentPrice}=${Math.abs(quotedPrice - currentPrice)} <= ${this.nobaTransactionConfigs.slippageAllowedPercentage * quotedPrice
       }? ${withinSlippage}`,
     );
 

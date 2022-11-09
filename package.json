@@ -62,7 +62,7 @@
     "multer": "^1.4.5-lts.1",
     "multicoin-address-validator": "^0.5.10",
     "nanoid": "^3.1.23",
-    "nest-winston": "^1.7.0",
+    "nest-winston": "^1.8.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "plaid": "^11.0.0",

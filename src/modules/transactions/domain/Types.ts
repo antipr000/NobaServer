@@ -3,6 +3,7 @@ export enum TransactionType {
   ONRAMP = "onramp",
   OFFRAMP = "offramp",
   SWAP = "swap",
+  NOBA_WALLET = "wallet",
 }
 
 // *** DO NOT CHANGE/REMOVE THE STATUSES ONCE IN PRODUCTION AS EXISTING TRANSACTION WONT BE VALID, WE CAN ONLY ADD NEW STATUS

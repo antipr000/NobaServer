@@ -205,7 +205,7 @@ export class TransactionController {
   async getConsumerBalance(@AuthUser() authUser: Consumer): Promise<ConsumerBalanceDTO[]> {
     const balances = await this.transactionService.getParticipantBalance(authUser.props.zhParticipantCode);
 
-    const dto: ConsumerBalanceDTO[] = new Array();
+    const dto: ConsumerBalanceDTO[] = [];
     balances.forEach(balance => {
       dto.push({
         balance: balance.balance,

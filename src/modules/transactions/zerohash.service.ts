@@ -1,8 +1,6 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-var-requires */
 // TODO: Remove eslint disable later on
-import axios, { AxiosRequestConfig, Method } from "axios";
-import tunnel from "tunnel";
 import {
   BadRequestException,
   Inject,
@@ -10,31 +8,33 @@ import {
   InternalServerErrorException,
   ServiceUnavailableException,
 } from "@nestjs/common";
+import axios, { AxiosRequestConfig, Method } from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import tunnel from "tunnel";
 import { Logger } from "winston";
 import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/ZerohashConfigs";
 import { AppEnvironment, getEnvironmentName, ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { Utils } from "../../core/utils/Utils";
 import { LocationService } from "../common/location.service";
-import { ConsumerProps } from "../consumer/domain/Consumer";
 import { ConsumerService } from "../consumer/consumer.service";
+import { ConsumerProps } from "../consumer/domain/Consumer";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
 import {
   OnChainState,
   TradeState,
   WithdrawalState,
+  ZerohashExecutedQuote,
   ZerohashNetworkFee,
   ZerohashQuote,
-  ZerohashTradeResponse,
   ZerohashTradeRequest,
+  ZerohashTradeResponse,
   ZerohashTransfer,
-  ZerohashWithdrawalResponse,
   ZerohashTransferResponse,
-  ZerohashExecutedQuote,
+  ZerohashWithdrawalResponse,
   ZerohashAccountBalance,
 } from "./domain/ZerohashTypes";
-import { Utils } from "../../core/utils/Utils";
 
 const crypto_ts = require("crypto");
 
@@ -98,7 +98,6 @@ export class ZeroHashService {
     };
 
     const axiosInstance = axios.create(axiosConfig);
-
     const requestString = `[${method} ${this.configs.host}${route}]`;
     this.logger.info(`Sending ZeroHash request: ${requestString}`);
     if (method !== "GET") {
@@ -107,7 +106,8 @@ export class ZeroHashService {
 
     try {
       const { data } = await axiosInstance.request(axiosConfig);
-      this.logger.info(`Received response: ${JSON.stringify(data)}`);
+
+      this.logger.debug(`Received response: ${JSON.stringify(data)}`);
       return data;
     } catch (err) {
       // WARNING: Do not JSON.stringify() 'err' as it results in a "circular structure" error message in the AWS envs w/ proxy
@@ -270,7 +270,7 @@ export class ZeroHashService {
 
   // Execute a liquidity quote
   async getParticipantBalance(participantID: string): Promise<ZerohashAccountBalance[]> {
-    const balances: ZerohashAccountBalance[] = new Array();
+    const balances: ZerohashAccountBalance[] = [];
 
     try {
       const accounts = await this.makeRequest(`/accounts?account_owner=${participantID}`, "GET");
@@ -417,7 +417,7 @@ export class ZeroHashService {
     const response: ZerohashWithdrawalResponse = {
       gasPrice: withdrawal["message"][0]["gas_price"],
       requestedAmount: Number(withdrawal["message"][0]["requested_amount"]),
-      settledAmount: withdrawal["message"][0]["settled_amount"],
+      settledAmount: Number(withdrawal["message"][0]["settled_amount"]),
       onChainTransactionID: withdrawal["message"][0]["transaction_id"],
 
       onChainStatus: OnChainState.PENDING,
@@ -487,15 +487,12 @@ export class ZeroHashService {
     try {
       // Check trade_state every 3 seconds until it is terminated using setInterval
       const tradeData = await this.makeRequest(`/trades/${tradeId}`, "GET");
-      this.logger.info(JSON.stringify(tradeData.message.parties));
-
       const tradeState = tradeData["message"]["trade_state"];
       const settledTimestamp = tradeData.message.settled_timestamp;
-
       let settlementState: string;
       tradeData.message.parties.forEach(party => {
         if (party.side === "sell") {
-          settlementState = tradeData.message.parties[1].settlement_state;
+          settlementState = party.settlement_state;
         }
       });
 
@@ -540,6 +537,7 @@ export class ZeroHashService {
           };
 
         default:
+          this.logger.info("unexpected state");
           throw Error(`Unexpected trade state: '${tradeState}'`);
       }
     } catch (err) {

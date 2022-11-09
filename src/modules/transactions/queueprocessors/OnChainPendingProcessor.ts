@@ -1,18 +1,18 @@
 import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { TransactionStatus, TransactionQueueName } from "../domain/Types";
-import { ITransactionRepo } from "../repo/TransactionRepo";
-import { ConsumerService } from "../../consumer/consumer.service";
-import { TransactionService } from "../transaction.service";
-import { SqsClient } from "./sqs.client";
-import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../../modules/common/lock.service";
-import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { AssetService } from "../assets/asset.service";
-import { ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
-import { NotificationService } from "../../../modules/notifications/notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { ConsumerService } from "../../consumer/consumer.service";
+import { AssetService } from "../assets/asset.service";
+import { AssetServiceFactory } from "../assets/asset.service.factory";
+import { ConsumerWalletTransferStatus, PollStatus } from "../domain/AssetTypes";
+import { TransactionQueueName, TransactionStatus, TransactionType } from "../domain/Types";
+import { ITransactionRepo } from "../repo/TransactionRepo";
+import { TransactionService } from "../transaction.service";
+import { MessageProcessor } from "./message.processor";
+import { SqsClient } from "./sqs.client";
 
 export class OnChainPendingProcessor extends MessageProcessor {
   constructor(
@@ -48,6 +48,52 @@ export class OnChainPendingProcessor extends MessageProcessor {
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
+    if (transaction.props.type == TransactionType.NOBA_WALLET) {
+      await this.transactionRepo.updateTransactionStatus(
+        transaction.props._id,
+        TransactionStatus.COMPLETED,
+        transaction.props,
+      );
+
+      this.logger.info(
+        `${transactionId}: Transaction is a noba wallet transaction, so no on chain processing involved. So, skipping, marking as complete. New status ${TransactionStatus.COMPLETED}`,
+      );
+
+      // TODO Update notification email once Gal is up with new template
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
+        transaction.props.partnerID,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
+          email: consumer.props.displayEmail,
+          orderExecutedParams: {
+            transactionID: transaction.props.transactionID,
+            transactionTimestamp: transaction.props.transactionTimestamp,
+            settledTimestamp: new Date(),
+            transactionHash: transaction.props.blockchainTransactionId,
+            paymentMethod: paymentMethod.cardData.cardType,
+            last4Digits: paymentMethod.cardData.last4Digits,
+            fiatCurrency: transaction.props.leg1,
+            conversionRate: transaction.props.exchangeRate,
+            processingFee: transaction.props.processingFee,
+            networkFee: transaction.props.networkFee,
+            nobaFee: transaction.props.nobaFee,
+            totalPrice: transaction.props.leg1Amount,
+            cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+            cryptocurrency: transaction.props.leg2,
+            cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
+            destinationWalletAddress: "Your Noba Wallet",
+            status: transaction.props.transactionStatus,
+          },
+        },
+      );
+      // TODO Send notification here once Gal is ready with the email template
+      return;
+    }
+
     const assetService: AssetService = await this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     this.logger.info(`${transactionId}: Polling the withdrawal status of "${transaction.props.zhWithdrawalID}"`);
@@ -88,7 +134,6 @@ export class OnChainPendingProcessor extends MessageProcessor {
         return;
     }
 
-    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
     if (paymentMethod == null) {
       // Should never happen if we got this far
       this.logger.error(

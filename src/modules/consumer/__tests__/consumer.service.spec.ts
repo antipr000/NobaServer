@@ -1989,7 +1989,7 @@ describe("ConsumerService", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";
       const email = "a@noba.com";
-      const partnerId = "fake-partner-id";
+      const partnerId = "fake-partner-id2";
       const otp = 123456;
       const otpObject = Otp.createOtp({
         otp: otp,
@@ -2136,13 +2136,40 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
+      when(
+        notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, undefined, {
+          email: email,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props.firstName,
+        }),
+      ).thenResolve();
 
+      // update consumer
       const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
+
       verify(consumerRepo.updateConsumer(anything())).once();
       const [requestArg] = capture(consumerRepo.updateConsumer).last();
       expect(requestArg.props.email).toBe(email.toLowerCase());
       expect(requestArg.props.displayEmail).toBe(email);
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
+
+      verify(notificationService.sendNotification(anything(), anything(), anything())).once();
+      const [notificationType, notificationPartnerId, notificationUserArgs] = capture(
+        notificationService.sendNotification,
+      ).last();
+      expect(notificationType).toBe(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT);
+      expect(notificationPartnerId).toBe(undefined);
+      expect(notificationUserArgs).toStrictEqual({
+        email: email.toLowerCase(),
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+      });
+
+      //update consumer again, this time notification shouldn't be sent
+      await consumerService.updateConsumerEmail(updateConsumerResponse, emailUpdateRequest);
+      verify(notificationService.sendNotification(anything(), anything(), anything())).once(); //already called above
     });
   });
 });

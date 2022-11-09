@@ -1,13 +1,10 @@
 import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { ConsumerService } from "../../consumer/consumer.service";
 import { Logger } from "winston";
-import { TransactionStatus, TransactionQueueName } from "../domain/Types";
-import { ITransactionRepo } from "../repo/TransactionRepo";
-import { TransactionService } from "../transaction.service";
-import { MessageProcessor } from "./message.processor";
-import { SqsClient } from "./sqs.client";
 import { LockService } from "../../../modules/common/lock.service";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { ConsumerService } from "../../consumer/consumer.service";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
 import {
@@ -16,8 +13,11 @@ import {
   ConsumerWalletTransferResponse,
   PollStatus,
 } from "../domain/AssetTypes";
-import { NotificationService } from "../../../modules/notifications/notification.service";
-import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { TransactionQueueName, TransactionStatus, TransactionType } from "../domain/Types";
+import { ITransactionRepo } from "../repo/TransactionRepo";
+import { TransactionService } from "../transaction.service";
+import { MessageProcessor } from "./message.processor";
+import { SqsClient } from "./sqs.client";
 
 export class CryptoTransactionStatusProcessor extends MessageProcessor {
   constructor(
@@ -80,8 +80,8 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
 
       const consumer = await this.consumerService.getConsumer(transaction.props.userId);
 
-      // Skip this if we already have a withdrawalID
-      if (!transaction.props.zhWithdrawalID) {
+      // Skip this if we already have a withdrawalID or if it is a noba wallet transaction
+      if (!transaction.props.zhWithdrawalID && transaction.props.type != TransactionType.NOBA_WALLET) {
         this.logger.info(`${transactionId}: Initiating the transfer to consumer wallet.`);
 
         const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
