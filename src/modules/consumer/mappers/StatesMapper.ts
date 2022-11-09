@@ -27,9 +27,10 @@ export class StatesMapper {
   }
 
   private getAggregatedPaymentMethodStatus(paymentMethods: PaymentMethod[]): PaymentMethodStatus {
-    if (paymentMethods.filter(paymentMethod => paymentMethod.status === PaymentMethodStatus.REJECTED)) {
+    if (paymentMethods.filter(paymentMethod => paymentMethod.status === PaymentMethodStatus.REJECTED).length > 0) {
       return PaymentMethodStatus.REJECTED;
     }
+    if (paymentMethods.length === 0) return null;
     const numApproved = paymentMethods.filter(
       paymentMethod => paymentMethod.status && paymentMethod.status === PaymentMethodStatus.APPROVED,
     ).length;
@@ -73,7 +74,7 @@ export class StatesMapper {
       case KYCStatus.NOT_SUBMITTED:
         return KycVerificationState.NOT_SUBMITTED;
       case KYCStatus.REJECTED:
-        return KycVerificationState.ACTION_REQUIRED;
+        return KycVerificationState.REJECTED;
     }
   }
 
@@ -95,7 +96,7 @@ export class StatesMapper {
     } else if (status === DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE) {
       return [DocumentVerificationState.ACTION_REQUIRED, DocumentVerificationErrorReason.REQUIRES_RECAPTURE];
     } else if (status === DocumentVerificationStatus.REJECTED) {
-      return [DocumentVerificationState.ACTION_REQUIRED, null];
+      return [DocumentVerificationState.REJECTED, null];
     }
   }
 
@@ -114,6 +115,20 @@ export class StatesMapper {
     const [documentVerificationState, _] = this.getDocumentVerificationState(documentVerificationStatus);
 
     if (
+      consumer.props.isLocked ||
+      identityVerificationStatus === KYCStatus.REJECTED ||
+      documentVerificationState === DocumentVerificationState.REJECTED ||
+      walletStatus === WalletStatus.REJECTED ||
+      paymentMethodStatus === PaymentMethodStatus.REJECTED
+    ) {
+      return UserState.PERMANENT_HOLD;
+    }
+
+    if (consumer.props.isDisabled || consumer.props.isSuspectedFraud) {
+      return UserState.TEMPORARY_HOLD;
+    }
+
+    if (
       identityVerificationState === KycVerificationState.APPROVED &&
       (documentVerificationState === DocumentVerificationState.VERIFIED ||
         documentVerificationState === DocumentVerificationState.NOT_REQUIRED) &&
@@ -128,15 +143,6 @@ export class StatesMapper {
       paymentMethodStatus === null
     ) {
       return UserState.ACTION_REQUIRED;
-    } else if (consumer.props.isDisabled || consumer.props.isSuspectedFraud) {
-      return UserState.TEMPORARY_HOLD;
-    } else if (
-      consumer.props.isLocked ||
-      identityVerificationStatus === KYCStatus.REJECTED ||
-      walletStatus === WalletStatus.REJECTED ||
-      paymentMethodStatus === PaymentMethodStatus.REJECTED
-    ) {
-      return UserState.PERMANENT_HOLD;
     }
 
     return UserState.PENDING;

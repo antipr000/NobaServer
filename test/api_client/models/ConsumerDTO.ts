@@ -12,7 +12,7 @@ export type ConsumerDTO = {
   firstName?: string;
   lastName?: string;
   email: string;
-  status: "Approved" | "Pending" | "ActionRequired";
+  status: "Approved" | "Pending" | "ActionRequired" | "TemporaryHold" | "PermanentHold";
   kycVerificationData: KycVerificationDTO;
   documentVerificationData: DocumentVerificationDTO;
   phone?: string;
