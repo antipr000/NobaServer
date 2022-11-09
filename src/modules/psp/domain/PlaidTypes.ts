@@ -13,6 +13,7 @@ export type RetrieveAccountDataRequest = {
 export type RetrieveAccountDataResponse = {
   itemID: string;
   accountID: string;
+  institutionID: string;
   availableBalance: string;
   currencyCode: string;
   mask: string;

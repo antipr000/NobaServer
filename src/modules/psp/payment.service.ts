@@ -233,8 +233,6 @@ export class PaymentService {
     // that we can use by the time we make a payment
     const [checkoutCustomerID, hasCustomerIDSaved] = await this.createPspConsumerAccount(consumer);
 
-    // const checkoutResponse = await this.checkoutService.performOneDollarACHTransaction(processorToken);
-    // console.log(checkoutResponse);
     const newPaymentMethod: PaymentMethod = {
       name: accountData.name,
       type: PaymentMethodType.ACH,

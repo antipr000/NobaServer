@@ -39,6 +39,8 @@ export type Bank = {
   accountType: string;
   balance: number;
   balanceCurrencyCode: string;
+  id: string;
+  idSource: string;
 };
 
 export type PaymentMethod = {

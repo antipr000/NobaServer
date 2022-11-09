@@ -264,7 +264,6 @@ export class Sardine implements IDVProvider {
       }
 
       sardinePaymentMethodData = {
-        // TODO(Sardine): Only allowed value as per documentation is "crypto". So, why "BANK"/"CARD"?
         type: PaymentMethodTypes.BANK,
         bank: {
           accountNumber: accountData.accountNumber,
@@ -272,6 +271,8 @@ export class Sardine implements IDVProvider {
           accountType: accountType,
           balance: parseFloat(accountData.availableBalance),
           balanceCurrencyCode: accountData.currencyCode,
+          id: accountData.institutionID,
+          idSource: "plaid",
         },
       };
     }
