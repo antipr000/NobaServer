@@ -3,10 +3,18 @@ import { DBProvider } from "../DBProvider";
 import { Collection } from "mongodb";
 import { Consumer } from "../../modules/consumer/domain/Consumer";
 import { PaymentMethod, PaymentMethodType } from "../../modules/consumer/domain/PaymentMethod";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { CryptoWallet } from "../../modules/consumer/domain/CryptoWallet";
+import { WalletStatus } from "../../modules/consumer/domain/VerificationStatus";
 
 @Injectable()
-export class PaymentMethodsMigrator {
-  constructor(private readonly dbProvider: DBProvider) {}
+export class ConsumerMigrator {
+  private readonly nobaPartnerId: string;
+  constructor(private readonly dbProvider: DBProvider, configService: CustomConfigService) {
+    this.nobaPartnerId = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).partnerID;
+  }
 
   private async saveDocumentToConsumerCollection(consumer: Consumer) {
     const consumerModel = await this.dbProvider.getUserModel();
@@ -14,7 +22,7 @@ export class PaymentMethodsMigrator {
   }
 
   // Any error here would crash the application and that is intentional.
-  private convertToNewSchema(queriedPaymentMethodRecord: any) {
+  private convertPaymentMethodToNewSchema(queriedPaymentMethodRecord: any) {
     const isOnOlderSchema: boolean =
       queriedPaymentMethodRecord.type === undefined || queriedPaymentMethodRecord.type === null;
 
@@ -41,6 +49,23 @@ export class PaymentMethodsMigrator {
     return migratedRecord;
   }
 
+  private convertCryptoWalletsToNewSchema(cryptoWallet: any) {
+    const migratedRecord: CryptoWallet = {
+      // As there are no "ACH" method yet,
+      // it is safe to assume that every payment method is of "CARD" type.
+      walletName: cryptoWallet.walletName,
+      address: cryptoWallet.address,
+      chainType: cryptoWallet.chainType,
+      isEVMCompatible: cryptoWallet.isEVMCompatible,
+      status: cryptoWallet.status ?? WalletStatus.PENDING,
+      partnerID: cryptoWallet.partnerID ?? this.nobaPartnerId,
+      riskScore: cryptoWallet.riskScore,
+      isPrivate: cryptoWallet.isPrivate ?? true,
+    };
+
+    return migratedRecord;
+  }
+
   private async readAndConvertTheEntireCollection(consumerCollection: Collection): Promise<Consumer[]> {
     const consumerDocumentCursor = consumerCollection.find({});
     const allUpdatedRecords: Consumer[] = [];
@@ -48,9 +73,12 @@ export class PaymentMethodsMigrator {
     while (await consumerDocumentCursor.hasNext()) {
       const consumerDocument = await consumerDocumentCursor.next();
       consumerDocument.paymentMethods = consumerDocument.paymentMethods.map(paymentMethodRecord => {
-        return this.convertToNewSchema(paymentMethodRecord);
+        return this.convertPaymentMethodToNewSchema(paymentMethodRecord);
       });
 
+      consumerDocument.cryptoWallets = consumerDocument.cryptoWallets.map(cryptoWallet => {
+        return this.convertCryptoWalletsToNewSchema(cryptoWallet);
+      });
       // Updating the row while the cursor is pointing to that might be error prone.
       // So, storing all the converted records into an in-memory structure.
       allUpdatedRecords.push(
@@ -66,7 +94,7 @@ export class PaymentMethodsMigrator {
 
   // This is idempotent and safe to re-run after any failures/crash.
   public async migrate() {
-    console.log("Migrating the 'PaymentMethods' field of 'Consumer' collection ...");
+    console.log("Migrating the 'Consumers' ...");
 
     const consumerModel = await this.dbProvider.getUserModel();
 

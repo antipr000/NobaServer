@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import { MongoClient, Collection } from "mongodb";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
-import { PaymentMethodsMigrator } from "../../../infraproviders/migrators/payment.method.migration";
+import { PaymentMethodsMigrator } from "../../migrators/consumer.migration";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
 import { WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
