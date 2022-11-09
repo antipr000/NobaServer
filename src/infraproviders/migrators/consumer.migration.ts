@@ -51,8 +51,6 @@ export class ConsumerMigrator {
 
   private convertCryptoWalletsToNewSchema(cryptoWallet: any) {
     const migratedRecord: CryptoWallet = {
-      // As there are no "ACH" method yet,
-      // it is safe to assume that every payment method is of "CARD" type.
       walletName: cryptoWallet.walletName,
       address: cryptoWallet.address,
       chainType: cryptoWallet.chainType,
