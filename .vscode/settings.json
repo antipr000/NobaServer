@@ -3,15 +3,5 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": ["source.formatDocument", "source.fixAll.eslint"],
   "eslint.validate": ["typescript"],
-  "editor.tabSize": 2,
-  "atlascode.jira.jqlList": [
-    {
-      "id": "0525824a-4cd4-48f7-87e0-91b33e9da1c9",
-      "siteId": "9a9a6538-1133-45b7-81ff-02ecc4b9f7c8",
-      "name": "Soham's Issues",
-      "query": "project = \"CRYPTO\" AND assignee = \"6350366df7ad721e784c27b1\"",
-      "enabled": true,
-      "monitor": true
-    }
-  ]
+  "editor.tabSize": 2
 }
