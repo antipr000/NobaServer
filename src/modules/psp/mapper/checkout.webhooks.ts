@@ -44,8 +44,8 @@ export class CheckoutWebhooksMapper {
       currency: data.currency,
       processedOn: new Date(data.processed_on),
       idempotencyID: data.metadata.order_id,
-      acquirerReferenceNumber: data.processing.acquirer_reference_number,
       acquirerTransactionID: data.processing.acquirer_transaction_id,
+      acquirerReferenceNumber: data.processing.acquirer_reference_number,
     };
   }
 }

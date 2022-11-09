@@ -24,6 +24,7 @@ export function getMockTransactionRepoWithDefaults(): ITransactionRepo {
   when(mockTransactionRepo.getStaleTransactionsToProcess(anyNumber(), anyNumber(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
+  when(mockTransactionRepo.updateFiatTransactionInfo(anything())).thenReject(new Error("Method not implemented"));
 
   return mockTransactionRepo;
 }

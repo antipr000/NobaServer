@@ -4,7 +4,11 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
-import { PaymentCapturePendingWebhookData, PaymentPendingWebhookData } from "./domain/CheckoutTypes";
+import {
+  PaymentCapturedWebhookData,
+  PaymentCapturePendingWebhookData,
+  PaymentPendingWebhookData,
+} from "./domain/CheckoutTypes";
 import { CheckoutWebhooksMapper } from "./mapper/checkout.webhooks";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
@@ -31,13 +35,13 @@ export class PaymentWebhooksController {
   @ApiTags("Vendors")
   @ApiOperation({ summary: "Checks if the transaction parameters are valid" })
   @ApiResponse({ status: HttpStatus.OK })
-  async checkIfTransactionPossible(@Body() requestBody, @Headers() headers) {
+  async consumePaymentWebhooks(@Body() requestBody, @Headers() headers) {
     this.logger.info(`Received Checkout webhook event with ID: '${requestBody.id}'`);
 
     let isValidRequest = true;
     const requiredFields = ["type", "id", "data"];
     requiredFields.forEach(field => {
-      if (requestBody.type === undefined || requestBody.type === null) {
+      if (requestBody[field] === undefined || requestBody[field] === null) {
         isValidRequest = false;
         return;
       }
@@ -60,17 +64,50 @@ export class PaymentWebhooksController {
       case "payment_pending": {
         const paymentPendingEvent: PaymentPendingWebhookData =
           this.checkoutWebhooksMapper.convertRawPaymentPendingWebhook(requestBody.data);
+
+        await this.transactionsRepo.updateFiatTransactionInfo({
+          details: JSON.stringify(paymentPendingEvent),
+          transactionID: paymentPendingEvent.idempotencyID,
+          willUpdateIsApproved: false,
+          willUpdateIsCompleted: false,
+          willUpdateIsFailed: false,
+        });
+        break;
       }
 
       case "payment_capture_pending": {
         const paymentCapturePendingEvent: PaymentCapturePendingWebhookData =
           this.checkoutWebhooksMapper.convertRawPaymentCapturePendingWebhook(requestBody.data);
+
+        await this.transactionsRepo.updateFiatTransactionInfo({
+          details: JSON.stringify(paymentCapturePendingEvent),
+          transactionID: paymentCapturePendingEvent.idempotencyID,
+          willUpdateIsApproved: true,
+          updatedIsApprovedValue: true,
+          willUpdateIsCompleted: false,
+          willUpdateIsFailed: false,
+        });
+        break;
       }
 
       case "payment_declined": {
       }
+
       case "payment_captured": {
+        const paymentCapturedWebhookData: PaymentCapturedWebhookData =
+          this.checkoutWebhooksMapper.convertRawPaymentCapturedWebhook(requestBody.data);
+
+        await this.transactionsRepo.updateFiatTransactionInfo({
+          details: JSON.stringify(paymentCapturedWebhookData),
+          transactionID: paymentCapturedWebhookData.idempotencyID,
+          willUpdateIsApproved: false,
+          willUpdateIsCompleted: true,
+          updatedIsCompletedValue: true,
+          willUpdateIsFailed: false,
+        });
+        break;
       }
+
       case "payment_returned": {
       }
 
