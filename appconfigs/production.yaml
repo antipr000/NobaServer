@@ -50,6 +50,7 @@ checkout:
   processingChannelId: "pc_v5hfxdz7txiuflbqrb6a4aa5qq"
   webhookSignatureKey: "bogus-value"
   awsSecretNameForWebhookSignatureKey: "PROD_CHECKOUT_WEBHOOK_SIGNATURE_KEY"
+  apiUrl: "https://api.checkout.com"
 
 mongo:
   awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"

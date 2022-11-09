@@ -48,6 +48,7 @@ checkout:
   processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
   webhookSignatureKey: "abcd"
   awsSecretNameForWebhookSignatureKey: ""
+  apiUrl: "https://api.sandbox.checkout.com"
 
 twilio:
   awsSecretNameForSID: ""

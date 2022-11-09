@@ -15,11 +15,8 @@ import { TransactionRepoModule } from "../transactions/repo/transaction.repo.mod
 export const CheckoutClientProvider: Provider = {
   provide: CheckoutClient,
   useFactory: async (customConfigService: CustomConfigService) => {
-    console.log("Something ...");
     const checkoutClient = new CheckoutClient(customConfigService);
-    console.log("Something ...");
     await checkoutClient.registerACHWebhooks();
-    console.log("Something ...");
     return checkoutClient;
   },
   inject: [CustomConfigService],

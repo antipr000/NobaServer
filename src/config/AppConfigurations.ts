@@ -309,6 +309,7 @@ async function configureCheckoutCredentials(
   checkoutConfigs.couponCode = await getParameterValue(null, checkoutConfigs.couponCode);
   checkoutConfigs.partnerId = parseInt(await getParameterValue(null, checkoutConfigs.partnerId.toString()));
   checkoutConfigs.processingChannelId = await getParameterValue(null, checkoutConfigs.processingChannelId);
+  checkoutConfigs.apiUrl = await getParameterValue(null, checkoutConfigs.apiUrl);
 
   configs[CHECKOUT_CONFIG_KEY] = checkoutConfigs;
   return configs;

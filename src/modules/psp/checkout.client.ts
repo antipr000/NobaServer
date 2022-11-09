@@ -204,7 +204,7 @@ export class CheckoutClient {
   public async registerACHWebhooks() {
     try {
       const workflows: WorkflowMetadata[] = (
-        await axios.get("https://api.sandbox.checkout.com/workflows", {
+        await axios.get(`${this.checkoutConfigs.apiUrl}/workflows`, {
           headers: {
             Authorization: `Bearer ${this.checkoutConfigs.secretKey}`,
           },
@@ -241,7 +241,7 @@ export class CheckoutClient {
             },
             signature: {
               method: "HMACSHA256",
-              key: "abcd",
+              key: this.checkoutConfigs.webhookSignatureKey,
             },
           },
         ],
