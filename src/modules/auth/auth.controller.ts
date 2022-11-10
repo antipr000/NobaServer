@@ -111,7 +111,7 @@ export class AuthController {
           break;
       }
     }
-    //const autoCreate = requestBody.autoCreate ?? true;
+
     const authService: AuthService = this.getAuthService(requestBody.identityType);
 
     if (!autoCreate) {

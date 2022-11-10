@@ -24,6 +24,8 @@ export class UserAuthService extends AuthService {
   }
 
   protected async isUserSignedUp(emailOrPhone: string): Promise<boolean> {
-    return (await this.consumerService.findConsumerByEmailOrPhone(emailOrPhone)) != null;
+    const consumer = await this.consumerService.findConsumerByEmailOrPhone(emailOrPhone);
+
+    return consumer.isSuccess;
   }
 }
