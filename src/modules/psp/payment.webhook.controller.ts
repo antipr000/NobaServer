@@ -14,10 +14,11 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
+import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 
 const crypto_ts = require("crypto");
 
-@Roles(Role.AppAdmin)
+@IsNoApiKeyNeeded()
 @Controller()
 export class PaymentWebhooksController {
   private webhookSignatureKey: string;
