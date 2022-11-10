@@ -48,6 +48,7 @@ export const CHECKOUT_PROCESSING_CHANNEL_ID = "processingChannelId";
 export const CHECKOUT_WEBHOOK_SIGNATURE_KEY = "webhookSignatureKey";
 export const CHECKOUT_AWS_SECRET_NAME_FOR_WEBHOOK_SIGNATURE_KEY = "awsSecretNameForWebhookSignatureKey";
 export const CHECKOUT_API_URL = "apiUrl";
+export const CHECKOUT_NOBA_WEBHOOK_URL = "nobaWebhookUrl";
 
 export const TWILIO_CONFIG_KEY = "twilio";
 export const TWILIO_AWS_SECRET_KEY_FOR_SID_ATTR = "awsSecretNameForSID";

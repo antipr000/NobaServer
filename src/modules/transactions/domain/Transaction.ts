@@ -81,25 +81,6 @@ export interface FiatPaymentInfo {
   details: any[];
 }
 
-export interface ACHPaymentStatus {
-  status: ACHStatus;
-  timestamp: Date;
-  amount: number;
-  currency: string;
-  otherDetails: string;
-}
-
-export enum ACHStatus {
-  // Checkout ACKed the payment
-  SUBMITTED = "submitted",
-  // Checkout verified the transaction parameters (not yet captured)
-  INITIAL_VERIFICATION_COMPLETED = "initial_verification_completed",
-  // Checkout CAPTURED the payment
-  COMPLETED = "completed",
-  // Checkout sent PAYMENT_RETURNED or PAYMENT_DECLIEND
-  FAILED = "failed",
-}
-
 export interface Discounts {
   fixedCreditCardFeeDiscount: number;
   nobaFeeDiscount: number;

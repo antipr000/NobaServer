@@ -199,6 +199,10 @@ export class CheckoutClient {
   // This function doesn't take any parameters and is idempotent.
   // So, it is safe to expose it publicly as clients can't do much with it.
   public async registerACHWebhooks() {
+    // TODO: Remove this once we have confidence in the flow.
+    // url: "https://webhook.site/523c9bbe-7a61-423c-9d2e-62519d30bfdd",
+    const webhookUrl = this.checkoutConfigs.nobaWebhookUrl;
+
     try {
       const workflows: WorkflowMetadata[] = (
         await axios.get(`${this.checkoutConfigs.apiUrl}/workflows`, {
@@ -232,7 +236,7 @@ export class CheckoutClient {
         actions: [
           {
             type: "webhook",
-            url: "https://webhook.site/523c9bbe-7a61-423c-9d2e-62519d30bfdd",
+            url: webhookUrl,
             headers: {
               Authorization: "secret-key",
             },
@@ -244,7 +248,7 @@ export class CheckoutClient {
         ],
       };
       const registeredWorkflowId = (
-        await axios.post("https://api.sandbox.checkout.com/workflows", createWorkflowRequest, {
+        await axios.post(`${this.checkoutConfigs.apiUrl}/workflows`, createWorkflowRequest, {
           headers: {
             Authorization: `Bearer ${this.checkoutConfigs.secretKey}`,
           },

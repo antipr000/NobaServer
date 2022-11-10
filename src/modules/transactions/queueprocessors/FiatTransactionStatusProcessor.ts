@@ -53,7 +53,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
         // Because the transaction is stopped and there is no loss 'isSettled' will also be set.
         if (transaction.props.fiatPaymentInfo.isFailed) {
           transaction.props.fiatPaymentInfo.isCompleted = true;
-          transaction.props.transactionStatus = TransactionStatus.FAILED;
+          transaction.props.transactionStatus = TransactionStatus.FIAT_INCOMING_FAILED;
         }
         // Approved by Checkout but not yet rejected.
         // Noba will take the risk and do the crypto transfers.
@@ -90,7 +90,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
         // hence the "FIAT Transaction" is considered to be "completed".
         else if (paymentStatus === FiatTransactionStatus.FAILED) {
           transaction.props.fiatPaymentInfo.isCompleted = true;
-          transaction.props.transactionStatus = TransactionStatus.FAILED;
+          transaction.props.transactionStatus = TransactionStatus.FIAT_INCOMING_FAILED;
         } else {
           // Unknown error. So, retry again after sometime (DBPoller will poll and retry).
           // TODO: Add limit on retry.
@@ -100,7 +100,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
         break;
       }
       default: {
-        this.logger.error(`PaymentMethod should be either CARD or ACH.`);
+        this.logger.error(`PaymentMethod should be either Card or Ach.`);
         return;
       }
     }
@@ -116,13 +116,9 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
         await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transactionId);
         break;
       }
-      case TransactionStatus.FAILED: {
+      case TransactionStatus.FIAT_INCOMING_FAILED: {
         // TODO (#332) get details from exception thrown by getFiatPaymentStatus()
-        await this.processFailure(
-          TransactionStatus.FIAT_INCOMING_FAILED,
-          "Need more details on the failure",
-          transaction,
-        );
+        await this.processFailure(TransactionStatus.FIAT_INCOMING_FAILED, "Failed to process payment", transaction);
         break;
       }
       default: {

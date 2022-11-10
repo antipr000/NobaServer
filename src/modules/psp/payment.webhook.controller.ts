@@ -91,6 +91,8 @@ export class PaymentWebhooksController {
       }
 
       case "payment_declined": {
+        this.logger.error(`'payment_declined' event is received - "${JSON.stringify(requestBody)}"`);
+        break;
       }
 
       case "payment_captured": {
@@ -109,6 +111,8 @@ export class PaymentWebhooksController {
       }
 
       case "payment_returned": {
+        this.logger.error(`'payment_declined' event is received - "${JSON.stringify(requestBody)}"`);
+        break;
       }
 
       default: {

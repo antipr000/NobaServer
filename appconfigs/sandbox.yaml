@@ -37,6 +37,7 @@ checkout:
   webhookSignatureKey: "secret"
   awsSecretNameForWebhookSignatureKey: ""
   apiUrl: "https://api.sandbox.checkout.com"
+  nobaWebhookUrl: "https://api-sandbox.noba.com/v1/vendors/checkout/webhooks"
 
 twilio:
   awsSecretNameForSID: "TEST_TWILIO_SID"

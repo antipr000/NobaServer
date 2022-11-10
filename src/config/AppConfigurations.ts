@@ -310,6 +310,7 @@ async function configureCheckoutCredentials(
   checkoutConfigs.partnerId = parseInt(await getParameterValue(null, checkoutConfigs.partnerId.toString()));
   checkoutConfigs.processingChannelId = await getParameterValue(null, checkoutConfigs.processingChannelId);
   checkoutConfigs.apiUrl = await getParameterValue(null, checkoutConfigs.apiUrl);
+  checkoutConfigs.nobaWebhookUrl = await getParameterValue(null, checkoutConfigs.nobaWebhookUrl);
 
   configs[CHECKOUT_CONFIG_KEY] = checkoutConfigs;
   return configs;
