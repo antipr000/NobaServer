@@ -11,6 +11,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PaginatedResult, SortOrder, EMPTY_PAGE_RESULT } from "../../../core/infra/PaginationTypes";
 import { SortOptions, paginationPipeLine } from "../../../infra/mongodb/paginate/PaginationPipeline";
+import { UpdateFiatTransactionInfoRequest } from "../domain/TransactionRepoTypes";
 
 type AggregateResultType = {
   _id: number;
@@ -88,6 +89,32 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     );
 
     return results.map(x => this.transactionMapper.toDomain(convertDBResponseToJsObject(x)));
+  }
+
+  async updateFiatTransactionInfo(request: UpdateFiatTransactionInfoRequest): Promise<void> {
+    const updatedFiatInfoFields = {};
+
+    if (request.willUpdateIsApproved) {
+      updatedFiatInfoFields["fiatPaymentInfo.isApproved"] = request.updatedIsApprovedValue;
+    }
+    if (request.willUpdateIsCompleted) {
+      updatedFiatInfoFields["fiatPaymentInfo.isCompleted"] = request.updatedIsCompletedValue;
+    }
+    if (request.willUpdateIsFailed) {
+      updatedFiatInfoFields["fiatPaymentInfo.isFailed"] = request.updatedIsFailedValue;
+    }
+
+    const transactionModel = await this.dbProvider.getTransactionModel();
+    await transactionModel
+      .findByIdAndUpdate(request.transactionID, {
+        $set: {
+          ...updatedFiatInfoFields,
+        },
+        $push: {
+          "fiatPaymentInfo.details": request.details,
+        },
+      })
+      .exec();
   }
 
   async getAll(): Promise<Transaction[]> {

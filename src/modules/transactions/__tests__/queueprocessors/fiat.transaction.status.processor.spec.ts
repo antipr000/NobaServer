@@ -27,6 +27,8 @@ import { LockService } from "../../../../modules/common/lock.service";
 import { getMockLockServiceWithDefaults } from "../../../../modules/common/mocks/mock.lock.service";
 import { ObjectType } from "../../../../modules/common/domain/ObjectType";
 import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
+import { Consumer } from "../../../../modules/consumer/domain/Consumer";
+import { PaymentMethodType } from "../../../../modules/consumer/domain/PaymentMethod";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -130,53 +132,53 @@ describe("FiatTransactionInitiator", () => {
     await mongoServer.stop();
   });
 
-  it("should process fiat transaction status and put it in next queue", async () => {
-    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
-    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
-    expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
-
-    const initiatedPaymentId = "CCCCCCCCCC";
-    const transaction: Transaction = Transaction.createTransaction({
-      _id: "1111111111",
-      userId: "UUUUUUUUU",
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      paymentMethodID: "XXXXXXXXXX",
-      leg1Amount: 1000,
-      leg2Amount: 1,
-      leg1: "USD",
-      leg2: "ETH",
-      checkoutPaymentID: initiatedPaymentId,
-      lastStatusUpdateTimestamp: Date.now().valueOf(),
-      partnerID: "12345",
-    });
-
-    await transactionCollection.insertOne({
-      ...transaction.props,
-      _id: transaction.props._id as any,
-    });
-    when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
-    ).thenResolve(PaymentProvider.CHECKOUT);
-    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
-      FiatTransactionStatus.CAPTURED,
-    );
-    when(sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transaction.props._id)).thenResolve("");
-    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
-    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
-
-    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
-
-    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
-    expect(allTransactionsInDb).toHaveLength(1);
-    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_COMPLETED);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
-    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
-      transaction.props.lastStatusUpdateTimestamp,
-    );
-
-    const [queueName, transactionId] = capture(sqsClient.enqueue).last();
-    expect(queueName).toBe(TransactionQueueName.FiatTransactionCompleted);
-    expect(transactionId).toBe(transaction.props._id);
+  const consumerID: string = "UUUUUUUUUUU";
+  const cardPaymentToken: string = "CCCCCCCCCCCC";
+  const achPaymentToken: string = "AAAAAAAAAAAA";
+  const consumerWithBothCardAndAchPaymentMethods = Consumer.createConsumer({
+    _id: consumerID,
+    firstName: "Fake",
+    lastName: "Name",
+    email: "test@noba.com",
+    displayEmail: "test@noba.com",
+    paymentProviderAccounts: [
+      {
+        providerCustomerID: "test-customer-1",
+        providerID: PaymentProvider.CHECKOUT,
+      },
+    ],
+    partners: [
+      {
+        partnerID: "mock-partner-id",
+      },
+    ],
+    isAdmin: false,
+    paymentMethods: [
+      {
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: cardPaymentToken,
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+        },
+        imageUri: "https://noba.com",
+      },
+      {
+        type: PaymentMethodType.ACH,
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: achPaymentToken,
+        achData: {
+          accessToken: "dummy-access-token",
+          accountID: "dummy-account-id",
+          accountType: "checking",
+          itemID: "item-id",
+          mask: "1234",
+        },
+        imageUri: "https://noba.com",
+      },
+    ],
+    cryptoWallets: [],
   });
 
   it("should exit flow if transaction status is not 'FIAT_INCOMING_INITIATED'", async () => {
@@ -187,9 +189,17 @@ describe("FiatTransactionInitiator", () => {
     const initiatedPaymentId = "CCCCCCCCCC";
     const transaction: Transaction = Transaction.createTransaction({
       _id: "1111111111",
-      userId: "UUUUUUUUU",
+      userId: consumerID,
       transactionStatus: TransactionStatus.VALIDATION_PASSED,
-      paymentMethodID: "XXXXXXXXXX",
+      fiatPaymentInfo: {
+        paymentMethodID: cardPaymentToken,
+        paymentID: initiatedPaymentId,
+        isCompleted: false,
+        isApproved: false,
+        isFailed: false,
+        details: [],
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",
@@ -202,6 +212,7 @@ describe("FiatTransactionInitiator", () => {
       ...transaction.props,
       _id: transaction.props._id as any,
     });
+
     when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
     when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
@@ -213,88 +224,372 @@ describe("FiatTransactionInitiator", () => {
     expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
   });
 
-  it("should move into failed queue if transaction fails", async () => {
-    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
-    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
-    expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
+  describe("CARD Payment Method", () => {
+    it("should do nothing payment status is pending", async () => {
+      const initiatedPaymentId = "CCCCCCCCCC";
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumerID,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: cardPaymentToken,
+          paymentID: initiatedPaymentId,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+        partnerID: "12345",
+      });
 
-    const initiatedPaymentId = "CCCCCCCCCC";
-    const transaction: Transaction = Transaction.createTransaction({
-      _id: "1111111111",
-      userId: "UUUUUUUUU",
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      paymentMethodID: "XXXXXXXXXX",
-      leg1Amount: 1000,
-      leg2Amount: 1,
-      leg1: "USD",
-      leg2: "ETH",
-      checkoutPaymentID: initiatedPaymentId,
-      lastStatusUpdateTimestamp: Date.now().valueOf(),
-      partnerID: "12345",
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
+      when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
+        FiatTransactionStatus.PENDING,
+      );
+
+      await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
     });
 
-    await transactionCollection.insertOne({
-      ...transaction.props,
-      _id: transaction.props._id as any,
+    it("should move into failed queue if transaction fails", async () => {
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
+      expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
+
+      const initiatedPaymentId = "CCCCCCCCCC";
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumerID,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: cardPaymentToken,
+          paymentID: initiatedPaymentId,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+        partnerID: "12345",
+      });
+
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
+      when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
+        FiatTransactionStatus.FAILED,
+      );
+      when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+      await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+        transaction.props.lastStatusUpdateTimestamp,
+      );
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+      expect(transactionId).toBe(transaction.props._id);
     });
-    when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
-    ).thenResolve(PaymentProvider.CHECKOUT);
-    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
-      FiatTransactionStatus.FAILED,
-    );
-    when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
-    when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
-    when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
 
-    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+    it("should process fiat transaction status and put it in next queue", async () => {
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
+      expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
 
-    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
-    expect(allTransactionsInDb).toHaveLength(1);
-    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
-    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
+      const initiatedPaymentId = "CCCCCCCCCC";
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumerID,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: cardPaymentToken,
+          paymentID: initiatedPaymentId,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+        partnerID: "12345",
+      });
 
-    const [queueName, transactionId] = capture(sqsClient.enqueue).last();
-    expect(queueName).toBe(TransactionQueueName.TransactionFailed);
-    expect(transactionId).toBe(transaction.props._id);
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
+      when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
+        FiatTransactionStatus.CAPTURED,
+      );
+      when(sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transaction.props._id)).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+      await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_COMPLETED);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+        transaction.props.lastStatusUpdateTimestamp,
+      );
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.FiatTransactionCompleted);
+      expect(transactionId).toBe(transaction.props._id);
+    });
   });
 
-  it("should do nothing payment status is pending", async () => {
-    const initiatedPaymentId = "CCCCCCCCCC";
-    const transaction: Transaction = Transaction.createTransaction({
-      _id: "1111111111",
-      userId: "UUUUUUUUU",
-      transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-      paymentMethodID: "XXXXXXXXXX",
-      leg1Amount: 1000,
-      leg2Amount: 1,
-      leg1: "USD",
-      leg2: "ETH",
-      checkoutPaymentID: initiatedPaymentId,
-      lastStatusUpdateTimestamp: Date.now().valueOf(),
-      partnerID: "12345",
+  describe("ACH Payment Method", () => {
+    it("should skip the transaction if none of 'isApproved' or 'isFailed' is 'true'", async () => {
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
+      expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
+
+      const initiatedPaymentId = "CCCCCCCCCC";
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumerID,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: achPaymentToken,
+          paymentID: initiatedPaymentId,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+        partnerID: "12345",
+      });
+
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+      await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBe(transaction.props.lastStatusUpdateTimestamp);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isApproved).toBe(false);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isFailed).toBe(false);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isCompleted).toBe(false);
     });
 
-    await transactionCollection.insertOne({
-      ...transaction.props,
-      _id: transaction.props._id as any,
+    it("should move the transaction to 'FAILED' queue if 'isFailed' is 'true'", async () => {
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
+      expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
+
+      const initiatedPaymentId = "CCCCCCCCCC";
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumerID,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: achPaymentToken,
+          paymentID: initiatedPaymentId,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: true,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+        partnerID: "12345",
+      });
+
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
+      when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+      await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+        transaction.props.lastStatusUpdateTimestamp,
+      );
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isApproved).toBe(false);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isFailed).toBe(true);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isCompleted).toBe(true);
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+      expect(transactionId).toBe(transaction.props._id);
     });
 
-    when(
-      consumerService.getPaymentMethodProvider(transaction.props.userId, transaction.props.paymentMethodID),
-    ).thenResolve(PaymentProvider.CHECKOUT);
-    when(consumerService.getFiatPaymentStatus(initiatedPaymentId, PaymentProvider.CHECKOUT)).thenResolve(
-      FiatTransactionStatus.PENDING,
-    );
+    it("should move the transaction to next stage WITHOUT updating 'isCompleted' if 'isApproved' is 'true'", async () => {
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
+      expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
 
-    await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+      const initiatedPaymentId = "CCCCCCCCCC";
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumerID,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: achPaymentToken,
+          paymentID: initiatedPaymentId,
+          isCompleted: false,
+          isApproved: true,
+          isFailed: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+        partnerID: "12345",
+      });
 
-    const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
 
-    expect(allTransactionsInDb).toHaveLength(1);
-    expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_INITIATED);
-    expect(allTransactionsInDb[0].checkoutPaymentID).toBe(initiatedPaymentId);
-    expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toEqual(transaction.props.lastStatusUpdateTimestamp);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
+      when(sqsClient.enqueue(TransactionQueueName.FiatTransactionCompleted, transaction.props._id)).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+      await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_COMPLETED);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+        transaction.props.lastStatusUpdateTimestamp,
+      );
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isApproved).toBe(true);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isFailed).toBe(false);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isCompleted).toBe(false);
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.FiatTransactionCompleted);
+      expect(transactionId).toBe(transaction.props._id);
+    });
+
+    it("should move the transaction to 'FAILED' queue if 'isFailed' & 'isApproved' both are 'true'", async () => {
+      const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+      expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiated);
+      expect(processor).toBeInstanceOf(FiatTransactionStatusProcessor);
+
+      const initiatedPaymentId = "CCCCCCCCCC";
+      const transaction: Transaction = Transaction.createTransaction({
+        _id: "1111111111",
+        userId: consumerID,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: achPaymentToken,
+          paymentID: initiatedPaymentId,
+          isCompleted: false,
+          isApproved: true,
+          isFailed: true,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 1,
+        leg1: "USD",
+        leg2: "ETH",
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+        partnerID: "12345",
+      });
+
+      await transactionCollection.insertOne({
+        ...transaction.props,
+        _id: transaction.props._id as any,
+      });
+
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumerWithBothCardAndAchPaymentMethods);
+      when(sqsClient.enqueue(TransactionQueueName.TransactionFailed, transaction.props._id)).thenResolve("");
+      when(lockService.acquireLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve("lock-1");
+      when(lockService.releaseLockForKey(transaction.props._id, ObjectType.TRANSACTION)).thenResolve();
+
+      await fiatTransactionStatusProcessor.processMessageInternal(transaction.props._id);
+
+      const allTransactionsInDb = await getAllRecordsInTransactionCollection(transactionCollection);
+      expect(allTransactionsInDb).toHaveLength(1);
+      expect(allTransactionsInDb[0].transactionStatus).toBe(TransactionStatus.FIAT_INCOMING_FAILED);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.paymentID).toBe(initiatedPaymentId);
+      expect(allTransactionsInDb[0].lastStatusUpdateTimestamp).toBeGreaterThan(
+        transaction.props.lastStatusUpdateTimestamp,
+      );
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isApproved).toBe(true);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isFailed).toBe(true);
+      expect(allTransactionsInDb[0].fiatPaymentInfo.isCompleted).toBe(true);
+
+      const [queueName, transactionId] = capture(sqsClient.enqueue).last();
+      expect(queueName).toBe(TransactionQueueName.TransactionFailed);
+      expect(transactionId).toBe(transaction.props._id);
+    });
   });
 });

@@ -48,7 +48,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
     if (transaction.props.type == TransactionType.NOBA_WALLET) {
       await this.transactionRepo.updateTransactionStatus(
         transaction.props._id,
@@ -133,6 +133,7 @@ export class OnChainPendingProcessor extends MessageProcessor {
         await this.processFailure(TransactionStatus.FAILED, withdrawalStatus.errorMessage, transaction);
         return;
     }
+
     if (paymentMethod == null) {
       // Should never happen if we got this far
       this.logger.error(

@@ -35,6 +35,7 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "../../exceptions/TransactionSubmissionException";
+import { PaymentProvider } from "../../../../modules/consumer/domain/PaymentProvider";
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -151,7 +152,15 @@ describe("ValidatePendingTransaction", () => {
       userId: consumerID,
       sessionKey: "12345",
       transactionStatus: TransactionStatus.PENDING,
-      paymentMethodID: "XXXXXXXXXX",
+      fiatPaymentInfo: {
+        paymentMethodID: "XXXXXXXXXX",
+        isCompleted: false,
+        isApproved: false,
+        isFailed: false,
+        details: [],
+        paymentID: undefined,
+        paymentProvider: PaymentProvider.CHECKOUT,
+      },
       leg1Amount: 1000,
       leg2Amount: 1,
       leg1: "USD",

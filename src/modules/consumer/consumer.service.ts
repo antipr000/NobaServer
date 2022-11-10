@@ -246,7 +246,7 @@ export class ConsumerService {
     }
     */
 
-    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
     if (paymentMethod.paymentProviderID === PaymentProvider.CHECKOUT) {
       return this.paymentService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     } else {

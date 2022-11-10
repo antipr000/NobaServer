@@ -265,11 +265,19 @@ export class TransactionService {
       transactionRequest.leg1Amount,
     );
 
+    const consumer = await this.consumerService.getConsumer(consumerID);
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
       sessionKey: sessionKey,
-      type: transactionType,
-      paymentMethodID: transactionRequest.paymentToken,
+      fiatPaymentInfo: {
+        paymentMethodID: transactionRequest.paymentToken,
+        isCompleted: false,
+        isApproved: false,
+        isFailed: false,
+        details: [],
+        paymentID: undefined,
+        paymentProvider: consumer.getPaymentMethodByID(transactionRequest.paymentToken).paymentProviderID,
+      },
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
       leg1Amount: fiatAmount,
       leg2Amount: cryptoAmount,
@@ -382,7 +390,9 @@ export class TransactionService {
     consumer: Consumer,
     transaction: Transaction,
   ): Promise<PendingTransactionValidationStatus> {
-    const paymentMethod: PaymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    const paymentMethod: PaymentMethod = consumer.getPaymentMethodByID(
+      transaction.props.fiatPaymentInfo.paymentMethodID,
+    );
 
     if (!paymentMethod) {
       this.logger.error(

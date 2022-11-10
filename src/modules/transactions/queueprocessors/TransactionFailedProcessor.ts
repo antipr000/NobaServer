@@ -48,7 +48,7 @@ export class TransactionFailedProcessor extends MessageProcessor {
       return;
     }
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.paymentMethodID);
+    const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
     if (paymentMethod == null) {
       // Should never happen if we got this far
       this.logger.error(

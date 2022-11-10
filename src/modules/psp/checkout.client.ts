@@ -1,24 +1,25 @@
 import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { CheckoutPaymentStatus } from "./domain/CheckoutTypes";
+import { CheckoutPaymentStatus, WorkflowMetadata } from "./domain/CheckoutTypes";
 import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMethodDTO";
 import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodResponse";
 import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
+import axios from "axios";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 @Injectable()
 export class CheckoutClient {
   private readonly checkoutApi: Checkout;
   private readonly checkoutConfigs: CheckoutConfigs;
 
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
-  constructor(private configService: CustomConfigService) {
+  constructor(
+    private configService: CustomConfigService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) {
     this.checkoutConfigs = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY);
     this.checkoutApi = new Checkout(this.checkoutConfigs.secretKey, {
       pk: this.checkoutConfigs.publicKey,
@@ -195,5 +196,92 @@ export class CheckoutClient {
 
   public async removePaymentMethod(paymentMethodId: string): Promise<void> {
     await this.checkoutApi.instruments.delete(paymentMethodId);
+  }
+
+  // This function doesn't take any parameters and is idempotent.
+  // So, it is safe to expose it publicly as clients can't do much with it.
+  public async registerACHWebhooks() {
+    // TODO: Remove this once we have confidence in the flow.
+    // url: "https://webhook.site/523c9bbe-7a61-423c-9d2e-62519d30bfdd",
+    const webhookUrl = this.checkoutConfigs.nobaWebhookUrl;
+
+    try {
+      const workflows: WorkflowMetadata[] = (
+        await axios.get(`${this.checkoutConfigs.apiUrl}/workflows`, {
+          headers: {
+            Authorization: `Bearer ${this.checkoutConfigs.secretKey}`,
+          },
+        })
+      ).data.data;
+
+      let webhookAlreadyConfigured = false;
+      workflows.forEach(workflow => {
+        if (workflow.name.endsWith(webhookUrl)) {
+          webhookAlreadyConfigured = true;
+        }
+      });
+      if (webhookAlreadyConfigured) {
+        console.log(`Workflow already configured - ${JSON.stringify(workflows)}`);
+        return;
+      }
+
+      const createWorkflowRequest = {
+        // The webhook URL is added in the "name" intentionally to save API calls.
+        // Get All Wrokflow call above, doesn't return the webhook url
+        // (You need to call GET /workflow with the specified ID for the same) but it does
+        // returns the "name" for the webhook.
+        name: `Webhook for ${webhookUrl}`,
+        conditions: [
+          {
+            type: "event",
+            events: {
+              gateway: [
+                // https://www.checkout-docs-private-beta.com/docs/four/ach#Webhooks
+                "payment_pending",
+                "payment_capture_pending",
+                "payment_declined",
+                "payment_captured",
+                "payment_returned",
+              ],
+            },
+          },
+        ],
+        actions: [
+          {
+            type: "webhook",
+            url: webhookUrl,
+            headers: {
+              Authorization: "secret-key",
+            },
+            signature: {
+              method: "HMACSHA256",
+              key: this.checkoutConfigs.webhookSignatureKey,
+            },
+          },
+        ],
+      };
+      const registeredWorkflowId = (
+        await axios.post(`${this.checkoutConfigs.apiUrl}/workflows`, createWorkflowRequest, {
+          headers: {
+            Authorization: `Bearer ${this.checkoutConfigs.secretKey}`,
+          },
+        })
+      ).data.id;
+      console.log(`Workflow created with ID: '${registeredWorkflowId}'`);
+
+      // const workflows: WorkflowMetadata[] = ((await this.checkoutApi.workflows.getAll()) as any).data;
+      // if (workflows.length === 1) {
+      //   // TODO: Extend this to support the workflow "update" case as well by
+      //   //       having something like "desired_workflow" as private variable.
+      //   this.logger.info(`Workflow already configured - ${JSON.stringify(workflows)}`);
+      //   return;
+      // }
+      // console.log(workflows);
+      // const webhookResponse = await this.checkoutApi.workflows.add(createWorkflowRequest);
+      // console.log("Webhook created", webhookResponse);
+    } catch (e) {
+      console.log(e, e.response);
+      throw e;
+    }
   }
 }

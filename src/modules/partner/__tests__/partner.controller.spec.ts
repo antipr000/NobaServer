@@ -15,6 +15,7 @@ import { Partner } from "../domain/Partner";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
 import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
 import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
@@ -990,7 +991,14 @@ describe("PartnerController", () => {
           _id: "fake-transaction-id",
           userId: "user-id-1",
           sessionKey: "fake-session-key",
-          paymentMethodID: "fake-payment-token",
+          fiatPaymentInfo: {
+            paymentMethodID: "fake-payment-token",
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 100,
           leg2Amount: 0.1,
           leg1: "USD",
@@ -1080,7 +1088,14 @@ describe("PartnerController", () => {
           _id: "fake-transaction-id",
           userId: "user-id-1",
           sessionKey: "fake-session-key",
-          paymentMethodID: "fake-payment-token",
+          fiatPaymentInfo: {
+            paymentMethodID: "fake-payment-token",
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 100,
           leg2Amount: 0.1,
           leg1: "USD",
@@ -1156,7 +1171,14 @@ describe("PartnerController", () => {
           _id: "fake-transaction-id",
           userId: "user-id-1",
           sessionKey: "fake-session-key",
-          paymentMethodID: "fake-payment-token",
+          fiatPaymentInfo: {
+            paymentMethodID: "fake-payment-token",
+            isCompleted: false,
+            isApproved: false,
+            isFailed: false,
+            details: [],
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
           leg1Amount: 100,
           leg2Amount: 0.1,
           leg1: "USD",

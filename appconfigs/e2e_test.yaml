@@ -46,6 +46,10 @@ checkout:
   couponCode: "NY2018"
   partnerId: 123989
   processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
+  webhookSignatureKey: "abcd"
+  awsSecretNameForWebhookSignatureKey: ""
+  apiUrl: "https://api.sandbox.checkout.com"
+  nobaWebhookUrl: "https://api-sandbox.noba.com/v1/vendors/checkout/webhooks"
 
 twilio:
   awsSecretNameForSID: ""

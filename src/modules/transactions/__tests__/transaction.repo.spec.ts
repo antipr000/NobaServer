@@ -18,6 +18,7 @@ import {
 } from "../domain/Types";
 import { CurrencyType } from "../../../../src/modules/common/domain/Types";
 import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 
 const TRANSACTION_ID_PREFIX = "transaction_id_prefix";
 const TEST_NUMBER = 5;
@@ -31,6 +32,35 @@ const EUR = "EUR";
 
 const mkid = (id: string): string => {
   return TRANSACTION_ID_PREFIX + id;
+};
+
+const getAllRecordsInTransactionCollection = async (
+  transactionCollection: Collection,
+): Promise<Array<TransactionProps>> => {
+  const transactionDocumentsCursor = transactionCollection.find({});
+  const allRecords: TransactionProps[] = [];
+
+  while (await transactionDocumentsCursor.hasNext()) {
+    const transactionDocument = await transactionDocumentsCursor.next();
+
+    allRecords.push({
+      ...transactionDocument,
+      _id: transactionDocument._id.toString(),
+    } as any);
+  }
+
+  return allRecords;
+};
+
+const getByTransactionIdInTransactionCollection = async (
+  transactionCollection: Collection,
+  transactionId: string,
+): Promise<TransactionProps> => {
+  const allTransactions = await getAllRecordsInTransactionCollection(transactionCollection);
+  for (let i = 0; i < allTransactions.length; i++) {
+    if (allTransactions[i]._id === transactionId) return allTransactions[i];
+  }
+  return null;
 };
 
 describe("MongoDBTransactionRepoTests", () => {
@@ -184,6 +214,7 @@ describe("MongoDBTransactionRepoTests", () => {
       expect(filteredByPartnerAndConsumerIDResponse.totalItems).toBe(3);
       expect(filteredByPartnerAndConsumerIDResponse.items[0].props.userId).toBe(DEFAULT_USER_ID);
     });
+
     it("should get all transactions for a user", async () => {
       //  2 transaction already exists in beforeEachStep, will add 2 more transaction one with different user and one with same user but different partner
       await transactionRepo.createTransaction(
@@ -698,6 +729,315 @@ describe("MongoDBTransactionRepoTests", () => {
       expect(totalAmount).toBe(TEST_NUMBER * 2);
     });
   });
+
+  describe("updateFiatTransactionInfo()", () => {
+    it("should update 'isApproved' field", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: true,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-1",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+
+      await transactionRepo.updateFiatTransactionInfo({
+        transactionID: "1111111111",
+        willUpdateIsApproved: true,
+        updatedIsApprovedValue: false,
+        willUpdateIsCompleted: false,
+        willUpdateIsFailed: false,
+        details: "more granular details",
+      });
+
+      const updatedTransactionStateInDB = await getByTransactionIdInTransactionCollection(
+        transactionCollection,
+        "1111111111",
+      );
+      expect(updatedTransactionStateInDB.fiatPaymentInfo).toStrictEqual({
+        paymentMethodID: "fake-paymethod-method",
+        isCompleted: false,
+        isApproved: false,
+        isFailed: false,
+        details: ["more granular details"],
+        paymentID: "payment-1",
+        paymentProvider: PaymentProvider.CHECKOUT,
+      });
+    });
+
+    it("should update 'isFailed' field", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: false,
+          isFailed: true,
+          details: [],
+          paymentID: "payment-1",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+
+      await transactionRepo.updateFiatTransactionInfo({
+        transactionID: "1111111111",
+        willUpdateIsApproved: false,
+        willUpdateIsCompleted: false,
+        willUpdateIsFailed: true,
+        updatedIsFailedValue: false,
+        details: "more granular details",
+      });
+
+      const updatedTransactionStateInDB = await getByTransactionIdInTransactionCollection(
+        transactionCollection,
+        "1111111111",
+      );
+      expect(updatedTransactionStateInDB.fiatPaymentInfo).toStrictEqual({
+        paymentMethodID: "fake-paymethod-method",
+        isCompleted: false,
+        isApproved: false,
+        isFailed: false,
+        details: ["more granular details"],
+        paymentID: "payment-1",
+        paymentProvider: PaymentProvider.CHECKOUT,
+      });
+    });
+
+    it("should update 'isCompleted' field", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: true,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-1",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+
+      await transactionRepo.updateFiatTransactionInfo({
+        transactionID: "1111111111",
+        willUpdateIsApproved: false,
+        willUpdateIsCompleted: true,
+        updatedIsCompletedValue: false,
+        willUpdateIsFailed: false,
+        details: "more granular details",
+      });
+
+      const updatedTransactionStateInDB = await getByTransactionIdInTransactionCollection(
+        transactionCollection,
+        "1111111111",
+      );
+      expect(updatedTransactionStateInDB.fiatPaymentInfo).toStrictEqual({
+        paymentMethodID: "fake-paymethod-method",
+        isCompleted: false,
+        isApproved: false,
+        isFailed: false,
+        details: ["more granular details"],
+        paymentID: "payment-1",
+        paymentProvider: PaymentProvider.CHECKOUT,
+      });
+    });
+
+    it("should update only the 2 desired fields as mentioned in request", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-1",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-2",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+
+      await transactionRepo.updateFiatTransactionInfo({
+        transactionID: "1111111111",
+        willUpdateIsApproved: true,
+        updatedIsApprovedValue: true,
+        willUpdateIsCompleted: true,
+        updatedIsCompletedValue: true,
+        willUpdateIsFailed: false,
+        details: "more granular details",
+      });
+
+      const updatedTransactionStateInDB = await getByTransactionIdInTransactionCollection(
+        transactionCollection,
+        "1111111111",
+      );
+      expect(updatedTransactionStateInDB.fiatPaymentInfo).toStrictEqual({
+        paymentMethodID: "fake-paymethod-method",
+        isCompleted: true,
+        isApproved: true,
+        isFailed: false,
+        details: ["more granular details"],
+        paymentID: "payment-1",
+        paymentProvider: PaymentProvider.CHECKOUT,
+      });
+    });
+
+    it("should push details correctly even if there are no fields to be updated in request", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-1",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-2",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+
+      await transactionRepo.updateFiatTransactionInfo({
+        transactionID: "1111111111",
+        willUpdateIsApproved: true,
+        updatedIsApprovedValue: true,
+        willUpdateIsCompleted: false,
+        willUpdateIsFailed: false,
+        details: "more granular details",
+      });
+      await transactionRepo.updateFiatTransactionInfo({
+        transactionID: "1111111111",
+        willUpdateIsApproved: false,
+        willUpdateIsCompleted: false,
+        willUpdateIsFailed: false,
+        details: "doesn't update any fields",
+      });
+
+      const updatedTransactionStateInDB = await getByTransactionIdInTransactionCollection(
+        transactionCollection,
+        "1111111111",
+      );
+      expect(updatedTransactionStateInDB.fiatPaymentInfo).toStrictEqual({
+        paymentMethodID: "fake-paymethod-method",
+        isCompleted: false,
+        isApproved: true,
+        isFailed: false,
+        details: ["more granular details", "doesn't update any fields"],
+        paymentID: "payment-1",
+        paymentProvider: PaymentProvider.CHECKOUT,
+      });
+    });
+
+    it("shouldn't update the field if the value is already same", async () => {
+      // TODO(#): Remove this once tests are localised and is creating their own transactions.
+      await transactionCollection.deleteMany({});
+
+      const defaultTransaction: TransactionProps = getRandomTransaction(mkid("1")).props;
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111111" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-1",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+      await transactionCollection.insertOne({
+        ...defaultTransaction,
+        _id: "1111111112" as any,
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-paymethod-method",
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentID: "payment-2",
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+      });
+
+      await transactionRepo.updateFiatTransactionInfo({
+        transactionID: "1111111111",
+        willUpdateIsApproved: true,
+        updatedIsApprovedValue: false,
+        willUpdateIsCompleted: true,
+        updatedIsCompletedValue: true,
+        willUpdateIsFailed: true,
+        updatedIsFailedValue: true,
+        details: "All are required to be changed but 'isApproved' is still 'false'",
+      });
+
+      const updatedTransactionStateInDB = await getByTransactionIdInTransactionCollection(
+        transactionCollection,
+        "1111111111",
+      );
+      expect(updatedTransactionStateInDB.fiatPaymentInfo).toStrictEqual({
+        paymentMethodID: "fake-paymethod-method",
+        isCompleted: true,
+        isApproved: false,
+        isFailed: true,
+        details: ["All are required to be changed but 'isApproved' is still 'false'"],
+        paymentID: "payment-1",
+        paymentProvider: PaymentProvider.CHECKOUT,
+      });
+    });
+  });
 });
 
 const getRandomTransaction = (
@@ -720,8 +1060,15 @@ const getRandomTransaction = (
     type: TransactionType.ONRAMP,
     leg1Amount: TEST_NUMBER,
     leg2Amount: TEST_NUMBER,
-    paymentMethodID: "paymentMethodID",
-    checkoutPaymentID: "checkoutPaymentID",
+    fiatPaymentInfo: {
+      details: [],
+      isCompleted: true,
+      isApproved: true,
+      isFailed: false,
+      paymentMethodID: "paymentMethodID",
+      paymentID: "checkoutPaymentID",
+      paymentProvider: PaymentProvider.CHECKOUT,
+    },
     cryptoTransactionId: "cryptoTransactionId",
     destinationWalletAddress: "destinationWalletAddress",
     transactionTimestamp: new Date(),
