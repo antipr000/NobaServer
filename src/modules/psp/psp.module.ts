@@ -9,21 +9,24 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PaymentWebhooksController } from "./payment.webhook.controller";
 import { CheckoutWebhooksMapper } from "./mapper/checkout.webhooks";
 import { TransactionRepoModule } from "../transactions/repo/transaction.repo.module";
+import { getWinstonModule } from "../../core/utils/WinstonModule";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
 export const CheckoutClientProvider: Provider = {
   provide: CheckoutClient,
-  useFactory: async (customConfigService: CustomConfigService) => {
-    const checkoutClient = new CheckoutClient(customConfigService);
+  useFactory: async (customConfigService: CustomConfigService, logger: Logger) => {
+    const checkoutClient = new CheckoutClient(customConfigService, logger);
     await checkoutClient.registerACHWebhooks();
     return checkoutClient;
   },
-  inject: [CustomConfigService],
+  inject: [CustomConfigService, WINSTON_MODULE_PROVIDER],
 };
 
 @Module({
-  imports: [ConfigModule, CommonModule, NotificationsModule, TransactionRepoModule],
+  imports: [ConfigModule, getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule],
   controllers: [PaymentWebhooksController],
   providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper],
   exports: [CheckoutClient, PlaidClient, PaymentService],

@@ -92,6 +92,8 @@ export class FiatTransactionInitiator extends MessageProcessor {
         return;
       }
     } catch (e) {
+      console.log(e);
+
       if (e instanceof CardProcessingException) {
         if (e.disposition === CardFailureExceptionText.ERROR) {
           await this.processFailure(

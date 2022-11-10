@@ -15,16 +15,13 @@ import axios from "axios";
 export class CheckoutClient {
   private readonly checkoutApi: Checkout;
   private readonly checkoutConfigs: CheckoutConfigs;
+  // @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
 
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
-
-  constructor(private configService: CustomConfigService) {
+  constructor(private configService: CustomConfigService, private readonly logger: Logger) {
     this.checkoutConfigs = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY);
     this.checkoutApi = new Checkout(this.checkoutConfigs.secretKey, {
       pk: this.checkoutConfigs.publicKey,
     });
-    console.log(this.checkoutApi);
   }
 
   public async createConsumer(email: string): Promise<string> {
