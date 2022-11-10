@@ -34,6 +34,7 @@ import {
 } from "../domain/ExternalStates";
 import { EmailVerificationOtpRequest } from "../dto/EmailVerificationDTO";
 import { UserEmailUpdateRequest } from "test/api_client";
+import { Result } from "../../../core/logic/Result";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -591,6 +592,7 @@ describe("ConsumerController", () => {
         phone: phone,
       };
 
+      when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerService.sendOtpToPhone(phone)).thenResolve();
 
@@ -619,6 +621,48 @@ describe("ConsumerController", () => {
           undefined,
         );
       }).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should reject the request if phone already exists for this or another account", async () => {
+      const partnerID = "partner-1";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerID,
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      const phone = "+1234567890";
+
+      const phoneUpdateOtpRequest: PhoneVerificationOtpRequest = {
+        phone: phone,
+      };
+
+      when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(
+        Result.ok(Consumer.createConsumer({ phone: phone, partners: [{ partnerID: partnerID }] })),
+      );
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.sendOtpToPhone(phone)).thenResolve();
+
+      try {
+        await consumerController.requestOtpToUpdatePhone(
+          {
+            user: {
+              entity: consumer,
+              partnerId: "partner-1",
+            } as AuthenticatedUser,
+          },
+          phoneUpdateOtpRequest,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
     });
   });
 
@@ -649,6 +693,7 @@ describe("ConsumerController", () => {
         phone: phone,
       });
 
+      when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenResolve(expectedUpdatedConsumer);
 
@@ -679,6 +724,47 @@ describe("ConsumerController", () => {
           undefined,
         );
       }).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should reject the request if phone already exists for this or another account", async () => {
+      const partnerID = "partner-1";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerID,
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      const phone = "+1234567890";
+
+      const phoneUpdateRequest: UserPhoneUpdateRequest = {
+        phone: phone,
+        otp: 123456,
+      };
+
+      when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(
+        Result.ok(Consumer.createConsumer({ phone: phone, partners: [{ partnerID: partnerID }] })),
+      );
+
+      try {
+        await consumerController.updatePhone(
+          {
+            user: {
+              entity: consumer,
+              partnerId: "partner-1",
+            } as AuthenticatedUser,
+          },
+          phoneUpdateRequest,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
     });
   });
 
@@ -711,6 +797,7 @@ describe("ConsumerController", () => {
       };
 
       const apiKey = "1234567890";
+      when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerService.sendOtpToEmail(email, consumer, partnerID)).thenResolve();
       when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
@@ -745,6 +832,59 @@ describe("ConsumerController", () => {
         );
       }).rejects.toThrow(ForbiddenException);
     });
+
+    it("should reject the request if email already exists for this or another account", async () => {
+      const partnerID = "partner-1234";
+      const partner = Partner.createPartner({
+        _id: partnerID,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+      });
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerID,
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
+
+      const email = "rosie@noba.com";
+
+      const emailUpdateOtpRequest: EmailVerificationOtpRequest = {
+        email: email,
+      };
+
+      const apiKey = "1234567890";
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.sendOtpToEmail(email, consumer, partnerID)).thenResolve();
+      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+      when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(
+        Result.ok(Consumer.createConsumer({ email: email, partners: [{ partnerID: partnerID }] })),
+      );
+
+      try {
+        await consumerController.requestOtpToUpdateEmail(
+          {
+            user: {
+              entity: consumer,
+              partnerId: partnerID,
+            } as AuthenticatedUser,
+          },
+          {
+            "x-noba-api-key": apiKey,
+          },
+          emailUpdateOtpRequest,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+    });
   });
 
   describe("email", () => {
@@ -775,6 +915,7 @@ describe("ConsumerController", () => {
         displayEmail: email,
       });
 
+      when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).thenResolve(expectedUpdatedConsumer);
 
@@ -805,6 +946,55 @@ describe("ConsumerController", () => {
           undefined,
         );
       }).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should reject the request if email already exists for this or another account", async () => {
+      const partnerID = "partner-1";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerID,
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
+
+      const email = "Rosie@Noba.com";
+
+      const emailUpdateRequest: UserEmailUpdateRequest = {
+        email: email,
+        otp: 123456,
+      };
+
+      const expectedUpdatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        email: email.toLowerCase(),
+        displayEmail: email,
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).thenResolve(expectedUpdatedConsumer);
+      when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(
+        Result.ok(Consumer.createConsumer({ email: email, partners: [{ partnerID: partnerID }] })),
+      );
+
+      try {
+        await consumerController.updateEmail(
+          {
+            user: {
+              entity: consumer,
+              partnerId: partnerID,
+            } as AuthenticatedUser,
+          },
+          emailUpdateRequest,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
     });
   });
 

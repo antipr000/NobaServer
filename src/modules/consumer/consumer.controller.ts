@@ -133,6 +133,12 @@ export class ConsumerController {
       throw new ForbiddenException();
     }
 
+    const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.phone);
+    if (existingConsumer.isSuccess) {
+      // Somebody else already has this phone number, so deny update
+      throw new BadRequestException("User already exists with this phone number");
+    }
+
     const res = await this.consumerService.updateConsumerPhone(consumer, requestBody);
     return this.consumerMapper.toDTO(res);
   }
@@ -151,6 +157,12 @@ export class ConsumerController {
       throw new ForbiddenException();
     }
 
+    const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.phone);
+    if (existingConsumer.isSuccess) {
+      // Somebody else already has this phone number, so deny update
+      throw new BadRequestException("User already exists with this phone number");
+    }
+
     await this.consumerService.sendOtpToPhone(requestBody.phone);
   }
 
@@ -167,6 +179,12 @@ export class ConsumerController {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
+    }
+
+    const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.email);
+    if (existingConsumer.isSuccess) {
+      // Somebody else already has this email number, so deny update
+      throw new BadRequestException("User already exists with this email address");
     }
 
     const res = await this.consumerService.updateConsumerEmail(consumer, requestBody);
@@ -190,6 +208,13 @@ export class ConsumerController {
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
     }
+
+    const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.email);
+    if (existingConsumer.isSuccess) {
+      // Somebody else already has this email number, so deny update
+      throw new BadRequestException("User already exists with this email address");
+    }
+
     const partnerID = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY])).props._id;
 
     await this.consumerService.sendOtpToEmail(requestBody.email, consumer, partnerID);
