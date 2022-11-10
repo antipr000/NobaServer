@@ -143,7 +143,6 @@ describe("UserAuthService", () => {
 
     it("should throw BadRequestException if partnerID is not provided", async () => {
       const NON_EXISTING_USER_EMAIL = "abcd@noba.com";
-      const consumerID = "1234567890";
 
       when(mockOtpRepo.getOTP(NON_EXISTING_USER_EMAIL, identityType, nobaPartnerID)).thenReject(
         new NotFoundException(),
