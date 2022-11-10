@@ -1,28 +1,26 @@
-import { KYCStatus } from "../../consumer/domain/VerificationStatus";
+import { StatesMapper } from "../../../modules/consumer/mappers/StatesMapper";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { DocumentVerificationResultDTO } from "../dto/DocumentVerificationResultDTO";
-import { VerificationResultDTO, VerificationResultStatus } from "../dto/VerificationResultDTO";
+import { VerificationResultDTO } from "../dto/VerificationResultDTO";
 
 export class VerificationResponseMapper {
+  private readonly statesMapper: StatesMapper;
+
+  constructor() {
+    this.statesMapper = new StatesMapper();
+  }
+
   toConsumerInformationResultDTO(t: ConsumerVerificationResult): VerificationResultDTO {
-    if (t.status === KYCStatus.APPROVED) {
-      return {
-        status: VerificationResultStatus.APPROVED,
-      };
-    } else if (t.status === KYCStatus.REJECTED) {
-      return {
-        status: VerificationResultStatus.NOT_APPROVED,
-      };
-    } else {
-      return {
-        status: VerificationResultStatus.PENDING,
-      };
-    }
+    return {
+      status: this.statesMapper.getKycVerificationState(t.status),
+    };
   }
 
   toDocumentResultDTO(t: DocumentVerificationResult): DocumentVerificationResultDTO {
+    const [status, errorReason] = this.statesMapper.getDocumentVerificationState(t.status);
     return {
-      status: t.status,
+      status,
+      errorReason,
     };
   }
 }

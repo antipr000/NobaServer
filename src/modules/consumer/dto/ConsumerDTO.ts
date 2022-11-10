@@ -3,6 +3,7 @@ import { Address } from "../domain/Address";
 import {
   AggregatedPaymentMethodState,
   AggregatedWalletState,
+  DocumentVerificationErrorReason,
   DocumentVerificationState,
   KycVerificationState,
   UserState,
@@ -77,6 +78,9 @@ export class DocumentVerificationDTO {
   @ApiPropertyOptional({ enum: DocumentVerificationState })
   documentVerificationStatus?: DocumentVerificationState;
 
+  @ApiPropertyOptional({ enum: DocumentVerificationErrorReason })
+  documentVerificationErrorReason?: DocumentVerificationErrorReason;
+
   @ApiPropertyOptional()
   updatedTimestamp?: number;
 }
@@ -110,15 +114,6 @@ export class ConsumerDTO {
 
   @ApiPropertyOptional()
   address?: Address;
-
-  @ApiProperty()
-  isSuspectedFraud: boolean;
-
-  @ApiProperty()
-  isLocked: boolean;
-
-  @ApiPropertyOptional()
-  isDisabled?: boolean;
 
   @ApiPropertyOptional({ type: [PaymentMethodsDTO] })
   paymentMethods?: PaymentMethodsDTO[];

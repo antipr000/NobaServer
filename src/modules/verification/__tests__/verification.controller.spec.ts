@@ -13,6 +13,7 @@ import { VerificationProviders } from "../../../modules/consumer/domain/Verifica
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { AuthenticatedUser } from "src/modules/auth/domain/AuthenticatedUser";
 import { IDVerificationURLRequestLocale, IDVerificationURLResponseDTO } from "../dto/IDVerificationRequestURLDTO";
+import { DocumentVerificationState } from "../../../modules/consumer/domain/ExternalStates";
 
 describe("VerificationController", () => {
   let verificationController: VerificationController;
@@ -112,7 +113,7 @@ describe("VerificationController", () => {
       expect(result.status).toBe("Approved");
     });
 
-    it("should return 'NOT_APPROVED' for consumer info verification when details are not correct", async () => {
+    it("should return 'Rejected' for consumer info verification when details are not correct", async () => {
       const consumerInfo: ConsumerInformation = {
         userID: "testuser-1234",
         firstName: "Fake",
@@ -164,7 +165,7 @@ describe("VerificationController", () => {
         },
       );
 
-      expect(result.status).toBe("NotApproved");
+      expect(result.status).toBe("Rejected");
     });
 
     it("should return 'PENDING' for consumer info verification when user is flagged", async () => {
@@ -288,7 +289,7 @@ describe("VerificationController", () => {
       const result = await verificationController.getDocumentVerificationResult("fake-transaction-2", {
         user: { entity: consumer, partnerId: "partner-1" } as AuthenticatedUser,
       });
-      expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
+      expect(result.status).toBe(DocumentVerificationState.VERIFIED);
     });
   });
 
