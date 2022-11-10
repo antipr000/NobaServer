@@ -91,7 +91,7 @@ describe("AuthController", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, partnerId, true)).thenResolve(adminId);
+      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, partnerId)).thenResolve(adminId);
       when(mockAdminAuthService.generateAccessToken(adminId, partnerId)).thenResolve(generateAccessTokenResponse);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
@@ -118,7 +118,7 @@ describe("AuthController", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, partnerId, true)).thenResolve(consumerId);
+      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, partnerId)).thenResolve(consumerId);
       when(mockConsumerAuthService.generateAccessToken(consumerId, partnerId)).thenResolve(generateAccessTokenResponse);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
@@ -179,6 +179,28 @@ describe("AuthController", () => {
       );
     });
 
+    it("should work with autoCreate set to true", async () => {
+      const consumerEmail = "consumer@noba.com";
+      const identityType: string = consumerIdentityIdentifier;
+      const otp = 123456;
+
+      when(mockConsumerAuthService.createOtp()).thenReturn(otp);
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString(), partnerId)).thenResolve();
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+
+      await authController.loginUser(
+        {
+          emailOrPhone: consumerEmail,
+          identityType: identityType,
+          autoCreate: true,
+        },
+        {
+          "x-noba-api-key": apiKey,
+        },
+      );
+    });
+
     it("should work with emailOrPhoneAttribute too, with email as input", async () => {
       const consumerEmail = "consumer@noba.com";
       const identityType: string = consumerIdentityIdentifier;
@@ -221,7 +243,7 @@ describe("AuthController", () => {
       );
     });
 
-    it("should throw if phone used for partner admin or noba admin for login", async () => {
+    it("should throw BadRequestException if phone used for partner admin or noba admin for login", async () => {
       const phone = "+123424242";
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
@@ -302,7 +324,7 @@ describe("AuthController", () => {
       );
     });
 
-    it("should throw if phone number is used for partner admin or noba admin'", async () => {
+    it("should throw BadRequestException if phone number is used for partner admin or noba admin'", async () => {
       const partnerAdminPhone = "+1424242424"; // using phone for partner loging
       const identityType: string = partnerAdminIdentityIdenitfier;
       const otp = 123456;
@@ -325,6 +347,29 @@ describe("AuthController", () => {
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(BadRequestException);
+      }
+    });
+
+    it("should throw 'ForbiddenException' if unregistered Consumer tries to log in with autoCreate set to false", async () => {
+      const unregisteredConsumer = "rosie@noba.com";
+      const identityType: string = consumerIdentityIdentifier;
+
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
+
+      try {
+        await authController.loginUser(
+          {
+            email: unregisteredConsumer,
+            identityType: identityType,
+            autoCreate: false,
+          },
+          {
+            "x-noba-api-key": apiKey,
+          },
+        );
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
       }
     });
 

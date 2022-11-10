@@ -71,7 +71,6 @@ export class ConsumerService {
   async getOrCreateConsumerConditionally(
     emailOrPhone: string,
     partnerID: string,
-    createIfNotExists = true,
     partnerUserID?: string,
   ): Promise<Consumer> {
     const isEmail = Utils.isEmail(emailOrPhone);
@@ -80,20 +79,6 @@ export class ConsumerService {
 
     const consumerResult = await this.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumerResult.isFailure) {
-      // consumer doesn't exist will create one if createIfNotExists is true
-
-      if (!createIfNotExists) {
-        throw new BadRequestException(`Consumer with email ${emailOrPhone} doesn't exist, please signup first`);
-      }
-
-      // Commented this out. We want to allow phone-based account creation on the app. Will need
-      // to implement a check for whether or not we are on the app or web so this can be made conditional.
-      /*if (!isEmail) {
-        throw new BadRequestException(
-          "User should be registered with email first and add their phone number before being able to login with phone number",
-        );
-      }*/
-
       const newConsumer = Consumer.createConsumer({
         email: email ? email.toLowerCase() : undefined,
         displayEmail: email ?? undefined,
