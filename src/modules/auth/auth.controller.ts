@@ -21,6 +21,7 @@ import { AuthService } from "./auth.service";
 import {
   allIdentities,
   consumerIdentityIdentifier,
+  IdentityType,
   nobaAdminIdentityIdentifier,
   partnerAdminIdentityIdenitfier,
 } from "./domain/IdentityType";
@@ -71,8 +72,6 @@ export class AuthController {
     const authService: AuthService = this.getAuthService(requestBody.identityType);
     const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
 
-    const shouldCreateAccountIfNotExists = requestBody.createAccountIfNotExists ?? true;
-
     if (requestBody.identityType !== consumerIdentityIdentifier && !isEmail) {
       throw new BadRequestException(
         `Phone number based login is not supported for this identity type ${requestBody.identityType}`,
@@ -80,12 +79,7 @@ export class AuthController {
     }
 
     // TODO: figure out how to get partner's user ID from request & pass as parameter 4 of this method:
-    const userId: string = await authService.validateAndGetUserId(
-      requestBody.emailOrPhone,
-      requestBody.otp,
-      partnerId,
-      shouldCreateAccountIfNotExists, //by default create account if not exists
-    );
+    const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp, partnerId);
     return authService.generateAccessToken(userId, partnerId);
   }
 
@@ -104,14 +98,29 @@ export class AuthController {
       );
     }
 
-    const authService: AuthService = this.getAuthService(requestBody.identityType);
-    const isLoginAllowed = await authService.verifyUserExistence(emailOrPhone);
-    if (!isLoginAllowed) {
-      throw new ForbiddenException(
-        `User "${emailOrPhone}" is not allowed to login as identity "${requestBody.identityType}". ` +
-          "Please contact support team, if you think this is an error.",
-      );
+    let autoCreate = requestBody.autoCreate;
+    if (autoCreate === undefined) {
+      // Set defaults
+      switch (requestBody.identityType) {
+        case IdentityType.consumer:
+          autoCreate = true;
+          break;
+        case IdentityType.partnerAdmin:
+        case IdentityType.nobaAdmin:
+          autoCreate = false;
+          break;
+      }
     }
+    //const autoCreate = requestBody.autoCreate ?? true;
+    const authService: AuthService = this.getAuthService(requestBody.identityType);
+
+    if (!autoCreate) {
+      const isLoginAllowed = await authService.verifyUserExistence(emailOrPhone);
+      if (!isLoginAllowed) {
+        throw new ForbiddenException(`User "${emailOrPhone}" is not registered or not authorized to log in.`);
+      }
+    }
+
     const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
     const otp = authService.createOtp();
     await authService.deleteAnyExistingOTP(emailOrPhone);

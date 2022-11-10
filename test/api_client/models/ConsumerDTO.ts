@@ -12,15 +12,12 @@ export type ConsumerDTO = {
   firstName?: string;
   lastName?: string;
   email: string;
-  status: "Approved" | "Pending" | "ActionRequired";
+  status: "Approved" | "Pending" | "ActionRequired" | "TemporaryHold" | "PermanentHold";
   kycVerificationData: KycVerificationDTO;
   documentVerificationData: DocumentVerificationDTO;
   phone?: string;
   dateOfBirth?: string;
   address?: any;
-  isSuspectedFraud: boolean;
-  isLocked: boolean;
-  isDisabled?: boolean;
   paymentMethods?: Array<PaymentMethodsDTO>;
   cryptoWallets?: Array<CryptoWalletsDTO>;
   paymentMethodStatus?: "Approved" | "Pending" | "NotSubmitted";

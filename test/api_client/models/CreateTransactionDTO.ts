@@ -4,7 +4,7 @@
 
 export type CreateTransactionDTO = {
   paymentToken: string;
-  type: "onramp" | "offramp" | "swap";
+  type: "onramp" | "offramp" | "swap" | "wallet";
   leg1: string;
   leg2: string;
   leg1Amount: number;

@@ -30,6 +30,7 @@ import {
   AggregatedWalletState,
   KycVerificationState,
   DocumentVerificationState,
+  DocumentVerificationErrorReason,
 } from "../domain/ExternalStates";
 import { EmailVerificationOtpRequest } from "../dto/EmailVerificationDTO";
 import { UserEmailUpdateRequest } from "test/api_client";
@@ -813,6 +814,9 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
         partners: [
           {
             partnerID: "partner-1",
@@ -868,11 +872,14 @@ describe("ConsumerController", () => {
       expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
     });
 
-    it("should return user status as ACTION_REQUIRED and walletStatus as NOT_SUBMITTED and filtered wallet list when one wallet is REJECTED", async () => {
+    it("should return user status as PERMANENT_HOLD and walletStatus as NOT_SUBMITTED and filtered wallet list when one wallet is REJECTED", async () => {
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
         partners: [
           {
             partnerID: "partner-1",
@@ -927,7 +934,7 @@ describe("ConsumerController", () => {
         { user: { entity: consumer } },
       );
 
-      expect(response.status).toBe(UserState.ACTION_REQUIRED);
+      expect(response.status).toBe(UserState.PERMANENT_HOLD);
       expect(response.walletStatus).toBe(AggregatedWalletState.NOT_SUBMITTED);
       expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
       expect(response.cryptoWallets.length).toBe(1);
@@ -938,6 +945,9 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
         partners: [
           {
             partnerID: "partner-1",
@@ -999,6 +1009,9 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
         partners: [
           {
             partnerID: "partner-1",
@@ -1049,14 +1062,152 @@ describe("ConsumerController", () => {
         { user: { entity: consumer } },
       );
 
-      expect(response.status).toBe(UserState.ACTION_REQUIRED);
+      expect(response.status).toBe(UserState.PERMANENT_HOLD);
       expect(response.walletStatus).toBe(AggregatedWalletState.APPROVED);
       expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
       expect(response.paymentMethods.length).toBe(1);
-      expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.ACTION_REQUIRED);
+      expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.REJECTED);
       expect(response.documentVerificationData.documentVerificationStatus).toBe(
         DocumentVerificationState.NOT_SUBMITTED,
       );
+    });
+
+    it("should return ActionRequired with proper error reason for document verification status when verification fails for BAD_QUALITY", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+        paymentMethods: [],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.ACTION_REQUIRED);
+      expect(response.documentVerificationData.documentVerificationStatus).toBe(
+        DocumentVerificationState.ACTION_REQUIRED,
+      );
+      expect(response.documentVerificationData.documentVerificationErrorReason).toBe(
+        DocumentVerificationErrorReason.POOR_QUALITY,
+      );
+    });
+
+    it("should return status as TEMPORARY_HOLD when user has isDisabled set to true", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: true,
+        isLocked: false,
+        isSuspectedFraud: false,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+        paymentMethods: [],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.TEMPORARY_HOLD);
+    });
+
+    it("should return status as PERMANENT_HOLD when atleast one payment method is REJECTED", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.ACH,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            achData: {
+              mask: "fake-mask",
+              accountType: "fake-type",
+              accessToken: "fake-token",
+              accountID: "fake-acc-id",
+              itemID: "fake-item",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.REJECTED,
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.PERMANENT_HOLD);
     });
   });
 });

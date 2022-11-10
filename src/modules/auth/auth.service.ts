@@ -38,7 +38,6 @@ export abstract class AuthService {
     emailOrPhone: string,
     enteredOtp: number,
     partnerID: string,
-    createUserIfNotExist = true,
     partnerUserID?: string,
   ): Promise<string> {
     if (!partnerID || partnerID.length == 0) {
@@ -51,7 +50,7 @@ export abstract class AuthService {
       throw new UnauthorizedException();
     } else {
       await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
-      return this.getUserId(emailOrPhone, actualOtp.props.partnerID, createUserIfNotExist, partnerUserID);
+      return this.getUserId(emailOrPhone, actualOtp.props.partnerID, partnerUserID);
     }
   }
 
@@ -96,7 +95,7 @@ export abstract class AuthService {
   }
 
   async verifyUserExistence(emailOrPhone: string): Promise<boolean> {
-    return this.isUserSignedUp(emailOrPhone);
+    return await this.isUserSignedUp(emailOrPhone);
   }
 
   async deleteAllExpiredOTPs(): Promise<void> {
@@ -104,12 +103,7 @@ export abstract class AuthService {
   }
 
   protected abstract getIdentityType();
-  // TODO: try to separate 'emailOrPhone' by introducing an interface.
-  protected abstract getUserId(
-    emailOrPhone: string,
-    partnerID: string,
-    createUserIfNotExist: boolean,
-    partnerUserID?: string,
-  ): Promise<string>;
+
+  protected abstract getUserId(emailOrPhone: string, partnerID: string, partnerUserID?: string): Promise<string>;
   protected abstract isUserSignedUp(emailOrPhone: string): Promise<boolean>;
 }

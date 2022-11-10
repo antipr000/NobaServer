@@ -1,13 +1,19 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { DBProvider } from "../../../infraproviders/DBProvider";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { DBProvider } from "../../DBProvider";
+import {
+  MONGO_CONFIG_KEY,
+  MONGO_URI,
+  NOBA_CONFIG_KEY,
+  NOBA_PARTNER_ID,
+  SERVER_LOG_FILE_PATH,
+} from "../../../config/ConfigurationUtils";
 import mongoose from "mongoose";
 import { MongoClient, Collection } from "mongodb";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
-import { PaymentMethodsMigrator } from "../../../infraproviders/migrators/payment.method.migration";
+import { ConsumerMigrator } from "../../migrators/consumer.migration";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
 import { WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
@@ -29,14 +35,14 @@ const getAllRecordsInConsumerCollection = async (consumerCollection: Collection)
   return allRecords;
 };
 
-describe("PaymentMethodMigrator", () => {
+describe("ConsumerMigrator", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;
   let mongoClient: MongoClient;
   let consumerCollection: Collection;
 
-  let paymentMethodMigrator: PaymentMethodsMigrator;
+  let consumerMigrator: ConsumerMigrator;
 
   beforeEach(async () => {
     // Spin up an in-memory mongodb server
@@ -61,15 +67,18 @@ describe("PaymentMethodMigrator", () => {
         [MONGO_URI]: mongoUri,
       },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_PARTNER_ID]: "test-partner-id",
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [DBProvider, PaymentMethodsMigrator],
+      providers: [DBProvider, ConsumerMigrator],
     }).compile();
 
-    paymentMethodMigrator = app.get<PaymentMethodsMigrator>(PaymentMethodsMigrator);
+    consumerMigrator = app.get<ConsumerMigrator>(ConsumerMigrator);
 
     // Setup a mongodb client for interacting with "consumers" collection.
     mongoClient = new MongoClient(mongoUri);
@@ -85,7 +94,7 @@ describe("PaymentMethodMigrator", () => {
 
   describe("migrate", () => {
     it("should not do anything if there is no document", async () => {
-      await paymentMethodMigrator.migrate();
+      await consumerMigrator.migrate();
 
       const allDocumentsInConsumer = await getAllRecordsInConsumerCollection(consumerCollection);
       expect(allDocumentsInConsumer).toHaveLength(0);
@@ -142,7 +151,7 @@ describe("PaymentMethodMigrator", () => {
         _id: inputConsumerProps._id as any,
       });
 
-      await paymentMethodMigrator.migrate();
+      await consumerMigrator.migrate();
 
       const outputConsumerProps = {
         _id: "mock-consumer-1",
@@ -236,6 +245,11 @@ describe("PaymentMethodMigrator", () => {
             partnerID: partnerId,
             isPrivate: false,
           },
+          {
+            walletName: "Test wallet 2",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.APPROVED,
+          },
         ],
       };
 
@@ -244,7 +258,7 @@ describe("PaymentMethodMigrator", () => {
         _id: oldConsumerProps._id as any,
       });
 
-      await paymentMethodMigrator.migrate();
+      await consumerMigrator.migrate();
 
       const migratedConsumerProps = {
         _id: "mock-consumer-1",
@@ -288,6 +302,14 @@ describe("PaymentMethodMigrator", () => {
             status: WalletStatus.PENDING,
             partnerID: partnerId,
             isPrivate: false,
+            _id: expect.anything(),
+          },
+          {
+            walletName: "Test wallet 2",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.APPROVED,
+            partnerID: "test-partner-id",
+            isPrivate: true,
             _id: expect.anything(),
           },
         ],
@@ -392,7 +414,7 @@ describe("PaymentMethodMigrator", () => {
         _id: newSchemaInputConsumerProps._id as any,
       });
 
-      await paymentMethodMigrator.migrate();
+      await consumerMigrator.migrate();
 
       const migratedOldSchemaConsumerProps = {
         _id: "mock-consumer-1",

@@ -1203,7 +1203,7 @@ describe("ConsumerService", () => {
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
@@ -1218,7 +1218,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp);
+      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId);
 
       expect(response).toStrictEqual(updatedConsumer);
 
@@ -1360,11 +1360,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1")).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
@@ -1375,7 +1376,7 @@ describe("ConsumerService", () => {
       );
 
       try {
-        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp);
+        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp, "partner-1");
       } catch (e) {
         expect(e).toBeInstanceOf(UnauthorizedException);
       }
@@ -1426,11 +1427,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, walletAddress);
+      const response = await consumerService.getCryptoWallet(consumer, walletAddress, "partner-1");
       expect(response).toStrictEqual(consumer.props.cryptoWallets[0]);
     });
 
@@ -1476,11 +1478,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address");
+      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address", "partner-1");
       expect(response).toStrictEqual(null);
     });
   });
@@ -1975,7 +1978,7 @@ describe("ConsumerService", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";
       const email = "a@noba.com";
-      const partnerId = "fake-partner-id";
+      const partnerId = "fake-partner-id2";
       const otp = 123456;
       const otpObject = Otp.createOtp({
         otp: otp,
@@ -2122,13 +2125,40 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
+      when(
+        notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, undefined, {
+          email: email,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props.firstName,
+        }),
+      ).thenResolve();
 
+      // update consumer
       const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
+
       verify(consumerRepo.updateConsumer(anything())).once();
       const [requestArg] = capture(consumerRepo.updateConsumer).last();
       expect(requestArg.props.email).toBe(email.toLowerCase());
       expect(requestArg.props.displayEmail).toBe(email);
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
+
+      verify(notificationService.sendNotification(anything(), anything(), anything())).once();
+      const [notificationType, notificationPartnerId, notificationUserArgs] = capture(
+        notificationService.sendNotification,
+      ).last();
+      expect(notificationType).toBe(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT);
+      expect(notificationPartnerId).toBe(undefined);
+      expect(notificationUserArgs).toStrictEqual({
+        email: email.toLowerCase(),
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+      });
+
+      //update consumer again, this time notification shouldn't be sent
+      await consumerService.updateConsumerEmail(updateConsumerResponse, emailUpdateRequest);
+      verify(notificationService.sendNotification(anything(), anything(), anything())).once(); //already called above
     });
   });
 });

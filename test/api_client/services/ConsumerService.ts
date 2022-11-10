@@ -4,6 +4,7 @@
 import type { AddCryptoWalletDTO } from "../models/AddCryptoWalletDTO";
 import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
+import type { ConsumerBalanceDTO } from "../models/ConsumerBalanceDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
 import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtpRequest";
@@ -438,6 +439,37 @@ export class ConsumerService {
       mediaType: "application/json",
       errors: {
         401: `Invalid OTP`,
+      },
+    });
+  }
+
+  /**
+   * Gets all wallet balances for the logged-in consumer
+   * @returns ConsumerBalanceDTO Get all consumer balances
+   * @throws ApiError
+   */
+  public static getConsumerBalance({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<ConsumerBalanceDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/balances",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        400: `Invalid request parameters`,
       },
     });
   }

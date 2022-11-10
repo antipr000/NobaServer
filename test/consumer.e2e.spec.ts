@@ -868,7 +868,7 @@ describe("Consumers", () => {
 
       expect(getConsumerResponse.status).toBe("ActionRequired");
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
-      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("ActionRequired");
       expect(getConsumerResponse.paymentMethods.length).toBe(1);
       expect(getConsumerResponse.cryptoWallets.length).toBe(0);
       expect(getConsumerResponse.walletStatus).toBe("NotSubmitted");

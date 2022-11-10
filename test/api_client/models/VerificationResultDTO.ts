@@ -3,5 +3,5 @@
 /* eslint-disable */
 
 export type VerificationResultDTO = {
-  status: "Approved" | "NotApproved" | "Pending";
+  status: "NotSubmitted" | "Pending" | "Approved" | "Rejected";
 };

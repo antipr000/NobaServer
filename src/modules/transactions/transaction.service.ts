@@ -4,22 +4,29 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NobaConfigs, NobaTransactionConfigs } from "../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { Utils } from "../../core/utils/Utils";
 import { CurrencyService } from "../common/currency.service";
 import { CurrencyType } from "../common/domain/Types";
+import { EllipticService } from "../common/elliptic.service";
+import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
+import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { KYCStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { NotificationService } from "../notifications/notification.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerService } from "../partner/partner.service";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
-import { NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
+import { ConsumerAccountBalance, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
-import { TransactionStatus } from "./domain/Types";
+import { TransactionFilterOptions, TransactionStatus, TransactionType } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
@@ -28,16 +35,8 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "./exceptions/TransactionSubmissionException";
-import { Utils } from "../../core/utils/Utils";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
-import { EllipticService } from "../common/elliptic.service";
-import { TransactionFilterOptions } from "./domain/Types";
-import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
-import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
 
 @Injectable()
 export class TransactionService {
@@ -156,6 +155,10 @@ export class TransactionService {
     return this.transactionsMapper.toDTO(transaction);
   }
 
+  async getParticipantBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
+    return await this.assetServiceFactory.getWalletProviderService().getConsumerAccountBalance(participantID);
+  }
+
   async getUserTransactions(
     userID: string,
     partnerID: string,
@@ -225,9 +228,30 @@ export class TransactionService {
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
 
-    // Validate that destination wallet address is a valid address for given currency
-    if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
+    const transactionType = transactionRequest.type;
+
+    if (transactionType == TransactionType.ONRAMP) {
+      // Validate that destination wallet address is a valid address for given currency for an ONRAMP transaction
+      if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
+        throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
+      }
+
+      // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as FLAGGED
+      const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(
+        transactionRequest.destinationWalletAddress,
+      );
+      if (isSanctionedWallet) {
+        const consumer = await this.consumerService.getConsumer(consumerID);
+        const cryptoWallet = this.consumerService.getCryptoWallet(
+          consumer,
+          transactionRequest.destinationWalletAddress,
+          partnerID,
+        );
+        cryptoWallet.status = WalletStatus.FLAGGED;
+        await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+        this.logger.error("Failed to transact to a sanctioned wallet");
+        throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
+      }
     }
 
     // Validate & round to proper precision
@@ -235,19 +259,6 @@ export class TransactionService {
       transactionRequest.leg2,
       transactionRequest.leg2Amount,
     );
-
-    // Check if the destination wallet is a sanctioned wallet, and if so mark the wallet as FLAGGED
-    const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(
-      transactionRequest.destinationWalletAddress,
-    );
-    if (isSanctionedWallet) {
-      const consumer = await this.consumerService.getConsumer(consumerID);
-      const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transactionRequest.destinationWalletAddress);
-      cryptoWallet.status = WalletStatus.FLAGGED;
-      await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
-      this.logger.error("Failed to transact to a sanctioned wallet");
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
-    }
 
     const fiatAmount = await this.roundToProperDecimalsForFiatCurrency(
       transactionRequest.leg1,
@@ -257,6 +268,7 @@ export class TransactionService {
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
       sessionKey: sessionKey,
+      type: transactionType,
       paymentMethodID: transactionRequest.paymentToken,
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
       leg1Amount: fiatAmount,
@@ -383,7 +395,16 @@ export class TransactionService {
       );
     }
 
-    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
+    if (transaction.props.type == TransactionType.NOBA_WALLET) {
+      // Ignore wallet, sardine and partner check for NOBA WALLET transactions.
+      return PendingTransactionValidationStatus.PASS;
+    }
+
+    const cryptoWallet = this.consumerService.getCryptoWallet(
+      consumer,
+      transaction.props.destinationWalletAddress,
+      transaction.props.partnerID,
+    );
     if (cryptoWallet == null) {
       this.logger.error(
         `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
@@ -518,7 +539,11 @@ export class TransactionService {
     const walletExposureResponse = await this.ellipticService.transactionAnalysis(transaction);
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
+    const cryptoWallet = this.consumerService.getCryptoWallet(
+      consumer,
+      transaction.props.destinationWalletAddress,
+      transaction.props.partnerID,
+    );
 
     cryptoWallet.riskScore = walletExposureResponse.riskScore;
 

@@ -124,7 +124,7 @@ export class CheckoutClient {
             order_id: transactionId,
           },
         },
-        /*idempotencyKey=*/ transactionId,
+        transactionId,
       );
 
       this.logger.info(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
@@ -138,7 +138,7 @@ export class CheckoutClient {
       };
     } catch (e) {
       this.logger.error(
-        `Exception while requesting checkout payment for transaction id ${transactionId}: ${e.message}`,
+        `Exception while requesting checkout payment for transaction id ${transactionId}: ${JSON.stringify(e)}`,
       );
       throw e;
     }
@@ -164,7 +164,7 @@ export class CheckoutClient {
             order_id: transactionId,
           },
         },
-        /*idempotencyKey=*/ transactionId,
+        transactionId,
       );
       return {
         id: checkoutResponse["id"],
@@ -177,7 +177,7 @@ export class CheckoutClient {
       };
     } catch (err) {
       this.logger.error(
-        `Exception while requesting checkout payment for transaction id ${transactionId}: ${err.message}`,
+        `Exception while requesting checkout payment for transaction id ${transactionId}: ${JSON.stringify(err)}`,
       );
       throw err;
     }
