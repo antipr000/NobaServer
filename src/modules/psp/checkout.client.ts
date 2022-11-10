@@ -211,13 +211,24 @@ export class CheckoutClient {
           },
         })
       ).data.data;
-      if (workflows.length === 1) {
+
+      let webhookAlreadyConfigured = false;
+      workflows.forEach(workflow => {
+        if (workflow.name.endsWith(webhookUrl)) {
+          webhookAlreadyConfigured = true;
+        }
+      });
+      if (webhookAlreadyConfigured) {
         console.log(`Workflow already configured - ${JSON.stringify(workflows)}`);
         return;
       }
 
       const createWorkflowRequest = {
-        name: "Noba 'Events' webhook",
+        // The webhook URL is added in the "name" intentionally to save API calls.
+        // Get All Wrokflow call above, doesn't return the webhook url
+        // (You need to call GET /workflow with the specified ID for the same) but it does
+        // returns the "name" for the webhook.
+        name: `Webhook for ${webhookUrl}`,
         conditions: [
           {
             type: "event",
