@@ -1,10 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { LoginRequestDTO } from "./LoginRequest";
+import { allIdentities } from "../domain/IdentityType";
 
-export class VerifyOtpRequestDTO extends LoginRequestDTO {
-  @ApiProperty()
+export class VerifyOtpRequestDTO {
+  @ApiPropertyOptional({ description: "Email or phone value to identify the user" })
+  emailOrPhone?: string;
+
+  @ApiPropertyOptional({
+    description: "This attribute is deprecated and will be removed in future, please use emailOrPhone instead",
+  })
+  email?: string;
+
+  @ApiProperty({ enum: allIdentities, description: "Identity type of the user logging in" })
+  identityType: string;
+
+  @ApiProperty({ description: "One-time password sent to email or phone" })
   otp: number;
-
-  @ApiPropertyOptional({ description: "Creates a user account if user doesn't exist already" })
-  createAccountIfNotExists?: boolean;
 }

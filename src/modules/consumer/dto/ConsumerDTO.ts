@@ -3,6 +3,7 @@ import { Address } from "../domain/Address";
 import {
   AggregatedPaymentMethodState,
   AggregatedWalletState,
+  DocumentVerificationErrorReason,
   DocumentVerificationState,
   KycVerificationState,
   UserState,
@@ -12,6 +13,9 @@ import { PaymentMethodType } from "../domain/PaymentMethod";
 export class PaymentMethodCardDataDTO {
   @ApiPropertyOptional()
   cardType?: string;
+
+  @ApiPropertyOptional()
+  scheme?: string;
 
   @ApiProperty()
   first6Digits: string;
@@ -77,6 +81,9 @@ export class DocumentVerificationDTO {
   @ApiPropertyOptional({ enum: DocumentVerificationState })
   documentVerificationStatus?: DocumentVerificationState;
 
+  @ApiPropertyOptional({ enum: DocumentVerificationErrorReason })
+  documentVerificationErrorReason?: DocumentVerificationErrorReason;
+
   @ApiPropertyOptional()
   updatedTimestamp?: number;
 }
@@ -110,15 +117,6 @@ export class ConsumerDTO {
 
   @ApiPropertyOptional()
   address?: Address;
-
-  @ApiProperty()
-  isSuspectedFraud: boolean;
-
-  @ApiProperty()
-  isLocked: boolean;
-
-  @ApiPropertyOptional()
-  isDisabled?: boolean;
 
   @ApiPropertyOptional({ type: [PaymentMethodsDTO] })
   paymentMethods?: PaymentMethodsDTO[];

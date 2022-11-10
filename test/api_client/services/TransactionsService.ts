@@ -75,7 +75,7 @@ export class TransactionsService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    type: "onramp" | "offramp" | "swap";
+    type: "onramp" | "offramp" | "swap" | "wallet";
     transactionAmount: number;
     baseCurrency: string;
     xNobaSignature?: string;

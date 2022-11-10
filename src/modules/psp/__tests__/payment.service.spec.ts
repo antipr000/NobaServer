@@ -398,6 +398,7 @@ describe("PaymentService", () => {
         paymentProviderID: PaymentProvider.CHECKOUT,
         cardData: {
           cardType: "CREDIT",
+          scheme: "VISA",
           first6Digits: "424242",
           last4Digits: "4242",
           authCode: "100000",
@@ -645,6 +646,7 @@ describe("PaymentService", () => {
         paymentProviderID: PaymentProvider.CHECKOUT,
         cardData: {
           cardType: "CREDIT",
+          scheme: "VISA",
           first6Digits: "424242",
           last4Digits: "4242",
           authCode: "10000",

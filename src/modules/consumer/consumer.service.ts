@@ -71,7 +71,6 @@ export class ConsumerService {
   async getOrCreateConsumerConditionally(
     emailOrPhone: string,
     partnerID: string,
-    createIfNotExists = true,
     partnerUserID?: string,
   ): Promise<Consumer> {
     const isEmail = Utils.isEmail(emailOrPhone);
@@ -80,20 +79,6 @@ export class ConsumerService {
 
     const consumerResult = await this.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumerResult.isFailure) {
-      // consumer doesn't exist will create one if createIfNotExists is true
-
-      if (!createIfNotExists) {
-        throw new BadRequestException(`Consumer with email ${emailOrPhone} doesn't exist, please signup first`);
-      }
-
-      // Commented this out. We want to allow phone-based account creation on the app. Will need
-      // to implement a check for whether or not we are on the app or web so this can be made conditional.
-      /*if (!isEmail) {
-        throw new BadRequestException(
-          "User should be registered with email first and add their phone number before being able to login with phone number",
-        );
-      }*/
-
       const newConsumer = Consumer.createConsumer({
         email: email ? email.toLowerCase() : undefined,
         displayEmail: email ?? undefined,
@@ -357,7 +342,7 @@ export class ConsumerService {
   async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string, partnerId: string) {
     const otp: number = Math.floor(100000 + Math.random() * 900000);
     await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier);
-    await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier);
+    await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier, partnerId);
     await this.notificationService.sendNotification(
       NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       partnerId,
@@ -371,9 +356,10 @@ export class ConsumerService {
     );
   }
 
-  async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number) {
+  async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number, partnerID: string) {
     // Verify if the otp is correct
-    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier);
+    const cryptoWallet = this.getCryptoWallet(consumer, walletAddress, partnerID);
+    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier, partnerID);
     const currentDateTime: number = new Date().getTime();
 
     if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {
@@ -384,10 +370,7 @@ export class ConsumerService {
       await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
     }
 
-    // Find the wallet and mark it verified
-    const cryptoWallet: CryptoWallet = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet => existingCryptoWallet.address == walletAddress,
-    )[0];
+    // mark the wallet verified
 
     const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(cryptoWallet.address);
     if (isSanctionedWallet) {
@@ -404,8 +387,10 @@ export class ConsumerService {
     return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
   }
 
-  getCryptoWallet(consumer: Consumer, address: string): CryptoWallet {
-    const cryptoWallets = consumer.props.cryptoWallets.filter(wallet => wallet.address === address);
+  getCryptoWallet(consumer: Consumer, address: string, partnerID: string): CryptoWallet {
+    const cryptoWallets = consumer.props.cryptoWallets.filter(
+      wallet => wallet.address === address && wallet.partnerID === partnerID,
+    );
 
     if (cryptoWallets.length === 0) {
       return null;
@@ -424,19 +409,10 @@ export class ConsumerService {
     const remainingWallets = allCryptoWallets.filter(
       wallet => !(wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID),
     );
-
-    // It's an add
-    if (selectedWallet.length === 0) {
-      allCryptoWallets.push(cryptoWallet);
-    } else {
-      allCryptoWallets = [...remainingWallets, cryptoWallet];
-    }
-
     // Send the verification OTP to the user
     if (cryptoWallet.status == WalletStatus.PENDING) {
       await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, cryptoWallet.partnerID);
     }
-
     const partner: Partner = await this.partnerService.getPartner(cryptoWallet.partnerID);
     if (partner.props.config === null || partner.props.config === undefined) {
       partner.props.config = {} as any;
@@ -446,6 +422,13 @@ export class ConsumerService {
       partner.props.config.privateWallets === null || partner.props.config.privateWallets === undefined
         ? true
         : partner.props.config.privateWallets;
+
+    // It's an add
+    if (selectedWallet.length === 0) {
+      allCryptoWallets.push(cryptoWallet);
+    } else {
+      allCryptoWallets = [...remainingWallets, cryptoWallet];
+    }
 
     const updatedConsumer = await this.updateConsumer({
       ...consumer.props,

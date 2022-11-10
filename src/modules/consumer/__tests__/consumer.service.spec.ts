@@ -1217,7 +1217,7 @@ describe("ConsumerService", () => {
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
@@ -1232,7 +1232,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp);
+      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId);
 
       expect(response).toStrictEqual(updatedConsumer);
 
@@ -1374,11 +1374,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1")).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
@@ -1389,7 +1390,7 @@ describe("ConsumerService", () => {
       );
 
       try {
-        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp);
+        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp, "partner-1");
       } catch (e) {
         expect(e).toBeInstanceOf(UnauthorizedException);
       }
@@ -1440,11 +1441,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, walletAddress);
+      const response = await consumerService.getCryptoWallet(consumer, walletAddress, "partner-1");
       expect(response).toStrictEqual(consumer.props.cryptoWallets[0]);
     });
 
@@ -1490,11 +1492,12 @@ describe("ConsumerService", () => {
             address: walletAddress,
             status: WalletStatus.PENDING,
             isPrivate: false,
+            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address");
+      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address", "partner-1");
       expect(response).toStrictEqual(null);
     });
   });

@@ -334,7 +334,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.addOrUpdateCryptoWallet(consumer, anything())).thenResolve(consumer);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(consumer);
 
@@ -351,7 +351,7 @@ describe("TransactionService", () => {
       };
 
       verify(consumerService.updatePaymentMethod(consumerID, deepEqual(updatedPaymentMethod))).times(1);
-      verify(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).times(1);
+      verify(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).times(1);
       verify(consumerService.addOrUpdateCryptoWallet(consumer, deepEqual(updatedWallet))).times(1);
     });
     it("should fail if verification service returns KYC FLAGGED", async () => {
@@ -360,7 +360,7 @@ describe("TransactionService", () => {
         status: KYCStatus.FLAGGED,
       });
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
@@ -375,7 +375,7 @@ describe("TransactionService", () => {
     it("should fail if wallet doesn't exist", async () => {
       await setupTestModule(defaultEnvironmentVariables);
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, "BadWallet")).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, "BadWallet", partnerID)).thenReturn(cryptoWallet);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
         expect(true).toBe(false);
@@ -404,7 +404,7 @@ describe("TransactionService", () => {
       };
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
@@ -422,7 +422,7 @@ describe("TransactionService", () => {
         status: KYCStatus.REJECTED,
       });
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
@@ -443,7 +443,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
 
       const updatedWallet: CryptoWallet = {
         ...cryptoWallet,
@@ -491,7 +491,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -523,7 +523,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -555,7 +555,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -587,7 +587,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(notificationService.sendNotification(anyString(), anyString(), anything())).thenThrow(
@@ -622,7 +622,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -659,7 +659,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
@@ -697,7 +697,7 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
       when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(null);
@@ -2551,7 +2551,9 @@ describe("TransactionService", () => {
       when(ellipticService.transactionAnalysis(anything())).thenResolve({ riskScore: 10 });
       when(consumerService.getConsumer(currentConsumer.props._id)).thenResolve(currentConsumer);
       when(consumerService.addOrUpdateCryptoWallet(anything(), anything())).thenResolve(currentConsumer);
-      when(consumerService.getCryptoWallet(deepEqual(currentConsumer), cryptoWallet.address)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(deepEqual(currentConsumer), cryptoWallet.address, "12345")).thenReturn(
+        cryptoWallet,
+      );
       await transactionService.analyzeTransactionWalletExposure(transaction);
 
       verify(ellipticService.transactionAnalysis(deepEqual(transaction))).once();

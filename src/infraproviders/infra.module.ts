@@ -1,7 +1,9 @@
 import { Module } from "@nestjs/common";
+import { CheckoutClient } from "../modules/psp/checkout.client";
 import { DBProvider } from "./DBProvider";
+import { ConsumerMigrator } from "./migrators/consumer.migration";
 import { MigratorService } from "./migrators/migrator.service";
-import { PaymentMethodsMigrator } from "./migrators/payment.method.migration";
+import { PaymentMethodSchemeMigrator } from "./migrators/payment.method.scheme.migration";
 import { AdminSeeder } from "./seeders/admin.seed";
 import { CreditCardBinDataSeeder } from "./seeders/creditcard.bin.data.seed";
 import { NobaPartnerSeed } from "./seeders/noba.partner.seed";
@@ -14,8 +16,10 @@ import { SeederService } from "./seeders/seeder.service";
     AdminSeeder,
     NobaPartnerSeed,
     SeederService,
-    PaymentMethodsMigrator,
+    ConsumerMigrator,
+    PaymentMethodSchemeMigrator,
     MigratorService,
+    CheckoutClient,
   ],
   exports: [DBProvider, SeederService, MigratorService],
 })

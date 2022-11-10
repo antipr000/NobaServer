@@ -1,6 +1,5 @@
 import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import Checkout from "checkout-sdk-node";
-import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -10,14 +9,17 @@ import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMeth
 import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodResponse";
 import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
 import axios from "axios";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 @Injectable()
 export class CheckoutClient {
   private readonly checkoutApi: Checkout;
   private readonly checkoutConfigs: CheckoutConfigs;
-  // @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
 
-  constructor(private configService: CustomConfigService, private readonly logger: Logger) {
+  constructor(
+    private configService: CustomConfigService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) {
     this.checkoutConfigs = configService.get<CheckoutConfigs>(CHECKOUT_CONFIG_KEY);
     this.checkoutApi = new Checkout(this.checkoutConfigs.secretKey, {
       pk: this.checkoutConfigs.publicKey,

@@ -245,6 +245,7 @@ export class TransactionService {
         const cryptoWallet = this.consumerService.getCryptoWallet(
           consumer,
           transactionRequest.destinationWalletAddress,
+          partnerID,
         );
         cryptoWallet.status = WalletStatus.FLAGGED;
         await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
@@ -409,7 +410,11 @@ export class TransactionService {
       return PendingTransactionValidationStatus.PASS;
     }
 
-    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
+    const cryptoWallet = this.consumerService.getCryptoWallet(
+      consumer,
+      transaction.props.destinationWalletAddress,
+      transaction.props.partnerID,
+    );
     if (cryptoWallet == null) {
       this.logger.error(
         `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
@@ -544,7 +549,11 @@ export class TransactionService {
     const walletExposureResponse = await this.ellipticService.transactionAnalysis(transaction);
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
+    const cryptoWallet = this.consumerService.getCryptoWallet(
+      consumer,
+      transaction.props.destinationWalletAddress,
+      transaction.props.partnerID,
+    );
 
     cryptoWallet.riskScore = walletExposureResponse.riskScore;
 

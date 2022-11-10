@@ -60,6 +60,7 @@ const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
 
 const paymentMethodCardDataValidationJoiKeys: KeysRequired<CardData> = {
   cardType: Joi.string().optional(),
+  scheme: Joi.string().optional(),
   first6Digits: Joi.string().required(),
   last4Digits: Joi.string().required(),
   authCode: Joi.string().optional(),
@@ -83,7 +84,7 @@ const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
   chainType: Joi.string().optional(),
   isEVMCompatible: Joi.boolean().optional(),
   status: Joi.string().optional(),
-  partnerID: Joi.string().optional(), // TODO(#466) - Make required
+  partnerID: Joi.string().required(), // TODO(#466) - Make required
   riskScore: Joi.number().optional(),
   isPrivate: Joi.boolean().optional(),
 };

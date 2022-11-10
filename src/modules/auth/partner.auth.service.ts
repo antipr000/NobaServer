@@ -17,7 +17,7 @@ export class PartnerAuthService extends AuthService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async getUserId(emailOrPhone: string, _: string, createPartnerIfNotExists: boolean): Promise<string> {
+  protected async getUserId(emailOrPhone: string, partnerID: string, partnerUserID?: string): Promise<string> {
     const isEmail = Utils.isEmail(emailOrPhone);
     if (!isEmail) throw new Error("Partner Admin can only login with email");
     const partnerAdmin: PartnerAdmin = await this.partnerAdminService.getPartnerAdminFromEmail(emailOrPhone);

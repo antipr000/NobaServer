@@ -3,15 +3,20 @@
 /* eslint-disable */
 
 export type VerifyOtpRequestDTO = {
+  /**
+   * Email or phone value to identify the user
+   */
   emailOrPhone?: string;
   /**
    * This attribute is deprecated and will be removed in future, please use emailOrPhone instead
    */
   email?: string;
-  identityType: "CONSUMER" | "PARTNER_ADMIN" | "NOBA_ADMIN";
-  otp: number;
   /**
-   * Creates a user account if user doesn't exist already
+   * Identity type of the user logging in
    */
-  createAccountIfNotExists?: boolean;
+  identityType: "CONSUMER" | "PARTNER_ADMIN" | "NOBA_ADMIN";
+  /**
+   * One-time password sent to email or phone
+   */
+  otp: number;
 };

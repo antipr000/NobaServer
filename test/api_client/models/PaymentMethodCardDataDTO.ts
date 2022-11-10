@@ -4,6 +4,7 @@
 
 export type PaymentMethodCardDataDTO = {
   cardType?: string;
+  scheme?: string;
   first6Digits: string;
   last4Digits: string;
 };

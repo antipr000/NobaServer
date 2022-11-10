@@ -444,7 +444,7 @@ export class ConsumerService {
   }
 
   /**
-   * Gets all balances for the logged-in consumer
+   * Gets all wallet balances for the logged-in consumer
    * @returns ConsumerBalanceDTO Get all consumer balances
    * @throws ApiError
    */

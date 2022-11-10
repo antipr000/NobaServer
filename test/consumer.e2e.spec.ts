@@ -639,7 +639,7 @@ describe("Consumers", () => {
         "POST",
         "/v1/consumers/paymentmethods",
         JSON.stringify({
-          type: "CARD",
+          type: "Card",
           name: "Tester",
           cardDetails: {
             cardNumber: "4242424242424242",
@@ -654,7 +654,7 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          type: "CARD",
+          type: "Card",
           name: "Tester",
           cardDetails: {
             cardNumber: "4242424242424242",
@@ -702,7 +702,7 @@ describe("Consumers", () => {
         "POST",
         "/v1/consumers/paymentmethods",
         JSON.stringify({
-          type: "CARD",
+          type: "Card",
           cardDetails: {
             cardNumber: "4242424242424242",
             expiryMonth: 3,
@@ -716,7 +716,7 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          type: "CARD",
+          type: "Card",
           cardDetails: {
             cardNumber: "4242424242424242",
             expiryMonth: 3,
@@ -773,7 +773,8 @@ describe("Consumers", () => {
             paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "faketoken1234",
             cardData: {
-              cardType: "VISA",
+              cardType: "Credit",
+              scheme: "VISA",
               first6Digits: "123456",
               last4Digits: "1234",
             },
@@ -843,7 +844,8 @@ describe("Consumers", () => {
             paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: "faketoken1234",
             cardData: {
-              cardType: "VISA",
+              cardType: "Credit",
+              scheme: "VISA",
               first6Digits: "123456",
               last4Digits: "1234",
             },
@@ -866,7 +868,7 @@ describe("Consumers", () => {
 
       expect(getConsumerResponse.status).toBe("ActionRequired");
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
-      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("ActionRequired");
       expect(getConsumerResponse.paymentMethods.length).toBe(1);
       expect(getConsumerResponse.cryptoWallets.length).toBe(0);
       expect(getConsumerResponse.walletStatus).toBe("NotSubmitted");
