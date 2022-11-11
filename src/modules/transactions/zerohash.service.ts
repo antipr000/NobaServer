@@ -9,7 +9,6 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import axios, { AxiosRequestConfig, Method } from "axios";
-import { randomUUID } from "crypto";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import tunnel from "tunnel";
 import { Logger } from "winston";
@@ -298,7 +297,7 @@ export class ZeroHashService {
   }
 
   // Transfer assets from ZHLS to Noba account prior to trade
-  async transferAssetsToNoba(asset: string, amount: number): Promise<ZerohashTransferResponse> {
+  async transferAssetsToNoba(asset: string, amount: number, transactionID: string): Promise<ZerohashTransferResponse> {
     const transfer = await this.makeRequest("/transfers", "POST", {
       from_participant_code: this.getNobaPlatformCode(),
       from_account_group: ZHLS_PLATFORM_CODE,
@@ -308,7 +307,7 @@ export class ZeroHashService {
       to_account_group: this.getNobaPlatformCode(),
       asset: asset,
       amount: String(amount),
-      client_transfer_id: randomUUID(),
+      client_transfer_id: transactionID,
     });
 
     return {

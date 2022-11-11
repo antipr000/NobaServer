@@ -39,6 +39,7 @@ export interface ExecuteQuoteRequest {
 export interface FundsAvailabilityRequest {
   cryptocurrency: string;
   cryptoAmount: number;
+  transactionID: string;
 }
 
 export interface FundsAvailabilityResponse {

@@ -3,7 +3,7 @@ import { validate } from "multicoin-address-validator";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NobaConfigs, NobaTransactionConfigs } from "../../config/configtypes/NobaConfigs";
-import { AppEnvironment, getEnvironmentName, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { isProductionEnvironment, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Utils } from "../../core/utils/Utils";
@@ -574,7 +574,7 @@ export class TransactionService {
     // Strip anything from the first period onward
     const checkCurr = curr.split(".")[0];
 
-    const networkType = getEnvironmentName() === AppEnvironment.PROD ? "prod" : "testnet";
+    const networkType = isProductionEnvironment() ? "prod" : "testnet";
 
     return validate(destinationWalletAddress, checkCurr, networkType);
   }

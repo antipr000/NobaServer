@@ -2102,6 +2102,7 @@ describe("ZerohashAssetService", () => {
       const request: FundsAvailabilityRequest = {
         cryptoAmount: 12345.68783829,
         cryptocurrency: "ETH",
+        transactionID: "fake-transaction-1",
       };
 
       const transferID = "12345";
@@ -2117,7 +2118,9 @@ describe("ZerohashAssetService", () => {
         cryptocurrency: request.cryptocurrency,
       };
 
-      when(zerohashService.transferAssetsToNoba(request.cryptocurrency, request.cryptoAmount)).thenResolve(response);
+      when(
+        zerohashService.transferAssetsToNoba(request.cryptocurrency, request.cryptoAmount, "fake-transaction-1"),
+      ).thenResolve(response);
 
       const fundsAvailabilityResponse = await zerohashAssetService.makeFundsAvailable(request);
 

@@ -166,6 +166,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
     const assetTransfer: ZerohashTransferResponse = await this.zerohashService.transferAssetsToNoba(
       request.cryptocurrency,
       request.cryptoAmount,
+      request.transactionID,
     );
 
     return {

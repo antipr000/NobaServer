@@ -167,6 +167,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
           cryptocurrency: transaction.props.intermediaryLeg
             ? transaction.props.intermediaryLeg
             : transaction.props.leg2,
+          transactionID: transaction.props._id,
         };
         const fundAvailableResponse: FundsAvailabilityResponse = await assetService.makeFundsAvailable(
           fundsAvailabilityRequest,
