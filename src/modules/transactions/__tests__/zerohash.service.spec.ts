@@ -304,29 +304,6 @@ describe("Zerohash Service", () => {
       });
 
       const transactionTimestamp = new Date();
-      const consumerData = {
-        first_name: consumer.props.firstName,
-        last_name: consumer.props.lastName,
-        email: consumer.props.email,
-        address_one: consumer.props.address.streetLine1,
-        address_two: consumer.props.address.streetLine2,
-        city: consumer.props.address.city,
-        state: consumer.props.address.regionCode,
-        zip: consumer.props.address.postalCode,
-
-        country: "US", // ZH has its own spellings for some of the countries, so we store that in alternateCountryName
-        date_of_birth: consumer.props.dateOfBirth, // ZH format and our format are both YYYY-MM-DD
-        id_number_type: "ssn", // TODO: Support other types outside US
-        id_number: consumer.props.socialSecurityNumber, // TODO: Support other types outside US
-        signed_timestamp: transactionTimestamp.getTime(),
-        metadata: {
-          cip_kyc: "Pass", // We do not allow failed KYC to get here, so this is always pass
-          cip_timestamp: consumer.props.verificationData.kycVerificationTimestamp,
-          sanction_screening: "Pass", // We do not allow failed sanctions screening to get here, so this is always pass
-          sanction_screening_timestamp: consumer.props.verificationData.kycVerificationTimestamp,
-        },
-        risk_rating: consumer.props.riskRating,
-      };
       const expectedResponse = getAccountsResponse(consumer);
 
       // The lib we use for sardine test i.e. jest-mock-axios didn't work, so we are going ahead with jest.SpyOn
@@ -595,7 +572,7 @@ describe("Zerohash Service", () => {
         },
       };
       const getSpy = jest.spyOn(axios, "request").mockResolvedValue(zhResponse);
-      const response = await zerohashService.transferAssetsToNoba("BTC", 100);
+      const response = await zerohashService.transferAssetsToNoba("BTC", 100, "client_transfer_id");
       expect(getSpy).toHaveBeenCalledTimes(1);
       const expectedResponse = {
         transferID: 78,
