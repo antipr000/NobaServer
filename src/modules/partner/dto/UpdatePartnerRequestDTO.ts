@@ -4,6 +4,7 @@ import {
   NotificationEventHandler,
 } from "../../../modules/notifications/domain/NotificationTypes";
 import { NotificationConfiguration } from "../domain/NotificationConfiguration";
+import { PartnerWebhook } from "../domain/Partner";
 import { WebhookType } from "../domain/WebhookTypes";
 
 export class NotificationConfigDTO implements NotificationConfiguration {
@@ -12,6 +13,14 @@ export class NotificationConfigDTO implements NotificationConfiguration {
 
   @ApiProperty({ enum: NotificationEventHandler })
   notificationEventHandler: NotificationEventHandler[];
+}
+
+export class WebhooksDTO implements PartnerWebhook {
+  @ApiProperty({ enum: WebhookType })
+  type: WebhookType;
+
+  @ApiProperty()
+  url: string;
 }
 
 export class UpdatePartnerRequestDTO {
@@ -23,4 +32,7 @@ export class UpdatePartnerRequestDTO {
 
   @ApiPropertyOptional()
   notificationConfigs?: NotificationConfigDTO[];
+
+  @ApiPropertyOptional()
+  webhooks?: WebhooksDTO[];
 }
