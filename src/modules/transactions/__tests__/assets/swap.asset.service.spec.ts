@@ -715,6 +715,7 @@ describe("SwapAssetService", () => {
         await swapAssetService.makeFundsAvailable({
           cryptocurrency: "USDC.POLYGON",
           cryptoAmount: 1,
+          transactionID: "fake-transaction-1",
         });
       }).rejects.toThrowError(Error);
     });
