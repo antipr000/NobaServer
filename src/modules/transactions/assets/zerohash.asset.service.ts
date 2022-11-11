@@ -32,6 +32,10 @@ import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 import { DefaultAssetService } from "./default.asset.service";
 import { WalletProviderService } from "./wallet.provider.service";
+import {
+  TransactionSubmissionException,
+  TransactionSubmissionFailureExceptionText,
+} from "../exceptions/TransactionSubmissionException";
 
 @Injectable()
 export class ZerohashAssetService extends DefaultAssetService implements WalletProviderService {
@@ -228,18 +232,27 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
 
   // TODO(#): Make this implementation idempotent.
   async transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<ConsumerWalletTransferResponse> {
-    const withdrawalId: string = await this.zerohashService.requestWithdrawal(
-      request.walletAddress,
-      request.amount,
-      request.assetId,
-      request.consumer.zhParticipantCode,
-      this.zerohashService.getNobaPlatformCode(),
-      request.smartContractData,
-    );
+    try {
+      const withdrawalId: string = await this.zerohashService.requestWithdrawal(
+        request.walletAddress,
+        request.amount,
+        request.assetId,
+        request.consumer.zhParticipantCode,
+        this.zerohashService.getNobaPlatformCode(),
+        request.smartContractData,
+      );
 
-    return {
-      liquidityProviderTransactionId: withdrawalId,
-    };
+      return {
+        liquidityProviderTransactionId: withdrawalId,
+      };
+    } catch (e) {
+      console.log(e);
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.INVALID_WALLET,
+        "InvalidWallet",
+        JSON.stringify(e),
+      );
+    }
   }
 
   protected async getLiquidityProviderWithdrawal(id: any): Promise<ZerohashWithdrawalResponse> {

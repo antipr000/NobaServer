@@ -9,6 +9,7 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import axios, { AxiosRequestConfig, Method } from "axios";
+import { randomUUID } from "crypto";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import tunnel from "tunnel";
 import { Logger } from "winston";
@@ -307,6 +308,7 @@ export class ZeroHashService {
       to_account_group: this.getNobaPlatformCode(),
       asset: asset,
       amount: String(amount),
+      client_transfer_id: randomUUID(),
     });
 
     return {

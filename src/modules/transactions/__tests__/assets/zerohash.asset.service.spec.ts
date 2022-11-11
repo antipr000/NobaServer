@@ -41,6 +41,8 @@ import { getMockCurrencyServiceWithDefaults } from "../../../common/mocks/mock.c
 import { CurrencyService } from "../../../common/currency.service";
 import { ZerohashAssetService } from "../../assets/zerohash.asset.service";
 import { Utils } from "../../../../core/utils/Utils";
+import { BadRequestException } from "@nestjs/common";
+import { TransactionSubmissionException } from "../../exceptions/TransactionSubmissionException";
 
 describe("ZerohashAssetService", () => {
   let zerohashService: ZeroHashService;
@@ -2438,7 +2440,6 @@ describe("ZerohashAssetService", () => {
   });
 
   describe("transferToConsumerWallet()", () => {
-    // Not really much to do here!
     it("returns the withdrawal ID", async () => {
       const consumer: Consumer = Consumer.createConsumer({
         _id: "1234567890",
@@ -2474,6 +2475,42 @@ describe("ZerohashAssetService", () => {
 
       const returnedWithdrawalResponse = await zerohashAssetService.transferToConsumerWallet(request);
       expect(returnedWithdrawalResponse.liquidityProviderTransactionId).toEqual(withdrawalID);
+    });
+
+    it("throws TransactionSubmissionException when zerohash request fails", async () => {
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "1234567890",
+        email: "test@noba.com",
+        zhParticipantCode: "12345",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const request: ConsumerWalletTransferRequest = {
+        amount: 1234,
+        assetId: "1111",
+        transactionID: "XXXX",
+        walletAddress: "YYYY",
+        consumer: consumer.props,
+      };
+
+      when(
+        zerohashService.requestWithdrawal(
+          request.walletAddress,
+          request.amount,
+          request.assetId,
+          request.consumer.zhParticipantCode,
+          nobaPlatformCode,
+          undefined,
+        ),
+      ).thenReject(new BadRequestException("Invalid wallet address"));
+
+      expect(async () => await zerohashAssetService.transferToConsumerWallet(request)).rejects.toThrow(
+        TransactionSubmissionException,
+      );
     });
   });
 

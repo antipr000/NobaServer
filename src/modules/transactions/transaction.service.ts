@@ -573,6 +573,9 @@ export class TransactionService {
 
     // Strip anything from the first period onward
     const checkCurr = curr.split(".")[0];
+
+    // const networkType = getEnvironmentName() === AppEnvironment.PROD ? "prod" : "testnet";
+
     return validate(destinationWalletAddress, checkCurr);
   }
 
