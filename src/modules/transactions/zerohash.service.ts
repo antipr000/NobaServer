@@ -131,13 +131,11 @@ export class ZeroHashService {
   }
 
   async getPrice(underlying: string, quoted_currency: string) {
-    let price = await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET");
-    return price;
+    return await this.makeRequest(`/index?underlying=${underlying}&quoted_currency=${quoted_currency}`, "GET");
   }
 
   async getAccounts() {
-    const accounts = await this.makeRequest("/accounts", "GET");
-    return accounts;
+    return await this.makeRequest("/accounts", "GET");
   }
 
   async createParticipant(consumer: ConsumerProps, transactionTimestamp: Date) {
