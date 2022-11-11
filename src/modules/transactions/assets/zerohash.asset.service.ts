@@ -246,10 +246,10 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
         liquidityProviderTransactionId: withdrawalId,
       };
     } catch (e) {
-      console.log(e);
+      console.log(JSON.stringify(e));
       throw new TransactionSubmissionException(
         TransactionSubmissionFailureExceptionText.INVALID_WALLET,
-        "InvalidWallet",
+        "Wallet address is invalid",
         JSON.stringify(e),
       );
     }

@@ -108,15 +108,18 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           transaction = await this.transactionRepo.updateTransaction(transaction);
         } catch (e) {
           if (e instanceof TransactionSubmissionException) {
-            this.logger.error("Failed transferring to consumer wallet because of invalid wallet address.");
-            this.logger.error(transaction.props);
+            this.logger.error(
+              "Failed transferring to consumer wallet because of invalid wallet address.",
+              JSON.stringify(e),
+            );
             await this.processFailure(
-              TransactionStatus.VALIDATION_FAILED,
+              TransactionStatus.CRYPTO_OUTGOING_FAILED,
               e.reasonCode, // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
               transaction,
               e.reasonSummary,
             );
           }
+          return;
         }
       }
 
