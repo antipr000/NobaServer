@@ -250,7 +250,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
       throw new TransactionSubmissionException(
         TransactionSubmissionFailureExceptionText.INVALID_WALLET,
         "Wallet address is invalid",
-        JSON.stringify(e.response.data),
+        JSON.stringify(e.response),
       );
     }
   }
