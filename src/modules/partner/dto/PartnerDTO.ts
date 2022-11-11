@@ -23,7 +23,16 @@ export class PartnerDTO {
   apiKey: string;
 
   @ApiProperty()
+  apiKeyForEmbed: string;
+
+  @ApiProperty()
   secretKey: string;
+
+  @ApiProperty()
+  webhookClientID: string;
+
+  @ApiProperty()
+  webhookSecret: string;
 
   @ApiPropertyOptional()
   logoSmall?: string;
