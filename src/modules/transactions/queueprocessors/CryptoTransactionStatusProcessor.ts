@@ -114,7 +114,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
             );
             await this.processFailure(
               TransactionStatus.CRYPTO_OUTGOING_FAILED,
-              e.reasonCode, // TODO (#332): Need more detail here - should throw exception from validatePendingTransaction with detailed reason
+              e.reasonCode,
               transaction,
               e.reasonSummary,
             );
