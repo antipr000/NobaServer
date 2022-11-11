@@ -22,7 +22,7 @@ export function getMockZerohashServiceWithDefaults(): ZeroHashService {
   when(mockZerohashService.requestQuoteForDesiredCryptoQuantity(anyString(), anyString(), anyNumber())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockZerohashService.transferAssetsToNoba(anyString(), anyNumber())).thenReject(
+  when(mockZerohashService.transferAssetsToNoba(anyString(), anyNumber(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockZerohashService.executeTrade(anything())).thenReject(new Error("Method not implemented"));
