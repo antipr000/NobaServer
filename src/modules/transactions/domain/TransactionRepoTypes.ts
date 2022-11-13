@@ -1,5 +1,3 @@
-import { ACHPaymentStatus } from "./Transaction";
-
 export type UpdateFiatTransactionInfoRequest = {
   transactionID: string;
 

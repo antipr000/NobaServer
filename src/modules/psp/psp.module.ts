@@ -11,7 +11,6 @@ import { TransactionRepoModule } from "../transactions/repo/transaction.repo.mod
 import { getWinstonModule } from "../../core/utils/WinstonModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { InfraProvidersModule } from "src/infraproviders/infra.module";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
