@@ -2,8 +2,6 @@ import { Body, Controller, Headers, HttpStatus, Inject, Post } from "@nestjs/com
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { Role } from "../auth/role.enum";
-import { Roles } from "../auth/roles.decorator";
 import {
   PaymentCapturedWebhookData,
   PaymentCapturePendingWebhookData,

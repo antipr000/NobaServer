@@ -229,7 +229,6 @@ export class TransactionService {
     }
 
     const transactionType = transactionRequest.type;
-
     if (transactionType == TransactionType.ONRAMP) {
       // Validate that destination wallet address is a valid address for given currency for an ONRAMP transaction
       if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
@@ -287,6 +286,7 @@ export class TransactionService {
       transactionStatus: TransactionStatus.PENDING,
       partnerID: partnerID,
       destinationWalletAddress: transactionRequest.destinationWalletAddress,
+      type: transactionType,
     });
     const assetService: AssetService = await this.assetServiceFactory.getAssetService(transactionRequest.leg2);
 

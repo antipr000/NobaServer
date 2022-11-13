@@ -132,9 +132,9 @@ describe("FiatTransactionInitiator", () => {
     await mongoServer.stop();
   });
 
-  const consumerID: string = "UUUUUUUUUUU";
-  const cardPaymentToken: string = "CCCCCCCCCCCC";
-  const achPaymentToken: string = "AAAAAAAAAAAA";
+  const consumerID = "UUUUUUUUUUU";
+  const cardPaymentToken = "CCCCCCCCCCCC";
+  const achPaymentToken = "AAAAAAAAAAAA";
   const consumerWithBothCardAndAchPaymentMethods = Consumer.createConsumer({
     _id: consumerID,
     firstName: "Fake",

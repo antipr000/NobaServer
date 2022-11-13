@@ -116,7 +116,7 @@ export class TransactionMigrator {
     const allUpdatedRecords: Transaction[] = [];
 
     while (await transactionDocumentCursor.hasNext()) {
-      let transactionDocument = await transactionDocumentCursor.next();
+      const transactionDocument = await transactionDocumentCursor.next();
       const migratedTransactionDocument = this.convertToNewSchema(transactionDocument);
 
       // Updating the row while the cursor is pointing to that might be error prone.
