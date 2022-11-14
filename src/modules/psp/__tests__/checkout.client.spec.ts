@@ -152,7 +152,7 @@ describe("CheckoutClient", () => {
 
       const paymentToken = addedPaymentMethod.instrumentID;
 
-      const response = await checkoutClient.makeCardPayment(1000, "USD", paymentToken, "order_id_1");
+      const response = await checkoutClient.makeCardPayment(1000, "USD", paymentToken, "order_id_1", "idempotency-key");
 
       expect(response.id).toBeTruthy();
       expect(response.response_code).toBe("10000");
@@ -181,7 +181,7 @@ describe("CheckoutClient", () => {
 
       const paymentToken = addedPaymentMethod.instrumentID;
 
-      const payment = await checkoutClient.makeCardPayment(1000, "USD", paymentToken, "order_id_1");
+      const payment = await checkoutClient.makeCardPayment(1000, "USD", paymentToken, "order_id_1", "idempotency-key");
 
       const response = await checkoutClient.getPaymentDetails(payment.id);
 

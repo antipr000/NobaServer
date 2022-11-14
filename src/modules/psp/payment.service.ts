@@ -75,9 +75,9 @@ export class PaymentService {
   ): Promise<AddPaymentMethodResponse> {
     switch (paymentMethod.type) {
       case PaymentType.CARD:
-        return this.addCreditCardPaymentMethod(consumer, paymentMethod, partnerId);
+        return await this.addCreditCardPaymentMethod(consumer, paymentMethod, partnerId);
       case PaymentType.ACH:
-        return this.addACHPaymentMethod(consumer, paymentMethod);
+        return await this.addACHPaymentMethod(consumer, paymentMethod);
     }
   }
 
@@ -125,10 +125,11 @@ export class PaymentService {
       try {
         // Check if added payment method is valid
         paymentResponse = await this.checkoutClient.makeCardPayment(
-          /* amount= */ 1,
-          /* currency= */ "USD",
-          /* paymentMethodId= */ addPaymentMethodResponse.instrumentID,
-          /* transactionId= */ "test_order_1",
+          1, // 1 cent
+          "USD",
+          addPaymentMethodResponse.instrumentID,
+          "Test_Transaction",
+          undefined, // No idempotency key here as this is just a test transaction
         );
 
         creditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
@@ -275,10 +276,11 @@ export class PaymentService {
 
   private async makeCardPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
     const paymentResponse: PspCardPaymentResponse = await this.checkoutClient.makeCardPayment(
-      /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
-      /* currency= */ transaction.props.leg1,
-      /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
-      /* transactionId= */ transaction.props._id,
+      Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
+      transaction.props.leg1,
+      transaction.props.fiatPaymentInfo.paymentMethodID,
+      transaction.props._id,
+      transaction.props._id, // Idempotency key to ensure a duplicate submission does not result in duplicate charge
     );
 
     let creditCardBinData = await this.creditCardService.getBINDetails(paymentResponse.bin);
@@ -346,10 +348,11 @@ export class PaymentService {
 
   private async makeACHPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
     const response: PspACHPaymentResponse = await this.checkoutClient.makeACHPayment(
-      /* amount= */ Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
-      /* currency= */ transaction.props.leg1,
-      /* paymentMethodId= */ transaction.props.fiatPaymentInfo.paymentMethodID,
-      /* transactionId= */ transaction.props._id,
+      Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
+      transaction.props.leg1,
+      transaction.props.fiatPaymentInfo.paymentMethodID,
+      transaction.props._id,
+      transaction.props._id,
     );
 
     if (response.status !== "Pending") {
@@ -425,6 +428,10 @@ export class PaymentService {
     partnerID,
     binData,
   }: HandlePaymentResponse): Promise<CheckoutResponseData> {
+    if (!paymentResponse) {
+      this.logger.error(`Empty paymentResponse in handlePaymentResponse() for transactionID ${transactionID}`);
+      throw new CardProcessingException(CardFailureExceptionText.ERROR);
+    }
     const response: CheckoutResponseData = new CheckoutResponseData();
     response.responseCode = paymentResponse.response_code;
     response.responseSummary = paymentResponse.response_summary;

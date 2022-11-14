@@ -105,6 +105,7 @@ export class CheckoutClient {
     currency: string,
     paymentMethodId: string,
     transactionId: string,
+    idempotencyKey: string,
   ): Promise<PspACHPaymentResponse> {
     try {
       const checkoutResponse = await this.checkoutApi.payments.request(
@@ -125,7 +126,7 @@ export class CheckoutClient {
             order_id: transactionId,
           },
         },
-        transactionId,
+        idempotencyKey,
       );
 
       this.logger.info(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
@@ -150,6 +151,7 @@ export class CheckoutClient {
     currency: string,
     paymentMethodId: string,
     transactionId: string,
+    idempotencyKey: string,
   ): Promise<PspCardPaymentResponse> {
     try {
       const checkoutResponse = await this.checkoutApi.payments.request(
@@ -165,7 +167,7 @@ export class CheckoutClient {
             order_id: transactionId,
           },
         },
-        transactionId,
+        idempotencyKey,
       );
       return {
         id: checkoutResponse["id"],
