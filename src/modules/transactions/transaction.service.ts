@@ -93,6 +93,7 @@ export class TransactionService {
             transactionQuoteQuery.fiatCurrencyCode,
             transactionQuoteQuery.fixedAmount,
           ),
+          transactionType: transactionQuoteQuery.transactionType,
           discount: {
             fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
             networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
@@ -116,6 +117,7 @@ export class TransactionService {
               transactionQuoteQuery.cryptoCurrencyCode,
               transactionQuoteQuery.fixedAmount,
             ),
+            transactionType: transactionQuoteQuery.transactionType,
             discount: {
               fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
               networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
@@ -305,6 +307,7 @@ export class TransactionService {
         cryptoCurrency: transactionRequest.leg2,
         fiatAmount: await this.roundToProperDecimalsForFiatCurrency(transactionRequest.leg1, fiatAmount),
         intermediateCryptoCurrency: newTransaction.props.intermediaryLeg,
+        transactionType: transactionRequest.type,
         discount: {
           fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
           networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
@@ -319,6 +322,7 @@ export class TransactionService {
         fiatCurrency: transactionRequest.leg1,
         cryptoCurrency: transactionRequest.leg2,
         cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(transactionRequest.leg2, cryptoAmount),
+        transactionType: transactionRequest.type,
         discount: {
           fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
           networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,

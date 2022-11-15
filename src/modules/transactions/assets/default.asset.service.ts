@@ -38,6 +38,7 @@ import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 import { getDiscountedAmount } from "./AssetServiceHelper";
+import { TransactionType } from "../domain/Types";
 
 @Injectable()
 export abstract class DefaultAssetService implements AssetService {
@@ -53,6 +54,10 @@ export abstract class DefaultAssetService implements AssetService {
   async getQuoteForSpecifiedFiatAmount(request: QuoteRequestForFixedFiat): Promise<CombinedNobaQuote> {
     // TODO(#): Remove this once all the clients are aware about "discount"
     if (request.discount === undefined || request.discount === null) request.discount = {} as any;
+
+    if (request.transactionType === TransactionType.NOBA_WALLET) {
+      request.discount.networkFeeDiscountPercent = 1;
+    }
 
     const nobaSpreadPercent = getDiscountedAmount(
       this.nobaTransactionConfigs.spreadPercentage,
@@ -235,6 +240,10 @@ export abstract class DefaultAssetService implements AssetService {
 
     // TODO(#): Remove this once all the clients are aware about "discount"
     if (request.discount === undefined || request.discount === null) request.discount = {} as any;
+
+    if (request.transactionType === TransactionType.NOBA_WALLET) {
+      request.discount.networkFeeDiscountPercent = 1;
+    }
 
     const nobaSpreadPercent = getDiscountedAmount(
       this.nobaTransactionConfigs.spreadPercentage,

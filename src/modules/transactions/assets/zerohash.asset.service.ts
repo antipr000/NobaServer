@@ -122,6 +122,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
           cryptoCurrency: request.cryptoCurrency,
           fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
           fiatCurrency: request.fiatCurrency,
+          transactionType: request.transactionType,
           discount: {
             fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
             networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
@@ -137,6 +138,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
           cryptoCurrency: request.cryptoCurrency,
           cryptoQuantity: Utils.roundToSpecifiedDecimalNumber(request.cryptoQuantity, cryptocurrency.precision),
           fiatCurrency: request.fiatCurrency,
+          transactionType: request.transactionType,
           discount: {
             fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
             networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,

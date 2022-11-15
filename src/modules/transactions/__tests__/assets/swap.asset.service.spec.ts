@@ -39,6 +39,7 @@ import { Utils } from "../../../../core/utils/Utils";
 import { SwapAssetService } from "../../assets/swap.asset.service";
 import { SwapServiceProvider } from "../../domain/swap.service.provider";
 import { getMockSquidServiceWithDefaults } from "../../mocks/mock.squid.service";
+import { TransactionType } from "../../domain/Types";
 
 describe("SwapAssetService", () => {
   let zerohashService: ZeroHashService;
@@ -270,6 +271,7 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -330,6 +332,7 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -390,6 +393,7 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -450,6 +454,7 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -511,6 +516,7 @@ describe("SwapAssetService", () => {
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         intermediateCryptoCurrency: "USDC.POLYGON",
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -626,6 +632,7 @@ describe("SwapAssetService", () => {
           cryptoCurrency: REQUESTED_CRYPTO_ASSET,
           fiatCurrency: "USD",
           cryptoQuantity: cryptoQuantity,
+          transactionType: TransactionType.ONRAMP,
           discount: {
             fixedCreditCardFeeDiscountPercent: 0,
             networkFeeDiscountPercent: 0,
@@ -654,6 +661,7 @@ describe("SwapAssetService", () => {
         transactionCreationTimestamp: new Date(),
         transactionID: "123456",
         fixedSide: CurrencyType.FIAT,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const quote: ExecutedQuote = {

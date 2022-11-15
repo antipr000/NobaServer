@@ -103,6 +103,7 @@ export class USDCPolygonAssetService extends DefaultAssetService {
       cryptoCurrency: request.cryptoCurrency,
       fiatAmount: Utils.roundTo2DecimalNumber(request.fiatAmount),
       fiatCurrency: request.fiatCurrency,
+      transactionType: request.transactionType,
       discount: {
         fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
         networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,

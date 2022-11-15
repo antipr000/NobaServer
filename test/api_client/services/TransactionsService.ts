@@ -23,6 +23,7 @@ export class TransactionsService {
     cryptoCurrencyCode,
     fixedSide,
     fixedAmount,
+    transactionType,
     xNobaSignature,
     xNobaTimestamp,
     partnerId,
@@ -32,6 +33,7 @@ export class TransactionsService {
     cryptoCurrencyCode: string;
     fixedSide: "fiat" | "crypto";
     fixedAmount: number;
+    transactionType: "onramp" | "offramp" | "swap" | "wallet";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -52,6 +54,7 @@ export class TransactionsService {
         cryptoCurrencyCode: cryptoCurrencyCode,
         fixedSide: fixedSide,
         fixedAmount: fixedAmount,
+        transactionType: transactionType,
         partnerID: partnerId,
       },
       errors: {

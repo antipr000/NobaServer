@@ -71,7 +71,7 @@ export class CryptoTransactionInitiator extends MessageProcessor {
         consumer: consumer.props,
         cryptoCurrency: transaction.props.intermediaryLeg ? transaction.props.intermediaryLeg : transaction.props.leg2,
         fiatCurrency: transaction.props.leg1,
-
+        transactionType: transaction.props.type,
         cryptoQuantity: transaction.props.intermediaryLeg
           ? transaction.props.intermediaryLegAmount
           : transaction.props.leg2Amount,

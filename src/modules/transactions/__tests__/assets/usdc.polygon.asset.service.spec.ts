@@ -35,6 +35,7 @@ import { CurrencyType } from "../../../common/domain/Types";
 import { getMockCurrencyServiceWithDefaults } from "../../../common/mocks/mock.currency.service";
 import { CurrencyService } from "../../../common/currency.service";
 import { Utils } from "../../../../core/utils/Utils";
+import { TransactionType } from "../../domain/Types";
 
 describe("DefaultAssetService", () => {
   let zerohashService: ZeroHashService;
@@ -250,6 +251,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -297,6 +299,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -343,6 +346,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -389,6 +393,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -435,6 +440,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -481,6 +487,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -527,6 +534,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -588,6 +596,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 1,
           networkFeeDiscountPercent: 1,
@@ -769,6 +778,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(quote.quote).toEqual(expectedNobaQuote.quote);
@@ -808,6 +818,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -855,6 +866,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -902,6 +914,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -949,6 +962,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -996,6 +1010,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote).toEqual(expectedNobaQuote);
@@ -1035,6 +1050,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote).toEqual(expectedNobaQuote);
@@ -1074,6 +1090,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote).toEqual(expectedNobaQuote);
@@ -1113,6 +1130,7 @@ describe("DefaultAssetService", () => {
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote).toEqual(expectedNobaQuote);
@@ -1133,6 +1151,7 @@ describe("DefaultAssetService", () => {
         transactionCreationTimestamp: new Date(),
         transactionID: "123456",
         fixedSide: CurrencyType.FIAT,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const quote: ExecutedQuote = {

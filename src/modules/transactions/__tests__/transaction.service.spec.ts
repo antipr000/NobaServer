@@ -736,6 +736,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: -1,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       try {
@@ -767,6 +768,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 100,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       try {
@@ -798,6 +800,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 10,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -845,6 +848,7 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -887,6 +891,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 10,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -938,6 +943,7 @@ describe("TransactionService", () => {
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
             intermediateCryptoCurrency: "USDC.POLYGON",
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -980,6 +986,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 10,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -1027,6 +1034,7 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -1070,6 +1078,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.CRYPTO,
         fixedAmount: 0.1,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -1117,6 +1126,7 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             cryptoQuantity: Number(transactionQuoteQuery.fixedAmount),
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -1626,6 +1636,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: undefined,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -1772,6 +1783,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: undefined,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -1958,6 +1970,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "axlUSDCMoonbeam",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: intermediaryLeg,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -2146,6 +2159,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatCurrency: "USD",
             cryptoQuantity: 0.1,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -2333,6 +2347,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatCurrency: "USD",
             cryptoQuantity: 0.1,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,

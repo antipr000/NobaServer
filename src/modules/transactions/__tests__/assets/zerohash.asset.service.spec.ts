@@ -43,6 +43,7 @@ import { ZerohashAssetService } from "../../assets/zerohash.asset.service";
 import { Utils } from "../../../../core/utils/Utils";
 import { BadRequestException } from "@nestjs/common";
 import { TransactionSubmissionException } from "../../exceptions/TransactionSubmissionException";
+import { TransactionType } from "../../domain/Types";
 
 describe("ZerohashAssetService", () => {
   let zerohashService: ZeroHashService;
@@ -276,6 +277,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
         // All these discounts should mean that the quote & non-discounted quote remain equal
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
@@ -331,7 +333,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -386,7 +388,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -441,7 +443,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -496,7 +498,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -551,7 +553,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -606,7 +608,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -670,7 +672,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0.5,
           networkFeeDiscountPercent: 0,
@@ -734,7 +736,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0.5,
@@ -798,7 +800,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -862,7 +864,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -926,7 +928,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -990,7 +992,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0.1,
           networkFeeDiscountPercent: 0.2,
@@ -1176,6 +1178,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(quote.quote).toEqual(expectedNobaQuote.quote);
@@ -1223,6 +1226,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1270,6 +1274,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1317,6 +1322,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1364,6 +1370,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1411,6 +1418,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1458,6 +1466,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1505,6 +1514,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1552,6 +1562,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.ONRAMP,
       });
 
       expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
@@ -1607,7 +1618,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0.5,
           networkFeeDiscountPercent: 0,
@@ -1670,7 +1681,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0.5,
@@ -1733,7 +1744,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -1796,7 +1807,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -1859,7 +1870,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0,
           networkFeeDiscountPercent: 0,
@@ -1922,7 +1933,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         fiatCurrency: "USD",
         cryptoQuantity: cryptoQuantity,
-
+        transactionType: TransactionType.ONRAMP,
         discount: {
           fixedCreditCardFeeDiscountPercent: 0.1,
           networkFeeDiscountPercent: 0.2,
@@ -1937,6 +1948,69 @@ describe("ZerohashAssetService", () => {
       expect(nobaQuote.discountsGiven).toEqual({
         creditCardFeeDiscount: 2,
         networkFeeDiscount: 0.8,
+        nobaFeeDiscount: 2.4,
+        spreadDiscount: 24,
+        processingFeeDiscount: 54,
+      });
+    });
+
+    it("should give 100% network fee discount when transactionType is WALLET", async () => {
+      const cryptoQuantity = 10;
+      const originalCostPerUnit = 10;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        cryptoQuantity,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 0.6,
+          fiatFeeDollars: 8,
+          dynamicCreditCardFeePercentage: 0.36,
+          fixedCreditCardFee: 20,
+
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 1,
+            nobaFeeDiscountPercent: 0.3,
+            nobaSpreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        },
+        {
+          expectedNobaFee: 8,
+          expectedProcessingFee: 128,
+          expectedNetworkFee: 4,
+          quotedCostPerUnit: 16,
+          expectedAmountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
+
+          discountedExpectedNobaFee: 5.6,
+          discountedExpectedProcessingFee: 72,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 13.6,
+          discountedExpectedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100 * (1 + 0.6),
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedCryptoQuantity({
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        cryptoQuantity: cryptoQuantity,
+        transactionType: TransactionType.NOBA_WALLET,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0.1,
+          networkFeeDiscountPercent: 0.2,
+          nobaFeeDiscountPercent: 0.3,
+          nobaSpreadDiscountPercent: 0.4,
+          processingFeeDiscountPercent: 0.5,
+        },
+      });
+
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 2,
+        networkFeeDiscount: 4,
         nobaFeeDiscount: 2.4,
         spreadDiscount: 24,
         processingFeeDiscount: 54,
@@ -1964,6 +2038,7 @@ describe("ZerohashAssetService", () => {
         cryptoQuantity: 12345.6789,
         fiatAmount: 2,
         fiatCurrency: "USD",
+        transactionType: TransactionType.ONRAMP,
         slippage: 0,
         transactionCreationTimestamp: new Date(),
         transactionID: "123456",
@@ -2049,6 +2124,7 @@ describe("ZerohashAssetService", () => {
         consumer: consumer.props,
         cryptoCurrency: "UNKNOWN",
         cryptoQuantity: 12345.6789,
+        transactionType: TransactionType.ONRAMP,
         fiatAmount: 2,
         fiatCurrency: "USD",
         slippage: 0,
@@ -2082,6 +2158,7 @@ describe("ZerohashAssetService", () => {
         cryptoCurrency: "ETH",
         cryptoQuantity: 12345.6789,
         fiatAmount: 2,
+        transactionType: TransactionType.ONRAMP,
         fiatCurrency: "UNKNOWN",
         slippage: 0,
         transactionCreationTimestamp: new Date(),
