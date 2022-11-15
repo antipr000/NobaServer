@@ -1062,6 +1062,75 @@ describe("ConsumerController", () => {
       expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
     });
 
+    it("should return wallet status as APPROVED when some wallets are in Pending state and atleast one wallet is in APPROVED state", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.APPROVED,
+            isPrivate: false,
+          },
+          {
+            address: "wallet-2",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.PENDING,
+            isPrivate: false,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.APPROVED);
+      expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
+      expect(response.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.VERIFIED);
+      expect(response.walletStatus).toBe(AggregatedWalletState.APPROVED);
+      expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
+    });
+
     it("should return user status as PERMANENT_HOLD and walletStatus as NOT_SUBMITTED and filtered wallet list when one wallet is REJECTED", async () => {
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
