@@ -206,6 +206,10 @@ export class CheckoutClient {
     // TODO: Remove this once we have confidence in the flow.
     // url: "https://webhook.site/523c9bbe-7a61-423c-9d2e-62519d30bfdd",
     const webhookUrl = this.checkoutConfigs.nobaWebhookUrl;
+    if (webhookUrl === "disabled") {
+      this.logger.warn("Skipping Checkout ACH webhook registration");
+      return;
+    }
 
     try {
       const workflows: WorkflowMetadata[] = (

@@ -51,7 +51,7 @@ checkout:
   webhookSignatureKey: "bogus-value"
   awsSecretNameForWebhookSignatureKey: "PROD_CHECKOUT_WEBHOOK_SIGNATURE_KEY"
   apiUrl: "https://api.checkout.com"
-  nobaWebhookUrl: "https://api.noba.com/v1/vendors/checkout/webhooks"
+  nobaWebhookUrl: "disabled"
 
 mongo:
   awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"
