@@ -607,6 +607,68 @@ describe("DefaultAssetService", () => {
       });
       expect(nobaQuote).toEqual(expectedNobaQuote);
     });
+
+    it("network fee is waived when transaction type is NOBA_WALLET", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 1;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 0,
+          fiatFeeDollars: 0,
+          dynamicCreditCardFeePercentage: 0.125,
+          fixedCreditCardFee: 1,
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 1,
+            networkFeeDiscountPercent: 1,
+            nobaFeeDiscountPercent: 1,
+            nobaSpreadDiscountPercent: 1,
+            processingFeeDiscountPercent: 1,
+          },
+        },
+        {
+          expectedNobaFee: 0,
+          expectedProcessingFee: 13.5,
+          expectedNetworkFee: 0,
+          quotedCostPerUnit: 1,
+          amountPreSpread: 86.5,
+          expectedPriceAfterFeeAndSpread: 86.5,
+
+          // Expected amounts are the same with no discount
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 1,
+          discountedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100,
+        },
+      );
+
+      expectedNobaQuote.discountsGiven = {
+        creditCardFeeDiscount: 1,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        processingFeeDiscount: 12.5,
+        spreadDiscount: 0,
+      };
+
+      const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "USDC.POLYGON",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 1,
+          networkFeeDiscountPercent: 0, // Keeping network fee discount as 0%
+          nobaFeeDiscountPercent: 1,
+          nobaSpreadDiscountPercent: 1,
+          processingFeeDiscountPercent: 1,
+        },
+      });
+      expect(nobaQuote).toEqual(expectedNobaQuote);
+    });
   });
 
   describe("getQuoteForSpecifiedCryptoQuantity()", () => {
