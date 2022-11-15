@@ -163,6 +163,7 @@ export class CheckoutClient {
             id: paymentMethodId,
           },
           description: "Noba Customer Payment at UTC " + Date.now(),
+          processing_channel_id: this.checkoutConfigs.processingChannelId,
           metadata: {
             order_id: transactionId,
           },
