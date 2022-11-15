@@ -1011,6 +1011,63 @@ describe("ZerohashAssetService", () => {
       //   processingFeeDiscount: 0,
       // });
     });
+
+    it("should add 100% network fee discount for transaction type of NOBA_WALLET", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 10;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          spreadPercentage: 1,
+          fiatFeeDollars: 7.5,
+          dynamicCreditCardFeePercentage: 0.12,
+          fixedCreditCardFee: 10,
+
+          discount: {
+            fixedCreditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 1,
+            nobaFeeDiscountPercent: 0.3,
+            nobaSpreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        },
+        {
+          // Without discounts.
+          expectedNobaFee: 7.5,
+          expectedProcessingFee: 22,
+          expectedNetworkFee: 10,
+          quotedCostPerUnit: 20,
+          amountPreSpread: 60.5,
+          expectedPriceAfterFeeAndSpread: 30.25,
+
+          // WITH discounts.
+          discountedExpectedNobaFee: 5.25,
+          discountedExpectedProcessingFee: 15,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 16,
+          discountedAmountPreSpread: 79.75,
+          discountedExpectedPriceAfterFeeAndSpread: 49.84,
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.NOBA_WALLET,
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0.1,
+          networkFeeDiscountPercent: 0.2,
+          nobaFeeDiscountPercent: 0.3,
+          nobaSpreadDiscountPercent: 0.4,
+          processingFeeDiscountPercent: 0.5,
+        },
+      });
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+    });
   });
 
   describe("getQuoteForSpecifiedCryptoQuantity()", () => {
