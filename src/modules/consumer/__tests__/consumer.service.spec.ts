@@ -1316,6 +1316,8 @@ describe("ConsumerService", () => {
         name: "New Fake Name",
       };
 
+      when(consumerRepo.updateConsumer(anything())).thenResolve(consumer);
+
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       expect(
         async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
