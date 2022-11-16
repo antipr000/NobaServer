@@ -326,9 +326,9 @@ export class ConsumerService {
     );
 
     const currentPaymentMethod = consumer.props.paymentMethods.filter(
-      existingPaymentMethod =>
-        existingPaymentMethod.paymentToken === paymentMethod.paymentToken &&
-        paymentMethod.status !== PaymentMethodStatus.DELETED,
+      currentMethod =>
+        currentMethod.paymentToken === paymentMethod.paymentToken &&
+        currentMethod.status !== PaymentMethodStatus.DELETED,
     );
 
     if (currentPaymentMethod.length === 0) {
