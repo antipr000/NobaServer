@@ -13,6 +13,9 @@ import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatu
 
 export class StatesMapper {
   private getAggregatedWalletStatus(wallets: CryptoWallet[]): WalletStatus {
+    // Filter out wallets that has not been deleted
+    wallets = wallets.filter(wallet => wallet.status !== WalletStatus.DELETED);
+
     // At least one wallet is rejected
     if (wallets.filter(wallet => wallet.status === WalletStatus.REJECTED).length > 0) {
       return WalletStatus.REJECTED;
@@ -25,6 +28,9 @@ export class StatesMapper {
   }
 
   private getAggregatedPaymentMethodStatus(paymentMethods: PaymentMethod[]): PaymentMethodStatus {
+    // Filter out payment methods that has not been deleted
+    paymentMethods = paymentMethods.filter(paymentMethod => paymentMethod.status !== PaymentMethodStatus.DELETED);
+
     if (paymentMethods.filter(paymentMethod => paymentMethod.status === PaymentMethodStatus.REJECTED).length > 0) {
       return PaymentMethodStatus.REJECTED;
     }

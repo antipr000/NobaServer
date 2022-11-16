@@ -241,6 +241,134 @@ describe("PaymentService", () => {
       expect(response.updatedConsumerData).toStrictEqual(expectedConsumerProps);
     });
 
+    it("adds ACH payment method that was previously deleted", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+
+      const checkoutCustomerID = "checkout-customer-for-mock-consumer";
+
+      const plaidPublicToken = "public-token-by-plain-embed-ui";
+      const plaidAccessToken = "plaid-access-token-for-public-token";
+      const plaidAuthGetItemID = "plaid-itemID-for-auth-get-request";
+      const plaidAccountID = "plaid-account-id-for-the-consumer-bank-account";
+      const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
+
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: checkoutCustomerID,
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.ACH,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: plaidCheckoutProcessorToken,
+            status: PaymentMethodStatus.DELETED,
+            achData: {
+              accessToken: plaidPublicToken,
+              accountID: plaidAccountID,
+              itemID: plaidAuthGetItemID,
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
+            },
+            imageUri: "fake-uri",
+            name: "Fake ach",
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      const addPaymentMethod: AddPaymentMethodDTO = {
+        type: PaymentType.ACH,
+        name: "Bank Account",
+        achDetails: {
+          token: plaidPublicToken,
+        },
+        imageUri: "https://noba.com",
+      } as any;
+
+      when(plaidClient.exchangeForAccessToken(deepEqual({ publicToken: plaidPublicToken }))).thenResolve(
+        plaidAccessToken,
+      );
+      when(plaidClient.retrieveAccountData(deepEqual({ accessToken: plaidAccessToken }))).thenResolve({
+        accountID: plaidAccountID,
+        itemID: plaidAuthGetItemID,
+        accountNumber: "1234567890",
+        achRoutingNumber: "123456789",
+        availableBalance: "1234.56",
+        currencyCode: "USD",
+        mask: "7890",
+        name: "Bank Account",
+        accountType: BankAccountType.CHECKING,
+        wireRoutingNumber: "987654321",
+      });
+      when(
+        plaidClient.createProcessorToken(
+          deepEqual({
+            accessToken: plaidAccessToken,
+            accountID: plaidAccountID,
+            tokenProcessor: TokenProcessor.CHECKOUT,
+          }),
+        ),
+      ).thenResolve(plaidCheckoutProcessorToken);
+
+      const expectedConsumerProps: ConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: checkoutCustomerID,
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            name: "Bank Account",
+            type: PaymentMethodType.ACH,
+            achData: {
+              accessToken: plaidAccessToken,
+              accountID: plaidAccountID,
+              itemID: plaidAuthGetItemID,
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
+            },
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: plaidCheckoutProcessorToken,
+            imageUri: "https://noba.com",
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [],
+      };
+
+      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+
+      expect(response.updatedConsumerData).toBeTruthy();
+      expect(response.updatedConsumerData).toStrictEqual(expectedConsumerProps);
+    });
+
     it("adds a payment method of 'ACH' type AFTER creating Checkout customer if this is the first payment method", async () => {
       const email = "mock-user@noba.com";
       const partnerId = "partner-1";
@@ -364,6 +492,78 @@ describe("PaymentService", () => {
           },
         ],
         [],
+      );
+      when(checkoutClient.addCreditCardPaymentMethod(deepEqual(paymentMethod), "checkout-consumer-1")).thenResolve({
+        instrumentID: "fake-payment-token",
+        scheme: "VISA",
+        bin: "424242",
+        issuer: "",
+        cardType: "CREDIT",
+      });
+
+      when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
+
+      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+        id: "fake-payment-1",
+        response_code: "100000",
+        response_summary: "Approved",
+        risk: {
+          flagged: false,
+        },
+        bin: "424242",
+      });
+
+      when(creditCardService.getBINDetails("424242")).thenResolve(null);
+      when(creditCardService.updateBinData(anything())).thenResolve();
+
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+
+      expect(response.updatedConsumerData).toBeTruthy();
+      expect(response.newPaymentMethod).toBeTruthy();
+      expect(response.updatedConsumerData.paymentMethods.length).toBe(1);
+      expect(response.updatedConsumerData.paymentMethods[0]).toStrictEqual({
+        type: PaymentMethodType.CARD,
+        imageUri: "https://image.noba.com",
+        paymentToken: "fake-payment-token",
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        cardData: {
+          cardType: "CREDIT",
+          scheme: "VISA",
+          first6Digits: "424242",
+          last4Digits: "4242",
+          authCode: "100000",
+          authReason: "Approved",
+        },
+        status: PaymentMethodStatus.APPROVED,
+        name: "Personal Card",
+      });
+    });
+
+    it("should add credit card that was previously deleted", async () => {
+      const paymentMethod: AddPaymentMethodDTO = createFakePaymentMethodRequest();
+
+      const consumer = createFakeConsumerRecord(
+        [
+          {
+            providerID: PaymentProvider.CHECKOUT,
+            providerCustomerID: "checkout-consumer-1",
+          },
+        ],
+        [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-payment-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            status: PaymentMethodStatus.DELETED,
+          },
+        ],
       );
       when(checkoutClient.addCreditCardPaymentMethod(deepEqual(paymentMethod), "checkout-consumer-1")).thenResolve({
         instrumentID: "fake-payment-token",

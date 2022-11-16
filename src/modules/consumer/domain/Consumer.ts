@@ -10,7 +10,7 @@ import { PartnerDetails } from "./PartnerDetails";
 import { CardData, PaymentMethod } from "./PaymentMethod";
 import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
-import { DocumentVerificationStatus, KYCStatus } from "./VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus } from "./VerificationStatus";
 
 export interface ConsumerProps extends VersioningInfo {
   _id: string;
@@ -160,7 +160,8 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
 
   public getPaymentMethodByID(paymentMethodID: string): PaymentMethod {
     const paymentMethodList: PaymentMethod[] = this.props.paymentMethods.filter(
-      paymentMethod => paymentMethod.paymentToken === paymentMethodID,
+      paymentMethod =>
+        paymentMethod.paymentToken === paymentMethodID && paymentMethod.status !== PaymentMethodStatus.DELETED,
     );
 
     if (paymentMethodList.length === 0) {

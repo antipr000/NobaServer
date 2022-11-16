@@ -1468,5 +1468,70 @@ describe("ConsumerController", () => {
 
       expect(response.status).toBe(UserState.PERMANENT_HOLD);
     });
+
+    it("should return user status as ACTION_REQUIRED, paymentMethodStatus as NOT_SUBMITTED and cryptoWalletStatus as NOT_SUBMITTED", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        isSuspectedFraud: false,
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        cryptoWallets: [
+          {
+            address: "wallet-1",
+            partnerID: "fake-partner-1",
+            status: WalletStatus.DELETED,
+            isPrivate: false,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.DELETED,
+          },
+        ],
+        verificationData: {
+          kycVerificationStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          verificationProvider: VerificationProviders.SARDINE,
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
+        Partner.createPartner({
+          name: "Test Partner",
+          _id: "fake-partner-1",
+        }),
+      );
+      const response = await consumerController.getConsumer(
+        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { user: { entity: consumer } },
+      );
+
+      expect(response.status).toBe(UserState.ACTION_REQUIRED);
+      expect(response.walletStatus).toBe(AggregatedWalletState.NOT_SUBMITTED);
+      expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.NOT_SUBMITTED);
+      expect(response.paymentMethods).toHaveLength(0);
+      expect(response.cryptoWallets).toHaveLength(0);
+      expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
+      expect(response.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.NOT_REQUIRED);
+    });
   });
 });

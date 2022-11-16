@@ -247,6 +247,11 @@ export class ConsumerService {
     */
 
     const paymentMethod = consumer.getPaymentMethodByID(transaction.props.fiatPaymentInfo.paymentMethodID);
+
+    if (paymentMethod === null) {
+      throw new BadRequestException("Payment method does not exist for user");
+    }
+
     if (paymentMethod.paymentProviderID === PaymentProvider.CHECKOUT) {
       return this.paymentService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     } else {
@@ -263,25 +268,21 @@ export class ConsumerService {
     const paymentMethod = consumer.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken === paymentToken,
     );
-    if (paymentMethod.length === 0) {
+    if (paymentMethod.length === 0 || paymentMethod[0].status === PaymentMethodStatus.DELETED) {
       throw new NotFoundException("Payment Method id not found");
-    }
-
-    const paymentProviderID = paymentMethod[0].paymentProviderID;
-
-    if (paymentProviderID === PaymentProvider.CHECKOUT) {
-      await this.paymentService.removePaymentMethod(paymentToken);
-    } else {
-      throw new NotFoundException("Payment provider not found");
     }
 
     const filteredPaymentMethods = consumer.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken !== paymentToken,
     );
 
+    const deletedPaymentMethod = paymentMethod[0];
+
+    deletedPaymentMethod.status = PaymentMethodStatus.DELETED;
+
     const updatedConsumer: ConsumerProps = {
       ...consumer.props,
-      paymentMethods: filteredPaymentMethods,
+      paymentMethods: [...filteredPaymentMethods, deletedPaymentMethod],
     };
 
     const result = await this.updateConsumer(updatedConsumer);
@@ -308,7 +309,8 @@ export class ConsumerService {
   async getPaymentMethodProvider(consumerId: string, paymentToken: string): Promise<PaymentProvider> {
     const consumer = await this.getConsumer(consumerId);
     const paymentMethod = consumer.props.paymentMethods.filter(
-      paymentMethod => paymentMethod.paymentToken === paymentToken,
+      paymentMethod =>
+        paymentMethod.paymentToken === paymentToken && paymentMethod.status !== PaymentMethodStatus.DELETED,
     );
     if (paymentMethod.length === 0) {
       throw new NotFoundException(`Payment method with token ${paymentToken} not found for consumer: ${consumerId}`);
@@ -324,7 +326,9 @@ export class ConsumerService {
     );
 
     const currentPaymentMethod = consumer.props.paymentMethods.filter(
-      existingPaymentMethod => existingPaymentMethod.paymentToken === paymentMethod.paymentToken,
+      existingPaymentMethod =>
+        existingPaymentMethod.paymentToken === paymentMethod.paymentToken &&
+        paymentMethod.status !== PaymentMethodStatus.DELETED,
     );
 
     if (currentPaymentMethod.length === 0) {
@@ -359,6 +363,11 @@ export class ConsumerService {
   async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number, partnerID: string) {
     // Verify if the otp is correct
     const cryptoWallet = this.getCryptoWallet(consumer, walletAddress, partnerID);
+
+    if (cryptoWallet === null) {
+      throw new BadRequestException("Crypto wallet does not exist for user");
+    }
+
     const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier, partnerID);
     const currentDateTime: number = new Date().getTime();
 
@@ -389,7 +398,7 @@ export class ConsumerService {
 
   getCryptoWallet(consumer: Consumer, address: string, partnerID: string): CryptoWallet {
     const cryptoWallets = consumer.props.cryptoWallets.filter(
-      wallet => wallet.address === address && wallet.partnerID === partnerID,
+      wallet => wallet.address === address && wallet.partnerID === partnerID && wallet.status !== WalletStatus.DELETED,
     );
 
     if (cryptoWallets.length === 0) {
@@ -445,9 +454,19 @@ export class ConsumerService {
         existingCryptoWallet.address !== cryptoWalletAddress || existingCryptoWallet.partnerID !== partnerID,
     );
 
+    const currentWallet = consumer.props.cryptoWallets.filter(
+      cryptoWallet => cryptoWallet.address === cryptoWalletAddress && cryptoWallet.partnerID === partnerID,
+    )[0];
+
+    if (!currentWallet) {
+      throw new NotFoundException("Crypto wallet not found for user");
+    }
+
+    currentWallet.status = WalletStatus.DELETED;
+
     const updatedConsumer = await this.updateConsumer({
       ...consumer.props,
-      cryptoWallets: [...otherCryptoWallets],
+      cryptoWallets: [...otherCryptoWallets, currentWallet],
     });
     return updatedConsumer;
   }

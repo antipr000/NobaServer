@@ -652,6 +652,73 @@ describe("ConsumerService", () => {
       expect(response).toStrictEqual(paymentRequestResponse);
     });
 
+    it("should throw error when payment method is DELETED", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+      const paymentToken = "fake-token";
+      const paymentMethod: PaymentMethod = {
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: paymentToken,
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+        },
+        imageUri: "fake-uri",
+        status: PaymentMethodStatus.DELETED,
+      };
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [paymentMethod],
+        cryptoWallets: [],
+      });
+
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-id",
+        userId: consumer.props._id,
+        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
+        fiatPaymentInfo: {
+          paymentMethodID: paymentToken,
+          isCompleted: false,
+          isApproved: false,
+          isFailed: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        leg1Amount: 1000,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        partnerID: partnerId,
+        lastProcessingTimestamp: Date.now().valueOf(),
+        lastStatusUpdateTimestamp: Date.now().valueOf(),
+      });
+
+      expect(async () => await consumerService.requestPayment(consumer, transaction)).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(async () => await consumerService.requestPayment(consumer, transaction)).rejects.toThrow(
+        "Payment method does not exist for user",
+      );
+    });
+
     it("should throw error when payment provider is not supported", async () => {
       const email = "mock-user@noba.com";
       const partnerId = "partner-1";
@@ -768,16 +835,16 @@ describe("ConsumerService", () => {
         cryptoWallets: [],
       });
 
-      try {
-        await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(NotFoundException);
-        expect(e.message).toBe("Payment Method id not found");
-      }
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+        NotFoundException,
+      );
+
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+        "Payment Method id not found",
+      );
     });
 
-    it("should throw error when payment provider is not valid", async () => {
+    it("should throw error when payment method is deleted for consumer", async () => {
       const email = "mock-user@noba.com";
       const partnerId = "partner-1";
       const paymentToken = "fake-token";
@@ -802,25 +869,26 @@ describe("ConsumerService", () => {
         paymentMethods: [
           {
             type: PaymentMethodType.CARD,
-            paymentProviderID: "FakeProvider" as any,
+            paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: paymentToken,
             cardData: {
               first6Digits: "123456",
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            status: PaymentMethodStatus.DELETED,
           },
         ],
         cryptoWallets: [],
       });
 
-      try {
-        await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(NotFoundException);
-        expect(e.message).toBe("Payment provider not found");
-      }
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+        NotFoundException,
+      );
+
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+        "Payment Method id not found",
+      );
     });
 
     it("should delete payment method successfully", async () => {
@@ -857,6 +925,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [],
@@ -864,7 +933,21 @@ describe("ConsumerService", () => {
 
       const updatedConsumer = Consumer.createConsumer({
         ...consumer.props,
-        paymentMethods: [],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            status: PaymentMethodStatus.DELETED,
+          },
+        ],
       });
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -873,7 +956,7 @@ describe("ConsumerService", () => {
 
       const response = await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
       expect(response).toStrictEqual(updatedConsumer);
-      expect(response.props.paymentMethods.length).toBe(0);
+      expect(response.props.paymentMethods.length).toBe(1);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_CARD_DELETED_EVENT,
@@ -978,6 +1061,51 @@ describe("ConsumerService", () => {
         async () => await consumerService.getPaymentMethodProvider(consumer.props._id, "new-fake-payment-token"),
       ).rejects.toThrow(NotFoundException);
     });
+
+    it("throws NotFoundException when payment method is deleted for consumer", async () => {
+      const paymentToken = "fake-payment-token";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fake+email@noba.com",
+        displayEmail: "fake+email@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: "fake-partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            status: PaymentMethodStatus.DELETED,
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+
+      expect(
+        async () => await consumerService.getPaymentMethodProvider(consumer.props._id, paymentToken),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe("getFiatPaymentStatus", () => {
@@ -1074,7 +1202,7 @@ describe("ConsumerService", () => {
       verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
     });
 
-    it("should update payment method for consumer", async () => {
+    it("should throw error when paymentToken does not exist for consumer", async () => {
       const email = "mock-user@noba.com";
       const partnerId = "partner-1";
       const paymentToken = "fake-token";
@@ -1127,16 +1255,74 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      expect(
+        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+      ).rejects.toThrow(BadRequestException);
+      expect(
+        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+      ).rejects.toThrow(`Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`);
+    });
 
-      try {
-        await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.message).toBe(
-          `Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`,
-        );
-      }
+    it("should throw error when payment method is deleted for consumer", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+      const paymentToken = "fake-token";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            status: PaymentMethodStatus.DELETED,
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      const updatedPaymentMethod: PaymentMethod = {
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: paymentToken,
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+          cardType: "VISA",
+        },
+        imageUri: "fake-uri",
+        name: "New Fake Name",
+      };
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      expect(
+        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+      ).rejects.toThrow(BadRequestException);
+      expect(
+        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+      ).rejects.toThrow(`Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`);
     });
   });
 
@@ -1237,6 +1423,63 @@ describe("ConsumerService", () => {
       expect(response).toStrictEqual(updatedConsumer);
 
       verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
+    });
+
+    it("throws BadRequestException when cryptoWallet is deleted", async () => {
+      const email = "mock-user@noba.com";
+      const walletAddress = "fake-wallet-address";
+      const otp = 123456;
+      const partnerId = "fake-partner";
+
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: walletAddress,
+            status: WalletStatus.DELETED,
+            partnerID: partnerId,
+            isPrivate: false,
+          },
+        ],
+      });
+
+      expect(
+        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId),
+      ).rejects.toThrow(BadRequestException);
+      expect(
+        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId),
+      ).rejects.toThrow("Crypto wallet does not exist for user");
     });
 
     // it("throws an error for a sanctioned wallet", async () => {
@@ -1500,10 +1743,61 @@ describe("ConsumerService", () => {
       const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address", "partner-1");
       expect(response).toStrictEqual(null);
     });
+
+    it("returns null when wallet is deleted for consumer", async () => {
+      const email = "mock-user@noba.com";
+      const walletAddress = "fake-wallet-address";
+
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: walletAddress,
+            status: WalletStatus.DELETED,
+            isPrivate: false,
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const response = await consumerService.getCryptoWallet(consumer, walletAddress, "partner-1");
+      expect(response).toStrictEqual(null);
+    });
   });
 
   describe("removeCryptoWallet", () => {
-    it("Removes crypto wallet for user without touching other wallets", async () => {
+    it("Sets wallet status to DELETED for user without touching other wallets", async () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
@@ -1582,6 +1876,13 @@ describe("ConsumerService", () => {
             status: WalletStatus.PENDING,
             isPrivate: false,
             partnerID: "54321",
+          },
+          {
+            walletName: "Test wallet",
+            address: walletAddress,
+            status: WalletStatus.DELETED,
+            isPrivate: false,
+            partnerID: partnerID,
           },
         ],
       });
@@ -1699,6 +2000,65 @@ describe("ConsumerService", () => {
         ...cryptoWallet,
         partnerID: partner2Id,
       });
+
+      expect(response).toBe(updatedConsumer);
+    });
+
+    it("should set wallet status to PENDING when wallet status is DELETED and method is called", async () => {
+      const partner1Id = "fake-partner-id-1";
+
+      const cryptoWallet: CryptoWallet = {
+        address: "fake-wallet-address",
+        status: WalletStatus.DELETED,
+        partnerID: partner1Id,
+        isPrivate: false,
+      };
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "fake+email@noba.com",
+        displayEmail: "fake+email@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partner1Id,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [],
+        cryptoWallets: [cryptoWallet],
+      });
+
+      const toAddCryptoWallet: CryptoWallet = {
+        address: "fake-wallet-address",
+        status: WalletStatus.PENDING,
+        partnerID: partner1Id,
+        isPrivate: false,
+      };
+
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        cryptoWallets: [toAddCryptoWallet],
+      });
+
+      const partner: Partner = Partner.createPartner({
+        _id: partner1Id,
+        name: "Fake Partner",
+        config: {
+          privateWallets: false,
+        } as any,
+      });
+      when(partnerService.getPartner(partner1Id)).thenResolve(partner);
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
+      const response = await consumerService.addOrUpdateCryptoWallet(consumer, toAddCryptoWallet);
 
       expect(response).toBe(updatedConsumer);
     });
