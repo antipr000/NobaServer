@@ -26,6 +26,7 @@ import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
 import { ConsumerAccountBalance, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
+import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { TransactionFilterOptions, TransactionStatus, TransactionType } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
@@ -35,6 +36,7 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "./exceptions/TransactionSubmissionException";
+import { LimitsService } from "./limits.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 
@@ -52,6 +54,7 @@ export class TransactionService {
     private readonly partnerService: PartnerService,
     private readonly ellipticService: EllipticService,
     private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService,
+    private readonly limitService: LimitsService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     @Inject(NotificationService) private readonly notificationService: NotificationService,
@@ -267,6 +270,14 @@ export class TransactionService {
     );
 
     const consumer = await this.consumerService.getConsumer(consumerID);
+    const transactionLimits = await this.limitService.canMakeTransaction(consumer, fiatAmount);
+    if (transactionLimits.status !== TransactionAllowedStatus.ALLOWED) {
+      this.logger.error(`Transaction limit error: ${JSON.stringify(transactionLimits)}`);
+      throw new TransactionSubmissionException(
+        this.convertLimitErrorToTransactionSubmissionException(transactionLimits.status),
+      );
+    }
+
     const newTransaction: Transaction = Transaction.createTransaction({
       userId: consumerID,
       sessionKey: sessionKey,
@@ -590,5 +601,24 @@ export class TransactionService {
       partner.props.config.cryptocurrencyAllowList.length == 0 ||
       partner.props.config.cryptocurrencyAllowList.includes(cryptocurrency)
     );
+  }
+
+  private convertLimitErrorToTransactionSubmissionException(
+    status: TransactionAllowedStatus,
+  ): TransactionSubmissionFailureExceptionText {
+    switch (status) {
+      case TransactionAllowedStatus.MONTHLY_LIMIT_REACHED:
+        return TransactionSubmissionFailureExceptionText.MONTHLY_LIMIT_REACHED;
+      case TransactionAllowedStatus.DAILY_LIMIT_REACHED:
+        return TransactionSubmissionFailureExceptionText.DAILY_LIMIT_REACHED;
+      case TransactionAllowedStatus.WEEKLY_LIMIT_REACHED:
+        return TransactionSubmissionFailureExceptionText.WEEKLY_LIMIT_REACHED;
+      case TransactionAllowedStatus.TRANSACTION_TOO_SMALL:
+        return TransactionSubmissionFailureExceptionText.TRANSACTION_TOO_SMALL;
+      case TransactionAllowedStatus.TRANSACTION_TOO_LARGE:
+        return TransactionSubmissionFailureExceptionText.TRANSACTION_TOO_LARGE;
+      default:
+        return TransactionSubmissionFailureExceptionText.UNKNOWN_LIMIT_ERROR;
+    }
   }
 }
