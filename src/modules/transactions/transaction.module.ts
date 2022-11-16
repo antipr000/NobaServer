@@ -30,7 +30,7 @@ import { TransactionRepoModule } from "./repo/transaction.repo.module";
     TransactionRepoModule,
   ],
   controllers: [TransactionController],
-  providers: [TransactionService, LimitsService, ZeroHashService, SquidService, SanctionedCryptoWalletService],
+  providers: [LimitsService, TransactionService, ZeroHashService, SquidService, SanctionedCryptoWalletService],
   exports: [TransactionService], //Need to access in PublicController
 })
 export class TransactionModule {}

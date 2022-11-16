@@ -272,7 +272,7 @@ export class TransactionService {
     const consumer = await this.consumerService.getConsumer(consumerID);
     const transactionLimits = await this.limitService.canMakeTransaction(consumer, fiatAmount);
     if (transactionLimits.status !== TransactionAllowedStatus.ALLOWED) {
-      this.logger.error(`Transaction limit error: ${JSON.stringify(transactionLimits)}`);
+      this.logger.info(`Transaction limit error: ${JSON.stringify(transactionLimits)}`);
       throw new TransactionSubmissionException(
         this.convertLimitErrorToTransactionSubmissionException(transactionLimits.status),
       );
