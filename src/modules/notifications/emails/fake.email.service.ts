@@ -9,6 +9,6 @@ export class FakeEmailService implements EmailService {
   constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {}
 
   async sendEmail(request: EmailRequest): Promise<void> {
-    this.logger.info(`Faking the email sending with following parameters: ${JSON.stringify(request)}`);
+    this.logger.debug(`Faking the email sending with following parameters: ${JSON.stringify(request)}`);
   }
 }
