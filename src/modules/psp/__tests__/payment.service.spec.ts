@@ -185,6 +185,7 @@ describe("PaymentService", () => {
         name: "Bank Account",
         accountType: BankAccountType.CHECKING,
         wireRoutingNumber: "987654321",
+        institutionID: "inst-id",
       });
       when(
         plaidClient.createProcessorToken(
@@ -292,6 +293,7 @@ describe("PaymentService", () => {
         name: "Bank Account",
         accountType: BankAccountType.CHECKING,
         wireRoutingNumber: "987654321",
+        institutionID: "inst-id",
       });
       when(
         plaidClient.createProcessorToken(
