@@ -110,7 +110,7 @@ squid:
 
 configuration:
   lowAmountThreshold: .01
-  highAmountThreshold: 200
+  highAmountThreshold: 75
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
 
