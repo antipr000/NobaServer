@@ -844,6 +844,52 @@ describe("ConsumerService", () => {
       );
     });
 
+    it("should throw error when payment provider is not valid", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+      const paymentToken = "fake-token";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: "FakeProvider" as any,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      try {
+        await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+        expect(e.message).toBe("Payment provider not found");
+      }
+    });
+
     it("should throw error when payment method is deleted for consumer", async () => {
       const email = "mock-user@noba.com";
       const partnerId = "partner-1";

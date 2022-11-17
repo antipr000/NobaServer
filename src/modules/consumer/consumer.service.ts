@@ -271,6 +271,12 @@ export class ConsumerService {
     if (paymentMethod.length === 0 || paymentMethod[0].status === PaymentMethodStatus.DELETED) {
       throw new NotFoundException("Payment Method id not found");
     }
+    const paymentProviderID = paymentMethod[0].paymentProviderID;
+    if (paymentProviderID === PaymentProvider.CHECKOUT) {
+      await this.paymentService.removePaymentMethod(paymentToken);
+    } else {
+      throw new NotFoundException("Payment provider not found");
+    }
 
     const filteredPaymentMethods = consumer.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken !== paymentToken,
