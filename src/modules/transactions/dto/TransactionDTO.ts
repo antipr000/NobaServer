@@ -71,6 +71,9 @@ export class TransactionDTO {
   @ApiProperty({ description: "All amounts and currency information related to this transaction" })
   amounts: TransactionAmountsDTO;
 
-  @ApiProperty({ enum: TransactionType, description: "Type of the transaction. Can be onramp', 'offramp', 'wallet'" })
+  @ApiProperty({
+    enum: TransactionType,
+    description: "Type of the transaction. Can be one of 'onramp', 'offramp', 'wallet', 'swap'",
+  })
   type: TransactionType;
 }

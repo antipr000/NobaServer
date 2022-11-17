@@ -4,6 +4,7 @@ import { Transaction } from "../domain/Transaction";
 import { TransactionDTO } from "../dto/TransactionDTO";
 
 export class TransactionMapper implements Mapper<Transaction> {
+  // TODO: Move this calculation as a part of transaction object
   private static calculateTotalFees(processingFee: number, networkFee: number, nobaFee: number): number {
     return (
       Utils.roundTo2DecimalNumber(processingFee) +
