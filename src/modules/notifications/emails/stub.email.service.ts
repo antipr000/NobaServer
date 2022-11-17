@@ -5,7 +5,7 @@ import { EmailService } from "./email.service";
 import { EmailRequest } from "../domain/EmailTypes";
 
 @Injectable()
-export class FakeEmailService implements EmailService {
+export class StubEmailService implements EmailService {
   constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {}
 
   async sendEmail(request: EmailRequest): Promise<void> {

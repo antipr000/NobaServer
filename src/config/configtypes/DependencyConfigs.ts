@@ -5,6 +5,6 @@ export interface DependencyConfigs {
 }
 
 export enum EmailClient {
-  FAKE = "FAKE",
+  STUB = "STUB",
   SENDGRID = "SENDGRID",
 }

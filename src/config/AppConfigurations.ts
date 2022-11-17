@@ -413,7 +413,7 @@ async function configureDependencies(
     throw Error(errorMessage);
   }
 
-  const allowedEmailClients = [EmailClient.FAKE, EmailClient.SENDGRID];
+  const allowedEmailClients = [EmailClient.STUB, EmailClient.SENDGRID];
   if (!allowedEmailClients.includes(dependencyConfigs.emailClient)) {
     const errorMessage = `"${DEPENDENCY_EMAIL_CLIENT}" should be one of ${allowedEmailClients}`;
     throw Error(errorMessage);

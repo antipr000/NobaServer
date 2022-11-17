@@ -138,7 +138,7 @@ plaid:
   awsSecretNameForSecretKey: ""
 
 dependencies:
-  emailClient: "FAKE"
+  emailClient: "STUB"
 
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"
