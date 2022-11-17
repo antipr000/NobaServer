@@ -70,6 +70,7 @@ import { getMockNotificationServiceWithDefaults } from "../../../modules/notific
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { getMockLimitServiceWithDefaults } from "../mocks/mock.limit.service";
 import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
+import { Utils } from "../../../core/utils/Utils";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -2905,12 +2906,18 @@ describe("TransactionService", () => {
         partnerID: "fake-partner",
         destinationWalletAddress: FAKE_VALID_WALLET,
         transactionTimestamp: new Date(),
+        type: TransactionType.ONRAMP,
+        nobaFee: 0.01,
+        processingFee: 0.01,
+        networkFee: 0.02,
       });
       when(transactionRepo.getTransaction(transaction.props._id)).thenResolve(transaction);
 
       const transactionDTO = transactionMapper.toDTO(transaction);
       const response = await transactionService.getTransaction(transaction.props._id);
       expect(response).toStrictEqual(transactionDTO);
+      expect(response.type).toBe(TransactionType.ONRAMP);
+      expect(response.amounts.totalFee).toBe(Utils.roundTo2DecimalNumber(0.01) * 2 + Utils.roundTo2DecimalNumber(0.02));
     });
   });
 

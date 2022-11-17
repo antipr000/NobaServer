@@ -1,8 +1,17 @@
+import { Utils } from "../../../core/utils/Utils";
 import { Mapper } from "../../../core/infra/Mapper";
 import { Transaction } from "../domain/Transaction";
 import { TransactionDTO } from "../dto/TransactionDTO";
 
 export class TransactionMapper implements Mapper<Transaction> {
+  private static calculateTotalFees(processingFee: number, networkFee: number, nobaFee: number): number {
+    return (
+      Utils.roundTo2DecimalNumber(processingFee) +
+      Utils.roundTo2DecimalNumber(networkFee) +
+      Utils.roundTo2DecimalNumber(nobaFee)
+    );
+  }
+
   toDTO(t: Transaction): TransactionDTO {
     const props = t.props;
     return {
@@ -15,6 +24,7 @@ export class TransactionMapper implements Mapper<Transaction> {
       destinationWalletAddress: props.destinationWalletAddress,
       partnerID: props.partnerID,
       paymentMethodID: props.fiatPaymentInfo.paymentMethodID,
+      type: props.type,
       amounts: {
         baseAmount: props.leg1Amount, // Will need a new actual baseAmount property when we take other fiat currencies
         fiatAmount: props.leg1Amount,
@@ -27,6 +37,7 @@ export class TransactionMapper implements Mapper<Transaction> {
         nobaFee: props.nobaFee,
         totalFiatPrice: props.leg1Amount,
         conversionRate: props.exchangeRate,
+        totalFee: TransactionMapper.calculateTotalFees(props.processingFee, props.networkFee, props.nobaFee),
       },
     };
   }

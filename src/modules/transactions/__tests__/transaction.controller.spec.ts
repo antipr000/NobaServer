@@ -19,19 +19,23 @@ import { getMockTransactionServiceWithDefaults } from "../mocks/mock.transaction
 import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQueryDTO";
 import { CurrencyType } from "../../../modules/common/domain/Types";
-import { TransactionType } from "../domain/Types";
+import { TransactionStatus, TransactionType } from "../domain/Types";
 import { PartnerService } from "../../../modules/partner/partner.service";
 import { Partner } from "../../../modules/partner/domain/Partner";
 import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
 import { X_NOBA_API_KEY } from "../../../modules/auth/domain/HeaderConstants";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { Transaction } from "../domain/Transaction";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
+import { TransactionMapper } from "../mapper/TransactionMapper";
 
 describe("TransactionController", () => {
   let transactionService: TransactionService;
   let transactionController: TransactionController;
   let limitsService: LimitsService;
   let partnerService: PartnerService;
+  let transactionMapper: TransactionMapper;
 
   const partner = Partner.createPartner({
     _id: "test-partner-1234",
@@ -51,6 +55,7 @@ describe("TransactionController", () => {
   });
 
   beforeAll(async () => {
+    transactionMapper = new TransactionMapper();
     transactionService = getMockTransactionServiceWithDefaults();
     limitsService = getMockLimitsServiceWithDefaults();
     partnerService = getMockPartnerServiceWithDefaults();
@@ -158,6 +163,65 @@ describe("TransactionController", () => {
       );
 
       expect(response).toStrictEqual(transactionQuote);
+    });
+  });
+
+  describe("GET /transactions/:transactionID", () => {
+    it("gets transaction", async () => {
+      const transaction = Transaction.createTransaction({
+        _id: "fake-transaction-1",
+        transactionID: "faketransactionid",
+        userId: consumer.props._id,
+        sessionKey: "fake-session-1",
+        fiatPaymentInfo: {
+          paymentMethodID: "fake-payment-id",
+          isCompleted: true,
+          isApproved: true,
+          isFailed: false,
+          details: [],
+          paymentProvider: PaymentProvider.CHECKOUT,
+        },
+        sourceWalletAddress: "fake-source-wallet",
+        destinationWalletAddress: "fake-destination-wallet",
+        leg1Amount: 100,
+        leg2Amount: 0.1,
+        leg1: "USD",
+        leg2: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        type: TransactionType.ONRAMP,
+        partnerID: partner.props._id,
+        tradeQuoteID: "fake-trade-quote-id",
+        nobaFee: 0.01,
+        processingFee: 0.02,
+        networkFee: 0.01,
+        exchangeRate: 100,
+        buyRate: 98,
+        transactionStatus: TransactionStatus.COMPLETED,
+        // TODO(#348): Evaluate if this timestamp is required.
+        transactionTimestamp: new Date(),
+        settledTimestamp: new Date(),
+        zhWithdrawalID: "withdrawal-1234",
+        executedQuoteTradeID: "executed-trade-1234",
+        executedQuoteSettledTimestamp: new Date().valueOf(),
+        executedCrypto: 0.1,
+        amountPreSpread: 98,
+
+        // Denotes the timestamp when the status of this tranaction is last updated.
+        // The data-type is 'number' instead of 'string' to optimise index space used.
+        lastProcessingTimestamp: new Date().valueOf(),
+        lastStatusUpdateTimestamp: new Date().valueOf(),
+      });
+
+      const transactionDTO = transactionMapper.toDTO(transaction);
+
+      when(transactionService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
+
+      const result = await transactionController.getTransaction(
+        { user: { entity: consumer, partnerId: partner.props._id } },
+        transaction.props._id,
+        consumer,
+      );
+      expect(result).toStrictEqual(transactionDTO);
     });
   });
 });
