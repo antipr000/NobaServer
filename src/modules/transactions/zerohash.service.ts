@@ -110,7 +110,7 @@ export class ZeroHashService {
       this.logger.debug(`Received response: ${JSON.stringify(data)}`);
       return data;
     } catch (err) {
-      this.logger.error(`Error in ZeroHash request: ${err.message} - ${err.toJSON()}`);
+      this.logger.error(`Error in ZeroHash request: ${err.message}}`);
 
       // WARNING: Do not JSON.stringify() 'err' as it results in a "circular structure" error message in the AWS envs w/ proxy
       if (err.response) {
