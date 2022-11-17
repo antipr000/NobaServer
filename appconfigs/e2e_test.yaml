@@ -137,6 +137,9 @@ plaid:
   secretKey: "3efe6f2aef4a7ab5d609149f96a35b"
   awsSecretNameForSecretKey: ""
 
+dependencies:
+  emailClient: "FAKE"
+
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"

@@ -133,6 +133,9 @@ plaid:
   secretKey: ""
   awsSecretNameForSecretKey: "PROD_PLAID_SECRET_KEY"
 
+dependencies:
+  emailClient: "SENDGRID"
+
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"

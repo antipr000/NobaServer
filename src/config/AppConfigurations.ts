@@ -106,6 +106,8 @@ import {
   CHECKOUT_PROCESSING_CHANNEL_ID,
   CHECKOUT_AWS_SECRET_NAME_FOR_WEBHOOK_SIGNATURE_KEY,
   CHECKOUT_WEBHOOK_SIGNATURE_KEY,
+  DEPENDENCY_CONFIG_KEY,
+  DEPENDENCY_EMAIL_CLIENT,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -123,6 +125,7 @@ import { EllipticConfigs } from "./configtypes/EllipticConfig";
 import { SquidConfigs } from "./configtypes/SquidConfigs";
 import { PartnerConfigs } from "./configtypes/PartnerConfigs";
 import { PlaidConfigs } from "./configtypes/PlaidConfigs";
+import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -268,6 +271,7 @@ async function configureAllVendorCredentials(
     configureSquidCredentials,
     configurePartnerConfigurations,
     configurePlaidCredentials,
+    configureDependencies,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -392,6 +396,30 @@ async function configureSendgridCredentials(
   sendgridConfigs.apiKey = await getParameterValue(sendgridConfigs.awsSecretNameForApiKey, sendgridConfigs.apiKey);
 
   configs[SENDGRID_CONFIG_KEY] = sendgridConfigs;
+  return configs;
+}
+
+async function configureDependencies(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const dependencyConfigs: DependencyConfigs = configs[DEPENDENCY_CONFIG_KEY];
+
+  if (dependencyConfigs === undefined) {
+    const errorMessage =
+      "\n'Dependencies' configurations are required. Please configure the dependencies in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${DEPENDENCY_CONFIG_KEY}" and populate "${DEPENDENCY_EMAIL_CLIENT}"\n`;
+
+    throw Error(errorMessage);
+  }
+
+  const allowedEmailClients = [EmailClient.FAKE, EmailClient.SENDGRID];
+  if (!allowedEmailClients.includes(dependencyConfigs.emailClient)) {
+    const errorMessage = `"${DEPENDENCY_EMAIL_CLIENT}" should be one of ${allowedEmailClients}`;
+    throw Error(errorMessage);
+  }
+
+  configs[DEPENDENCY_CONFIG_KEY] = dependencyConfigs;
   return configs;
 }
 

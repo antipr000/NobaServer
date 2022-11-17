@@ -1,7 +1,4 @@
 import { Inject, Injectable } from "@nestjs/common";
-import sgMail from "@sendgrid/mail";
-import { SendGridConfigs } from "../../config/configtypes/SendGridConfigs";
-import { SENDGRID_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyService } from "../common/currency.service";
 import { Logger } from "winston";
@@ -28,22 +25,22 @@ import { SendCryptoFailedEvent } from "./events/SendCryptoFailedEvent";
 import { SendOrderExecutedEvent } from "./events/SendOrderExecutedEvent";
 import { SendOrderFailedEvent } from "./events/SendOrderFailedEvent";
 import { SendHardDeclineEvent } from "./events/SendHardDeclineEvent";
+import { EmailService } from "./emails/email.service";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
 const NOBA_COMPLIANCE_EMAIL = "Noba Compliance <compliance@noba.com>";
+
 @Injectable()
-export class EmailService {
+export class EventHandler {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
   constructor(
     configService: CustomConfigService,
+    @Inject("EmailService") private readonly emailService: EmailService,
     @Inject(CurrencyService) private readonly currencyService: CurrencyService,
-  ) {
-    const sendGridApiKey = configService.get<SendGridConfigs>(SENDGRID_CONFIG_KEY).apiKey;
-    sgMail.setApiKey(sendGridApiKey);
-  }
+  ) {}
 
   @OnEvent(`email.${NotificationEventType.SEND_OTP_EVENT}`)
   public async sendOtp(payload: SendOtpEvent) {
@@ -58,7 +55,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`)
@@ -75,7 +72,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_WELCOME_MESSAGE_EVENT}`)
@@ -90,7 +87,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_US_EVENT}`)
@@ -105,7 +102,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT}`)
@@ -120,7 +117,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_DENIED_EVENT}`)
@@ -136,7 +133,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
@@ -155,7 +152,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT}`)
@@ -170,7 +167,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT}`)
@@ -185,7 +182,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT}`)
@@ -200,7 +197,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDED_EVENT}`)
@@ -218,7 +215,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT}`)
@@ -235,7 +232,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CARD_DELETED_EVENT}`)
@@ -253,7 +250,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT}`)
@@ -289,7 +286,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CRYPTO_FAILED_EVENT}`)
@@ -326,7 +323,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT}`)
@@ -365,7 +362,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_FAILED_EVENT}`)
@@ -402,7 +399,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_HARD_DECLINE_EVENT}`)
@@ -424,7 +421,7 @@ export class EmailService {
       },
     };
 
-    await sgMail.send(msg);
+    await this.emailService.sendEmail(msg);
   }
 
   private async getCryptocurrencyNameFromTicker(ticker: string): Promise<string> {
