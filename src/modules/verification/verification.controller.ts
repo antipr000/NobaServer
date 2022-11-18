@@ -329,7 +329,7 @@ export class VerificationWebhookController {
     const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
     const computedSignature = hmac.update(JSON.stringify(request.body)).digest("hex");
     if (sardineSignature !== computedSignature) {
-      this.logger.debug(
+      this.logger.error(
         `sardineSignature: ${sardineSignature}, hexString: ${computedSignature}, requestBody: ${JSON.stringify(
           request.body,
         )}`,
