@@ -3,6 +3,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationConfiguration } from "../partner/domain/NotificationConfiguration";
+import { WebhookType } from "../partner/domain/WebhookTypes";
 import { PartnerService } from "../partner/partner.service";
 import { NotificationPayload } from "./domain/NotificationPayload";
 import { NotificationEventHandler, NotificationEventType } from "./domain/NotificationTypes";
@@ -41,12 +42,14 @@ export class NotificationService {
 
       if (partner) {
         const notificationConfigs: NotificationConfiguration[] = partner.props.config?.notificationConfig ?? [];
+        const isWebhookConfigured = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION) != null;
 
         const filteredNotificationEvents = notificationConfigs.filter(
           notificationConfig => notificationConfig.notificationEventType === eventType,
         );
 
-        if (filteredNotificationEvents.length === 0) {
+        // If webhooks are not properly configured for the environment, then don't even look for webhooks in config
+        if (!isWebhookConfigured || filteredNotificationEvents.length === 0) {
           notificationEvent = {
             notificationEventType: eventType,
             notificationEventHandler: [NotificationEventHandler.EMAIL],
