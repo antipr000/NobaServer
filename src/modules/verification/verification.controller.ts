@@ -37,7 +37,7 @@ import { DocumentsFileUploadRequestDTO, DocVerificationRequestDTO } from "./dto/
 import { IDVerificationRequestDTO } from "./dto/IDVerificationRequestDTO";
 import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { VerificationService } from "./verification.service";
-import { Public } from "../auth/public.decorator";
+import { IsNoApiKeyNeeded, Public } from "../auth/public.decorator";
 import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
 import { Consumer } from "../consumer/domain/Consumer";
 import { DeviceVerificationResponseDTO } from "./dto/DeviceVerificationResponseDTO";
@@ -260,6 +260,7 @@ export class VerificationController {
 }
 
 @Roles(Role.User)
+@IsNoApiKeyNeeded()
 @Controller("verify/webhook")
 @ApiTags("VerificationWebhooks")
 export class VerificationWebhookController {
@@ -273,7 +274,6 @@ export class VerificationWebhookController {
     this.sardineConfigs = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY);
   }
 
-  @Public()
   @Post("/document/result")
   @HttpCode(200)
   async postDocumentVerificationResult(
@@ -281,7 +281,7 @@ export class VerificationWebhookController {
     @Body() requestBody: DocumentVerificationWebhookRequestDTO,
     @Request() request: Request,
   ): Promise<DocumentVerificationResultDTO> {
-    this.logger.debug(`Received Sardine document verification webhook call: ${JSON.stringify(request.body)}`);
+    this.logger.info(`Received Sardine document verification webhook call: ${JSON.stringify(request.body)}`);
 
     // Throws an exception if invalid
     this.validateWebhookSignature(headers, request);
@@ -299,7 +299,6 @@ export class VerificationWebhookController {
     }
   }
 
-  @Public()
   @Post("/case/notification")
   @HttpCode(200)
   async postCaseNotification(
@@ -307,7 +306,7 @@ export class VerificationWebhookController {
     @Body() requestBody: CaseNotificationWebhookRequestDTO,
     @Request() request: Request,
   ): Promise<string> {
-    this.logger.debug(`Received Sardine case notification webhook call: ${JSON.stringify(request.body)}`);
+    this.logger.info(`Received Sardine case notification webhook call: ${JSON.stringify(request.body)}`);
 
     // Throws an exception if invalid
     this.validateWebhookSignature(headers, request);

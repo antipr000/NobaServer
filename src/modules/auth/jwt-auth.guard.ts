@@ -5,10 +5,13 @@ import { Observable } from "rxjs";
 import { IS_NO_API_KEY_NEEDED_KEY, IS_PUBLIC_KEY } from "./public.decorator";
 import { X_NOBA_API_KEY, X_NOBA_SIGNATURE, X_NOBA_TIMESTAMP } from "./domain/HeaderConstants";
 import { HeaderValidationService } from "./header.validation.service";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {
   @Inject() headerValidationService: HeaderValidationService;
+  @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
 
   constructor(private reflector: Reflector) {
     super();
@@ -28,8 +31,10 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
         request.url.split("?")[0], // Only take URI path, no parameters
         JSON.stringify(request.body),
       );
+      this.logger.info("Validated headers successfully");
       return true;
     } catch (e) {
+      this.logger.error(`Failed to validate headers. Reason: ${e.message}`);
       return false;
     }
   }
