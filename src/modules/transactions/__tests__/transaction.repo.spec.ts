@@ -19,6 +19,7 @@ import {
 import { CurrencyType } from "../../../../src/modules/common/domain/Types";
 import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
+import fs from "fs";
 
 const TRANSACTION_ID_PREFIX = "transaction_id_prefix";
 const TEST_NUMBER = 5;
@@ -33,6 +34,8 @@ const EUR = "EUR";
 const mkid = (id: string): string => {
   return TRANSACTION_ID_PREFIX + id;
 };
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const getAllRecordsInTransactionCollection = async (
   transactionCollection: Collection,
@@ -1035,6 +1038,236 @@ describe("MongoDBTransactionRepoTests", () => {
         details: ["All are required to be changed but 'isApproved' is still 'false'"],
         paymentID: "payment-1",
         paymentProvider: PaymentProvider.CHECKOUT,
+      });
+    });
+  });
+
+  describe("getPartnerTransactions()", () => {
+    it("should store the records in CSV format in the specified file", async () => {
+      await transactionCollection.deleteMany({});
+
+      const date1 = new Date();
+      const date2 = new Date();
+
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_1",
+        userId: "UUUUUUUUUU_1",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date1,
+        leg1Amount: 100,
+        leg1: "USD",
+        leg2Amount: 0.03,
+        leg2: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        processingFee: 14,
+        networkFee: 15,
+        nobaFee: 16,
+        discounts: {
+          fixedCreditCardFeeDiscount: 1.4,
+          dynamicCreditCardFeeDiscount: 1.5,
+          nobaFeeDiscount: 1.6,
+          networkFeeDiscount: 1.7,
+          spreadDiscount: 1.8,
+        },
+        _id: "1111111111" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_2",
+        userId: "UUUUUUUUUU_2",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date2,
+        leg2Amount: 200,
+        leg2: "USD",
+        leg1Amount: 0.23,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 24,
+        networkFee: 25,
+        nobaFee: 26,
+        discounts: {
+          fixedCreditCardFeeDiscount: 2.4,
+          dynamicCreditCardFeeDiscount: 2.5,
+          nobaFeeDiscount: 2.6,
+          networkFeeDiscount: 2.7,
+          spreadDiscount: 2.8,
+        },
+        _id: "22222222222" as any,
+      });
+
+      const filePath = `/tmp/txn-${Math.floor(Math.random() * 1000000)}.csv`;
+
+      await transactionRepo.getPartnerTransactions(
+        {
+          startDate: date1,
+          endDate: date2,
+        },
+        filePath,
+      );
+
+      const csvContent = await fs.readFileSync(filePath, { encoding: "utf8" });
+      const receivedRecords = csvContent.split("\n");
+      const expectedRecords = [
+        `PPPPPPPPP_1,TTTTTTTTT_1,UUUUUUUUUU_1,"${date1.toUTCString()}",COMPLETED,100,USD,0.03,ETH,14,15,16,1.4,1.5,1.6,1.7,1.8`,
+        `PPPPPPPPP_1,TTTTTTTTT_2,UUUUUUUUUU_2,"${date2.toUTCString()}",COMPLETED,200,USD,0.23,ETH,24,25,26,2.4,2.5,2.6,2.7,2.8`,
+      ];
+
+      expect(receivedRecords).toHaveLength(1 + 2 + 1); // HEADER + 2 RECORDS + EMPTY LINE
+      expectedRecords.forEach(record => {
+        expect(receivedRecords).toContain(record);
+      });
+    });
+
+    it("should skip the records which are after 'startDate' in CSV file", async () => {
+      await transactionCollection.deleteMany({});
+
+      const date1 = new Date();
+      await sleep(500);
+      const date2 = new Date();
+
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_1",
+        userId: "UUUUUUUUUU_1",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date1,
+        leg1Amount: 100,
+        leg1: "USD",
+        leg2Amount: 0.03,
+        leg2: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        processingFee: 14,
+        networkFee: 15,
+        nobaFee: 16,
+        discounts: {
+          fixedCreditCardFeeDiscount: 1.4,
+          dynamicCreditCardFeeDiscount: 1.5,
+          nobaFeeDiscount: 1.6,
+          networkFeeDiscount: 1.7,
+          spreadDiscount: 1.8,
+        },
+        _id: "1111111111" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_2",
+        userId: "UUUUUUUUUU_2",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date2,
+        leg2Amount: 200,
+        leg2: "USD",
+        leg1Amount: 0.23,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 24,
+        networkFee: 25,
+        nobaFee: 26,
+        discounts: {
+          fixedCreditCardFeeDiscount: 2.4,
+          dynamicCreditCardFeeDiscount: 2.5,
+          nobaFeeDiscount: 2.6,
+          networkFeeDiscount: 2.7,
+          spreadDiscount: 2.8,
+        },
+        _id: "22222222222" as any,
+      });
+
+      const filePath = `/tmp/txn-${Math.floor(Math.random() * 1000000)}.csv`;
+
+      await transactionRepo.getPartnerTransactions(
+        {
+          startDate: date2,
+          endDate: date2,
+        },
+        filePath,
+      );
+
+      const csvContent = await fs.readFileSync(filePath, { encoding: "utf8" });
+      const receivedRecords = csvContent.split("\n");
+      const expectedRecords = [
+        `PPPPPPPPP_1,TTTTTTTTT_2,UUUUUUUUUU_2,"${date2.toUTCString()}",COMPLETED,200,USD,0.23,ETH,24,25,26,2.4,2.5,2.6,2.7,2.8`,
+      ];
+
+      expect(receivedRecords).toHaveLength(1 + 1 + 1); // HEADER + 1 RECORD + EMPTY LINE
+      expectedRecords.forEach(record => {
+        expect(receivedRecords).toContain(record);
+      });
+    });
+
+    it("should skip the records which are before 'endDate' in CSV file", async () => {
+      await transactionCollection.deleteMany({});
+
+      const date1 = new Date();
+      await sleep(500);
+      const date2 = new Date();
+
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_1",
+        userId: "UUUUUUUUUU_1",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date1,
+        leg1Amount: 100,
+        leg1: "USD",
+        leg2Amount: 0.03,
+        leg2: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        processingFee: 14,
+        networkFee: 15,
+        nobaFee: 16,
+        discounts: {
+          fixedCreditCardFeeDiscount: 1.4,
+          dynamicCreditCardFeeDiscount: 1.5,
+          nobaFeeDiscount: 1.6,
+          networkFeeDiscount: 1.7,
+          spreadDiscount: 1.8,
+        },
+        _id: "1111111111" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_2",
+        userId: "UUUUUUUUUU_2",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date2,
+        leg2Amount: 200,
+        leg2: "USD",
+        leg1Amount: 0.23,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 24,
+        networkFee: 25,
+        nobaFee: 26,
+        discounts: {
+          fixedCreditCardFeeDiscount: 2.4,
+          dynamicCreditCardFeeDiscount: 2.5,
+          nobaFeeDiscount: 2.6,
+          networkFeeDiscount: 2.7,
+          spreadDiscount: 2.8,
+        },
+        _id: "22222222222" as any,
+      });
+
+      const filePath = `/tmp/txn-${Math.floor(Math.random() * 1000000)}.csv`;
+
+      await transactionRepo.getPartnerTransactions(
+        {
+          startDate: date1,
+          endDate: date1,
+        },
+        filePath,
+      );
+
+      const csvContent = await fs.readFileSync(filePath, { encoding: "utf8" });
+      const receivedRecords = csvContent.split("\n");
+      const expectedRecords = [
+        `PPPPPPPPP_1,TTTTTTTTT_1,UUUUUUUUUU_1,"${date1.toUTCString()}",COMPLETED,100,USD,0.03,ETH,14,15,16,1.4,1.5,1.6,1.7,1.8`,
+      ];
+
+      expect(receivedRecords).toHaveLength(1 + 1 + 1); // HEADER + 1 RECORD + EMPTY LINE
+      expectedRecords.forEach(record => {
+        expect(receivedRecords).toContain(record);
       });
     });
   });

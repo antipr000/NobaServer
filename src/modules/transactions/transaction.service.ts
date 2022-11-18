@@ -175,6 +175,10 @@ export class TransactionService {
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
   }
 
+  // async getPartnerTransactions(partnerID: string, filters: PartnerTransactionFilterOptions): Promise<PartnerTransactions> {
+
+  // }
+
   async getTransactionsInInterval(
     userID: string,
     partnerID: string,

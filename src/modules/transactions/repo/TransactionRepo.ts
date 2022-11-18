@@ -1,11 +1,12 @@
 import { Transaction, TransactionProps } from "../domain/Transaction";
 import { TransactionStatus, TransactionFilterOptions } from "../domain/Types";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
-import { UpdateFiatTransactionInfoRequest } from "../domain/TransactionRepoTypes";
+import { PartnerTransactionFilterOptions, UpdateFiatTransactionInfoRequest } from "../domain/TransactionRepoTypes";
 
 export interface ITransactionRepo {
   getAll(): Promise<Transaction[]>; //this is to be used by app admins. TODO pagination? transaction filter options?
   getTransaction(transactionId: string): Promise<Transaction>;
+  getPartnerTransactions(filters: PartnerTransactionFilterOptions, outputCsvFile: string);
   createTransaction(transaction: Transaction): Promise<Transaction>;
   updateTransaction(transaction: Transaction): Promise<Transaction>;
   updateTransactionStatus(
