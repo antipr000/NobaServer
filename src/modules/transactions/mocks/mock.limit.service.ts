@@ -1,4 +1,4 @@
-import { anyString, when, mock, anything, anyNumber } from "ts-mockito";
+import { when, mock, anything, anyNumber } from "ts-mockito";
 import { LimitsService } from "../limits.service";
 
 export function getMockLimitServiceWithDefaults() {

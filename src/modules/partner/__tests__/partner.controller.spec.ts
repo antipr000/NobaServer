@@ -6,20 +6,20 @@ import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
-import { PartnerAdminService } from "../partneradmin.service";
-import { PartnerMapper } from "../mappers/PartnerMapper";
-import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
-import { PartnerController } from "../partner.controller";
-import { PartnerAdmin, PARTNER_ADMIN_ROLE_TYPES } from "../domain/PartnerAdmin";
-import { Partner } from "../domain/Partner";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { Transaction } from "../../../modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { TransactionDTO } from "../../../modules/transactions/dto/TransactionDTO";
-import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { TransactionMapper } from "../../../modules/transactions/mapper/TransactionMapper";
+import { Partner } from "../domain/Partner";
+import { PartnerAdmin, PARTNER_ADMIN_ROLE_TYPES } from "../domain/PartnerAdmin";
+import { PartnerAdminMapper } from "../mappers/PartnerAdminMapper";
+import { PartnerMapper } from "../mappers/PartnerMapper";
 import { getMockPartnerAdminServiceWithDefaults } from "../mocks/mock.partner.admin.service";
 import { getMockPartnerServiceWithDefaults } from "../mocks/mock.partner.service";
+import { PartnerController } from "../partner.controller";
 import { PartnerService } from "../partner.service";
+import { PartnerAdminService } from "../partneradmin.service";
 
 describe("PartnerController", () => {
   let partnerController: PartnerController;
@@ -502,6 +502,51 @@ describe("PartnerController", () => {
         name: "Mock Partner",
         apiKey: "mockPublicKey",
         secretKey: "mockPrivateKey",
+      });
+      const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "mock-partner-admin-2",
+        email: "mock2@partner.com",
+        partnerId: partner.props._id,
+        role: "BASIC",
+      });
+
+      when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
+
+      const result = await partnerController.getPartner({
+        user: {
+          entity: requestingPartnerAdmin,
+        },
+      });
+
+      expect(result).toStrictEqual(partnerMapper.toDTO(partner));
+    });
+
+    it("should get partner details with all params", async () => {
+      const partner = Partner.createPartner({
+        _id: "mock-partner-1",
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        apiKeyForEmbed: "mockApiKey",
+        webhookClientID: "mockWebhookClientID",
+        webhookSecret: "mockWeb",
+        config: {
+          privateWallets: false,
+          viewOtherWallets: false,
+          fees: {
+            takeRate: 1,
+            creditCardFeeDiscountPercent: 1,
+            nobaFeeDiscountPercent: 1,
+            processingFeeDiscountPercent: 1,
+            networkFeeDiscountPercent: 1,
+            spreadDiscountPercent: 1,
+          },
+          notificationConfig: [],
+          logo: "mockLogo",
+          logoSmall: "mockLogoSmall",
+        },
+        isAPIEnabled: true,
+        isEmbedEnabled: true,
       });
       const requestingPartnerAdmin = PartnerAdmin.createPartnerAdmin({
         _id: "mock-partner-admin-2",
