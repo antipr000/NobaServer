@@ -1,5 +1,6 @@
 import { CurrencyType } from "../../../modules/common/domain/Types";
 import { ConsumerProps } from "../../consumer/domain/Consumer";
+import { TransactionType } from "./Types";
 
 export enum PollStatus {
   SUCCESS = "success",
@@ -34,11 +35,14 @@ export interface ExecuteQuoteRequest {
   consumer: ConsumerProps;
 
   discount?: QuoteDiscount;
+
+  transactionType: TransactionType;
 }
 
 export interface FundsAvailabilityRequest {
   cryptocurrency: string;
   cryptoAmount: number;
+  transactionID: string;
 }
 
 export interface FundsAvailabilityResponse {
@@ -158,6 +162,7 @@ export type QuoteRequestForFixedFiat = {
   fiatCurrency: string;
   fiatAmount: number;
   intermediateCryptoCurrency?: string;
+  transactionType: TransactionType;
 
   // Discounts
   discount?: QuoteDiscount;
@@ -167,6 +172,7 @@ export interface QuoteRequestForFixedCrypto {
   cryptoCurrency: string;
   fiatCurrency: string;
   cryptoQuantity: number;
+  transactionType: TransactionType;
 
   // Discounts
   discount?: QuoteDiscount;

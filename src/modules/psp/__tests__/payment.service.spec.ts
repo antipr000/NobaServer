@@ -185,6 +185,7 @@ describe("PaymentService", () => {
         name: "Bank Account",
         accountType: BankAccountType.CHECKING,
         wireRoutingNumber: "987654321",
+        institutionID: "inst-id",
       });
       when(
         plaidClient.createProcessorToken(
@@ -292,6 +293,7 @@ describe("PaymentService", () => {
         name: "Bank Account",
         accountType: BankAccountType.CHECKING,
         wireRoutingNumber: "987654321",
+        institutionID: "inst-id",
       });
       when(
         plaidClient.createProcessorToken(
@@ -373,7 +375,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "test_order_1")).thenResolve({
+      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "100000",
         response_summary: "Approved",
@@ -426,7 +428,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "test_order_1")).thenResolve({
+      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "20014",
         response_summary: "Approved",
@@ -468,7 +470,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "test_order_1")).thenResolve({
+      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "30000",
         response_summary: "Rejected",
@@ -690,6 +692,7 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -748,6 +751,7 @@ describe("PaymentService", () => {
           Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
           transaction.props.leg1,
           paymentMethod.paymentToken,
+          transaction.props._id,
           transaction.props._id,
         ),
       ).thenResolve({
@@ -824,6 +828,7 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -883,6 +888,7 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "payment-1234",
@@ -930,6 +936,7 @@ describe("PaymentService", () => {
           Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
           transaction.props.leg1,
           paymentMethod.paymentToken,
+          transaction.props._id,
           transaction.props._id,
         ),
       ).thenResolve({

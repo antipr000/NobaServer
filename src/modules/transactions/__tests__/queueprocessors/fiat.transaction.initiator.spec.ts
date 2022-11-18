@@ -395,6 +395,54 @@ describe("FiatTransactionInitiator", () => {
     await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
     await performFailureAssertions(transactionCollection, sqsClient, transaction);
   });
+
+  it("should handle card processing SOFT_DECLINE exceptions from checkout", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestPayment(consumer, anything())).thenThrow(
+      new CardProcessingException(CardFailureExceptionText.SOFT_DECLINE, rejectCode, rejectReason),
+    );
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
+
+  it("should handle card processing DECLINE exceptions from checkout", async () => {
+    // expect that 'FiatTransactionInitiator' actually subscribed to 'FiatTransactionInitiator' queue.
+    const [subscribedQueueName, processor] = capture(sqsClient.subscribeToQueue).last();
+    expect(subscribedQueueName).toBe(TransactionQueueName.FiatTransactionInitiator);
+    expect(processor).toBeInstanceOf(FiatTransactionInitiator);
+
+    await transactionCollection.insertOne({
+      ...transaction.props,
+      _id: transaction.props._id as any,
+    });
+
+    when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+    const rejectCode = "1234";
+    const rejectReason = "Bad payment";
+    when(consumerService.requestPayment(consumer, anything())).thenThrow(
+      new CardProcessingException(CardFailureExceptionText.DECLINE, rejectCode, rejectReason),
+    );
+
+    setupMocksandEnqueue(sqsClient, transaction, lockService, verificationService, consumerService, consumerID);
+    await fiatTransactionInitiator.processMessageInternal(transaction.props._id);
+    await performFailureAssertions(transactionCollection, sqsClient, transaction);
+  });
 });
 
 function setupMocksandEnqueue(

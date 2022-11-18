@@ -10,6 +10,7 @@ import { Logger } from "winston";
 import { environmentDependentQueueUrl } from "../../../infra/aws/services/CommonUtils";
 import { MessageProcessor } from "./message.processor";
 import { TransactionQueueName } from "../domain/Types";
+import https from "https";
 
 @Injectable()
 export class SqsClient {
@@ -42,6 +43,17 @@ export class SqsClient {
         this.logger.info(`${message.Body} [${messageProcessor.constructor.name}]`);
         return messageProcessor.processMessage(message.Body);
       },
+
+      // By default, the default Node.js HTTP/HTTPS SQS agent, creates a new TCP
+      // connection for every new request. To avoid the cost of establishing a new
+      // connection, you can reuse an existing connection using 'keepAlive'.
+      sqs: new SQS({
+        httpOptions: {
+          agent: new https.Agent({
+            keepAlive: true,
+          }),
+        },
+      }),
     });
 
     app.on("error", err => messageProcessor.subscriptionErrorHandler(err));

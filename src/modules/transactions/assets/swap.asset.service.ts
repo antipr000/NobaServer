@@ -28,6 +28,7 @@ export class SwapAssetService implements AssetService {
       cryptoCurrency: request.intermediateCryptoCurrency,
       fiatCurrency: request.fiatCurrency,
       fiatAmount: request.fiatAmount,
+      transactionType: request.transactionType,
       discount: {
         fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
         networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,

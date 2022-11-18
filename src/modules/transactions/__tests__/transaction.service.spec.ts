@@ -68,6 +68,9 @@ import { ZeroHashService } from "../zerohash.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
+import { getMockLimitServiceWithDefaults } from "../mocks/mock.limit.service";
+import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
+import { Utils } from "../../../core/utils/Utils";
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -94,6 +97,7 @@ describe("TransactionService", () => {
   let assetService: AssetService;
   let transactionMapper: TransactionMapper;
   let ellipticService: EllipticService;
+  let limitService: LimitsService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
 
   const userId = "1234567890";
@@ -117,6 +121,7 @@ describe("TransactionService", () => {
     partnerService = getMockPartnerServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     ellipticService = getMockEllipticServiceWithDefaults();
+    limitService = getMockLimitServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
 
     transactionMapper = new TransactionMapper();
@@ -125,7 +130,6 @@ describe("TransactionService", () => {
       imports: [await TestConfigModule.registerAsync(environmentVariables), getTestWinstonModule()],
       providers: [
         DBProvider,
-        LimitsService,
         TransactionService,
         {
           provide: ConsumerService,
@@ -166,6 +170,10 @@ describe("TransactionService", () => {
         {
           provide: SanctionedCryptoWalletService,
           useFactory: () => instance(sanctionedCryptoWalletService),
+        },
+        {
+          provide: LimitsService,
+          useFactory: () => instance(limitService),
         },
       ],
     }).compile();
@@ -736,6 +744,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: -1,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       try {
@@ -767,6 +776,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 100,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       try {
@@ -798,6 +808,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 10,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -845,6 +856,7 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -887,6 +899,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 10,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -938,6 +951,7 @@ describe("TransactionService", () => {
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
             intermediateCryptoCurrency: "USDC.POLYGON",
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -980,6 +994,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.FIAT,
         fixedAmount: 10,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -1027,6 +1042,7 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             fiatAmount: Number(transactionQuoteQuery.fixedAmount),
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -1070,6 +1086,7 @@ describe("TransactionService", () => {
         fixedSide: CurrencyType.CRYPTO,
         fixedAmount: 0.1,
         partnerID: partnerID,
+        transactionType: TransactionType.ONRAMP,
       };
 
       const nobaQuote: CombinedNobaQuote = {
@@ -1117,6 +1134,7 @@ describe("TransactionService", () => {
             cryptoCurrency: transactionQuoteQuery.cryptoCurrencyCode,
             fiatCurrency: transactionQuoteQuery.fiatCurrencyCode,
             cryptoQuantity: Number(transactionQuoteQuery.fixedAmount),
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -1308,6 +1326,476 @@ describe("TransactionService", () => {
       }
     });
 
+    it("should throws TransactionSubmissionException when MONTHLY_LIMIT is breached", async () => {
+      const consumerId = "mock-consumer-id";
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const fiatAmount = 100;
+      const exchangeRate = 1000;
+      const paymentToken = "fake-payment-token";
+
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.MONTHLY_LIMIT_REACHED,
+      });
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+          fees: {
+            creditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            spreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: paymentToken,
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: fiatAmount,
+        leg2Amount: fiatAmount / exchangeRate,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+          precision: 8,
+          provider: "Zerohash",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+          precision: 8,
+        },
+      ]);
+
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.MONTHLY_LIMIT_REACHED);
+      }
+    });
+
+    it("should throws TransactionSubmissionException when DAILY_LIMIT is breached", async () => {
+      const consumerId = "mock-consumer-id";
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const fiatAmount = 100;
+      const exchangeRate = 1000;
+      const paymentToken = "fake-payment-token";
+
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.DAILY_LIMIT_REACHED,
+      });
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+          fees: {
+            creditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            spreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: paymentToken,
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: fiatAmount,
+        leg2Amount: fiatAmount / exchangeRate,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+          precision: 8,
+          provider: "Zerohash",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+          precision: 8,
+        },
+      ]);
+
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.DAILY_LIMIT_REACHED);
+      }
+    });
+
+    it("should throws TransactionSubmissionException when WEEKLY_LIMIT is breached", async () => {
+      const consumerId = "mock-consumer-id";
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const fiatAmount = 100;
+      const exchangeRate = 1000;
+      const paymentToken = "fake-payment-token";
+
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.WEEKLY_LIMIT_REACHED,
+      });
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+          fees: {
+            creditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            spreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: paymentToken,
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: fiatAmount,
+        leg2Amount: fiatAmount / exchangeRate,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+          precision: 8,
+          provider: "Zerohash",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+          precision: 8,
+        },
+      ]);
+
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.WEEKLY_LIMIT_REACHED);
+      }
+    });
+
+    it("should throws TransactionSubmissionException when transaction value is too small", async () => {
+      const consumerId = "mock-consumer-id";
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const fiatAmount = 100;
+      const exchangeRate = 1000;
+      const paymentToken = "fake-payment-token";
+
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
+      });
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+          fees: {
+            creditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            spreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: paymentToken,
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: fiatAmount,
+        leg2Amount: fiatAmount / exchangeRate,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+          precision: 8,
+          provider: "Zerohash",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+          precision: 8,
+        },
+      ]);
+
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.TRANSACTION_TOO_SMALL);
+      }
+    });
+
+    it("should throws TransactionSubmissionException when transaction value is too large", async () => {
+      const consumerId = "mock-consumer-id";
+      const partnerId = "fake-partner-1";
+      const sessionKey = "fake-session-key";
+      const fiatAmount = 100;
+      const exchangeRate = 1000;
+      const paymentToken = "fake-payment-token";
+
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+            },
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.TRANSACTION_TOO_LARGE,
+      });
+
+      const partner: Partner = Partner.createPartner({
+        _id: partnerId,
+        name: "Mock Partner",
+        apiKey: "mockPublicKey",
+        secretKey: "mockPrivateKey",
+        config: {
+          cryptocurrencyAllowList: ["ETH", "axlUSDCMoonbeam"],
+          fees: {
+            creditCardFeeDiscountPercent: 0.1,
+            networkFeeDiscountPercent: 0.2,
+            nobaFeeDiscountPercent: 0.3,
+            spreadDiscountPercent: 0.4,
+            processingFeeDiscountPercent: 0.5,
+          },
+        } as any,
+      });
+      when(partnerService.getPartner(partnerId)).thenResolve(partner);
+
+      const transactionRequest: CreateTransactionDTO = {
+        paymentToken: paymentToken,
+        type: TransactionType.ONRAMP,
+        leg1: "USD",
+        leg2: "ETH",
+        leg1Amount: fiatAmount,
+        leg2Amount: fiatAmount / exchangeRate,
+        fixedSide: CurrencyType.FIAT,
+        destinationWalletAddress: FAKE_VALID_WALLET,
+      };
+
+      when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
+      when(currencyService.getSupportedCryptocurrencies()).thenResolve([
+        {
+          ticker: "ETH",
+          name: "Ethereum",
+          iconPath: "",
+          precision: 8,
+          provider: "Zerohash",
+        },
+      ]);
+
+      when(currencyService.getSupportedFiatCurrencies()).thenResolve([
+        {
+          ticker: "USD",
+          name: "US Dollar",
+          iconPath: "",
+          precision: 8,
+        },
+      ]);
+
+      try {
+        await transactionService.initiateTransaction(consumerId, partnerId, sessionKey, transactionRequest);
+      } catch (e) {
+        expect(e).toBeInstanceOf(TransactionSubmissionException);
+        const err = e as TransactionSubmissionException;
+        expect(err.disposition).toBe(TransactionSubmissionFailureExceptionText.TRANSACTION_TOO_LARGE);
+      }
+    });
+
     it("throws UNKNOWN_CRYPTO exception when specified leg2 currency is not allowed by Partner", async () => {
       when(currencyService.getFiatCurrency("ABC")).thenResolve(null);
 
@@ -1417,7 +1905,7 @@ describe("TransactionService", () => {
     });
 
     it("should throw BadRequestException when intermediary leg is needed and fixed side is 'CRYPTO'", async () => {
-      const consumerId = consumer.props._id;
+      const consumerId = "mock-consumer-id";
       const partnerId = "fake-partner-2";
       const sessionKey = "fake-session-key";
       const paymentToken = "fake-payment-token";
@@ -1444,29 +1932,33 @@ describe("TransactionService", () => {
         destinationWalletAddress: FAKE_VALID_WALLET,
       };
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(
-        Consumer.createConsumer({
-          _id: consumerId,
-          email: "test@noba.com",
-          partners: [
-            {
-              partnerID: partnerId,
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
             },
-          ],
-          paymentMethods: [
-            {
-              type: PaymentMethodType.CARD,
-              paymentProviderID: PaymentProvider.CHECKOUT,
-              paymentToken: paymentToken,
-              cardData: {
-                first6Digits: "123456",
-                last4Digits: "7890",
-              },
-              imageUri: "fake-uri",
-            },
-          ],
-        }),
-      );
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        status: TransactionAllowedStatus.ALLOWED,
+        rangeMin: 0,
+        rangeMax: 100,
+      });
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(false);
       when(currencyService.getSupportedCryptocurrencies()).thenResolve([
@@ -1507,34 +1999,38 @@ describe("TransactionService", () => {
     });
 
     it("should throw BadRequestException when the amount exceeds slippage", async () => {
-      const consumerId = consumer.props._id;
+      const consumerId = "mock-consumer-id";
       const partnerId = "fake-partner-124";
       const sessionKey = "fake-session-key";
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(
-        Consumer.createConsumer({
-          _id: consumerId,
-          email: "test@noba.com",
-          partners: [
-            {
-              partnerID: partnerId,
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
             },
-          ],
-          paymentMethods: [
-            {
-              type: PaymentMethodType.CARD,
-              paymentProviderID: PaymentProvider.CHECKOUT,
-              paymentToken: paymentToken,
-              cardData: {
-                first6Digits: "123456",
-                last4Digits: "7890",
-              },
-              imageUri: "fake-uri",
-            },
-          ],
-        }),
-      );
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.ALLOWED,
+      });
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1626,6 +2122,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: undefined,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -1646,36 +2143,40 @@ describe("TransactionService", () => {
     });
 
     it("should create transaction entry in DB with fixed FIAT side", async () => {
-      const consumerId = consumer.props._id;
+      const consumerId = "mock-consumer-id";
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
       const fiatAmount = 100;
       const exchangeRate = 1000;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(
-        Consumer.createConsumer({
-          _id: consumerId,
-          email: "test@noba.com",
-          partners: [
-            {
-              partnerID: partnerId,
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
             },
-          ],
-          paymentMethods: [
-            {
-              type: PaymentMethodType.CARD,
-              paymentProviderID: PaymentProvider.CHECKOUT,
-              paymentToken: paymentToken,
-              cardData: {
-                first6Digits: "123456",
-                last4Digits: "7890",
-              },
-              imageUri: "fake-uri",
-            },
-          ],
-        }),
-      );
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.ALLOWED,
+      });
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1772,6 +2273,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: undefined,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -1830,7 +2332,7 @@ describe("TransactionService", () => {
     });
 
     it("should create transaction entry in DB with fixed FIAT side and intermediary leg is needed", async () => {
-      const consumerId = consumer.props._id;
+      const consumerId = "mock-consumer-id";
       const intermediaryLeg = "USDC.POLYGON";
       const partnerId = "fake-partner-1";
       const sessionKey = "fake-session-key";
@@ -1838,29 +2340,33 @@ describe("TransactionService", () => {
       const exchangeRate = 1000;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(
-        Consumer.createConsumer({
-          _id: consumerId,
-          email: "test@noba.com",
-          partners: [
-            {
-              partnerID: partnerId,
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
             },
-          ],
-          paymentMethods: [
-            {
-              type: PaymentMethodType.CARD,
-              paymentProviderID: PaymentProvider.CHECKOUT,
-              paymentToken: paymentToken,
-              cardData: {
-                first6Digits: "123456",
-                last4Digits: "7890",
-              },
-              imageUri: "fake-uri",
-            },
-          ],
-        }),
-      );
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.ALLOWED,
+      });
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -1958,6 +2464,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "axlUSDCMoonbeam",
             fiatAmount: transactionRequest.leg1Amount,
             intermediateCryptoCurrency: intermediaryLeg,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0,
               networkFeeDiscountPercent: 0,
@@ -2019,36 +2526,40 @@ describe("TransactionService", () => {
     });
 
     it("should create transaction entry in DB with fixed CRYPTO side", async () => {
-      const consumerId = consumer.props._id;
+      const consumerId = "mock-consumer-id";
       const partnerId = "fake-partner-4758752";
       const sessionKey = "fake-session-key";
       const initialQuotedFiatAmount = 160;
       const initialQuotedConversionRate = 1600;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(
-        Consumer.createConsumer({
-          _id: consumerId,
-          email: "test@noba.com",
-          partners: [
-            {
-              partnerID: partnerId,
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
             },
-          ],
-          paymentMethods: [
-            {
-              type: PaymentMethodType.CARD,
-              paymentProviderID: PaymentProvider.CHECKOUT,
-              paymentToken: paymentToken,
-              cardData: {
-                first6Digits: "123456",
-                last4Digits: "7890",
-              },
-              imageUri: "fake-uri",
-            },
-          ],
-        }),
-      );
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, initialQuotedFiatAmount)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.ALLOWED,
+      });
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -2146,6 +2657,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatCurrency: "USD",
             cryptoQuantity: 0.1,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -2206,36 +2718,40 @@ describe("TransactionService", () => {
     });
 
     it("should throw BadRequestException when the new conversion rate is not within slippage for fixed CRYPTO side", async () => {
-      const consumerId = consumer.props._id;
+      const consumerId = "mock-consumer-id";
       const partnerId = "fake-partner-4758752";
       const sessionKey = "fake-session-key";
       const initialQuotedFiatAmount = 160;
       const initialQuotedConversionRate = 1600;
       const paymentToken = "fake-payment-token";
 
-      when(consumerService.getConsumer(consumerId)).thenResolve(
-        Consumer.createConsumer({
-          _id: consumerId,
-          email: "test@noba.com",
-          partners: [
-            {
-              partnerID: partnerId,
+      const consumer = Consumer.createConsumer({
+        _id: consumerId,
+        email: "test@noba.com",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
             },
-          ],
-          paymentMethods: [
-            {
-              type: PaymentMethodType.CARD,
-              paymentProviderID: PaymentProvider.CHECKOUT,
-              paymentToken: paymentToken,
-              cardData: {
-                first6Digits: "123456",
-                last4Digits: "7890",
-              },
-              imageUri: "fake-uri",
-            },
-          ],
-        }),
-      );
+            imageUri: "fake-uri",
+          },
+        ],
+      });
+      when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
+      when(limitService.canMakeTransaction(consumer, initialQuotedFiatAmount)).thenResolve({
+        rangeMin: 0,
+        rangeMax: 100,
+        status: TransactionAllowedStatus.ALLOWED,
+      });
 
       const partner: Partner = Partner.createPartner({
         _id: partnerId,
@@ -2333,6 +2849,7 @@ describe("TransactionService", () => {
             cryptoCurrency: "ETH",
             fiatCurrency: "USD",
             cryptoQuantity: 0.1,
+            transactionType: TransactionType.ONRAMP,
             discount: {
               fixedCreditCardFeeDiscountPercent: 0.1,
               networkFeeDiscountPercent: 0.2,
@@ -2389,12 +2906,18 @@ describe("TransactionService", () => {
         partnerID: "fake-partner",
         destinationWalletAddress: FAKE_VALID_WALLET,
         transactionTimestamp: new Date(),
+        type: TransactionType.ONRAMP,
+        nobaFee: 0.01,
+        processingFee: 0.01,
+        networkFee: 0.02,
       });
       when(transactionRepo.getTransaction(transaction.props._id)).thenResolve(transaction);
 
       const transactionDTO = transactionMapper.toDTO(transaction);
       const response = await transactionService.getTransaction(transaction.props._id);
       expect(response).toStrictEqual(transactionDTO);
+      expect(response.type).toBe(TransactionType.ONRAMP);
+      expect(response.amounts.totalFee).toBe(Utils.roundTo2DecimalNumber(0.01) * 2 + Utils.roundTo2DecimalNumber(0.02));
     });
   });
 

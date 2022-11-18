@@ -1,1 +1,2899 @@
-{"openapi":"3.0.0","paths":{"/v1/health":{"get":{"operationId":"appHealth","summary":"Checks if the Noba service is up and running","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Health status of the Noba service"}},"tags":["Health Check"]}},"/v1/cryptocurrencies":{"get":{"operationId":"supportedCryptocurrencies","summary":"Returns a list of all cryptocurrencies supported by Noba Onramp","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"List of all supported cryptocurrencies","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/CurrencyDTO"}}}}}},"tags":["Assets"]}},"/v1/fiatcurrencies":{"get":{"operationId":"supportedFiatCurrencies","summary":"Returns a list of all fiat currencies supported by Noba Onramp","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"List of all supported fiat currencies","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/CurrencyDTO"}}}}}},"tags":["Assets"]}},"/v1/countries":{"get":{"operationId":"getSupportedCountries","summary":"Returns a list of all countries supported by Noba Onramp","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"includeSubdivisions","required":false,"in":"query","description":"Include subdivision data","schema":{"type":"boolean"}}],"responses":{"200":{"description":"Location details of supported countries, optionally including subdivision data","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/LocationDTO"}}}}}},"tags":["Assets"]}},"/v1/countries/{countryCode}":{"get":{"operationId":"getSupportedCountry","summary":"Returns details of a country and its subdivisions supported by Noba Onramp","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"countryCode","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Location details of requested country","content":{"application/json":{"schema":{"$ref":"#/components/schemas/LocationDTO"}}}},"404":{"description":"Country code not found"}},"tags":["Assets"]}},"/v1/config":{"get":{"operationId":"getCommonConfigurations","summary":"Returns common api configurations","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Common api configurations","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConfigurationsDTO"}}}},"404":{"description":"Configurations not found"}},"tags":["Assets"]}},"/v1/creditcardmetadata/{bin}":{"get":{"operationId":"getCreditCardBIN","summary":"Returns credit card structure metadata for the provided BIN","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"bin","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Card metadata","content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreditCardDTO"}}}},"404":{"description":"Credit card information not found"}},"tags":["Assets"]}},"/v1/auth/verifyotp":{"post":{"operationId":"verifyOtp","summary":"Submits the one-time passcode (OTP) to retreive an API access token","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/VerifyOtpRequestDTO"}}}},"responses":{"200":{"description":"API access token","content":{"application/json":{"schema":{"$ref":"#/components/schemas/VerifyOtpResponseDTO"}}}},"401":{"description":"Invalid OTP"}},"tags":["Authentication"]}},"/v1/auth/login":{"post":{"operationId":"loginUser","summary":"Logs user in and sends one-time passcode (OTP) to the provided email address","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/LoginRequestDTO"}}}},"responses":{"200":{"description":"OTP successfully sent."},"403":{"description":"Access denied"}},"tags":["Authentication"]}},"/v1/consumers":{"get":{"operationId":"getConsumer","summary":"Gets details of logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Details of logged-in consumer","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]},"patch":{"operationId":"updateConsumer","summary":"Updates details of logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdateConsumerRequestDTO"}}}},"responses":{"200":{"description":"Updated consumer record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/phone":{"patch":{"operationId":"updatePhone","summary":"Adds or updates phone number of logged in user with OTP","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UserPhoneUpdateRequest"}}}},"responses":{"200":{"description":"Updated the user's phone number","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/phone/verify":{"post":{"operationId":"requestOtpToUpdatePhone","summary":"Sends OTP to user's phone to verify update of user profile","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/PhoneVerificationOtpRequest"}}}},"responses":{"200":{"description":"OTP sent to user's phone"},"400":{"description":"Invalid request parameters"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/email":{"patch":{"operationId":"updateEmail","summary":"Adds or updates email address of logged in user with OTP","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UserEmailUpdateRequest"}}}},"responses":{"200":{"description":"Updated the user's email address","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/email/verify":{"post":{"operationId":"requestOtpToUpdateEmail","summary":"Sends OTP to user's email to verify update of user profile","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/EmailVerificationOtpRequest"}}}},"responses":{"200":{"description":"OTP sent to user's email address"},"400":{"description":"Invalid request parameters"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/paymentmethods/plaid/token":{"get":{"operationId":"generatePlaidToken","summary":"Generates a token to connect to Plaid UI","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Plaid token","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PlaidTokenDTO"}}}},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/paymentmethods":{"post":{"operationId":"addPaymentMethod","summary":"Adds a payment method for the logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AddPaymentMethodDTO"}}}},"responses":{"201":{"description":"Updated consumer record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid payment method details"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/paymentmethods/{paymentToken}":{"delete":{"operationId":"deletePaymentMethod","summary":"Deletes a payment method for the logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"paymentToken","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Deleted consumer record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid payment method details"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/wallets":{"post":{"operationId":"addCryptoWallet","summary":"Adds a crypto wallet for the logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AddCryptoWalletDTO"}}}},"responses":{"201":{"description":"Updated consumer record with the crypto wallet","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid crypto wallet details"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/wallets/{walletAddress}":{"delete":{"operationId":"deleteCryptoWallet","summary":"Deletes a saved wallet for the logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"walletAddress","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Deleted wallet for consumer","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid wallet address"},"403":{"description":"Logged-in user is not a Consumer"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/consumers/wallets/confirm":{"post":{"operationId":"confirmWalletUpdate","summary":"Submits the one-time passcode (OTP) to confirm wallet add or update","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConfirmWalletUpdateDTO"}}}},"responses":{"200":{"description":"Verified wallet for consumer","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"401":{"description":"Invalid OTP"}},"tags":["Consumer"],"security":[{"JWT-auth":[]}]}},"/v1/partners":{"get":{"operationId":"getPartner","summary":"Gets details of a partner","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Details of partner","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to retrieve partner details"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]},"patch":{"operationId":"updatePartner","summary":"Updates details of a partner","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdatePartnerRequestDTO"}}}},"responses":{"200":{"description":"Partner details","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to update partner details"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]}},"/v1/partners/admins/{partnerAdminID}":{"get":{"operationId":"getPartnerAdmin","summary":"Gets details of a partner admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"partnerAdminID","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Details of partner admin","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to retrieve partner admin"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]},"patch":{"operationId":"updatePartnerAdmin","summary":"Updates details of a partner admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"partnerAdminID","required":true,"in":"path","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdatePartnerAdminRequestDTO"}}}},"responses":{"200":{"description":"Details of updated partner admin","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to update partner admin"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]},"delete":{"operationId":"deletePartnerAdmin","summary":"Deletes a parter admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"partnerAdminID","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Deleted partner admin record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to delete partner admin"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]}},"/v1/partners/admins":{"get":{"operationId":"getAllPartnerAdmins","summary":"Gets all admins for the partner","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"All admins of the partner","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to retrieve partner admin list"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]},"post":{"operationId":"addPartnerAdmin","summary":"Adds a new partner admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AddPartnerAdminRequestDTO"}}}},"responses":{"201":{"description":"New partner admin record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to add a new partner admin"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]}},"/v1/partners/consumers":{"get":{"operationId":"getAllPartnerConsumers","summary":"Gets all consumers for the partner","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"All consumers of the partner","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}}},"400":{"description":"Invalid request parameters"},"403":{"description":"User lacks permission to retrieve partner admin list"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]}},"/v1/partners/transactions":{"get":{"operationId":"getPartnerTransactions","summary":"Get all transactions for the given partner","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"consumerID","required":false,"in":"query","description":"Consumer ID whose transactions is needed","schema":{"type":"string"}},{"name":"partnerID","required":false,"in":"query","description":"Partner ID whose transactions needs to be filtered","schema":{"type":"string"}},{"name":"startDate","required":false,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}},{"name":"endDate","required":false,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}},{"name":"pageOffset","required":false,"in":"query","description":"number of pages to skip, offset 0 means first page results, 1 means second page etc.","schema":{"type":"number"}},{"name":"pageLimit","required":false,"in":"query","description":"number of items per page","schema":{"type":"number"}},{"name":"sortField","required":false,"in":"query","description":"sort by field","schema":{"enum":["transactionTimestamp","leg1Amount","leg2Amount","leg1","leg2"],"type":"string"}},{"name":"sortOrder","required":false,"in":"query","description":"sort order asc or desc","schema":{"enum":["ASC","DESC"],"type":"string"}},{"name":"fiatCurrency","required":false,"in":"query","description":"filter for a particular fiat currency","schema":{"type":"string"}},{"name":"cryptoCurrency","required":false,"in":"query","description":"filter for a particular Cryptocurrency","schema":{"type":"string"}},{"name":"transactionStatus","required":false,"in":"query","description":"filter for a particular transaction status","schema":{"enum":["PENDING","VALIDATION_FAILED","VALIDATION_PASSED","FIAT_INCOMING_INITIATED","FIAT_INCOMING_COMPLETED","FIAT_INCOMING_FAILED","FIAT_REVERSAL_INITIATING","FIAT_INCOMING_REVERSAL_INITIATED","FIAT_INCOMING_REVERSAL_FAILED","FIAT_INCOMING_REVERSED","CRYPTO_OUTGOING_INITIATING","CRYPTO_OUTGOING_INITIATED","CRYPTO_OUTGOING_COMPLETED","CRYPTO_OUTGOING_FAILED","COMPLETED","FAILED"],"type":"string"}}],"responses":{"200":{"description":"All transactions for the partner","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TransactionsQueryResultsDTO"}}}},"400":{"description":"Invalid request parameters"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]}},"/v1/partners/transactions/{transactionID}":{"get":{"operationId":"getPartnerTransaction","summary":"Gets details of a transaction","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"transactionID","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Details of a transaction","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TransactionDTO"}}}},"404":{"description":"Transaction does not exist"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]}},"/v1/partners/logo":{"post":{"operationId":"uploadPartnerLogo","summary":"Adds or updates partner logo","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"multipart/form-data":{"schema":{"type":"object","properties":{"logo":{"type":"string","format":"binary"},"logoSmall":{"type":"string","format":"binary"}}}}}},"responses":{"202":{"description":"Updated Partner Info after adding or updating the logos","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerDTO"}}}},"400":{"description":"Invalid request parameters"}},"tags":["Partner"],"security":[{"JWT-auth":[]}]}},"/v1/vendors/checkout/webhooks":{"post":{"operationId":"consumePaymentWebhooks","summary":"Checks if the transaction parameters are valid","parameters":[],"responses":{"200":{"description":""}},"tags":["Vendors"]}},"/v1/admins/{adminID}/transactionmetrics":{"get":{"operationId":"getTransactionMetrics","summary":"Gets all transaction metrics for a given partner","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"adminID","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Transaction statistics","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TransactionStatsDTO"}}}}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/admins/{adminID}/transactions":{"get":{"operationId":"getAllTransactions","summary":"Gets all transactions filtered by the specified date range","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"adminID","required":true,"in":"path","schema":{"type":"string"}},{"name":"startDate","required":true,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}},{"name":"endDate","required":true,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}}],"responses":{"200":{"description":"All transactions within the specified date range","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/TransactionDTO"}}}}}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/admins":{"post":{"operationId":"createNobaAdmin","summary":"Creates a new Noba admin with the specified role","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AddNobaAdminDTO"}}}},"responses":{"200":{"description":"The newly created Noba admin","content":{"application/json":{"schema":{"$ref":"#/components/schemas/NobaAdminDTO"}}}},"403":{"description":"User forbidden from adding new Noba admin"},"409":{"description":"User is already a Noba admin"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]},"get":{"operationId":"getNobaAdmin","summary":"Gets the details of the logged in Noba admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"The logged in Noba admin","content":{"application/json":{"schema":{"$ref":"#/components/schemas/NobaAdminDTO"}}}},"403":{"description":"User forbidden from retrieving details of the Noba admin"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/admins/{adminID}":{"patch":{"operationId":"updateNobaAdmin","summary":"Updates the details of a Noba admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"adminID","required":true,"in":"path","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdateNobaAdminDTO"}}}},"responses":{"200":{"description":"The updated NobaAdmin.","content":{"application/json":{"schema":{"$ref":"#/components/schemas/NobaAdminDTO"}}}},"403":{"description":"User forbidden from updating Noba admin or attempt to update one's own record"},"404":{"description":"Noba admin not found"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]},"delete":{"operationId":"deleteNobaAdmin","summary":"Deletes a Noba admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"adminID","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"The ID of the Noba admin to delete","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DeleteNobaAdminDTO"}}}},"403":{"description":"User forbidden from deleting Noba admin or attempt to delete one's own record"},"404":{"description":"Noba admin not found"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/admins/partners/{partnerID}/admins":{"post":{"operationId":"addAdminsForPartners","summary":"Adds a new partner admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"partnerID","required":true,"in":"path","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AddPartnerAdminRequestDTO"}}}},"responses":{"201":{"description":"Adds a new partner admin","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}},"400":{"description":"Invalid parameter(s)"},"403":{"description":"User forbidden from adding a new partner admin"},"404":{"description":"Partner admin not found"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/admins/partners/{partnerID}/admins/{partnerAdminID}":{"delete":{"operationId":"deleteAdminsForPartners","summary":"Deletes a partner admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"partnerID","required":true,"in":"path","schema":{"type":"string"}},{"name":"partnerAdminID","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Add a new partner admin","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}},"400":{"description":"Invalid parameter(s)"},"403":{"description":"User forbidden from deleting a partner admin"},"404":{"description":"Partner admin not found"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]},"patch":{"operationId":"updateAdminForPartners","summary":"Update details of a partner admin","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"partnerID","required":true,"in":"path","schema":{"type":"string"}},{"name":"partnerAdminID","required":true,"in":"path","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdatePartnerAdminRequestDTO"}}}},"responses":{"200":{"description":"Update details of a partner admin","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerAdminDTO"}}}},"400":{"description":"Invalid parameter(s)"},"403":{"description":"User forbidden from updating a partner admin"},"404":{"description":"Partner admin not found"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/admins/partners":{"post":{"operationId":"registerPartner","summary":"Adds a new partner","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreatePartnerRequestDTO"}}}},"responses":{"201":{"description":"New partner record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/PartnerDTO"}}}},"400":{"description":"Invalid parameter(s)"},"403":{"description":"User forbidden from adding a new partner"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/admins/consumers/{consumerID}":{"patch":{"operationId":"updateConsumer","summary":"Updates a consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"consumerID","required":true,"in":"path","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/AdminUpdateConsumerRequestDTO"}}}},"responses":{"200":{"description":"Updated consumer record","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerDTO"}}}},"400":{"description":"Invalid parameter(s)"},"403":{"description":"User forbidden from updating consumer record"}},"tags":["Admin"],"security":[{"JWT-auth":[]}]}},"/v1/verify":{"get":{"operationId":"getVerificationStatus","summary":"Checks if verification service is up","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Service is up"}},"tags":["Verification"],"security":[{"JWT-auth":[]}]}},"/v1/verify/session":{"post":{"operationId":"createSession","summary":"Creates a new session for verification","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"201":{"description":"New session token","content":{"application/json":{"schema":{"type":"string"}}}},"400":{"description":"Invalid request"}},"tags":["Verification"],"security":[{"JWT-auth":[]}]}},"/v1/verify/consumerinfo":{"post":{"operationId":"verifyConsumer","summary":"Verifies consumer-provided information","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"sessionKey","required":true,"in":"query","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/IDVerificationRequestDTO"}}}},"responses":{"200":{"description":"Verification result","content":{"application/json":{"schema":{"$ref":"#/components/schemas/VerificationResultDTO"}}}},"400":{"description":"Invalid request parameters"}},"tags":["Verification"],"security":[{"JWT-auth":[]}]}},"/v1/verify/document":{"post":{"operationId":"verifyDocument","summary":"Verifies consumer uploaded identification documents","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"sessionKey","required":true,"in":"query","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"multipart/form-data":{"schema":{"type":"object","properties":{"documentType":{"type":"string","description":"Supported values: passport, national_identity_card, driver_license, other, unknown"},"frontImage":{"type":"string","format":"binary"},"backImage":{"type":"string","format":"binary"},"photoImage":{"type":"string","format":"binary"}}}}}},"responses":{"202":{"description":"Document upload result","content":{"application/json":{"schema":{"type":"string"}}}},"400":{"description":"Invalid request parameters"}},"tags":["Verification"],"security":[{"JWT-auth":[]}]}},"/v1/verify/document/result/{id}":{"get":{"operationId":"getDocumentVerificationResult","summary":"Gets result for a previously-submitted document verification","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"id","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Document verification result","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DocumentVerificationResultDTO"}}}},"400":{"description":"Invalid request parameters"},"404":{"description":"Document verification request not found"}},"tags":["Verification"],"security":[{"JWT-auth":[]}]}},"/v1/verify/document/url":{"get":{"operationId":"getIdentityDocumentVerificationURL","summary":"Retrieves a URL for identity verification","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"sessionKey","required":true,"in":"query","description":"Unique verification key for this session","schema":{"type":"string"}},{"name":"requestPOA","required":true,"in":"query","description":"Request proof of address","schema":{"type":"boolean"}},{"name":"requestSelfie","required":true,"in":"query","description":"Request a selfie photo","schema":{"type":"boolean"}},{"name":"requestBack","required":true,"in":"query","description":"Request photo of back of ID","schema":{"type":"boolean"}},{"name":"locale","required":true,"in":"query","description":"Unique verification key for this session","schema":{"enum":["en-us","es-419"],"type":"string"}}],"responses":{"200":{"description":"Document verification KYC URL details","content":{"application/json":{"schema":{"$ref":"#/components/schemas/IDVerificationURLResponseDTO"}}}},"400":{"description":"Invalid request parameters"}},"tags":["Verification"],"security":[{"JWT-auth":[]}]}},"/v1/verify/device/result":{"get":{"operationId":"getDeviceVerificationResult","summary":"Gets device verification result","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"sessionKey","required":true,"in":"query","schema":{"type":"string"}}],"responses":{"200":{"description":"Device verification result","content":{"application/json":{"schema":{"$ref":"#/components/schemas/DeviceVerificationResponseDTO"}}}},"400":{"description":"Invalid request parameters"}},"tags":["Verification"],"security":[{"JWT-auth":[]}]}},"/v1/verify/webhook/document/result":{"post":{"operationId":"postDocumentVerificationResult","parameters":[{"name":"x-sardine-signature","required":true,"in":"header","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/DocumentVerificationWebhookRequestDTO"}}}},"responses":{"200":{"description":""}},"tags":["VerificationWebhooks"]}},"/v1/verify/webhook/case/notification":{"post":{"operationId":"postCaseNotification","parameters":[{"name":"x-sardine-signature","required":true,"in":"header","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CaseNotificationWebhookRequestDTO"}}}},"responses":{"200":{"description":""}},"tags":["VerificationWebhooks"]}},"/v1/transactions/quote":{"get":{"operationId":"getTransactionQuote","summary":"Get transaction quote (exchange rate, provider fees, network fees etc.)","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"fiatCurrencyCode","required":true,"in":"query","schema":{"type":"string"}},{"name":"cryptoCurrencyCode","required":true,"in":"query","schema":{"type":"string"}},{"name":"fixedSide","required":true,"in":"query","schema":{"enum":["fiat","crypto"],"type":"string"}},{"name":"fixedAmount","required":true,"in":"query","schema":{"type":"number"}},{"name":"partnerID","required":false,"in":"query","schema":{"type":"string"}}],"responses":{"200":{"description":"","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TransactionQuoteDTO"}}}},"400":{"description":"Invalid currency code (fiat or crypto)"},"503":{"description":"Unable to connect to underlying service provider"}},"security":[{"JWT-auth":[]}],"tags":["Transactions"]}},"/v1/transactions/check":{"get":{"operationId":"checkIfTransactionPossible","summary":"Checks if the transaction parameters are valid","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"type","required":true,"in":"query","schema":{"enum":["onramp","offramp","swap","wallet"],"type":"string"}},{"name":"transactionAmount","required":true,"in":"query","schema":{"type":"number"}},{"name":"baseCurrency","required":true,"in":"query","schema":{"type":"string"}}],"responses":{"200":{"description":"","content":{"application/json":{"schema":{"$ref":"#/components/schemas/CheckTransactionDTO"}}}}},"security":[{"JWT-auth":[]}],"tags":["Transactions"]}},"/v1/transactions/{transactionID}":{"get":{"operationId":"getTransaction","summary":"Gets details of a transaction","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"transactionID","required":true,"in":"path","schema":{"type":"string"}}],"responses":{"200":{"description":"Details of a transaction","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TransactionDTO"}}}},"404":{"description":"Transaction does not exist"}},"security":[{"JWT-auth":[]}],"tags":["Transactions"]}},"/v1/transactions":{"post":{"operationId":"transact","summary":"Submits a new transaction","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"sessionKey","required":true,"in":"query","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreateTransactionDTO"}}}},"responses":{"200":{"description":"Transaction ID"},"400":{"description":"Invalid request parameters"}},"security":[{"JWT-auth":[]}],"tags":["Transactions"]},"get":{"operationId":"getTransactions","summary":"Gets all transactions for the logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"consumerID","required":false,"in":"query","description":"Consumer ID whose transactions is needed","schema":{"type":"string"}},{"name":"partnerID","required":false,"in":"query","description":"Partner ID whose transactions needs to be filtered","schema":{"type":"string"}},{"name":"startDate","required":false,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}},{"name":"endDate","required":false,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}},{"name":"pageOffset","required":false,"in":"query","description":"number of pages to skip, offset 0 means first page results, 1 means second page etc.","schema":{"type":"number"}},{"name":"pageLimit","required":false,"in":"query","description":"number of items per page","schema":{"type":"number"}},{"name":"sortField","required":false,"in":"query","description":"sort by field","schema":{"enum":["transactionTimestamp","leg1Amount","leg2Amount","leg1","leg2"],"type":"string"}},{"name":"sortOrder","required":false,"in":"query","description":"sort order asc or desc","schema":{"enum":["ASC","DESC"],"type":"string"}},{"name":"fiatCurrency","required":false,"in":"query","description":"filter for a particular fiat currency","schema":{"type":"string"}},{"name":"cryptoCurrency","required":false,"in":"query","description":"filter for a particular Cryptocurrency","schema":{"type":"string"}},{"name":"transactionStatus","required":false,"in":"query","description":"filter for a particular transaction status","schema":{"enum":["PENDING","VALIDATION_FAILED","VALIDATION_PASSED","FIAT_INCOMING_INITIATED","FIAT_INCOMING_COMPLETED","FIAT_INCOMING_FAILED","FIAT_REVERSAL_INITIATING","FIAT_INCOMING_REVERSAL_INITIATED","FIAT_INCOMING_REVERSAL_FAILED","FIAT_INCOMING_REVERSED","CRYPTO_OUTGOING_INITIATING","CRYPTO_OUTGOING_INITIATED","CRYPTO_OUTGOING_COMPLETED","CRYPTO_OUTGOING_FAILED","COMPLETED","FAILED"],"type":"string"}}],"responses":{"200":{"description":"List of all transactions","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TransactionsQueryResultsDTO"}}}},"400":{"description":"Invalid request parameters"}},"security":[{"JWT-auth":[]}],"tags":["Transactions"]}},"/v1/consumers/balances":{"get":{"operationId":"getConsumerBalance","summary":"Gets all wallet balances for the logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Get all consumer balances","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/ConsumerBalanceDTO"}}}}},"400":{"description":"Invalid request parameters"}},"security":[{"JWT-auth":[]}],"tags":["Consumer"]}},"/v1/consumers/limits":{"get":{"operationId":"getConsumerLimits","summary":"Gets transaction limit details for logged-in consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}}],"responses":{"200":{"description":"Consumer limit details","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ConsumerLimitsDTO"}}}},"400":{"description":"Invalid request parameters"}},"security":[{"JWT-auth":[]}],"tags":["Consumer"]}},"/v1/transactions/download":{"get":{"operationId":"downloadTransactions","summary":"Downloads all the transactions of a particular consumer","parameters":[{"name":"x-noba-api-key","in":"header","required":true,"schema":{"type":"string"}},{"name":"x-noba-signature","in":"header","required":false,"schema":{"type":"string"}},{"name":"x-noba-timestamp","in":"header","description":"Timestamp in milliseconds, use: new Date().getTime().toString()","required":false,"schema":{"type":"string"}},{"name":"consumerID","required":false,"in":"query","description":"Consumer ID whose transactions is needed","schema":{"type":"string"}},{"name":"partnerID","required":false,"in":"query","description":"Partner ID whose transactions needs to be filtered","schema":{"type":"string"}},{"name":"startDate","required":false,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}},{"name":"endDate","required":false,"in":"query","description":"Format: YYYY-MM-DD, example: 2010-04-27","schema":{"type":"string"}},{"name":"pageOffset","required":false,"in":"query","description":"number of pages to skip, offset 0 means first page results, 1 means second page etc.","schema":{"type":"number"}},{"name":"pageLimit","required":false,"in":"query","description":"number of items per page","schema":{"type":"number"}},{"name":"sortField","required":false,"in":"query","description":"sort by field","schema":{"enum":["transactionTimestamp","leg1Amount","leg2Amount","leg1","leg2"],"type":"string"}},{"name":"sortOrder","required":false,"in":"query","description":"sort order asc or desc","schema":{"enum":["ASC","DESC"],"type":"string"}},{"name":"fiatCurrency","required":false,"in":"query","description":"filter for a particular fiat currency","schema":{"type":"string"}},{"name":"cryptoCurrency","required":false,"in":"query","description":"filter for a particular Cryptocurrency","schema":{"type":"string"}},{"name":"transactionStatus","required":false,"in":"query","description":"filter for a particular transaction status","schema":{"enum":["PENDING","VALIDATION_FAILED","VALIDATION_PASSED","FIAT_INCOMING_INITIATED","FIAT_INCOMING_COMPLETED","FIAT_INCOMING_FAILED","FIAT_REVERSAL_INITIATING","FIAT_INCOMING_REVERSAL_INITIATED","FIAT_INCOMING_REVERSAL_FAILED","FIAT_INCOMING_REVERSED","CRYPTO_OUTGOING_INITIATING","CRYPTO_OUTGOING_INITIATED","CRYPTO_OUTGOING_COMPLETED","CRYPTO_OUTGOING_FAILED","COMPLETED","FAILED"],"type":"string"}},{"name":"reportFormat","required":true,"in":"query","description":"Format in which you want the transactions report. Current 'CSV' is supported.","schema":{"enum":["csv","pdf"],"type":"string"}}],"responses":{"200":{"description":"A CSV or PDF file containing details of all the transactions made by the consumer","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/TransactionDTO"}}}}}},"security":[{"JWT-auth":[]}],"tags":["Transactions"]}}},"info":{"title":"Noba Server","description":"Noba Server API (Internal) (DEVELOPMENT)","version":"1.0","contact":{}},"tags":[],"servers":[{"url":"/"}],"components":{"securitySchemes":{"JWT-auth":{"scheme":"bearer","bearerFormat":"JWT","type":"http"}},"schemas":{"CurrencyDTO":{"type":"object","properties":{"type":{"type":"string"},"provider":{"type":"string"},"name":{"type":"string"},"ticker":{"type":"string"},"iconPath":{"type":"string"},"precision":{"type":"number"}},"required":["name","ticker","iconPath","precision"]},"SubdivisionDTO":{"type":"object","properties":{"code":{"type":"string"},"name":{"type":"string"},"supported":{"type":"boolean"}},"required":["code","name","supported"]},"LocationDTO":{"type":"object","properties":{"countryName":{"type":"string"},"alternateCountryName":{"type":"string"},"countryISOCode":{"type":"string"},"subdivisions":{"type":"array","items":{"$ref":"#/components/schemas/SubdivisionDTO"}},"countryFlagIconPath":{"type":"string"}},"required":["countryName","countryISOCode"]},"ConfigurationsDTO":{"type":"object","properties":{"lowAmountThreshold":{"type":"number"},"highAmountThreshold":{"type":"number"},"cryptoImageBaseUrl":{"type":"string"},"fiatImageBaseUrl":{"type":"string"}},"required":["lowAmountThreshold","highAmountThreshold","cryptoImageBaseUrl","fiatImageBaseUrl"]},"CreditCardDTO":{"type":"object","properties":{"issuer":{"type":"string"},"network":{"type":"string"},"bin":{"type":"string"},"type":{"type":"string"},"supported":{"type":"string"},"digits":{"type":"number"},"cvvDigits":{"type":"number"},"mask":{"type":"string"}},"required":["network","bin","type","supported","digits","cvvDigits"]},"VerifyOtpRequestDTO":{"type":"object","properties":{"emailOrPhone":{"type":"string","description":"Email or phone value to identify the user"},"email":{"type":"string","description":"This attribute is deprecated and will be removed in future, please use emailOrPhone instead"},"identityType":{"type":"string","enum":["CONSUMER","PARTNER_ADMIN","NOBA_ADMIN"],"description":"Identity type of the user logging in"},"otp":{"type":"number","description":"One-time password sent to email or phone"}},"required":["identityType","otp"]},"VerifyOtpResponseDTO":{"type":"object","properties":{"access_token":{"type":"string"},"user_id":{"type":"string"}},"required":["access_token","user_id"]},"LoginRequestDTO":{"type":"object","properties":{"emailOrPhone":{"type":"string","description":"Email or phone value to identify the user"},"email":{"type":"string","description":"This attribute is deprecated and will be removed in future, please use emailOrPhone instead"},"identityType":{"type":"string","enum":["CONSUMER","PARTNER_ADMIN","NOBA_ADMIN"],"description":"Identity type of the user logging in"},"autoCreate":{"type":"boolean","description":"Whether or not to auto-create an account if not present"}},"required":["identityType"]},"KycVerificationDTO":{"type":"object","properties":{"kycVerificationStatus":{"type":"string","enum":["NotSubmitted","Pending","Approved","Rejected"]},"updatedTimestamp":{"type":"number"}},"required":["kycVerificationStatus"]},"DocumentVerificationDTO":{"type":"object","properties":{"documentVerificationStatus":{"type":"string","enum":["NotRequired","NotSubmitted","Pending","Verified","ActionRequired","Rejected"]},"documentVerificationErrorReason":{"type":"string","enum":["RequiresRecapture","PoorQuality","SizeOrType"]},"updatedTimestamp":{"type":"number"}}},"PaymentMethodCardDataDTO":{"type":"object","properties":{"cardType":{"type":"string"},"scheme":{"type":"string"},"first6Digits":{"type":"string"},"last4Digits":{"type":"string"}},"required":["first6Digits","last4Digits"]},"PaymentMethodACHDataDTO":{"type":"object","properties":{"accountMask":{"type":"string"},"accountType":{"type":"string"}},"required":["accountMask"]},"PaymentMethodsDTO":{"type":"object","properties":{"name":{"type":"string"},"type":{"type":"string","enum":["Card","ACH"]},"imageUri":{"type":"string"},"paymentToken":{"type":"string"},"cardData":{"$ref":"#/components/schemas/PaymentMethodCardDataDTO"},"achData":{"$ref":"#/components/schemas/PaymentMethodACHDataDTO"}},"required":["type","paymentToken"]},"CryptoWalletsDTO":{"type":"object","properties":{"walletName":{"type":"string"},"address":{"type":"string"},"chainType":{"type":"string"},"isEVMCompatible":{"type":"boolean"}},"required":["address"]},"ConsumerDTO":{"type":"object","properties":{"_id":{"type":"string"},"firstName":{"type":"string"},"lastName":{"type":"string"},"email":{"type":"string"},"status":{"type":"string","enum":["Approved","Pending","ActionRequired","TemporaryHold","PermanentHold"]},"kycVerificationData":{"$ref":"#/components/schemas/KycVerificationDTO"},"documentVerificationData":{"$ref":"#/components/schemas/DocumentVerificationDTO"},"phone":{"type":"string"},"dateOfBirth":{"type":"string"},"address":{"type":"object"},"paymentMethods":{"type":"array","items":{"$ref":"#/components/schemas/PaymentMethodsDTO"}},"cryptoWallets":{"type":"array","items":{"$ref":"#/components/schemas/CryptoWalletsDTO"}},"paymentMethodStatus":{"type":"string","enum":["Approved","Pending","NotSubmitted"]},"walletStatus":{"type":"string","enum":["Approved","Pending","NotSubmitted"]}},"required":["_id","email","status","kycVerificationData","documentVerificationData"]},"UpdateConsumerRequestDTO":{"type":"object","properties":{"firstName":{"type":"string"},"lastName":{"type":"string"},"address":{"type":"object"},"dateOfBirth":{"type":"string"}}},"UserPhoneUpdateRequest":{"type":"object","properties":{"phone":{"type":"string"},"otp":{"type":"number"}},"required":["phone","otp"]},"PhoneVerificationOtpRequest":{"type":"object","properties":{"phone":{"type":"string"}},"required":["phone"]},"UserEmailUpdateRequest":{"type":"object","properties":{"email":{"type":"string"},"otp":{"type":"number"}},"required":["email","otp"]},"EmailVerificationOtpRequest":{"type":"object","properties":{"email":{"type":"string"}},"required":["email"]},"PlaidTokenDTO":{"type":"object","properties":{"token":{"type":"string"}},"required":["token"]},"CardDetailsDTO":{"type":"object","properties":{"cardNumber":{"type":"string"},"expiryMonth":{"type":"number"},"expiryYear":{"type":"number"},"cvv":{"type":"string"}},"required":["cardNumber","expiryMonth","expiryYear","cvv"]},"ACHDetailsDTO":{"type":"object","properties":{"token":{"type":"string"}},"required":["token"]},"AddPaymentMethodDTO":{"type":"object","properties":{"name":{"type":"string"},"type":{"type":"string","enum":["Card","ACH"]},"cardDetails":{"$ref":"#/components/schemas/CardDetailsDTO"},"achDetails":{"$ref":"#/components/schemas/ACHDetailsDTO"},"imageUri":{"type":"string"}},"required":["type"]},"AddCryptoWalletDTO":{"type":"object","properties":{"walletName":{"type":"string"},"address":{"type":"string"},"chainType":{"type":"string"},"isEVMCompatible":{"type":"boolean"}},"required":["address"]},"ConfirmWalletUpdateDTO":{"type":"object","properties":{"address":{"type":"string"},"otp":{"type":"number"}},"required":["address","otp"]},"KybStatusInfoDTO":{"type":"object","properties":{"kybStatus":{"type":"string","enum":["VERIFIED","NOT_VERIFIED"]},"kybProvider":{"type":"string"}},"required":["kybStatus","kybProvider"]},"PartnerDTO":{"type":"object","properties":{"_id":{"type":"string"},"name":{"type":"string"},"verificationData":{"$ref":"#/components/schemas/KybStatusInfoDTO"},"apiKey":{"type":"string"},"apiKeyForEmbed":{"type":"string"},"secretKey":{"type":"string"},"webhookClientID":{"type":"string"},"webhookSecret":{"type":"string"},"logoSmall":{"type":"string"},"logo":{"type":"string"}},"required":["_id","name","apiKey","apiKeyForEmbed","secretKey","webhookClientID","webhookSecret"]},"UpdatePartnerRequestDTO":{"type":"object","properties":{"name":{"type":"string"},"takeRate":{"type":"number"},"notificationConfigs":{"type":"array","items":{"type":"string"}},"webhooks":{"type":"array","items":{"type":"string"}}}},"PartnerAdminDTO":{"type":"object","properties":{"_id":{"type":"string"},"name":{"type":"string"},"email":{"type":"string"},"partnerID":{"type":"string"},"role":{"type":"string","enum":["BASIC","INTERMEDIATE","ALL"]}},"required":["_id","email","partnerID","role"]},"AddPartnerAdminRequestDTO":{"type":"object","properties":{"email":{"type":"string"},"name":{"type":"string"},"role":{"type":"string","enum":["BASIC","INTERMEDIATE","ALL"]}},"required":["email","name","role"]},"UpdatePartnerAdminRequestDTO":{"type":"object","properties":{"email":{"type":"string"},"name":{"type":"string"},"role":{"type":"string","enum":["BASIC","INTERMEDIATE","ALL"]}}},"TransactionAmountsDTO":{"type":"object","properties":{"baseAmount":{"type":"number","description":"Fiat amount in USD"},"fiatAmount":{"type":"number","description":"Fiat amount in currency represented by 'fiatCurrency' property"},"fiatCurrency":{"type":"string","description":"Fiat currency used to purchase crypto"},"cryptoQuantityExpected":{"type":"number","description":"Amount of crypto initially expected (see 'cryptoAmountSettled' for final confirmed amount)"},"cryptoAmountSettled":{"type":"number","description":"Amount of crypto purchased and settled on the blockchain"},"cryptocurrency":{"type":"string","description":"Cryptocurrency purchased in this transaction"},"processingFee":{"type":"number","description":"Payment processing fee for the transaction"},"networkFee":{"type":"number","description":"Network / gas fee required to settle the transaction on chain"},"nobaFee":{"type":"number","description":"Noba service fee for the transaction"},"totalFiatPrice":{"type":"number","description":"Amount paid inclusive of fees"},"conversionRate":{"type":"number","description":"Conversion rate used between the 'fiatCurrency' and 'cryptocurrency'"}},"required":["baseAmount","fiatAmount","fiatCurrency","cryptoQuantityExpected","cryptoAmountSettled","cryptocurrency","processingFee","networkFee","nobaFee","totalFiatPrice","conversionRate"]},"TransactionDTO":{"type":"object","properties":{"_id":{"type":"string","description":"Internal unique reference to this transaction"},"transactionID":{"type":"string","description":"Unique transaction reference number"},"userID":{"type":"string","description":"Internal unique reference to the user who initiated the transaction"},"status":{"type":"string","enum":["PENDING","VALIDATION_FAILED","VALIDATION_PASSED","FIAT_INCOMING_INITIATED","FIAT_INCOMING_COMPLETED","FIAT_INCOMING_FAILED","FIAT_REVERSAL_INITIATING","FIAT_INCOMING_REVERSAL_INITIATED","FIAT_INCOMING_REVERSAL_FAILED","FIAT_INCOMING_REVERSED","CRYPTO_OUTGOING_INITIATING","CRYPTO_OUTGOING_INITIATED","CRYPTO_OUTGOING_COMPLETED","CRYPTO_OUTGOING_FAILED","COMPLETED","FAILED"],"description":"Current status of the transaction"},"transactionHash":{"type":"string","description":"Hash of the transaction as settled on the blockchain"},"transactionTimestamp":{"format":"date-time","type":"string","description":"Timestamp the transaction was submitted"},"destinationWalletAddress":{"type":"string","description":"Wallet address to which the crypto purchase was transferred"},"partnerID":{"type":"string","description":"Unique ID of the partner through which this transaction was made"},"paymentMethodID":{"type":"string","description":"Unique ID of the payment method used to fund this transaction"},"amounts":{"description":"All amounts and currency information related to this transaction","allOf":[{"$ref":"#/components/schemas/TransactionAmountsDTO"}]}},"required":["_id","transactionID","userID","status","transactionHash","transactionTimestamp","partnerID","paymentMethodID","amounts"]},"TransactionsQueryResultsDTO":{"type":"object","properties":{"items":{"type":"array","items":{"$ref":"#/components/schemas/TransactionDTO"}},"page":{"type":"number"},"hasNextPage":{"type":"boolean"},"totalPages":{"type":"number"},"totalItems":{"type":"number"}},"required":["items","page","hasNextPage","totalPages","totalItems"]},"TransactionStatsDTO":{"type":"object","properties":{"numTransactions":{"type":"number"},"totalAmount":{"type":"number"}},"required":["numTransactions","totalAmount"]},"AddNobaAdminDTO":{"type":"object","properties":{"email":{"type":"string"},"name":{"type":"string"},"role":{"type":"string","enum":["BASIC","INTERMEDIATE","ADMIN"]}},"required":["email","name","role"]},"NobaAdminDTO":{"type":"object","properties":{"_id":{"type":"string"},"email":{"type":"string"},"name":{"type":"string"},"role":{"type":"string","enum":["BASIC","INTERMEDIATE","ADMIN"]}},"required":["_id","email","name","role"]},"UpdateNobaAdminDTO":{"type":"object","properties":{"name":{"type":"string"},"role":{"type":"string","enum":["BASIC","INTERMEDIATE","ADMIN"]}},"required":["name","role"]},"DeleteNobaAdminDTO":{"type":"object","properties":{"_id":{"type":"string"}},"required":["_id"]},"CreatePartnerRequestDTO":{"type":"object","properties":{"name":{"type":"string"},"allowedCryptoCurrencies":{"type":"array","items":{"type":"string"}},"keepWalletsPrivate":{"type":"boolean"},"makeOtherPartnerWalletsVisible":{"type":"boolean"},"bypassWalletOtp":{"type":"boolean"},"creditCardFeeDiscountPercent":{"type":"number"},"nobaFeeDiscountPercent":{"type":"number"},"processingFeeDiscountPercent":{"type":"number"},"networkFeeDiscountPercent":{"type":"number"},"spreadDiscountPercent":{"type":"number"}},"required":["name","allowedCryptoCurrencies"]},"AddressDTO":{"type":"object","properties":{"streetLine1":{"type":"string"},"streetLine2":{"type":"string"},"countryCode":{"type":"string"},"city":{"type":"string"},"regionCode":{"type":"string"},"postalCode":{"type":"string"}},"required":["streetLine1","countryCode","city","regionCode","postalCode"]},"VerificationDataDTO":{"type":"object","properties":{"verificationProvider":{"type":"string","enum":["sardine"]},"kycVerificationStatus":{"type":"string","enum":["NotSubmitted","Pending","Approved","Flagged","Rejected"]},"documentVerificationStatus":{"type":"string","enum":["NotRequired","Required","Pending","Approved","Rejected","Rejected_RequiresRecapture","Rejected_PoorQuality","Rejected_SizeOrType","LivePhotoVerified"]}}},"AdminUpdateConsumerRequestDTO":{"type":"object","properties":{"dateOfBirth":{"type":"string"},"address":{"$ref":"#/components/schemas/AddressDTO"},"verificationData":{"$ref":"#/components/schemas/VerificationDataDTO"}}},"NationalIDDTO":{"type":"object","properties":{"type":{"type":"string","enum":["SocialSecurity"]},"number":{"type":"string"}},"required":["type","number"]},"IDVerificationRequestDTO":{"type":"object","properties":{"firstName":{"type":"string"},"lastName":{"type":"string"},"address":{"$ref":"#/components/schemas/AddressDTO"},"phoneNumber":{"type":"string"},"dateOfBirth":{"type":"string","description":"Date of birth in format YYYY-MM-DD"},"nationalID":{"$ref":"#/components/schemas/NationalIDDTO"}},"required":["firstName","lastName","address","dateOfBirth"]},"VerificationResultDTO":{"type":"object","properties":{"status":{"type":"string","enum":["NotSubmitted","Pending","Approved","Rejected"]}},"required":["status"]},"DocumentVerificationResultDTO":{"type":"object","properties":{"status":{"type":"string","enum":["NotRequired","NotSubmitted","Pending","Verified","ActionRequired","Rejected"]},"errorReason":{"type":"string","enum":["RequiresRecapture","PoorQuality","SizeOrType"]}},"required":["status"]},"IDVerificationURLResponseDTO":{"type":"object","properties":{"id":{"type":"string","description":"Unique ID for this identity verification request"},"url":{"type":"string","description":"URL for identity verification document capture redirect"},"expiration":{"type":"number","description":"Expiration time of the url (in ms since the epoch)"}},"required":["id","url","expiration"]},"DeviceAttributesDTO":{"type":"object","properties":{"Browser":{"type":"array","items":{"type":"string"}},"Model":{"type":"array","items":{"type":"string"}},"OS":{"type":"array","items":{"type":"string"}}},"required":["Browser","Model","OS"]},"DeviceBehaviorBiometricsDTO":{"type":"object","properties":{"numDistractionEvents":{"type":"number"},"fields":{"type":"array","items":{"type":"string"}}},"required":["fields"]},"DeviceIpLocationDTO":{"type":"object","properties":{"city":{"type":"string"},"region":{"type":"string"},"country":{"type":"string"},"latitude":{"type":"string"},"longitude":{"type":"string"}}},"DeviceGpsLocationDTO":{"type":"object","properties":{"city":{"type":"string"},"region":{"type":"string"},"country":{"type":"string"},"latitude":{"type":"string"},"longitude":{"type":"string"},"mockLevel":{"type":"string"}}},"DeviceVerificationResponseDTO":{"type":"object","properties":{"id":{"type":"string"},"level":{"type":"string","enum":["unknown","very_high","high","medium","low"]},"attributes":{"$ref":"#/components/schemas/DeviceAttributesDTO"},"signals":{"type":"array","items":{"type":"string"}},"sessionKey":{"type":"string"},"fingerprint":{"type":"string"},"fingerprintConfidenceScore":{"type":"number"},"behaviorBiometricRiskLevel":{"type":"string"},"deviceReputation":{"type":"string"},"behaviorBiometrics":{"$ref":"#/components/schemas/DeviceBehaviorBiometricsDTO"},"ipLocation":{"$ref":"#/components/schemas/DeviceIpLocationDTO"},"gpsLocation":{"$ref":"#/components/schemas/DeviceGpsLocationDTO"}},"required":["id","level","sessionKey"]},"ActionDTO":{"type":"object","properties":{"source":{"type":"string"},"user_email":{"type":"string"},"value":{"type":"string"}},"required":["source"]},"CaseDTO":{"type":"object","properties":{"sessionKey":{"type":"string"},"customerID":{"type":"string"},"status":{"type":"string"},"checkpoint":{"type":"string"},"transactionID":{"type":"string"}},"required":["sessionKey","customerID"]},"DataDTO":{"type":"object","properties":{"action":{"$ref":"#/components/schemas/ActionDTO"},"case":{"$ref":"#/components/schemas/CaseDTO"},"documentVerificationResult":{"type":"object"}},"required":["action","case","documentVerificationResult"]},"DocumentVerificationWebhookRequestDTO":{"type":"object","properties":{"id":{"type":"string"},"type":{"type":"string"},"timestamp":{"type":"string"},"data":{"$ref":"#/components/schemas/DataDTO"}},"required":["id","type","timestamp","data"]},"CaseNotificationDataDTO":{"type":"object","properties":{"action":{"$ref":"#/components/schemas/ActionDTO"},"case":{"$ref":"#/components/schemas/CaseDTO"}},"required":["action","case"]},"CaseNotificationWebhookRequestDTO":{"type":"object","properties":{"id":{"type":"string"},"type":{"type":"string"},"timestamp":{"type":"string"},"data":{"$ref":"#/components/schemas/CaseNotificationDataDTO"}},"required":["id","type","timestamp","data"]},"TransactionQuoteDTO":{"type":"object","properties":{"fiatCurrencyCode":{"type":"string"},"cryptoCurrencyCode":{"type":"string"},"fixedSide":{"type":"string","enum":["fiat","crypto"]},"fixedAmount":{"type":"number"},"quotedAmount":{"type":"number"},"processingFee":{"type":"number"},"nobaFee":{"type":"number"},"networkFee":{"type":"number"},"exchangeRate":{"type":"number"}},"required":["fiatCurrencyCode","cryptoCurrencyCode","fixedSide","fixedAmount","quotedAmount","processingFee","nobaFee","networkFee","exchangeRate"]},"CheckTransactionDTO":{"type":"object","properties":{"status":{"type":"string","enum":["ALLOWED","TRANSACTION_TOO_SMALL","TRANSACTION_TOO_LARGE","TRANSACTION_LIMIT_REACHED","DAILY_LIMIT_REACHED","WEEKLY_LIMIT_REACHED","MONTHLY_LIMIT_REACHED","MAX_LIMIT_REACHED"]},"rangeMin":{"type":"number"},"rangeMax":{"type":"number"}},"required":["status","rangeMin","rangeMax"]},"CreateTransactionDTO":{"type":"object","properties":{"paymentToken":{"type":"string"},"type":{"type":"string","enum":["onramp","offramp","swap","wallet"]},"leg1":{"type":"string"},"leg2":{"type":"string"},"leg1Amount":{"type":"number"},"leg2Amount":{"type":"number"},"fixedSide":{"type":"string","enum":["fiat","crypto"]},"destinationWalletAddress":{"type":"string"}},"required":["paymentToken","type","leg1","leg2","leg1Amount","leg2Amount","fixedSide","destinationWalletAddress"]},"ConsumerBalanceDTO":{"type":"object","properties":{"asset":{"type":"string"},"balance":{"type":"string"},"accountType":{"type":"string"},"accountID":{"type":"string"},"lastUpdate":{"type":"number"},"name":{"type":"string"}},"required":["asset","balance"]},"PeriodLimit":{"type":"object","properties":{"max":{"type":"number"},"used":{"type":"number"},"period":{"type":"number"}},"required":["max","used","period"]},"ConsumerLimitsDTO":{"type":"object","properties":{"minTransaction":{"type":"number"},"maxTransaction":{"type":"number"},"monthly":{"$ref":"#/components/schemas/PeriodLimit"},"weekly":{"$ref":"#/components/schemas/PeriodLimit"},"daily":{"$ref":"#/components/schemas/PeriodLimit"}},"required":["minTransaction","maxTransaction","monthly"]}}}}
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "operationId": "appHealth",
+        "summary": "Checks if the Noba service is up and running",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Health status of the Noba service" } },
+        "tags": ["Health Check"]
+      }
+    },
+    "/v1/cryptocurrencies": {
+      "get": {
+        "operationId": "supportedCryptocurrencies",
+        "summary": "Returns a list of all cryptocurrencies supported by Noba Onramp",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all supported cryptocurrencies",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/CurrencyDTO" } }
+              }
+            }
+          }
+        },
+        "tags": ["Assets"]
+      }
+    },
+    "/v1/fiatcurrencies": {
+      "get": {
+        "operationId": "supportedFiatCurrencies",
+        "summary": "Returns a list of all fiat currencies supported by Noba Onramp",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all supported fiat currencies",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/CurrencyDTO" } }
+              }
+            }
+          }
+        },
+        "tags": ["Assets"]
+      }
+    },
+    "/v1/countries": {
+      "get": {
+        "operationId": "getSupportedCountries",
+        "summary": "Returns a list of all countries supported by Noba Onramp",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "includeSubdivisions",
+            "required": false,
+            "in": "query",
+            "description": "Include subdivision data",
+            "schema": { "type": "boolean" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Location details of supported countries, optionally including subdivision data",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/LocationDTO" } }
+              }
+            }
+          }
+        },
+        "tags": ["Assets"]
+      }
+    },
+    "/v1/countries/{countryCode}": {
+      "get": {
+        "operationId": "getSupportedCountry",
+        "summary": "Returns details of a country and its subdivisions supported by Noba Onramp",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "countryCode", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Location details of requested country",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LocationDTO" } } }
+          },
+          "404": { "description": "Country code not found" }
+        },
+        "tags": ["Assets"]
+      }
+    },
+    "/v1/config": {
+      "get": {
+        "operationId": "getCommonConfigurations",
+        "summary": "Returns common api configurations",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Common api configurations",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConfigurationsDTO" } } }
+          },
+          "404": { "description": "Configurations not found" }
+        },
+        "tags": ["Assets"]
+      }
+    },
+    "/v1/creditcardmetadata/{bin}": {
+      "get": {
+        "operationId": "getCreditCardBIN",
+        "summary": "Returns credit card structure metadata for the provided BIN",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "bin", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card metadata",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreditCardDTO" } } }
+          },
+          "404": { "description": "Credit card information not found" }
+        },
+        "tags": ["Assets"]
+      }
+    },
+    "/v1/auth/verifyotp": {
+      "post": {
+        "operationId": "verifyOtp",
+        "summary": "Submits the one-time passcode (OTP) to retreive an API access token",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VerifyOtpRequestDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "API access token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VerifyOtpResponseDTO" } } }
+          },
+          "401": { "description": "Invalid OTP" }
+        },
+        "tags": ["Authentication"]
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "operationId": "loginUser",
+        "summary": "Logs user in and sends one-time passcode (OTP) to the provided email address",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequestDTO" } } }
+        },
+        "responses": { "200": { "description": "OTP successfully sent." }, "403": { "description": "Access denied" } },
+        "tags": ["Authentication"]
+      }
+    },
+    "/v1/consumers": {
+      "get": {
+        "operationId": "getConsumer",
+        "summary": "Gets details of logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of logged-in consumer",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "patch": {
+        "operationId": "updateConsumer",
+        "summary": "Updates details of logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateConsumerRequestDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated consumer record",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/phone": {
+      "patch": {
+        "operationId": "updatePhone",
+        "summary": "Adds or updates phone number of logged in user with OTP",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserPhoneUpdateRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated the user's phone number",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/phone/verify": {
+      "post": {
+        "operationId": "requestOtpToUpdatePhone",
+        "summary": "Sends OTP to user's phone to verify update of user profile",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PhoneVerificationOtpRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "OTP sent to user's phone" },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/email": {
+      "patch": {
+        "operationId": "updateEmail",
+        "summary": "Adds or updates email address of logged in user with OTP",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserEmailUpdateRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated the user's email address",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/email/verify": {
+      "post": {
+        "operationId": "requestOtpToUpdateEmail",
+        "summary": "Sends OTP to user's email to verify update of user profile",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/EmailVerificationOtpRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "OTP sent to user's email address" },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/paymentmethods/plaid/token": {
+      "get": {
+        "operationId": "generatePlaidToken",
+        "summary": "Generates a token to connect to Plaid UI",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Plaid token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PlaidTokenDTO" } } }
+          },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/paymentmethods": {
+      "post": {
+        "operationId": "addPaymentMethod",
+        "summary": "Adds a payment method for the logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddPaymentMethodDTO" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "Updated consumer record",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid payment method details" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/paymentmethods/{paymentToken}": {
+      "delete": {
+        "operationId": "deletePaymentMethod",
+        "summary": "Deletes a payment method for the logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "paymentToken", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted consumer record",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid payment method details" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/wallets": {
+      "post": {
+        "operationId": "addCryptoWallet",
+        "summary": "Adds a crypto wallet for the logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddCryptoWalletDTO" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "Updated consumer record with the crypto wallet",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid crypto wallet details" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/wallets/{walletAddress}": {
+      "delete": {
+        "operationId": "deleteCryptoWallet",
+        "summary": "Deletes a saved wallet for the logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "walletAddress", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted wallet for consumer",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid wallet address" },
+          "403": { "description": "Logged-in user is not a Consumer" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/consumers/wallets/confirm": {
+      "post": {
+        "operationId": "confirmWalletUpdate",
+        "summary": "Submits the one-time passcode (OTP) to confirm wallet add or update",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConfirmWalletUpdateDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Verified wallet for consumer",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "401": { "description": "Invalid OTP" }
+        },
+        "tags": ["Consumer"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/partners": {
+      "get": {
+        "operationId": "getPartner",
+        "summary": "Gets details of a partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of partner",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to retrieve partner details" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "patch": {
+        "operationId": "updatePartner",
+        "summary": "Updates details of a partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePartnerRequestDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Partner details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to update partner details" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/partners/admins/{partnerAdminID}": {
+      "get": {
+        "operationId": "getPartnerAdmin",
+        "summary": "Gets details of a partner admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "partnerAdminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of partner admin",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerAdminDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to retrieve partner admin" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "patch": {
+        "operationId": "updatePartnerAdmin",
+        "summary": "Updates details of a partner admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "partnerAdminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePartnerAdminRequestDTO" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Details of updated partner admin",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerAdminDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to update partner admin" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "delete": {
+        "operationId": "deletePartnerAdmin",
+        "summary": "Deletes a parter admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "partnerAdminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted partner admin record",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerAdminDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to delete partner admin" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/partners/admins": {
+      "get": {
+        "operationId": "getAllPartnerAdmins",
+        "summary": "Gets all admins for the partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All admins of the partner",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PartnerAdminDTO" } }
+              }
+            }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to retrieve partner admin list" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "post": {
+        "operationId": "addPartnerAdmin",
+        "summary": "Adds a new partner admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddPartnerAdminRequestDTO" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "New partner admin record",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerAdminDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to add a new partner admin" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/partners/consumers": {
+      "get": {
+        "operationId": "getAllPartnerConsumers",
+        "summary": "Gets all consumers for the partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All consumers of the partner",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PartnerAdminDTO" } }
+              }
+            }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "403": { "description": "User lacks permission to retrieve partner admin list" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/partners/transactions": {
+      "get": {
+        "operationId": "getPartnerTransactions",
+        "summary": "Get all transactions for the given partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "consumerID",
+            "required": false,
+            "in": "query",
+            "description": "Consumer ID whose transactions is needed",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "partnerID",
+            "required": false,
+            "in": "query",
+            "description": "Partner ID whose transactions needs to be filtered",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageOffset",
+            "required": false,
+            "in": "query",
+            "description": "number of pages to skip, offset 0 means first page results, 1 means second page etc.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageLimit",
+            "required": false,
+            "in": "query",
+            "description": "number of items per page",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "sortField",
+            "required": false,
+            "in": "query",
+            "description": "sort by field",
+            "schema": { "enum": ["transactionTimestamp", "leg1Amount", "leg2Amount", "leg1", "leg2"], "type": "string" }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "sort order asc or desc",
+            "schema": { "enum": ["ASC", "DESC"], "type": "string" }
+          },
+          {
+            "name": "fiatCurrency",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular fiat currency",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "cryptoCurrency",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular Cryptocurrency",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "transactionStatus",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular transaction status",
+            "schema": {
+              "enum": [
+                "PENDING",
+                "VALIDATION_FAILED",
+                "VALIDATION_PASSED",
+                "FIAT_INCOMING_INITIATED",
+                "FIAT_INCOMING_COMPLETED",
+                "FIAT_INCOMING_FAILED",
+                "FIAT_REVERSAL_INITIATING",
+                "FIAT_INCOMING_REVERSAL_INITIATED",
+                "FIAT_INCOMING_REVERSAL_FAILED",
+                "FIAT_INCOMING_REVERSED",
+                "CRYPTO_OUTGOING_INITIATING",
+                "CRYPTO_OUTGOING_INITIATED",
+                "CRYPTO_OUTGOING_COMPLETED",
+                "CRYPTO_OUTGOING_FAILED",
+                "COMPLETED",
+                "FAILED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All transactions for the partner",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TransactionsQueryResultsDTO" } }
+            }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/partners/transactions/{transactionID}": {
+      "get": {
+        "operationId": "getPartnerTransaction",
+        "summary": "Gets details of a transaction",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "transactionID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of a transaction",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TransactionDTO" } } }
+          },
+          "404": { "description": "Transaction does not exist" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/partners/logo": {
+      "post": {
+        "operationId": "uploadPartnerLogo",
+        "summary": "Adds or updates partner logo",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "logo": { "type": "string", "format": "binary" },
+                  "logoSmall": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Updated Partner Info after adding or updating the logos",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "tags": ["Partner"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/vendors/checkout/webhooks": {
+      "post": {
+        "operationId": "consumePaymentWebhooks",
+        "summary": "Checks if the transaction parameters are valid",
+        "parameters": [],
+        "responses": { "200": { "description": "" } },
+        "tags": ["Vendors"]
+      }
+    },
+    "/v1/admins/{adminID}/transactionmetrics": {
+      "get": {
+        "operationId": "getTransactionMetrics",
+        "summary": "Gets all transaction metrics for a given partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "adminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction statistics",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TransactionStatsDTO" } } }
+          }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/admins/{adminID}/transactions": {
+      "get": {
+        "operationId": "getAllTransactions",
+        "summary": "Gets all transactions filtered by the specified date range",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "adminID", "required": true, "in": "path", "schema": { "type": "string" } },
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All transactions within the specified date range",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TransactionDTO" } }
+              }
+            }
+          }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/admins": {
+      "post": {
+        "operationId": "createNobaAdmin",
+        "summary": "Creates a new Noba admin with the specified role",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddNobaAdminDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "The newly created Noba admin",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NobaAdminDTO" } } }
+          },
+          "403": { "description": "User forbidden from adding new Noba admin" },
+          "409": { "description": "User is already a Noba admin" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "get": {
+        "operationId": "getNobaAdmin",
+        "summary": "Gets the details of the logged in Noba admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The logged in Noba admin",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NobaAdminDTO" } } }
+          },
+          "403": { "description": "User forbidden from retrieving details of the Noba admin" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/admins/{adminID}": {
+      "patch": {
+        "operationId": "updateNobaAdmin",
+        "summary": "Updates the details of a Noba admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "adminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateNobaAdminDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated NobaAdmin.",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NobaAdminDTO" } } }
+          },
+          "403": { "description": "User forbidden from updating Noba admin or attempt to update one's own record" },
+          "404": { "description": "Noba admin not found" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "delete": {
+        "operationId": "deleteNobaAdmin",
+        "summary": "Deletes a Noba admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "adminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "The ID of the Noba admin to delete",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteNobaAdminDTO" } } }
+          },
+          "403": { "description": "User forbidden from deleting Noba admin or attempt to delete one's own record" },
+          "404": { "description": "Noba admin not found" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/admins/partners/{partnerID}/admins": {
+      "post": {
+        "operationId": "addAdminsForPartners",
+        "summary": "Adds a new partner admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "partnerID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddPartnerAdminRequestDTO" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "Adds a new partner admin",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerAdminDTO" } } }
+          },
+          "400": { "description": "Invalid parameter(s)" },
+          "403": { "description": "User forbidden from adding a new partner admin" },
+          "404": { "description": "Partner admin not found" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/admins/partners/{partnerID}/admins/{partnerAdminID}": {
+      "delete": {
+        "operationId": "deleteAdminsForPartners",
+        "summary": "Deletes a partner admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "partnerID", "required": true, "in": "path", "schema": { "type": "string" } },
+          { "name": "partnerAdminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Add a new partner admin",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerAdminDTO" } } }
+          },
+          "400": { "description": "Invalid parameter(s)" },
+          "403": { "description": "User forbidden from deleting a partner admin" },
+          "404": { "description": "Partner admin not found" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      },
+      "patch": {
+        "operationId": "updateAdminForPartners",
+        "summary": "Update details of a partner admin",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "partnerID", "required": true, "in": "path", "schema": { "type": "string" } },
+          { "name": "partnerAdminID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePartnerAdminRequestDTO" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update details of a partner admin",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerAdminDTO" } } }
+          },
+          "400": { "description": "Invalid parameter(s)" },
+          "403": { "description": "User forbidden from updating a partner admin" },
+          "404": { "description": "Partner admin not found" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/admins/partners": {
+      "post": {
+        "operationId": "registerPartner",
+        "summary": "Adds a new partner",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatePartnerRequestDTO" } } }
+        },
+        "responses": {
+          "201": {
+            "description": "New partner record",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PartnerDTO" } } }
+          },
+          "400": { "description": "Invalid parameter(s)" },
+          "403": { "description": "User forbidden from adding a new partner" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/admins/consumers/{consumerID}": {
+      "patch": {
+        "operationId": "updateConsumer",
+        "summary": "Updates a consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "consumerID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AdminUpdateConsumerRequestDTO" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated consumer record",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerDTO" } } }
+          },
+          "400": { "description": "Invalid parameter(s)" },
+          "403": { "description": "User forbidden from updating consumer record" }
+        },
+        "tags": ["Admin"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify": {
+      "get": {
+        "operationId": "getVerificationStatus",
+        "summary": "Checks if verification service is up",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Service is up" } },
+        "tags": ["Verification"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify/session": {
+      "post": {
+        "operationId": "createSession",
+        "summary": "Creates a new session for verification",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "New session token",
+            "content": { "application/json": { "schema": { "type": "string" } } }
+          },
+          "400": { "description": "Invalid request" }
+        },
+        "tags": ["Verification"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify/consumerinfo": {
+      "post": {
+        "operationId": "verifyConsumer",
+        "summary": "Verifies consumer-provided information",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "sessionKey", "required": true, "in": "query", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IDVerificationRequestDTO" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VerificationResultDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "tags": ["Verification"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify/document": {
+      "post": {
+        "operationId": "verifyDocument",
+        "summary": "Verifies consumer uploaded identification documents",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "sessionKey", "required": true, "in": "query", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "documentType": {
+                    "type": "string",
+                    "description": "Supported values: passport, national_identity_card, driver_license, other, unknown"
+                  },
+                  "frontImage": { "type": "string", "format": "binary" },
+                  "backImage": { "type": "string", "format": "binary" },
+                  "photoImage": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Document upload result",
+            "content": { "application/json": { "schema": { "type": "string" } } }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "tags": ["Verification"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify/document/result/{id}": {
+      "get": {
+        "operationId": "getDocumentVerificationResult",
+        "summary": "Gets result for a previously-submitted document verification",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "id", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document verification result",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DocumentVerificationResultDTO" } }
+            }
+          },
+          "400": { "description": "Invalid request parameters" },
+          "404": { "description": "Document verification request not found" }
+        },
+        "tags": ["Verification"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify/document/url": {
+      "get": {
+        "operationId": "getIdentityDocumentVerificationURL",
+        "summary": "Retrieves a URL for identity verification",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sessionKey",
+            "required": true,
+            "in": "query",
+            "description": "Unique verification key for this session",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "requestPOA",
+            "required": true,
+            "in": "query",
+            "description": "Request proof of address",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "requestSelfie",
+            "required": true,
+            "in": "query",
+            "description": "Request a selfie photo",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "requestBack",
+            "required": true,
+            "in": "query",
+            "description": "Request photo of back of ID",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "locale",
+            "required": true,
+            "in": "query",
+            "description": "Unique verification key for this session",
+            "schema": { "enum": ["en-us", "es-419"], "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document verification KYC URL details",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/IDVerificationURLResponseDTO" } }
+            }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "tags": ["Verification"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify/device/result": {
+      "get": {
+        "operationId": "getDeviceVerificationResult",
+        "summary": "Gets device verification result",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "sessionKey", "required": true, "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device verification result",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/DeviceVerificationResponseDTO" } }
+            }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "tags": ["Verification"],
+        "security": [{ "JWT-auth": [] }]
+      }
+    },
+    "/v1/verify/webhook/document/result": {
+      "post": {
+        "operationId": "postDocumentVerificationResult",
+        "parameters": [
+          { "name": "x-sardine-signature", "required": true, "in": "header", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/DocumentVerificationWebhookRequestDTO" } }
+          }
+        },
+        "responses": { "200": { "description": "" } },
+        "tags": ["VerificationWebhooks"]
+      }
+    },
+    "/v1/verify/webhook/case/notification": {
+      "post": {
+        "operationId": "postCaseNotification",
+        "parameters": [
+          { "name": "x-sardine-signature", "required": true, "in": "header", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CaseNotificationWebhookRequestDTO" } }
+          }
+        },
+        "responses": { "200": { "description": "" } },
+        "tags": ["VerificationWebhooks"]
+      }
+    },
+    "/v1/transactions/quote": {
+      "get": {
+        "operationId": "getTransactionQuote",
+        "summary": "Get transaction quote (exchange rate, provider fees, network fees etc.)",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "fiatCurrencyCode", "required": true, "in": "query", "schema": { "type": "string" } },
+          { "name": "cryptoCurrencyCode", "required": true, "in": "query", "schema": { "type": "string" } },
+          {
+            "name": "fixedSide",
+            "required": true,
+            "in": "query",
+            "schema": { "enum": ["fiat", "crypto"], "type": "string" }
+          },
+          { "name": "fixedAmount", "required": true, "in": "query", "schema": { "type": "number" } },
+          {
+            "name": "transactionType",
+            "required": true,
+            "in": "query",
+            "schema": { "enum": ["onramp", "offramp", "swap", "wallet"], "type": "string" }
+          },
+          { "name": "partnerID", "required": false, "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TransactionQuoteDTO" } } }
+          },
+          "400": { "description": "Invalid currency code (fiat or crypto)" },
+          "503": { "description": "Unable to connect to underlying service provider" }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Transactions"]
+      }
+    },
+    "/v1/transactions/check": {
+      "get": {
+        "operationId": "checkIfTransactionPossible",
+        "summary": "Checks if the transaction parameters are valid",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "required": true,
+            "in": "query",
+            "schema": { "enum": ["onramp", "offramp", "swap", "wallet"], "type": "string" }
+          },
+          { "name": "transactionAmount", "required": true, "in": "query", "schema": { "type": "number" } },
+          { "name": "baseCurrency", "required": true, "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckTransactionDTO" } } }
+          }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Transactions"]
+      }
+    },
+    "/v1/transactions/{transactionID}": {
+      "get": {
+        "operationId": "getTransaction",
+        "summary": "Gets details of a transaction",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "transactionID", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of a transaction",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TransactionDTO" } } }
+          },
+          "404": { "description": "Transaction does not exist" }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Transactions"]
+      }
+    },
+    "/v1/transactions": {
+      "post": {
+        "operationId": "transact",
+        "summary": "Submits a new transaction",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          { "name": "sessionKey", "required": true, "in": "query", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateTransactionDTO" } } }
+        },
+        "responses": {
+          "200": { "description": "Transaction ID" },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Transactions"]
+      },
+      "get": {
+        "operationId": "getTransactions",
+        "summary": "Gets all transactions for the logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "consumerID",
+            "required": false,
+            "in": "query",
+            "description": "Consumer ID whose transactions is needed",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "partnerID",
+            "required": false,
+            "in": "query",
+            "description": "Partner ID whose transactions needs to be filtered",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageOffset",
+            "required": false,
+            "in": "query",
+            "description": "number of pages to skip, offset 0 means first page results, 1 means second page etc.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageLimit",
+            "required": false,
+            "in": "query",
+            "description": "number of items per page",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "sortField",
+            "required": false,
+            "in": "query",
+            "description": "sort by field",
+            "schema": { "enum": ["transactionTimestamp", "leg1Amount", "leg2Amount", "leg1", "leg2"], "type": "string" }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "sort order asc or desc",
+            "schema": { "enum": ["ASC", "DESC"], "type": "string" }
+          },
+          {
+            "name": "fiatCurrency",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular fiat currency",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "cryptoCurrency",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular Cryptocurrency",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "transactionStatus",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular transaction status",
+            "schema": {
+              "enum": [
+                "PENDING",
+                "VALIDATION_FAILED",
+                "VALIDATION_PASSED",
+                "FIAT_INCOMING_INITIATED",
+                "FIAT_INCOMING_COMPLETED",
+                "FIAT_INCOMING_FAILED",
+                "FIAT_REVERSAL_INITIATING",
+                "FIAT_INCOMING_REVERSAL_INITIATED",
+                "FIAT_INCOMING_REVERSAL_FAILED",
+                "FIAT_INCOMING_REVERSED",
+                "CRYPTO_OUTGOING_INITIATING",
+                "CRYPTO_OUTGOING_INITIATED",
+                "CRYPTO_OUTGOING_COMPLETED",
+                "CRYPTO_OUTGOING_FAILED",
+                "COMPLETED",
+                "FAILED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all transactions",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TransactionsQueryResultsDTO" } }
+            }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Transactions"]
+      }
+    },
+    "/v1/consumers/balances": {
+      "get": {
+        "operationId": "getConsumerBalance",
+        "summary": "Gets all wallet balances for the logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get all consumer balances",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ConsumerBalanceDTO" } }
+              }
+            }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Consumer"]
+      }
+    },
+    "/v1/consumers/limits": {
+      "get": {
+        "operationId": "getConsumerLimits",
+        "summary": "Gets transaction limit details for logged-in consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consumer limit details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ConsumerLimitsDTO" } } }
+          },
+          "400": { "description": "Invalid request parameters" }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Consumer"]
+      }
+    },
+    "/v1/transactions/download": {
+      "get": {
+        "operationId": "downloadTransactions",
+        "summary": "Downloads all the transactions of a particular consumer",
+        "parameters": [
+          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "x-noba-timestamp",
+            "in": "header",
+            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "consumerID",
+            "required": false,
+            "in": "query",
+            "description": "Consumer ID whose transactions is needed",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "partnerID",
+            "required": false,
+            "in": "query",
+            "description": "Partner ID whose transactions needs to be filtered",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "description": "Format: YYYY-MM-DD, example: 2010-04-27",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageOffset",
+            "required": false,
+            "in": "query",
+            "description": "number of pages to skip, offset 0 means first page results, 1 means second page etc.",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "pageLimit",
+            "required": false,
+            "in": "query",
+            "description": "number of items per page",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "sortField",
+            "required": false,
+            "in": "query",
+            "description": "sort by field",
+            "schema": { "enum": ["transactionTimestamp", "leg1Amount", "leg2Amount", "leg1", "leg2"], "type": "string" }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "sort order asc or desc",
+            "schema": { "enum": ["ASC", "DESC"], "type": "string" }
+          },
+          {
+            "name": "fiatCurrency",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular fiat currency",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "cryptoCurrency",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular Cryptocurrency",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "transactionStatus",
+            "required": false,
+            "in": "query",
+            "description": "filter for a particular transaction status",
+            "schema": {
+              "enum": [
+                "PENDING",
+                "VALIDATION_FAILED",
+                "VALIDATION_PASSED",
+                "FIAT_INCOMING_INITIATED",
+                "FIAT_INCOMING_COMPLETED",
+                "FIAT_INCOMING_FAILED",
+                "FIAT_REVERSAL_INITIATING",
+                "FIAT_INCOMING_REVERSAL_INITIATED",
+                "FIAT_INCOMING_REVERSAL_FAILED",
+                "FIAT_INCOMING_REVERSED",
+                "CRYPTO_OUTGOING_INITIATING",
+                "CRYPTO_OUTGOING_INITIATED",
+                "CRYPTO_OUTGOING_COMPLETED",
+                "CRYPTO_OUTGOING_FAILED",
+                "COMPLETED",
+                "FAILED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "reportFormat",
+            "required": true,
+            "in": "query",
+            "description": "Format in which you want the transactions report. Current 'CSV' is supported.",
+            "schema": { "enum": ["csv", "pdf"], "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A CSV or PDF file containing details of all the transactions made by the consumer",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items": { "$ref": "#/components/schemas/TransactionDTO" } }
+              }
+            }
+          }
+        },
+        "security": [{ "JWT-auth": [] }],
+        "tags": ["Transactions"]
+      }
+    }
+  },
+  "info": {
+    "title": "Noba Server",
+    "description": "Noba Server API (Internal) (DEVELOPMENT)",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [{ "url": "/" }],
+  "components": {
+    "securitySchemes": { "JWT-auth": { "scheme": "bearer", "bearerFormat": "JWT", "type": "http" } },
+    "schemas": {
+      "CurrencyDTO": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "provider": { "type": "string" },
+          "name": { "type": "string" },
+          "ticker": { "type": "string" },
+          "iconPath": { "type": "string" },
+          "precision": { "type": "number" }
+        },
+        "required": ["name", "ticker", "iconPath", "precision"]
+      },
+      "SubdivisionDTO": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "name": { "type": "string" },
+          "supported": { "type": "boolean" }
+        },
+        "required": ["code", "name", "supported"]
+      },
+      "LocationDTO": {
+        "type": "object",
+        "properties": {
+          "countryName": { "type": "string" },
+          "alternateCountryName": { "type": "string" },
+          "countryISOCode": { "type": "string" },
+          "subdivisions": { "type": "array", "items": { "$ref": "#/components/schemas/SubdivisionDTO" } },
+          "countryFlagIconPath": { "type": "string" }
+        },
+        "required": ["countryName", "countryISOCode"]
+      },
+      "ConfigurationsDTO": {
+        "type": "object",
+        "properties": {
+          "lowAmountThreshold": { "type": "number" },
+          "highAmountThreshold": { "type": "number" },
+          "cryptoImageBaseUrl": { "type": "string" },
+          "fiatImageBaseUrl": { "type": "string" }
+        },
+        "required": ["lowAmountThreshold", "highAmountThreshold", "cryptoImageBaseUrl", "fiatImageBaseUrl"]
+      },
+      "CreditCardDTO": {
+        "type": "object",
+        "properties": {
+          "issuer": { "type": "string" },
+          "network": { "type": "string" },
+          "bin": { "type": "string" },
+          "type": { "type": "string" },
+          "supported": { "type": "string" },
+          "digits": { "type": "number" },
+          "cvvDigits": { "type": "number" },
+          "mask": { "type": "string" }
+        },
+        "required": ["network", "bin", "type", "supported", "digits", "cvvDigits"]
+      },
+      "VerifyOtpRequestDTO": {
+        "type": "object",
+        "properties": {
+          "emailOrPhone": { "type": "string", "description": "Email or phone value to identify the user" },
+          "email": {
+            "type": "string",
+            "description": "This attribute is deprecated and will be removed in future, please use emailOrPhone instead"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["CONSUMER", "PARTNER_ADMIN", "NOBA_ADMIN"],
+            "description": "Identity type of the user logging in"
+          },
+          "otp": { "type": "number", "description": "One-time password sent to email or phone" }
+        },
+        "required": ["identityType", "otp"]
+      },
+      "VerifyOtpResponseDTO": {
+        "type": "object",
+        "properties": { "access_token": { "type": "string" }, "user_id": { "type": "string" } },
+        "required": ["access_token", "user_id"]
+      },
+      "LoginRequestDTO": {
+        "type": "object",
+        "properties": {
+          "emailOrPhone": { "type": "string", "description": "Email or phone value to identify the user" },
+          "email": {
+            "type": "string",
+            "description": "This attribute is deprecated and will be removed in future, please use emailOrPhone instead"
+          },
+          "identityType": {
+            "type": "string",
+            "enum": ["CONSUMER", "PARTNER_ADMIN", "NOBA_ADMIN"],
+            "description": "Identity type of the user logging in"
+          },
+          "autoCreate": { "type": "boolean", "description": "Whether or not to auto-create an account if not present" }
+        },
+        "required": ["identityType"]
+      },
+      "KycVerificationDTO": {
+        "type": "object",
+        "properties": {
+          "kycVerificationStatus": { "type": "string", "enum": ["NotSubmitted", "Pending", "Approved", "Rejected"] },
+          "updatedTimestamp": { "type": "number" }
+        },
+        "required": ["kycVerificationStatus"]
+      },
+      "DocumentVerificationDTO": {
+        "type": "object",
+        "properties": {
+          "documentVerificationStatus": {
+            "type": "string",
+            "enum": ["NotRequired", "NotSubmitted", "Pending", "Verified", "ActionRequired", "Rejected"]
+          },
+          "documentVerificationErrorReason": {
+            "type": "string",
+            "enum": ["RequiresRecapture", "PoorQuality", "SizeOrType"]
+          },
+          "updatedTimestamp": { "type": "number" }
+        }
+      },
+      "PaymentMethodCardDataDTO": {
+        "type": "object",
+        "properties": {
+          "cardType": { "type": "string" },
+          "scheme": { "type": "string" },
+          "first6Digits": { "type": "string" },
+          "last4Digits": { "type": "string" }
+        },
+        "required": ["first6Digits", "last4Digits"]
+      },
+      "PaymentMethodACHDataDTO": {
+        "type": "object",
+        "properties": { "accountMask": { "type": "string" }, "accountType": { "type": "string" } },
+        "required": ["accountMask"]
+      },
+      "PaymentMethodsDTO": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["Card", "ACH"] },
+          "imageUri": { "type": "string" },
+          "paymentToken": { "type": "string" },
+          "cardData": { "$ref": "#/components/schemas/PaymentMethodCardDataDTO" },
+          "achData": { "$ref": "#/components/schemas/PaymentMethodACHDataDTO" }
+        },
+        "required": ["type", "paymentToken"]
+      },
+      "CryptoWalletsDTO": {
+        "type": "object",
+        "properties": {
+          "walletName": { "type": "string" },
+          "address": { "type": "string" },
+          "chainType": { "type": "string" },
+          "isEVMCompatible": { "type": "boolean" }
+        },
+        "required": ["address"]
+      },
+      "ConsumerDTO": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["Approved", "Pending", "ActionRequired", "TemporaryHold", "PermanentHold"]
+          },
+          "kycVerificationData": { "$ref": "#/components/schemas/KycVerificationDTO" },
+          "documentVerificationData": { "$ref": "#/components/schemas/DocumentVerificationDTO" },
+          "phone": { "type": "string" },
+          "dateOfBirth": { "type": "string" },
+          "address": { "type": "object" },
+          "paymentMethods": { "type": "array", "items": { "$ref": "#/components/schemas/PaymentMethodsDTO" } },
+          "cryptoWallets": { "type": "array", "items": { "$ref": "#/components/schemas/CryptoWalletsDTO" } },
+          "paymentMethodStatus": { "type": "string", "enum": ["Approved", "Pending", "NotSubmitted"] },
+          "walletStatus": { "type": "string", "enum": ["Approved", "Pending", "NotSubmitted"] }
+        },
+        "required": ["_id", "email", "status", "kycVerificationData", "documentVerificationData"]
+      },
+      "UpdateConsumerRequestDTO": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "address": { "type": "object" },
+          "dateOfBirth": { "type": "string" }
+        }
+      },
+      "UserPhoneUpdateRequest": {
+        "type": "object",
+        "properties": { "phone": { "type": "string" }, "otp": { "type": "number" } },
+        "required": ["phone", "otp"]
+      },
+      "PhoneVerificationOtpRequest": {
+        "type": "object",
+        "properties": { "phone": { "type": "string" } },
+        "required": ["phone"]
+      },
+      "UserEmailUpdateRequest": {
+        "type": "object",
+        "properties": { "email": { "type": "string" }, "otp": { "type": "number" } },
+        "required": ["email", "otp"]
+      },
+      "EmailVerificationOtpRequest": {
+        "type": "object",
+        "properties": { "email": { "type": "string" } },
+        "required": ["email"]
+      },
+      "PlaidTokenDTO": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] },
+      "CardDetailsDTO": {
+        "type": "object",
+        "properties": {
+          "cardNumber": { "type": "string" },
+          "expiryMonth": { "type": "number" },
+          "expiryYear": { "type": "number" },
+          "cvv": { "type": "string" }
+        },
+        "required": ["cardNumber", "expiryMonth", "expiryYear", "cvv"]
+      },
+      "ACHDetailsDTO": { "type": "object", "properties": { "token": { "type": "string" } }, "required": ["token"] },
+      "AddPaymentMethodDTO": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["Card", "ACH"] },
+          "cardDetails": { "$ref": "#/components/schemas/CardDetailsDTO" },
+          "achDetails": { "$ref": "#/components/schemas/ACHDetailsDTO" },
+          "imageUri": { "type": "string" }
+        },
+        "required": ["type"]
+      },
+      "AddCryptoWalletDTO": {
+        "type": "object",
+        "properties": {
+          "walletName": { "type": "string" },
+          "address": { "type": "string" },
+          "chainType": { "type": "string" },
+          "isEVMCompatible": { "type": "boolean" }
+        },
+        "required": ["address"]
+      },
+      "ConfirmWalletUpdateDTO": {
+        "type": "object",
+        "properties": { "address": { "type": "string" }, "otp": { "type": "number" } },
+        "required": ["address", "otp"]
+      },
+      "KybStatusInfoDTO": {
+        "type": "object",
+        "properties": {
+          "kybStatus": { "type": "string", "enum": ["VERIFIED", "NOT_VERIFIED"] },
+          "kybProvider": { "type": "string" }
+        },
+        "required": ["kybStatus", "kybProvider"]
+      },
+      "PartnerDTO": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "verificationData": { "$ref": "#/components/schemas/KybStatusInfoDTO" },
+          "apiKey": { "type": "string" },
+          "apiKeyForEmbed": { "type": "string" },
+          "secretKey": { "type": "string" },
+          "webhookClientID": { "type": "string" },
+          "webhookSecret": { "type": "string" },
+          "logoSmall": { "type": "string" },
+          "logo": { "type": "string" },
+          "apiKeyForEmbed": { "type": "string" },
+          "webhookClientID": { "type": "string" },
+          "webhookSecret": { "type": "string" },
+          "config": { "type": "object" },
+          "isAPIEnabled": { "type": "boolean" },
+          "isEmbedEnabled": { "type": "boolean" }
+        },
+        "required": ["_id", "name", "apiKey", "apiKeyForEmbed", "secretKey", "webhookClientID", "webhookSecret"]
+      },
+      "UpdatePartnerRequestDTO": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "takeRate": { "type": "number" },
+          "notificationConfigs": { "type": "array", "items": { "type": "string" } },
+          "webhooks": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "PartnerAdminDTO": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "partnerID": { "type": "string" },
+          "role": { "type": "string", "enum": ["BASIC", "INTERMEDIATE", "ALL"] }
+        },
+        "required": ["_id", "email", "partnerID", "role"]
+      },
+      "AddPartnerAdminRequestDTO": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["BASIC", "INTERMEDIATE", "ALL"] }
+        },
+        "required": ["email", "name", "role"]
+      },
+      "UpdatePartnerAdminRequestDTO": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["BASIC", "INTERMEDIATE", "ALL"] }
+        }
+      },
+      "TransactionAmountsDTO": {
+        "type": "object",
+        "properties": {
+          "baseAmount": { "type": "number", "description": "Fiat amount in USD" },
+          "fiatAmount": {
+            "type": "number",
+            "description": "Fiat amount in currency represented by 'fiatCurrency' property"
+          },
+          "fiatCurrency": { "type": "string", "description": "Fiat currency used to purchase crypto" },
+          "cryptoQuantityExpected": {
+            "type": "number",
+            "description": "Amount of crypto initially expected (see 'cryptoAmountSettled' for final confirmed amount)"
+          },
+          "cryptoAmountSettled": {
+            "type": "number",
+            "description": "Amount of crypto purchased and settled on the blockchain"
+          },
+          "cryptocurrency": { "type": "string", "description": "Cryptocurrency purchased in this transaction" },
+          "processingFee": { "type": "number", "description": "Payment processing fee for the transaction" },
+          "networkFee": {
+            "type": "number",
+            "description": "Network / gas fee required to settle the transaction on chain"
+          },
+          "nobaFee": { "type": "number", "description": "Noba service fee for the transaction" },
+          "totalFiatPrice": { "type": "number", "description": "Amount paid inclusive of fees" },
+          "conversionRate": {
+            "type": "number",
+            "description": "Conversion rate used between the 'fiatCurrency' and 'cryptocurrency'"
+          },
+          "totalFee": {
+            "type": "number",
+            "description": "Total additional fee paid by the consumer for the transacion"
+          }
+        },
+        "required": [
+          "baseAmount",
+          "fiatAmount",
+          "fiatCurrency",
+          "cryptoQuantityExpected",
+          "cryptoAmountSettled",
+          "cryptocurrency",
+          "processingFee",
+          "networkFee",
+          "nobaFee",
+          "totalFiatPrice",
+          "conversionRate",
+          "totalFee"
+        ]
+      },
+      "TransactionDTO": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "description": "Internal unique reference to this transaction" },
+          "transactionID": { "type": "string", "description": "Unique transaction reference number" },
+          "userID": {
+            "type": "string",
+            "description": "Internal unique reference to the user who initiated the transaction"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VALIDATION_FAILED",
+              "VALIDATION_PASSED",
+              "FIAT_INCOMING_INITIATED",
+              "FIAT_INCOMING_COMPLETED",
+              "FIAT_INCOMING_FAILED",
+              "FIAT_REVERSAL_INITIATING",
+              "FIAT_INCOMING_REVERSAL_INITIATED",
+              "FIAT_INCOMING_REVERSAL_FAILED",
+              "FIAT_INCOMING_REVERSED",
+              "CRYPTO_OUTGOING_INITIATING",
+              "CRYPTO_OUTGOING_INITIATED",
+              "CRYPTO_OUTGOING_COMPLETED",
+              "CRYPTO_OUTGOING_FAILED",
+              "COMPLETED",
+              "FAILED"
+            ],
+            "description": "Current status of the transaction"
+          },
+          "transactionHash": {
+            "type": "string",
+            "description": "Hash of the transaction as settled on the blockchain"
+          },
+          "transactionTimestamp": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Timestamp the transaction was submitted"
+          },
+          "destinationWalletAddress": {
+            "type": "string",
+            "description": "Wallet address to which the crypto purchase was transferred"
+          },
+          "partnerID": {
+            "type": "string",
+            "description": "Unique ID of the partner through which this transaction was made"
+          },
+          "paymentMethodID": {
+            "type": "string",
+            "description": "Unique ID of the payment method used to fund this transaction"
+          },
+          "amounts": {
+            "description": "All amounts and currency information related to this transaction",
+            "allOf": [{ "$ref": "#/components/schemas/TransactionAmountsDTO" }]
+          },
+          "type": {
+            "type": "string",
+            "enum": ["onramp", "offramp", "swap", "wallet"],
+            "description": "Type of the transaction. Can be one of 'onramp', 'offramp', 'wallet', 'swap'"
+          }
+        },
+        "required": [
+          "_id",
+          "transactionID",
+          "userID",
+          "status",
+          "transactionHash",
+          "transactionTimestamp",
+          "partnerID",
+          "paymentMethodID",
+          "amounts",
+          "type"
+        ]
+      },
+      "TransactionsQueryResultsDTO": {
+        "type": "object",
+        "properties": {
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/TransactionDTO" } },
+          "page": { "type": "number" },
+          "hasNextPage": { "type": "boolean" },
+          "totalPages": { "type": "number" },
+          "totalItems": { "type": "number" }
+        },
+        "required": ["items", "page", "hasNextPage", "totalPages", "totalItems"]
+      },
+      "TransactionStatsDTO": {
+        "type": "object",
+        "properties": { "numTransactions": { "type": "number" }, "totalAmount": { "type": "number" } },
+        "required": ["numTransactions", "totalAmount"]
+      },
+      "AddNobaAdminDTO": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["BASIC", "INTERMEDIATE", "ADMIN"] }
+        },
+        "required": ["email", "name", "role"]
+      },
+      "NobaAdminDTO": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "email": { "type": "string" },
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["BASIC", "INTERMEDIATE", "ADMIN"] }
+        },
+        "required": ["_id", "email", "name", "role"]
+      },
+      "UpdateNobaAdminDTO": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "role": { "type": "string", "enum": ["BASIC", "INTERMEDIATE", "ADMIN"] }
+        },
+        "required": ["name", "role"]
+      },
+      "DeleteNobaAdminDTO": { "type": "object", "properties": { "_id": { "type": "string" } }, "required": ["_id"] },
+      "CreatePartnerRequestDTO": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "allowedCryptoCurrencies": { "type": "array", "items": { "type": "string" } },
+          "keepWalletsPrivate": { "type": "boolean" },
+          "makeOtherPartnerWalletsVisible": { "type": "boolean" },
+          "bypassWalletOtp": { "type": "boolean" },
+          "creditCardFeeDiscountPercent": { "type": "number" },
+          "nobaFeeDiscountPercent": { "type": "number" },
+          "processingFeeDiscountPercent": { "type": "number" },
+          "networkFeeDiscountPercent": { "type": "number" },
+          "spreadDiscountPercent": { "type": "number" }
+        },
+        "required": ["name", "allowedCryptoCurrencies"]
+      },
+      "AddressDTO": {
+        "type": "object",
+        "properties": {
+          "streetLine1": { "type": "string" },
+          "streetLine2": { "type": "string" },
+          "countryCode": { "type": "string" },
+          "city": { "type": "string" },
+          "regionCode": { "type": "string" },
+          "postalCode": { "type": "string" }
+        },
+        "required": ["streetLine1", "countryCode", "city", "regionCode", "postalCode"]
+      },
+      "VerificationDataDTO": {
+        "type": "object",
+        "properties": {
+          "verificationProvider": { "type": "string", "enum": ["sardine"] },
+          "kycVerificationStatus": {
+            "type": "string",
+            "enum": ["NotSubmitted", "Pending", "Approved", "Flagged", "Rejected"]
+          },
+          "documentVerificationStatus": {
+            "type": "string",
+            "enum": [
+              "NotRequired",
+              "Required",
+              "Pending",
+              "Approved",
+              "Rejected",
+              "Rejected_RequiresRecapture",
+              "Rejected_PoorQuality",
+              "Rejected_SizeOrType",
+              "LivePhotoVerified"
+            ]
+          }
+        }
+      },
+      "AdminUpdateConsumerRequestDTO": {
+        "type": "object",
+        "properties": {
+          "dateOfBirth": { "type": "string" },
+          "address": { "$ref": "#/components/schemas/AddressDTO" },
+          "verificationData": { "$ref": "#/components/schemas/VerificationDataDTO" }
+        }
+      },
+      "NationalIDDTO": {
+        "type": "object",
+        "properties": { "type": { "type": "string", "enum": ["SocialSecurity"] }, "number": { "type": "string" } },
+        "required": ["type", "number"]
+      },
+      "IDVerificationRequestDTO": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "address": { "$ref": "#/components/schemas/AddressDTO" },
+          "phoneNumber": { "type": "string" },
+          "dateOfBirth": { "type": "string", "description": "Date of birth in format YYYY-MM-DD" },
+          "nationalID": { "$ref": "#/components/schemas/NationalIDDTO" }
+        },
+        "required": ["firstName", "lastName", "address", "dateOfBirth"]
+      },
+      "VerificationResultDTO": {
+        "type": "object",
+        "properties": { "status": { "type": "string", "enum": ["NotSubmitted", "Pending", "Approved", "Rejected"] } },
+        "required": ["status"]
+      },
+      "DocumentVerificationResultDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["NotRequired", "NotSubmitted", "Pending", "Verified", "ActionRequired", "Rejected"]
+          },
+          "errorReason": { "type": "string", "enum": ["RequiresRecapture", "PoorQuality", "SizeOrType"] }
+        },
+        "required": ["status"]
+      },
+      "IDVerificationURLResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Unique ID for this identity verification request" },
+          "url": { "type": "string", "description": "URL for identity verification document capture redirect" },
+          "expiration": { "type": "number", "description": "Expiration time of the url (in ms since the epoch)" }
+        },
+        "required": ["id", "url", "expiration"]
+      },
+      "DeviceAttributesDTO": {
+        "type": "object",
+        "properties": {
+          "Browser": { "type": "array", "items": { "type": "string" } },
+          "Model": { "type": "array", "items": { "type": "string" } },
+          "OS": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["Browser", "Model", "OS"]
+      },
+      "DeviceBehaviorBiometricsDTO": {
+        "type": "object",
+        "properties": {
+          "numDistractionEvents": { "type": "number" },
+          "fields": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["fields"]
+      },
+      "DeviceIpLocationDTO": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string" },
+          "region": { "type": "string" },
+          "country": { "type": "string" },
+          "latitude": { "type": "string" },
+          "longitude": { "type": "string" }
+        }
+      },
+      "DeviceGpsLocationDTO": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "string" },
+          "region": { "type": "string" },
+          "country": { "type": "string" },
+          "latitude": { "type": "string" },
+          "longitude": { "type": "string" },
+          "mockLevel": { "type": "string" }
+        }
+      },
+      "DeviceVerificationResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "level": { "type": "string", "enum": ["unknown", "very_high", "high", "medium", "low"] },
+          "attributes": { "$ref": "#/components/schemas/DeviceAttributesDTO" },
+          "signals": { "type": "array", "items": { "type": "string" } },
+          "sessionKey": { "type": "string" },
+          "fingerprint": { "type": "string" },
+          "fingerprintConfidenceScore": { "type": "number" },
+          "behaviorBiometricRiskLevel": { "type": "string" },
+          "deviceReputation": { "type": "string" },
+          "behaviorBiometrics": { "$ref": "#/components/schemas/DeviceBehaviorBiometricsDTO" },
+          "ipLocation": { "$ref": "#/components/schemas/DeviceIpLocationDTO" },
+          "gpsLocation": { "$ref": "#/components/schemas/DeviceGpsLocationDTO" }
+        },
+        "required": ["id", "level", "sessionKey"]
+      },
+      "ActionDTO": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string" },
+          "user_email": { "type": "string" },
+          "value": { "type": "string" }
+        },
+        "required": ["source"]
+      },
+      "CaseDTO": {
+        "type": "object",
+        "properties": {
+          "sessionKey": { "type": "string" },
+          "customerID": { "type": "string" },
+          "status": { "type": "string" },
+          "checkpoint": { "type": "string" },
+          "transactionID": { "type": "string" }
+        },
+        "required": ["sessionKey", "customerID"]
+      },
+      "DataDTO": {
+        "type": "object",
+        "properties": {
+          "action": { "$ref": "#/components/schemas/ActionDTO" },
+          "case": { "$ref": "#/components/schemas/CaseDTO" },
+          "documentVerificationResult": { "type": "object" }
+        },
+        "required": ["action", "case", "documentVerificationResult"]
+      },
+      "DocumentVerificationWebhookRequestDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "timestamp": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/DataDTO" }
+        },
+        "required": ["id", "type", "timestamp", "data"]
+      },
+      "CaseNotificationDataDTO": {
+        "type": "object",
+        "properties": {
+          "action": { "$ref": "#/components/schemas/ActionDTO" },
+          "case": { "$ref": "#/components/schemas/CaseDTO" }
+        },
+        "required": ["action", "case"]
+      },
+      "CaseNotificationWebhookRequestDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "timestamp": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/CaseNotificationDataDTO" }
+        },
+        "required": ["id", "type", "timestamp", "data"]
+      },
+      "TransactionQuoteDTO": {
+        "type": "object",
+        "properties": {
+          "fiatCurrencyCode": { "type": "string" },
+          "cryptoCurrencyCode": { "type": "string" },
+          "fixedSide": { "type": "string", "enum": ["fiat", "crypto"] },
+          "fixedAmount": { "type": "number" },
+          "quotedAmount": { "type": "number" },
+          "processingFee": { "type": "number" },
+          "nobaFee": { "type": "number" },
+          "networkFee": { "type": "number" },
+          "exchangeRate": { "type": "number" }
+        },
+        "required": [
+          "fiatCurrencyCode",
+          "cryptoCurrencyCode",
+          "fixedSide",
+          "fixedAmount",
+          "quotedAmount",
+          "processingFee",
+          "nobaFee",
+          "networkFee",
+          "exchangeRate"
+        ]
+      },
+      "CheckTransactionDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ALLOWED",
+              "TRANSACTION_TOO_SMALL",
+              "TRANSACTION_TOO_LARGE",
+              "TRANSACTION_LIMIT_REACHED",
+              "DAILY_LIMIT_REACHED",
+              "WEEKLY_LIMIT_REACHED",
+              "MONTHLY_LIMIT_REACHED",
+              "MAX_LIMIT_REACHED"
+            ]
+          },
+          "rangeMin": { "type": "number" },
+          "rangeMax": { "type": "number" }
+        },
+        "required": ["status", "rangeMin", "rangeMax"]
+      },
+      "CreateTransactionDTO": {
+        "type": "object",
+        "properties": {
+          "paymentToken": { "type": "string" },
+          "type": { "type": "string", "enum": ["onramp", "offramp", "swap", "wallet"] },
+          "leg1": { "type": "string" },
+          "leg2": { "type": "string" },
+          "leg1Amount": { "type": "number" },
+          "leg2Amount": { "type": "number" },
+          "fixedSide": { "type": "string", "enum": ["fiat", "crypto"] },
+          "destinationWalletAddress": { "type": "string" }
+        },
+        "required": [
+          "paymentToken",
+          "type",
+          "leg1",
+          "leg2",
+          "leg1Amount",
+          "leg2Amount",
+          "fixedSide",
+          "destinationWalletAddress"
+        ]
+      },
+      "ConsumerBalanceDTO": {
+        "type": "object",
+        "properties": {
+          "asset": { "type": "string" },
+          "balance": { "type": "string" },
+          "accountType": { "type": "string" },
+          "accountID": { "type": "string" },
+          "lastUpdate": { "type": "number" },
+          "name": { "type": "string" }
+        },
+        "required": ["asset", "balance"]
+      },
+      "PeriodLimit": {
+        "type": "object",
+        "properties": { "max": { "type": "number" }, "used": { "type": "number" }, "period": { "type": "number" } },
+        "required": ["max", "used", "period"]
+      },
+      "ConsumerLimitsDTO": {
+        "type": "object",
+        "properties": {
+          "minTransaction": { "type": "number" },
+          "maxTransaction": { "type": "number" },
+          "monthly": { "$ref": "#/components/schemas/PeriodLimit" },
+          "weekly": { "$ref": "#/components/schemas/PeriodLimit" },
+          "daily": { "$ref": "#/components/schemas/PeriodLimit" }
+        },
+        "required": ["minTransaction", "maxTransaction", "monthly"]
+      }
+    }
+  }
+}

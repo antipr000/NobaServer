@@ -1,7 +1,7 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { instance, when } from "ts-mockito";
+import { anything, capture, instance, when } from "ts-mockito";
 import { SENDGRID_API_KEY, SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { SendOtpEvent } from "../events/SendOtpEvent";
 import { SendWalletUpdateVerificationCodeEvent } from "../events/SendWalletUpdateVerificationCodeEvent";
@@ -20,29 +20,29 @@ import { SendCryptoFailedEvent } from "../events/SendCryptoFailedEvent";
 import { SendOrderExecutedEvent } from "../events/SendOrderExecutedEvent";
 import { SendOrderFailedEvent } from "../events/SendOrderFailedEvent";
 import { SendHardDeclineEvent } from "../events/SendHardDeclineEvent";
-import sgMail, { ClientResponse } from "@sendgrid/mail";
-import { EmailService } from "../email.service";
-import { CurrencyService } from "../../../modules/common/currency.service";
-import { getMockCurrencyServiceWithDefaults } from "../../../modules/common/mocks/mock.currency.service";
+import { CurrencyService } from "../../common/currency.service";
+import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.currency.service";
 import { EmailTemplates } from "../domain/EmailTemplates";
 import { Utils } from "../../../core/utils/Utils";
-import { TransactionStatus } from "../../../modules/transactions/domain/Types";
-
-jest.mock("@sendgrid/mail");
-const mockedSgMail = sgMail as jest.Mocked<typeof sgMail>;
+import { TransactionStatus } from "../../transactions/domain/Types";
+import { EmailService } from "../emails/email.service";
+import { EventHandler } from "../event.handler";
+import { getMockEmailServiceWithDefaults } from "../mocks/mock.email.service";
 
 describe("ConfigurationsProviderService", () => {
   let currencyService: CurrencyService;
   let emailService: EmailService;
+  let eventHandler: EventHandler;
+
   const SUPPORT_URL = "help.noba.com";
   const SENDER_EMAIL = "Noba <no-reply@noba.com>";
   const NOBA_COMPLIANCE_EMAIL = "Noba Compliance <compliance@noba.com>";
-  const CLIENT_RESPONSE: ClientResponse = {} as any;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
+    emailService = getMockEmailServiceWithDefaults();
 
     process.env = {
       ...process.env,
@@ -60,20 +60,23 @@ describe("ConfigurationsProviderService", () => {
       ],
       controllers: [],
       providers: [
-        EmailService,
         {
           provide: CurrencyService,
           useFactory: () => instance(currencyService),
         },
+        {
+          provide: "EmailService",
+          useFactory: () => instance(emailService),
+        },
+        EventHandler,
       ],
     }).compile();
 
-    emailService = app.get<EmailService>(EmailService);
+    eventHandler = app.get<EventHandler>(EventHandler);
+    when(emailService.sendEmail(anything())).thenResolve();
   });
 
-  afterEach(() => {
-    mockedSgMail.send.mockClear();
-  });
+  afterEach(() => {});
 
   it("should call emailService with SendOtp event", async () => {
     const payload = new SendOtpEvent({
@@ -83,11 +86,10 @@ describe("ConfigurationsProviderService", () => {
       partnerID: "fake-partner-1234",
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
+    await eventHandler.sendOtp(payload);
 
-    await emailService.sendOtp(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.OTP_EMAIL, //this is template id for sending otp without any context, see sendgrid dashboard
@@ -99,7 +101,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendWalletUpdateVerificationCode event", async () => {
+  it("should call eventHandler with SendWalletUpdateVerificationCode event", async () => {
     const payload = new SendWalletUpdateVerificationCodeEvent({
       email: "fake+user@noba.com",
       otp: "123456",
@@ -110,11 +112,10 @@ describe("ConfigurationsProviderService", () => {
       nobaUserID: "fake-noba-user-id",
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
+    await eventHandler.sendWalletUpdateVerificationCode(payload);
 
-    await emailService.sendWalletUpdateVerificationCode(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.WALLET_UPDATE_OTP,
@@ -127,7 +128,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendWelcomeMessage event", async () => {
+  it("should call eventHandler with SendWelcomeMessage event", async () => {
     const payload = new SendWelcomeMessageEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -136,10 +137,11 @@ describe("ConfigurationsProviderService", () => {
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
 
-    await emailService.sendWelcomeMessage(payload);
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    await eventHandler.sendWelcomeMessage(payload);
+
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.WELCOME_EMAIL,
@@ -150,7 +152,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendKycApprovedUS event", async () => {
+  it("should call eventHandler with SendKycApprovedUS event", async () => {
     const payload = new SendKycApprovedUSEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -160,10 +162,10 @@ describe("ConfigurationsProviderService", () => {
       nobaUserID: "fake-noba-user-id",
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
+    await eventHandler.sendKycApprovedUSEmail(payload);
 
-    await emailService.sendKycApprovedUSEmail(payload);
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL,
@@ -174,7 +176,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendKycApprovedNonUS event", async () => {
+  it("should call eventHandler with SendKycApprovedNonUS event", async () => {
     const payload = new SendKycApprovedNonUSEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -184,11 +186,10 @@ describe("ConfigurationsProviderService", () => {
       nobaUserID: "fake-noba-user-id",
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
+    await eventHandler.sendKycApprovedNonUSEmail(payload);
 
-    await emailService.sendKycApprovedNonUSEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL,
@@ -199,7 +200,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendKycDenied event", async () => {
+  it("should call eventHandler with SendKycDenied event", async () => {
     const payload = new SendKycDeniedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -208,11 +209,10 @@ describe("ConfigurationsProviderService", () => {
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
+    await eventHandler.sendKycDeniedEmail(payload);
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendKycDeniedEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.KYC_DENIED_EMAIL,
@@ -224,7 +224,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendKycPendingOrFlagged event", async () => {
+  it("should call eventHandler with SendKycPendingOrFlagged event", async () => {
     const payload = new SendKycDeniedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -233,13 +233,13 @@ describe("ConfigurationsProviderService", () => {
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendKycPendingOrFlaggedEmail(payload);
+    await eventHandler.sendKycPendingOrFlaggedEmail(payload);
 
-    expect(mockedSgMail.send).toHaveBeenCalled();
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual;
   });
 
-  it("should call emailService with SendDocVerificationPending event", async () => {
+  it("should call eventHandler with SendDocVerificationPending event", async () => {
     const payload = new SendDocumentVerificationPendingEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -248,11 +248,11 @@ describe("ConfigurationsProviderService", () => {
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
 
-    await emailService.sendDocVerificationPendingEmail(payload);
+    await eventHandler.sendDocVerificationPendingEmail(payload);
 
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL,
@@ -263,7 +263,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendDocVerificationRejected event", async () => {
+  it("should call eventHandler with SendDocVerificationRejected event", async () => {
     const payload = new SendDocumentVerificationRejectedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -273,11 +273,10 @@ describe("ConfigurationsProviderService", () => {
       nobaUserID: "fake-noba-user-id",
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
+    await eventHandler.sendDocVerificationRejectedEmail(payload);
 
-    await emailService.sendDocVerificationRejectedEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL,
@@ -288,7 +287,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendDocVerificationTechnicalFailure event", async () => {
+  it("should call eventHandler with SendDocVerificationTechnicalFailure event", async () => {
     const payload = new SendDocumentVerificationTechnicalFailureEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -297,11 +296,10 @@ describe("ConfigurationsProviderService", () => {
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
+    await eventHandler.sendDocVerificationFailedTechEmail(payload);
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendDocVerificationFailedTechEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL,
@@ -312,7 +310,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendCardAdded event", async () => {
+  it("should call eventHandler with SendCardAdded event", async () => {
     const payload = new SendCardAddedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -323,11 +321,10 @@ describe("ConfigurationsProviderService", () => {
       cardNetwork: "VISA",
       last4Digits: "1234",
     });
+    await eventHandler.sendCardAddedEmail(payload);
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendCardAddedEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_ADDED_EMAIL,
@@ -341,7 +338,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendCardAdditionFailed event", async () => {
+  it("should call eventHandler with SendCardAdditionFailed event", async () => {
     const payload = new SendCardAdditionFailedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -351,11 +348,10 @@ describe("ConfigurationsProviderService", () => {
       nobaUserID: "fake-noba-user-id",
       last4Digits: "1234",
     });
+    await eventHandler.sendCardAdditionFailedEmail(payload);
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendCardAdditionFailedEmail(payload);
-
-    expect(sgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL,
@@ -368,7 +364,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendCardDeleted event", async () => {
+  it("should call eventHandler with SendCardDeleted event", async () => {
     const payload = new SendCardDeletedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -379,11 +375,10 @@ describe("ConfigurationsProviderService", () => {
       cardNetwork: "VISA",
       last4Digits: "1234",
     });
+    await eventHandler.sendCardDeletedEmail(payload);
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendCardDeletedEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CARD_DELETED_EMAIL,
@@ -397,7 +392,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendTransactionInitiated event", async () => {
+  it("should call eventHandler with SendTransactionInitiated event", async () => {
     const payload = new SendTransactionInitiatedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -429,9 +424,7 @@ describe("ConfigurationsProviderService", () => {
       iconPath: "",
       precision: 1,
     });
-
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendTransactionInitiatedEmail(payload);
+    await eventHandler.sendTransactionInitiatedEmail(payload);
 
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
@@ -439,7 +432,8 @@ describe("ConfigurationsProviderService", () => {
       Utils.roundTo2DecimalNumber(payload.params.networkFee) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFee);
 
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL,
@@ -465,7 +459,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendTransactionInitiated event and pass ticker itself when currencyRecord is not found", async () => {
+  it("should call eventHandler with SendTransactionInitiated event and pass ticker itself when currencyRecord is not found", async () => {
     const payload = new SendTransactionInitiatedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -492,9 +486,7 @@ describe("ConfigurationsProviderService", () => {
     });
 
     when(currencyService.getCryptocurrency("ETH")).thenResolve(null);
-
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-    await emailService.sendTransactionInitiatedEmail(payload);
+    await eventHandler.sendTransactionInitiatedEmail(payload);
 
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
@@ -502,7 +494,8 @@ describe("ConfigurationsProviderService", () => {
       Utils.roundTo2DecimalNumber(payload.params.networkFee) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFee);
 
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL,
@@ -528,7 +521,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendCryptoFailed event", async () => {
+  it("should call eventHandler with SendCryptoFailed event", async () => {
     const payload = new SendCryptoFailedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -568,11 +561,10 @@ describe("ConfigurationsProviderService", () => {
       precision: 1,
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
+    await eventHandler.sendCryptoFailedEmail(payload);
 
-    await emailService.sendCryptoFailedEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.CRYPTO_FAILED_EMAIL,
@@ -599,7 +591,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendOrderExecuted event", async () => {
+  it("should call eventHandler with SendOrderExecuted event", async () => {
     const payload = new SendOrderExecutedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -635,16 +627,15 @@ describe("ConfigurationsProviderService", () => {
       precision: 1,
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-
-    await emailService.sendOrderExecutedEmail(payload);
+    await eventHandler.sendOrderExecutedEmail(payload);
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
       Utils.roundTo2DecimalNumber(payload.params.processingFee) -
       Utils.roundTo2DecimalNumber(payload.params.networkFee) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFee);
 
-    expect(sgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ORDER_EXECUTED_EMAIL,
@@ -673,7 +664,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendOrderFailed event", async () => {
+  it("should call eventHandler with SendOrderFailed event", async () => {
     const payload = new SendOrderFailedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -707,16 +698,15 @@ describe("ConfigurationsProviderService", () => {
       precision: 1,
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
-
-    await emailService.sendOrderFailedEmail(payload);
+    await eventHandler.sendOrderFailedEmail(payload);
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
       Utils.roundTo2DecimalNumber(payload.params.processingFee) -
       Utils.roundTo2DecimalNumber(payload.params.networkFee) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFee);
 
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ORDER_FAILED_EMAIL,
@@ -743,7 +733,7 @@ describe("ConfigurationsProviderService", () => {
     });
   });
 
-  it("should call emailService with SendHardDecline event", async () => {
+  it("should call eventHandler with SendHardDecline event", async () => {
     const payload = new SendHardDeclineEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
@@ -759,11 +749,10 @@ describe("ConfigurationsProviderService", () => {
       processor: "Checkout",
     });
 
-    mockedSgMail.send.mockResolvedValueOnce([CLIENT_RESPONSE, {}]);
+    await eventHandler.sendHardDeclineEmail(payload);
 
-    await emailService.sendHardDeclineEmail(payload);
-
-    expect(mockedSgMail.send).toHaveBeenCalledWith({
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
       to: NOBA_COMPLIANCE_EMAIL,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.NOBA_INTERNAL_HARD_DECLINE,

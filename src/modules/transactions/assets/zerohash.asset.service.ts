@@ -32,6 +32,10 @@ import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 import { DefaultAssetService } from "./default.asset.service";
 import { WalletProviderService } from "./wallet.provider.service";
+import {
+  TransactionSubmissionException,
+  TransactionSubmissionFailureExceptionText,
+} from "../exceptions/TransactionSubmissionException";
 
 @Injectable()
 export class ZerohashAssetService extends DefaultAssetService implements WalletProviderService {
@@ -118,6 +122,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
           cryptoCurrency: request.cryptoCurrency,
           fiatAmount: Utils.roundToSpecifiedDecimalNumber(request.fiatAmount, fiatCurrency.precision),
           fiatCurrency: request.fiatCurrency,
+          transactionType: request.transactionType,
           discount: {
             fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
             networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
@@ -133,6 +138,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
           cryptoCurrency: request.cryptoCurrency,
           cryptoQuantity: Utils.roundToSpecifiedDecimalNumber(request.cryptoQuantity, cryptocurrency.precision),
           fiatCurrency: request.fiatCurrency,
+          transactionType: request.transactionType,
           discount: {
             fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
             networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
@@ -162,6 +168,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
     const assetTransfer: ZerohashTransferResponse = await this.zerohashService.transferAssetsToNoba(
       request.cryptocurrency,
       request.cryptoAmount,
+      request.transactionID,
     );
 
     return {
@@ -228,18 +235,26 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
 
   // TODO(#): Make this implementation idempotent.
   async transferToConsumerWallet(request: ConsumerWalletTransferRequest): Promise<ConsumerWalletTransferResponse> {
-    const withdrawalId: string = await this.zerohashService.requestWithdrawal(
-      request.walletAddress,
-      request.amount,
-      request.assetId,
-      request.consumer.zhParticipantCode,
-      this.zerohashService.getNobaPlatformCode(),
-      request.smartContractData,
-    );
+    try {
+      const withdrawalId: string = await this.zerohashService.requestWithdrawal(
+        request.walletAddress,
+        request.amount,
+        request.assetId,
+        request.consumer.zhParticipantCode,
+        this.zerohashService.getNobaPlatformCode(),
+        request.smartContractData,
+      );
 
-    return {
-      liquidityProviderTransactionId: withdrawalId,
-    };
+      return {
+        liquidityProviderTransactionId: withdrawalId,
+      };
+    } catch (e) {
+      throw new TransactionSubmissionException(
+        TransactionSubmissionFailureExceptionText.INVALID_WALLET,
+        "Wallet address is invalid",
+        JSON.stringify(e.response),
+      );
+    }
   }
 
   protected async getLiquidityProviderWithdrawal(id: any): Promise<ZerohashWithdrawalResponse> {

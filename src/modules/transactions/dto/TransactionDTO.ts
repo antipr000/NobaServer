@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { TransactionStatus } from "../domain/Types";
+import { TransactionStatus, TransactionType } from "../domain/Types";
 
 export class TransactionAmountsDTO {
   @ApiProperty({ description: "Fiat amount in USD" })
@@ -36,6 +36,9 @@ export class TransactionAmountsDTO {
 
   @ApiProperty({ description: "Conversion rate used between the 'fiatCurrency' and 'cryptocurrency'" })
   conversionRate: number;
+
+  @ApiProperty({ description: "Total additional fee paid by the consumer for the transacion" })
+  totalFee: number;
 }
 export class TransactionDTO {
   @ApiProperty({ description: "Internal unique reference to this transaction" })
@@ -67,4 +70,10 @@ export class TransactionDTO {
 
   @ApiProperty({ description: "All amounts and currency information related to this transaction" })
   amounts: TransactionAmountsDTO;
+
+  @ApiProperty({
+    enum: TransactionType,
+    description: "Type of the transaction. Can be one of 'onramp', 'offramp', 'wallet', 'swap'",
+  })
+  type: TransactionType;
 }

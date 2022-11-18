@@ -152,6 +152,9 @@ export const PLAID_AWS_SECRET_KEY_FOR_REDIRECT_URI = "awsSecretNameForRedirectUr
 export const PLAID_AWS_SECRET_KEY_FOR_SECRET_KEY = "awsSecretNameForSecretKey";
 export const PLAID_AWS_SECRET_KEY_FOR_CLIENT_ID = "awsSecretNameForClientID";
 
+export const DEPENDENCY_CONFIG_KEY = "dependencies";
+export const DEPENDENCY_EMAIL_CLIENT = "emailClient";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

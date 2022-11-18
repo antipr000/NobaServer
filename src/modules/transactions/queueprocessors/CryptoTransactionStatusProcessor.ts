@@ -14,6 +14,7 @@ import {
   PollStatus,
 } from "../domain/AssetTypes";
 import { TransactionQueueName, TransactionStatus, TransactionType } from "../domain/Types";
+import { TransactionSubmissionException } from "../exceptions/TransactionSubmissionException";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { MessageProcessor } from "./message.processor";
@@ -93,17 +94,30 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
           intermediateCryptoAsset: transaction.props.intermediaryLeg,
         };
 
-        const consumerWalletTransferResponse: ConsumerWalletTransferResponse =
-          await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
-        transaction.props.zhWithdrawalID = consumerWalletTransferResponse.liquidityProviderTransactionId;
-        transaction.props.executedCrypto = consumerWalletTransferResponse.cryptoAmount
-          ? consumerWalletTransferResponse.cryptoAmount
-          : transaction.props.executedCrypto;
+        try {
+          const consumerWalletTransferResponse: ConsumerWalletTransferResponse =
+            await assetService.transferToConsumerWallet(consumerWalletTransferRequest);
+          transaction.props.zhWithdrawalID = consumerWalletTransferResponse.liquidityProviderTransactionId;
+          transaction.props.executedCrypto = consumerWalletTransferResponse.cryptoAmount
+            ? consumerWalletTransferResponse.cryptoAmount
+            : transaction.props.executedCrypto;
 
-        this.logger.info(
-          `${transactionId}: Initiated the transfer to consumer wallet with Withdrawal ID: "${transaction.props.zhWithdrawalID}"`,
-        );
-        transaction = await this.transactionRepo.updateTransaction(transaction);
+          this.logger.info(
+            `${transactionId}: Initiated the transfer to consumer wallet with Withdrawal ID: "${transaction.props.zhWithdrawalID}"`,
+          );
+          transaction = await this.transactionRepo.updateTransaction(transaction);
+        } catch (e) {
+          if (e instanceof TransactionSubmissionException) {
+            this.logger.error(`Failed transferring to consumer wallet. Error details: ${e.reasonSummary}`);
+            await this.processFailure(
+              TransactionStatus.CRYPTO_OUTGOING_FAILED,
+              e.reasonCode,
+              transaction,
+              e.reasonSummary,
+            );
+          }
+          return;
+        }
       }
 
       // We either had a withdrawal ID from a prior run but failed to set the status

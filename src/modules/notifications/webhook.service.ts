@@ -50,7 +50,7 @@ export class WebhookService {
       this.logger.error(
         `Failed to make webhook call for partner id ${partner.props._id}, with payload: ${JSON.stringify(
           payload,
-        )}. Reason: ${JSON.stringify(e)}`,
+        )}. Reason: ${e.message}`,
       );
     }
   }

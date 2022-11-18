@@ -101,8 +101,22 @@ export class FiatTransactionInitiator extends MessageProcessor {
             "Error processing fiat transaction",
             transaction,
           );
-        }
-        if (e.disposition === CardFailureExceptionText.NO_CRYPTO) {
+        } else if (e.disposition === CardFailureExceptionText.SOFT_DECLINE) {
+          // Soft declines may work upon retry (e.g. could be caused by breach of credit limit) so we don't want to block the card
+
+          this.logger.info(
+            `${transactionId}: Transaction failed fiat leg with code ${e.reasonCode}-${e.reasonSummary}`,
+          );
+
+          await this.handleCheckoutFailure(
+            e.reasonCode,
+            e.reasonSummary,
+            PaymentMethodStatus.APPROVED,
+            consumer,
+            transaction,
+            false,
+          );
+        } else if (e.disposition === CardFailureExceptionText.NO_CRYPTO) {
           this.logger.info(
             `${transactionId}: Transaction failed fiat leg with code ${e.reasonCode}-${e.reasonSummary} as it doesn't support crypto`,
           );
@@ -128,7 +142,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
             PaymentMethodStatus.REJECTED,
             consumer,
             transaction,
-            false,
+            true,
           );
         }
       } else {

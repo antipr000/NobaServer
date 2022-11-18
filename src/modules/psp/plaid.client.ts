@@ -108,15 +108,15 @@ export class PlaidClient {
   //  institution to retrieve the data."
   public async retrieveAccountData(request: RetrieveAccountDataRequest): Promise<RetrieveAccountDataResponse> {
     try {
-      console.log(`Calling authGet with token ${request.accessToken}`);
       const authData: AxiosResponse<AuthGetResponse> = await this.plaidApi.authGet({
         access_token: request.accessToken,
       });
+
       if (authData == null) {
-        console.log("Why is authData null?");
+        const errorMessage = `authGet call returned null for token ${request.accessToken}`;
+        this.logger.error(errorMessage);
+        throw new InternalServerErrorException(errorMessage);
       }
-      console.log(`All authdata: ${JSON.stringify(authData.data, null, 1)}`);
-      this.logger.info(`"authGet" succeeds with request_id: "${authData.data.request_id}"`);
 
       if (authData.data.accounts.length != 1) {
         const errorMessage = "Mismatch between access token and account id in Plaid AuthGet request.";
@@ -141,6 +141,7 @@ export class PlaidClient {
       return {
         accountID: authData.data.accounts[0].account_id,
         itemID: authData.data.item.item_id,
+        institutionID: authData.data.item.institution_id,
         availableBalance: Utils.roundTo2DecimalString(authData.data.accounts[0].balances.available / 100),
         currencyCode: authData.data.accounts[0].balances.iso_currency_code,
         mask: authData.data.accounts[0].mask,
@@ -179,7 +180,6 @@ export class PlaidClient {
         `"processorTokenCreate" succeeds with request_id: "${processorTokenResponse.data.request_id}" and token ${processorTokenResponse.data.processor_token}`,
       );
 
-      console.log(processorTokenResponse);
       return processorTokenResponse.data.processor_token;
     } catch (err) {
       this.logger.error(`Error while creating processor token: ${JSON.stringify(err.response.data)}`);

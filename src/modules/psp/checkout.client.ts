@@ -105,6 +105,7 @@ export class CheckoutClient {
     currency: string,
     paymentMethodId: string,
     transactionId: string,
+    idempotencyKey: string,
   ): Promise<PspACHPaymentResponse> {
     try {
       const checkoutResponse = await this.checkoutApi.payments.request(
@@ -125,7 +126,7 @@ export class CheckoutClient {
             order_id: transactionId,
           },
         },
-        transactionId,
+        idempotencyKey,
       );
 
       this.logger.info(`Response from Checkout: ${JSON.stringify(checkoutResponse, null, 1)}`);
@@ -150,6 +151,7 @@ export class CheckoutClient {
     currency: string,
     paymentMethodId: string,
     transactionId: string,
+    idempotencyKey: string,
   ): Promise<PspCardPaymentResponse> {
     try {
       const checkoutResponse = await this.checkoutApi.payments.request(
@@ -161,11 +163,12 @@ export class CheckoutClient {
             id: paymentMethodId,
           },
           description: "Noba Customer Payment at UTC " + Date.now(),
+          processing_channel_id: this.checkoutConfigs.processingChannelId,
           metadata: {
             order_id: transactionId,
           },
         },
-        transactionId,
+        idempotencyKey,
       );
       return {
         id: checkoutResponse["id"],
@@ -204,6 +207,10 @@ export class CheckoutClient {
     // TODO: Remove this once we have confidence in the flow.
     // url: "https://webhook.site/523c9bbe-7a61-423c-9d2e-62519d30bfdd",
     const webhookUrl = this.checkoutConfigs.nobaWebhookUrl;
+    if (webhookUrl === "disabled") {
+      this.logger.warn("Skipping Checkout ACH webhook registration");
+      return;
+    }
 
     try {
       const workflows: WorkflowMetadata[] = (

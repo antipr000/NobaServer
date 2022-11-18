@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { KybStatus, KybStatusInfo } from "../domain/KybStatus";
+import { PartnerConfig } from "../domain/Partner";
 
 class KybStatusInfoDTO implements KybStatusInfo {
   @ApiProperty({ enum: KybStatus })
@@ -39,4 +40,23 @@ export class PartnerDTO {
 
   @ApiPropertyOptional()
   logo?: string;
+
+  @ApiPropertyOptional()
+  apiKeyForEmbed?: string;
+
+  @ApiPropertyOptional()
+  webhookClientID?: string;
+
+  @ApiPropertyOptional()
+  webhookSecret?: string;
+
+  // TODO: Ask what should be in config?
+  @ApiPropertyOptional()
+  config?: PartnerConfig;
+
+  @ApiPropertyOptional()
+  isAPIEnabled?: boolean;
+
+  @ApiPropertyOptional()
+  isEmbedEnabled?: boolean;
 }

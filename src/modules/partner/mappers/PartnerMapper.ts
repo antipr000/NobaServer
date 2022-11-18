@@ -20,6 +20,12 @@ export class PartnerMapper implements Mapper<Partner> {
       secretKey: p.secretKey,
       logo: (p.config ?? {}).logo,
       logoSmall: (p.config ?? {}).logoSmall,
+      apiKeyForEmbed: p.apiKeyForEmbed,
+      webhookClientID: p.webhookClientID,
+      webhookSecret: p.webhookSecret,
+      config: p.config,
+      isAPIEnabled: p.isAPIEnabled,
+      isEmbedEnabled: p.isEmbedEnabled,
     };
   }
 }

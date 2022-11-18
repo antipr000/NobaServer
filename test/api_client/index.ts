@@ -76,5 +76,6 @@ export { ConsumerService } from "./services/ConsumerService";
 export { HealthCheckService } from "./services/HealthCheckService";
 export { PartnerService } from "./services/PartnerService";
 export { TransactionsService } from "./services/TransactionsService";
+export { VendorsService } from "./services/VendorsService";
 export { VerificationService } from "./services/VerificationService";
 export { VerificationWebhooksService } from "./services/VerificationWebhooksService";

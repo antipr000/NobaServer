@@ -22,6 +22,7 @@ import { ValidatePendingTransactionProcessor } from "./ValidatePendingTransactio
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { NotificationsModule } from "../../../modules/notifications/notification.module";
 import { PspModule } from "../../../modules/psp/psp.module";
+import { LimitsService } from "../limits.service";
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PspModule } from "../../../modules/psp/psp.module";
   controllers: [],
   providers: [
     ZeroHashService,
+    LimitsService,
     TransactionService,
     SqsClient,
     TransactionPollerService,

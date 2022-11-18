@@ -100,7 +100,7 @@ export class FiatTransactionStatusProcessor extends MessageProcessor {
         break;
       }
       default: {
-        this.logger.error(`PaymentMethod should be either Card or Ach.`);
+        this.logger.error("PaymentMethod should be either Card or Ach.");
         return;
       }
     }
