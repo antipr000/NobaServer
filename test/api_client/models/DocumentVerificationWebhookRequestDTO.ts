@@ -9,4 +9,5 @@ export type DocumentVerificationWebhookRequestDTO = {
   type: string;
   timestamp: string;
   data: DataDTO;
+  documentVerificationResult: any;
 };

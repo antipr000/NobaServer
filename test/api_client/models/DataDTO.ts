@@ -8,5 +8,4 @@ import type { CaseDTO } from "./CaseDTO";
 export type DataDTO = {
   action: ActionDTO;
   case: CaseDTO;
-  documentVerificationResult: any;
 };
