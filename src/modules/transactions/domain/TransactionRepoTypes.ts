@@ -14,8 +14,9 @@ export type UpdateFiatTransactionInfoRequest = {
 };
 
 export type PartnerTransactionFilterOptions = {
-  startDate: Date;
-  endDate: Date;
+  startDate?: Date;
+  endDate?: Date;
+  partnerID?: string;
 };
 
 export type PartnerTransaction = {

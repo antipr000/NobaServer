@@ -107,6 +107,14 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       timestampFilters["$lte"] = filters.endDate;
     }
 
+    const transactionFilters = {};
+    if (filters.partnerID !== undefined && filters.partnerID !== null) {
+      transactionFilters["partnerID"] = filters.partnerID;
+    }
+    if (Object.keys(timestampFilters).length !== 0) {
+      transactionFilters["transactionTimestamp"] = timestampFilters;
+    }
+
     const headers = [
       { id: "partnerID", title: "PARTNER_ID" },
       { id: "transactionID", title: "TRANSACTION_ID" },
@@ -140,9 +148,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     const transactionModel = await this.dbProvider.getTransactionModel();
     const result = new Promise((resolve, reject) => {
       transactionModel
-        .find({
-          transactionTimestamp: timestampFilters,
-        })
+        .find(transactionFilters)
         .cursor()
         .on("data", async doc => {
           recordsQueried++;

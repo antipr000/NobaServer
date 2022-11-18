@@ -1178,7 +1178,6 @@ describe("MongoDBTransactionRepoTests", () => {
       await transactionRepo.getPartnerTransactions(
         {
           startDate: date2,
-          endDate: date2,
         },
         filePath,
       );
@@ -1253,7 +1252,6 @@ describe("MongoDBTransactionRepoTests", () => {
 
       await transactionRepo.getPartnerTransactions(
         {
-          startDate: date1,
           endDate: date1,
         },
         filePath,
@@ -1266,6 +1264,208 @@ describe("MongoDBTransactionRepoTests", () => {
       ];
 
       expect(receivedRecords).toHaveLength(1 + 1 + 1); // HEADER + 1 RECORD + EMPTY LINE
+      expectedRecords.forEach(record => {
+        expect(receivedRecords).toContain(record);
+      });
+    });
+
+    it("should filter the transaction based on specified 'partnerID' in CSV file", async () => {
+      await transactionCollection.deleteMany({});
+
+      const date1 = new Date();
+      const date2 = new Date();
+
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_1",
+        userId: "UUUUUUUUUU_1",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date1,
+        leg1Amount: 100,
+        leg1: "USD",
+        leg2Amount: 0.03,
+        leg2: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        processingFee: 14,
+        networkFee: 15,
+        nobaFee: 16,
+        discounts: {
+          fixedCreditCardFeeDiscount: 1.4,
+          dynamicCreditCardFeeDiscount: 1.5,
+          nobaFeeDiscount: 1.6,
+          networkFeeDiscount: 1.7,
+          spreadDiscount: 1.8,
+        },
+        _id: "1111111111" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_2",
+        transactionID: "TTTTTTTTT_2",
+        userId: "UUUUUUUUUU_2",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date2,
+        leg2Amount: 200,
+        leg2: "USD",
+        leg1Amount: 0.23,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 24,
+        networkFee: 25,
+        nobaFee: 26,
+        discounts: {
+          fixedCreditCardFeeDiscount: 2.4,
+          dynamicCreditCardFeeDiscount: 2.5,
+          nobaFeeDiscount: 2.6,
+          networkFeeDiscount: 2.7,
+          spreadDiscount: 2.8,
+        },
+        _id: "22222222222" as any,
+      });
+
+      const filePath = `/tmp/txn-${Math.floor(Math.random() * 1000000)}.csv`;
+
+      await transactionRepo.getPartnerTransactions(
+        {
+          partnerID: "PPPPPPPPP_1",
+        },
+        filePath,
+      );
+
+      const csvContent = await fs.readFileSync(filePath, { encoding: "utf8" });
+      const receivedRecords = csvContent.split("\n");
+      const expectedRecords = [
+        `PPPPPPPPP_1,TTTTTTTTT_1,UUUUUUUUUU_1,"${date1.toUTCString()}",COMPLETED,100,USD,0.03,ETH,14,15,16,1.4,1.5,1.6,1.7,1.8`,
+      ];
+
+      expect(receivedRecords).toHaveLength(1 + 1 + 1); // HEADER + 1 RECORD + EMPTY LINE
+      expectedRecords.forEach(record => {
+        expect(receivedRecords).toContain(record);
+      });
+    });
+
+    it("should filter the transaction based on specified 'partnerID', 'startDate' & 'endDate' in CSV file", async () => {
+      await transactionCollection.deleteMany({});
+
+      const date1 = new Date();
+      await sleep(500);
+      const date2 = new Date();
+      await sleep(500);
+      const date3 = new Date();
+      await sleep(500);
+      const date4 = new Date();
+
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_1",
+        userId: "UUUUUUUUUU_1",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date1,
+        leg1Amount: 100,
+        leg1: "USD",
+        leg2Amount: 0.03,
+        leg2: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        processingFee: 14,
+        networkFee: 15,
+        nobaFee: 16,
+        discounts: {
+          fixedCreditCardFeeDiscount: 1.4,
+          dynamicCreditCardFeeDiscount: 1.5,
+          nobaFeeDiscount: 1.6,
+          networkFeeDiscount: 1.7,
+          spreadDiscount: 1.8,
+        },
+        _id: "1111111111" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_2",
+        transactionID: "TTTTTTTTT_2",
+        userId: "UUUUUUUUUU_2",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date2,
+        leg2Amount: 200,
+        leg2: "USD",
+        leg1Amount: 0.23,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 24,
+        networkFee: 25,
+        nobaFee: 26,
+        discounts: {
+          fixedCreditCardFeeDiscount: 2.4,
+          dynamicCreditCardFeeDiscount: 2.5,
+          nobaFeeDiscount: 2.6,
+          networkFeeDiscount: 2.7,
+          spreadDiscount: 2.8,
+        },
+        _id: "22222222222" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_2",
+        transactionID: "TTTTTTTTT_3",
+        userId: "UUUUUUUUUU_3",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date3,
+        leg2Amount: 300,
+        leg2: "USD",
+        leg1Amount: 0.33,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 34,
+        networkFee: 35,
+        nobaFee: 36,
+        discounts: {
+          fixedCreditCardFeeDiscount: 3.4,
+          dynamicCreditCardFeeDiscount: 3.5,
+          nobaFeeDiscount: 3.6,
+          networkFeeDiscount: 3.7,
+          spreadDiscount: 3.8,
+        },
+        _id: "333333333333" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_2",
+        transactionID: "TTTTTTTTT_4",
+        userId: "UUUUUUUUUU_4",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date4,
+        leg2Amount: 400,
+        leg2: "USD",
+        leg1Amount: 0.43,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 44,
+        networkFee: 45,
+        nobaFee: 46,
+        discounts: {
+          fixedCreditCardFeeDiscount: 4.4,
+          dynamicCreditCardFeeDiscount: 4.5,
+          nobaFeeDiscount: 4.6,
+          networkFeeDiscount: 4.7,
+          spreadDiscount: 4.8,
+        },
+        _id: "44444444444" as any,
+      });
+
+      const filePath = `/tmp/txn-${Math.floor(Math.random() * 1000000)}.csv`;
+
+      await transactionRepo.getPartnerTransactions(
+        {
+          partnerID: "PPPPPPPPP_2",
+          startDate: date2,
+          endDate: date3,
+        },
+        filePath,
+      );
+
+      const csvContent = await fs.readFileSync(filePath, { encoding: "utf8" });
+      const receivedRecords = csvContent.split("\n");
+      const expectedRecords = [
+        `PPPPPPPPP_2,TTTTTTTTT_2,UUUUUUUUUU_2,"${date2.toUTCString()}",COMPLETED,200,USD,0.23,ETH,24,25,26,2.4,2.5,2.6,2.7,2.8`,
+        `PPPPPPPPP_2,TTTTTTTTT_3,UUUUUUUUUU_3,"${date3.toUTCString()}",COMPLETED,300,USD,0.33,ETH,34,35,36,3.4,3.5,3.6,3.7,3.8`,
+      ];
+
+      expect(receivedRecords).toHaveLength(1 + 2 + 1); // HEADER + 2 RECORD + EMPTY LINE
       expectedRecords.forEach(record => {
         expect(receivedRecords).toContain(record);
       });
