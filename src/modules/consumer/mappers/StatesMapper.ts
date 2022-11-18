@@ -12,9 +12,9 @@ import { PaymentMethod } from "../domain/PaymentMethod";
 import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 
 export class StatesMapper {
-  private getAggregatedWalletStatus(wallets: CryptoWallet[]): WalletStatus {
+  private getAggregatedWalletStatus(allWallets: CryptoWallet[]): WalletStatus {
     // Filter out wallets that has not been deleted
-    wallets = wallets.filter(wallet => wallet.status !== WalletStatus.DELETED);
+    const wallets = allWallets.filter(wallet => wallet.status !== WalletStatus.DELETED);
 
     // At least one wallet is rejected
     if (wallets.filter(wallet => wallet.status === WalletStatus.REJECTED).length > 0) {
@@ -27,9 +27,11 @@ export class StatesMapper {
     } else return null;
   }
 
-  private getAggregatedPaymentMethodStatus(paymentMethods: PaymentMethod[]): PaymentMethodStatus {
+  private getAggregatedPaymentMethodStatus(allPaymentMethods: PaymentMethod[]): PaymentMethodStatus {
     // Filter out payment methods that has not been deleted
-    paymentMethods = paymentMethods.filter(paymentMethod => paymentMethod.status !== PaymentMethodStatus.DELETED);
+    const paymentMethods = allPaymentMethods.filter(
+      paymentMethod => paymentMethod.status !== PaymentMethodStatus.DELETED,
+    );
 
     if (paymentMethods.filter(paymentMethod => paymentMethod.status === PaymentMethodStatus.REJECTED).length > 0) {
       return PaymentMethodStatus.REJECTED;
