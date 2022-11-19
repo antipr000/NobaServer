@@ -8,9 +8,10 @@ import { AdminMapper } from "./mappers/AdminMapper";
 import { PartnerModule } from "../partner/partner.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { ConsumerModule } from "../consumer/consumer.module";
+import { TransactionModule } from "../transactions/transaction.module";
 
 @Module({
-  imports: [ConfigModule, CommonModule, PartnerModule, ConsumerModule],
+  imports: [ConfigModule, CommonModule, PartnerModule, ConsumerModule, TransactionModule],
   controllers: [AdminController],
   providers: [
     AdminService,

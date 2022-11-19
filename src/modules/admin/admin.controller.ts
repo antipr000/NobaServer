@@ -13,6 +13,7 @@ import {
   ForbiddenException,
   Patch,
   NotFoundException,
+  Response,
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -55,6 +56,9 @@ import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { CreatePartnerRequestDTO } from "../partner/dto/CreatePartnerRequestDTO";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
+import { TransactionService } from "../transactions/transaction.service";
+import fs from "fs";
+import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")
@@ -78,6 +82,9 @@ export class AdminController {
 
   @Inject()
   private readonly consumerService: ConsumerService;
+
+  @Inject()
+  private readonly transactionService: TransactionService;
 
   private readonly partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
@@ -279,6 +286,55 @@ export class AdminController {
       requestBody,
     );
     return this.partnerAdminMapper.toDTO(partnerAdmin);
+  }
+
+  @Get(`/partners/:${PartnerID}/transactions`)
+  @ApiOperation({ summary: "Fetch all the transactions for a specific Partner" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from fetching the transactions for a Partner",
+  })
+  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
+  @ApiNotFoundResponse({ description: "Partner not found" })
+  async fetchTransactionsForPartner(
+    @Param(PartnerID) partnerId: string,
+    @Query() filters: TransactionFilterDTO,
+    @Request() request,
+    @Response() response,
+  ) {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
+      throw new ForbiddenException(
+        `Admins with role '${authenticatedUser.props.role}' can't fetch transactions for Partners.`,
+      );
+    }
+
+    const partnerDetails = await this.partnerService.getPartner(partnerId);
+    if (partnerDetails === undefined || partnerDetails === null) {
+      throw new NotFoundException(`Partner with ID "${partnerId}" not found.`);
+    }
+
+    const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
+    const endDate = filters.endDate ? new Date(filters.endDate) : undefined;
+    const localCsvFileWithTransactions = await this.transactionService.populateCsvFileWithPartnerTransactions(
+      partnerId,
+      startDate,
+      endDate,
+    );
+
+    return new Promise((resolve, reject) => {
+      response.writeHead(200, { "Content-Type": "text/csv" });
+      fs.createReadStream(localCsvFileWithTransactions)
+        .on("end", () => {
+          this.logger.debug(`Deleting the file '${localCsvFileWithTransactions}'`);
+          fs.unlinkSync(localCsvFileWithTransactions);
+          resolve(0);
+        })
+        .on("error", err => {
+          this.logger.error(`Error while sending the stream in response: ${JSON.stringify(err)}`);
+          reject(err);
+        })
+        .pipe(response);
+    });
   }
 
   @Post("/partners")

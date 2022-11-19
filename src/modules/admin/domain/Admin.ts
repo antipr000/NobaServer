@@ -15,6 +15,7 @@ const Permissions = {
   removeNobaAdmin: "REMOVE_NOBA_ADMIN",
   changeNobaAdminPrivileges: "CHANGE_NOBA_ADMIN_PRIVILEGES",
   updateConsumerData: "UPDATE_CONSUMER_DATA",
+  queryPartnerTransactions: "QUERY_PARTNER_TRANSACTIONS",
 };
 
 export enum NOBA_ADMIN_ROLE_TYPES {
@@ -36,6 +37,7 @@ const AdminRolesWithTheirPrivileges = {
       Permissions.addAdminsToPartner,
       Permissions.updateAdminsForPartner,
       Permissions.removePartnerAdmin,
+      Permissions.queryPartnerTransactions,
     ],
   },
   ADMIN: {
@@ -51,6 +53,7 @@ const AdminRolesWithTheirPrivileges = {
       Permissions.removeNobaAdmin,
       Permissions.changeNobaAdminPrivileges,
       Permissions.updateConsumerData,
+      Permissions.queryPartnerTransactions,
     ],
   },
 };

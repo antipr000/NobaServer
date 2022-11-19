@@ -27,6 +27,10 @@ import { KYCStatus, DocumentVerificationStatus } from "../../../modules/consumer
 import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
 import { CreatePartnerRequestDTO } from "../../../modules/partner/dto/CreatePartnerRequestDTO";
 import { DocumentVerificationState, KycVerificationState } from "../../../modules/consumer/domain/ExternalStates";
+import { TransactionService } from "../../../modules/transactions/transaction.service";
+import { getMockTransactionServiceWithDefaults } from "../../../modules/transactions/mocks/mock.transactions.repo";
+import { TransactionFilterDTO } from "../dto/TransactionFilterDTO";
+import fs from "fs";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -40,6 +44,7 @@ describe("AdminController", () => {
   let mockPartnerAdminService: PartnerAdminService;
   let mockPartnerService: PartnerService;
   let mockConsumerService: ConsumerService;
+  let mockTransactionService: TransactionService;
 
   beforeEach(async () => {
     process.env = {
@@ -52,6 +57,7 @@ describe("AdminController", () => {
     mockPartnerAdminService = getMockPartnerAdminServiceWithDefaults();
     mockPartnerService = getMockPartnerServiceWithDefaults();
     mockConsumerService = getMockConsumerServiceWithDefaults();
+    mockTransactionService = getMockTransactionServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -72,6 +78,10 @@ describe("AdminController", () => {
         {
           provide: ConsumerService,
           useFactory: () => instance(mockConsumerService),
+        },
+        {
+          provide: TransactionService,
+          useFactory: () => instance(mockTransactionService),
         },
         AdminMapper,
       ],
@@ -1533,6 +1543,161 @@ describe("AdminController", () => {
       expect(result._id).toBe(consumerProps._id);
       expect(result.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
       expect(result.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.VERIFIED);
+    });
+  });
+
+  describe("fetchTransactionsForPartner", () => {
+    let mockResponseFilePath: string;
+    let dummyFilePathWithContent: string;
+    let dummyFileContent: string;
+
+    class MockedResponse extends fs.WriteStream {
+      static receivedResponseCode: number = 0;
+      static receivedHeaders = {};
+
+      constructor(responseFilePath: string) {
+        super(responseFilePath as any);
+      }
+
+      writeHead(responseCode: number, headers) {
+        MockedResponse.receivedHeaders = headers;
+        MockedResponse.receivedResponseCode = responseCode;
+      }
+
+      static reset() {
+        MockedResponse.receivedHeaders = {};
+        MockedResponse.receivedResponseCode = 0;
+      }
+    }
+
+    beforeEach(() => {
+      MockedResponse.reset();
+
+      mockResponseFilePath = `/tmp/out-${Math.floor(Math.random() * 1000000)}.csv`;
+      fs.writeFileSync(mockResponseFilePath, "");
+
+      dummyFilePathWithContent = `/tmp/csv-content-${Math.floor(Math.random() * 1000000)}.csv`;
+      dummyFileContent = "some,test,content\n";
+      fs.writeFileSync(dummyFilePathWithContent, dummyFileContent);
+    });
+
+    afterEach(() => {
+      try {
+        fs.unlinkSync(mockResponseFilePath);
+        fs.unlinkSync(dummyFilePathWithContent);
+      } catch (err) {
+        // It's ok if the unlink fails.
+      }
+    });
+
+    it("Logged-in Consumer shouldn't be able to call GET /partners/{partnerID}/transactions", async () => {
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
+        _id: "XXXXXXXXXX",
+        email: "consumer@noba.com",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      try {
+        await adminController.fetchTransactionsForPartner(
+          "partnerId",
+          {},
+          { user: { entity: authenticatedConsumer } },
+          new MockedResponse(mockResponseFilePath),
+        );
+        expect(true).toBe(false);
+      } catch (err) {
+        console.log(err);
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("Logged-in PartnerAdmins shouldn't be able to call GET /partners/{partnerID}/transactions", async () => {
+      const authenticatedPartnerAdmin: PartnerAdmin = PartnerAdmin.createPartnerAdmin({
+        _id: "XXXXXXXXXX",
+        email: "partner.admin@noba.com",
+        role: PARTNER_ADMIN_ROLE_TYPES.ALL,
+        partnerId: "PPPPPPPPPP",
+      });
+
+      try {
+        await adminController.fetchTransactionsForPartner(
+          "partnerId",
+          {},
+          { user: { entity: authenticatedPartnerAdmin } },
+          new MockedResponse(mockResponseFilePath),
+        );
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("Logged-in NobaAdmin with 'BASIC' role shouldn't be able to call GET /partners/{partnerID}/transactions", async () => {
+      const adminId = "XXXXXXXXXX";
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
+      });
+
+      try {
+        await adminController.fetchTransactionsForPartner(
+          "partnerId",
+          {},
+          { user: { entity: authenticatedNobaAdmin } },
+          new MockedResponse(mockResponseFilePath),
+        );
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+      }
+    });
+
+    it("Logged-in NobaAdmins with 'INTERMEDIATE' role should successfully get the transaction details of a Partner", async () => {
+      const adminId = "XXXXXXXXXX";
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
+      });
+
+      const partnerId = "PPPPPPPPPP";
+      when(mockPartnerService.getPartner(partnerId)).thenResolve(
+        Partner.createPartner({
+          _id: partnerId,
+          name: "Partner Name",
+        }),
+      );
+
+      when(
+        mockTransactionService.populateCsvFileWithPartnerTransactions(anything(), anything(), anything()),
+      ).thenResolve(dummyFilePathWithContent);
+
+      const filters: TransactionFilterDTO = {
+        endDate: "2022-11-19",
+        startDate: "2022-11-19",
+      };
+      await adminController.fetchTransactionsForPartner(
+        partnerId,
+        filters,
+        { user: { entity: authenticatedNobaAdmin } },
+        new MockedResponse(mockResponseFilePath),
+      );
+
+      expect(MockedResponse.receivedResponseCode).toBe(200);
+      expect(MockedResponse.receivedHeaders).toStrictEqual({ "Content-Type": "text/csv" });
+      expect(fs.readFileSync(mockResponseFilePath, { encoding: "utf-8" })).toBe(dummyFileContent);
+
+      const [involvedPartnerId, involvedStartDate, involvedEndDate] = capture(
+        mockTransactionService.populateCsvFileWithPartnerTransactions,
+      ).last();
+      expect(involvedPartnerId).toBe(partnerId);
+      expect(involvedStartDate).toStrictEqual(new Date(filters.startDate));
+      expect(involvedEndDate).toStrictEqual(new Date(filters.endDate));
     });
   });
 });
