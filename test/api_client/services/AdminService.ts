@@ -374,6 +374,58 @@ export class AdminService {
   }
 
   /**
+   * Fetch all the transactions for a specific Partner
+   * @returns void
+   * @throws ApiError
+   */
+  public static fetchTransactionsForPartner({
+    xNobaApiKey,
+    partnerId,
+    xNobaSignature,
+    xNobaTimestamp,
+    startDate,
+    endDate,
+  }: {
+    xNobaApiKey: string;
+    partnerId: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    /**
+     * Format: YYYY-MM-DD. Example: '2010-04-27' means 27th Apr 2010 at 00:00:00 UTC
+     */
+    startDate?: string;
+    /**
+     * Format: YYYY-MM-DD. Example: '2010-04-27' means 27th Apr 2010 at 00:00:00 UTC
+     */
+    endDate?: string;
+  }): CancelablePromise<void> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins/partners/{partnerID}/transactions",
+      path: {
+        partnerID: partnerId,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        startDate: startDate,
+        endDate: endDate,
+      },
+      errors: {
+        400: `Invalid parameter(s)`,
+        403: `User forbidden from fetching the transactions for a Partner`,
+        404: `Partner not found`,
+      },
+    });
+  }
+
+  /**
    * Adds a new partner
    * @returns PartnerDTO New partner record
    * @throws ApiError
