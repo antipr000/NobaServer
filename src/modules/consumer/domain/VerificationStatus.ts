@@ -23,6 +23,7 @@ export enum WalletStatus {
   FLAGGED = "Flagged",
   REJECTED = "Rejected",
   APPROVED = "Approved",
+  DELETED = "Deleted",
 }
 
 export enum PaymentMethodStatus {
@@ -30,6 +31,7 @@ export enum PaymentMethodStatus {
   REJECTED = "Rejected",
   APPROVED = "Approved",
   UNSUPPORTED = "Unsupported",
+  DELETED = "Deleted",
 }
 
 export enum RiskLevel {

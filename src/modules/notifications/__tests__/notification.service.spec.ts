@@ -29,6 +29,7 @@ import { SendCryptoFailedEvent } from "../events/SendCryptoFailedEvent";
 import { SendOrderExecutedEvent } from "../events/SendOrderExecutedEvent";
 import { SendOrderFailedEvent } from "../events/SendOrderFailedEvent";
 import { SendHardDeclineEvent } from "../events/SendHardDeclineEvent";
+import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
 
 describe("ConfigurationsProviderService", () => {
   let partnerService: PartnerService;
@@ -97,6 +98,7 @@ describe("ConfigurationsProviderService", () => {
 
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
+    when(partnerService.getWebhook(partner, WebhookType.NOTIFICATION)).thenReturn(anything());
     await notificationService.sendNotification(
       NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       partner.props._id,
@@ -128,6 +130,45 @@ describe("ConfigurationsProviderService", () => {
     ).once();
   });
 
+  it("should send email instead of webhook event if partner is not configured for webhooks", async () => {
+    const partner = createFakePartner(NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT, [
+      NotificationEventHandler.WEBHOOK,
+    ]);
+
+    when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+    when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
+    when(partnerService.getWebhook(partner, WebhookType.NOTIFICATION)).thenReturn(null);
+    await notificationService.sendNotification(
+      NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+      partner.props._id,
+      {
+        email: "fake+user@noba.com",
+        otp: "123456",
+        firstName: "Fake",
+        walletAddress: "fake-wallet-address",
+        nobaUserID: "fake-noba-user-id",
+        partnerUserID: "fake-partner-user-id",
+      },
+    );
+
+    const sendWalletUpdateVerificationCodeEvent = new SendWalletUpdateVerificationCodeEvent({
+      email: "fake+user@noba.com",
+      otp: "123456",
+      name: "Fake",
+      partnerID: partner.props._id,
+      walletAddress: "fake-wallet-address",
+      nobaUserID: "fake-noba-user-id",
+      partnerUserID: "fake-partner-user-id",
+    });
+
+    verify(
+      eventEmitter.emitAsync(
+        `email.${NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`,
+        deepEqual(sendWalletUpdateVerificationCodeEvent),
+      ),
+    ).once();
+  });
+
   it("should emit both Webhook and Email events for 'SEND_WELCOME_MESSAGE_EVENT' when partner is configured", async () => {
     const partner = createFakePartner(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, [
       NotificationEventHandler.WEBHOOK,
@@ -136,6 +177,7 @@ describe("ConfigurationsProviderService", () => {
 
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
+    when(partnerService.getWebhook(partner, WebhookType.NOTIFICATION)).thenReturn(anything());
     await notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, partner.props._id, {
       email: "fake+user@noba.com",
       otp: "123456",
@@ -208,6 +250,7 @@ describe("ConfigurationsProviderService", () => {
 
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
+    when(partnerService.getWebhook(partner, WebhookType.NOTIFICATION)).thenReturn(anything());
     await notificationService.sendNotification(
       NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
       partner.props._id,
@@ -288,6 +331,7 @@ describe("ConfigurationsProviderService", () => {
 
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       when(partnerService.getPartner(partner.props._id)).thenResolve(partner);
+      when(partnerService.getWebhook(partner, WebhookType.NOTIFICATION)).thenReturn(anything());
 
       await notificationService.sendNotification(event, partner.props._id, payload);
       let data: any;
@@ -451,6 +495,7 @@ function createFakePartner(eventType: NotificationEventType, handlers: Notificat
   return Partner.createPartner({
     _id: "fake-partner-1234",
     name: "Fake Partner",
+    webhooks: [{ type: WebhookType.NOTIFICATION, url: "webhook-url" }],
     config: {
       fees: {} as any,
       notificationConfig: [

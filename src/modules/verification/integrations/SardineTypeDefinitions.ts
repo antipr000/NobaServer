@@ -184,8 +184,8 @@ export type DocumentVerificationWebhookRequest = {
       sessionKey: string;
       customerID: string;
     };
-    documentVerificationResult: DocumentVerificationSardineResponse;
   };
+  documentVerificationResult: DocumentVerificationSardineResponse;
 };
 
 export type DocumentVerificationSardineResponse = {

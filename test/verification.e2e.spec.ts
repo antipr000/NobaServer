@@ -252,7 +252,6 @@ describe("Verification", () => {
         type: "fake-type",
         timestamp: new Date().toISOString(),
         data: {
-          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
           case: {
             sessionKey: "test-session-key",
             customerID: getConsumerResponse._id,
@@ -261,6 +260,7 @@ describe("Verification", () => {
             source: "fake-source",
           },
         },
+        documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
       };
 
       const sardineSignature = computeSardineWebhookSignature(secretKey, JSON.stringify(requestBody));
@@ -289,7 +289,6 @@ describe("Verification", () => {
         type: "fake-type",
         timestamp: new Date().toISOString(),
         data: {
-          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
           case: {
             sessionKey: "test-session-key",
             customerID: "fake-consumer",
@@ -298,6 +297,7 @@ describe("Verification", () => {
             source: "fake-source",
           },
         },
+        documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
       };
 
       const sardineSignature = computeSardineWebhookSignature(secretKey, JSON.stringify(requestBody));

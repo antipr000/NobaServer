@@ -285,7 +285,7 @@ export class VerificationService {
   ): Promise<DocumentVerificationResult> {
     const consumerID = documentVerificationResult.data.case.customerID;
     const result: DocumentVerificationResult = this.idvProvider.processDocumentVerificationResult(
-      documentVerificationResult.data.documentVerificationResult,
+      documentVerificationResult.documentVerificationResult,
     );
 
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);

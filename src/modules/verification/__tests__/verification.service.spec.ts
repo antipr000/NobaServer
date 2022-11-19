@@ -592,7 +592,7 @@ describe("VerificationService", () => {
       when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
       when(
         idvProvider.processDocumentVerificationResult(
-          deepEqual(documentVerificationWebhookRequest.data.documentVerificationResult),
+          deepEqual(documentVerificationWebhookRequest.documentVerificationResult),
         ),
       ).thenReturn(documentVerificationResult);
       when(consumerService.updateConsumer(deepEqual(newConsumerData))).thenResolve(
@@ -647,7 +647,7 @@ describe("VerificationService", () => {
       when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
       when(
         idvProvider.processDocumentVerificationResult(
-          deepEqual(documentVerificationWebhookRequest.data.documentVerificationResult),
+          deepEqual(documentVerificationWebhookRequest.documentVerificationResult),
         ),
       ).thenReturn(documentVerificationResult);
       when(consumerService.updateConsumer(deepEqual(newConsumerData))).thenResolve(
@@ -1004,8 +1004,8 @@ function getDocumentVerificationWebhookRequest(
             sessionKey: "fake-session-key",
             customerID: consumer.props._id,
           },
-          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
         },
+        documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
       };
     case DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE:
       return {
@@ -1020,8 +1020,8 @@ function getDocumentVerificationWebhookRequest(
             sessionKey: "fake-session-key",
             customerID: consumer.props._id,
           },
-          documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
         },
+        documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
       };
   }
 }
