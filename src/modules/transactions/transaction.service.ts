@@ -27,6 +27,7 @@ import { AssetServiceFactory } from "./assets/asset.service.factory";
 import { ConsumerAccountBalance, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
+import { PartnerTransactionFilterOptions } from "./domain/TransactionRepoTypes";
 import { TransactionFilterOptions, TransactionStatus, TransactionType } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
@@ -175,9 +176,21 @@ export class TransactionService {
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
   }
 
-  // async getPartnerTransactions(partnerID: string, filters: PartnerTransactionFilterOptions): Promise<PartnerTransactions> {
+  async populateCsvFileWithPartnerTransactions(partnerID: string, startDate: Date, endDate: Date): Promise<string> {
+    if (partnerID === undefined || partnerID === null) {
+      this.logger.error(`"populateCsvFileWithPartnerTransactions" is called without 'partnerID'`);
+      throw new BadRequestException(`partnerID is required`);
+    }
+    const filters: PartnerTransactionFilterOptions = {
+      partnerID: partnerID,
+      startDate: startDate,
+      endDate: endDate,
+    };
 
-  // }
+    const filePath = `/tmp/txn-${partnerID}-${Math.floor(Math.random() * 1000000)}.csv`;
+    await this.transactionsRepo.getPartnerTransactions(filters, filePath);
+    return filePath;
+  }
 
   async getTransactionsInInterval(
     userID: string,
