@@ -187,7 +187,7 @@ export class TransactionService {
       endDate: endDate,
     };
 
-    const filePath = `/tmp/txn-${partnerID}-${Math.floor(Math.random() * 1000000)}.csv`;
+    const filePath = `/tmp/txn-${partnerID}-${Date.now().valueOf()}.csv`;
     await this.transactionsRepo.getPartnerTransactions(filters, filePath);
     return filePath;
   }
