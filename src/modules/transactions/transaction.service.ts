@@ -176,7 +176,12 @@ export class TransactionService {
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
   }
 
-  async populateCsvFileWithPartnerTransactions(partnerID: string, startDate: Date, endDate: Date): Promise<string> {
+  async populateCsvFileWithPartnerTransactions(
+    partnerID: string,
+    startDate: Date,
+    endDate: Date,
+    includeIncompleteTransactions: boolean,
+  ): Promise<string> {
     if (partnerID === undefined || partnerID === null) {
       this.logger.error(`"populateCsvFileWithPartnerTransactions" is called without 'partnerID'`);
       throw new BadRequestException(`partnerID is required`);
@@ -185,6 +190,7 @@ export class TransactionService {
       partnerID: partnerID,
       startDate: startDate,
       endDate: endDate,
+      includeIncompleteTransactions: includeIncompleteTransactions ?? true,
     };
 
     const filePath = `/tmp/txn-${partnerID}-${Date.now().valueOf()}.csv`;

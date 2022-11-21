@@ -1603,7 +1603,6 @@ describe("AdminController", () => {
 
       try {
         await adminController.fetchTransactionsForPartner(
-          "partnerId",
           {},
           { user: { entity: authenticatedConsumer } },
           new MockedResponse(mockResponseFilePath),
@@ -1625,7 +1624,6 @@ describe("AdminController", () => {
 
       try {
         await adminController.fetchTransactionsForPartner(
-          "partnerId",
           {},
           { user: { entity: authenticatedPartnerAdmin } },
           new MockedResponse(mockResponseFilePath),
@@ -1646,7 +1644,6 @@ describe("AdminController", () => {
 
       try {
         await adminController.fetchTransactionsForPartner(
-          "partnerId",
           {},
           { user: { entity: authenticatedNobaAdmin } },
           new MockedResponse(mockResponseFilePath),
@@ -1664,25 +1661,19 @@ describe("AdminController", () => {
         email: "admin@noba.com",
         role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
       });
-
       const partnerId = "PPPPPPPPPP";
-      when(mockPartnerService.getPartner(partnerId)).thenResolve(
-        Partner.createPartner({
-          _id: partnerId,
-          name: "Partner Name",
-        }),
-      );
 
       when(
-        mockTransactionService.populateCsvFileWithPartnerTransactions(anything(), anything(), anything()),
+        mockTransactionService.populateCsvFileWithPartnerTransactions(anything(), anything(), anything(), anything()),
       ).thenResolve(dummyFilePathWithContent);
 
       const filters: TransactionFilterDTO = {
         endDate: "2022-11-19",
         startDate: "2022-11-19",
+        partnerID: partnerId,
+        onlyCompletedTransactions: true,
       };
       await adminController.fetchTransactionsForPartner(
-        partnerId,
         filters,
         { user: { entity: authenticatedNobaAdmin } },
         new MockedResponse(mockResponseFilePath),
@@ -1692,12 +1683,85 @@ describe("AdminController", () => {
       expect(MockedResponse.receivedHeaders).toStrictEqual({ "Content-Type": "text/csv" });
       expect(fs.readFileSync(mockResponseFilePath, { encoding: "utf-8" })).toBe(dummyFileContent);
 
-      const [involvedPartnerId, involvedStartDate, involvedEndDate] = capture(
+      const [involvedPartnerId, involvedStartDate, involvedEndDate, involvedIncludeIncompleteTransactions] = capture(
         mockTransactionService.populateCsvFileWithPartnerTransactions,
       ).last();
       expect(involvedPartnerId).toBe(partnerId);
       expect(involvedStartDate).toStrictEqual(new Date(filters.startDate));
       expect(involvedEndDate).toStrictEqual(new Date(filters.endDate));
+      expect(involvedIncludeIncompleteTransactions).toStrictEqual(false);
+    });
+
+    it("should return incomplete Transactions if 'onlyCompletedTransactions' is not specified", async () => {
+      const adminId = "XXXXXXXXXX";
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
+      });
+      const partnerId = "PPPPPPPPPP";
+
+      when(
+        mockTransactionService.populateCsvFileWithPartnerTransactions(anything(), anything(), anything(), anything()),
+      ).thenResolve(dummyFilePathWithContent);
+
+      const filters: TransactionFilterDTO = {
+        endDate: "2022-11-19",
+        startDate: "2022-11-19",
+        partnerID: partnerId,
+      };
+      await adminController.fetchTransactionsForPartner(
+        filters,
+        { user: { entity: authenticatedNobaAdmin } },
+        new MockedResponse(mockResponseFilePath),
+      );
+
+      expect(MockedResponse.receivedResponseCode).toBe(200);
+      expect(MockedResponse.receivedHeaders).toStrictEqual({ "Content-Type": "text/csv" });
+      expect(fs.readFileSync(mockResponseFilePath, { encoding: "utf-8" })).toBe(dummyFileContent);
+
+      const [involvedPartnerId, involvedStartDate, involvedEndDate, involvedIncludeIncompleteTransactions] = capture(
+        mockTransactionService.populateCsvFileWithPartnerTransactions,
+      ).last();
+      expect(involvedPartnerId).toBe(partnerId);
+      expect(involvedStartDate).toStrictEqual(new Date(filters.startDate));
+      expect(involvedEndDate).toStrictEqual(new Date(filters.endDate));
+      expect(involvedIncludeIncompleteTransactions).toStrictEqual(true);
+    });
+
+    it("should not filter on 'partnerID' if not specified", async () => {
+      const adminId = "XXXXXXXXXX";
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        _id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.INTERMEDIATE,
+      });
+
+      when(
+        mockTransactionService.populateCsvFileWithPartnerTransactions(anything(), anything(), anything(), anything()),
+      ).thenResolve(dummyFilePathWithContent);
+
+      const filters: TransactionFilterDTO = {
+        endDate: "2022-11-19",
+        startDate: "2022-11-19",
+      };
+      await adminController.fetchTransactionsForPartner(
+        filters,
+        { user: { entity: authenticatedNobaAdmin } },
+        new MockedResponse(mockResponseFilePath),
+      );
+
+      expect(MockedResponse.receivedResponseCode).toBe(200);
+      expect(MockedResponse.receivedHeaders).toStrictEqual({ "Content-Type": "text/csv" });
+      expect(fs.readFileSync(mockResponseFilePath, { encoding: "utf-8" })).toBe(dummyFileContent);
+
+      const [involvedPartnerId, involvedStartDate, involvedEndDate, involvedIncludeIncompleteTransactions] = capture(
+        mockTransactionService.populateCsvFileWithPartnerTransactions,
+      ).last();
+      expect(involvedPartnerId).toBeUndefined();
+      expect(involvedStartDate).toStrictEqual(new Date(filters.startDate));
+      expect(involvedEndDate).toStrictEqual(new Date(filters.endDate));
+      expect(involvedIncludeIncompleteTransactions).toStrictEqual(true);
     });
   });
 });

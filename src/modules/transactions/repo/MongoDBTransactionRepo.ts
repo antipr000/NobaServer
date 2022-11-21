@@ -114,6 +114,9 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     if (Object.keys(timestampFilters).length !== 0) {
       transactionFilters["transactionTimestamp"] = timestampFilters;
     }
+    if (!filters.includeIncompleteTransactions) {
+      transactionFilters["transactionStatus"] = TransactionStatus.COMPLETED;
+    }
 
     const headers = [
       { id: "partnerID", title: "PARTNER_ID" },
@@ -134,10 +137,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       { id: "networkFeeWaived", title: "NETWORK_FEE_WAIVED" },
       { id: "spreadAmountWaived", title: "SPREAD_AMOUNT_WAIVED" },
     ];
-    // const csvWriter = createCsvWriter({
-    //   path: outputCsvFilePath,
-    //   header: headers,
-    // });
+
     const csvStringifier = createCsvStringifier({
       header: headers,
     });

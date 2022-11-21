@@ -45,9 +45,9 @@ export function getMockTransactionServiceWithDefaults(): TransactionService {
   when(mockTransactionService.validatePendingTransaction(anything(), anything())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockTransactionService.populateCsvFileWithPartnerTransactions(anyString(), anything(), anything())).thenReject(
-    new Error("Method not implemented"),
-  );
+  when(
+    mockTransactionService.populateCsvFileWithPartnerTransactions(anyString(), anything(), anything(), anything()),
+  ).thenReject(new Error("Method not implemented"));
 
   return mockTransactionService;
 }

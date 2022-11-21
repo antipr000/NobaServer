@@ -3098,7 +3098,7 @@ describe("TransactionService", () => {
   describe("populateCsvFileWithPartnerTransactions()", () => {
     it("should throw BadRequestError if 'partnerID' is not provided", async () => {
       try {
-        await transactionService.populateCsvFileWithPartnerTransactions(null, new Date(), new Date());
+        await transactionService.populateCsvFileWithPartnerTransactions(null, new Date(), new Date(), false);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(BadRequestException);
@@ -3117,6 +3117,7 @@ describe("TransactionService", () => {
         partnerID,
         date1,
         date2,
+        false,
       );
 
       const [filters, expectedOutputFile] = capture(transactionRepo.getPartnerTransactions).last();
@@ -3125,6 +3126,32 @@ describe("TransactionService", () => {
         partnerID: partnerID,
         startDate: date1,
         endDate: date2,
+        includeIncompleteTransactions: false,
+      });
+    });
+
+    it("should default the value of 'includeIncompleteTransactions' to 'true' if not specified", async () => {
+      const date1 = new Date();
+      await sleep(100); // to avoid error due to precisions
+      const date2 = new Date();
+      const partnerID = "mock-partner-id";
+
+      when(transactionRepo.getPartnerTransactions(anything(), anything())).thenResolve();
+
+      const receivedOutputFile: string = await transactionService.populateCsvFileWithPartnerTransactions(
+        partnerID,
+        date1,
+        date2,
+        undefined,
+      );
+
+      const [filters, expectedOutputFile] = capture(transactionRepo.getPartnerTransactions).last();
+      expect(expectedOutputFile).toBe(receivedOutputFile);
+      expect(filters).toStrictEqual({
+        partnerID: partnerID,
+        startDate: date1,
+        endDate: date2,
+        includeIncompleteTransactions: true,
       });
     });
 
@@ -3134,7 +3161,7 @@ describe("TransactionService", () => {
       );
 
       try {
-        await transactionService.populateCsvFileWithPartnerTransactions("partnerID", new Date(), new Date());
+        await transactionService.populateCsvFileWithPartnerTransactions("partnerID", new Date(), new Date(), false);
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(InternalServerErrorException);

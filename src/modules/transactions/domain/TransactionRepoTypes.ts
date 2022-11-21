@@ -17,6 +17,7 @@ export type PartnerTransactionFilterOptions = {
   startDate?: Date;
   endDate?: Date;
   partnerID?: string;
+  includeIncompleteTransactions: boolean;
 };
 
 export type PartnerTransaction = {

@@ -288,19 +288,14 @@ export class AdminController {
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
-  @Get(`/partners/:${PartnerID}/transactions`)
+  @Get(`/partners/transactions/download`)
   @ApiOperation({ summary: "Fetch all the transactions for a specific Partner" })
   @ApiForbiddenResponse({
     description: "User forbidden from fetching the transactions for a Partner",
   })
   @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
   @ApiNotFoundResponse({ description: "Partner not found" })
-  async fetchTransactionsForPartner(
-    @Param(PartnerID) partnerId: string,
-    @Query() filters: TransactionFilterDTO,
-    @Request() request,
-    @Response() response,
-  ) {
+  async fetchTransactionsForPartner(@Query() filters: TransactionFilterDTO, @Request() request, @Response() response) {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
       throw new ForbiddenException(
@@ -308,17 +303,13 @@ export class AdminController {
       );
     }
 
-    const partnerDetails = await this.partnerService.getPartner(partnerId);
-    if (partnerDetails === undefined || partnerDetails === null) {
-      throw new NotFoundException(`Partner with ID "${partnerId}" not found.`);
-    }
-
     const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
     const endDate = filters.endDate ? new Date(filters.endDate) : undefined;
     const localCsvFileWithTransactions = await this.transactionService.populateCsvFileWithPartnerTransactions(
-      partnerId,
+      filters.partnerID,
       startDate,
       endDate,
+      filters.onlyCompletedTransactions ? !filters.onlyCompletedTransactions : true,
     );
 
     return new Promise((resolve, reject) => {
