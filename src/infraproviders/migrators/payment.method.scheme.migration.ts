@@ -21,7 +21,10 @@ export class PaymentMethodSchemeMigrator {
     if (!isCardType) return queriedPaymentMethodRecord;
 
     const isOnOlderSchema: boolean =
-      queriedPaymentMethodRecord.cardData.scheme === undefined || queriedPaymentMethodRecord.cardData.scheme === null;
+      queriedPaymentMethodRecord.cardData.scheme === undefined ||
+      queriedPaymentMethodRecord.cardData.scheme === null ||
+      queriedPaymentMethodRecord.isDefault === undefined ||
+      queriedPaymentMethodRecord.isDefault === null;
 
     if (!isOnOlderSchema) return queriedPaymentMethodRecord;
 
@@ -44,6 +47,7 @@ export class PaymentMethodSchemeMigrator {
         imageUri: queriedPaymentMethodRecord.imageUri,
         paymentToken: queriedPaymentMethodRecord.paymentToken,
         status: queriedPaymentMethodRecord.status,
+        isDefault: false,
       };
 
       return migratedRecord;

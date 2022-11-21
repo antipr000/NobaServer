@@ -741,6 +741,80 @@ describe("Consumers", () => {
       expect(addedCardDetails.paymentToken).toBeDefined();
     });
 
+    it("should allow updating payment method to make it default", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "POST",
+        "/v1/consumers/paymentmethods",
+        JSON.stringify({
+          type: "Card",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
+        }),
+      );
+      const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          type: "Card",
+          cardDetails: {
+            cardNumber: "4242424242424242",
+            expiryMonth: 3,
+            expiryYear: 2030,
+            cvv: "737",
+          },
+        },
+      })) as ConsumerDTO & ResponseStatus;
+      expect(addPaymentMethodResponse.__status).toBe(201);
+      expect(addPaymentMethodResponse.paymentMethods[0].isDefault).toBeFalsy();
+
+      signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers/paymentmethods/" + addPaymentMethodResponse.paymentMethods[0].paymentToken,
+        JSON.stringify({
+          isDefault: true,
+        }),
+      );
+
+      const updatedPaymentMethodResponse = (await ConsumerService.updatePaymentMethod({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          isDefault: true,
+        },
+        paymentToken: addPaymentMethodResponse.paymentMethods[0].paymentToken,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(updatedPaymentMethodResponse.__status).toBe(200);
+
+      expect(updatedPaymentMethodResponse.paymentMethods[0].isDefault).toBeTruthy();
+
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+
+      expect(getConsumerResponse.paymentMethods).toHaveLength(1);
+      const addedCardDetails = getConsumerResponse.paymentMethods[0];
+      expect(addedCardDetails.paymentToken).toBeDefined();
+      expect(addedCardDetails.isDefault).toBe(true);
+    });
+
     it("should map verification status properly when all status are approved", async () => {
       const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
@@ -767,6 +841,7 @@ describe("Consumers", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
           {
             type: PaymentMethodType.CARD,
@@ -780,6 +855,7 @@ describe("Consumers", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -838,6 +914,7 @@ describe("Consumers", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.FLAGGED,
+            isDefault: false,
           },
           {
             type: PaymentMethodType.CARD,
@@ -851,6 +928,7 @@ describe("Consumers", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
       };

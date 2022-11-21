@@ -290,6 +290,7 @@ describe("TransactionService", () => {
         last4Digits: "7890",
       },
       imageUri: "xxx",
+      isDefault: false,
       paymentProviderID: "12345" as any,
       paymentToken: paymentMethodID,
     };
@@ -1354,6 +1355,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -1448,6 +1450,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -1542,6 +1545,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -1636,6 +1640,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -1730,6 +1735,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -1952,6 +1958,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -2024,6 +2031,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -2170,6 +2178,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -2360,6 +2369,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -2553,6 +2563,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });
@@ -2745,6 +2756,7 @@ describe("TransactionService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
       });

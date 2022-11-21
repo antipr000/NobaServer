@@ -17,7 +17,7 @@ import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
 import { Partner } from "../../../modules/partner/domain/Partner";
 import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
 import { PaymentProvider } from "../domain/PaymentProvider";
-import { PaymentMethodType } from "../domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
@@ -35,6 +35,7 @@ import {
 import { EmailVerificationOtpRequest } from "../dto/EmailVerificationDTO";
 import { UserEmailUpdateRequest } from "test/api_client";
 import { Result } from "../../../core/logic/Result";
+import { UpdatePaymentMethodDTO } from "../dto/UpdatePaymentMethodDTO";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -411,6 +412,7 @@ describe("ConsumerController", () => {
               },
               imageUri: "testimage",
               status: PaymentMethodStatus.APPROVED,
+              isDefault: false,
             },
           ],
         }),
@@ -554,6 +556,7 @@ describe("ConsumerController", () => {
               },
               imageUri: "testimage",
               status: PaymentMethodStatus.APPROVED,
+              isDefault: false,
             },
           ],
         }),
@@ -568,6 +571,67 @@ describe("ConsumerController", () => {
 
       expect(result._id).toBe(consumer.props._id);
       expect(result.paymentMethods.length).toBe(1);
+    });
+
+    it("should update cardDetails", async () => {
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "faketoken1234",
+            cardData: {
+              cardType: "VISA",
+              first6Digits: "123456",
+              last4Digits: "1234",
+            },
+            imageUri: "testimage",
+            status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
+          },
+        ],
+      });
+
+      const updatePaymentMethodDTO: UpdatePaymentMethodDTO = {
+        isDefault: true,
+      };
+
+      const updatedPaymentMethod: PaymentMethod = {
+        ...consumer.props.paymentMethods[0],
+        isDefault: true,
+      };
+
+      when(consumerService.updatePaymentMethod(consumer.props._id, deepEqual(updatedPaymentMethod))).thenResolve(
+        Consumer.createConsumer({
+          ...consumer.props,
+          paymentMethods: [updatedPaymentMethod],
+        }),
+      );
+
+      const res = await consumerController.updatePaymentMethod(
+        updatedPaymentMethod.paymentToken,
+        consumer,
+        updatePaymentMethodDTO,
+      );
+
+      expect(res).toStrictEqual(
+        consumerMapper.toDTO(
+          Consumer.createConsumer({
+            ...consumer.props,
+            paymentMethods: [updatedPaymentMethod],
+          }),
+        ),
+      );
     });
   });
 
@@ -1034,6 +1098,7 @@ describe("ConsumerController", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -1103,6 +1168,7 @@ describe("ConsumerController", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -1172,6 +1238,7 @@ describe("ConsumerController", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -1234,6 +1301,7 @@ describe("ConsumerController", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.FLAGGED,
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -1300,6 +1368,7 @@ describe("ConsumerController", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -1445,6 +1514,7 @@ describe("ConsumerController", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.REJECTED,
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -1504,6 +1574,7 @@ describe("ConsumerController", () => {
             },
             imageUri: "testimage",
             status: PaymentMethodStatus.DELETED,
+            isDefault: false,
           },
         ],
         verificationData: {

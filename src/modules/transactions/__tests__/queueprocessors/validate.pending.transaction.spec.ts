@@ -179,6 +179,7 @@ describe("ValidatePendingTransaction", () => {
       paymentToken: "ABCDE12345",
       imageUri: "xxx",
       paymentProviderID: "xxx" as any,
+      isDefault: false,
     };
 
     //const consumerProps: ConsumerProps = ;

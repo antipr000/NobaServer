@@ -221,6 +221,7 @@ describe("CryptoTransactionInitiator", () => {
     imageUri: "...",
     paymentToken: "XXXXXXXXXX",
     paymentProviderID: PaymentProvider.CHECKOUT,
+    isDefault: false,
   };
   const consumer: Consumer = Consumer.createConsumer({
     _id: consumerID,
