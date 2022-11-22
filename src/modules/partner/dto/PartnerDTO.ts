@@ -17,7 +17,7 @@ export class NotificationConfigurationDTO {
   @ApiProperty({ enum: NotificationEventType })
   notificationEventType: NotificationEventType;
 
-  @ApiProperty()
+  @ApiProperty({ enum: NotificationEventHandler })
   notificationEventHandler: NotificationEventHandler[];
 }
 
