@@ -289,12 +289,11 @@ export class AdminController {
   }
 
   @Get(`/partners/transactions/download`)
-  @ApiOperation({ summary: "Fetch all the transactions for a specific Partner" })
+  @ApiOperation({ summary: "Fetch the transactions based on different filters" })
   @ApiForbiddenResponse({
     description: "User forbidden from fetching the transactions for a Partner",
   })
   @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
-  @ApiNotFoundResponse({ description: "Partner not found" })
   async fetchTransactionsForPartner(@Query() filters: TransactionFilterDTO, @Request() request, @Response() response) {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
