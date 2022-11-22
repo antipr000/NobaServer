@@ -504,7 +504,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "100000",
         response_summary: "Approved",
@@ -576,7 +576,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "100000",
         response_summary: "Approved",
@@ -629,7 +629,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "20014",
         response_summary: "Approved",
@@ -671,7 +671,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "30000",
         response_summary: "Rejected",

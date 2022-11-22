@@ -125,7 +125,7 @@ export class PaymentService {
       try {
         // Check if added payment method is valid
         paymentResponse = await this.checkoutClient.makeCardPayment(
-          1, // 1 cent
+          2, // 2 cents - the minimum
           "USD",
           addPaymentMethodResponse.instrumentID,
           "Test_Transaction",
