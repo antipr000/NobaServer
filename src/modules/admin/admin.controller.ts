@@ -304,12 +304,21 @@ export class AdminController {
     }
 
     const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
-    const endDate = filters.endDate ? new Date(filters.endDate) : undefined;
+    const endDate = filters.endDate ? this.convertToLastMinuteOfDay(new Date(filters.endDate)) : undefined;
+
+    let includeIncompleteTransactions: boolean = true;
+    if (filters.onlyCompletedTransactions !== undefined && filters.onlyCompletedTransactions !== null) {
+      includeIncompleteTransactions =
+        filters.onlyCompletedTransactions == false ||
+        (filters.onlyCompletedTransactions as any) == "false" ||
+        (filters.onlyCompletedTransactions as any) == 0;
+    }
+
     const localCsvFileWithTransactions = await this.transactionService.populateCsvFileWithPartnerTransactions(
       filters.partnerID,
       startDate,
       endDate,
-      filters.onlyCompletedTransactions ? !filters.onlyCompletedTransactions : true,
+      includeIncompleteTransactions,
     );
 
     return new Promise((resolve, reject) => {
@@ -384,5 +393,12 @@ export class AdminController {
     });
 
     return this.consumerMapper.toDTO(updatedConsumerData);
+  }
+
+  private convertToLastMinuteOfDay(date: Date): Date {
+    date.setHours(23);
+    date.setMinutes(59);
+    date.setSeconds(59);
+    return date;
   }
 }
