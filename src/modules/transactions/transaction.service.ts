@@ -182,10 +182,6 @@ export class TransactionService {
     endDate: Date,
     includeIncompleteTransactions: boolean,
   ): Promise<string> {
-    if (partnerID === undefined || partnerID === null) {
-      this.logger.error(`"populateCsvFileWithPartnerTransactions" is called without 'partnerID'`);
-      throw new BadRequestException(`partnerID is required`);
-    }
     const filters: PartnerTransactionFilterOptions = {
       partnerID: partnerID,
       startDate: startDate,
