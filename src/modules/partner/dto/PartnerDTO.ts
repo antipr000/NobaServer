@@ -17,7 +17,7 @@ export class NotificationConfigurationDTO {
   @ApiProperty({ enum: NotificationEventType })
   notificationEventType: NotificationEventType;
 
-  @ApiProperty({ enum: NotificationEventHandler })
+  @ApiProperty()
   notificationEventHandler: NotificationEventHandler[];
 }
 
@@ -60,7 +60,7 @@ export class PartnerConfigDTO {
   @ApiProperty()
   fees: PartnerFeesDTO;
 
-  @ApiProperty()
+  @ApiProperty({ type: [NotificationConfigurationDTO] })
   notificationConfig: NotificationConfigurationDTO[];
 
   @ApiPropertyOptional()
