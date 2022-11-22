@@ -1624,6 +1624,107 @@ describe("MongoDBTransactionRepoTests", () => {
         expect(receivedRecords).toContain(record);
       });
     });
+
+    it("should replace '0' for 'discounts' if that field is not present", async () => {
+      await transactionCollection.deleteMany({});
+
+      const date1 = new Date();
+      await sleep(500);
+      const date2 = new Date();
+      await sleep(500);
+      const date3 = new Date();
+      await sleep(500);
+      const date4 = new Date();
+
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_1",
+        transactionID: "TTTTTTTTT_1",
+        userId: "UUUUUUUUUU_1",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date1,
+        leg1Amount: 100,
+        leg1: "USD",
+        leg2Amount: 0.03,
+        leg2: "ETH",
+        fixedSide: CurrencyType.FIAT,
+        processingFee: 14,
+        networkFee: 15,
+        nobaFee: 16,
+        _id: "1111111111" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_2",
+        transactionID: "TTTTTTTTT_2",
+        userId: "UUUUUUUUUU_2",
+        transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
+        transactionTimestamp: date2,
+        leg2Amount: 200,
+        leg2: "USD",
+        leg1Amount: 0.23,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 24,
+        networkFee: 25,
+        nobaFee: 26,
+        _id: "22222222222" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_2",
+        transactionID: "TTTTTTTTT_3",
+        userId: "UUUUUUUUUU_3",
+        transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        transactionTimestamp: date3,
+        leg2Amount: 300,
+        leg2: "USD",
+        leg1Amount: 0.33,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 34,
+        networkFee: 35,
+        nobaFee: 36,
+        _id: "333333333333" as any,
+      });
+      await transactionCollection.insertOne({
+        partnerID: "PPPPPPPPP_2",
+        transactionID: "TTTTTTTTT_4",
+        userId: "UUUUUUUUUU_4",
+        transactionStatus: TransactionStatus.COMPLETED,
+        transactionTimestamp: date4,
+        leg2Amount: 400,
+        leg2: "USD",
+        leg1Amount: 0.43,
+        leg1: "ETH",
+        fixedSide: CurrencyType.CRYPTO,
+        processingFee: 44,
+        networkFee: 45,
+        nobaFee: 46,
+        _id: "44444444444" as any,
+      });
+
+      const filePath = `/tmp/txn-${Math.floor(Math.random() * 1000000)}.csv`;
+
+      await transactionRepo.getPartnerTransactions(
+        {
+          partnerID: "PPPPPPPPP_2",
+          startDate: date2,
+          endDate: date3,
+          includeIncompleteTransactions: true,
+        },
+        filePath,
+      );
+
+      const csvContent = await fs.readFileSync(filePath, { encoding: "utf8" });
+      const receivedRecords = csvContent.split("\n");
+      const expectedRecords = [
+        `PPPPPPPPP_2,TTTTTTTTT_2,UUUUUUUUUU_2,"${date2.toUTCString()}",FIAT_INCOMING_COMPLETED,200,USD,0.23,ETH,24,25,26,0,0,0,0,0`,
+        `PPPPPPPPP_2,TTTTTTTTT_3,UUUUUUUUUU_3,"${date3.toUTCString()}",CRYPTO_OUTGOING_COMPLETED,300,USD,0.33,ETH,34,35,36,0,0,0,0,0`,
+      ];
+
+      expect(receivedRecords).toHaveLength(1 + 2 + 1); // HEADER + 2 RECORD + EMPTY LINE
+      expectedRecords.forEach(record => {
+        expect(receivedRecords).toContain(record);
+      });
+    });
   });
 });
 

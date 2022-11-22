@@ -470,11 +470,15 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       processingFeeCharged: transactionDocument.processingFee,
       networkFeeCharged: transactionDocument.networkFee,
       nobaFeeCharged: transactionDocument.nobaFee,
-      fixedCreditCardFeeWaived: transactionDocument.discounts.fixedCreditCardFeeDiscount,
-      dynamicCreditCardFeeWaived: transactionDocument.discounts.dynamicCreditCardFeeDiscount,
-      nobaFeeWaived: transactionDocument.discounts.nobaFeeDiscount,
-      networkFeeWaived: transactionDocument.discounts.networkFeeDiscount,
-      spreadAmountWaived: transactionDocument.discounts.spreadDiscount,
+      fixedCreditCardFeeWaived: transactionDocument.discounts
+        ? transactionDocument.discounts.fixedCreditCardFeeDiscount
+        : 0,
+      dynamicCreditCardFeeWaived: transactionDocument.discounts
+        ? transactionDocument.discounts.dynamicCreditCardFeeDiscount
+        : 0,
+      nobaFeeWaived: transactionDocument.discounts ? transactionDocument.discounts.nobaFeeDiscount : 0,
+      networkFeeWaived: transactionDocument.discounts ? transactionDocument.discounts.networkFeeDiscount : 0,
+      spreadAmountWaived: transactionDocument.discounts ? transactionDocument.discounts.spreadDiscount : 0,
     };
 
     switch (transactionDocument.fixedSide) {
