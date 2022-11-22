@@ -1551,6 +1551,13 @@ describe("AdminController", () => {
     let dummyFilePathWithContent: string;
     let dummyFileContent: string;
 
+    const convertToLastMinuteOfDay = (date: Date): Date => {
+      date.setHours(23);
+      date.setMinutes(59);
+      date.setSeconds(59);
+      return date;
+    };
+
     class MockedResponse extends fs.WriteStream {
       static receivedResponseCode: number = 0;
       static receivedHeaders = {};
@@ -1688,7 +1695,7 @@ describe("AdminController", () => {
       ).last();
       expect(involvedPartnerId).toBe(partnerId);
       expect(involvedStartDate).toStrictEqual(new Date(filters.startDate));
-      expect(involvedEndDate).toStrictEqual(new Date(filters.endDate));
+      expect(involvedEndDate).toStrictEqual(convertToLastMinuteOfDay(new Date(filters.endDate)));
       expect(involvedIncludeIncompleteTransactions).toStrictEqual(false);
     });
 
@@ -1725,7 +1732,7 @@ describe("AdminController", () => {
       ).last();
       expect(involvedPartnerId).toBe(partnerId);
       expect(involvedStartDate).toStrictEqual(new Date(filters.startDate));
-      expect(involvedEndDate).toStrictEqual(new Date(filters.endDate));
+      expect(involvedEndDate).toStrictEqual(convertToLastMinuteOfDay(new Date(filters.endDate)));
       expect(involvedIncludeIncompleteTransactions).toStrictEqual(true);
     });
 
@@ -1760,7 +1767,7 @@ describe("AdminController", () => {
       ).last();
       expect(involvedPartnerId).toBeUndefined();
       expect(involvedStartDate).toStrictEqual(new Date(filters.startDate));
-      expect(involvedEndDate).toStrictEqual(new Date(filters.endDate));
+      expect(involvedEndDate).toStrictEqual(convertToLastMinuteOfDay(new Date(filters.endDate)));
       expect(involvedIncludeIncompleteTransactions).toStrictEqual(true);
     });
   });
