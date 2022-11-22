@@ -3096,15 +3096,6 @@ describe("TransactionService", () => {
   });
 
   describe("populateCsvFileWithPartnerTransactions()", () => {
-    it("should throw BadRequestError if 'partnerID' is not provided", async () => {
-      try {
-        await transactionService.populateCsvFileWithPartnerTransactions(null, new Date(), new Date(), false);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-      }
-    });
-
     it("should return the CSV file path if the underlying repo succeeds", async () => {
       const date1 = new Date();
       await sleep(100); // to avoid error due to precisions
