@@ -18,4 +18,6 @@ export class CurrencyDTO {
 
   @ApiProperty()
   precision: number;
+
+  spreadOverride?: number;
 }

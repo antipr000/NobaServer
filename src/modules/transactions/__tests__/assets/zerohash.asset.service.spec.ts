@@ -87,6 +87,14 @@ describe("ZerohashAssetService", () => {
       precision: 8,
     });
 
+    when(currencyService.getCryptocurrency("USDC.ETH")).thenResolve({
+      iconPath: "dummy/path",
+      name: "USD Coin",
+      ticker: "USDC.ETH",
+      precision: 8,
+      spreadOverride: 0.01,
+    });
+
     when(currencyService.getSupportedFiatCurrencies()).thenResolve([
       {
         iconPath: "dummy/path",
@@ -139,6 +147,7 @@ describe("ZerohashAssetService", () => {
     }
 
     const setupTestAndGetQuoteResponse = async (
+      cryptocurrency: string,
       requestedFiatAmount: number,
       originalCostPerUnit: number,
       input: QuoteInputs,
@@ -164,20 +173,21 @@ describe("ZerohashAssetService", () => {
       input.discount.nobaSpreadDiscountPercent = input.discount.nobaSpreadDiscountPercent ?? 0;
       input.discount.processingFeeDiscountPercent = input.discount.processingFeeDiscountPercent ?? 0;
 
-      when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        cryptoCurrency: "ETH",
+      when(zerohashService.estimateNetworkFee(cryptocurrency, "USD")).thenResolve({
+        cryptoCurrency: cryptocurrency,
         feeInCrypto: 0,
         fiatCurrency: "USD",
         feeInFiat: output.expectedNetworkFee,
       });
+
       when(
         zerohashService.requestQuoteForFixedFiatCurrency(
-          "ETH",
+          cryptocurrency,
           "USD",
           Utils.roundTo2DecimalNumber(output.discountedExpectedPriceAfterFeeAndSpread),
         ),
       ).thenResolve({
-        cryptoCurrency: "ETH",
+        cryptoCurrency: cryptocurrency,
         fiatCurrency: "USD",
         expireTimestamp: Date.now(),
         perUnitCryptoAssetCost: originalCostPerUnit,
@@ -203,7 +213,7 @@ describe("ZerohashAssetService", () => {
         quote: {
           quoteID: "id-1",
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
+          cryptoCurrency: cryptocurrency,
           amountPreSpread: output.discountedAmountPreSpread,
           processingFeeInFiat: output.discountedExpectedProcessingFee,
           networkFeeInFiat: output.discountedExpectedNetworkFee,
@@ -247,6 +257,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -298,11 +309,70 @@ describe("ZerohashAssetService", () => {
       });
     });
 
+    it("Spread percentage override is taken into account correctly", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 10;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "USDC.ETH",
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          // This number is expected to be overridden by USDC.ETH spread override, so calcs below are against the override (0.01)
+          spreadPercentage: 0.5,
+          fiatFeeDollars: 0,
+          dynamicCreditCardFeePercentage: 0,
+          fixedCreditCardFee: 0,
+        },
+        {
+          expectedNobaFee: 0,
+          expectedProcessingFee: 0,
+          expectedNetworkFee: 0,
+          quotedCostPerUnit: 10.1,
+          amountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 99.01,
+
+          // WITH discounts.
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 10.1,
+          discountedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 99.01,
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "USDC.ETH",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
+        // All these discounts should mean that the quote & non-discounted quote remain equal
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
+      });
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
+    });
+
     it("Noba flat fee is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -358,6 +428,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -413,6 +484,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -468,6 +540,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -523,6 +596,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -578,6 +652,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -633,6 +708,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -698,6 +774,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -763,6 +840,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -828,6 +906,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -894,6 +973,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -959,6 +1039,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -1026,6 +1107,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         fiatAmountUSD,
         originalCostPerUnit,
         {
@@ -1119,6 +1201,7 @@ describe("ZerohashAssetService", () => {
     }
 
     const setupTestAndGetQuoteResponse = async (
+      cryptocurrency: string,
       requestedCryptoQuantity: number,
       originalCostPerUnit: number,
       input: QuoteInputs,
@@ -1144,14 +1227,16 @@ describe("ZerohashAssetService", () => {
       input.discount.nobaSpreadDiscountPercent = input.discount.nobaSpreadDiscountPercent ?? 0;
       input.discount.processingFeeDiscountPercent = input.discount.processingFeeDiscountPercent ?? 0;
 
-      when(zerohashService.estimateNetworkFee("ETH", "USD")).thenResolve({
-        cryptoCurrency: "ETH",
+      when(zerohashService.estimateNetworkFee(cryptocurrency, "USD")).thenResolve({
+        cryptoCurrency: cryptocurrency,
         feeInCrypto: 0,
         fiatCurrency: "USD",
         feeInFiat: output.expectedNetworkFee,
       });
-      when(zerohashService.requestQuoteForDesiredCryptoQuantity("ETH", "USD", requestedCryptoQuantity)).thenResolve({
-        cryptoCurrency: "ETH",
+      when(
+        zerohashService.requestQuoteForDesiredCryptoQuantity(cryptocurrency, "USD", requestedCryptoQuantity),
+      ).thenResolve({
+        cryptoCurrency: cryptocurrency,
         fiatCurrency: "USD",
         expireTimestamp: Date.now(),
         perUnitCryptoAssetCost: originalCostPerUnit,
@@ -1166,7 +1251,7 @@ describe("ZerohashAssetService", () => {
         quote: {
           quoteID: "id-1",
           fiatCurrency: "USD",
-          cryptoCurrency: "ETH",
+          cryptoCurrency: cryptocurrency,
           amountPreSpread: output.discountedExpectedAmountPreSpread,
           processingFeeInFiat: output.discountedExpectedProcessingFee,
           networkFeeInFiat: output.discountedExpectedNetworkFee,
@@ -1222,6 +1307,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1270,6 +1356,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1318,6 +1405,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1366,6 +1454,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1414,6 +1503,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1462,6 +1552,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1510,6 +1601,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1558,6 +1650,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1606,6 +1699,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1654,6 +1748,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1717,6 +1812,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1780,6 +1876,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1843,6 +1940,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1906,6 +2004,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -1969,6 +2068,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {
@@ -2032,6 +2132,7 @@ describe("ZerohashAssetService", () => {
       const originalCostPerUnit = 10;
 
       const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "ETH",
         cryptoQuantity,
         originalCostPerUnit,
         {

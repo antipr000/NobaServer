@@ -37,7 +37,7 @@ import { CurrencyService } from "../../../common/currency.service";
 import { Utils } from "../../../../core/utils/Utils";
 import { TransactionType } from "../../domain/Types";
 
-describe("DefaultAssetService", () => {
+describe("USDCPolygonAssetService", () => {
   let zerohashService: ZeroHashService;
   let currencyService: CurrencyService;
   let usdcPolygonAssetService: USDCPolygonAssetService;

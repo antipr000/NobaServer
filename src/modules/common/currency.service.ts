@@ -44,6 +44,7 @@ export class CurrencyService {
             const precision = Number(`${data["Precision"]}`.trim());
             const provider = `${data["Provider"]}`.trim();
             const type = `${data["Type"]}`.trim();
+            const spreadOverride = data["SpreadOverride"].trim();
 
             const curr = new CurrencyDTO();
             curr.name = name;
@@ -52,6 +53,8 @@ export class CurrencyService {
             curr.provider = provider;
             curr.iconPath = `https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/${symbol.toLowerCase()}.svg`;
             curr.precision = precision;
+            // Should be undefined if not value is set, in which case we use system default
+            curr.spreadOverride = spreadOverride ? Number(spreadOverride) : undefined;
             results.push(curr);
           }
         })
