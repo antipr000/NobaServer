@@ -8,6 +8,7 @@ import {
   Headers,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -18,6 +19,7 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiHeaders,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -290,6 +292,7 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
+  @ApiNotFoundResponse({ description: "Payment method not found for Consumer" })
   async updatePaymentMethod(
     @Param("paymentToken") paymentToken: string,
     @AuthUser() consumer: Consumer,
@@ -298,7 +301,7 @@ export class ConsumerController {
     const paymentMethod = consumer.getPaymentMethodByID(paymentToken);
 
     if (paymentMethod === null) {
-      throw new BadRequestException(`Payment method with id: ${paymentToken} not found for consumer`);
+      throw new NotFoundException("Payment method not found for consumer");
     }
 
     if (updatePaymentMethodDTO.name) paymentMethod.name = updatePaymentMethodDTO.name;
