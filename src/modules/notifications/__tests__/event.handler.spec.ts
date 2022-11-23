@@ -29,7 +29,7 @@ import { EmailService } from "../emails/email.service";
 import { EventHandler } from "../event.handler";
 import { getMockEmailServiceWithDefaults } from "../mocks/mock.email.service";
 
-describe("ConfigurationsProviderService", () => {
+describe("EventHandlerService", () => {
   let currencyService: CurrencyService;
   let emailService: EmailService;
   let eventHandler: EventHandler;

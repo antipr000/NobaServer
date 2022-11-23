@@ -10,7 +10,7 @@ export const getMockPartnerAuthServiceWithDefaults = () => {
   when(mockPartnerAuthService.generateAccessToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAuthService.saveOtp(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(mockPartnerAuthService.sendOtp(anyString(), anyString(), anyString())).thenReject(new Error("Not implemented!"));
-  when(mockPartnerAuthService.createOtp()).thenReject(new Error("Not implemented!"));
+  when(mockPartnerAuthService.generateOTP()).thenReject(new Error("Not implemented!"));
   when(mockPartnerAuthService.verifyUserExistence(anyString())).thenReject(new Error("Not implemented!"));
 
   return mockPartnerAuthService;

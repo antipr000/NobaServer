@@ -108,6 +108,7 @@ import {
   CHECKOUT_WEBHOOK_SIGNATURE_KEY,
   DEPENDENCY_CONFIG_KEY,
   DEPENDENCY_EMAIL_CLIENT,
+  DEV_TEST_ONLY_VARIABLES,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -188,11 +189,28 @@ export default async function loadAppConfigs() {
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
+  const filteredConfigs = ensureDevOnlyConfig(environment, vendorConfigs);
 
   // initializeAWSEnv();
 
   //validate configs
-  return Joi.attempt(vendorConfigs, appConfigsJoiValidationSchema);
+  return Joi.attempt(filteredConfigs, appConfigsJoiValidationSchema);
+}
+
+function ensureDevOnlyConfig(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
+  // There are certain configurations we want to ensure are NOT set in non-dev/test envs. This ensures
+  // that if they are set, they get removed.
+  if ([AppEnvironment.DEV, AppEnvironment.AWSDEV, AppEnvironment.E2E_TEST].indexOf(environment) == -1) {
+    DEV_TEST_ONLY_VARIABLES.forEach(
+      item =>
+        delete configs[item] &&
+        console.error(
+          `Dev/Test-only configuration value should be removed from configuration file in ${environment} environment: "${item}". Ignoring.`,
+        ),
+    );
+  }
+
+  return configs;
 }
 
 function configureAwsCredentials(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {

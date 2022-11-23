@@ -31,7 +31,7 @@ import { SendOrderFailedEvent } from "../events/SendOrderFailedEvent";
 import { SendHardDeclineEvent } from "../events/SendHardDeclineEvent";
 import { WebhookType } from "../../../modules/partner/domain/WebhookTypes";
 
-describe("ConfigurationsProviderService", () => {
+describe("NotificationService", () => {
   let partnerService: PartnerService;
   let notificationService: NotificationService;
   let eventEmitter: EventEmitter2;

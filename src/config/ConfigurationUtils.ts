@@ -26,6 +26,7 @@ export const ASSETS_BUCKET_NAME = "assetsBucketName";
 export const DB_DUMP_FILES_BUCKET_PATH = "dbDumpFilesBucketPath";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH = "supportedCryptoFileBucketPath";
 export const SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH = "sanctionedCryptoWalletsFileBucketPath";
+export const STATIC_DEV_OTP = "staticDevOTP";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
 export const AWS_SECRET_ACCESS_KEY_ATTR = "awsSecretAccessKey";
@@ -161,6 +162,8 @@ export const appConfigsJoiValidationSchema = Joi.object({
   [NODE_ENV_CONFIG_KEY]: Joi.string().default(AppEnvironment.DEV),
   logFilePath: Joi.string().required(),
 }).options({ allowUnknown: true });
+
+export const DEV_TEST_ONLY_VARIABLES = [STATIC_DEV_OTP];
 
 export function getEnvironmentName(): AppEnvironment {
   let envType: any = getPropertyFromEnvironment(NODE_ENV_CONFIG_KEY);

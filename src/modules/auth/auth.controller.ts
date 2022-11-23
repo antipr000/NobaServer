@@ -122,7 +122,7 @@ export class AuthController {
     }
 
     const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
-    const otp = authService.createOtp();
+    const otp = authService.generateOTP();
     await authService.deleteAnyExistingOTP(emailOrPhone);
     await authService.saveOtp(emailOrPhone, otp, partnerId);
     return authService.sendOtp(emailOrPhone, otp.toString(), partnerId);

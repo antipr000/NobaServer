@@ -32,7 +32,7 @@ jest.mock("axios");
 
 const mockAxios = axios as jest.Mocked<typeof axios>;
 
-describe("ConfigurationsProviderService", () => {
+describe("WebhookService", () => {
   let partnerService: PartnerService;
   let webhookService: WebhookService;
 
