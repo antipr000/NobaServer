@@ -37,11 +37,11 @@ export class Otp extends AggregateRoot<OtpProps> {
 
   public static createOtp(otpProps: Partial<OtpProps>): Otp {
     if (!otpProps._id) otpProps._id = Entity.getNewID();
-    if (!otpProps.otpExpiryTime) otpProps.otpExpiryTime = Otp.getOTPExpirtyTime().getTime();
+    if (!otpProps.otpExpiryTime) otpProps.otpExpiryTime = Otp.getOTPExpiryTime().getTime();
     return new Otp(Joi.attempt(otpProps, otpJoiSchema));
   }
 
-  public static getOTPExpirtyTime(expiryTimeInMinutes = otpConstants.EXPIRY_TIME_IN_MINUTES): Date {
+  public static getOTPExpiryTime(expiryTimeInMinutes = otpConstants.EXPIRY_TIME_IN_MINUTES): Date {
     return new Date(new Date().getTime() + expiryTimeInMinutes * 60000);
   }
 }
