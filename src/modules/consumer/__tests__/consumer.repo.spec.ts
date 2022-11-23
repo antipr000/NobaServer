@@ -1,6 +1,6 @@
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { MongoClient } from "mongodb";
+import { MongoClient, Collection } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { KmsService } from "../../../../src/modules/common/kms.service";
@@ -23,12 +23,51 @@ const mkid = (id: string): string => {
   return CONSUMER_ID_PREFIX + id;
 };
 
+const getAllRecordsInConsumerCollection = async (consumerCollection: Collection): Promise<ConsumerProps[]> => {
+  const consumerDocumentsCursor = consumerCollection.find({});
+  const allRecords: ConsumerProps[] = [];
+
+  while (await consumerDocumentsCursor.hasNext()) {
+    const consumerDocument = await consumerDocumentsCursor.next();
+
+    const currentRecord: ConsumerProps = {
+      _id: consumerDocument._id as any,
+      firstName: consumerDocument.firstName,
+      lastName: consumerDocument.lastName,
+      email: consumerDocument.email,
+      handle: consumerDocument.handle,
+      displayEmail: consumerDocument.displayEmail,
+      phone: consumerDocument.phone,
+      isAdmin: consumerDocument.isAdmin,
+      dateOfBirth: consumerDocument.dateOfBirth,
+      address: consumerDocument.address,
+      socialSecurityNumber: consumerDocument.socialSecurityNumber,
+      nationalID: consumerDocument.nationalID,
+      nationalIDType: consumerDocument.nationalIDType,
+      riskRating: consumerDocument.riskRating,
+      isSuspectedFraud: consumerDocument.isSuspectedFraud,
+      isLocked: consumerDocument.isLocked,
+      isDisabled: consumerDocument.isDisabled,
+      zhParticipantCode: consumerDocument.zhParticipantCode,
+      partners: consumerDocument.partners,
+      paymentProviderAccounts: consumerDocument.paymentProviderAccounts,
+      verificationData: consumerDocument.verificationData,
+      paymentMethods: consumerDocument.paymentMethods,
+      cryptoWallets: consumerDocument.cryptoWallets,
+    };
+    allRecords.push(currentRecord);
+  }
+
+  return allRecords;
+};
+
 describe("MongoDBConsumerRepoTests", () => {
   jest.setTimeout(20000);
 
   let consumerRepo: IConsumerRepo;
   let mongoServer: MongoMemoryServer;
   let mongoClient: MongoClient;
+  let consumerCollection: Collection;
 
   beforeEach(async () => {
     // Spin up an in-memory mongodb server
@@ -64,8 +103,8 @@ describe("MongoDBConsumerRepoTests", () => {
     consumerRepo = app.get<MongoDBConsumerRepo>(MongoDBConsumerRepo);
 
     mongoClient = new MongoClient(mongoUri);
-
     await mongoClient.connect();
+    consumerCollection = mongoClient.db("").collection("consumers");
   });
 
   afterEach(async () => {
@@ -165,7 +204,7 @@ describe("MongoDBConsumerRepoTests", () => {
   });
 
   describe("updateConsumer", () => {
-    it("update a consumer", async () => {
+    it("should update a consumer", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
@@ -179,6 +218,103 @@ describe("MongoDBConsumerRepoTests", () => {
 
       const result1 = await consumerRepo.getConsumer(result.props._id);
       expect(result1.props.phone).toBe(phone);
+    });
+
+    it("should throw error if tried to update 'handle' which already exists", async () => {
+      const consumerProps1: ConsumerProps = {
+        _id: "test-consumer-id-1",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test-1@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test1",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
+
+      const consumerProps2: ConsumerProps = {
+        _id: "test-consumer-id-2",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test-2@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test2",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
+
+      try {
+        consumerProps2.handle = "test1";
+        await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2));
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(BadRequestException);
+        expect(err.message).toBe("A user with same 'handle' already exist");
+      }
+    });
+
+    it("should update the consumer if 'handle' is not associated with any Consumer already", async () => {
+      const consumerProps1: ConsumerProps = {
+        _id: "test-consumer-id-1",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test-1@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test1",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
+
+      const consumerProps2: ConsumerProps = {
+        _id: "test-consumer-id-2",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test-2@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test2",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
+
+      consumerProps2.handle = "test3";
+      await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2));
+
+      const consumerRecordForId2 = (await getAllRecordsInConsumerCollection(consumerCollection)).filter(record => {
+        return record._id === "test-consumer-id-2";
+      })[0];
+      expect(consumerRecordForId2.handle).toBe("test3");
+    });
+
+    it("shouldn't update the consumer 'handle' is not updated", async () => {
+      const consumerProps1: ConsumerProps = {
+        _id: "test-consumer-id-1",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test-1@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test1",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
+
+      const consumerProps2: ConsumerProps = {
+        _id: "test-consumer-id-2",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test-2@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test2",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
+
+      consumerProps2.phone = "+9876541235";
+      await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2));
+
+      const consumerRecordForId2 = (await getAllRecordsInConsumerCollection(consumerCollection)).filter(record => {
+        return record._id === "test-consumer-id-2";
+      })[0];
+      expect(consumerRecordForId2.handle).toBe("test2");
     });
   });
 
@@ -210,7 +346,7 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(result).toBe(false);
     });
 
-    it("should return 'false' if there already exist an user with same handle", async () => {
+    it("should return 'true' if there isn't an user with same handle", async () => {
       const consumerProps: ConsumerProps = {
         _id: "test-consumer-id",
         firstName: "firstName",

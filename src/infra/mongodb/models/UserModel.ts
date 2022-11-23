@@ -7,12 +7,13 @@ import { consumerJoiSchema, ConsumerProps } from "../../../modules/consumer/doma
 
 const joigoose = Joigoose(Mongoose, null, {});
 
+// A unique 'index' would prevent inserting 2 records with same 'handle'.
 const mongooseConsumerSchema = new Schema(joigoose.convert(consumerJoiSchema), {
   timestamps: {
     createdAt: "createdTimestamp",
     updatedAt: "updatedTimestamp",
   },
-});
+}).index({ handle: 1 }, { unique: true });
 
 export const CONSUMER_MODEL_NAME = "Consumer";
 

@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
@@ -50,20 +50,29 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     // Encrypt SSN
     consumer.props.socialSecurityNumber = await this.encryptString(consumer.props.socialSecurityNumber);
 
-    const result = await userModel
-      .findByIdAndUpdate(
-        consumer.props._id,
-        {
-          $set: consumer.props,
-        },
-        {
-          new: true,
-        },
-      )
-      .exec();
+    try {
+      const result = await userModel
+        .findByIdAndUpdate(
+          consumer.props._id,
+          {
+            $set: consumer.props,
+          },
+          {
+            new: true,
+          },
+        )
+        .exec();
 
-    const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-    return this.consumerMapper.toDomain(consumerProps);
+      const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
+      return this.consumerMapper.toDomain(consumerProps);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+
+      if (err.code === 11000 && err.keyPattern && err.keyPattern.handle === 1) {
+        throw new BadRequestException("A user with same 'handle' already exist");
+      }
+      throw err;
+    }
   }
 
   async getConsumerIfExists(email: string): Promise<Result<Consumer>> {
