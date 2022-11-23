@@ -196,7 +196,7 @@ describe("DefaultAssetService", () => {
           amountPreSpread: output.discountedAmountPreSpread,
           processingFeeInFiat: output.discountedExpectedProcessingFee,
           networkFeeInFiat: output.discountedExpectedNetworkFee,
-          totalCryptoQuantity: (requestedFiatAmount - discountedExpectedTotalFees) / output.quotedCostPerUnit,
+          totalCryptoQuantity: (requestedFiatAmount - discountedExpectedTotalFees) / output.discountedQuotedCostPerUnit,
           nobaFeeInFiat: output.discountedExpectedNobaFee,
           quotedFiatAmount:
             output.expectedPriceAfterFeeAndSpread +
@@ -554,7 +554,7 @@ describe("DefaultAssetService", () => {
         fiatAmountUSD,
         originalCostPerUnit,
         {
-          spreadPercentage: 0,
+          spreadPercentage: 1,
           fiatFeeDollars: 0,
           dynamicCreditCardFeePercentage: 0.125,
           fixedCreditCardFee: 1,
@@ -570,9 +570,9 @@ describe("DefaultAssetService", () => {
           expectedNobaFee: 0,
           expectedProcessingFee: 13.5,
           expectedNetworkFee: 0,
-          quotedCostPerUnit: 1,
+          quotedCostPerUnit: 2,
           amountPreSpread: 86.5,
-          expectedPriceAfterFeeAndSpread: 86.5,
+          expectedPriceAfterFeeAndSpread: 50,
 
           // Expected amounts are the same with no discount
           discountedExpectedNobaFee: 0,
@@ -589,7 +589,7 @@ describe("DefaultAssetService", () => {
         networkFeeDiscount: 0,
         nobaFeeDiscount: 0,
         processingFeeDiscount: 12.5,
-        spreadDiscount: 0,
+        spreadDiscount: 50,
       };
 
       const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
@@ -616,13 +616,13 @@ describe("DefaultAssetService", () => {
         fiatAmountUSD,
         originalCostPerUnit,
         {
-          spreadPercentage: 0,
+          spreadPercentage: 1,
           fiatFeeDollars: 0,
           dynamicCreditCardFeePercentage: 0.125,
           fixedCreditCardFee: 1,
           discount: {
             fixedCreditCardFeeDiscountPercent: 1,
-            networkFeeDiscountPercent: 1,
+            networkFeeDiscountPercent: 0, // 0% discount on network fees
             nobaFeeDiscountPercent: 1,
             nobaSpreadDiscountPercent: 1,
             processingFeeDiscountPercent: 1,
@@ -631,10 +631,10 @@ describe("DefaultAssetService", () => {
         {
           expectedNobaFee: 0,
           expectedProcessingFee: 13.5,
-          expectedNetworkFee: 0,
-          quotedCostPerUnit: 1,
-          amountPreSpread: 86.5,
-          expectedPriceAfterFeeAndSpread: 86.5,
+          expectedNetworkFee: 5,
+          quotedCostPerUnit: 2,
+          amountPreSpread: 81.5,
+          expectedPriceAfterFeeAndSpread: 50,
 
           // Expected amounts are the same with no discount
           discountedExpectedNobaFee: 0,
@@ -648,17 +648,17 @@ describe("DefaultAssetService", () => {
 
       expectedNobaQuote.discountsGiven = {
         creditCardFeeDiscount: 1,
-        networkFeeDiscount: 0,
+        networkFeeDiscount: 5,
         nobaFeeDiscount: 0,
         processingFeeDiscount: 12.5,
-        spreadDiscount: 0,
+        spreadDiscount: 50,
       };
 
       const nobaQuote: CombinedNobaQuote = await usdcPolygonAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.POLYGON",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
-        transactionType: TransactionType.ONRAMP,
+        transactionType: TransactionType.NOBA_WALLET,
         discount: {
           fixedCreditCardFeeDiscountPercent: 1,
           networkFeeDiscountPercent: 0, // Keeping network fee discount as 0%
