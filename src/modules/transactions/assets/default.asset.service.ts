@@ -105,7 +105,9 @@ export abstract class DefaultAssetService implements AssetService {
     };
 
     const fiatAmountAfterAllChargesWithSpread: DiscountedAmount = {
-      value: Utils.roundTo2DecimalNumber(fiatAmountAfterAllChargesWithoutSpread.value / (1 + nobaSpreadPercent.value)),
+      value: Utils.roundTo2DecimalNumber(
+        fiatAmountAfterAllChargesWithoutSpread.discountedValue / (1 + nobaSpreadPercent.value),
+      ),
       discountedValue: Utils.roundTo2DecimalNumber(
         fiatAmountAfterAllChargesWithoutSpread.discountedValue / (1 + nobaSpreadPercent.discountedValue),
       ),
@@ -128,13 +130,13 @@ export abstract class DefaultAssetService implements AssetService {
     };
 
     const perUnitCryptoCostWithSpread: DiscountedAmount = {
-      value: perUnitCryptoCostWithoutSpread.value * (1 + nobaSpreadPercent.value),
+      value: perUnitCryptoCostWithoutSpread.discountedValue * (1 + nobaSpreadPercent.value),
       discountedValue: perUnitCryptoCostWithoutSpread.discountedValue * (1 + nobaSpreadPercent.discountedValue),
     };
 
     const discountedTotalCryptoQuantity: number = await this.roundToProperDecimalsForCryptocurrency(
       request.cryptoCurrency,
-      fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.discountedValue,
+      fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.value,
     );
     const nonDiscountedtotalCryptoQuantity: number = await this.roundToProperDecimalsForCryptocurrency(
       request.cryptoCurrency,
@@ -207,7 +209,6 @@ export abstract class DefaultAssetService implements AssetService {
       request.fiatAmount * 0.007
     }
   `);
-
     const result: CombinedNobaQuote = {
       quote: discountedNobaQuote,
       nonDiscountedQuote: nonDiscountedNobaQuote,
@@ -222,10 +223,7 @@ export abstract class DefaultAssetService implements AssetService {
         // fixed credit card fees.
         creditCardFeeDiscount: fixedCreditCardFeeInFiat.value - fixedCreditCardFeeInFiat.discountedValue,
         spreadDiscount:
-          fiatAmountAfterAllChargesWithoutSpread.value -
-          fiatAmountAfterAllChargesWithSpread.value -
-          (fiatAmountAfterAllChargesWithoutSpread.discountedValue -
-            fiatAmountAfterAllChargesWithSpread.discountedValue),
+          (discountedTotalCryptoQuantity - nonDiscountedtotalCryptoQuantity) * perUnitCryptoCostWithoutSpread.value,
       },
     };
 
