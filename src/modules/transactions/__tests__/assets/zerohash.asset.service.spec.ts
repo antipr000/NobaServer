@@ -95,6 +95,15 @@ describe("ZerohashAssetService", () => {
       spreadOverride: 0.01,
     });
 
+    // Test for Solana with a spread override of 0
+    when(currencyService.getCryptocurrency("SOL")).thenResolve({
+      iconPath: "dummy/path",
+      name: "Solana",
+      ticker: "SOL",
+      precision: 6,
+      spreadOverride: 0,
+    });
+
     when(currencyService.getSupportedFiatCurrencies()).thenResolve([
       {
         iconPath: "dummy/path",
@@ -309,7 +318,7 @@ describe("ZerohashAssetService", () => {
       });
     });
 
-    it("Spread percentage override is taken into account correctly", async () => {
+    it("Positive spread percentage override is taken into account correctly", async () => {
       const fiatAmountUSD = 100;
       const originalCostPerUnit = 10;
 
@@ -344,6 +353,64 @@ describe("ZerohashAssetService", () => {
 
       const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
         cryptoCurrency: "USDC.ETH",
+        fiatCurrency: "USD",
+        fiatAmount: fiatAmountUSD,
+        transactionType: TransactionType.ONRAMP,
+        // All these discounts should mean that the quote & non-discounted quote remain equal
+        discount: {
+          fixedCreditCardFeeDiscountPercent: 0,
+          networkFeeDiscountPercent: 0,
+          nobaFeeDiscountPercent: 0,
+          nobaSpreadDiscountPercent: 0,
+          processingFeeDiscountPercent: 0,
+        },
+      });
+      expect(nobaQuote.quote).toEqual(expectedNobaQuote.quote);
+      expect(nobaQuote.nonDiscountedQuote).toEqual(expectedNobaQuote.nonDiscountedQuote);
+      expect(nobaQuote.discountsGiven).toEqual({
+        creditCardFeeDiscount: 0,
+        networkFeeDiscount: 0,
+        nobaFeeDiscount: 0,
+        spreadDiscount: 0,
+        processingFeeDiscount: 0,
+      });
+    });
+
+    it("Spread percentage override of 0 is taken into account correctly", async () => {
+      const fiatAmountUSD = 100;
+      const originalCostPerUnit = 10;
+
+      const expectedNobaQuote: CombinedNobaQuote = await setupTestAndGetQuoteResponse(
+        "SOL",
+        fiatAmountUSD,
+        originalCostPerUnit,
+        {
+          // This number is expected to be overridden by SOL spread override, so calcs below are against the override (0.01)
+          spreadPercentage: 0.5,
+          fiatFeeDollars: 0,
+          dynamicCreditCardFeePercentage: 0,
+          fixedCreditCardFee: 0,
+        },
+        {
+          expectedNobaFee: 0,
+          expectedProcessingFee: 0,
+          expectedNetworkFee: 0,
+          quotedCostPerUnit: 10,
+          amountPreSpread: 100,
+          expectedPriceAfterFeeAndSpread: 100,
+
+          // WITH discounts.
+          discountedExpectedNobaFee: 0,
+          discountedExpectedProcessingFee: 0,
+          discountedExpectedNetworkFee: 0,
+          discountedQuotedCostPerUnit: 10,
+          discountedAmountPreSpread: 100,
+          discountedExpectedPriceAfterFeeAndSpread: 100,
+        },
+      );
+
+      const nobaQuote: CombinedNobaQuote = await zerohashAssetService.getQuoteForSpecifiedFiatAmount({
+        cryptoCurrency: "SOL",
         fiatCurrency: "USD",
         fiatAmount: fiatAmountUSD,
         transactionType: TransactionType.ONRAMP,

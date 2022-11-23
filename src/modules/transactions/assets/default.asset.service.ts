@@ -61,7 +61,7 @@ export abstract class DefaultAssetService implements AssetService {
 
     let spreadPercentage = this.nobaTransactionConfigs.spreadPercentage;
     const currency = await this.currencyService.getCryptocurrency(request.cryptoCurrency);
-    if (currency.spreadOverride) spreadPercentage = currency.spreadOverride;
+    if (currency.spreadOverride !== undefined) spreadPercentage = currency.spreadOverride;
 
     const nobaSpreadPercent = getDiscountedAmount(spreadPercentage, request.discount.nobaSpreadDiscountPercent);
     const nobaFlatFeeInFiat = getDiscountedAmount(
@@ -241,7 +241,7 @@ export abstract class DefaultAssetService implements AssetService {
 
     let spreadPercentage = this.nobaTransactionConfigs.spreadPercentage;
     const currency = await this.currencyService.getCryptocurrency(request.cryptoCurrency);
-    if (currency.spreadOverride) spreadPercentage = currency.spreadOverride;
+    if (currency.spreadOverride !== undefined) spreadPercentage = currency.spreadOverride;
 
     const nobaSpreadPercent = getDiscountedAmount(spreadPercentage, request.discount.nobaSpreadDiscountPercent);
     const nobaFlatFeeInFiat = getDiscountedAmount(
