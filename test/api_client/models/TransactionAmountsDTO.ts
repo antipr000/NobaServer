@@ -47,4 +47,8 @@ export type TransactionAmountsDTO = {
    * Conversion rate used between the 'fiatCurrency' and 'cryptocurrency'
    */
   conversionRate: number;
+  /**
+   * Total additional fee paid by the consumer for the transacion
+   */
+  totalFee: number;
 };

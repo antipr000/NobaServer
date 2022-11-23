@@ -27,6 +27,7 @@ import { AssetServiceFactory } from "./assets/asset.service.factory";
 import { ConsumerAccountBalance, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
+import { PartnerTransactionFilterOptions } from "./domain/TransactionRepoTypes";
 import { TransactionFilterOptions, TransactionStatus, TransactionType } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
@@ -173,6 +174,24 @@ export class TransactionService {
     transactionQuery.partnerID = partnerID;
     const transactionsResult = await this.transactionsRepo.getFilteredTransactions(transactionQuery);
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
+  }
+
+  async populateCsvFileWithPartnerTransactions(
+    partnerID: string,
+    startDate: Date,
+    endDate: Date,
+    includeIncompleteTransactions: boolean,
+  ): Promise<string> {
+    const filters: PartnerTransactionFilterOptions = {
+      partnerID: partnerID,
+      startDate: startDate,
+      endDate: endDate,
+      includeIncompleteTransactions: includeIncompleteTransactions ?? true,
+    };
+
+    const filePath = `/tmp/txn-${partnerID}-${Date.now().valueOf()}.csv`;
+    await this.transactionsRepo.getPartnerTransactions(filters, filePath);
+    return filePath;
   }
 
   async getTransactionsInInterval(

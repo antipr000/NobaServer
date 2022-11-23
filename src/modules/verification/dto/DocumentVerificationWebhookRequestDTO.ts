@@ -87,9 +87,6 @@ export class DataDTO {
 
   @ApiProperty()
   case: CaseDTO;
-
-  @ApiProperty()
-  documentVerificationResult: DocumentVerificationSardineResponse;
 }
 
 export class DocumentVerificationWebhookRequestDTO implements DocumentVerificationWebhookRequest {
@@ -104,4 +101,7 @@ export class DocumentVerificationWebhookRequestDTO implements DocumentVerificati
 
   @ApiProperty()
   data: DataDTO;
+
+  @ApiProperty()
+  documentVerificationResult: DocumentVerificationSardineResponse;
 }

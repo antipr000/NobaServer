@@ -125,7 +125,7 @@ export class PaymentService {
       try {
         // Check if added payment method is valid
         paymentResponse = await this.checkoutClient.makeCardPayment(
-          1, // 1 cent
+          2, // 2 cents - the minimum
           "USD",
           addPaymentMethodResponse.instrumentID,
           "Test_Transaction",
@@ -391,15 +391,18 @@ export class PaymentService {
     checkoutResponse: CheckoutResponseData,
   ): Promise<AddPaymentMethodResponse> {
     let updatedConsumerProps: ConsumerProps;
+    const existingPaymentMethods = consumer.props.paymentMethods.filter(
+      paymentMethod => paymentMethod.paymentToken !== newPaymentMethod.paymentToken,
+    );
     if (hasCustomerIDSaved) {
       updatedConsumerProps = {
         ...consumer.props,
-        paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+        paymentMethods: [...existingPaymentMethods, newPaymentMethod],
       };
     } else {
       updatedConsumerProps = {
         ...consumer.props,
-        paymentMethods: [...consumer.props.paymentMethods, newPaymentMethod],
+        paymentMethods: [...existingPaymentMethods, newPaymentMethod],
         paymentProviderAccounts: [
           ...consumer.props.paymentProviderAccounts,
           {

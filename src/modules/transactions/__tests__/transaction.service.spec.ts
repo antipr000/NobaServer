@@ -7,9 +7,9 @@ jest.mock("multicoin-address-validator", () => ({
   }),
 }));
 
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { anyString, anything, deepEqual, instance, reset, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, reset, verify, when } from "ts-mockito";
 import {
   DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE,
   FIXED_CREDIT_CARD_FEE,
@@ -71,6 +71,8 @@ import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvide
 import { getMockLimitServiceWithDefaults } from "../mocks/mock.limit.service";
 import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
 import { Utils } from "../../../core/utils/Utils";
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const defaultEnvironmentVariables = {
   [NOBA_CONFIG_KEY]: {
@@ -3090,6 +3092,71 @@ describe("TransactionService", () => {
           }),
         ),
       ).once();
+    });
+  });
+
+  describe("populateCsvFileWithPartnerTransactions()", () => {
+    it("should return the CSV file path if the underlying repo succeeds", async () => {
+      const date1 = new Date();
+      await sleep(100); // to avoid error due to precisions
+      const date2 = new Date();
+      const partnerID = "mock-partner-id";
+
+      when(transactionRepo.getPartnerTransactions(anything(), anything())).thenResolve();
+
+      const receivedOutputFile: string = await transactionService.populateCsvFileWithPartnerTransactions(
+        partnerID,
+        date1,
+        date2,
+        false,
+      );
+
+      const [filters, expectedOutputFile] = capture(transactionRepo.getPartnerTransactions).last();
+      expect(expectedOutputFile).toBe(receivedOutputFile);
+      expect(filters).toStrictEqual({
+        partnerID: partnerID,
+        startDate: date1,
+        endDate: date2,
+        includeIncompleteTransactions: false,
+      });
+    });
+
+    it("should default the value of 'includeIncompleteTransactions' to 'true' if not specified", async () => {
+      const date1 = new Date();
+      await sleep(100); // to avoid error due to precisions
+      const date2 = new Date();
+      const partnerID = "mock-partner-id";
+
+      when(transactionRepo.getPartnerTransactions(anything(), anything())).thenResolve();
+
+      const receivedOutputFile: string = await transactionService.populateCsvFileWithPartnerTransactions(
+        partnerID,
+        date1,
+        date2,
+        undefined,
+      );
+
+      const [filters, expectedOutputFile] = capture(transactionRepo.getPartnerTransactions).last();
+      expect(expectedOutputFile).toBe(receivedOutputFile);
+      expect(filters).toStrictEqual({
+        partnerID: partnerID,
+        startDate: date1,
+        endDate: date2,
+        includeIncompleteTransactions: true,
+      });
+    });
+
+    it("should rethrow error if underlying repo fails", async () => {
+      when(transactionRepo.getPartnerTransactions(anything(), anything())).thenReject(
+        new InternalServerErrorException(),
+      );
+
+      try {
+        await transactionService.populateCsvFileWithPartnerTransactions("partnerID", new Date(), new Date(), false);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(InternalServerErrorException);
+      }
     });
   });
 });

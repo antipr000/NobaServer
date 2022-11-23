@@ -13,6 +13,7 @@ import {
   ForbiddenException,
   Patch,
   NotFoundException,
+  Response,
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -55,6 +56,9 @@ import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { CreatePartnerRequestDTO } from "../partner/dto/CreatePartnerRequestDTO";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
+import { TransactionService } from "../transactions/transaction.service";
+import fs from "fs";
+import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")
@@ -78,6 +82,9 @@ export class AdminController {
 
   @Inject()
   private readonly consumerService: ConsumerService;
+
+  @Inject()
+  private readonly transactionService: TransactionService;
 
   private readonly partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
   private readonly partnerMapper: PartnerMapper = new PartnerMapper();
@@ -281,6 +288,54 @@ export class AdminController {
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
+  @Get(`/partners/transactions/download`)
+  @ApiOperation({ summary: "Fetch the transactions based on different filters" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from fetching the transactions for a Partner",
+  })
+  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
+  async fetchTransactionsForPartner(@Query() filters: TransactionFilterDTO, @Request() request, @Response() response) {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
+      throw new ForbiddenException(
+        `Admins with role '${authenticatedUser.props.role}' can't fetch transactions for Partners.`,
+      );
+    }
+
+    const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
+    const endDate = filters.endDate ? this.convertToLastMinuteOfDay(new Date(filters.endDate)) : undefined;
+
+    let includeIncompleteTransactions: boolean = true;
+    if (filters.onlyCompletedTransactions !== undefined && filters.onlyCompletedTransactions !== null) {
+      includeIncompleteTransactions =
+        filters.onlyCompletedTransactions == false ||
+        (filters.onlyCompletedTransactions as any) == "false" ||
+        (filters.onlyCompletedTransactions as any) == 0;
+    }
+
+    const localCsvFileWithTransactions = await this.transactionService.populateCsvFileWithPartnerTransactions(
+      filters.partnerID,
+      startDate,
+      endDate,
+      includeIncompleteTransactions,
+    );
+
+    return new Promise((resolve, reject) => {
+      response.writeHead(200, { "Content-Type": "text/csv" });
+      fs.createReadStream(localCsvFileWithTransactions)
+        .on("end", () => {
+          this.logger.debug(`Deleting the file '${localCsvFileWithTransactions}'`);
+          fs.unlinkSync(localCsvFileWithTransactions);
+          resolve(0);
+        })
+        .on("error", err => {
+          this.logger.error(`Error while sending the stream in response: ${JSON.stringify(err)}`);
+          reject(err);
+        })
+        .pipe(response);
+    });
+  }
+
   @Post("/partners")
   @ApiOperation({ summary: "Adds a new partner" })
   @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "New partner record" })
@@ -337,5 +392,12 @@ export class AdminController {
     });
 
     return this.consumerMapper.toDTO(updatedConsumerData);
+  }
+
+  private convertToLastMinuteOfDay(date: Date): Date {
+    date.setHours(23);
+    date.setMinutes(59);
+    date.setSeconds(59);
+    return date;
   }
 }

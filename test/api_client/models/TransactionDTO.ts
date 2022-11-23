@@ -61,4 +61,8 @@ export type TransactionDTO = {
    * All amounts and currency information related to this transaction
    */
   amounts: TransactionAmountsDTO;
+  /**
+   * Type of the transaction. Can be one of 'onramp', 'offramp', 'wallet', 'swap'
+   */
+  type: "onramp" | "offramp" | "swap" | "wallet";
 };

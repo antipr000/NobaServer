@@ -4,6 +4,7 @@ import { DBProvider } from "./DBProvider";
 import { ConsumerMigrator } from "./migrators/consumer.migration";
 import { MigratorService } from "./migrators/migrator.service";
 import { PaymentMethodSchemeMigrator } from "./migrators/payment.method.scheme.migration";
+import { TransactionDiscountsMigrator } from "./migrators/transaction.discounts.migrator";
 import { TransactionMigrator } from "./migrators/transaction.migrator";
 import { AdminSeeder } from "./seeders/admin.seed";
 import { CreditCardBinDataSeeder } from "./seeders/creditcard.bin.data.seed";
@@ -19,6 +20,7 @@ import { SeederService } from "./seeders/seeder.service";
     SeederService,
     ConsumerMigrator,
     PaymentMethodSchemeMigrator,
+    TransactionDiscountsMigrator,
     TransactionMigrator,
     MigratorService,
     CheckoutClient,

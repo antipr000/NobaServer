@@ -68,7 +68,7 @@ export interface TransactionProps extends VersioningInfo {
   lastStatusUpdateTimestamp: number;
 
   transactionExceptions?: TransactionEvent[];
-  discounts?: Discounts;
+  discounts: Discounts;
 }
 
 export interface FiatPaymentInfo {

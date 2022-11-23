@@ -145,7 +145,7 @@ export class WebhookService {
     await this.makeRequest(partner, webhookRequestPayload, webhook.url);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_KYC_DENIED_EVENT}`)
+  @OnEvent(`webhook.${NotificationEventType.SEND_KYC_DENIED_EVENT}`)
   public async sendKycDeniedMessage(payload: SendKycDeniedEvent) {
     const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
@@ -163,7 +163,7 @@ export class WebhookService {
     await this.makeRequest(partner, webhookRequestPayload, webhook.url);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
+  @OnEvent(`webhook.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
   public async sendKycPendingOrFlaggedMessage(payload: SendKycPendingOrFlaggedEvent) {
     const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
@@ -376,7 +376,7 @@ export class WebhookService {
     await this.makeRequest(partner, webhookRequestPayload, webhook.url);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_HARD_DECLINE_EVENT}`)
+  @OnEvent(`webhook.${NotificationEventType.SEND_HARD_DECLINE_EVENT}`)
   public async sendHardDeclineMessage(payload: SendHardDeclineEvent) {
     const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
