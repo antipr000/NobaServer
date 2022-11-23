@@ -24,6 +24,14 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     return this.kmsService.encryptString(text, KmsKeyType.SSN);
   }
 
+  async isHandleTaken(handle: string): Promise<boolean> {
+    const userModel = await this.dbProvider.getUserModel();
+    const user = await userModel.findOne({ handle: handle });
+
+    if (!user) return true;
+    return false;
+  }
+
   async getConsumer(consumerID: string): Promise<Consumer> {
     const userModel = await this.dbProvider.getUserModel();
     const result: any = await userModel.findById(consumerID).exec();

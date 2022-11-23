@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { ConsumerHandleMigrator } from "./consumer.handle.migration";
 import { ConsumerMigrator } from "./consumer.migration";
 import { PaymentMethodSchemeMigrator } from "./payment.method.scheme.migration";
 import { TransactionDiscountsMigrator } from "./transaction.discounts.migrator";
@@ -11,6 +12,7 @@ export class MigratorService {
     private readonly paymentMethodSchemeMigrator: PaymentMethodSchemeMigrator,
     private readonly transactionMigrator: TransactionMigrator,
     private readonly transactionDiscountsMigrator: TransactionDiscountsMigrator,
+    private readonly consumerHandleMigrator: ConsumerHandleMigrator,
   ) {}
 
   // Any error here would lead to server crash. It is intentional!
@@ -26,5 +28,8 @@ export class MigratorService {
 
     // Ensure 'discounts' sub-collection in "Transaction" collection is migrated correctly.
     await this.transactionDiscountsMigrator.migrate();
+
+    // Add the 'handle' field in all the documents of the "Consumer" collection.
+    await this.consumerHandleMigrator.migrate();
   }
 }

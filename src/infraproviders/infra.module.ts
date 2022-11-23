@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { CheckoutClient } from "../modules/psp/checkout.client";
 import { DBProvider } from "./DBProvider";
+import { ConsumerHandleMigrator } from "./migrators/consumer.handle.migration";
 import { ConsumerMigrator } from "./migrators/consumer.migration";
 import { MigratorService } from "./migrators/migrator.service";
 import { PaymentMethodSchemeMigrator } from "./migrators/payment.method.scheme.migration";
@@ -24,6 +25,7 @@ import { SeederService } from "./seeders/seeder.service";
     TransactionMigrator,
     MigratorService,
     CheckoutClient,
+    ConsumerHandleMigrator,
   ],
   exports: [DBProvider, SeederService, MigratorService],
 })

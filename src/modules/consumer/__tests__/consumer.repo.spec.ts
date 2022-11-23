@@ -192,6 +192,40 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(result[0].props.email).toBe(savedConsumer.props.email);
     });
   });
+
+  describe("isHandleTaken", () => {
+    it("should return 'false' if there already exist an user with same handle", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+
+      const result = await consumerRepo.isHandleTaken("test");
+      expect(result).toBe(false);
+    });
+
+    it("should return 'false' if there already exist an user with same handle", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test2",
+      };
+      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+
+      const result = await consumerRepo.isHandleTaken("test");
+      expect(result).toBe(true);
+    });
+  });
 });
 
 const getRandomUser = (email: string, phone?: string): Consumer => {
