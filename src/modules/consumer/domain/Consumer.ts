@@ -17,6 +17,7 @@ export interface ConsumerProps extends VersioningInfo {
   firstName?: string;
   lastName?: string;
   email?: string;
+  handle?: string;
   displayEmail?: string;
   phone?: string;
   isAdmin?: boolean;
@@ -108,6 +109,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
     .allow(null)
     .optional()
     .meta({ _mongoose: { index: true } }),
+  handle: Joi.string().optional(),
   displayEmail: Joi.string().email().optional(),
   phone: Joi.string()
     .pattern(/^\+[0-9 ]+$/) // allows digits, spaces, and + sign
