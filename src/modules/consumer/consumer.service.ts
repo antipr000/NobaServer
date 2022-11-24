@@ -285,6 +285,7 @@ export class ConsumerService {
     const deletedPaymentMethod = paymentMethod[0];
 
     deletedPaymentMethod.status = PaymentMethodStatus.DELETED;
+    deletedPaymentMethod.isDefault = false;
 
     const updatedConsumer: ConsumerProps = {
       ...consumer.props,
