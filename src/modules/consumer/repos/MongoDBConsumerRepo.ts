@@ -28,7 +28,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     const userModel = await this.dbProvider.getUserModel();
     const user = await userModel.findOne({ handle: handle });
 
-    if (!user) return true;
+    if (user) return true;
     return false;
   }
 

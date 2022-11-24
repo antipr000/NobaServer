@@ -367,7 +367,7 @@ describe("MongoDBConsumerRepoTests", () => {
   });
 
   describe("isHandleTaken", () => {
-    it("should return 'false' if there already exist an user with same handle", async () => {
+    it("should return 'true' if there already exist an user with same handle", async () => {
       const consumerProps: ConsumerProps = {
         _id: "test-consumer-id",
         firstName: "firstName",
@@ -380,10 +380,10 @@ describe("MongoDBConsumerRepoTests", () => {
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
 
       const result = await consumerRepo.isHandleTaken("test");
-      expect(result).toBe(false);
+      expect(result).toBe(true);
     });
 
-    it("should return 'true' if there isn't an user with same handle", async () => {
+    it("should return 'false' if there isn't an user with same handle", async () => {
       const consumerProps: ConsumerProps = {
         _id: "test-consumer-id",
         firstName: "firstName",
@@ -396,7 +396,7 @@ describe("MongoDBConsumerRepoTests", () => {
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
 
       const result = await consumerRepo.isHandleTaken("test");
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
   });
 });

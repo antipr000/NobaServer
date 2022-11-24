@@ -12,6 +12,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
 } from "@nestjs/common";
 import {
@@ -48,6 +49,7 @@ import { PhoneVerificationOtpRequest, UserPhoneUpdateRequest } from "./dto/Phone
 import { EmailVerificationOtpRequest, UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { AuthUser } from "../auth/auth.decorator";
 import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
+import { ConsumerHandleDTO } from "./dto/ConsumerHandleDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -97,6 +99,26 @@ export class ConsumerController {
     });
 
     return this.consumerMapper.toDTO(entity);
+  }
+
+  @Get("/handles/availability")
+  @ApiOperation({ summary: "Returns whether the handle is available or not." })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerHandleDTO,
+    description: "False or True specifying whether the specified 'handle' is already in use or not",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  async isHandleAvailable(@Query("handle") handle: string, @Request() request): Promise<ConsumerHandleDTO> {
+    const consumer = request.user.entity;
+    if (!(consumer instanceof Consumer)) {
+      throw new ForbiddenException();
+    }
+
+    return {
+      isAvailable: await this.consumerService.isHandleAvaialbe(handle.toLocaleLowerCase()),
+      handle: handle.toLocaleLowerCase(),
+    };
   }
 
   @Patch("/")

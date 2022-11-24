@@ -374,20 +374,20 @@ export class AdminService {
   }
 
   /**
-   * Fetch all the transactions for a specific Partner
+   * Fetch the transactions based on different filters
    * @returns void
    * @throws ApiError
    */
   public static fetchTransactionsForPartner({
     xNobaApiKey,
-    partnerId,
     xNobaSignature,
     xNobaTimestamp,
     startDate,
     endDate,
+    partnerId,
+    onlyCompletedTransactions,
   }: {
     xNobaApiKey: string;
-    partnerId: string;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -398,16 +398,21 @@ export class AdminService {
      */
     startDate?: string;
     /**
-     * Format: YYYY-MM-DD. Example: '2010-04-27' means 27th Apr 2010 at 00:00:00 UTC
+     * Format: YYYY-MM-DD. This is inclusive. Example: '2010-04-27' means 27th Apr 2010 at 23:59:59 UTC
      */
     endDate?: string;
+    /**
+     * Partner ID
+     */
+    partnerId?: string;
+    /**
+     * Whether to include 'only' COMPLETED Transactions. Default value is 'false'
+     */
+    onlyCompletedTransactions?: boolean;
   }): CancelablePromise<void> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/admins/partners/{partnerID}/transactions",
-      path: {
-        partnerID: partnerId,
-      },
+      url: "/v1/admins/partners/transactions/download",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
@@ -416,11 +421,12 @@ export class AdminService {
       query: {
         startDate: startDate,
         endDate: endDate,
+        partnerID: partnerId,
+        onlyCompletedTransactions: onlyCompletedTransactions,
       },
       errors: {
         400: `Invalid parameter(s)`,
         403: `User forbidden from fetching the transactions for a Partner`,
-        404: `Partner not found`,
       },
     });
   }
