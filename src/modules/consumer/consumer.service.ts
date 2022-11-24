@@ -67,6 +67,14 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
+  // Note that this depicts the current state & is not locking the handle
+  // (like booking applications).
+  // So, it may happen that the function returned 'true' but when called
+  // 'updateConsumer' with the same 'handle', it throws BadRequestException.
+  async isHandleAvaialbe(handle: string): Promise<boolean> {
+    return (await this.consumerRepo.isHandleTaken(handle)) === false;
+  }
+
   // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
   async getOrCreateConsumerConditionally(
     emailOrPhone: string,

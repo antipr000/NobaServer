@@ -2581,6 +2581,22 @@ describe("ConsumerService", () => {
       verify(notificationService.sendNotification(anything(), anything(), anything())).once(); //already called above
     });
   });
+
+  describe("isHandleAvaialbe", () => {
+    it("should return 'false' if the handle is already taken", async () => {
+      when(consumerRepo.isHandleTaken("test")).thenResolve(true);
+
+      const isHandleAvaialble = await consumerService.isHandleAvaialbe("test");
+      expect(isHandleAvaialble).toBe(false);
+    });
+
+    it("should return 'true' if the handle is not taken", async () => {
+      when(consumerRepo.isHandleTaken("test")).thenResolve(false);
+
+      const isHandleAvaialble = await consumerService.isHandleAvaialbe("test");
+      expect(isHandleAvaialble).toBe(true);
+    });
+  });
 });
 
 function constructAddPaymentMethodResponse(
