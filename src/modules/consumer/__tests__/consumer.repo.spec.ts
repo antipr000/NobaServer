@@ -128,6 +128,43 @@ describe("MongoDBConsumerRepoTests", () => {
         expect(e.message).toContain("already exists");
       }
     });
+
+    it("shouldn't modify the 'handle', if already specified, before saving the consumer", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test2",
+      };
+      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+
+      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(savedResults).toHaveLength(1);
+      expect(savedResults[0].handle).toBe("test2");
+
+      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
+    });
+
+    it("should add a 'default' handle (if not specified) before saving the consumer", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+      };
+      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+
+      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(savedResults).toHaveLength(1);
+      expect(savedResults[0].handle).toBeDefined();
+
+      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
+    });
   });
 
   describe("getConsumer", () => {

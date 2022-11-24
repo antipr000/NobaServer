@@ -112,6 +112,9 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     } else {
       // Encrypt SSN
       consumer.props.socialSecurityNumber = await this.encryptString(consumer.props.socialSecurityNumber);
+      if (consumer.props.handle === undefined || consumer.props.handle === null) {
+        consumer.props.handle = `${consumer.props.email.substring(0, 3)}${Date.now().valueOf().toString().substr(5)}`;
+      }
 
       const userModel = await this.dbProvider.getUserModel();
       const result = await userModel.create(consumer.props);
