@@ -11,6 +11,7 @@ import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtp
 import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
 import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
+import type { UpdatePaymentMethodDTO } from "../models/UpdatePaymentMethodDTO";
 import type { UserEmailUpdateRequest } from "../models/UserEmailUpdateRequest";
 import type { UserPhoneUpdateRequest } from "../models/UserPhoneUpdateRequest";
 
@@ -299,8 +300,49 @@ export class ConsumerService {
   }
 
   /**
+   * Updates a payment method for logged-in consumer
+   * @returns ConsumerDTO Consumer record with updated payment methods
+   * @throws ApiError
+   */
+  public static updatePaymentMethod({
+    xNobaApiKey,
+    paymentToken,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    paymentToken: string;
+    requestBody: UpdatePaymentMethodDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/consumers/paymentmethods/{paymentToken}",
+      path: {
+        paymentToken: paymentToken,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid payment method details`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
    * Deletes a payment method for the logged-in consumer
-   * @returns ConsumerDTO Deleted consumer record
+   * @returns ConsumerDTO Consumer record with updated payment methods
    * @throws ApiError
    */
   public static deletePaymentMethod({

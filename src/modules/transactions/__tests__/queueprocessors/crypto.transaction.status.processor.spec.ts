@@ -451,6 +451,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       imageUri: "...",
       paymentToken: "XXXXXXXXXX",
       paymentProviderID: PaymentProvider.CHECKOUT,
+      isDefault: false,
     };
     when(consumerService.getConsumer(transaction.props.userId)).thenResolve(
       Consumer.createConsumer({

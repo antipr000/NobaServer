@@ -11,4 +11,5 @@ export type AddPaymentMethodDTO = {
   cardDetails?: CardDetailsDTO;
   achDetails?: ACHDetailsDTO;
   imageUri?: string;
+  isDefault?: boolean;
 };

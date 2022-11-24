@@ -50,6 +50,9 @@ export class PaymentMethodsDTO {
 
   @ApiPropertyOptional()
   achData?: PaymentMethodACHDataDTO;
+
+  @ApiProperty()
+  isDefault: boolean;
 }
 
 export class CryptoWalletsDTO {

@@ -39,4 +39,7 @@ export class AddPaymentMethodDTO {
 
   @ApiPropertyOptional()
   imageUri?: string;
+
+  @ApiPropertyOptional()
+  isDefault?: boolean;
 }

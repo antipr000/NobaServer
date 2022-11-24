@@ -59,10 +59,11 @@ export abstract class DefaultAssetService implements AssetService {
       request.discount.networkFeeDiscountPercent = 1;
     }
 
-    const nobaSpreadPercent = getDiscountedAmount(
-      this.nobaTransactionConfigs.spreadPercentage,
-      request.discount.nobaSpreadDiscountPercent,
-    );
+    let spreadPercentage = this.nobaTransactionConfigs.spreadPercentage;
+    const currency = await this.currencyService.getCryptocurrency(request.cryptoCurrency);
+    if (currency.spreadOverride !== undefined) spreadPercentage = currency.spreadOverride;
+
+    const nobaSpreadPercent = getDiscountedAmount(spreadPercentage, request.discount.nobaSpreadDiscountPercent);
     const nobaFlatFeeInFiat = getDiscountedAmount(
       this.nobaTransactionConfigs.flatFeeDollars,
       request.discount.nobaFeeDiscountPercent,
@@ -105,7 +106,9 @@ export abstract class DefaultAssetService implements AssetService {
     };
 
     const fiatAmountAfterAllChargesWithSpread: DiscountedAmount = {
-      value: Utils.roundTo2DecimalNumber(fiatAmountAfterAllChargesWithoutSpread.value / (1 + nobaSpreadPercent.value)),
+      value: Utils.roundTo2DecimalNumber(
+        fiatAmountAfterAllChargesWithoutSpread.discountedValue / (1 + nobaSpreadPercent.value),
+      ),
       discountedValue: Utils.roundTo2DecimalNumber(
         fiatAmountAfterAllChargesWithoutSpread.discountedValue / (1 + nobaSpreadPercent.discountedValue),
       ),
@@ -128,13 +131,13 @@ export abstract class DefaultAssetService implements AssetService {
     };
 
     const perUnitCryptoCostWithSpread: DiscountedAmount = {
-      value: perUnitCryptoCostWithoutSpread.value * (1 + nobaSpreadPercent.value),
+      value: perUnitCryptoCostWithoutSpread.discountedValue * (1 + nobaSpreadPercent.value),
       discountedValue: perUnitCryptoCostWithoutSpread.discountedValue * (1 + nobaSpreadPercent.discountedValue),
     };
 
     const discountedTotalCryptoQuantity: number = await this.roundToProperDecimalsForCryptocurrency(
       request.cryptoCurrency,
-      fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.discountedValue,
+      fiatAmountAfterAllChargesWithSpread.discountedValue / perUnitCryptoCostWithoutSpread.value,
     );
     const nonDiscountedtotalCryptoQuantity: number = await this.roundToProperDecimalsForCryptocurrency(
       request.cryptoCurrency,
@@ -207,7 +210,6 @@ export abstract class DefaultAssetService implements AssetService {
       request.fiatAmount * 0.007
     }
   `);
-
     const result: CombinedNobaQuote = {
       quote: discountedNobaQuote,
       nonDiscountedQuote: nonDiscountedNobaQuote,
@@ -222,10 +224,7 @@ export abstract class DefaultAssetService implements AssetService {
         // fixed credit card fees.
         creditCardFeeDiscount: fixedCreditCardFeeInFiat.value - fixedCreditCardFeeInFiat.discountedValue,
         spreadDiscount:
-          fiatAmountAfterAllChargesWithoutSpread.value -
-          fiatAmountAfterAllChargesWithSpread.value -
-          (fiatAmountAfterAllChargesWithoutSpread.discountedValue -
-            fiatAmountAfterAllChargesWithSpread.discountedValue),
+          (discountedTotalCryptoQuantity - nonDiscountedtotalCryptoQuantity) * perUnitCryptoCostWithoutSpread.value,
       },
     };
 
@@ -233,11 +232,6 @@ export abstract class DefaultAssetService implements AssetService {
   }
 
   async getQuoteForSpecifiedCryptoQuantity(request: QuoteRequestForFixedCrypto): Promise<CombinedNobaQuote> {
-    // const nobaSpreadPercent = this.nobaTransactionConfigs.spreadPercentage;
-    // const nobaFlatFeeInFiat = this.nobaTransactionConfigs.flatFeeDollars;
-    // const creditCardFeePercent = this.nobaTransactionConfigs.dynamicCreditCardFeePercentage;
-    // const fixedCreditCardFeeInFiat = this.nobaTransactionConfigs.fixedCreditCardFee;
-
     // TODO(#): Remove this once all the clients are aware about "discount"
     if (request.discount === undefined || request.discount === null) request.discount = {} as any;
 
@@ -245,10 +239,11 @@ export abstract class DefaultAssetService implements AssetService {
       request.discount.networkFeeDiscountPercent = 1;
     }
 
-    const nobaSpreadPercent = getDiscountedAmount(
-      this.nobaTransactionConfigs.spreadPercentage,
-      request.discount.nobaSpreadDiscountPercent,
-    );
+    let spreadPercentage = this.nobaTransactionConfigs.spreadPercentage;
+    const currency = await this.currencyService.getCryptocurrency(request.cryptoCurrency);
+    if (currency.spreadOverride !== undefined) spreadPercentage = currency.spreadOverride;
+
+    const nobaSpreadPercent = getDiscountedAmount(spreadPercentage, request.discount.nobaSpreadDiscountPercent);
     const nobaFlatFeeInFiat = getDiscountedAmount(
       this.nobaTransactionConfigs.flatFeeDollars,
       request.discount.nobaFeeDiscountPercent,
@@ -664,7 +659,6 @@ export abstract class DefaultAssetService implements AssetService {
     cryptoCurrency: string,
     fiatCurrency: string,
   ): Promise<ZerohashNetworkFee>;
-
   protected abstract getQuoteFromLiquidityProviderFiatFixed(
     cryptoCurrency: string,
     fiatCurrency: string,

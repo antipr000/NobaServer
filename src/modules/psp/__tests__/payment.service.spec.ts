@@ -230,6 +230,7 @@ describe("PaymentService", () => {
             paymentToken: plaidCheckoutProcessorToken,
             imageUri: "https://noba.com",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -286,6 +287,7 @@ describe("PaymentService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake ach",
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -359,6 +361,7 @@ describe("PaymentService", () => {
             paymentToken: plaidCheckoutProcessorToken,
             imageUri: "https://noba.com",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -469,6 +472,7 @@ describe("PaymentService", () => {
             paymentToken: plaidCheckoutProcessorToken,
             imageUri: "https://noba.com",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -504,7 +508,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "100000",
         response_summary: "Approved",
@@ -527,6 +531,111 @@ describe("PaymentService", () => {
         imageUri: "https://image.noba.com",
         paymentToken: "fake-payment-token",
         paymentProviderID: PaymentProvider.CHECKOUT,
+        isDefault: false,
+        cardData: {
+          cardType: "CREDIT",
+          scheme: "VISA",
+          first6Digits: "424242",
+          last4Digits: "4242",
+          authCode: "100000",
+          authReason: "Approved",
+        },
+        status: PaymentMethodStatus.APPROVED,
+        name: "Personal Card",
+      });
+    });
+
+    it("should add a new card for exisiting checkout customer and replace existing default payment method", async () => {
+      const paymentMethod: AddPaymentMethodDTO = createFakePaymentMethodRequest();
+      paymentMethod.isDefault = true;
+
+      const consumer = createFakeConsumerRecord(
+        [
+          {
+            providerID: PaymentProvider.CHECKOUT,
+            providerCustomerID: "checkout-consumer-1",
+          },
+        ],
+        [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-payment-token-1",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            status: PaymentMethodStatus.APPROVED,
+            isDefault: true,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-payment-token-2",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
+          },
+        ],
+      );
+      when(checkoutClient.addCreditCardPaymentMethod(deepEqual(paymentMethod), "checkout-consumer-1")).thenResolve({
+        instrumentID: "fake-payment-token",
+        scheme: "VISA",
+        bin: "424242",
+        issuer: "",
+        cardType: "CREDIT",
+      });
+
+      when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
+
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+        id: "fake-payment-1",
+        response_code: "100000",
+        response_summary: "Approved",
+        risk: {
+          flagged: false,
+        },
+        bin: "424242",
+      });
+
+      when(creditCardService.getBINDetails("424242")).thenResolve(null);
+      when(creditCardService.updateBinData(anything())).thenResolve();
+
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+
+      expect(response.updatedConsumerData).toBeTruthy();
+      expect(response.newPaymentMethod).toBeTruthy();
+      expect(response.updatedConsumerData.paymentMethods.length).toBe(3);
+      expect(response.updatedConsumerData.paymentMethods[1]).toStrictEqual({
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: "fake-payment-token-1",
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+          cardType: "VISA",
+        },
+        imageUri: "fake-uri",
+        name: "Fake card",
+        status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
+      });
+
+      expect(response.updatedConsumerData.paymentMethods[2]).toStrictEqual({
+        type: PaymentMethodType.CARD,
+        imageUri: "https://image.noba.com",
+        paymentToken: "fake-payment-token",
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        isDefault: true,
         cardData: {
           cardType: "CREDIT",
           scheme: "VISA",
@@ -563,6 +672,7 @@ describe("PaymentService", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             status: PaymentMethodStatus.DELETED,
+            isDefault: false,
           },
         ],
       );
@@ -576,7 +686,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "100000",
         response_summary: "Approved",
@@ -599,6 +709,7 @@ describe("PaymentService", () => {
         imageUri: "https://image.noba.com",
         paymentToken: "fake-payment-token",
         paymentProviderID: PaymentProvider.CHECKOUT,
+        isDefault: false,
         cardData: {
           cardType: "CREDIT",
           scheme: "VISA",
@@ -629,7 +740,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "20014",
         response_summary: "Approved",
@@ -671,7 +782,7 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.UNKNOWN);
 
-      when(checkoutClient.makeCardPayment(1, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
+      when(checkoutClient.makeCardPayment(2, "USD", "fake-payment-token", "Test_Transaction", undefined)).thenResolve({
         id: "fake-payment-1",
         response_code: "30000",
         response_summary: "Rejected",
@@ -754,6 +865,7 @@ describe("PaymentService", () => {
             },
             status: PaymentMethodStatus.APPROVED,
             name: "Personal Card",
+            isDefault: false,
           },
         ],
       );
@@ -847,6 +959,7 @@ describe("PaymentService", () => {
         imageUri: "https://image.noba.com",
         paymentToken: "fake-payment-token",
         paymentProviderID: PaymentProvider.CHECKOUT,
+        isDefault: false,
         cardData: {
           cardType: "CREDIT",
           scheme: "VISA",
@@ -874,6 +987,7 @@ describe("PaymentService", () => {
           last4Digits: "7890",
         },
         status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
       };
       const consumer = createFakeConsumerRecord(
         [
@@ -934,6 +1048,7 @@ describe("PaymentService", () => {
           last4Digits: "4242",
         },
         status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
       };
       const consumer = createFakeConsumerRecord(
         [
@@ -1010,6 +1125,7 @@ describe("PaymentService", () => {
           last4Digits: "7890",
         },
         status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
       };
       const consumer = createFakeConsumerRecord(
         [
@@ -1070,6 +1186,7 @@ describe("PaymentService", () => {
           accountType: "savings",
         },
         status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
       };
       const consumer = createFakeConsumerRecord(
         [
@@ -1119,6 +1236,7 @@ describe("PaymentService", () => {
           accountType: "savings",
         },
         status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
       };
       const consumer = createFakeConsumerRecord(
         [

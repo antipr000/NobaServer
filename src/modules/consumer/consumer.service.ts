@@ -293,6 +293,7 @@ export class ConsumerService {
     const deletedPaymentMethod = paymentMethod[0];
 
     deletedPaymentMethod.status = PaymentMethodStatus.DELETED;
+    deletedPaymentMethod.isDefault = false;
 
     const updatedConsumer: ConsumerProps = {
       ...consumer.props,
@@ -351,9 +352,20 @@ export class ConsumerService {
       );
     }
 
+    let updatedPaymentMethods = [...otherPaymentMethods, paymentMethod];
+
+    if (paymentMethod.isDefault) {
+      const existingDefaultPaymentMethod = otherPaymentMethods.filter(method => method.isDefault)[0];
+      const existingNonDefaultPaymentMethods = otherPaymentMethods.filter(method => !method.isDefault);
+      if (existingDefaultPaymentMethod) {
+        existingDefaultPaymentMethod.isDefault = false;
+        updatedPaymentMethods = [...existingNonDefaultPaymentMethods, existingDefaultPaymentMethod, paymentMethod];
+      }
+    }
+
     return await this.updateConsumer({
       ...consumer.props,
-      paymentMethods: [...otherPaymentMethods, paymentMethod],
+      paymentMethods: updatedPaymentMethods,
     });
   }
 

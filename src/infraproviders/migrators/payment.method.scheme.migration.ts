@@ -4,6 +4,7 @@ import { Collection } from "mongodb";
 import { Consumer } from "../../modules/consumer/domain/Consumer";
 import { PaymentMethod, PaymentMethodType } from "../../modules/consumer/domain/PaymentMethod";
 import { CheckoutClient } from "../../modules/psp/checkout.client";
+import { PaymentMethodStatus } from "../../modules/consumer/domain/VerificationStatus";
 
 @Injectable()
 export class PaymentMethodSchemeMigrator {
@@ -21,7 +22,10 @@ export class PaymentMethodSchemeMigrator {
     if (!isCardType) return queriedPaymentMethodRecord;
 
     const isOnOlderSchema: boolean =
-      queriedPaymentMethodRecord.cardData.scheme === undefined || queriedPaymentMethodRecord.cardData.scheme === null;
+      queriedPaymentMethodRecord.cardData.scheme === undefined ||
+      queriedPaymentMethodRecord.cardData.scheme === null ||
+      queriedPaymentMethodRecord.isDefault === undefined ||
+      queriedPaymentMethodRecord.isDefault === null;
 
     if (!isOnOlderSchema) return queriedPaymentMethodRecord;
 
@@ -44,6 +48,7 @@ export class PaymentMethodSchemeMigrator {
         imageUri: queriedPaymentMethodRecord.imageUri,
         paymentToken: queriedPaymentMethodRecord.paymentToken,
         status: queriedPaymentMethodRecord.status,
+        isDefault: queriedPaymentMethodRecord.isDefault ?? false,
       };
 
       return migratedRecord;
@@ -62,9 +67,18 @@ export class PaymentMethodSchemeMigrator {
       const consumerDocument = await consumerDocumentCursor.next();
       consumerDocument.paymentMethods = await Promise.all(
         consumerDocument.paymentMethods.map(async paymentMethodRecord => {
+          if (paymentMethodRecord && paymentMethodRecord.status === PaymentMethodStatus.DELETED)
+            return paymentMethodRecord;
           return await this.convertToNewSchema(paymentMethodRecord);
         }),
       );
+      const defaultPaymentMethod = consumerDocument.paymentMethods.filter(paymentMethod => paymentMethod.isDefault);
+      if (defaultPaymentMethod.length === 0 && consumerDocument.paymentMethods.length > 0) {
+        const index = consumerDocument.paymentMethods.findIndex(
+          paymentMethod => paymentMethod.status === PaymentMethodStatus.APPROVED,
+        );
+        consumerDocument.paymentMethods[index].isDefault = true;
+      }
 
       // Updating the row while the cursor is pointing to that might be error prone.
       // So, storing all the converted records into an in-memory structure.
@@ -82,7 +96,6 @@ export class PaymentMethodSchemeMigrator {
   // This is idempotent and safe to re-run after any failures/crash.
   public async migrate() {
     console.log("Migrating the 'PaymentMethods' Card Details of 'Consumer' collection ...");
-
     const consumerModel = await this.dbProvider.getUserModel();
 
     const consumerCollection: Collection = consumerModel.collection;

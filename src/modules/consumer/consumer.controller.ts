@@ -8,6 +8,7 @@ import {
   Headers,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -18,6 +19,7 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiHeaders,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -44,6 +46,8 @@ import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
 import { PlaidClient } from "../psp/plaid.client";
 import { PhoneVerificationOtpRequest, UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { EmailVerificationOtpRequest, UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
+import { AuthUser } from "../auth/auth.decorator";
+import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -279,12 +283,39 @@ export class ConsumerController {
     return this.consumerMapper.toDTO(res);
   }
 
+  @Patch("/paymentmethods/:paymentToken")
+  @ApiOperation({ summary: "Updates a payment method for logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerDTO,
+    description: "Consumer record with updated payment methods",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid payment method details" })
+  @ApiNotFoundResponse({ description: "Payment method not found for Consumer" })
+  async updatePaymentMethod(
+    @Param("paymentToken") paymentToken: string,
+    @AuthUser() consumer: Consumer,
+    @Body() updatePaymentMethodDTO: UpdatePaymentMethodDTO,
+  ): Promise<ConsumerDTO> {
+    const paymentMethod = consumer.getPaymentMethodByID(paymentToken);
+
+    if (paymentMethod === null) {
+      throw new NotFoundException("Payment method not found for consumer");
+    }
+
+    if (updatePaymentMethodDTO.name) paymentMethod.name = updatePaymentMethodDTO.name;
+    if (updatePaymentMethodDTO.isDefault) paymentMethod.isDefault = updatePaymentMethodDTO.isDefault;
+    const res = await this.consumerService.updatePaymentMethod(consumer.props._id, paymentMethod);
+    return this.consumerMapper.toDTO(res);
+  }
+
   @Delete("/paymentmethods/:paymentToken")
   @ApiOperation({ summary: "Deletes a payment method for the logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
     type: ConsumerDTO,
-    description: "Deleted consumer record",
+    description: "Consumer record with updated payment methods",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })

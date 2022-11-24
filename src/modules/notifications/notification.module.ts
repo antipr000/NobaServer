@@ -25,7 +25,7 @@ export const EmailProvider: Provider = {
         return new SendgridEmailService(customConfigService, logger);
 
       default:
-        throw Error(`Unexpected Email client.`);
+        throw Error("Unexpected Email client.");
     }
   },
   inject: [CustomConfigService, WINSTON_MODULE_PROVIDER],

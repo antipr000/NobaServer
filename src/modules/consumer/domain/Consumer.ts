@@ -77,6 +77,7 @@ const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethod> = {
   paymentToken: Joi.string().required(),
   paymentProviderID: Joi.string().required(),
   status: Joi.string().optional(),
+  isDefault: Joi.boolean().default(false),
 };
 
 const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {

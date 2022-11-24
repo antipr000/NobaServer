@@ -97,6 +97,21 @@ describe("CurrencyService for e2e test", () => {
         precision: 6,
         provider: "ZeroHash",
         type: "Base",
+        spreadOverride: undefined,
+      });
+    });
+
+    it("Should return USDC.ETH DTO with a spread override", async () => {
+      const usdcETH = await currencyService.getCryptocurrency("USDC.ETH");
+
+      expect(usdcETH).toEqual({
+        name: "USD Coin",
+        ticker: "USDC.ETH",
+        iconPath: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto/usdc.eth.svg",
+        precision: 8,
+        provider: "ZeroHash",
+        type: "ERC20",
+        spreadOverride: 0.01,
       });
     });
 
@@ -206,7 +221,7 @@ describe("CurrencyService for sandbox env", () => {
       expect(cryptoCurrencies.length).toBeGreaterThan(40);
     });
 
-    it("Contains Ethereum", async () => {
+    it("Contains Ethereum with no spread override", async () => {
       const cryptocurrencies = await currencyService.getSupportedCryptocurrencies();
 
       const ethCurrencyList = cryptocurrencies.filter(curr => curr.ticker === "ETH");
@@ -219,6 +234,7 @@ describe("CurrencyService for sandbox env", () => {
           precision: 6,
           provider: "ZeroHash",
           type: "Base",
+          spreadOverride: undefined,
         },
       ]);
     });
