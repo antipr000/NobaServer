@@ -163,6 +163,7 @@ describe("FiatTransactionInitiator", () => {
           last4Digits: "7890",
         },
         imageUri: "https://noba.com",
+        isDefault: false,
       },
       {
         type: PaymentMethodType.ACH,
@@ -176,6 +177,7 @@ describe("FiatTransactionInitiator", () => {
           mask: "1234",
         },
         imageUri: "https://noba.com",
+        isDefault: false,
       },
     ],
     cryptoWallets: [],

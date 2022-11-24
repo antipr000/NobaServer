@@ -9,7 +9,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
-import { WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
+import { PaymentMethodStatus, WalletStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { PaymentMethodSchemeMigrator } from "../../migrators/payment.method.scheme.migration";
 import { CheckoutClient } from "../../../modules/psp/checkout.client";
 import { getMockCheckoutClientWithDefaults } from "../../../modules/psp/mocks/mock.checkout.client";
@@ -137,6 +137,8 @@ describe("PaymentMethodMigrator", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: true,
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -190,7 +192,9 @@ describe("PaymentMethodMigrator", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: true,
             _id: expect.anything(),
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -255,6 +259,7 @@ describe("PaymentMethodMigrator", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             _id: expect.anything(),
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -309,6 +314,8 @@ describe("PaymentMethodMigrator", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             _id: expect.anything(),
+            isDefault: true,
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -373,6 +380,7 @@ describe("PaymentMethodMigrator", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             _id: expect.anything(),
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -416,6 +424,8 @@ describe("PaymentMethodMigrator", () => {
             },
             imageUri: "fake-uri-2",
             name: "Fake card",
+            isDefault: true,
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -474,6 +484,8 @@ describe("PaymentMethodMigrator", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             _id: expect.anything(),
+            isDefault: true,
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -522,6 +534,8 @@ describe("PaymentMethodMigrator", () => {
             imageUri: "fake-uri-2",
             name: "Fake card",
             _id: expect.anything(),
+            isDefault: true,
+            status: PaymentMethodStatus.APPROVED,
           },
         ],
         cryptoWallets: [
@@ -542,6 +556,327 @@ describe("PaymentMethodMigrator", () => {
       expect(allDocumentsInConsumer).toHaveLength(2);
       expect(allDocumentsInConsumer).toContainEqual(migratedOldSchemaConsumerProps);
       expect(allDocumentsInConsumer).toContainEqual(newSchemaExpectedConsumerProps);
+    });
+
+    it("should make the first Approved payment method as default", async () => {
+      const partnerId = "mock-partner-id";
+      const paymentToken = "fake-token";
+      const paymentToken2 = "fake-token-2";
+      const newCardType = "Debit";
+      const newScheme = "Visa";
+
+      when(checkoutClient.getPaymentMethod(paymentToken)).thenResolve({
+        bin: "123456",
+        cardType: newCardType,
+        instrumentID: "inst-12345",
+        issuer: "Not-Chase",
+        scheme: newScheme,
+      });
+
+      when(checkoutClient.getPaymentMethod(paymentToken2)).thenResolve({
+        bin: "123456",
+        cardType: newCardType,
+        instrumentID: "inst-12345",
+        issuer: "Not-Chase",
+        scheme: newScheme,
+      });
+
+      const oldConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            _id: expect.anything(),
+            status: PaymentMethodStatus.APPROVED,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken2,
+            cardData: {
+              first6Digits: "123457",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card 2",
+            _id: expect.anything(),
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+          },
+        ],
+      };
+
+      await consumerCollection.insertOne({
+        ...oldConsumerProps,
+        _id: oldConsumerProps._id as any,
+      });
+
+      await paymentMethodMigrator.migrate();
+
+      const migratedConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+            _id: expect.anything(),
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+            _id: expect.anything(),
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: newCardType,
+              scheme: newScheme,
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            _id: expect.anything(),
+            isDefault: true,
+            status: PaymentMethodStatus.APPROVED,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token-2",
+            cardData: {
+              first6Digits: "123457",
+              last4Digits: "7890",
+              cardType: newCardType,
+              scheme: newScheme,
+            },
+            imageUri: "fake-uri",
+            name: "Fake card 2",
+            _id: expect.anything(),
+            isDefault: false,
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+            _id: expect.anything(),
+          },
+        ],
+        updatedTimestamp: expect.anything(),
+      };
+      const allDocumentsInConsumer = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(allDocumentsInConsumer).toHaveLength(1);
+      expect(allDocumentsInConsumer[0].props).toEqual(migratedConsumerProps);
+    });
+
+    it("should not make the first payment method as default when one default is already present", async () => {
+      const partnerId = "mock-partner-id";
+      const paymentToken = "fake-token";
+      const paymentToken2 = "fake-token-2";
+      const newCardType = "Debit";
+      const newScheme = "Visa";
+
+      when(checkoutClient.getPaymentMethod(paymentToken)).thenResolve({
+        bin: "123456",
+        cardType: newCardType,
+        instrumentID: "inst-12345",
+        issuer: "Not-Chase",
+        scheme: newScheme,
+      });
+
+      when(checkoutClient.getPaymentMethod(paymentToken2)).thenResolve({
+        bin: "123456",
+        cardType: newCardType,
+        instrumentID: "inst-12345",
+        issuer: "Not-Chase",
+        scheme: newScheme,
+      });
+
+      const oldConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            _id: expect.anything(),
+            status: PaymentMethodStatus.APPROVED,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken2,
+            cardData: {
+              first6Digits: "123457",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            isDefault: true,
+            imageUri: "fake-uri",
+            name: "Fake card 2",
+            _id: expect.anything(),
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+          },
+        ],
+      };
+
+      await consumerCollection.insertOne({
+        ...oldConsumerProps,
+        _id: oldConsumerProps._id as any,
+      });
+
+      await paymentMethodMigrator.migrate();
+
+      const migratedConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+            _id: expect.anything(),
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+            _id: expect.anything(),
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: newCardType,
+              scheme: newScheme,
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            _id: expect.anything(),
+            isDefault: false,
+            status: PaymentMethodStatus.APPROVED,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token-2",
+            cardData: {
+              first6Digits: "123457",
+              last4Digits: "7890",
+              cardType: newCardType,
+              scheme: newScheme,
+            },
+            imageUri: "fake-uri",
+            name: "Fake card 2",
+            _id: expect.anything(),
+            isDefault: true,
+            status: PaymentMethodStatus.APPROVED,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+            _id: expect.anything(),
+          },
+        ],
+        updatedTimestamp: expect.anything(),
+      };
+      const allDocumentsInConsumer = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(allDocumentsInConsumer).toHaveLength(1);
+      expect(allDocumentsInConsumer[0].props).toEqual(migratedConsumerProps);
     });
   });
 });

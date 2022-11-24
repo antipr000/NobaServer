@@ -12,4 +12,5 @@ export type PaymentMethodsDTO = {
   paymentToken: string;
   cardData?: PaymentMethodCardDataDTO;
   achData?: PaymentMethodACHDataDTO;
+  isDefault: boolean;
 };

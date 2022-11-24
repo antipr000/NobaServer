@@ -197,6 +197,7 @@ export class PaymentService {
         imageUri: paymentMethod.imageUri,
         paymentProviderID: PaymentProvider.CHECKOUT,
         paymentToken: addPaymentMethodResponse.instrumentID,
+        isDefault: paymentMethod.isDefault ?? false,
       };
 
       if (response.paymentMethodStatus) {
@@ -248,6 +249,7 @@ export class PaymentService {
       paymentProviderID: PaymentProvider.CHECKOUT,
       paymentToken: processorToken,
       status: PaymentMethodStatus.APPROVED,
+      isDefault: paymentMethod.isDefault ?? false,
     };
 
     return this.prepareAddPaymentMethodResponse(
@@ -391,9 +393,19 @@ export class PaymentService {
     checkoutResponse: CheckoutResponseData,
   ): Promise<AddPaymentMethodResponse> {
     let updatedConsumerProps: ConsumerProps;
-    const existingPaymentMethods = consumer.props.paymentMethods.filter(
+    let existingPaymentMethods = consumer.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken !== newPaymentMethod.paymentToken,
     );
+
+    if (newPaymentMethod.isDefault) {
+      const existingDefaultPaymentMethod = existingPaymentMethods.filter(paymentMethod => paymentMethod.isDefault)[0];
+      const existingRemainingPaymentMethods = existingPaymentMethods.filter(paymentMethod => !paymentMethod.isDefault);
+      if (existingDefaultPaymentMethod) {
+        existingDefaultPaymentMethod.isDefault = false;
+        existingPaymentMethods = [...existingRemainingPaymentMethods, existingDefaultPaymentMethod];
+      }
+    }
+
     if (hasCustomerIDSaved) {
       updatedConsumerProps = {
         ...consumer.props,

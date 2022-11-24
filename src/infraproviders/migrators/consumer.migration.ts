@@ -44,6 +44,7 @@ export class ConsumerMigrator {
       imageUri: queriedPaymentMethodRecord.imageUri,
       paymentToken: queriedPaymentMethodRecord.paymentToken,
       status: queriedPaymentMethodRecord.status,
+      isDefault: queriedPaymentMethodRecord.isDefault ?? false,
     };
 
     return migratedRecord;

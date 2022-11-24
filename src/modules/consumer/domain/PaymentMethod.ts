@@ -12,6 +12,7 @@ export type PaymentMethod = {
   paymentToken: string;
   paymentProviderID: PaymentProvider;
   status?: PaymentMethodStatus;
+  isDefault: boolean;
 };
 
 export enum PaymentMethodType {

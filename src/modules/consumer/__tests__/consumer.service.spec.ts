@@ -520,6 +520,7 @@ describe("ConsumerService", () => {
         paymentToken: plaidCheckoutProcessorToken,
         imageUri: "https://noba.com",
         status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
       };
 
       const updatedConsumer = Consumer.createConsumer({
@@ -565,6 +566,7 @@ describe("ConsumerService", () => {
             paymentToken: plaidCheckoutProcessorToken,
             imageUri: "https://noba.com",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -594,6 +596,7 @@ describe("ConsumerService", () => {
           last4Digits: "7890",
         },
         imageUri: "fake-uri",
+        isDefault: false,
       };
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -666,6 +669,7 @@ describe("ConsumerService", () => {
         },
         imageUri: "fake-uri",
         status: PaymentMethodStatus.DELETED,
+        isDefault: false,
       };
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -733,6 +737,7 @@ describe("ConsumerService", () => {
           last4Digits: "7890",
         },
         imageUri: "fake-uri",
+        isDefault: false,
       };
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -830,6 +835,7 @@ describe("ConsumerService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -876,6 +882,7 @@ describe("ConsumerService", () => {
               last4Digits: "7890",
             },
             imageUri: "fake-uri",
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -923,6 +930,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             status: PaymentMethodStatus.DELETED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -972,6 +980,7 @@ describe("ConsumerService", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -992,6 +1001,7 @@ describe("ConsumerService", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             status: PaymentMethodStatus.DELETED,
+            isDefault: false,
           },
         ],
       });
@@ -1053,6 +1063,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -1096,6 +1107,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -1141,6 +1153,7 @@ describe("ConsumerService", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             status: PaymentMethodStatus.DELETED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -1216,6 +1229,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -1232,11 +1246,134 @@ describe("ConsumerService", () => {
         },
         imageUri: "fake-uri",
         name: "New Fake Name",
+        isDefault: false,
       };
 
       const updatedConsumer = Consumer.createConsumer({
         ...consumer.props,
         paymentMethods: [updatedPaymentMethod],
+      });
+
+      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
+
+      const response = await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod);
+
+      expect(response).toStrictEqual(updatedConsumer);
+      verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
+    });
+
+    it("should replace existing default payment method", async () => {
+      const email = "mock-user@noba.com";
+      const partnerId = "partner-1";
+      const paymentToken = "fake-token";
+      const consumer = Consumer.createConsumer({
+        _id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: paymentToken,
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            isDefault: false,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token-1",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            isDefault: true,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token-2",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            isDefault: false,
+          },
+        ],
+        cryptoWallets: [],
+      });
+
+      const updatedPaymentMethod: PaymentMethod = {
+        type: PaymentMethodType.CARD,
+        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentToken: paymentToken,
+        cardData: {
+          first6Digits: "123456",
+          last4Digits: "7890",
+          cardType: "VISA",
+        },
+        imageUri: "fake-uri",
+        name: "New Fake Name",
+        isDefault: true,
+      };
+
+      const updatedConsumer = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token-2",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            isDefault: false,
+          },
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token-1",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            isDefault: false,
+          },
+          updatedPaymentMethod,
+        ],
       });
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -1282,6 +1419,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -1298,6 +1436,7 @@ describe("ConsumerService", () => {
         },
         imageUri: "fake-uri",
         name: "New Fake Name",
+        isDefault: false,
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -1344,6 +1483,7 @@ describe("ConsumerService", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             status: PaymentMethodStatus.DELETED,
+            isDefault: false,
           },
         ],
         cryptoWallets: [],
@@ -1360,6 +1500,7 @@ describe("ConsumerService", () => {
         },
         imageUri: "fake-uri",
         name: "New Fake Name",
+        isDefault: false,
       };
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
@@ -1420,6 +1561,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -1507,6 +1649,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -1655,6 +1798,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -1722,6 +1866,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -1773,6 +1918,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -1824,6 +1970,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -1879,6 +2026,7 @@ describe("ConsumerService", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -2599,6 +2747,7 @@ function constructAddPaymentMethodResponse(
         imageUri: "fake-uri",
         paymentToken: "fake-token",
         paymentProviderID: PaymentProvider.CHECKOUT,
+        isDefault: false,
       },
     ],
   });

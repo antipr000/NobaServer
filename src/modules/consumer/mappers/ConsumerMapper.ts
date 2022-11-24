@@ -41,6 +41,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
           cardType: paymentMethod.cardData.cardType,
           scheme: paymentMethod.cardData.scheme,
         },
+        isDefault: paymentMethod.isDefault,
       };
     } else if (paymentMethod.type === PaymentMethodType.ACH) {
       return {
@@ -52,6 +53,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
           accountMask: paymentMethod.achData.mask,
           accountType: paymentMethod.achData.accountType,
         },
+        isDefault: paymentMethod.isDefault,
       };
     } else {
       throw Error(`Unknown payment method type: ${paymentMethod.type}`);

@@ -62,6 +62,7 @@ export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";
 export type { UpdatePartnerAdminRequestDTO } from "./models/UpdatePartnerAdminRequestDTO";
 export type { UpdatePartnerRequestDTO } from "./models/UpdatePartnerRequestDTO";
+export type { UpdatePaymentMethodDTO } from "./models/UpdatePaymentMethodDTO";
 export type { UserEmailUpdateRequest } from "./models/UserEmailUpdateRequest";
 export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";

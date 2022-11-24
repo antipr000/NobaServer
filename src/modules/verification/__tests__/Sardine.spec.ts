@@ -354,6 +354,7 @@ describe("SardineTests", () => {
               first6Digits: "123456",
               last4Digits: "7890",
             },
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -424,6 +425,7 @@ describe("SardineTests", () => {
             paymentProviderID: PaymentProvider.CHECKOUT,
             paymentToken: plaidCheckoutProcessorToken,
             imageUri: "https://noba.com",
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -548,6 +550,7 @@ describe("SardineTests", () => {
               first6Digits: "123456",
               last4Digits: "7890",
             },
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -605,6 +608,7 @@ describe("SardineTests", () => {
               first6Digits: "123456",
               last4Digits: "7890",
             },
+            isDefault: false,
           },
         ],
         verificationData: {
@@ -662,6 +666,7 @@ describe("SardineTests", () => {
               first6Digits: "123456",
               last4Digits: "7890",
             },
+            isDefault: false,
           },
         ],
         verificationData: {
