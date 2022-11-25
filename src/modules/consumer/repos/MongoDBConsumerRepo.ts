@@ -24,6 +24,18 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     return this.kmsService.encryptString(text, KmsKeyType.SSN);
   }
 
+  private replaceNonAllowedCharactersWithUnderscore(text: string): string {
+    const regex = new RegExp("^[a-zA-Z0-9_]{1,1}$");
+
+    let result = "";
+    for (let i = 0; i < text.length; i++) {
+      if (regex.test(text[i])) result += text[i];
+      else result += "_";
+    }
+
+    return result;
+  }
+
   async isHandleTaken(handle: string): Promise<boolean> {
     const userModel = await this.dbProvider.getUserModel();
     const user = await userModel.findOne({ handle: handle });
@@ -112,8 +124,12 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     } else {
       // Encrypt SSN
       consumer.props.socialSecurityNumber = await this.encryptString(consumer.props.socialSecurityNumber);
+
+      // This will 'never' yield any handle that will be have "_" as first character as "email" doesn't have the same.
       if (consumer.props.handle === undefined || consumer.props.handle === null) {
-        consumer.props.handle = `${consumer.props.email.substring(0, 3)}${Date.now().valueOf().toString().substr(5)}`;
+        consumer.props.handle = `${consumer.props.email.substring(0, 5)}${Date.now().valueOf().toString().substr(5)}`;
+        consumer.props.handle = this.replaceNonAllowedCharactersWithUnderscore(consumer.props.handle);
+        consumer.props.handle = consumer.props.handle.toLocaleLowerCase();
       }
 
       const userModel = await this.dbProvider.getUserModel();

@@ -116,7 +116,7 @@ export class ConsumerController {
     }
 
     return {
-      isAvailable: await this.consumerService.isHandleAvaialbe(handle.toLocaleLowerCase()),
+      isAvailable: await this.consumerService.isHandleAvailable(handle.toLocaleLowerCase()),
       handle: handle.toLocaleLowerCase(),
     };
   }

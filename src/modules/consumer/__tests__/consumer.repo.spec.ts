@@ -165,6 +165,25 @@ describe("MongoDBConsumerRepoTests", () => {
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });
+
+    it("should add a 'default' handle which doesn't have 'dots' (.) even if email has it", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test.test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+      };
+      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+
+      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(savedResults).toHaveLength(1);
+      expect(savedResults[0].handle).toBeDefined();
+      expect(savedResults[0].handle.indexOf(".")).toBe(-1);
+
+      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
+    });
   });
 
   describe("getConsumer", () => {
