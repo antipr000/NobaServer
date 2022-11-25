@@ -14,4 +14,7 @@ export class UpdateConsumerRequestDTO implements Partial<ConsumerProps> {
 
   @ApiPropertyOptional()
   dateOfBirth?: string;
+
+  @ApiPropertyOptional()
+  handle?: string;
 }

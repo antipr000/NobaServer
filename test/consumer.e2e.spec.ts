@@ -250,37 +250,37 @@ describe("Consumers", () => {
       expect(getHandleAvailabilityResponse.isAvailable).toBe(true);
     });
 
-    // it("should return 'false' if the handle is already taken", async () => {
-    //   const consumerEmail = getRandomEmail("test.consumer");
+    it("should return 'false' if the handle is already taken", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
 
-    //   const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
-    //   setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
 
-    //   const getConsumerSignature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-    //   const getConsumerResponse = (await ConsumerService.getConsumer({
-    //     xNobaApiKey: TEST_API_KEY,
-    //     xNobaSignature: getConsumerSignature,
-    //     xNobaTimestamp: TEST_TIMESTAMP,
-    //   })) as ConsumerDTO & ResponseStatus;
-    //   expect(getConsumerResponse.__status).toBe(200);
+      const getConsumerSignature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: getConsumerSignature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+      expect(getConsumerResponse.__status).toBe(200);
 
-    //   const signature = computeSignature(
-    //     TEST_TIMESTAMP,
-    //     "GET",
-    //     "/v1/consumers/handles/availability",
-    //     JSON.stringify({}),
-    //   );
-    //   const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
-    //     handle: getConsumerResponse.handle,
-    //     xNobaApiKey: TEST_API_KEY,
-    //     xNobaSignature: signature,
-    //     xNobaTimestamp: TEST_TIMESTAMP,
-    //   })) as ConsumerHandleDTO & ResponseStatus;
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/handles/availability",
+        JSON.stringify({}),
+      );
+      const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
+        handle: getConsumerResponse.handle,
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerHandleDTO & ResponseStatus;
 
-    //   expect(getHandleAvailabilityResponse.__status).toBe(200);
-    //   expect(getHandleAvailabilityResponse.handle).toBe(getConsumerResponse.handle);
-    //   expect(getHandleAvailabilityResponse.isAvailable).toBe(false);
-    // });
+      expect(getHandleAvailabilityResponse.__status).toBe(200);
+      expect(getHandleAvailabilityResponse.handle).toBe(getConsumerResponse.handle);
+      expect(getHandleAvailabilityResponse.isAvailable).toBe(false);
+    });
   });
 
   describe("GET /consumers", () => {
@@ -345,6 +345,7 @@ describe("Consumers", () => {
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
+      expect(getConsumerResponse.handle).toBeDefined();
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
@@ -595,6 +596,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
+          handle: "changed-handle",
         }),
       );
       const updateConsumerResponse = (await ConsumerService.updateConsumer({
@@ -605,6 +607,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
+          handle: "changed-handle",
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
@@ -621,6 +624,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.dateOfBirth).toBe("1980-02-29");
       expect(getConsumerResponse.firstName).toBe("FIRSTNAME");
       expect(getConsumerResponse.lastName).toBe("LASTNAME");
+      expect(getConsumerResponse.handle).toBe("changed-handle");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
