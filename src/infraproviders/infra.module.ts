@@ -3,6 +3,7 @@ import { CheckoutClient } from "../modules/psp/checkout.client";
 import { DBProvider } from "./DBProvider";
 import { ConsumerHandleMigrator } from "./migrators/consumer.handle.migration";
 import { ConsumerMigrator } from "./migrators/consumer.migration";
+import { ConsumerPhoneMigrator } from "./migrators/consumer.phone.migrator";
 import { MigratorService } from "./migrators/migrator.service";
 import { PaymentMethodSchemeMigrator } from "./migrators/payment.method.scheme.migration";
 import { TransactionDiscountsMigrator } from "./migrators/transaction.discounts.migrator";
@@ -23,6 +24,7 @@ import { SeederService } from "./seeders/seeder.service";
     PaymentMethodSchemeMigrator,
     TransactionDiscountsMigrator,
     TransactionMigrator,
+    ConsumerPhoneMigrator,
     MigratorService,
     CheckoutClient,
     ConsumerHandleMigrator,

@@ -23,7 +23,6 @@ import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PaymentProvider } from "./domain/PaymentProvider";
-import { PlaidClient } from "../psp/plaid.client";
 import { Utils } from "../../core/utils/Utils";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
@@ -31,6 +30,8 @@ import { SMSService } from "../common/sms.service";
 import { Otp } from "../auth/domain/Otp";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import BadWordFilter from "bad-words-es";
+import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Injectable()
 export class ConsumerService {
@@ -59,10 +60,13 @@ export class ConsumerService {
   private readonly partnerService: PartnerService;
 
   @Inject()
-  private readonly plaidClient: PlaidClient;
-
-  @Inject()
   private readonly smsService: SMSService;
+
+  private otpOverride: number;
+
+  constructor(private readonly configService: CustomConfigService) {
+    this.otpOverride = this.configService.get(STATIC_DEV_OTP);
+  }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
@@ -94,6 +98,10 @@ export class ConsumerService {
   async isHandleAvailable(handle: string): Promise<boolean> {
     this.analyseHandle(handle);
     return (await this.consumerRepo.isHandleTaken(handle)) === false;
+  }
+
+  private generateOTP(): number {
+    return this.otpOverride ?? Utils.generateOTP();
   }
 
   // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
@@ -162,10 +170,14 @@ export class ConsumerService {
   }
 
   async sendOtpToPhone(phone: string) {
-    const otp = Utils.createOtp();
+    const otp = this.generateOTP();
     await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier);
     await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
-    const otpObject = Otp.createOtp({ emailOrPhone: phone, identityType: consumerIdentityIdentifier, otp });
+    const otpObject = Otp.createOtp({
+      emailOrPhone: Utils.stripSpaces(phone),
+      identityType: consumerIdentityIdentifier,
+      otp,
+    });
     this.otpRepo.saveOTPObject(otpObject);
   }
 
@@ -184,7 +196,7 @@ export class ConsumerService {
   }
 
   async sendOtpToEmail(email: string, consumer: Consumer, partnerID: string) {
-    const otp = Utils.createOtp();
+    const otp = this.generateOTP();
     await this.otpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier);
     await this.otpRepo.saveOTP(email, otp, consumerIdentityIdentifier);
 

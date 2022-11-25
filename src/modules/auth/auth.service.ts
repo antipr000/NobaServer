@@ -10,6 +10,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PartnerService } from "../partner/partner.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { Utils } from "../../core/utils/Utils";
+import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export abstract class AuthService {
@@ -31,7 +32,11 @@ export abstract class AuthService {
   @Inject()
   private readonly partnerService: PartnerService;
 
-  constructor(private readonly configService: CustomConfigService) {}
+  private otpOverride: number;
+
+  constructor(private readonly configService: CustomConfigService) {
+    this.otpOverride = this.configService.get(STATIC_DEV_OTP);
+  }
 
   // TODO: try to separate 'emailOrPhone' by introducing an interface.
   async validateAndGetUserId(
@@ -90,8 +95,8 @@ export abstract class AuthService {
     }
   }
 
-  public createOtp(): number {
-    return Utils.createOtp();
+  generateOTP(): number {
+    return this.otpOverride ?? Utils.generateOTP();
   }
 
   async verifyUserExistence(emailOrPhone: string): Promise<boolean> {

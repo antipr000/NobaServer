@@ -48,8 +48,16 @@ export class Utils {
     return emailOrPhone.includes("@");
   }
 
-  static createOtp(): number {
+  static generateOTP(): number {
     return Math.floor(100000 + Math.random() * 900000);
+  }
+
+  static stripSpaces(value: string): string {
+    if (value === undefined || value === null) {
+      return value;
+    }
+
+    return value.replace(/\s/g, "");
   }
 
   static getCodeTypeFromCardScheme(scheme: string): string {
