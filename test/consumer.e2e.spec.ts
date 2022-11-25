@@ -583,6 +583,48 @@ describe("Consumers", () => {
       expect(updateConsumerResponse.__status).toBe(400);
     });
 
+    it("should updates 'handle' if Consumer identity calls this API", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          handle: "good_handle",
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          handle: "good_handle",
+        },
+      })) as ConsumerDTO & ResponseStatus;
+      expect(updateConsumerResponse.__status).toBe(200);
+
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+      expect(getConsumerResponse.email).toBe(consumerEmail);
+      expect(getConsumerResponse.handle).toBe("good_handle");
+      expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
+      expect(getConsumerResponse.paymentMethods).toHaveLength(0);
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
+      expect(getConsumerResponse.firstName).toBeUndefined();
+      expect(getConsumerResponse.lastName).toBeUndefined();
+      expect(getConsumerResponse.address).toBeUndefined();
+    });
+
     it("should updates multiple-fields at once if Consumer identity calls this API", async () => {
       const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
@@ -596,7 +638,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
-          handle: "changed-handle",
+          handle: "changed_handle",
         }),
       );
       const updateConsumerResponse = (await ConsumerService.updateConsumer({
@@ -607,7 +649,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
-          handle: "changed-handle",
+          handle: "changed_handle",
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
@@ -624,7 +666,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.dateOfBirth).toBe("1980-02-29");
       expect(getConsumerResponse.firstName).toBe("FIRSTNAME");
       expect(getConsumerResponse.lastName).toBe("LASTNAME");
-      expect(getConsumerResponse.handle).toBe("changed-handle");
+      expect(getConsumerResponse.handle).toBe("changed_handle");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
