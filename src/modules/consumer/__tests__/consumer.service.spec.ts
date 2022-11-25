@@ -2628,7 +2628,7 @@ describe("ConsumerService", () => {
         phone: "+15559993333",
       });
 
-      const addStub = jest.spyOn(Utils, "generateOTP").mockReturnValueOnce(otp);
+      jest.spyOn(Utils, "generateOTP").mockReturnValueOnce(otp);
       when(
         notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
           email: email,
