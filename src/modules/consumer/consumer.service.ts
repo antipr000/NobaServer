@@ -29,6 +29,7 @@ import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
 import { SMSService } from "../common/sms.service";
 import { Otp } from "../auth/domain/Otp";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
+import BadWordFilter from "bad-words-es";
 import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
@@ -69,6 +70,34 @@ export class ConsumerService {
 
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
+  }
+
+  private analyseHandle(handle: string): void {
+    // Only alpha-numeric characters and "_" (underscore) is allowed.
+    const regex = new RegExp("^[a-z0-9][a-z0-9-]{2,14}$");
+    if (handle.length < 3 || handle.length > 15) {
+      throw new BadRequestException("'handle' should be between 3 and 15 charcters long.");
+    }
+    if (!regex.test(handle)) {
+      throw new BadRequestException(
+        "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
+      );
+    }
+
+    const filter = new BadWordFilter({ placeHolder: "$" });
+    const cleanedHandle = filter.clean(handle);
+    if (cleanedHandle.indexOf("$") !== -1) {
+      throw new BadRequestException("Specified 'handle' is reserved. Please choose a different one.");
+    }
+  }
+
+  // Note that this depicts the current state & is not locking the handle
+  // (like booking applications).
+  // So, it may happen that the function returned 'true' but when called
+  // 'updateConsumer' with the same 'handle', it throws BadRequestException.
+  async isHandleAvailable(handle: string): Promise<boolean> {
+    this.analyseHandle(handle);
+    return (await this.consumerRepo.isHandleTaken(handle)) === false;
   }
 
   private generateOTP(): number {
@@ -128,6 +157,9 @@ export class ConsumerService {
 
   async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerProps._id);
+    if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
+      this.analyseHandle(consumerProps.handle);
+    }
     const updatedConsumer = await this.consumerRepo.updateConsumer(
       Consumer.createConsumer({
         ...consumer.props,

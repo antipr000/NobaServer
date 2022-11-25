@@ -2937,6 +2937,18 @@ babel-preset-jest@^27.5.1:
     babel-plugin-jest-hoist "^27.5.1"
     babel-preset-current-node-syntax "^1.0.0"
 
+bad-words-es@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/bad-words-es/-/bad-words-es-1.0.0.tgz#78d2524573dd4e368efa0c51607b754cd44cff11"
+  integrity sha512-mz/lE8jkzWVwHBvh8tdhA0FItm4pm77INqekPgxhGuKyvmQk0onW5lwaJTVoT8uMBbZn27o8Gjh10sv2xpy83g==
+  dependencies:
+    badwords-list "^1.0.0"
+
+badwords-list@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/badwords-list/-/badwords-list-1.0.0.tgz#5e9856dbf13482a295c3b0b304afb9d4cfc5c579"
+  integrity sha512-oWhaSG67e+HQj3OGHQt2ucP+vAPm1wTbdp2aDHeuh4xlGXBdWwzZ//pfu6swf5gZ8iX0b7JgmSo8BhgybbqszA==
+
 balanced-match@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"

@@ -12,6 +12,7 @@ export type ConsumerDTO = {
   firstName?: string;
   lastName?: string;
   email: string;
+  handle: string;
   status: "Approved" | "Pending" | "ActionRequired" | "TemporaryHold" | "PermanentHold";
   kycVerificationData: KycVerificationDTO;
   documentVerificationData: DocumentVerificationDTO;

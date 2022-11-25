@@ -42,6 +42,7 @@ import {
 } from "../src/modules/consumer/domain/VerificationStatus";
 import { PaymentMethodType } from "../src/modules/consumer/domain/PaymentMethod";
 import { PaymentProvider } from "../src/modules/consumer/domain/PaymentProvider";
+import { ConsumerHandleDTO } from "./api_client/models/ConsumerHandleDTO";
 
 describe("Consumers", () => {
   jest.setTimeout(20000);
@@ -158,6 +159,130 @@ describe("Consumers", () => {
     });
   });
 
+  describe("GET /consumers/handles/availability", () => {
+    it("should return 401 if not logged in as any identity", async () => {
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/handles/availability",
+        JSON.stringify({}),
+      );
+      const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
+        handle: "test",
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerHandleDTO & ResponseStatus;
+
+      expect(getHandleAvailabilityResponse.__status).toBe(401);
+    });
+
+    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
+      const partnerAdminEmail = getRandomEmail("test.partner.admin");
+      expect(
+        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
+      ).toBe(true);
+
+      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
+      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/handles/availability",
+        JSON.stringify({}),
+      );
+      const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
+        handle: "test",
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerHandleDTO & ResponseStatus;
+
+      expect(getHandleAvailabilityResponse.__status).toBe(403);
+    });
+
+    it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
+      const nobaAdminEmail = getRandomEmail("test.noba.admin");
+      const nobaAdminId = getRandomID("AAAAAAAAA");
+      const nobaAdminRole = "BASIC";
+      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+
+      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.access_token);
+
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/handles/availability",
+        JSON.stringify({}),
+      );
+      const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
+        handle: "test",
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerHandleDTO & ResponseStatus;
+
+      expect(getHandleAvailabilityResponse.__status).toBe(403);
+    });
+
+    it("should allow Consumer identity to call this API", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
+
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/handles/availability",
+        JSON.stringify({}),
+      );
+      const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
+        handle: "test",
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerHandleDTO & ResponseStatus;
+
+      expect(getHandleAvailabilityResponse.__status).toBe(200);
+      expect(getHandleAvailabilityResponse.handle).toBe("test");
+      expect(getHandleAvailabilityResponse.isAvailable).toBe(true);
+    });
+
+    it("should return 'false' if the handle is already taken", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
+
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      const getConsumerSignature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: getConsumerSignature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+      expect(getConsumerResponse.__status).toBe(200);
+
+      const signature = computeSignature(
+        TEST_TIMESTAMP,
+        "GET",
+        "/v1/consumers/handles/availability",
+        JSON.stringify({}),
+      );
+      const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
+        handle: getConsumerResponse.handle,
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerHandleDTO & ResponseStatus;
+
+      expect(getHandleAvailabilityResponse.__status).toBe(200);
+      expect(getHandleAvailabilityResponse.handle).toBe(getConsumerResponse.handle);
+      expect(getHandleAvailabilityResponse.isAvailable).toBe(false);
+    });
+  });
+
   describe("GET /consumers", () => {
     it("should return 401 if not logged in as any identity", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
@@ -220,6 +345,7 @@ describe("Consumers", () => {
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
+      expect(getConsumerResponse.handle).toBeDefined();
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
@@ -457,6 +583,48 @@ describe("Consumers", () => {
       expect(updateConsumerResponse.__status).toBe(400);
     });
 
+    it("should updates 'handle' if Consumer identity calls this API", async () => {
+      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      let signature = computeSignature(
+        TEST_TIMESTAMP,
+        "PATCH",
+        "/v1/consumers",
+        JSON.stringify({
+          handle: "good-handle",
+        }),
+      );
+      const updateConsumerResponse = (await ConsumerService.updateConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+        requestBody: {
+          handle: "good-handle",
+        },
+      })) as ConsumerDTO & ResponseStatus;
+      expect(updateConsumerResponse.__status).toBe(200);
+
+      signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      const getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+      expect(getConsumerResponse.email).toBe(consumerEmail);
+      expect(getConsumerResponse.handle).toBe("good-handle");
+      expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
+      expect(getConsumerResponse.paymentMethods).toHaveLength(0);
+      expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
+      expect(getConsumerResponse.firstName).toBeUndefined();
+      expect(getConsumerResponse.lastName).toBeUndefined();
+      expect(getConsumerResponse.address).toBeUndefined();
+    });
+
     it("should updates multiple-fields at once if Consumer identity calls this API", async () => {
       const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
@@ -470,6 +638,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
+          handle: "changed-handle",
         }),
       );
       const updateConsumerResponse = (await ConsumerService.updateConsumer({
@@ -480,6 +649,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
+          handle: "changed-handle",
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
@@ -496,6 +666,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.dateOfBirth).toBe("1980-02-29");
       expect(getConsumerResponse.firstName).toBe("FIRSTNAME");
       expect(getConsumerResponse.lastName).toBe("LASTNAME");
+      expect(getConsumerResponse.handle).toBe("changed-handle");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");

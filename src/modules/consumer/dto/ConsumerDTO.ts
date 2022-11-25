@@ -103,6 +103,9 @@ export class ConsumerDTO {
   @ApiProperty()
   email: string;
 
+  @ApiProperty()
+  handle?: string;
+
   @ApiProperty({ enum: UserState })
   status: UserState;
 

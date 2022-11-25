@@ -83,6 +83,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       firstName: p.firstName,
       lastName: p.lastName,
       email: p.displayEmail ? p.displayEmail : p.email,
+      handle: p.handle,
       phone: p.phone,
       status: this.statesMapper.getUserState(consumer),
       kycVerificationData: {

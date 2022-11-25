@@ -6,6 +6,7 @@ import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
 import type { ConsumerBalanceDTO } from "../models/ConsumerBalanceDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
+import type { ConsumerHandleDTO } from "../models/ConsumerHandleDTO";
 import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
 import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtpRequest";
 import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
@@ -83,6 +84,42 @@ export class ConsumerService {
       mediaType: "application/json",
       errors: {
         400: `Invalid request parameters`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Returns whether the handle is available or not.
+   * @returns ConsumerHandleDTO False or True specifying whether the specified 'handle' is already in use or not
+   * @throws ApiError
+   */
+  public static isHandleAvailable({
+    xNobaApiKey,
+    handle,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    handle: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ConsumerHandleDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/handles/availability",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        handle: handle,
+      },
+      errors: {
         403: `Logged-in user is not a Consumer`,
       },
     });
@@ -336,6 +373,7 @@ export class ConsumerService {
       errors: {
         400: `Invalid payment method details`,
         403: `Logged-in user is not a Consumer`,
+        404: `Payment method not found for Consumer`,
       },
     });
   }

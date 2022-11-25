@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Utils } from "../../../core/utils/Utils";
 import { Logger } from "winston";
@@ -25,6 +25,30 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     return this.kmsService.encryptString(text, KmsKeyType.SSN);
   }
 
+  private removeAllUnsupportedHandleCharacters(text: string): string {
+    if (text === undefined || text === null) return "user-";
+
+    const regex = new RegExp("^[a-zA-Z0-9-]{1,1}$");
+    let result = "";
+
+    for (let i = 0; i < text.length; i++) {
+      if (regex.test(text[i])) result += text[i];
+    }
+
+    if (result.length < 1) result += "user-";
+    while (result.length < 3) result += "-";
+
+    return result.substring(0, 7);
+  }
+
+  async isHandleTaken(handle: string): Promise<boolean> {
+    const userModel = await this.dbProvider.getUserModel();
+    const user = await userModel.findOne({ handle: handle });
+
+    if (user) return true;
+    return false;
+  }
+
   async getConsumer(consumerID: string): Promise<Consumer> {
     const userModel = await this.dbProvider.getUserModel();
     const result: any = await userModel.findById(consumerID).exec();
@@ -43,20 +67,29 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     // Encrypt SSN
     consumer.props.socialSecurityNumber = await this.encryptString(consumer.props.socialSecurityNumber);
 
-    const result = await userModel
-      .findByIdAndUpdate(
-        consumer.props._id,
-        {
-          $set: consumer.props,
-        },
-        {
-          new: true,
-        },
-      )
-      .exec();
+    try {
+      const result = await userModel
+        .findByIdAndUpdate(
+          consumer.props._id,
+          {
+            $set: consumer.props,
+          },
+          {
+            new: true,
+          },
+        )
+        .exec();
 
-    const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
-    return this.consumerMapper.toDomain(consumerProps);
+      const consumerProps: ConsumerProps = convertDBResponseToJsObject(result);
+      return this.consumerMapper.toDomain(consumerProps);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+
+      if (err.code === 11000 && err.keyPattern && err.keyPattern.handle === 1) {
+        throw new BadRequestException("A user with same 'handle' already exists.");
+      }
+      throw err;
+    }
   }
 
   async getConsumerByEmail(email: string): Promise<Result<Consumer>> {
@@ -117,6 +150,13 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     } else {
       // Encrypt SSN
       consumer.props.socialSecurityNumber = await this.encryptString(consumer.props.socialSecurityNumber);
+
+      // This will 'never' yield any handle that will be have "_" as first character as "email" doesn't have the same.
+      if (consumer.props.handle === undefined || consumer.props.handle === null) {
+        consumer.props.handle =
+          this.removeAllUnsupportedHandleCharacters(consumer.props.firstName).toLocaleLowerCase() +
+          Date.now().valueOf().toString().substring(7);
+      }
 
       const userModel = await this.dbProvider.getUserModel();
       const result = await userModel.create(consumer.props);
