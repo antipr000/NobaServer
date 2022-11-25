@@ -133,7 +133,11 @@ export class ConsumerService {
     const otp = Utils.createOtp();
     await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier);
     await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
-    const otpObject = Otp.createOtp({ emailOrPhone: phone, identityType: consumerIdentityIdentifier, otp });
+    const otpObject = Otp.createOtp({
+      emailOrPhone: Utils.stripSpaces(phone),
+      identityType: consumerIdentityIdentifier,
+      otp,
+    });
     this.otpRepo.saveOTPObject(otpObject);
   }
 

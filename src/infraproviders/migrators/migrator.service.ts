@@ -3,6 +3,7 @@ import { ConsumerMigrator } from "./consumer.migration";
 import { PaymentMethodSchemeMigrator } from "./payment.method.scheme.migration";
 import { TransactionDiscountsMigrator } from "./transaction.discounts.migrator";
 import { TransactionMigrator } from "./transaction.migrator";
+import { ConsumerPhoneMigrator } from "./consumer.phone.migrator";
 
 @Injectable()
 export class MigratorService {
@@ -11,6 +12,7 @@ export class MigratorService {
     private readonly paymentMethodSchemeMigrator: PaymentMethodSchemeMigrator,
     private readonly transactionMigrator: TransactionMigrator,
     private readonly transactionDiscountsMigrator: TransactionDiscountsMigrator,
+    private readonly consumerPhoneMigrator: ConsumerPhoneMigrator,
   ) {}
 
   // Any error here would lead to server crash. It is intentional!
@@ -26,5 +28,8 @@ export class MigratorService {
 
     // Ensure 'discounts' sub-collection in "Transaction" collection is migrated correctly.
     await this.transactionDiscountsMigrator.migrate();
+
+    // Remove spaces from phone numbers
+    await this.consumerPhoneMigrator.migrate();
   }
 }

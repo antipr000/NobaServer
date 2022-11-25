@@ -16,6 +16,7 @@ import { MongoDBConsumerRepo } from "../repos/MongoDBConsumerRepo";
 const CONSUMER_ID_PREFIX = "consumer_id_prefix";
 const TEST_NUMBER = 5;
 const DEFAULT_EMAIL_ID = "user@noba.com";
+const DEFAULT_PHONE_NUMBER = "+15555555555";
 const DEFAULT_USER_ID = "user_id";
 const DEFAULT_PARTNER_ID = "partener_id";
 
@@ -75,32 +76,45 @@ describe("MongoDBConsumerRepoTests", () => {
   });
 
   describe("createConsumer", () => {
-    it("should create a consumer", async () => {
+    it("should fail to create a duplicate consumer by email", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props._id);
       expect(savedResult.props._id).toBe(result.props._id);
       expect(savedResult.props.email).toBe(consumer.props.email);
+      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
+        "Consumer with given email address already exists",
+      );
+    });
 
-      try {
-        await consumerRepo.createConsumer(consumer);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e.message).toContain("already exists");
-      }
+    it("should fail to create a duplicate consumer by phone", async () => {
+      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumer(result.props._id);
+      expect(savedResult.props._id).toBe(result.props._id);
+      expect(savedResult.props.phone).toBe(consumer.props.phone);
+      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
+        "Consumer with given phone number already exists",
+      );
+    });
+
+    it("should fail to create a duplicate consumer by phone even with different spacing", async () => {
+      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumer(result.props._id);
+      expect(savedResult.props._id).toBe(result.props._id);
+      expect(savedResult.props.phone).toBe(consumer.props.phone);
+      consumer.props.phone = "+155 55555  555";
+      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
+        "Consumer with given phone number already exists",
+      );
     });
   });
 
   describe("getConsumer", () => {
     it("should get a consumer", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-
-      try {
-        await consumerRepo.getConsumer(consumer.props._id);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(NotFoundException);
-      }
+      expect(async () => await consumerRepo.getConsumer(consumer.props._id)).rejects.toThrow(NotFoundException);
 
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props._id);
@@ -109,22 +123,8 @@ describe("MongoDBConsumerRepoTests", () => {
     });
   });
 
-  describe("getConsumerIfExists", () => {
-    it("should get a consumer if exists", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-
-      const resultNotFound = await consumerRepo.getConsumerIfExists("notExistingEmailID");
-      expect(resultNotFound.isFailure).toBe(true);
-
-      await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumerIfExists(consumer.props.email);
-      expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
-    });
-  });
-
   describe("checkIfUserExists", () => {
-    it("should create and find a user", async () => {
+    it("should create and find a user by email", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
       const result = await consumerRepo.exists(consumer.props.email);
       expect(result).toBe(false);
@@ -133,9 +133,19 @@ describe("MongoDBConsumerRepoTests", () => {
       const result2 = await consumerRepo.exists(savedConsumer.props.email);
       expect(result2).toBe(true);
     });
+
+    it("should create and find a user by phone", async () => {
+      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+      const result = await consumerRepo.exists(consumer.props.phone);
+      expect(result).toBe(false);
+
+      const savedConsumer = await consumerRepo.createConsumer(consumer);
+      const result2 = await consumerRepo.exists(savedConsumer.props.phone);
+      expect(result2).toBe(true);
+    });
   });
 
-  describe("getUserByEmail", () => {
+  describe("getConsumerByEmail", () => {
     it("get a user by email", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
 
@@ -147,9 +157,25 @@ describe("MongoDBConsumerRepoTests", () => {
       const result = await consumerRepo.getConsumerByEmail(savedConsumer.props.email);
       expect(result.getValue().props.email).toBe(consumer.props.email);
     });
+
+    it("should get a consumer by email if exists", async () => {
+      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
+
+      const resultNotFound = await consumerRepo.getConsumerByEmail("notExistingEmailID");
+      expect(resultNotFound.isFailure).toBe(true);
+
+      await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumerByEmail(consumer.props.email);
+      expect(savedResult.isSuccess).toBe(true);
+      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
+    });
+
+    it("should throw an error if passed an empty email address", async () => {
+      expect(async () => await consumerRepo.getConsumerByEmail(null)).rejects.toThrow(Error);
+    });
   });
 
-  describe("getUserByPhone", () => {
+  describe("getConsumerByPhone", () => {
     it("get a user by phone", async () => {
       const phone = "+18242525124";
       const consumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
@@ -161,6 +187,27 @@ describe("MongoDBConsumerRepoTests", () => {
 
       const result1 = await consumerRepo.getConsumerByPhone("randomphonenumber");
       expect(result1.isFailure).toBe(true);
+    });
+
+    it("should get a consumer by phone if exists", async () => {
+      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+
+      const resultNotFound = await consumerRepo.getConsumerByPhone("notExistingPhoneNumber");
+      expect(resultNotFound.isFailure).toBe(true);
+
+      await consumerRepo.createConsumer(consumer);
+      let savedResult = await consumerRepo.getConsumerByPhone(consumer.props.phone);
+      expect(savedResult.isSuccess).toBe(true);
+      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
+
+      // should get consumer record even when requested phone number has spaces
+      savedResult = await consumerRepo.getConsumerByPhone("+15 5555  55555");
+      expect(savedResult.isSuccess).toBe(true);
+      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
+    });
+
+    it("should throw an error if passed an empty phone number", async () => {
+      expect(async () => await consumerRepo.getConsumerByPhone(null)).rejects.toThrow(Error);
     });
   });
 

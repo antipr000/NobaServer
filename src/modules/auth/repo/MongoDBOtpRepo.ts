@@ -6,6 +6,7 @@ import { convertDBResponseToJsObject } from "../../../../src/infra/mongodb/Mongo
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class MongoDBOtpRepo implements IOTPRepo {
@@ -20,7 +21,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
   async getOTP(emailOrPhone: string, identityType: string, partnerID?: string): Promise<Otp> {
     const otpModel = await this.dbProvider.getOtpModel();
     const queryParams = {
-      emailOrPhone: emailOrPhone,
+      emailOrPhone: Utils.stripSpaces(emailOrPhone),
       identityType: identityType,
     };
 
@@ -37,13 +38,15 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   async getAllOTPsForUser(emailOrPhone: string, identityType: string): Promise<Otp[]> {
     const otpModel = await this.dbProvider.getOtpModel();
-    const result = await otpModel.find({ emailOrPhone: emailOrPhone, identityType: identityType }).exec();
+    const result = await otpModel
+      .find({ emailOrPhone: Utils.stripSpaces(emailOrPhone), identityType: identityType })
+      .exec();
     const otpProps: OtpProps[] = convertDBResponseToJsObject(result);
     return otpProps.map(otpResult => this.otpMapper.toDomain(otpResult));
   }
 
   async saveOTP(
-    emailID: string,
+    otpIdentifier: string,
     otp: number,
     identityType: string,
     partnerID?: string,
@@ -52,7 +55,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
     let otpInstance;
     if (identityType === consumerIdentityIdentifier) {
       otpInstance = Otp.createOtp({
-        emailOrPhone: emailID,
+        emailOrPhone: Utils.stripSpaces(otpIdentifier),
         otp: otp,
         identityType: identityType,
         otpExpiryTime: expiryTimeInMs,
@@ -60,7 +63,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
       });
     } else {
       otpInstance = Otp.createOtp({
-        emailOrPhone: emailID,
+        emailOrPhone: Utils.stripSpaces(otpIdentifier),
         otp: otp,
         otpExpiryTime: expiryTimeInMs,
         identityType: identityType,

@@ -186,4 +186,18 @@ describe("Utils", () => {
       expect(Utils.getUsernameFromNameParts(null, null)).toEqual("");
     });
   });
+
+  describe("stripSpaces()", () => {
+    it("It should strip spaces from a string", () => {
+      expect(Utils.stripSpaces(" A B CDEFG HI")).toEqual("ABCDEFGHI");
+    });
+
+    it("It should return input value for undefined input", () => {
+      expect(Utils.stripSpaces(undefined)).toEqual(undefined);
+    });
+
+    it("It should return input value for null input", () => {
+      expect(Utils.stripSpaces(null)).toEqual(null);
+    });
+  });
 });
