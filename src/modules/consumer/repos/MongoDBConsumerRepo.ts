@@ -82,7 +82,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       this.logger.error(JSON.stringify(err));
 
       if (err.code === 11000 && err.keyPattern && err.keyPattern.handle === 1) {
-        throw new BadRequestException("A user with same 'handle' already exist");
+        throw new BadRequestException("A user with same 'handle' already exists.");
       }
       throw err;
     }

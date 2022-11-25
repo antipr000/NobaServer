@@ -134,6 +134,7 @@ describe("ConsumerHandleMigrator", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -188,6 +189,7 @@ describe("ConsumerHandleMigrator", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             _id: expect.anything(),
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -240,6 +242,7 @@ describe("ConsumerHandleMigrator", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -302,6 +305,7 @@ describe("ConsumerHandleMigrator", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             _id: expect.anything(),
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -362,6 +366,7 @@ describe("ConsumerHandleMigrator", () => {
             },
             imageUri: "fake-uri",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -406,6 +411,7 @@ describe("ConsumerHandleMigrator", () => {
             },
             imageUri: "fake-uri-2",
             name: "Fake card",
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -464,6 +470,7 @@ describe("ConsumerHandleMigrator", () => {
             imageUri: "fake-uri",
             name: "Fake card",
             _id: expect.anything(),
+            isDefault: false,
           },
         ],
         cryptoWallets: [
@@ -512,6 +519,7 @@ describe("ConsumerHandleMigrator", () => {
             imageUri: "fake-uri-2",
             name: "Fake card",
             _id: expect.anything(),
+            isDefault: false,
           },
         ],
         cryptoWallets: [

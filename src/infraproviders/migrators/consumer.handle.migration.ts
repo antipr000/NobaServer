@@ -28,33 +28,8 @@ export class ConsumerHandleMigrator {
 
     if (!isOnOlderSchema) return queriedConsumerRecord;
 
-    const migratedRecord: ConsumerProps = {
-      _id: queriedConsumerRecord._id,
-      firstName: queriedConsumerRecord.firstName,
-      lastName: queriedConsumerRecord.lastName,
-      email: queriedConsumerRecord.email,
-      handle: this.userHandles[queriedConsumerRecord.email],
-      displayEmail: queriedConsumerRecord.displayEmail,
-      phone: queriedConsumerRecord.phone,
-      isAdmin: queriedConsumerRecord.isAdmin,
-      dateOfBirth: queriedConsumerRecord.dateOfBirth,
-      address: queriedConsumerRecord.address,
-      socialSecurityNumber: queriedConsumerRecord.socialSecurityNumber,
-      nationalID: queriedConsumerRecord.nationalID,
-      nationalIDType: queriedConsumerRecord.nationalIDType,
-      riskRating: queriedConsumerRecord.riskRating,
-      isSuspectedFraud: queriedConsumerRecord.isSuspectedFraud,
-      isLocked: queriedConsumerRecord.isLocked,
-      isDisabled: queriedConsumerRecord.isDisabled,
-      zhParticipantCode: queriedConsumerRecord.zhParticipantCode,
-      partners: queriedConsumerRecord.partners,
-      paymentProviderAccounts: queriedConsumerRecord.paymentProviderAccounts,
-      verificationData: queriedConsumerRecord.verificationData,
-      paymentMethods: queriedConsumerRecord.paymentMethods,
-      cryptoWallets: queriedConsumerRecord.cryptoWallets,
-    };
-
-    return migratedRecord;
+    queriedConsumerRecord["handle"] = this.userHandles[queriedConsumerRecord.email];
+    return queriedConsumerRecord;
   }
 
   private async readAndConvertTheEntireCollection(consumerCollection: Collection): Promise<ConsumerProps[]> {
