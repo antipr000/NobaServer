@@ -184,7 +184,7 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
       expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
-      expect(savedResults[0].handle[0] != "_").toBeTruthy();
+      expect(savedResults[0].handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });
@@ -204,9 +204,10 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
+      expect(savedResults[0].handle.indexOf("_")).toBe(-1);
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
       expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
-      expect(savedResults[0].handle[0] != "_").toBeTruthy();
+      expect(savedResults[0].handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });
@@ -226,9 +227,10 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
+      expect(savedResults[0].handle.indexOf("_")).toBe(-1);
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
       expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
-      expect(savedResults[0].handle[0] != "_").toBeTruthy();
+      expect(savedResults[0].handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });
@@ -247,9 +249,10 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
+      expect(savedResults[0].handle.indexOf("_")).toBe(-1);
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
       expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
-      expect(savedResults[0].handle[0] != "_").toBeTruthy();
+      expect(savedResults[0].handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });

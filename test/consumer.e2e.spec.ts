@@ -593,7 +593,7 @@ describe("Consumers", () => {
         "PATCH",
         "/v1/consumers",
         JSON.stringify({
-          handle: "good_handle",
+          handle: "good-handle",
         }),
       );
       const updateConsumerResponse = (await ConsumerService.updateConsumer({
@@ -601,7 +601,7 @@ describe("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          handle: "good_handle",
+          handle: "good-handle",
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
@@ -615,7 +615,7 @@ describe("Consumers", () => {
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
-      expect(getConsumerResponse.handle).toBe("good_handle");
+      expect(getConsumerResponse.handle).toBe("good-handle");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
@@ -638,7 +638,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
-          handle: "changed_handle",
+          handle: "changed-handle",
         }),
       );
       const updateConsumerResponse = (await ConsumerService.updateConsumer({
@@ -649,7 +649,7 @@ describe("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
-          handle: "changed_handle",
+          handle: "changed-handle",
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
@@ -666,7 +666,7 @@ describe("Consumers", () => {
       expect(getConsumerResponse.dateOfBirth).toBe("1980-02-29");
       expect(getConsumerResponse.firstName).toBe("FIRSTNAME");
       expect(getConsumerResponse.lastName).toBe("LASTNAME");
-      expect(getConsumerResponse.handle).toBe("changed_handle");
+      expect(getConsumerResponse.handle).toBe("changed-handle");
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");

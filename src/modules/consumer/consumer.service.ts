@@ -74,13 +74,13 @@ export class ConsumerService {
 
   private analyseHandle(handle: string): void {
     // Only alpha-numeric characters and "_" (underscore) is allowed.
-    const regex = new RegExp("^[a-z0-9][a-z0-9_]{2,14}$");
+    const regex = new RegExp("^[a-z0-9][a-z0-9-]{2,14}$");
     if (handle.length < 3 || handle.length > 15) {
       throw new BadRequestException("'handle' should be between 3 and 15 charcters long.");
     }
     if (!regex.test(handle)) {
       throw new BadRequestException(
-        "'handle' can't start with an '_' (underscore) and can only contain alphanumeric characters & '_' (underscore).",
+        "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
       );
     }
 

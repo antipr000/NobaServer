@@ -26,17 +26,17 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
   }
 
   private removeAllUnsupportedHandleCharacters(text: string): string {
-    if (text === undefined || text === null) return "user_";
+    if (text === undefined || text === null) return "user-";
 
-    const regex = new RegExp("^[a-zA-Z0-9_]{1,1}$");
+    const regex = new RegExp("^[a-zA-Z0-9-]{1,1}$");
     let result = "";
 
     for (let i = 0; i < text.length; i++) {
       if (regex.test(text[i])) result += text[i];
     }
 
-    if (result.length < 1) result += "user_";
-    while (result.length < 3) result += "_";
+    if (result.length < 1) result += "user-";
+    while (result.length < 3) result += "-";
 
     return result.substring(0, 7);
   }

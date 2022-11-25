@@ -536,7 +536,7 @@ describe("ConsumerHandleMigrator", () => {
             _id: expect.anything(),
           },
         ],
-        handle: expect.stringContaining("user_"),
+        handle: expect.stringContaining("user-"),
         isAdmin: false,
         paymentMethods: [
           {

@@ -2753,24 +2753,24 @@ describe("ConsumerService", () => {
 
     it("should throw BadRequestException if 'handle' starts with an underscore", async () => {
       try {
-        await consumerService.isHandleAvailable("_abcd");
+        await consumerService.isHandleAvailable("-abcd");
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(BadRequestException);
         expect(err.message).toBe(
-          "'handle' can't start with an '_' (underscore) and can only contain alphanumeric characters & '_' (underscore).",
+          "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
         );
       }
     });
 
     it("should throw BadRequestException if 'handle' has special characters other than underscore", async () => {
       try {
-        await consumerService.isHandleAvailable("ab$");
+        await consumerService.isHandleAvailable("ab_");
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(BadRequestException);
         expect(err.message).toBe(
-          "'handle' can't start with an '_' (underscore) and can only contain alphanumeric characters & '_' (underscore).",
+          "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
         );
       }
     });
@@ -2795,10 +2795,10 @@ describe("ConsumerService", () => {
       }
     });
 
-    it("should return 'true' if 'handle' has underscore in between", async () => {
-      when(consumerRepo.isHandleTaken("ab_cd")).thenResolve(false);
+    it("should return 'true' if 'handle' has hiphen in between", async () => {
+      when(consumerRepo.isHandleTaken("ab-cd")).thenResolve(false);
 
-      const isHandleAvaialble = await consumerService.isHandleAvailable("ab_cd");
+      const isHandleAvaialble = await consumerService.isHandleAvailable("ab-cd");
       expect(isHandleAvaialble).toBe(true);
     });
 
