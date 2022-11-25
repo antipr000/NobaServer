@@ -182,6 +182,9 @@ describe("MongoDBConsumerRepoTests", () => {
       const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
+      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
+      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
+      expect(savedResults[0].handle[0] != "_").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });
@@ -201,6 +204,52 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
+      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
+      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
+      expect(savedResults[0].handle[0] != "_").toBeTruthy();
+
+      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
+    });
+
+    it("should add a 'default' handle which doesn't have 'dots' (.) even if firstname has it", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "first.Name",
+        lastName: "lastName",
+        email: "test.test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+      };
+      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+
+      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(savedResults).toHaveLength(1);
+      expect(savedResults[0].handle).toBeDefined();
+      expect(savedResults[0].handle.indexOf(".")).toBe(-1);
+      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
+      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
+      expect(savedResults[0].handle[0] != "_").toBeTruthy();
+
+      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
+    });
+
+    it("should add a 'default' handle which doesn't have '_' as first character if firstname is not present", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        lastName: "lastName",
+        email: "test.test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+      };
+      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+
+      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(savedResults).toHaveLength(1);
+      expect(savedResults[0].handle).toBeDefined();
+      expect(savedResults[0].handle.indexOf(".")).toBe(-1);
+      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
+      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
+      expect(savedResults[0].handle[0] != "_").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });
@@ -340,7 +389,7 @@ describe("MongoDBConsumerRepoTests", () => {
         firstName: "firstName",
         lastName: "lastName",
         email: "test-2@noba.com",
-        phone: "+9876541230",
+        phone: "+9876541231",
         partners: [{ partnerID: DEFAULT_PARTNER_ID }],
         handle: "test2",
       };
@@ -352,7 +401,7 @@ describe("MongoDBConsumerRepoTests", () => {
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toBe("A user with same 'handle' already exist");
+        expect(err.message).toBe("A user with same 'handle' already exists.");
       }
     });
 
@@ -373,7 +422,7 @@ describe("MongoDBConsumerRepoTests", () => {
         firstName: "firstName",
         lastName: "lastName",
         email: "test-2@noba.com",
-        phone: "+9876541230",
+        phone: "+9876541231",
         partners: [{ partnerID: DEFAULT_PARTNER_ID }],
         handle: "test2",
       };
@@ -405,7 +454,7 @@ describe("MongoDBConsumerRepoTests", () => {
         firstName: "firstName",
         lastName: "lastName",
         email: "test-2@noba.com",
-        phone: "+9876541230",
+        phone: "+9876541231",
         partners: [{ partnerID: DEFAULT_PARTNER_ID }],
         handle: "test2",
       };

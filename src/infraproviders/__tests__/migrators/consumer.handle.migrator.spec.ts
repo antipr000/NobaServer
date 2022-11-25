@@ -290,7 +290,253 @@ describe("ConsumerHandleMigrator", () => {
             _id: expect.anything(),
           },
         ],
-        handle: expect.stringContaining("Fake"),
+        handle: expect.stringContaining("fake"),
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            _id: expect.anything(),
+            isDefault: false,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+            _id: expect.anything(),
+          },
+          {
+            walletName: "Test wallet 2",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.APPROVED,
+            partnerID: "test-partner-id",
+            isPrivate: true,
+            _id: expect.anything(),
+          },
+        ],
+        updatedTimestamp: expect.anything(),
+      };
+      const allDocumentsInConsumer = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(allDocumentsInConsumer).toHaveLength(1);
+      expect(allDocumentsInConsumer[0].props).toEqual(migratedConsumerProps);
+    });
+
+    it("should trim the firstname in the 'handle' if it has old Schema", async () => {
+      const partnerId = "mock-partner-id";
+
+      const oldConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "FakeName",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            isDefault: false,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+          },
+          {
+            walletName: "Test wallet 2",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.APPROVED,
+            partnerID: "test-partner-id",
+            isPrivate: true,
+          },
+        ],
+        updatedTimestamp: expect.anything(),
+      };
+
+      await consumerCollection.insertOne({
+        ...oldConsumerProps,
+        _id: oldConsumerProps._id as any,
+      });
+
+      await consumerHandleMigrator.migrate();
+
+      const migratedConsumerProps = {
+        _id: "mock-consumer-1",
+        firstName: "FakeName",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+            _id: expect.anything(),
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+            _id: expect.anything(),
+          },
+        ],
+        handle: expect.stringContaining("fakenam"),
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            _id: expect.anything(),
+            isDefault: false,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+            _id: expect.anything(),
+          },
+          {
+            walletName: "Test wallet 2",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.APPROVED,
+            partnerID: "test-partner-id",
+            isPrivate: true,
+            _id: expect.anything(),
+          },
+        ],
+        updatedTimestamp: expect.anything(),
+      };
+      const allDocumentsInConsumer = await getAllRecordsInConsumerCollection(consumerCollection);
+      expect(allDocumentsInConsumer).toHaveLength(1);
+      expect(allDocumentsInConsumer[0].props).toEqual(migratedConsumerProps);
+    });
+
+    it("should prepend with 'user_' in 'handle' if firstname is not specified", async () => {
+      const partnerId = "mock-partner-id";
+
+      const oldConsumerProps = {
+        _id: "mock-consumer-1",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        paymentMethods: [
+          {
+            type: PaymentMethodType.CARD,
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-token",
+            cardData: {
+              first6Digits: "123456",
+              last4Digits: "7890",
+              cardType: "VISA",
+            },
+            imageUri: "fake-uri",
+            name: "Fake card",
+            isDefault: false,
+          },
+        ],
+        cryptoWallets: [
+          {
+            walletName: "Test wallet",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.PENDING,
+            partnerID: partnerId,
+            isPrivate: false,
+          },
+          {
+            walletName: "Test wallet 2",
+            address: "1111-2222-3333-4444-5555",
+            status: WalletStatus.APPROVED,
+            partnerID: "test-partner-id",
+            isPrivate: true,
+          },
+        ],
+        updatedTimestamp: expect.anything(),
+      };
+
+      await consumerCollection.insertOne({
+        ...oldConsumerProps,
+        _id: oldConsumerProps._id as any,
+      });
+
+      await consumerHandleMigrator.migrate();
+
+      const migratedConsumerProps = {
+        _id: "mock-consumer-1",
+        lastName: "Name",
+        email: "test@noba.com",
+        displayEmail: "test@noba.com",
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+            _id: expect.anything(),
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+            _id: expect.anything(),
+          },
+        ],
+        handle: expect.stringContaining("user_"),
         isAdmin: false,
         paymentMethods: [
           {
@@ -456,7 +702,7 @@ describe("ConsumerHandleMigrator", () => {
           },
         ],
         isAdmin: false,
-        handle: expect.stringContaining("OldFake"),
+        handle: expect.stringContaining("oldfake"),
         paymentMethods: [
           {
             type: PaymentMethodType.CARD,
