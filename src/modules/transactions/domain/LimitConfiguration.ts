@@ -6,7 +6,7 @@ import { TransactionType } from "./Types";
 
 interface LimitConfigurationCriteria {
   transactionType?: TransactionType[];
-  partnerId?: string;
+  partnerID?: string;
   minProfileAge?: number;
   minBalanceInWallet?: number;
   minTotalTransactionAmount?: number;
@@ -24,7 +24,7 @@ const limitConfigurationCriteriaValidationKeys: KeysRequired<LimitConfigurationC
   transactionType: Joi.array()
     .items(Joi.string().valid(...Object.values(TransactionType)))
     .default([]),
-  partnerId: Joi.string().optional(),
+  partnerID: Joi.string().optional(),
   minProfileAge: Joi.number().optional(),
   minBalanceInWallet: Joi.number().optional(),
   minTotalTransactionAmount: Joi.number().optional(),
@@ -41,9 +41,7 @@ export const limitConfigurationValidationKeys: KeysRequired<LimitConfigurationPr
   criteria: Joi.object().keys(limitConfigurationCriteriaValidationKeys).required(),
 };
 
-export const limitConfigurationJoiSchema = Joi.object(limitConfigurationValidationKeys).options({
-  allowUnknown: true,
-});
+export const limitConfigurationJoiSchema = Joi.object(limitConfigurationValidationKeys);
 
 export class LimitConfiguration extends AggregateRoot<LimitConfigurationProps> {
   private constructor(limitConfigurationProps: LimitConfigurationProps) {

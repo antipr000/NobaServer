@@ -313,7 +313,7 @@ export class TransactionService {
         isFailed: false,
         details: [],
         paymentID: undefined,
-        paymentProvider: consumer.getPaymentMethodByID(transactionRequest.paymentToken).paymentProviderID,
+        paymentProvider: paymentMethod.paymentProviderID,
       },
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
       leg1Amount: fiatAmount,

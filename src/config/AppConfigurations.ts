@@ -533,6 +533,25 @@ async function configureNobaParameters(
     ),
   );
 
+  nobaConfigs.transaction.cardMinTransactionLimit = Number(
+    await getParameterValue(null, nobaConfigs.transaction.cardMinTransactionLimit.toString()),
+  );
+  nobaConfigs.transaction.cardMaxTransactionLimit = Number(
+    await getParameterValue(null, nobaConfigs.transaction.cardMaxTransactionLimit.toString()),
+  );
+  nobaConfigs.transaction.cardDailyLimit = Number(
+    await getParameterValue(null, nobaConfigs.transaction.cardDailyLimit.toString()),
+  );
+  nobaConfigs.transaction.cardWeeklyLimit = Number(
+    await getParameterValue(null, nobaConfigs.transaction.cardWeeklyLimit.toString()),
+  );
+  nobaConfigs.transaction.cardMonthlyLimit = Number(
+    await getParameterValue(null, nobaConfigs.transaction.cardMonthlyLimit.toString()),
+  );
+  nobaConfigs.transaction.unsettledExposure = Number(
+    await getParameterValue(null, nobaConfigs.transaction.unsettledExposure.toString()),
+  );
+
   configs[NOBA_CONFIG_KEY] = nobaConfigs;
   return configs;
 }

@@ -4,11 +4,11 @@ import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 
 export interface Limits {
-  daily: number;
-  weekly: number;
-  monthly: number;
-  maxTransaction: number;
-  minTransaction: number;
+  daily?: number;
+  weekly?: number;
+  monthly?: number;
+  maxTransaction?: number;
+  minTransaction?: number;
 }
 
 export interface LimitProfileProps extends VersioningInfo {
@@ -20,11 +20,11 @@ export interface LimitProfileProps extends VersioningInfo {
 }
 
 const limitsJoiValidationKeys: KeysRequired<Limits> = {
-  daily: Joi.number().required(),
-  weekly: Joi.number().required(),
-  monthly: Joi.number().required(),
-  maxTransaction: Joi.number().required(),
-  minTransaction: Joi.number().required(),
+  daily: Joi.number().optional(),
+  weekly: Joi.number().optional(),
+  monthly: Joi.number().optional(),
+  maxTransaction: Joi.number().optional(),
+  minTransaction: Joi.number().optional(),
 };
 
 export const limitProfileJoiValidationKeys: KeysRequired<LimitProfileProps> = {
@@ -36,9 +36,7 @@ export const limitProfileJoiValidationKeys: KeysRequired<LimitProfileProps> = {
   unsettledExposure: Joi.number().required(),
 };
 
-export const limitProfileJoiSchema = Joi.object(limitProfileJoiValidationKeys).options({
-  allowUnknown: true,
-});
+export const limitProfileJoiSchema = Joi.object(limitProfileJoiValidationKeys);
 
 export class LimitProfile extends AggregateRoot<LimitProfileProps> {
   private constructor(limitProfileProps: LimitProfileProps) {

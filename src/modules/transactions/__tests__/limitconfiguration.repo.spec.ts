@@ -115,7 +115,7 @@ function createLimitConfiguration(priority: number, id: string): LimitConfigurat
     profile: "fake-profile-1",
     criteria: {
       transactionType: [TransactionType.ONRAMP],
-      partnerId: "fake-partner-1",
+      partnerID: "fake-partner-1",
       minProfileAge: 365,
       minBalanceInWallet: 100,
       minTotalTransactionAmount: 1000,

@@ -27,14 +27,18 @@ export class LimitsService {
   @Inject("LimitConfigurationRepo")
   private readonly limitConfigRepo: ILimitConfigurationRepo;
 
+  private allLimitConfigs: LimitConfiguration[];
+
   private match(config: LimitConfiguration, consumer: Consumer, transactionType: TransactionType): boolean {
     return config.props.isDefault;
   }
 
   async getLimits(consumer: Consumer, transactionType?: TransactionType): Promise<LimitProfile> {
-    const allLimitConfigs = await this.limitConfigRepo.getAllLimitConfigs();
+    if (!this.allLimitConfigs) {
+      this.allLimitConfigs = await this.limitConfigRepo.getAllLimitConfigs();
+    }
 
-    const limitConfig: LimitConfiguration = allLimitConfigs.find(config =>
+    const limitConfig: LimitConfiguration = this.allLimitConfigs.find(config =>
       this.match(config, consumer, transactionType),
     );
 
@@ -57,7 +61,7 @@ export class LimitsService {
     }
     // Check single transaction limit
 
-    if (transactionAmount < limits.minTransaction) {
+    if (limits.minTransaction && transactionAmount < limits.minTransaction) {
       return {
         status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
         rangeMin: limits.minTransaction,
@@ -65,7 +69,7 @@ export class LimitsService {
       };
     }
 
-    if (transactionAmount > limits.maxTransaction) {
+    if (limits.maxTransaction && transactionAmount > limits.maxTransaction) {
       return {
         status: TransactionAllowedStatus.TRANSACTION_TOO_LARGE,
         rangeMin: limits.minTransaction,
@@ -82,7 +86,7 @@ export class LimitsService {
 
     // For some reason without casting the operands to a Number, this ends up doing string concat
     const total: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
-    if (total > limits.monthly) {
+    if (limits.monthly && total > limits.monthly) {
       // Spent + new amount exceeds monthly limit
       let maxRemaining = limits.monthly - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
