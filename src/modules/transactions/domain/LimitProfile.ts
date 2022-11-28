@@ -3,11 +3,12 @@ import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../co
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 
-interface Limits {
+export interface Limits {
   daily: number;
   weekly: number;
   monthly: number;
-  transaction: number;
+  maxTransaction: number;
+  minTransaction: number;
 }
 
 export interface LimitProfileProps extends VersioningInfo {
@@ -22,7 +23,8 @@ const limitsJoiValidationKeys: KeysRequired<Limits> = {
   daily: Joi.number().required(),
   weekly: Joi.number().required(),
   monthly: Joi.number().required(),
-  transaction: Joi.number().required(),
+  maxTransaction: Joi.number().required(),
+  minTransaction: Joi.number().required(),
 };
 
 export const limitProfileJoiValidationKeys: KeysRequired<LimitProfileProps> = {

@@ -5,11 +5,11 @@ import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { TransactionType } from "./Types";
 
 interface LimitConfigurationCriteria {
-  transactionType?: TransactionType;
+  transactionType?: TransactionType[];
   partnerId?: string;
-  profileAge?: number;
-  balanceInWallet?: number;
-  totalTransactionAmount?: number;
+  minProfileAge?: number;
+  minBalanceInWallet?: number;
+  minTotalTransactionAmount?: number;
 }
 
 export interface LimitConfigurationProps extends VersioningInfo {
@@ -21,13 +21,13 @@ export interface LimitConfigurationProps extends VersioningInfo {
 }
 
 const limitConfigurationCriteriaValidationKeys: KeysRequired<LimitConfigurationCriteria> = {
-  transactionType: Joi.string()
-    .valid(...Object.keys(TransactionType))
-    .optional(),
+  transactionType: Joi.array()
+    .items(Joi.string().valid(...Object.values(TransactionType)))
+    .default([]),
   partnerId: Joi.string().optional(),
-  profileAge: Joi.number().optional(),
-  balanceInWallet: Joi.number().optional(),
-  totalTransactionAmount: Joi.number().optional(),
+  minProfileAge: Joi.number().optional(),
+  minBalanceInWallet: Joi.number().optional(),
+  minTotalTransactionAmount: Joi.number().optional(),
 };
 
 export const limitConfigurationValidationKeys: KeysRequired<LimitConfigurationProps> = {

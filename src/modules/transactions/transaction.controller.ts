@@ -109,6 +109,7 @@ export class TransactionController {
     const checkTransactionResponse: CheckTransactionDTO = await this.limitsService.canMakeTransaction(
       authUser,
       tAmount,
+      checkTransactionQuery.type,
     );
 
     return checkTransactionResponse;
