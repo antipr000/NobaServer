@@ -32,7 +32,7 @@ import { Roles } from "../auth/roles.decorator";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
-import { TransactionFilterOptions } from "./domain/Types";
+import { TransactionFilterOptions, TransactionType } from "./domain/Types";
 
 import { AuthUser } from "../auth/auth.decorator";
 import { Public } from "../auth/public.decorator";
@@ -51,6 +51,8 @@ import { TransactionsQueryResultsDTO } from "./dto/TransactionsQueryResultsDTO";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { PartnerService } from "../partner/partner.service";
 import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
+import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
+import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -104,11 +106,15 @@ export class TransactionController {
   async checkIfTransactionPossible(
     @Query() checkTransactionQuery: CheckTransactionQueryDTO,
     @AuthUser() authUser: Consumer,
+    @Request() request,
   ): Promise<CheckTransactionDTO> {
     const tAmount = checkTransactionQuery.transactionAmount;
+    const partnerID = (request.user as AuthenticatedUser).partnerId;
     const checkTransactionResponse: CheckTransactionDTO = await this.limitsService.canMakeTransaction(
       authUser,
       tAmount,
+      partnerID,
+      checkTransactionQuery.type,
     );
 
     return checkTransactionResponse;
@@ -229,8 +235,14 @@ export class TransactionController {
     description: "Consumer limit details",
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getConsumerLimits(@AuthUser() authUser: Consumer): Promise<ConsumerLimitsDTO> {
-    return this.limitsService.getConsumerLimits(authUser);
+  async getConsumerLimits(
+    @Query() consumerLimitsQuery: ConsumerLimitsQueryDTO,
+    @AuthUser() authUser: Consumer,
+    @Request() request,
+  ): Promise<ConsumerLimitsDTO> {
+    const partnerID = (request.user as AuthenticatedUser).partnerId;
+    if (!consumerLimitsQuery.transactionType) consumerLimitsQuery.transactionType = TransactionType.ONRAMP;
+    return this.limitsService.getConsumerLimits(authUser, partnerID, consumerLimitsQuery.transactionType);
   }
 
   @Get("/transactions/download")

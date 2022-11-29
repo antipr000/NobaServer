@@ -1,93 +1,85 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { ConsumerService } from "../consumer/consumer.service";
-import { UserVerificationStatus } from "../consumer/domain/UserVerificationStatus";
 import { Consumer } from "../consumer/domain/Consumer";
-import {
-  TransactionLimitBuyOnly,
-  DailyLimitBuyOnly,
-  WeeklyLimitBuyOnly,
-  MonthlyLimitBuyOnly,
-  LifetimeLimitBuyOnly,
-  UserLimits,
-} from "./domain/Limits";
 import { ITransactionRepo } from "./repo/TransactionRepo";
-import { TransactionMapper } from "./mapper/TransactionMapper";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { COMMON_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { CommonConfigs } from "../../config/configtypes/CommonConfigs";
+import { ILimitProfileRepo } from "./repo/LimitProfileRepo";
+import { ILimitConfigurationRepo } from "./repo/LimitConfigurationRepo";
+import { TransactionType } from "./domain/Types";
+import { LimitProfile, Limits } from "./domain/LimitProfile";
+import { LimitConfiguration } from "./domain/LimitConfiguration";
+import { PaymentMethodType } from "../consumer/domain/PaymentMethod";
 
 @Injectable()
 export class LimitsService {
-  private readonly configs: CommonConfigs;
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
   @Inject("TransactionRepo")
   private readonly transactionsRepo: ITransactionRepo;
-  private readonly transactionsMapper: TransactionMapper;
 
-  constructor(private userService: ConsumerService, configService: CustomConfigService) {
-    this.transactionsMapper = new TransactionMapper();
-    this.configs = configService.get<CommonConfigs>(COMMON_CONFIG_KEY);
-    return this;
-  }
+  @Inject("LimitProfileRepo")
+  private readonly limitProfileRepo: ILimitProfileRepo;
 
-  getLimits(userVerificationStatus: UserVerificationStatus): UserLimits {
-    if (userVerificationStatus === UserVerificationStatus.NOT_VERIFIED) {
-      return {
-        dailyLimit: DailyLimitBuyOnly.no_kyc_max_amount_limit,
-        monthlyLimit: MonthlyLimitBuyOnly.no_kyc_max_amount_limit,
-        weeklyLimit: WeeklyLimitBuyOnly.no_kyc_max_amount_limit,
-        transactionLimit: TransactionLimitBuyOnly.no_kyc_max_amount_limit,
-        totalLimit: LifetimeLimitBuyOnly.no_kyc_max_amount_limit,
-        minTransaction: this.configs.lowAmountThreshold,
-        maxTransaction: this.configs.highAmountThreshold,
-      };
-    } else if (userVerificationStatus === UserVerificationStatus.PARTIALLY_VERIFIED) {
-      return {
-        dailyLimit: DailyLimitBuyOnly.partial_kyc_max_amount_limit,
-        monthlyLimit: MonthlyLimitBuyOnly.partial_kyc_max_amount_limit,
-        weeklyLimit: WeeklyLimitBuyOnly.partial_kyc_max_amount_limit,
-        transactionLimit: TransactionLimitBuyOnly.partial_kyc_max_amount_limit,
-        totalLimit: LifetimeLimitBuyOnly.partial_kyc_max_amount_limit,
-        minTransaction: this.configs.lowAmountThreshold,
-        maxTransaction: this.configs.highAmountThreshold,
-      };
-    } else {
-      return {
-        dailyLimit: DailyLimitBuyOnly.max_amount_limit,
-        monthlyLimit: MonthlyLimitBuyOnly.max_amount_limit,
-        weeklyLimit: WeeklyLimitBuyOnly.max_amount_limit,
-        transactionLimit: TransactionLimitBuyOnly.max_amount_limit,
-        totalLimit: LifetimeLimitBuyOnly.max_amount_limit,
-        minTransaction: this.configs.lowAmountThreshold,
-        maxTransaction: this.configs.highAmountThreshold,
-      };
+  @Inject("LimitConfigurationRepo")
+  private readonly limitConfigRepo: ILimitConfigurationRepo;
+
+  private allLimitConfigs: LimitConfiguration[];
+
+  private match(
+    config: LimitConfiguration,
+    consumer: Consumer,
+    partnerID: string,
+    totalTransactionAmount: number,
+    transactionType: TransactionType,
+  ): boolean {
+    if (config.props.criteria.partnerID && config.props.criteria.partnerID !== partnerID) {
+      return config.props.isDefault;
     }
+    if (
+      config.props.criteria.transactionType.length > 0 &&
+      !config.props.criteria.transactionType.includes(transactionType)
+    ) {
+      return config.props.isDefault;
+    }
+    if (
+      config.props.criteria.minTotalTransactionAmount &&
+      config.props.criteria.minTotalTransactionAmount > totalTransactionAmount
+    ) {
+      return config.props.isDefault;
+    }
+    // TODO(CRYPTO-393): Add other conditions
+    return true;
   }
 
-  async getLimitsForConsumer(consumer: Consumer): Promise<UserLimits> {
-    /* At this point unverified users cannot perform transactions, so leaving this commented */
-    //const userVerificationStatus: UserVerificationStatus = this.userService.getVerificationStatus(consumer);
+  async getLimits(consumer: Consumer, partnerID: string, transactionType?: TransactionType): Promise<LimitProfile> {
+    if (!this.allLimitConfigs) {
+      this.allLimitConfigs = await this.limitConfigRepo.getAllLimitConfigs();
+    }
+    const totalTransactionAmount = await this.transactionsRepo.getTotalUserTransactionAmount(consumer.props._id);
+    const limitConfig: LimitConfiguration = this.allLimitConfigs.find(config =>
+      this.match(config, consumer, partnerID, totalTransactionAmount, transactionType),
+    );
 
-    return this.getLimits(UserVerificationStatus.VERIFIED);
+    return await this.limitProfileRepo.getProfile(limitConfig.props.profile);
   }
 
   async canMakeTransaction(
     consumer: Consumer,
     transactionAmount: number,
-    limits?: UserLimits,
+    partnerID: string,
+    transactionType: TransactionType,
+    paymentMethodType?: PaymentMethodType,
   ): Promise<CheckTransactionDTO> {
-    if (limits == undefined) {
-      limits = await this.getLimitsForConsumer(consumer);
-    }
-
+    const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
+    if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
+    const limits: Limits =
+      paymentMethodType === PaymentMethodType.CARD ? limitProfile.props.cardLimits : limitProfile.props.bankLimits;
     // Check single transaction limit
+
     if (transactionAmount < limits.minTransaction) {
       return {
         status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
@@ -112,15 +104,11 @@ export class LimitsService {
     );
 
     // For some reason without casting the operands to a Number, this ends up doing string concat
-    const total: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
-    if (total > limits.monthlyLimit) {
+    const totalMonthly: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
+    if (totalMonthly > limits.monthly) {
       // Spent + new amount exceeds monthly limit
-      let maxRemaining = limits.monthlyLimit - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const maxRemaining = Math.max(limits.monthly - monthlyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
-      if (maxRemaining < 0) {
-        // This would mean we've over-spent monthly limit, which should never happen
-        maxRemaining = 0;
-      }
 
       /*
         Note that minRemaining will always be the minimum transaction limit but you can have a maximum of < the minimum.
@@ -147,6 +135,45 @@ export class LimitsService {
       };
     }
 
+    const weeklyTransactionAmount = await this.transactionsRepo.getWeeklyUserTransactionAmount(consumer.props._id);
+
+    const totalWeekly = Number(weeklyTransactionAmount) + Number(transactionAmount);
+
+    const weeklyLimit: number = limits.weekly ?? limits.monthly;
+
+    if (totalWeekly > weeklyLimit) {
+      const maxRemaining = Math.max(weeklyLimit - weeklyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
+      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+
+      return {
+        status: TransactionAllowedStatus.WEEKLY_LIMIT_REACHED,
+        rangeMin: minRemaining,
+        rangeMax: maxRemaining,
+      };
+    }
+
+    const dailyTransactionAmount = await this.transactionsRepo.getDailyUserTransactionAmount(consumer.props._id);
+
+    const totalDaily = Number(dailyTransactionAmount) + Number(transactionAmount);
+
+    let dailyLimit = 0;
+
+    if (limits.daily) dailyLimit = limits.daily;
+    else if (limits.weekly) dailyLimit = limits.weekly;
+    else dailyLimit = limits.monthly;
+
+    if (totalDaily > dailyLimit) {
+      const maxRemaining = Math.max(dailyLimit - dailyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
+      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+
+      return {
+        status: TransactionAllowedStatus.DAILY_LIMIT_REACHED,
+        rangeMin: minRemaining,
+        rangeMax: maxRemaining,
+      };
+    }
+
+    // TODO(CRYPTO-393): Add wallet exposure check
     return {
       status: TransactionAllowedStatus.ALLOWED,
       rangeMin: limits.minTransaction,
@@ -154,9 +181,20 @@ export class LimitsService {
     };
   }
 
-  async getConsumerLimits(consumer: Consumer, limits?: UserLimits): Promise<ConsumerLimitsDTO> {
-    if (limits == undefined) {
-      limits = await this.getLimitsForConsumer(consumer);
+  async getConsumerLimits(
+    consumer: Consumer,
+    partnerID: string,
+    transactionType: TransactionType,
+    paymentMethodType?: PaymentMethodType,
+  ): Promise<ConsumerLimitsDTO> {
+    const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
+    if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
+    let limits: Limits;
+
+    if (paymentMethodType === PaymentMethodType.CARD) {
+      limits = limitProfile.props.cardLimits;
+    } else {
+      limits = limitProfile.props.bankLimits;
     }
 
     const monthlyTransactionAmount: number = await this.transactionsRepo.getMonthlyUserTransactionAmount(
@@ -166,7 +204,7 @@ export class LimitsService {
     const limitsDTO: ConsumerLimitsDTO = {
       minTransaction: limits.minTransaction,
       maxTransaction: limits.maxTransaction,
-      monthly: { max: limits.monthlyLimit, used: monthlyTransactionAmount, period: 30 },
+      monthly: { max: limits.monthly, used: monthlyTransactionAmount, period: 30 },
     };
 
     return limitsDTO;
