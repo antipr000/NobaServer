@@ -108,7 +108,7 @@ export class LimitsService {
     const totalMonthly: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
     if (totalMonthly > limits.monthly) {
       // Spent + new amount exceeds monthly limit
-      const maxRemaining = limits.monthly - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const maxRemaining = Math.max(limits.monthly - monthlyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
       /*
@@ -143,7 +143,7 @@ export class LimitsService {
     const weeklyLimit: number = limits.weekly ? limits.weekly : limits.monthly;
 
     if (totalWeekly > weeklyLimit) {
-      const maxRemaining = weeklyLimit - weeklyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const maxRemaining = Math.max(weeklyLimit - weeklyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
       return {
@@ -164,7 +164,7 @@ export class LimitsService {
     else dailyLimit = limits.monthly;
 
     if (totalDaily > dailyLimit) {
-      const maxRemaining = dailyLimit - dailyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const maxRemaining = Math.max(dailyLimit - dailyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
       return {
