@@ -34,13 +34,12 @@ export class LimitsService {
     consumer: Consumer,
     partnerID: string,
     totalTransactionAmount: number,
-    transactionType?: TransactionType,
+    transactionType: TransactionType,
   ): boolean {
     if (config.props.criteria.partnerID && config.props.criteria.partnerID !== partnerID) {
       return config.props.isDefault;
     }
     if (
-      transactionType &&
       config.props.criteria.transactionType.length > 0 &&
       !config.props.criteria.transactionType.includes(transactionType)
     ) {
@@ -72,7 +71,7 @@ export class LimitsService {
     consumer: Consumer,
     transactionAmount: number,
     partnerID: string,
-    transactionType?: TransactionType,
+    transactionType: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<CheckTransactionDTO> {
     const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
@@ -185,7 +184,7 @@ export class LimitsService {
   async getConsumerLimits(
     consumer: Consumer,
     partnerID: string,
-    transactionType?: TransactionType,
+    transactionType: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<ConsumerLimitsDTO> {
     const limitProfile = await this.getLimits(consumer, partnerID, transactionType);

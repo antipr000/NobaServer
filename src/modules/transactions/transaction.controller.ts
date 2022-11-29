@@ -52,6 +52,7 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { PartnerService } from "../partner/partner.service";
 import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
+import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -234,9 +235,13 @@ export class TransactionController {
     description: "Consumer limit details",
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getConsumerLimits(@AuthUser() authUser: Consumer, @Request() request): Promise<ConsumerLimitsDTO> {
+  async getConsumerLimits(
+    @Query() consumerLimitsQuery: ConsumerLimitsQueryDTO,
+    @AuthUser() authUser: Consumer,
+    @Request() request,
+  ): Promise<ConsumerLimitsDTO> {
     const partnerID = (request.user as AuthenticatedUser).partnerId;
-    return this.limitsService.getConsumerLimits(authUser, partnerID);
+    return this.limitsService.getConsumerLimits(authUser, partnerID, consumerLimitsQuery.transactionType);
   }
 
   @Get("/transactions/download")
