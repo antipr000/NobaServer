@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { LimitConfiguration, LimitConfigurationProps } from "../domain/LimitConfiguration";
@@ -6,8 +6,7 @@ import { ILimitConfigurationRepo } from "./LimitConfigurationRepo";
 
 @Injectable()
 export class MongoDBLimitConfigurationRepo implements ILimitConfigurationRepo {
-  @Inject()
-  private readonly dbProvider: DBProvider;
+  constructor(private readonly dbProvider: DBProvider) {}
 
   async getLimitConfig(id: any): Promise<LimitConfiguration> {
     const limitConfigModel = await this.dbProvider.getLimitConfigurationModel();

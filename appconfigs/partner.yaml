@@ -75,16 +75,6 @@ noba:
     awsSecretKeyForFixedCreditCardFee: "TEST_NOBA_FIXED_CREDIT_CARD_FEE_DOLLARS"
     slippageAllowedPercentage: ""
     awsSecretKeyForSlippageAllowedPercentage: "TEST_NOBA_SLIPPAGE_ALLOWED_PERCENTAGE"
-    cardMaxTransactionLimit: "20"
-    cardMinTransactionLimit: "5"
-    cardWeeklyLimit: "100"
-    cardMonthlyLimit: "2000"
-    cardDailyLimit: "20"
-    bankMaxTransactionLimit: "20"
-    bankMinTransactionLimit: "5"
-    bankWeeklyLimit: "100"
-    bankMonthlyLimit: "2000"
-    bankDailyLimit: "20"
 
 zerohash:
   awsSecretNameForApiKey: "TEST_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

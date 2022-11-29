@@ -41,7 +41,7 @@ export const limitConfigurationValidationKeys: KeysRequired<LimitConfigurationPr
   criteria: Joi.object().keys(limitConfigurationCriteriaValidationKeys).required(),
 };
 
-export const limitConfigurationJoiSchema = Joi.object(limitConfigurationValidationKeys);
+export const limitConfigurationJoiSchema = Joi.object(limitConfigurationValidationKeys).options({ allowUnknown: true });
 
 export class LimitConfiguration extends AggregateRoot<LimitConfigurationProps> {
   private constructor(limitConfigurationProps: LimitConfigurationProps) {

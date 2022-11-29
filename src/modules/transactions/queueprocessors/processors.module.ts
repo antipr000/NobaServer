@@ -23,6 +23,7 @@ import { SanctionedCryptoWalletService } from "../../../modules/common/sanctione
 import { NotificationsModule } from "../../../modules/notifications/notification.module";
 import { PspModule } from "../../../modules/psp/psp.module";
 import { LimitsService } from "../limits.service";
+import { TransactionRepoModule } from "../repo/transaction.repo.module";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LimitsService } from "../limits.service";
     getWinstonModule(),
     NotificationsModule,
     PspModule,
+    TransactionRepoModule,
   ],
   controllers: [],
   providers: [

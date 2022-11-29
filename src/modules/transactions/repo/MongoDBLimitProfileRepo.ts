@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { LimitProfile, LimitProfileProps } from "../domain/LimitProfile";
@@ -6,7 +6,7 @@ import { ILimitProfileRepo } from "./LimitProfileRepo";
 
 @Injectable()
 export class MongoDBLimitProfileRepo implements ILimitProfileRepo {
-  @Inject() private readonly dbProvider: DBProvider;
+  constructor(private readonly dbProvider: DBProvider) {}
 
   async getProfile(id: string): Promise<LimitProfile> {
     const limitProfileModel = await this.dbProvider.getLimitProfileModel();

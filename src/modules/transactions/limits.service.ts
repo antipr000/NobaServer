@@ -61,7 +61,7 @@ export class LimitsService {
     }
     // Check single transaction limit
 
-    if (limits.minTransaction && transactionAmount < limits.minTransaction) {
+    if (transactionAmount < limits.minTransaction) {
       return {
         status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
         rangeMin: limits.minTransaction,
@@ -69,7 +69,7 @@ export class LimitsService {
       };
     }
 
-    if (limits.maxTransaction && transactionAmount > limits.maxTransaction) {
+    if (transactionAmount > limits.maxTransaction) {
       return {
         status: TransactionAllowedStatus.TRANSACTION_TOO_LARGE,
         rangeMin: limits.minTransaction,
@@ -86,7 +86,7 @@ export class LimitsService {
 
     // For some reason without casting the operands to a Number, this ends up doing string concat
     const total: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
-    if (limits.monthly && total > limits.monthly) {
+    if (total > limits.monthly) {
       // Spent + new amount exceeds monthly limit
       let maxRemaining = limits.monthly - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.

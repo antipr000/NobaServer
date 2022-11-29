@@ -15,8 +15,6 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
 import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
 import { TransactionRepoModule } from "./repo/transaction.repo.module";
-import { MongoDBLimitProfileRepo } from "./repo/MongoDBLimitProfileRepo";
-import { MongoDBLimitConfigurationRepo } from "./repo/MongoDBLimitConfigurationRepo";
 
 @Module({
   imports: [
@@ -32,21 +30,7 @@ import { MongoDBLimitConfigurationRepo } from "./repo/MongoDBLimitConfigurationR
     TransactionRepoModule,
   ],
   controllers: [TransactionController],
-  providers: [
-    LimitsService,
-    TransactionService,
-    ZeroHashService,
-    SquidService,
-    SanctionedCryptoWalletService,
-    {
-      provide: "LimitProfileRepo",
-      useClass: MongoDBLimitProfileRepo,
-    },
-    {
-      provide: "LimitConfigurationRepo",
-      useClass: MongoDBLimitConfigurationRepo,
-    },
-  ],
+  providers: [LimitsService, TransactionService, ZeroHashService, SquidService, SanctionedCryptoWalletService],
   exports: [TransactionService], //Need to access in PublicController
 })
 export class TransactionModule {}

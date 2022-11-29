@@ -91,17 +91,6 @@ export const AWS_SECRET_KEY_FOR_FLAT_FEE_DOLLARS = "awsSecretKeyForFlatFeeDollar
 export const AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE = "awsSecretKeyForDynamicCreditCardFeePercentage";
 export const AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE = "awsSecretKeyForFixedCreditCardFee";
 export const AWS_SECRET_KEY_FOR_SLIPPAGE_ALLOWED_PERCENTAGE = "awsSecretKeyForSlippageAllowedPercentage";
-export const CARD_MAX_TRANSACTION_LIMIT = "cardMaxTransactionLimit";
-export const CARD_MIN_TRANSACTION_LIMIT = "cardMinTransactionLimit";
-export const CARD_DAILY_LIMIT = "cardDailyLimit";
-export const CARD_MONTHLY_LIMIT = "cardMonthlyLimit";
-export const CARD_WEEKLY_LIMIT = "cardWeeklyLimit";
-export const BANK_MAX_TRANSACTION_LIMIT = "bankMaxTransactionLimit";
-export const BANK_MIN_TRANSACTION_LIMIT = "bankMinTransactionLimit";
-export const BANK_DAILY_LIMIT = "bankDailyLimit";
-export const BANK_MONTHLY_LIMIT = "bankMonthlyLimit";
-export const BANK_WEEKLY_LIMIT = "bankWeeklyLimit";
-export const UNSETTLED_EXPOSURE = "unsettledExposure";
 
 export const ZEROHASH_CONFIG_KEY = "zerohash";
 export const ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
