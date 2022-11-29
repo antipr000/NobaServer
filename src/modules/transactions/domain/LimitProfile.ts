@@ -16,7 +16,7 @@ export interface LimitProfileProps extends VersioningInfo {
   name: string;
   cardLimits: Limits;
   bankLimits: Limits;
-  unsettledExposure: number;
+  unsettledExposure?: number;
 }
 
 const limitsJoiValidationKeys: KeysRequired<Limits> = {
@@ -33,7 +33,7 @@ export const limitProfileJoiValidationKeys: KeysRequired<LimitProfileProps> = {
   name: Joi.string().required(),
   cardLimits: Joi.object().keys(limitsJoiValidationKeys).required(),
   bankLimits: Joi.object().keys(limitsJoiValidationKeys).required(),
-  unsettledExposure: Joi.number().required(),
+  unsettledExposure: Joi.number().optional(),
 };
 
 export const limitProfileJoiSchema = Joi.object(limitProfileJoiValidationKeys).options({ allowUnknown: true }); // Needed for timstamps

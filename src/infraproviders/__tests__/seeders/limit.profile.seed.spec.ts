@@ -4,6 +4,9 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../DBProvider";
 import {
   AppEnvironment,
+  COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY,
+  COMMON_CONFIG_KEY,
+  COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY,
   MONGO_CONFIG_KEY,
   MONGO_URI,
   NOBA_API_KEY_FOR_EMBED,
@@ -17,7 +20,6 @@ import { MongoClient, Collection } from "mongodb";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { LimitProfile } from "../../../modules/transactions/domain/LimitProfile";
 import { LimitProfileSeeder } from "../../../infraproviders/seeders/limit.profile.seed";
-import { environmentToDefaultCardLimitsMap } from "../../../infraproviders/seeders/data/default.limits.data";
 
 const getAllRecordsInLimitProfileCollection = async (
   limitProfileCollection: Collection,
@@ -97,6 +99,10 @@ describe("LimitProfile Seeder", () => {
         [NOBA_PARTNER_ID]: "test-partner-id",
         [NOBA_API_KEY_FOR_EMBED]: "test-api-key-for-embed",
       },
+      [COMMON_CONFIG_KEY]: {
+        [COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY]: 75,
+        [COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY]: 0.5,
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -132,12 +138,16 @@ describe("LimitProfile Seeder", () => {
 
       expect(allLimitProfileRecordsAfter).toHaveLength(1);
 
-      expect(allLimitProfileRecordsAfter[0].props.cardLimits).toStrictEqual(
-        environmentToDefaultCardLimitsMap[AppEnvironment.DEV],
-      );
-      expect(allLimitProfileRecordsAfter[0].props.bankLimits).toStrictEqual(
-        environmentToDefaultCardLimitsMap[AppEnvironment.DEV],
-      );
+      expect(allLimitProfileRecordsAfter[0].props.cardLimits).toStrictEqual({
+        minTransaction: 0.5,
+        maxTransaction: 75,
+        monthly: 2000,
+      });
+      expect(allLimitProfileRecordsAfter[0].props.bankLimits).toStrictEqual({
+        minTransaction: 0.5,
+        maxTransaction: 75,
+        monthly: 2000,
+      });
     });
 
     it("should not seed limit profile when already exists", async () => {

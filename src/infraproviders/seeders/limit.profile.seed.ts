@@ -1,26 +1,29 @@
 import { Injectable } from "@nestjs/common";
-import { getEnvironmentName } from "../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { COMMON_CONFIG_KEY, getEnvironmentName } from "../../config/ConfigurationUtils";
 import { convertDBResponseToJsObject } from "../../infra/mongodb/MongoDBUtils";
 import { LimitProfile, LimitProfileProps, Limits } from "../../modules/transactions/domain/LimitProfile";
 import { DBProvider } from "../DBProvider";
-import {
-  environmentToDefaultBankLimitsMap,
-  environmentToDefaultCardLimitsMap,
-  environmentToDefaultTransactionExposureMap,
-} from "./data/default.limits.data";
+import { CommonConfigs } from "../../config/configtypes/CommonConfigs";
 
 @Injectable()
 export class LimitProfileSeeder {
   private readonly cardLimits: Limits;
   private readonly bankLimits: Limits;
-  private readonly unsettledExposure: number;
-  constructor(private readonly dbProvider: DBProvider) {
+  constructor(private readonly dbProvider: DBProvider, configService: CustomConfigService) {
     const appEnvironment = getEnvironmentName();
-    this.cardLimits = environmentToDefaultCardLimitsMap[appEnvironment];
+    const config = configService.get<CommonConfigs>(COMMON_CONFIG_KEY);
+    this.cardLimits = {
+      minTransaction: config.lowAmountThreshold,
+      maxTransaction: config.highAmountThreshold,
+      monthly: 2000,
+    };
 
-    this.bankLimits = environmentToDefaultBankLimitsMap[appEnvironment];
-
-    this.unsettledExposure = environmentToDefaultTransactionExposureMap[appEnvironment];
+    this.bankLimits = {
+      minTransaction: config.lowAmountThreshold,
+      maxTransaction: config.highAmountThreshold,
+      monthly: 2000,
+    };
   }
 
   async seed() {
@@ -35,7 +38,6 @@ export class LimitProfileSeeder {
           name: "Default Limit Profile",
           cardLimits: this.cardLimits,
           bankLimits: this.bankLimits,
-          unsettledExposure: this.unsettledExposure,
         });
         await limitProfileModel.create(limitProfile.props);
       } else {
