@@ -139,7 +139,7 @@ export class LimitsService {
 
     const totalWeekly = Number(weeklyTransactionAmount) + Number(transactionAmount);
 
-    const weeklyLimit: number = limits.weekly ? limits.weekly : limits.monthly;
+    const weeklyLimit: number = limits.weekly ?? limits.monthly;
 
     if (totalWeekly > weeklyLimit) {
       const maxRemaining = Math.max(weeklyLimit - weeklyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining

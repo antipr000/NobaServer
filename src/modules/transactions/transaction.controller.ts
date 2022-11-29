@@ -32,7 +32,7 @@ import { Roles } from "../auth/roles.decorator";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
-import { TransactionFilterOptions } from "./domain/Types";
+import { TransactionFilterOptions, TransactionType } from "./domain/Types";
 
 import { AuthUser } from "../auth/auth.decorator";
 import { Public } from "../auth/public.decorator";
@@ -241,6 +241,7 @@ export class TransactionController {
     @Request() request,
   ): Promise<ConsumerLimitsDTO> {
     const partnerID = (request.user as AuthenticatedUser).partnerId;
+    if (!consumerLimitsQuery.transactionType) consumerLimitsQuery.transactionType = TransactionType.ONRAMP;
     return this.limitsService.getConsumerLimits(authUser, partnerID, consumerLimitsQuery.transactionType);
   }
 
