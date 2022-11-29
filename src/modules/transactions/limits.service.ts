@@ -52,7 +52,7 @@ export class LimitsService {
     ) {
       return config.props.isDefault;
     }
-    // TODO: Add other conditions
+    // TODO(CRYPTO-393): Add other conditions
     return true;
   }
 
@@ -77,12 +77,8 @@ export class LimitsService {
   ): Promise<CheckTransactionDTO> {
     const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
     if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
-    let limits: Limits;
-    if (paymentMethodType === PaymentMethodType.CARD) {
-      limits = limitProfile.props.cardLimits;
-    } else {
-      limits = limitProfile.props.bankLimits;
-    }
+    const limits: Limits =
+      paymentMethodType === PaymentMethodType.CARD ? limitProfile.props.cardLimits : limitProfile.props.bankLimits;
     // Check single transaction limit
 
     if (transactionAmount < limits.minTransaction) {
@@ -112,12 +108,8 @@ export class LimitsService {
     const totalMonthly: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
     if (totalMonthly > limits.monthly) {
       // Spent + new amount exceeds monthly limit
-      let maxRemaining = limits.monthly - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const maxRemaining = limits.monthly - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
-      if (maxRemaining < 0) {
-        // This would mean we've over-spent monthly limit, which should never happen
-        maxRemaining = 0;
-      }
 
       /*
         Note that minRemaining will always be the minimum transaction limit but you can have a maximum of < the minimum.
@@ -151,12 +143,8 @@ export class LimitsService {
     const weeklyLimit: number = limits.weekly ? limits.weekly : limits.monthly;
 
     if (totalWeekly > weeklyLimit) {
-      let maxRemaining = weeklyLimit - weeklyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const maxRemaining = weeklyLimit - weeklyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
-      if (maxRemaining < 0) {
-        // This would mean we've over-spent monthly limit, which should never happen
-        maxRemaining = 0;
-      }
 
       return {
         status: TransactionAllowedStatus.WEEKLY_LIMIT_REACHED,
@@ -176,12 +164,8 @@ export class LimitsService {
     else dailyLimit = limits.monthly;
 
     if (totalDaily > dailyLimit) {
-      let maxRemaining = dailyLimit - dailyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const maxRemaining = dailyLimit - dailyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
-      if (maxRemaining < 0) {
-        // This would mean we've over-spent monthly limit, which should never happen
-        maxRemaining = 0;
-      }
 
       return {
         status: TransactionAllowedStatus.DAILY_LIMIT_REACHED,
@@ -190,6 +174,7 @@ export class LimitsService {
       };
     }
 
+    // TODO(CRYPTO-393): Add wallet exposure check
     return {
       status: TransactionAllowedStatus.ALLOWED,
       rangeMin: limits.minTransaction,
