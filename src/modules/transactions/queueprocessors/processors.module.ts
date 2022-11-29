@@ -23,6 +23,7 @@ import { SanctionedCryptoWalletService } from "../../../modules/common/sanctione
 import { NotificationsModule } from "../../../modules/notifications/notification.module";
 import { PspModule } from "../../../modules/psp/psp.module";
 import { TransactionRepoModule } from "../repo/transaction.repo.module";
+import { LimitsService } from "../limits.service";
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TransactionRepoModule } from "../repo/transaction.repo.module";
   providers: [
     ZeroHashService,
     TransactionService,
+    LimitsService,
     SqsClient,
     TransactionPollerService,
     {
