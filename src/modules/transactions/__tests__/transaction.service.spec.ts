@@ -1361,7 +1361,13 @@ describe("TransactionService", () => {
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
       when(
-        limitService.canMakeTransaction(deepEqual(consumer), 100, TransactionType.ONRAMP, PaymentMethodType.CARD),
+        limitService.canMakeTransaction(
+          deepEqual(consumer),
+          100,
+          partnerId,
+          TransactionType.ONRAMP,
+          PaymentMethodType.CARD,
+        ),
       ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
@@ -1457,7 +1463,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.DAILY_LIMIT_REACHED,
@@ -1552,7 +1560,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.WEEKLY_LIMIT_REACHED,
@@ -1647,7 +1657,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
@@ -1742,7 +1754,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.TRANSACTION_TOO_LARGE,
@@ -1965,7 +1979,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         status: TransactionAllowedStatus.ALLOWED,
         rangeMin: 0,
         rangeMax: 100,
@@ -2038,7 +2054,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,
@@ -2185,7 +2203,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,
@@ -2376,7 +2396,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100, TransactionType.ONRAMP, PaymentMethodType.CARD)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,
@@ -2574,6 +2596,7 @@ describe("TransactionService", () => {
         limitService.canMakeTransaction(
           consumer,
           initialQuotedFiatAmount,
+          partnerId,
           TransactionType.ONRAMP,
           PaymentMethodType.CARD,
         ),
@@ -2774,6 +2797,7 @@ describe("TransactionService", () => {
         limitService.canMakeTransaction(
           consumer,
           initialQuotedFiatAmount,
+          partnerId,
           TransactionType.ONRAMP,
           PaymentMethodType.CARD,
         ),

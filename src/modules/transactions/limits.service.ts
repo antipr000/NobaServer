@@ -29,17 +29,40 @@ export class LimitsService {
 
   private allLimitConfigs: LimitConfiguration[];
 
-  private match(config: LimitConfiguration, consumer: Consumer, transactionType: TransactionType): boolean {
-    return config.props.isDefault;
+  private match(
+    config: LimitConfiguration,
+    consumer: Consumer,
+    partnerID: string,
+    totalTransactionAmount: number,
+    transactionType?: TransactionType,
+  ): boolean {
+    if (config.props.criteria.partnerID && config.props.criteria.partnerID !== partnerID) {
+      return config.props.isDefault;
+    }
+    if (
+      transactionType &&
+      config.props.criteria.transactionType.length > 0 &&
+      !config.props.criteria.transactionType.includes(transactionType)
+    ) {
+      return config.props.isDefault;
+    }
+    if (
+      config.props.criteria.minTotalTransactionAmount &&
+      config.props.criteria.minTotalTransactionAmount > totalTransactionAmount
+    ) {
+      return config.props.isDefault;
+    }
+    // TODO: Add other conditions
+    return true;
   }
 
-  async getLimits(consumer: Consumer, transactionType?: TransactionType): Promise<LimitProfile> {
+  async getLimits(consumer: Consumer, partnerID: string, transactionType?: TransactionType): Promise<LimitProfile> {
     if (!this.allLimitConfigs) {
       this.allLimitConfigs = await this.limitConfigRepo.getAllLimitConfigs();
     }
-
+    const totalTransactionAmount = await this.transactionsRepo.getTotalUserTransactionAmount(consumer.props._id);
     const limitConfig: LimitConfiguration = this.allLimitConfigs.find(config =>
-      this.match(config, consumer, transactionType),
+      this.match(config, consumer, partnerID, totalTransactionAmount, transactionType),
     );
 
     return await this.limitProfileRepo.getProfile(limitConfig.props.profile);
@@ -48,10 +71,11 @@ export class LimitsService {
   async canMakeTransaction(
     consumer: Consumer,
     transactionAmount: number,
+    partnerID: string,
     transactionType?: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<CheckTransactionDTO> {
-    const limitProfile = await this.getLimits(consumer, transactionType);
+    const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
     if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
     let limits: Limits;
     if (paymentMethodType === PaymentMethodType.CARD) {
@@ -85,8 +109,8 @@ export class LimitsService {
     );
 
     // For some reason without casting the operands to a Number, this ends up doing string concat
-    const total: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
-    if (total > limits.monthly) {
+    const totalMonthly: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
+    if (totalMonthly > limits.monthly) {
       // Spent + new amount exceeds monthly limit
       let maxRemaining = limits.monthly - monthlyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
       const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
@@ -120,6 +144,52 @@ export class LimitsService {
       };
     }
 
+    const weeklyTransactionAmount = await this.transactionsRepo.getWeeklyUserTransactionAmount(consumer.props._id);
+
+    const totalWeekly = Number(weeklyTransactionAmount) + Number(transactionAmount);
+
+    const weeklyLimit: number = limits.weekly ? limits.weekly : limits.monthly;
+
+    if (totalWeekly > weeklyLimit) {
+      let maxRemaining = weeklyLimit - weeklyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+      if (maxRemaining < 0) {
+        // This would mean we've over-spent monthly limit, which should never happen
+        maxRemaining = 0;
+      }
+
+      return {
+        status: TransactionAllowedStatus.WEEKLY_LIMIT_REACHED,
+        rangeMin: minRemaining,
+        rangeMax: maxRemaining,
+      };
+    }
+
+    const dailyTransactionAmount = await this.transactionsRepo.getDailyUserTransactionAmount(consumer.props._id);
+
+    const totalDaily = Number(dailyTransactionAmount) + Number(transactionAmount);
+
+    let dailyLimit = 0;
+
+    if (limits.daily) dailyLimit = limits.daily;
+    else if (limits.weekly) dailyLimit = limits.weekly;
+    else dailyLimit = limits.monthly;
+
+    if (totalDaily > dailyLimit) {
+      let maxRemaining = dailyLimit - dailyTransactionAmount; // We have our full limit minus what we've spent so far this month remaining
+      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+      if (maxRemaining < 0) {
+        // This would mean we've over-spent monthly limit, which should never happen
+        maxRemaining = 0;
+      }
+
+      return {
+        status: TransactionAllowedStatus.DAILY_LIMIT_REACHED,
+        rangeMin: minRemaining,
+        rangeMax: maxRemaining,
+      };
+    }
+
     return {
       status: TransactionAllowedStatus.ALLOWED,
       rangeMin: limits.minTransaction,
@@ -129,10 +199,11 @@ export class LimitsService {
 
   async getConsumerLimits(
     consumer: Consumer,
+    partnerID: string,
     transactionType?: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<ConsumerLimitsDTO> {
-    const limitProfile = await this.getLimits(consumer, transactionType);
+    const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
     if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
     let limits: Limits;
 

@@ -1,4 +1,4 @@
-import { AppEnvironment } from "src/config/ConfigurationUtils";
+import { AppEnvironment } from "../../../config/ConfigurationUtils";
 import { Limits } from "../../../modules/transactions/domain/LimitProfile";
 
 export interface EnvironmentLimitMap {

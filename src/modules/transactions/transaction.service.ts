@@ -293,6 +293,7 @@ export class TransactionService {
     const transactionLimits = await this.limitService.canMakeTransaction(
       consumer,
       fiatAmount,
+      partnerID,
       transactionRequest.type,
       paymentMethod.type,
     );
