@@ -82,7 +82,7 @@ export class ConsumerController {
   async getConsumer(@Headers() headers, @Request() request): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
     const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY]);
 
@@ -112,7 +112,7 @@ export class ConsumerController {
   async isHandleAvailable(@Query("handle") handle: string, @Request() request): Promise<ConsumerHandleDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     return {
@@ -133,7 +133,7 @@ export class ConsumerController {
   async updateConsumer(@Request() request, @Body() requestBody: UpdateConsumerRequestDTO): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const consumerProps = {
@@ -156,7 +156,7 @@ export class ConsumerController {
   async updatePhone(@Request() request, @Body() requestBody: UserPhoneUpdateRequest): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.phone);
@@ -180,7 +180,7 @@ export class ConsumerController {
   async requestOtpToUpdatePhone(@Request() request, @Body() requestBody: PhoneVerificationOtpRequest) {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.phone);
@@ -204,7 +204,7 @@ export class ConsumerController {
   async updateEmail(@Request() request, @Body() requestBody: UserEmailUpdateRequest): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.email);
@@ -232,7 +232,7 @@ export class ConsumerController {
   ) {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.email);
@@ -258,7 +258,7 @@ export class ConsumerController {
     const user: AuthenticatedUser = request.user;
     const consumer = user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     return {
@@ -279,7 +279,7 @@ export class ConsumerController {
     const user: AuthenticatedUser = request.user;
     const consumer = user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const requiredFields = [];
@@ -345,7 +345,7 @@ export class ConsumerController {
     const user: AuthenticatedUser = request.user;
     const consumer = user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
     const res = await this.consumerService.removePaymentMethod(consumer, paymentToken, user.partnerId);
     return this.consumerMapper.toDTO(res);
@@ -377,26 +377,26 @@ export class ConsumerController {
   async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @Headers() headers, @Request() request): Promise<any> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     // Sanitise notification method for OTP
-    if (requestBody.notificationMethod == NotificationMethod.EMAIL && consumer.props.email == null) {
-      if (consumer.props.phone == null) {
+    if (requestBody.notificationMethod === NotificationMethod.EMAIL && !consumer.props.email) {
+      if (!consumer.props.phone) {
         throw new BadRequestException("No email or phone configured for consumer");
       }
       this.logger.warn("Email not configured for consumer, using phone instead");
       requestBody.notificationMethod = NotificationMethod.PHONE;
     }
-    if (requestBody.notificationMethod == NotificationMethod.PHONE && consumer.props.phone == null) {
-      if (consumer.props.email == null) {
+    if (requestBody.notificationMethod === NotificationMethod.PHONE && !consumer.props.phone) {
+      if (!consumer.props.email) {
         throw new BadRequestException("No email or phone configured for consumer");
       }
       this.logger.warn("Phone not configured for consumer, using email instead");
       requestBody.notificationMethod = NotificationMethod.EMAIL;
     }
 
-    // Initialise the crypto wallet object with a pending status here in case of any updates made to wallet OR addition of a new wallet
+    // Initialise the crypto wallet object with a pending status here in case any updates made to wallet or addition of a new wallet
     const cryptoWallet: CryptoWallet = {
       walletName: requestBody.walletName,
       address: requestBody.address,
@@ -424,7 +424,7 @@ export class ConsumerController {
   async deleteCryptoWallet(@Param("walletAddress") walletAddress: string, @Request() request): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const partner = await this.partnerService.getPartnerFromApiKey(request.headers[X_NOBA_API_KEY]);
@@ -443,7 +443,7 @@ export class ConsumerController {
   ): Promise<ConsumerDTO> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
     const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY]);
@@ -452,6 +452,7 @@ export class ConsumerController {
       consumer,
       requestBody.address,
       requestBody.otp,
+      consumer.props._id,
       partner.props._id,
     );
     return this.consumerMapper.toDTO(res);

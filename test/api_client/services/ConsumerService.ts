@@ -563,6 +563,7 @@ export class ConsumerService {
     xNobaApiKey,
     xNobaSignature,
     xNobaTimestamp,
+    transactionType,
   }: {
     xNobaApiKey: string;
     xNobaSignature?: string;
@@ -570,6 +571,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
+    transactionType?: "onramp" | "offramp" | "swap" | "wallet";
   }): CancelablePromise<ConsumerLimitsDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -578,6 +580,9 @@ export class ConsumerService {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        transactionType: transactionType,
       },
       errors: {
         400: `Invalid request parameters`,

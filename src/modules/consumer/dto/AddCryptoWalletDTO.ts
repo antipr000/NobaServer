@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export enum NotificationMethod {
-  EMAIL = "email",
-  PHONE = "phone",
+  EMAIL = "Email",
+  PHONE = "Phone",
 }
 
 export class AddCryptoWalletDTO {
@@ -18,8 +18,8 @@ export class AddCryptoWalletDTO {
   @ApiPropertyOptional()
   isEVMCompatible: boolean;
 
-  @ApiProperty({ enum: NotificationMethod })
-  notificationMethod: NotificationMethod;
+  @ApiPropertyOptional({ enum: NotificationMethod })
+  notificationMethod?: NotificationMethod = NotificationMethod.EMAIL;
 }
 
 export class ConfirmWalletUpdateDTO {

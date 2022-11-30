@@ -1591,13 +1591,14 @@ describe("ConsumerService", () => {
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId)).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId, consumer.props._id)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
           otpExpiryTime: expiryDate.getTime(),
           identityType: "CONSUMER",
+          consumerID: consumer.props._id,
         }),
       );
 
@@ -1606,7 +1607,13 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId);
+      const response = await consumerService.confirmWalletUpdateOTP(
+        consumer,
+        walletAddress,
+        otp,
+        consumer.props._id,
+        partnerId,
+      );
 
       expect(response).toStrictEqual(updatedConsumer);
 
@@ -1664,10 +1671,12 @@ describe("ConsumerService", () => {
       });
 
       expect(
-        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId),
+        async () =>
+          await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, consumer.props._id, partnerId),
       ).rejects.toThrow(BadRequestException);
       expect(
-        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId),
+        async () =>
+          await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, consumer.props._id, partnerId),
       ).rejects.toThrow("Crypto wallet does not exist for user");
     });
 
@@ -1812,18 +1821,25 @@ describe("ConsumerService", () => {
         ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1", consumer.props._id)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
           otpExpiryTime: new Date().getTime(),
           identityType: "CONSUMER",
+          consumerID: consumer.props._id,
         }),
       );
 
       try {
-        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp, "partner-1");
+        await consumerService.confirmWalletUpdateOTP(
+          consumer,
+          walletAddress,
+          wrongOtp,
+          consumer.props._id,
+          "partner-1",
+        );
       } catch (e) {
         expect(e).toBeInstanceOf(UnauthorizedException);
       }
@@ -2252,6 +2268,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
+      when(mockOtpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier, "123")).thenResolve();
       const response = await consumerService.addOrUpdateCryptoWallet(consumer, toAddCryptoWallet);
 
       expect(response).toBe(updatedConsumer);
@@ -2535,7 +2552,7 @@ describe("ConsumerService", () => {
       const phone = "+12434252";
       when(smsService.sendSMS(phone, anyString())).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
-      when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, anyString())).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, "123")).thenResolve();
       await consumerService.sendOtpToPhone("123", phone);
       verify(smsService.sendSMS(phone, anyString())).once();
       verify(mockOtpRepo.saveOTPObject(anything())).once();
@@ -2637,9 +2654,9 @@ describe("ConsumerService", () => {
         }),
       ).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
-      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, anyString())).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props._id)).thenResolve();
       await consumerService.sendOtpToEmail(email, consumer, partnerID);
-      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier)).once();
+      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier, partnerID, consumer.props._id)).once();
     });
   });
 

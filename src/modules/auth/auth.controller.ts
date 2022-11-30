@@ -91,8 +91,9 @@ export class AuthController {
   async loginUser(@Body() requestBody: LoginRequestDTO, @Headers() headers) {
     const emailOrPhone = requestBody.emailOrPhone ?? requestBody.email;
     const isEmail = Utils.isEmail(emailOrPhone);
+    const isConsumer = requestBody.identityType === consumerIdentityIdentifier;
 
-    if (requestBody.identityType !== consumerIdentityIdentifier && !isEmail) {
+    if (!isConsumer && !isEmail) {
       throw new BadRequestException(
         `Phone number based login is not supported for this identity type ${requestBody.identityType}`,
       );
@@ -121,10 +122,11 @@ export class AuthController {
       }
     }
 
-    const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
     const otp = authService.generateOTP();
     await authService.deleteAnyExistingOTP(emailOrPhone);
-    await authService.saveOtp(emailOrPhone, otp, partnerId);
-    return authService.sendOtp(emailOrPhone, otp.toString(), partnerId);
+
+    const partnerID = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
+    await authService.saveOtp(emailOrPhone, otp, partnerID);
+    return authService.sendOtp(emailOrPhone, otp.toString(), partnerID);
   }
 }

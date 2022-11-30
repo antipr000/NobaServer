@@ -13,7 +13,7 @@ import { IdentityType } from "../domain/IdentityType";
 import { NotFoundException } from "@nestjs/common";
 import { Otp } from "../domain/Otp";
 
-const DEFAULT_PARTNER_ID = "partener_id";
+const DEFAULT_PARTNER_ID = "partner_id";
 
 describe("MongoDBOtpRepoTests", () => {
   jest.setTimeout(20000);
@@ -139,6 +139,7 @@ describe("MongoDBOtpRepoTests", () => {
       const otp = 123457;
       const otp2 = 123456;
       const opt3 = 1342424;
+      const consumerID = "1234567890";
 
       await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_PARTNER_ID);
       await otpRepo.saveOTP(emailID, otp2, IdentityType.consumer, DEFAULT_PARTNER_ID);
@@ -159,9 +160,10 @@ describe("MongoDBOtpRepoTests", () => {
       const otp = 123457;
       const otp2 = 123456;
       const opt3 = 1342424;
+      const consumerID = "1234567890";
 
-      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_PARTNER_ID, 100);
-      await otpRepo.saveOTP(emailID, otp2, IdentityType.consumer, DEFAULT_PARTNER_ID, 100);
+      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_PARTNER_ID, consumerID, 100);
+      await otpRepo.saveOTP(emailID, otp2, IdentityType.consumer, DEFAULT_PARTNER_ID, consumerID, 100);
       await otpRepo.saveOTP(emailID, opt3, IdentityType.consumer, DEFAULT_PARTNER_ID);
       const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.consumer);
       expect(savedOtps.length).toBe(3);
