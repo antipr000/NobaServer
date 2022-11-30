@@ -68,9 +68,9 @@ import { ZeroHashService } from "../zerohash.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
-import { getMockLimitServiceWithDefaults } from "../mocks/mock.limit.service";
 import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
 import { Utils } from "../../../core/utils/Utils";
+import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -123,7 +123,7 @@ describe("TransactionService", () => {
     partnerService = getMockPartnerServiceWithDefaults();
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     ellipticService = getMockEllipticServiceWithDefaults();
-    limitService = getMockLimitServiceWithDefaults();
+    limitService = getMockLimitsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
 
     transactionMapper = new TransactionMapper();
@@ -1360,7 +1360,15 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(
+          deepEqual(consumer),
+          100,
+          partnerId,
+          TransactionType.ONRAMP,
+          PaymentMethodType.CARD,
+        ),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.MONTHLY_LIMIT_REACHED,
@@ -1455,7 +1463,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.DAILY_LIMIT_REACHED,
@@ -1550,7 +1560,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.WEEKLY_LIMIT_REACHED,
@@ -1645,7 +1657,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
@@ -1740,7 +1754,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.TRANSACTION_TOO_LARGE,
@@ -1963,7 +1979,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         status: TransactionAllowedStatus.ALLOWED,
         rangeMin: 0,
         rangeMax: 100,
@@ -2036,7 +2054,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,
@@ -2183,7 +2203,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,
@@ -2374,7 +2396,9 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, 100)).thenResolve({
+      when(
+        limitService.canMakeTransaction(consumer, 100, partnerId, TransactionType.ONRAMP, PaymentMethodType.CARD),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,
@@ -2568,7 +2592,15 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, initialQuotedFiatAmount)).thenResolve({
+      when(
+        limitService.canMakeTransaction(
+          consumer,
+          initialQuotedFiatAmount,
+          partnerId,
+          TransactionType.ONRAMP,
+          PaymentMethodType.CARD,
+        ),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,
@@ -2761,7 +2793,15 @@ describe("TransactionService", () => {
         ],
       });
       when(consumerService.getConsumer(consumerId)).thenResolve(consumer);
-      when(limitService.canMakeTransaction(consumer, initialQuotedFiatAmount)).thenResolve({
+      when(
+        limitService.canMakeTransaction(
+          consumer,
+          initialQuotedFiatAmount,
+          partnerId,
+          TransactionType.ONRAMP,
+          PaymentMethodType.CARD,
+        ),
+      ).thenResolve({
         rangeMin: 0,
         rangeMax: 100,
         status: TransactionAllowedStatus.ALLOWED,

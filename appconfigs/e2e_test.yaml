@@ -117,7 +117,7 @@ squid:
   slippage: 1
 
 configuration:
-  lowAmountThreshold: .01
+  lowAmountThreshold: 0.25
   highAmountThreshold: 75
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"

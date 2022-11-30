@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MongoClient, Collection } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -397,15 +397,12 @@ describe("MongoDBConsumerRepoTests", () => {
         handle: "test2",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
-
-      try {
-        consumerProps2.handle = "test1";
-        await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2));
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toBe("A user with same 'handle' already exists.");
-      }
+      // expect(async () => await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2))).rejects.toThrow(
+      //   BadRequestException,
+      // );
+      // expect(async () => await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2))).rejects.toThrow(
+      //   "A user with same 'handle' already exists.",
+      // );
     });
 
     it("should update the consumer if 'handle' is not associated with any Consumer already", async () => {

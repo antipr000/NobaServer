@@ -289,7 +289,14 @@ export class TransactionService {
     );
 
     const consumer = await this.consumerService.getConsumer(consumerID);
-    const transactionLimits = await this.limitService.canMakeTransaction(consumer, fiatAmount);
+    const paymentMethod = consumer.getPaymentMethodByID(transactionRequest.paymentToken);
+    const transactionLimits = await this.limitService.canMakeTransaction(
+      consumer,
+      fiatAmount,
+      partnerID,
+      transactionRequest.type,
+      paymentMethod.type,
+    );
     if (transactionLimits.status !== TransactionAllowedStatus.ALLOWED) {
       this.logger.info(`Transaction limit error: ${JSON.stringify(transactionLimits)}`);
       throw new TransactionSubmissionException(
@@ -307,7 +314,7 @@ export class TransactionService {
         isFailed: false,
         details: [],
         paymentID: undefined,
-        paymentProvider: consumer.getPaymentMethodByID(transactionRequest.paymentToken).paymentProviderID,
+        paymentProvider: paymentMethod.paymentProviderID,
       },
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
       leg1Amount: fiatAmount,

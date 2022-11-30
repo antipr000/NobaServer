@@ -25,6 +25,10 @@ import { LockProps } from "../modules/common/domain/Lock";
 import path from "path";
 import { CreditCardBinDataProps } from "../modules/common/domain/CreditCardBinData";
 import { CreditCardBinDataModel } from "../infra/mongodb/models/CreditCardBinDataModel";
+import { LimitProfileModel } from "../infra/mongodb/models/LimitProfileModel";
+import { LimitProfileProps } from "../modules/transactions/domain/LimitProfile";
+import { LimitConfigurationProps } from "../modules/transactions/domain/LimitConfiguration";
+import { LimitConfigurationModel } from "../infra/mongodb/models/LimitConfigurationModel";
 
 @Injectable()
 export class DBProvider {
@@ -102,5 +106,15 @@ export class DBProvider {
   async getCreditCardBinDataModel(): Promise<Model<CreditCardBinDataProps>> {
     await this.connectToDb();
     return CreditCardBinDataModel;
+  }
+
+  async getLimitProfileModel(): Promise<Model<LimitProfileProps>> {
+    await this.connectToDb();
+    return LimitProfileModel;
+  }
+
+  async getLimitConfigurationModel(): Promise<Model<LimitConfigurationProps>> {
+    await this.connectToDb();
+    return LimitConfigurationModel;
   }
 }
