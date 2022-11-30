@@ -172,7 +172,7 @@ export class TransactionController {
       if (e instanceof TransactionSubmissionException) {
         throw new BadRequestException(e.disposition, e.message);
       } else {
-        this.logger.error(`Unknown error in initiatePurchase: ${JSON.stringify(e)}`);
+        this.logger.error(`Error in initiateTransaction: ${e.message}`);
         throw new BadRequestException("Failed to make the payment");
       }
     }

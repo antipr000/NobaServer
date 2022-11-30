@@ -199,10 +199,39 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
 
       sellAmount: request.fiatAmountPreSpread,
       totalFiatAmount: request.totalFiatAmount,
-
+      bankFee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.fiatAmountPreSpread),
       buyerParticipantCode: consumerParticipantCode,
       sellerParticipantCode: this.zerohashService.getNobaPlatformCode(),
 
+      idempotencyID: request.transactionID,
+      requestorEmail: request.consumer.email,
+    };
+
+    const tradeResponse: ZerohashTradeResponse = await this.zerohashService.executeTrade(tradeRequest);
+
+    return tradeResponse.tradeID;
+  }
+
+  async transferAssetToNobaAccount(request: ConsumerAccountTransferRequest): Promise<string> {
+    // Gets or creates participant code
+    const consumerParticipantCode: string = await this.zerohashService.getParticipantCode(
+      request.consumer,
+      request.transactionCreationTimestamp,
+    );
+
+    // TODO(#310) Confirm that the traded values comes out correctly
+    const tradeRequest: ZerohashTradeRequest = {
+      buyerParticipantCode: this.zerohashService.getNobaPlatformCode(),
+      boughtAssetID: request.cryptoCurrency,
+      buyAmount: request.totalCryptoAmount,
+
+      sellerParticipantCode: consumerParticipantCode,
+      soldAssetID: request.fiatCurrency,
+      sellAmount: request.fiatAmountPreSpread,
+
+      tradePrice: request.cryptoAssetTradePrice,
+      bankFee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.fiatAmountPreSpread),
+      totalFiatAmount: request.totalFiatAmount,
       idempotencyID: request.transactionID,
       requestorEmail: request.consumer.email,
     };
@@ -216,19 +245,21 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
     return this.zerohashService.checkTradeStatus(id);
   }
 
-  async getConsumerAccountBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
+  async getConsumerAccountBalance(participantID: string, asset?: string): Promise<ConsumerAccountBalance[]> {
     const zhBalances = await this.zerohashService.getParticipantBalance(participantID);
 
     const consumerAccountBalances: ConsumerAccountBalance[] = [];
     zhBalances.forEach(balance => {
-      consumerAccountBalances.push({
-        name: balance.accountLabel,
-        asset: balance.asset,
-        accountID: balance.accountID,
-        lastUpdate: balance.lastUpdate,
-        balance: balance.balance,
-        accountType: balance.accountType,
-      });
+      if (asset === undefined || asset == balance.asset) {
+        consumerAccountBalances.push({
+          name: balance.accountLabel,
+          asset: balance.asset,
+          accountID: balance.accountID,
+          lastUpdate: balance.lastUpdate,
+          balance: balance.balance,
+          accountType: balance.accountType,
+        });
+      }
     });
     return consumerAccountBalances;
   }

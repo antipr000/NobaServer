@@ -4,7 +4,12 @@ import { TransactionMapper } from "../mapper/TransactionMapper";
 import { ITransactionRepo } from "./TransactionRepo";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { TransactionFilterOptions, TransactionStatus, transactionPropFromQuerySortField } from "../domain/Types";
+import {
+  TransactionFilterOptions,
+  TransactionStatus,
+  transactionPropFromQuerySortField,
+  TransactionType,
+} from "../domain/Types";
 
 import { subDays } from "date-fns";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -39,9 +44,10 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     maxLastUpdateTime: number,
     minStatusUpdateTime: number,
     status: TransactionStatus,
+    type: TransactionType[],
   ): Promise<Transaction[]> {
     this.logger.debug(
-      `Fetching all pending transaction with status "${status}" which are updated ` +
+      `Fetching all pending transaction of type "${type.join(", ")}" with status "${status}" which are updated ` +
         ` before "${maxLastUpdateTime}" (i.e. ${(Date.now().valueOf() - maxLastUpdateTime) / 1000} seconds ago) ` +
         `and the status has been updated after "${minStatusUpdateTime}" (isn't stalled).`,
     );
@@ -49,6 +55,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     const transactionModel = await this.dbProvider.getTransactionModel();
     const results = await transactionModel.find({
       transactionStatus: status,
+      type: { $in: type },
       lastProcessingTimestamp: {
         $lte: maxLastUpdateTime,
       },

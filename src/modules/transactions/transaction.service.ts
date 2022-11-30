@@ -13,9 +13,10 @@ import { EllipticService } from "../common/elliptic.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
+import { CryptoWallet } from "../consumer/domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
-import { KYCStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
+import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
 import { Partner } from "../partner/domain/Partner";
@@ -161,8 +162,8 @@ export class TransactionService {
     return this.transactionsMapper.toDTO(transaction);
   }
 
-  async getParticipantBalance(participantID: string): Promise<ConsumerAccountBalance[]> {
-    return await this.assetServiceFactory.getWalletProviderService().getConsumerAccountBalance(participantID);
+  async getParticipantBalance(participantID: string, asset?: string): Promise<ConsumerAccountBalance[]> {
+    return await this.assetServiceFactory.getWalletProviderService().getConsumerAccountBalance(participantID, asset);
   }
 
   async getUserTransactions(
@@ -235,6 +236,12 @@ export class TransactionService {
     sessionKey: string,
     transactionRequest: CreateTransactionDTO,
   ): Promise<TransactionDTO> {
+    if (!Object.values(TransactionType).includes(transactionRequest.type)) {
+      // This should only ever happen on accident by a developer so not worth defining a new
+      // TransactionSubmissionFailureExceptionText type for this scenario.
+      throw new Error("Invalid transaction type");
+    }
+
     if (partnerID === null || partnerID === undefined)
       throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER);
 
@@ -431,42 +438,71 @@ export class TransactionService {
     consumer: Consumer,
     transaction: Transaction,
   ): Promise<PendingTransactionValidationStatus> {
+    if (transaction.props.type === TransactionType.ONRAMP) {
+      const paymentMethod = await this.validatePaymentMethod(consumer, transaction);
+      const cryptoWallet = await this.validateCryptoWallet(consumer, transaction);
+      await this.validateForSanctions(consumer, transaction, paymentMethod, cryptoWallet);
+      await this.sendPendingOnrampTransactionNotification(consumer, transaction, paymentMethod);
+    } else if (transaction.props.type === TransactionType.NOBA_WALLET) {
+      const paymentMethod = await this.validatePaymentMethod(consumer, transaction);
+      await this.sendPendingNobaWalletTransactionNotification(consumer, transaction, paymentMethod);
+    } else if (transaction.props.type === TransactionType.INTERNAL_WITHDRAWAL) {
+      await this.sendPendingInternalTransferNotification(consumer, transaction);
+    } else {
+      throw new Error(`validatePendingTransaction() does not handle transaction type ${transaction.props.type}`);
+    }
+
+    return PendingTransactionValidationStatus.PASS;
+  }
+
+  // Returns valid PaymentMethod or throws exception if invalid
+  private async validatePaymentMethod(consumer: Consumer, transaction: Transaction): Promise<PaymentMethod> {
     const paymentMethod: PaymentMethod = consumer.getPaymentMethodByID(
       transaction.props.fiatPaymentInfo.paymentMethodID,
     );
 
-    if (!paymentMethod) {
+    if (!paymentMethod || paymentMethod.status != PaymentMethodStatus.APPROVED) {
       this.logger.error(
         `Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}, Transaction ID: ${transaction.props._id}`,
       );
       throw new TransactionSubmissionException(
         TransactionSubmissionFailureExceptionText.UNKNOWN_PAYMENT_METHOD,
         "UnknownPaymentMethod",
-        "Payment method does not exist for user",
+        "Invalid payment method for user",
       );
     }
 
-    if (transaction.props.type == TransactionType.NOBA_WALLET) {
-      // Ignore wallet, sardine and partner check for NOBA WALLET transactions.
-      return PendingTransactionValidationStatus.PASS;
-    }
+    return paymentMethod;
+  }
 
+  // Returns valid CryptoWallet or throws exception if invalid
+  private async validateCryptoWallet(consumer: Consumer, transaction: Transaction): Promise<CryptoWallet> {
     const cryptoWallet = this.consumerService.getCryptoWallet(
       consumer,
       transaction.props.destinationWalletAddress,
       transaction.props.partnerID,
     );
-    if (cryptoWallet == null) {
+    if (cryptoWallet == null || cryptoWallet.status != WalletStatus.APPROVED) {
       this.logger.error(
         `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
       );
       throw new TransactionSubmissionException(
         TransactionSubmissionFailureExceptionText.WALLET_DOES_NOT_EXIST,
         "WalletNotFound",
-        "Requested wallet address does not exist for user",
+        "Invalid wallet address for user",
       );
     }
 
+    return cryptoWallet;
+  }
+
+  // No return object but throws exception if sanctions check fails
+  private async validateForSanctions(
+    consumer: Consumer,
+    transaction: Transaction,
+    paymentMethod: PaymentMethod,
+    cryptoWallet: CryptoWallet,
+  ) {
     const partner = await this.partnerService.getPartner(transaction.props.partnerID);
     if (partner == null) {
       throw new TransactionSubmissionException(
@@ -527,7 +563,13 @@ export class TransactionService {
         "Wallet status is not approved yet",
       );
     }
+  }
 
+  private async sendPendingOnrampTransactionNotification(
+    consumer: Consumer,
+    transaction: Transaction,
+    paymentMethod: PaymentMethod,
+  ) {
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
@@ -566,8 +608,95 @@ export class TransactionService {
     } catch (e) {
       this.logger.error("Failed to send email at transaction initiation. " + e);
     }
+  }
 
-    return PendingTransactionValidationStatus.PASS;
+  private async sendPendingNobaWalletTransactionNotification(
+    consumer: Consumer,
+    transaction: Transaction,
+    paymentMethod: PaymentMethod,
+  ) {
+    try {
+      // TODO(CRYPTO-411): need new email for Noba wallet transactions
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
+        transaction.props.partnerID,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
+          email: consumer.props.displayEmail,
+          transactionInitiatedParams: {
+            transactionID: transaction.props.transactionID,
+            transactionTimestamp: transaction.props.transactionTimestamp,
+            paymentMethod:
+              paymentMethod.type === PaymentMethodType.CARD
+                ? paymentMethod.cardData.cardType
+                : paymentMethod.achData.accountType,
+            last4Digits:
+              paymentMethod.type === PaymentMethodType.CARD
+                ? paymentMethod.cardData.last4Digits
+                : paymentMethod.achData.mask,
+            fiatCurrency: transaction.props.leg1,
+            conversionRate: transaction.props.exchangeRate,
+            processingFee: transaction.props.processingFee,
+            networkFee: transaction.props.networkFee,
+            nobaFee: transaction.props.nobaFee,
+            totalPrice: transaction.props.leg1Amount,
+            cryptoAmount: transaction.props.leg2Amount,
+            cryptocurrency: transaction.props.leg2,
+            destinationWalletAddress: transaction.props.destinationWalletAddress,
+            status: transaction.props.transactionStatus,
+          },
+        },
+      );
+    } catch (e) {
+      this.logger.error("Failed to send email at transaction initiation. " + e);
+    }
+  }
+
+  private async sendPendingInternalTransferNotification(consumer: Consumer, transaction: Transaction) {
+    // No validation checks to perform....or should we at least check user KYC status? Is it possible to get here if not KYC'd?
+
+    // TODO(CRYPTO-411): Need new email for internal transfer
+    try {
+      // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
+      // try catch block
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
+        transaction.props.partnerID,
+        {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props._id,
+          email: consumer.props.displayEmail,
+          transactionInitiatedParams: {
+            transactionID: transaction.props.transactionID,
+            transactionTimestamp: transaction.props.transactionTimestamp,
+            paymentMethod: null,
+            last4Digits: null,
+            /*  paymentMethod.type === PaymentMethodType.CARD
+                ? paymentMethod.cardData.cardType
+                : paymentMethod.achData.accountType,
+            last4Digits:
+              paymentMethod.type === PaymentMethodType.CARD
+                ? paymentMethod.cardData.last4Digits
+                : paymentMethod.achData.mask,*/
+            fiatCurrency: transaction.props.leg1,
+            conversionRate: transaction.props.exchangeRate,
+            processingFee: transaction.props.processingFee,
+            networkFee: transaction.props.networkFee,
+            nobaFee: transaction.props.nobaFee,
+            totalPrice: transaction.props.leg1Amount,
+            cryptoAmount: transaction.props.leg2Amount,
+            cryptocurrency: transaction.props.leg2,
+            destinationWalletAddress: transaction.props.destinationWalletAddress,
+            status: transaction.props.transactionStatus,
+          },
+        },
+      );
+    } catch (e) {
+      this.logger.error("Failed to send email at transaction initiation. " + e);
+    }
   }
 
   /**

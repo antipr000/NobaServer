@@ -19,6 +19,7 @@ export interface ZerohashTradeRequest {
   idempotencyID: string;
   requestorEmail: string;
 
+  bankFee: string;
   buyerParticipantCode: string;
   sellerParticipantCode: string;
 

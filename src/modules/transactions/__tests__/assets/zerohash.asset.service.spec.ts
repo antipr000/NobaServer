@@ -2602,6 +2602,7 @@ describe("ZerohashAssetService", () => {
         sellerParticipantCode: nobaPlatformCode,
         idempotencyID: request.transactionID,
         requestorEmail: request.consumer.email,
+        bankFee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.fiatAmountPreSpread),
       };
 
       const response: ZerohashTradeResponse = {

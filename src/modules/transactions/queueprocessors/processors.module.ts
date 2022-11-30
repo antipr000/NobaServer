@@ -24,6 +24,8 @@ import { NotificationsModule } from "../../../modules/notifications/notification
 import { PspModule } from "../../../modules/psp/psp.module";
 import { TransactionRepoModule } from "../repo/transaction.repo.module";
 import { LimitsService } from "../limits.service";
+import { InternalTransferInitiator } from "./InternalTransferInitiator";
+import { InternalTransferStatusProcessor } from "./InternalTransferStatusProcessor";
 
 @Module({
   imports: [
@@ -45,55 +47,21 @@ import { LimitsService } from "../limits.service";
     LimitsService,
     SqsClient,
     TransactionPollerService,
+    SanctionedCryptoWalletService,
     {
       provide: "TransactionRepo",
       useClass: MongoDBTransactionRepo,
     },
-    {
-      // TransactionStatus.PENDING
-      provide: TransactionQueueName.PendingTransactionValidation,
-      useClass: ValidatePendingTransactionProcessor,
-    },
-    {
-      // TransactionStatus.VALIDATION_PASSED || TransactionStatus.FIAT_INCOMING_INITIATING
-      // SHOULD HAVE A DIFFERENT QUEUE(?)
-      provide: TransactionQueueName.FiatTransactionInitiator,
-      useClass: FiatTransactionInitiator,
-    },
-    {
-      // TransactionStatus.FIAT_INCOMING_INITIATED
-      provide: TransactionQueueName.FiatTransactionInitiated,
-      useClass: FiatTransactionStatusProcessor,
-    },
-
-    {
-      // TransactionStatus.FIAT_INCOMING_COMPLETED
-      provide: TransactionQueueName.FiatTransactionCompleted,
-      useClass: CryptoTransactionInitiator,
-    },
-    // TODO(#338): Confirm the mappings once.
-    {
-      // TransactionStatus.CRYPTO_OUTGOING_INITIATING
-      provide: TransactionQueueName.CryptoTransactionCompleted,
-      useClass: CryptoTransactionInitiator,
-    },
-    {
-      // TransactionStatus.CRYPTO_OUTGOING_INITIATED
-      provide: TransactionQueueName.CryptoTransactionInitiated,
-      useClass: CryptoTransactionStatusProcessor,
-    },
-    {
-      // TransactionStatus.CRYPTO_OUTGOING_COMPLETED
-      provide: TransactionQueueName.OnChainPendingTransaction,
-      useClass: OnChainPendingProcessor,
-    },
-    {
-      // TransactionStatus.CRYPTO_OUTGOING_FAILED || TransactionStatus.FIAT_INCOMING_FAILED
-      // TransactionStatus.VALIDATION_FAILED
-      provide: TransactionQueueName.TransactionFailed,
-      useClass: TransactionFailedProcessor,
-    },
-    SanctionedCryptoWalletService,
+    // Processors
+    ValidatePendingTransactionProcessor,
+    FiatTransactionInitiator,
+    FiatTransactionStatusProcessor,
+    CryptoTransactionInitiator,
+    InternalTransferInitiator,
+    InternalTransferStatusProcessor,
+    CryptoTransactionStatusProcessor,
+    OnChainPendingProcessor,
+    TransactionFailedProcessor,
   ],
 })
 export class AsyncTransactionProcessorModule {}

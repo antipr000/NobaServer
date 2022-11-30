@@ -1,10 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { anyNumber, anyString, instance, verify, when } from "ts-mockito";
+import { anyNumber, anyString, anything, instance, verify, when } from "ts-mockito";
 import { TransactionPollerService } from "../../crons/transaction.poller.cron";
 import { Transaction } from "../../domain/Transaction";
-import { TransactionQueueName, TransactionStatus } from "../../domain/Types";
+import { TransactionQueueName, TransactionStatus, TransactionType } from "../../domain/Types";
 import { getMockSqsClientWithDefaults } from "../../mocks/mock.sqs.client";
 import { getMockTransactionRepoWithDefaults } from "../../mocks/mock.transactions.repo";
 import { SqsClient } from "../../queueprocessors/sqs.client";
@@ -59,9 +59,9 @@ describe("TransactionPoller", () => {
     });
 
     allTransactionStatus.forEach(status => {
-      when(transactionRepo.getValidTransactionsToProcess(anyNumber(), anyNumber(), status as any)).thenResolve(
-        transactionsPerStaus[status] ?? [],
-      );
+      when(
+        transactionRepo.getValidTransactionsToProcess(anyNumber(), anyNumber(), status as any, anything()),
+      ).thenResolve(transactionsPerStaus[status] ?? []);
     });
   };
 
@@ -425,6 +425,7 @@ describe("TransactionPoller", () => {
           _id: transactionId,
           userId: "UUUUUUUUU",
           transactionStatus: status as any,
+          type: TransactionType.ONRAMP,
           fiatPaymentInfo: {
             paymentMethodID: "XXXXXXXXXX",
             isCompleted: false,
@@ -464,10 +465,16 @@ describe("TransactionPoller", () => {
           status === TransactionStatus.FIAT_INCOMING_REVERSAL_FAILED ||
           status === TransactionStatus.COMPLETED ||
           status === TransactionStatus.FAILED
-        )
+        ) {
           return;
+        }
 
-        verify(transactionRepo.getStaleTransactionsToProcess(anyNumber(), anyNumber(), status as any)).once();
+        // This is kinda hacky but supports our case for having one status processed by multiple processors for different transaction types
+        if (status === TransactionStatus.VALIDATION_PASSED) {
+          verify(transactionRepo.getStaleTransactionsToProcess(anyNumber(), anyNumber(), status as any)).twice();
+        } else {
+          verify(transactionRepo.getStaleTransactionsToProcess(anyNumber(), anyNumber(), status as any)).once();
+        }
       });
     });
   });

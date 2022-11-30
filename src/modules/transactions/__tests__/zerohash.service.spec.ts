@@ -2,6 +2,7 @@ import { InternalServerErrorException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 // import mockAxios from "jest-mock-axios";
 import axios, { AxiosRequestConfig } from "axios";
+import { Utils } from "../../../core/utils/Utils";
 import { instance, when } from "ts-mockito";
 import {
   ZEROHASH_API_KEY,
@@ -656,6 +657,7 @@ describe("Zerohash Service", () => {
         requestorEmail: "user@00SCXM.com",
         buyerParticipantCode: "ABCDEF",
         sellerParticipantCode: "ABCDEF",
+        bankFee: Utils.roundTo2DecimalString(1 - 0),
         tradePrice: 10000,
         buyAmount: 0.00001,
         boughtAssetID: "BTC",

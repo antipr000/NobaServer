@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PendingTransactionValidationStatus } from "../../consumer/domain/Types";
 import { Logger } from "winston";
 import { ConsumerService } from "../../consumer/consumer.service";
-import { TransactionStatus, TransactionQueueName } from "../domain/Types";
+import { TransactionStatus, TransactionQueueName, TransactionType } from "../domain/Types";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { SqsClient } from "./sqs.client";
@@ -61,7 +61,13 @@ export class ValidatePendingTransactionProcessor extends MessageProcessor {
           updatedStatus,
           transaction.props,
         );
-        await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, transactionId);
+
+        // TODO: This type logic is not sustainable but necessary for now
+        if (transaction.props.type === TransactionType.INTERNAL_WITHDRAWAL) {
+          await this.sqsClient.enqueue(TransactionQueueName.InternalTransferInitiator, transactionId);
+        } else {
+          await this.sqsClient.enqueue(TransactionQueueName.FiatTransactionInitiator, transactionId);
+        }
       }
     } catch (e) {
       this.logger.error(`Error in ValidatePendingTransactionProcessor: ${JSON.stringify(e)}`);

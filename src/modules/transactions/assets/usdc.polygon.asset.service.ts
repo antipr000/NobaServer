@@ -144,7 +144,6 @@ export class USDCPolygonAssetService extends DefaultAssetService {
       request.transactionCreationTimestamp,
     );
 
-    // TODO(#310) Confirm that the traded values comes out correctly
     const tradeRequest: ZerohashTradeRequest = {
       boughtAssetID: request.cryptoCurrency,
       soldAssetID: request.fiatCurrency,
@@ -154,7 +153,7 @@ export class USDCPolygonAssetService extends DefaultAssetService {
 
       sellAmount: request.fiatAmountPreSpread,
       totalFiatAmount: request.totalFiatAmount,
-
+      bankFee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.fiatAmountPreSpread),
       buyerParticipantCode: consumerParticipantCode,
       sellerParticipantCode: this.zerohashService.getNobaPlatformCode(),
 

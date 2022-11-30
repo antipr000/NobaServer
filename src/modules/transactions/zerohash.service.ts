@@ -16,7 +16,6 @@ import { ZerohashConfigs, ZHLS_PLATFORM_CODE } from "../../config/configtypes/Ze
 import { AppEnvironment, getEnvironmentName, ZEROHASH_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { Utils } from "../../core/utils/Utils";
 import { LocationService } from "../common/location.service";
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerProps } from "../consumer/domain/Consumer";
@@ -270,7 +269,7 @@ export class ZeroHashService {
     };
   }
 
-  // Execute a liquidity quote
+  // Get participant balance
   async getParticipantBalance(participantID: string): Promise<ZerohashAccountBalance[]> {
     const balances: ZerohashAccountBalance[] = [];
 
@@ -319,7 +318,7 @@ export class ZeroHashService {
     };
   }
 
-  // Trade the crypto from Noba to Custom
+  // Trade the crypto between ZeroHash accounts
   async requestTrade(tradeData) {
     const tradeRequest = await this.makeRequest("/trades", "POST", tradeData);
     return tradeRequest;
@@ -338,7 +337,7 @@ export class ZeroHashService {
       physical_delivery: true,
       parties_anonymous: false,
       transaction_timestamp: Date.now(),
-      bank_fee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.sellAmount),
+      bank_fee: request.bankFee,
       parties: [
         {
           participant_code: request.buyerParticipantCode,

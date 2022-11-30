@@ -18,7 +18,7 @@ export function getMockTransactionRepoWithDefaults(): ITransactionRepo {
   when(mockTransactionRepo.getMonthlyUserTransactionAmount(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.getWeeklyUserTransactionAmount(anything())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.getDailyUserTransactionAmount(anything())).thenReject(new Error("Method not implemented"));
-  when(mockTransactionRepo.getValidTransactionsToProcess(anyNumber(), anyNumber(), anyString())).thenReject(
+  when(mockTransactionRepo.getValidTransactionsToProcess(anyNumber(), anyNumber(), anyString(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockTransactionRepo.getStaleTransactionsToProcess(anyNumber(), anyNumber(), anyString())).thenReject(

@@ -266,6 +266,7 @@ describe("TransactionService", () => {
       userId: consumerID,
       sessionKey: sessionKey,
       transactionStatus: TransactionStatus.PENDING,
+      type: TransactionType.ONRAMP,
       fiatPaymentInfo: {
         paymentMethodID: paymentMethodID,
         isCompleted: false,
@@ -293,12 +294,13 @@ describe("TransactionService", () => {
       isDefault: false,
       paymentProviderID: "12345" as any,
       paymentToken: paymentMethodID,
+      status: PaymentMethodStatus.APPROVED,
     };
 
     const cryptoWallet: CryptoWallet = {
       address: walletAddress,
       isEVMCompatible: false,
-      status: undefined,
+      status: WalletStatus.APPROVED,
       partnerID: partnerID,
       isPrivate: false,
     };
@@ -635,7 +637,7 @@ describe("TransactionService", () => {
       reset(consumerService);
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
-      when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
@@ -670,9 +672,11 @@ describe("TransactionService", () => {
       });
 
       reset(consumerService);
-      when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
+      when(consumerService.getCryptoWallet(consumer, consumer.props.cryptoWallets[0].address, partnerID)).thenReturn(
+        consumer.props.cryptoWallets[0],
+      );
       when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
-      when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
+      when(consumerService.addOrUpdateCryptoWallet(consumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(partner);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);
@@ -687,30 +691,18 @@ describe("TransactionService", () => {
 
     it("should throw an error if the partnerID is unknown", async () => {
       await setupTestModule(defaultEnvironmentVariables);
-      when(verificationService.transactionVerification(sessionKey, consumer, anything())).thenResolve({
-        status: KYCStatus.APPROVED,
-        walletStatus: WalletStatus.REJECTED,
-        paymentMethodStatus: PaymentMethodStatus.APPROVED,
-      });
-
-      const updatedWallet: CryptoWallet = {
-        ...cryptoWallet,
-        status: WalletStatus.REJECTED,
-      };
-      const updatedPaymentMethod: PaymentMethod = {
-        ...paymentMethod,
-        status: PaymentMethodStatus.APPROVED,
-      };
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        paymentMethods: [updatedPaymentMethod],
-        cryptoWallets: [updatedWallet],
-      });
 
       reset(consumerService);
+
+      const cryptoWallet: CryptoWallet = {
+        address: walletAddress,
+        isEVMCompatible: false,
+        status: WalletStatus.APPROVED,
+        partnerID: null,
+        isPrivate: false,
+      };
+
       when(consumerService.getCryptoWallet(consumer, cryptoWallet.address, partnerID)).thenReturn(cryptoWallet);
-      when(consumerService.updatePaymentMethod(consumerID, anything())).thenResolve(updatedConsumer);
-      when(consumerService.addOrUpdateCryptoWallet(updatedConsumer, anything())).thenResolve(updatedConsumer);
       when(partnerService.getPartner(partnerID)).thenResolve(null);
       try {
         await transactionService.validatePendingTransaction(consumer, transaction);

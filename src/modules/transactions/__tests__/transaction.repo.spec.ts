@@ -510,11 +510,13 @@ describe("MongoDBTransactionRepoTests", () => {
         /*maxLastUpdateTime=*/ 25,
         /*minStatusUpdateTime=*/ 15,
         TransactionStatus.PENDING,
+        [TransactionType.ONRAMP],
       );
       const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
         /*maxLastUpdateTime=*/ 25,
         /*minStatusUpdateTime=*/ 15,
         TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        [TransactionType.ONRAMP],
       );
 
       expect(pendingTransactions).toHaveLength(0);
@@ -546,11 +548,13 @@ describe("MongoDBTransactionRepoTests", () => {
         /*maxLastUpdateTime=*/ 27,
         /*minStatusUpdateTime=*/ 15,
         TransactionStatus.PENDING,
+        [TransactionType.ONRAMP],
       );
       const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
         /*maxLastUpdateTime=*/ 27,
         /*minStatusUpdateTime=*/ 15,
         TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        [TransactionType.ONRAMP],
       );
 
       expect(pendingTransactions).toHaveLength(0);
@@ -582,11 +586,13 @@ describe("MongoDBTransactionRepoTests", () => {
         /*maxLastUpdateTime=*/ 25,
         /*minStatusUpdateTime=*/ 17,
         TransactionStatus.PENDING,
+        [TransactionType.ONRAMP],
       );
       const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
         /*maxLastUpdateTime=*/ 25,
         /*minStatusUpdateTime=*/ 17,
         TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        [TransactionType.ONRAMP],
       );
 
       expect(pendingTransactions).toHaveLength(0);
@@ -692,11 +698,13 @@ describe("MongoDBTransactionRepoTests", () => {
         /*maxLastUpdateTime=*/ 25,
         /*minStatusUpdateTime=*/ 17,
         TransactionStatus.PENDING,
+        [TransactionType.ONRAMP],
       );
       const cryptoOutgoingCompletedTransactions: Transaction[] = await transactionRepo.getValidTransactionsToProcess(
         /*maxLastUpdateTime=*/ 25,
         /*minStatusUpdateTime=*/ 17,
         TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
+        [TransactionType.ONRAMP],
       );
 
       expect(pendingTransactions).toHaveLength(0);

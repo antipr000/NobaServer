@@ -77,6 +77,7 @@ export class TransactionPollerService {
         maxAllowedTransactionUpdateTime,
         minAllowedLastStatusUpdateTime,
         transactionAttr.transactionStatus,
+        transactionAttr.transactionType,
       );
       allAsyncOperations.push(this.enqueueTransactions(pendingTransactionsWithCurrentAttr, transactionAttr));
     }

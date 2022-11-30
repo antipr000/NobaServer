@@ -1,5 +1,5 @@
 import { Transaction, TransactionProps } from "../domain/Transaction";
-import { TransactionStatus, TransactionFilterOptions } from "../domain/Types";
+import { TransactionStatus, TransactionFilterOptions, TransactionType } from "../domain/Types";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { PartnerTransactionFilterOptions, UpdateFiatTransactionInfoRequest } from "../domain/TransactionRepoTypes";
 
@@ -31,6 +31,7 @@ export interface ITransactionRepo {
     maxLastUpdateTime: number,
     minStatusUpdateTime: number,
     status: TransactionStatus,
+    type: TransactionType[],
   ): Promise<Transaction[]>;
   getStaleTransactionsToProcess(
     maxLastUpdateTime: number,

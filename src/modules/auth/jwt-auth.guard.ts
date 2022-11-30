@@ -31,7 +31,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
         request.url.split("?")[0], // Only take URI path, no parameters
         JSON.stringify(request.body),
       );
-      this.logger.info("Validated headers successfully");
+      this.logger.debug("Validated headers successfully");
       return true;
     } catch (e) {
       this.logger.error(`Failed to validate headers. Reason: ${e.message}`);

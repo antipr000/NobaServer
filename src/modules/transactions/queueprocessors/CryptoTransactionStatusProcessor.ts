@@ -81,8 +81,8 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
 
       const consumer = await this.consumerService.getConsumer(transaction.props.userId);
 
-      // Skip this if we already have a withdrawalID or if it is a noba wallet transaction
-      if (!transaction.props.zhWithdrawalID && transaction.props.type != TransactionType.NOBA_WALLET) {
+      // Skip this if it's an onramp transaction and we already have a withdrawalID
+      if (!transaction.props.zhWithdrawalID && transaction.props.type == TransactionType.ONRAMP) {
         this.logger.info(`${transactionId}: Initiating the transfer to consumer wallet.`);
 
         const consumerWalletTransferRequest: ConsumerWalletTransferRequest = {
