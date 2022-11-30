@@ -90,9 +90,9 @@ export class MongoDBOtpRepo implements IOTPRepo {
     try {
       await otpModel.create(otp.props);
     } catch (e) {
-      // Already exists. We should update now
-      this.logger.warn(`Error while creating new OTP in db, assuming it already exists we are updating it, err: ${e}`);
-      await otpModel.findByIdAndUpdate(otp.props.emailOrPhone, otp.props);
+      // Already exists, which should never happen since we delete OTPs when generating new
+      this.logger.warn(`Error while creating new OTP in db. Error: ${e}`);
+      throw new Error("Error saving OTP");
     }
   }
 
@@ -102,7 +102,7 @@ export class MongoDBOtpRepo implements IOTPRepo {
       await otpModel.deleteOne({ _id: id });
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
-      console.log(e);
+      this.logger.warn(`Error deleting OTP by ID: ${e}`);
     }
   }
 

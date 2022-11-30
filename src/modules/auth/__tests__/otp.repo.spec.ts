@@ -14,6 +14,7 @@ import { NotFoundException } from "@nestjs/common";
 import { Otp } from "../domain/Otp";
 
 const DEFAULT_PARTNER_ID = "partner_id";
+const DEFAULT_CONSUMER_ID = "consumer_id";
 
 describe("MongoDBOtpRepoTests", () => {
   jest.setTimeout(20000);
@@ -67,7 +68,7 @@ describe("MongoDBOtpRepoTests", () => {
   });
 
   describe("getOtp", () => {
-    it("should return an otp", async () => {
+    it("should return an otp without ConsumerID", async () => {
       const emailID = "user@noba.com";
       const otp = 123457;
       await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_PARTNER_ID);
@@ -75,9 +76,33 @@ describe("MongoDBOtpRepoTests", () => {
       expect(savedOtp.props.emailOrPhone).toBe(emailID);
       expect(savedOtp.props.otp).toBe(otp);
     });
+
+    it("should return an otp with ConsumerID", async () => {
+      const emailID = "user@noba.com";
+      const otp = 123457;
+      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_PARTNER_ID, DEFAULT_CONSUMER_ID);
+      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_PARTNER_ID, DEFAULT_CONSUMER_ID);
+      expect(savedOtp.props.emailOrPhone).toBe(emailID);
+      expect(savedOtp.props.otp).toBe(otp);
+    });
   });
 
   describe("saveOTPObject", () => {
+    it("should save an otp object", async () => {
+      const emailID = "user@noba.com";
+      const otp = 123457;
+      const otpObject = Otp.createOtp({
+        emailOrPhone: emailID,
+        otp,
+        identityType: IdentityType.consumer,
+        partnerID: DEFAULT_PARTNER_ID,
+      });
+      await otpRepo.saveOTPObject(otpObject);
+      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_PARTNER_ID);
+      expect(savedOtp.props.emailOrPhone).toBe(emailID);
+      expect(savedOtp.props.otp).toBe(otp);
+    });
+
     it("should save an otp object", async () => {
       const emailID = "user@noba.com";
       const otp = 123457;
@@ -106,6 +131,20 @@ describe("MongoDBOtpRepoTests", () => {
       await otpRepo.saveOTP(emailID, opt3, IdentityType.partnerAdmin, DEFAULT_PARTNER_ID);
 
       const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.consumer);
+      expect(savedOtps.length).toBe(2);
+    });
+
+    it("should return all otps for a user for a given identity type and consumer", async () => {
+      const emailID = "user@noba.com";
+      const otp = 123457;
+      const otp2 = 123456;
+      const opt3 = 1342424;
+
+      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_PARTNER_ID, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, otp2, IdentityType.consumer, DEFAULT_PARTNER_ID, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, opt3, IdentityType.partnerAdmin, DEFAULT_PARTNER_ID);
+
+      const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.consumer, DEFAULT_CONSUMER_ID);
       expect(savedOtps.length).toBe(2);
     });
   });
