@@ -12,6 +12,6 @@ export interface IOTPRepo {
   ): Promise<void>;
   saveOTPObject(otp: Otp): Promise<void>;
   deleteOTP(id: string): Promise<void>;
-  deleteAllOTPsForUser(emailOrPhone: string, identityType: string): Promise<void>;
+  deleteAllOTPsForUser(emailOrPhone: string, identityType: string, userID?: string): Promise<void>;
   deleteAllExpiredOTPs(): Promise<void>;
 }

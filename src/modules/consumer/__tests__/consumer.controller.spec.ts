@@ -1,41 +1,41 @@
+import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { UserEmailUpdateRequest } from "test/api_client";
 import { deepEqual, instance, verify, when } from "ts-mockito";
+import { PhoneVerificationOtpRequest } from "../../../../test/api_client/models/PhoneVerificationOtpRequest";
+import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
+import { Result } from "../../../core/logic/Result";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
+import { Partner } from "../../../modules/partner/domain/Partner";
+import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
+import { PlaidClient } from "../../../modules/psp/plaid.client";
+import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
+import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
+import { PartnerService } from "../../partner/partner.service";
 import { ConsumerController } from "../consumer.controller";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
-import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
-import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
-import { ConsumerDTO } from "../dto/ConsumerDTO";
-import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
-import { ConsumerMapper } from "../mappers/ConsumerMapper";
-import { getMockConsumerServiceWithDefaults } from "../mocks/mock.consumer.service";
-import { PartnerService } from "../../partner/partner.service";
-import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
-import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
-import { Partner } from "../../../modules/partner/domain/Partner";
-import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
-import { PaymentProvider } from "../domain/PaymentProvider";
-import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
-import { PlaidClient } from "../../../modules/psp/plaid.client";
-import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
-import { PhoneVerificationOtpRequest } from "../../../../test/api_client/models/PhoneVerificationOtpRequest";
-import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
-import { VerificationProviders } from "../domain/VerificationData";
 import {
-  UserState,
   AggregatedPaymentMethodState,
   AggregatedWalletState,
-  KycVerificationState,
-  DocumentVerificationState,
   DocumentVerificationErrorReason,
+  DocumentVerificationState,
+  KycVerificationState,
+  UserState,
 } from "../domain/ExternalStates";
+import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
+import { PaymentProvider } from "../domain/PaymentProvider";
+import { VerificationProviders } from "../domain/VerificationData";
+import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
+import { ConsumerDTO } from "../dto/ConsumerDTO";
 import { EmailVerificationOtpRequest } from "../dto/EmailVerificationDTO";
-import { UserEmailUpdateRequest } from "test/api_client";
-import { Result } from "../../../core/logic/Result";
+import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
 import { UpdatePaymentMethodDTO } from "../dto/UpdatePaymentMethodDTO";
+import { ConsumerMapper } from "../mappers/ConsumerMapper";
+import { getMockConsumerServiceWithDefaults } from "../mocks/mock.consumer.service";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -658,7 +658,7 @@ describe("ConsumerController", () => {
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToPhone(phone)).thenResolve();
+      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
 
       await consumerController.requestOtpToUpdatePhone(
         {
@@ -670,7 +670,7 @@ describe("ConsumerController", () => {
         phoneUpdateOtpRequest,
       );
 
-      verify(consumerService.sendOtpToPhone(phone)).called();
+      verify(consumerService.sendOtpToPhone(consumer.props._id, phone)).called();
     });
 
     it("should reject the request for non-consumers", async () => {
@@ -712,7 +712,7 @@ describe("ConsumerController", () => {
         Result.ok(Consumer.createConsumer({ phone: phone, partners: [{ partnerID: partnerID }] })),
       );
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToPhone(phone)).thenResolve();
+      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
 
       try {
         await consumerController.requestOtpToUpdatePhone(

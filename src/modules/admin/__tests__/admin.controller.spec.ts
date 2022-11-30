@@ -1559,7 +1559,7 @@ describe("AdminController", () => {
     };
 
     class MockedResponse extends fs.WriteStream {
-      static receivedResponseCode: number = 0;
+      static receivedResponseCode = 0;
       static receivedHeaders = {};
 
       constructor(responseFilePath: string) {

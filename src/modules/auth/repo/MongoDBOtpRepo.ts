@@ -94,9 +94,13 @@ export class MongoDBOtpRepo implements IOTPRepo {
     }
   }
 
-  async deleteAllOTPsForUser(emailOrPhone: string, identityType: string): Promise<void> {
+  async deleteAllOTPsForUser(emailOrPhone: string, identityType: string, userID?: string): Promise<void> {
     try {
       const otpModel = await this.dbProvider.getOtpModel();
+      if (userID) {
+        await otpModel.deleteMany({ _id: userID, identityType: identityType });
+      }
+      // To be full proof, always delete by emailOrPhone passed too, in case there are multiple users with same email or phone
       await otpModel.deleteMany({ emailOrPhone: emailOrPhone, identityType: identityType });
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.

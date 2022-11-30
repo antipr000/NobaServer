@@ -35,7 +35,7 @@ import { ConsumerService } from "./consumer.service";
 import { Consumer } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { WalletStatus } from "./domain/VerificationStatus";
-import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO } from "./dto/AddCryptoWalletDTO";
+import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO, NotificationMethod } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "./dto/ConsumerDTO";
 import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
@@ -189,7 +189,7 @@ export class ConsumerController {
       throw new BadRequestException("User already exists with this phone number");
     }
 
-    await this.consumerService.sendOtpToPhone(requestBody.phone);
+    await this.consumerService.sendOtpToPhone(consumer.props._id, requestBody.phone);
   }
 
   @Patch("/email")
@@ -374,14 +374,26 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid crypto wallet details" })
-  async addCryptoWallet(
-    @Body() requestBody: AddCryptoWalletDTO,
-    @Headers() headers,
-    @Request() request,
-  ): Promise<ConsumerDTO> {
+  async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @Headers() headers, @Request() request): Promise<any> {
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException();
+    }
+
+    // Sanitise notification method for OTP
+    if (requestBody.notificationMethod == NotificationMethod.EMAIL && consumer.props.email == null) {
+      if (consumer.props.phone == null) {
+        throw new BadRequestException("No email or phone configured for consumer");
+      }
+      this.logger.warn("Email not configured for consumer, using phone instead");
+      requestBody.notificationMethod = NotificationMethod.PHONE;
+    }
+    if (requestBody.notificationMethod == NotificationMethod.PHONE && consumer.props.phone == null) {
+      if (consumer.props.email == null) {
+        throw new BadRequestException("No email or phone configured for consumer");
+      }
+      this.logger.warn("Phone not configured for consumer, using email instead");
+      requestBody.notificationMethod = NotificationMethod.EMAIL;
     }
 
     // Initialise the crypto wallet object with a pending status here in case of any updates made to wallet OR addition of a new wallet
@@ -395,8 +407,8 @@ export class ConsumerController {
       isPrivate: true, // default value of 'isPrivate'.
     };
 
-    const res = await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
-    return this.consumerMapper.toDTO(res);
+    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, requestBody.notificationMethod);
+    return { notificationMethod: requestBody.notificationMethod };
   }
 
   @Delete("/wallets/:walletAddress")
