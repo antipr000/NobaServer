@@ -14,6 +14,7 @@ import {
 import { Checkout } from "checkout-sdk-node";
 import { BadRequestException } from "@nestjs/common";
 import { AddPaymentMethodDTO, PaymentType } from "../../../modules/consumer/dto/AddPaymentMethodDTO";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
@@ -146,13 +147,21 @@ describe("CheckoutClient", () => {
         },
       };
 
+      const consumer = createConsumer("fake+consumer+payment@noba.com");
       const checkoutConsumerId = await checkoutClient.createConsumer("fake+consumer+payment@noba.com");
 
       const addedPaymentMethod = await checkoutClient.addCreditCardPaymentMethod(addPaymentMethod, checkoutConsumerId);
 
       const paymentToken = addedPaymentMethod.instrumentID;
 
-      const response = await checkoutClient.makeCardPayment(1000, "USD", paymentToken, "order_id_1", "idempotency-key");
+      const response = await checkoutClient.makeCardPayment(
+        1000,
+        "USD",
+        paymentToken,
+        "order_id_1",
+        "idempotency-key",
+        consumer,
+      );
 
       expect(response.id).toBeTruthy();
       expect(response.response_code).toBe("10000");
@@ -175,13 +184,21 @@ describe("CheckoutClient", () => {
         },
       };
 
+      const consumer = createConsumer("fake+consumer+payment@noba.com");
       const checkoutConsumerId = await checkoutClient.createConsumer("fake+consumer+payment@noba.com");
 
       const addedPaymentMethod = await checkoutClient.addCreditCardPaymentMethod(addPaymentMethod, checkoutConsumerId);
 
       const paymentToken = addedPaymentMethod.instrumentID;
 
-      const payment = await checkoutClient.makeCardPayment(1000, "USD", paymentToken, "order_id_1", "idempotency-key");
+      const payment = await checkoutClient.makeCardPayment(
+        1000,
+        "USD",
+        paymentToken,
+        "order_id_1",
+        "idempotency-key",
+        consumer,
+      );
 
       const response = await checkoutClient.getPaymentDetails(payment.id);
 
@@ -196,3 +213,22 @@ describe("CheckoutClient", () => {
     });
   });
 });
+
+const createConsumer = (email: string): Consumer => {
+  return Consumer.createConsumer({
+    _id: "fake-consumer-id",
+    email: email,
+    partners: [
+      {
+        partnerID: "fake-partner-1",
+      },
+    ],
+    address: {
+      streetLine1: "123 main st",
+      countryCode: "US",
+      city: "irvene",
+      regionCode: "CA",
+      postalCode: "123456",
+    },
+  });
+};
