@@ -5,4 +5,5 @@
 export type ConfirmWalletUpdateDTO = {
   address: string;
   otp: number;
+  notificationMethod?: "Email" | "Phone";
 };

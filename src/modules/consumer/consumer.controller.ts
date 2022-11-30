@@ -165,7 +165,7 @@ export class ConsumerController {
       throw new BadRequestException("User already exists with this phone number");
     }
 
-    const res = await this.consumerService.updateConsumerPhone(consumer, requestBody);
+    const res = await this.consumerService.updateConsumerPhone(consumer, requestBody, request.user.partnerId);
     return this.consumerMapper.toDTO(res);
   }
 
@@ -189,7 +189,7 @@ export class ConsumerController {
       throw new BadRequestException("User already exists with this phone number");
     }
 
-    await this.consumerService.sendOtpToPhone(consumer.props._id, requestBody.phone);
+    await this.consumerService.sendOtpToPhone(consumer.props._id, requestBody.phone, request.user.partnerId);
   }
 
   @Patch("/email")
@@ -380,21 +380,8 @@ export class ConsumerController {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    // Sanitise notification method for OTP
-    if (requestBody.notificationMethod === NotificationMethod.EMAIL && !consumer.props.email) {
-      if (!consumer.props.phone) {
-        throw new BadRequestException("No email or phone configured for consumer");
-      }
-      this.logger.warn("Email not configured for consumer, using phone instead");
-      requestBody.notificationMethod = NotificationMethod.PHONE;
-    }
-    if (requestBody.notificationMethod === NotificationMethod.PHONE && !consumer.props.phone) {
-      if (!consumer.props.email) {
-        throw new BadRequestException("No email or phone configured for consumer");
-      }
-      this.logger.warn("Phone not configured for consumer, using email instead");
-      requestBody.notificationMethod = NotificationMethod.EMAIL;
-    }
+    // Sanitize notification method for OTP
+    const notificationMethod = this.verifyOrReplaceNotificationMethod(requestBody.notificationMethod, consumer);
 
     // Initialise the crypto wallet object with a pending status here in case any updates made to wallet or addition of a new wallet
     const cryptoWallet: CryptoWallet = {
@@ -408,8 +395,8 @@ export class ConsumerController {
     };
 
     // Ignore the response from the below method, as we don't return the updated consumer in this API.
-    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, requestBody.notificationMethod);
-    return { notificationMethod: requestBody.notificationMethod };
+    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
+    return { notificationMethod: notificationMethod };
   }
 
   @Delete("/wallets/:walletAddress")
@@ -448,13 +435,37 @@ export class ConsumerController {
 
     const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY]);
 
+    const notificationMethod = this.verifyOrReplaceNotificationMethod(requestBody.notificationMethod, consumer);
+
     const res = await this.consumerService.confirmWalletUpdateOTP(
       consumer,
       requestBody.address,
       requestBody.otp,
       consumer.props._id,
       partner.props._id,
+      notificationMethod,
     );
     return this.consumerMapper.toDTO(res);
+  }
+
+  private verifyOrReplaceNotificationMethod(
+    notificationMethod: NotificationMethod,
+    consumer: Consumer,
+  ): NotificationMethod {
+    if (notificationMethod === NotificationMethod.EMAIL && !consumer.props.email) {
+      if (!consumer.props.phone) {
+        throw new BadRequestException("No email or phone configured for consumer");
+      }
+      this.logger.warn("Email not configured for consumer, using phone instead");
+      notificationMethod = NotificationMethod.PHONE;
+    }
+    if (notificationMethod === NotificationMethod.PHONE && !consumer.props.phone) {
+      if (!consumer.props.email) {
+        throw new BadRequestException("No email or phone configured for consumer");
+      }
+      this.logger.warn("Phone not configured for consumer, using email instead");
+      notificationMethod = NotificationMethod.EMAIL;
+    }
+    return notificationMethod;
   }
 }

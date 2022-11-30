@@ -28,4 +28,7 @@ export class ConfirmWalletUpdateDTO {
 
   @ApiProperty()
   otp: number;
+
+  @ApiPropertyOptional({ enum: NotificationMethod })
+  notificationMethod?: NotificationMethod = NotificationMethod.EMAIL;
 }

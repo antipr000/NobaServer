@@ -658,7 +658,9 @@ describe("ConsumerController", () => {
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
+      when(
+        consumerService.sendOtpToPhone(consumer.props._id, phone, consumer.props.partners[0].partnerID),
+      ).thenResolve();
 
       await consumerController.requestOtpToUpdatePhone(
         {
@@ -670,7 +672,7 @@ describe("ConsumerController", () => {
         phoneUpdateOtpRequest,
       );
 
-      verify(consumerService.sendOtpToPhone(consumer.props._id, phone)).called();
+      verify(consumerService.sendOtpToPhone(consumer.props._id, phone, consumer.props.partners[0].partnerID)).called();
     });
 
     it("should reject the request for non-consumers", async () => {
@@ -712,7 +714,9 @@ describe("ConsumerController", () => {
         Result.ok(Consumer.createConsumer({ phone: phone, partners: [{ partnerID: partnerID }] })),
       );
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
+      when(
+        consumerService.sendOtpToPhone(consumer.props._id, phone, consumer.props.partners[0].partnerID),
+      ).thenResolve();
 
       try {
         await consumerController.requestOtpToUpdatePhone(
@@ -759,7 +763,9 @@ describe("ConsumerController", () => {
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenResolve(expectedUpdatedConsumer);
+      when(
+        consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, consumer.props.partners[0].partnerID),
+      ).thenResolve(expectedUpdatedConsumer);
 
       const updatedConsumer = await consumerController.updatePhone(
         {
@@ -771,7 +777,9 @@ describe("ConsumerController", () => {
         phoneUpdateRequest,
       );
 
-      verify(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).called();
+      verify(
+        consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, consumer.props.partners[0].partnerID),
+      ).called();
 
       expect(updatedConsumer).toEqual(consumerMapper.toDTO(expectedUpdatedConsumer));
     });

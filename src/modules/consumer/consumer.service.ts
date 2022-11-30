@@ -170,7 +170,7 @@ export class ConsumerService {
     return updatedConsumer;
   }
 
-  async sendOtpToPhone(consumerID: string, phone: string) {
+  async sendOtpToPhone(consumerID: string, phone: string, partnerID: string) {
     const otp = this.generateOTP();
     await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, consumerID);
 
@@ -179,18 +179,29 @@ export class ConsumerService {
       identityType: consumerIdentityIdentifier,
       otp: otp,
       consumerID: consumerID,
+      partnerID: partnerID,
     });
     this.otpRepo.saveOTPObject(otpObject);
 
     await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
   }
 
-  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest): Promise<Consumer> {
-    const otpResult = await this.otpRepo.getOTP(reqData.phone, consumerIdentityIdentifier);
+  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest, partnerID: string): Promise<Consumer> {
+    console.log(
+      `Calling getOTP with ${reqData.phone}, ${consumerIdentityIdentifier}, ${partnerID}, ${consumer.props._id}`,
+    );
+    const otpResult = await this.otpRepo.getOTP(
+      reqData.phone,
+      consumerIdentityIdentifier,
+      partnerID,
+      consumer.props._id,
+    );
 
     if (otpResult.props.otp !== reqData.otp) {
       throw new BadRequestException("OTP is incorrect");
     }
+
+    await this.otpRepo.deleteOTP(otpResult.props._id);
 
     const updatedConsumer = await this.updateConsumer({
       _id: consumer.props._id,
@@ -218,6 +229,8 @@ export class ConsumerService {
     if (otpResult.props.otp !== reqData.otp) {
       throw new BadRequestException("OTP is incorrect");
     }
+
+    await this.otpRepo.deleteOTP(otpResult.props._id);
 
     const updatedConsumer = await this.updateConsumer({
       _id: consumer.props._id,
@@ -446,6 +459,7 @@ export class ConsumerService {
     otp: number,
     consumerID: string,
     partnerID: string,
+    notificationMethod: NotificationMethod,
   ) {
     // Verify if the otp is correct
     const cryptoWallet = this.getCryptoWallet(consumer, walletAddress, partnerID);
@@ -455,7 +469,7 @@ export class ConsumerService {
     }
 
     const actualOtp = await this.otpRepo.getOTP(
-      consumer.props.email,
+      notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone,
       consumerIdentityIdentifier,
       partnerID,
       consumerID,

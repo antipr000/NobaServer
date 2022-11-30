@@ -7,5 +7,5 @@ export type AddCryptoWalletDTO = {
   address: string;
   chainType?: string;
   isEVMCompatible?: boolean;
-  notificationMethod: "Email" | "Phone";
+  notificationMethod?: "Email" | "Phone";
 };

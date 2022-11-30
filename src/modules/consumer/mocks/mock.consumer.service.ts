@@ -32,8 +32,10 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
   );
   when(mockConsumerService.requestPayment(anything(), anything())).thenReject(new Error("Method not implemented!"));
 
-  when(mockConsumerService.sendOtpToPhone(anyString(), anyString())).thenReject(new Error("Method not implemented!"));
-  when(mockConsumerService.updateConsumerPhone(anything(), anything())).thenReject(
+  when(mockConsumerService.sendOtpToPhone(anyString(), anyString(), anyString())).thenReject(
+    new Error("Method not implemented!"),
+  );
+  when(mockConsumerService.updateConsumerPhone(anything(), anything(), anyString())).thenReject(
     new Error("Method not implemented!"),
   );
 
