@@ -406,7 +406,7 @@ export class ConsumerService {
   }
 
   async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string, partnerId: string) {
-    const otp: number = Math.floor(100000 + Math.random() * 900000);
+    const otp: number = this.generateOTP();
     await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier);
     await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier, partnerId);
     await this.notificationService.sendNotification(
