@@ -27,10 +27,15 @@ import {
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import { AuthUser } from "../auth/auth.decorator";
+import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
+import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
+import { PartnerService } from "../partner/partner.service";
+import { PlaidClient } from "../psp/plaid.client";
 import { ConsumerService } from "./consumer.service";
 import { Consumer } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
@@ -38,18 +43,13 @@ import { WalletStatus } from "./domain/VerificationStatus";
 import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO, NotificationMethod } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "./dto/ConsumerDTO";
-import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
-import { ConsumerMapper } from "./mappers/ConsumerMapper";
-import { PartnerService } from "../partner/partner.service";
-import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
-import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
-import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
-import { PlaidClient } from "../psp/plaid.client";
-import { PhoneVerificationOtpRequest, UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
-import { EmailVerificationOtpRequest, UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
-import { AuthUser } from "../auth/auth.decorator";
-import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
 import { ConsumerHandleDTO } from "./dto/ConsumerHandleDTO";
+import { EmailVerificationOtpRequest, UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
+import { PhoneVerificationOtpRequest, UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
+import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
+import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
+import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
+import { ConsumerMapper } from "./mappers/ConsumerMapper";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -407,6 +407,7 @@ export class ConsumerController {
       isPrivate: true, // default value of 'isPrivate'.
     };
 
+    // Ignore the response from the below method, as we don't return the updated consumer in this API.
     await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, requestBody.notificationMethod);
     return { notificationMethod: requestBody.notificationMethod };
   }

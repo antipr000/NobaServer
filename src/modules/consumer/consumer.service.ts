@@ -488,7 +488,7 @@ export class ConsumerService {
     consumer: Consumer,
     cryptoWallet: CryptoWallet,
     notificationMethod?: NotificationMethod,
-  ) {
+  ): Promise<Consumer> {
     let allCryptoWallets = consumer.props.cryptoWallets;
 
     const selectedWallet = allCryptoWallets.filter(
@@ -519,7 +519,7 @@ export class ConsumerService {
       allCryptoWallets = [...remainingWallets, cryptoWallet];
     }
 
-    await this.updateConsumer({
+    return await this.updateConsumer({
       ...consumer.props,
       cryptoWallets: allCryptoWallets,
     });
