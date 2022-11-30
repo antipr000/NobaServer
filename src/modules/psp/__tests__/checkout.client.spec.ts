@@ -147,7 +147,7 @@ describe("CheckoutClient", () => {
         },
       };
 
-      const consumer = createConsumer("fake+consumer+payment@noba.com");
+      const consumer = createFakeConsumer("fake+consumer+payment@noba.com");
       const checkoutConsumerId = await checkoutClient.createConsumer("fake+consumer+payment@noba.com");
 
       const addedPaymentMethod = await checkoutClient.addCreditCardPaymentMethod(addPaymentMethod, checkoutConsumerId);
@@ -184,7 +184,7 @@ describe("CheckoutClient", () => {
         },
       };
 
-      const consumer = createConsumer("fake+consumer+payment@noba.com");
+      const consumer = createFakeConsumer("fake+consumer+payment@noba.com");
       const checkoutConsumerId = await checkoutClient.createConsumer("fake+consumer+payment@noba.com");
 
       const addedPaymentMethod = await checkoutClient.addCreditCardPaymentMethod(addPaymentMethod, checkoutConsumerId);
@@ -214,7 +214,7 @@ describe("CheckoutClient", () => {
   });
 });
 
-const createConsumer = (email: string): Consumer => {
+const createFakeConsumer = (email: string): Consumer => {
   return Consumer.createConsumer({
     _id: "fake-consumer-id",
     email: email,
