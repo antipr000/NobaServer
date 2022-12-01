@@ -51,6 +51,9 @@ export class LimitsService {
     ) {
       return config.props.isDefault;
     }
+    if (config.props.criteria.minProfileAge && config.props.criteria.minProfileAge > consumer.getAccountAge()) {
+      return config.props.isDefault;
+    }
     // TODO(CRYPTO-393): Add other conditions
     return true;
   }
@@ -78,6 +81,7 @@ export class LimitsService {
     if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
     const limits: Limits =
       paymentMethodType === PaymentMethodType.CARD ? limitProfile.props.cardLimits : limitProfile.props.bankLimits;
+
     // Check single transaction limit
 
     if (transactionAmount < limits.minTransaction) {
@@ -171,6 +175,29 @@ export class LimitsService {
         rangeMin: minRemaining,
         rangeMax: maxRemaining,
       };
+    }
+
+    // Check for unsettled exposure limit
+    if (paymentMethodType === PaymentMethodType.ACH && limitProfile.props.unsettledExposure) {
+      const achPaymentMethodIds = consumer.props.paymentMethods
+        .filter(pMethod => pMethod.type === PaymentMethodType.ACH)
+        .map(pMethod => pMethod.paymentToken);
+
+      const totalUnsettledAchPaymentAmount = await this.transactionsRepo.getUserAchUnsettledTransactionAmount(
+        consumer.props._id,
+        achPaymentMethodIds,
+      );
+
+      if (limitProfile.props.unsettledExposure < Number(totalUnsettledAchPaymentAmount) + Number(transactionAmount)) {
+        const maxRemaining = Math.max(limitProfile.props.unsettledExposure - totalUnsettledAchPaymentAmount, 0);
+        const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+
+        return {
+          status: TransactionAllowedStatus.UNSETTLED_EXPOSURE_LIMIT_REACHED,
+          rangeMax: maxRemaining,
+          rangeMin: minRemaining,
+        };
+      }
     }
 
     // TODO(CRYPTO-393): Add wallet exposure check

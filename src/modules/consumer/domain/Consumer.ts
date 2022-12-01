@@ -11,6 +11,7 @@ import { CardData, PaymentMethod } from "./PaymentMethod";
 import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
 import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus } from "./VerificationStatus";
+import { differenceInDays } from "date-fns";
 
 export interface ConsumerProps extends VersioningInfo {
   _id: string;
@@ -172,5 +173,10 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     }
 
     return paymentMethodList[0];
+  }
+
+  public getAccountAge(): number {
+    const createdTimestamp = this.props.createdTimestamp;
+    return differenceInDays(new Date(), createdTimestamp);
   }
 }

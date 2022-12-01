@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { instance, when } from "ts-mockito";
+import { deepEqual, instance, when } from "ts-mockito";
 
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
@@ -21,6 +21,9 @@ import { LimitProfile, Limits } from "../domain/LimitProfile";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
 import { TransactionType } from "../domain/Types";
 import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
+import { BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
+import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
+import { PaymentMethodStatus } from "../../../modules/consumer/domain/VerificationStatus";
 
 const defaultEnvironmentVariables = {};
 
@@ -40,6 +43,7 @@ describe("LimitsService", () => {
         partnerID: "partner-1",
       },
     ],
+    paymentMethods: [],
   });
 
   const setupTestModule = async (environmentVariables: Record<string, any>): Promise<void> => {
@@ -109,7 +113,7 @@ describe("LimitsService", () => {
         name: "Fake Limit Profile",
         cardLimits: cardLimits,
         bankLimits: bankLimits,
-        unsettledExposure: 1,
+        unsettledExposure: 250,
       });
 
       when(limitConfigRepo.getAllLimitConfigs()).thenResolve([defaultLimitConfiguration]);
@@ -278,12 +282,36 @@ describe("LimitsService", () => {
     });
 
     it("Is within range so should be allowed for ach", async () => {
+      const consumerEntity = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [
+          {
+            name: "Bank Account",
+            type: PaymentMethodType.ACH,
+            achData: {
+              accessToken: "plaid-access-token",
+              accountID: "plaidAccountID",
+              itemID: "plaidAuthGetItemID",
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
+            },
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-payment-token",
+            imageUri: "https://noba.com",
+            status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
+          },
+        ],
+      });
       when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(500);
       when(transactionRepo.getDailyUserTransactionAmount(userId)).thenResolve(0);
       when(transactionRepo.getWeeklyUserTransactionAmount(userId)).thenResolve(200);
+      when(transactionRepo.getUserAchUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
+        0,
+      );
 
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
-        consumer,
+        consumerEntity,
         200,
         "fake-partner-1",
         TransactionType.ONRAMP,
@@ -292,6 +320,47 @@ describe("LimitsService", () => {
       expect(result.status).toBe(TransactionAllowedStatus.ALLOWED);
       expect(result.rangeMin).toBe(20);
       expect(result.rangeMax).toBe(200);
+    });
+
+    it("Is exceed unsettled exposure amount for ach payments", async () => {
+      const consumerEntity = Consumer.createConsumer({
+        ...consumer.props,
+        paymentMethods: [
+          {
+            name: "Bank Account",
+            type: PaymentMethodType.ACH,
+            achData: {
+              accessToken: "plaid-access-token",
+              accountID: "plaidAccountID",
+              itemID: "plaidAuthGetItemID",
+              mask: "7890",
+              accountType: BankAccountType.CHECKING,
+            },
+            paymentProviderID: PaymentProvider.CHECKOUT,
+            paymentToken: "fake-payment-token",
+            imageUri: "https://noba.com",
+            status: PaymentMethodStatus.APPROVED,
+            isDefault: false,
+          },
+        ],
+      });
+      when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(50);
+      when(transactionRepo.getDailyUserTransactionAmount(userId)).thenResolve(0);
+      when(transactionRepo.getWeeklyUserTransactionAmount(userId)).thenResolve(20);
+      when(transactionRepo.getUserAchUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
+        100,
+      );
+
+      const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
+        consumerEntity,
+        200,
+        "fake-partner-1",
+        TransactionType.ONRAMP,
+        PaymentMethodType.ACH,
+      );
+      expect(result.status).toBe(TransactionAllowedStatus.UNSETTLED_EXPOSURE_LIMIT_REACHED);
+      expect(result.rangeMin).toBe(20);
+      expect(result.rangeMax).toBe(150);
     });
   });
 
