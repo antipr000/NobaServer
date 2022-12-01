@@ -306,7 +306,7 @@ describe("LimitsService", () => {
       when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(500);
       when(transactionRepo.getDailyUserTransactionAmount(userId)).thenResolve(0);
       when(transactionRepo.getWeeklyUserTransactionAmount(userId)).thenResolve(200);
-      when(transactionRepo.getUserAchUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
+      when(transactionRepo.getUserACHUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
         0,
       );
 
@@ -347,7 +347,7 @@ describe("LimitsService", () => {
       when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(50);
       when(transactionRepo.getDailyUserTransactionAmount(userId)).thenResolve(0);
       when(transactionRepo.getWeeklyUserTransactionAmount(userId)).thenResolve(20);
-      when(transactionRepo.getUserAchUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
+      when(transactionRepo.getUserACHUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
         100,
       );
 

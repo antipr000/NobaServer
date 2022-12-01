@@ -1,11 +1,11 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 import { allIdentities } from "./IdentityType";
 import { otpConstants } from "../constants";
 
-export interface OtpProps extends VersioningInfo {
+export interface OtpProps extends BaseProps {
   _id: string;
   emailOrPhone: string;
   otp: number;
@@ -19,7 +19,7 @@ export interface OtpProps extends VersioningInfo {
 }
 
 export const otpValidationKeys: KeysRequired<OtpProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().required(),
   emailOrPhone: Joi.string().required(),
   otp: Joi.number().required(),

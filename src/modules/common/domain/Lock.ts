@@ -1,9 +1,9 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 
-export interface LockProps extends VersioningInfo {
+export interface LockProps extends BaseProps {
   _id: string;
   key: string;
   objectType: string;
@@ -11,7 +11,7 @@ export interface LockProps extends VersioningInfo {
 }
 
 export const lockKeys: KeysRequired<LockProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().required(),
   key: Joi.string().required(),
   objectType: Joi.string().required(),

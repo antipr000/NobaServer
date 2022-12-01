@@ -1715,29 +1715,12 @@ describe("MongoDBTransactionRepoTests", () => {
         }),
       );
 
-      // Insert some failed ach transactions
-      await transactionRepo.createTransaction(
-        getRandomTransaction("10", {
-          userId: userId,
-          status: TransactionStatus.COMPLETED,
-          fiatPaymentInfo: {
-            details: [],
-            isCompleted: false,
-            isApproved: true,
-            isFailed: true,
-            paymentMethodID: "fake-id-4",
-            paymentID: "checkoutPaymentID",
-            paymentProvider: PaymentProvider.CHECKOUT,
-          },
-        }),
-      );
-
-      const totalUnsettledAchTransactionAmount = await transactionRepo.getUserAchUnsettledTransactionAmount(
+      const totalUnsettledACHTransactionAmount = await transactionRepo.getUserACHUnsettledTransactionAmount(
         userId,
         achPaymentMethodIds,
       );
 
-      expect(totalUnsettledAchTransactionAmount).toBe(2 * TEST_NUMBER);
+      expect(totalUnsettledACHTransactionAmount).toBe(2 * TEST_NUMBER);
     });
 
     it("should return 0 when there is no unsettled ach transaction", async () => {
@@ -1778,29 +1761,12 @@ describe("MongoDBTransactionRepoTests", () => {
         }),
       );
 
-      // Insert some failed ach transactions
-      await transactionRepo.createTransaction(
-        getRandomTransaction("10", {
-          userId: userId,
-          status: TransactionStatus.COMPLETED,
-          fiatPaymentInfo: {
-            details: [],
-            isCompleted: false,
-            isApproved: true,
-            isFailed: true,
-            paymentMethodID: "fake-id-4",
-            paymentID: "checkoutPaymentID",
-            paymentProvider: PaymentProvider.CHECKOUT,
-          },
-        }),
-      );
-
-      const totalUnsettledAchTransactionAmount = await transactionRepo.getUserAchUnsettledTransactionAmount(
+      const totalUnsettledACHTransactionAmount = await transactionRepo.getUserACHUnsettledTransactionAmount(
         userId,
         achPaymentMethodIds,
       );
 
-      expect(totalUnsettledAchTransactionAmount).toBe(0);
+      expect(totalUnsettledACHTransactionAmount).toBe(0);
     });
   });
 });

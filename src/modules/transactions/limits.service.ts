@@ -54,7 +54,6 @@ export class LimitsService {
     if (config.props.criteria.minProfileAge && config.props.criteria.minProfileAge > consumer.getAccountAge()) {
       return config.props.isDefault;
     }
-    // TODO(CRYPTO-393): Add other conditions
     return true;
   }
 
@@ -183,13 +182,13 @@ export class LimitsService {
         .filter(pMethod => pMethod.type === PaymentMethodType.ACH)
         .map(pMethod => pMethod.paymentToken);
 
-      const totalUnsettledAchPaymentAmount = await this.transactionsRepo.getUserAchUnsettledTransactionAmount(
+      const totalUnsettledACHPaymentAmount = await this.transactionsRepo.getUserACHUnsettledTransactionAmount(
         consumer.props._id,
         achPaymentMethodIds,
       );
 
-      if (limitProfile.props.unsettledExposure < Number(totalUnsettledAchPaymentAmount) + Number(transactionAmount)) {
-        const maxRemaining = Math.max(limitProfile.props.unsettledExposure - totalUnsettledAchPaymentAmount, 0);
+      if (limitProfile.props.unsettledExposure < Number(totalUnsettledACHPaymentAmount) + Number(transactionAmount)) {
+        const maxRemaining = Math.max(limitProfile.props.unsettledExposure - totalUnsettledACHPaymentAmount, 0);
         const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
         return {

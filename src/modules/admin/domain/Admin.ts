@@ -1,5 +1,5 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
+import { BaseProps,  basePropsJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 
@@ -64,7 +64,7 @@ export const isValidRole = role => {
   return AllRoles.find(validRole => (role === validRole ? role : undefined)) !== undefined;
 };
 
-export interface AdminProps extends VersioningInfo {
+export interface AdminProps extends BaseProps {
   _id: string;
   name: string;
   email: string;
@@ -72,7 +72,7 @@ export interface AdminProps extends VersioningInfo {
 }
 
 export const AdminKeys: KeysRequired<AdminProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ... basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   name: Joi.string().min(2).max(100).optional(),
   email: Joi.string()

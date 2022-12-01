@@ -1,7 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
 import { Address } from "./Address";
@@ -13,7 +13,7 @@ import { VerificationData, VerificationProviders } from "./VerificationData";
 import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus } from "./VerificationStatus";
 import { differenceInDays } from "date-fns";
 
-export interface ConsumerProps extends VersioningInfo {
+export interface ConsumerProps extends BaseProps {
   _id: string;
   firstName?: string;
   lastName?: string;
@@ -102,7 +102,7 @@ const addressValidationJoiKeys: KeysRequired<Address> = {
 };
 
 export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   firstName: Joi.string().min(2).max(100).optional(),
   lastName: Joi.string().min(2).max(100).optional(),

@@ -418,28 +418,20 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return this.getPeriodicUserTransactionAmount(userId, 1);
   }
 
-  async getUserAchUnsettledTransactionAmount(userId: string, achPaymentMethodIds: string[]): Promise<number> {
+  async getUserACHUnsettledTransactionAmount(userId: string, achPaymentMethodIds: string[]): Promise<number> {
     const transactionModel = await this.dbProvider.getTransactionModel();
 
     /*
      * Unsettled ach transaction means:
      * PaymentMethod should be ACH. We will pass users list of ach payment method ids. transaction.fiatPaymentInfo.paymentMethodID should be in that list
      * fiatPaymentInfo.isCompleted is false
-     * fiatPaymentInfo.isFailed is false as we do not want to treat failed transactions as unsettled
      */
     const result = await transactionModel
-      .find(
-        {
-          userId: userId,
-          "fiatPaymentInfo.isCompleted": false,
-          "fiatPaymentInfo.isFailed": false,
-          "fiatPaymentInfo.paymentMethodID": { $in: achPaymentMethodIds },
-        },
-        {
-          "fiatPaymentInfo.$": 1,
-          leg1Amount: 1,
-        },
-      )
+      .find({
+        userId: userId,
+        "fiatPaymentInfo.isCompleted": false,
+        "fiatPaymentInfo.paymentMethodID": { $in: achPaymentMethodIds },
+      })
       .exec();
     const unsettledAchTransactions: TransactionProps[] = convertDBResponseToJsObject(result);
     return unsettledAchTransactions.reduce((acc, val) => acc + val.leg1Amount, 0);

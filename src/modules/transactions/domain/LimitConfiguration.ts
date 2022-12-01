@@ -1,5 +1,5 @@
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { TransactionType } from "./Types";
@@ -12,7 +12,7 @@ interface LimitConfigurationCriteria {
   minTotalTransactionAmount?: number;
 }
 
-export interface LimitConfigurationProps extends VersioningInfo {
+export interface LimitConfigurationProps extends BaseProps {
   _id: string;
   isDefault: boolean;
   priority: number;
@@ -31,7 +31,7 @@ const limitConfigurationCriteriaValidationKeys: KeysRequired<LimitConfigurationC
 };
 
 export const limitConfigurationValidationKeys: KeysRequired<LimitConfigurationProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().required(),
   isDefault: Joi.boolean().default(false),
   priority: Joi.number()
