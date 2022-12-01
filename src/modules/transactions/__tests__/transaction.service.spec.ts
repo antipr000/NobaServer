@@ -44,7 +44,7 @@ import { getMockVerificationServiceWithDefaults } from "../../verification/mocks
 import { VerificationService } from "../../verification/verification.service";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { CombinedNobaQuote, NobaQuote } from "../domain/AssetTypes";
+import { CombinedNobaQuote, ConsumerAccountBalance, NobaQuote } from "../domain/AssetTypes";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus, TransactionType } from "../domain/Types";
 import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
@@ -71,6 +71,8 @@ import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvide
 import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
 import { Utils } from "../../../core/utils/Utils";
 import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
+import { WalletProviderService } from "../assets/wallet.provider.service";
+import { getMockWalletProviderServiceWithDefaults } from "../mocks/mock.wallet.provider.service";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -97,6 +99,7 @@ describe("TransactionService", () => {
   let partnerService: PartnerService;
   let assetServiceFactory: AssetServiceFactory;
   let assetService: AssetService;
+  let walletProviderService: WalletProviderService;
   let transactionMapper: TransactionMapper;
   let ellipticService: EllipticService;
   let limitService: LimitsService;
@@ -125,6 +128,7 @@ describe("TransactionService", () => {
     ellipticService = getMockEllipticServiceWithDefaults();
     limitService = getMockLimitsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
+    walletProviderService = getMockWalletProviderServiceWithDefaults();
 
     transactionMapper = new TransactionMapper();
 
@@ -180,6 +184,9 @@ describe("TransactionService", () => {
       ],
     }).compile();
     transactionService = app.get<TransactionService>(TransactionService);
+
+    const walletProviderServiceInstance = instance(walletProviderService);
+    when(assetServiceFactory.getWalletProviderService()).thenReturn(walletProviderServiceInstance);
 
     assetService = getMockAssetServiceWithDefaults();
     when(assetServiceFactory.getAssetService(anyString())).thenResolve(instance(assetService));
@@ -3201,6 +3208,52 @@ describe("TransactionService", () => {
       } catch (err) {
         expect(err).toBeInstanceOf(InternalServerErrorException);
       }
+    });
+  });
+
+  describe("getParticipantBalance", () => {
+    beforeEach(() => {
+      when(assetService.needsIntermediaryLeg()).thenReturn(false);
+    });
+
+    it("returns an empty balance", async () => {
+      const participantID = "participant-12345";
+
+      when(walletProviderService.getConsumerAccountBalance(participantID, undefined)).thenResolve([]);
+
+      const balance = await transactionService.getParticipantBalance(participantID);
+
+      expect(balance).toEqual([]);
+    });
+
+    it("returns a structured balance object", async () => {
+      const participantID = "participant-12345";
+
+      const lastUpdateDate = new Date();
+      const balanceObj: ConsumerAccountBalance[] = [
+        {
+          accountID: "acct-id-1",
+          name: "acct-label-1",
+          accountType: "available",
+          asset: "asset-1",
+          balance: "1000000",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+        {
+          accountID: "acct-id-2",
+          name: "acct-label-2",
+          accountType: "available",
+          asset: "asset-2",
+          balance: "2000000",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+      ];
+
+      when(walletProviderService.getConsumerAccountBalance(participantID, undefined)).thenResolve(balanceObj);
+
+      const balance = await transactionService.getParticipantBalance(participantID);
+
+      expect(balance).toEqual(balance);
     });
   });
 });

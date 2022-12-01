@@ -44,7 +44,6 @@ export class InternalTransferStatusProcessor extends MessageProcessor {
       return;
     }
 
-    //const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     const assetService: AssetService = await this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     const consumerAccountTransferStatus: ConsumerAccountTransferStatus =
@@ -80,39 +79,40 @@ export class InternalTransferStatusProcessor extends MessageProcessor {
         err,
       );
       await this.processFailure(
-        TransactionStatus.CRYPTO_OUTGOING_FAILED,
+        TransactionStatus.FAILED,
         "Failed to perform internal transfer.", // TODO(#342): Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
         transaction,
+        err.message,
       );
-    }
 
-    // TODO(CRYPTO-411): Send proper notification here
-    /* await this.notificationService.sendNotification(
-        NotificationEventType.SEND_CRYPTO_FAILED_EVENT,
-        transaction.props.partnerID,
-        {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
-          email: consumer.props.displayEmail,
-          cryptoFailedParams: {
-            transactionID: transaction.props.transactionID,
-            transactionTimestamp: transaction.props.transactionTimestamp,
-            paymentMethod: paymentMethod.cardData.cardType,
-            last4Digits: paymentMethod.cardData.last4Digits,
-            fiatCurrency: transaction.props.leg1,
-            conversionRate: transaction.props.exchangeRate,
-            processingFee: transaction.props.processingFee,
-            networkFee: transaction.props.networkFee,
-            nobaFee: transaction.props.nobaFee,
-            totalPrice: transaction.props.leg1Amount,
-            cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
-            cryptocurrency: transaction.props.leg2,
-            destinationWalletAddress: transaction.props.destinationWalletAddress,
-            status: transaction.props.transactionStatus,
-            failureReason: "Failed to settle crypto transaction", // TODO: Better message
-          },
+      /*
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_CRYPTO_FAILED_EVENT,
+      transaction.props.partnerID,
+      {
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+        email: consumer.props.displayEmail,
+        cryptoFailedParams: {
+          transactionID: transaction.props.transactionID,
+          transactionTimestamp: transaction.props.transactionTimestamp,
+          paymentMethod: paymentMethod.cardData.cardType,
+          last4Digits: paymentMethod.cardData.last4Digits,
+          fiatCurrency: transaction.props.leg1,
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+          cryptocurrency: transaction.props.leg2,
+          destinationWalletAddress: transaction.props.destinationWalletAddress,
+          status: transaction.props.transactionStatus,
+          failureReason: "Failed to settle crypto transaction", // TODO: Better message
         },
-      );*/
+      },
+    );*/
+    }
   }
 }

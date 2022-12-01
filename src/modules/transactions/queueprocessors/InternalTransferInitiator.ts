@@ -9,10 +9,7 @@ import { SqsClient } from "./sqs.client";
 import { MessageProcessor } from "./message.processor";
 import { LockService } from "../../common/lock.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { AssetService } from "../assets/asset.service";
 import { ConsumerAccountTransferRequest } from "../domain/AssetTypes";
-import { CurrencyService } from "../../common/currency.service";
-import { PartnerService } from "../../partner/partner.service";
 import { WalletProviderService } from "../assets/wallet.provider.service";
 
 export class InternalTransferInitiator extends MessageProcessor {
@@ -48,7 +45,6 @@ export class InternalTransferInitiator extends MessageProcessor {
     }
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const assetService: AssetService = await this.assetServiceFactory.getAssetService(transaction.props.leg2);
 
     const balance = await this.transactionService.getParticipantBalance(
       consumer.props.zhParticipantCode,
@@ -61,13 +57,12 @@ export class InternalTransferInitiator extends MessageProcessor {
       this.logger.info(
         `Consumer ${transaction.props.userId} attempted a trade with insufficient ${transaction.props.leg2Amount} balance (available: ${balanceAmount})`,
       );
-      this.processFailure(
+      return this.processFailure(
         TransactionStatus.FAILED,
         "Insufficient balance",
         transaction,
         `Insufficient ${transaction.props.leg2Amount} balance. Available balance: ${balanceAmount}`,
       );
-      return;
     }
 
     this.logger.info(`${transactionId}: Starting the trade to transfer to consumer ZH account.`);
@@ -85,11 +80,11 @@ export class InternalTransferInitiator extends MessageProcessor {
     };
 
     const walletProviderService: WalletProviderService = this.assetServiceFactory.getWalletProviderService();
-    const tradeId: string = await walletProviderService.transferAssetToNobaAccount(assetTransferToNobaAccountRequest);
-    this.logger.info(`${transactionId}: Trade initiated to transfer to Noba ZH account with tradeID: "${tradeId}"`);
+    const tradeID: string = await walletProviderService.transferAssetToNobaAccount(assetTransferToNobaAccountRequest);
+    this.logger.info(`${transactionId}: Trade initiated to transfer to Noba ZH account with tradeID: "${tradeID}"`);
 
-    transaction.props.cryptoTransactionId = tradeId;
-    transaction = await this.transactionRepo.updateTransactionStatus(
+    transaction.props.cryptoTransactionId = tradeID;
+    await this.transactionRepo.updateTransactionStatus(
       transaction.props._id,
       TransactionStatus.INTERNAL_TRANSFER_PENDING,
       transaction.props,

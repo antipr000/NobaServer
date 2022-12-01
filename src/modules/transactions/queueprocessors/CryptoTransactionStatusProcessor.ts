@@ -136,6 +136,7 @@ export class CryptoTransactionStatusProcessor extends MessageProcessor {
         TransactionStatus.CRYPTO_OUTGOING_FAILED,
         "Failed to settle crypto transaction.", // TODO(#342): Need more detail here - should throw exception from cryptoTransactionStatus with detailed reason
         transaction,
+        err.message,
       );
 
       const consumer = await this.consumerService.getConsumer(transaction.props.userId);

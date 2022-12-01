@@ -22,5 +22,6 @@ export function getMockAssetServiceWithDefaults(): AssetService {
 export function getMockAssetServiceFactoryWithDefaultAssetService(): AssetServiceFactory {
   const mockAssetServiceFactory = mock(AssetServiceFactory);
   when(mockAssetServiceFactory.getAssetService(anyString())).thenReject(new Error("Method not implemented!"));
+  when(mockAssetServiceFactory.getWalletProviderService()).thenReject(new Error("Method not implemented"));
   return mockAssetServiceFactory;
 }

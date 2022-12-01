@@ -100,6 +100,7 @@ export class FiatTransactionInitiator extends MessageProcessor {
             TransactionStatus.FIAT_INCOMING_FAILED,
             "Error processing fiat transaction",
             transaction,
+            e.message,
           );
         } else if (e.disposition === CardFailureExceptionText.SOFT_DECLINE) {
           // Soft declines may work upon retry (e.g. could be caused by breach of credit limit) so we don't want to block the card
