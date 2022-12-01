@@ -1,5 +1,5 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { BaseProps,  basePropsJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
+import { BaseProps, basePropsJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 
@@ -72,7 +72,7 @@ export interface AdminProps extends BaseProps {
 }
 
 export const AdminKeys: KeysRequired<AdminProps> = {
-  ... basePropsJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   name: Joi.string().min(2).max(100).optional(),
   email: Joi.string()
