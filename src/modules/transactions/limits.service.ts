@@ -54,6 +54,7 @@ export class LimitsService {
     if (config.props.criteria.minProfileAge && config.props.criteria.minProfileAge > consumer.getAccountAge()) {
       return config.props.isDefault;
     }
+    // TODO(CRYPTO-416): Add check for Noba Wallet Balance
     return true;
   }
 
