@@ -820,6 +820,20 @@ describe("Consumers", () => {
           },
         }),
       );
+
+      await patchConsumer(
+        {
+          email: consumerEmail,
+          address: {
+            streetLine1: "123 main st",
+            countryCode: "US",
+            city: "irvene",
+            regionCode: "CA",
+            postalCode: "123456",
+          },
+        },
+        mongoUri,
+      );
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
@@ -859,7 +873,6 @@ describe("Consumers", () => {
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
       expect(getConsumerResponse.firstName).toBeUndefined();
       expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.address).toBeUndefined();
       expect(getConsumerResponse.dateOfBirth).toBeUndefined();
     });
 
@@ -867,6 +880,20 @@ describe("Consumers", () => {
       const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      await patchConsumer(
+        {
+          email: consumerEmail,
+          address: {
+            streetLine1: "123 main st",
+            countryCode: "US",
+            city: "irvene",
+            regionCode: "CA",
+            postalCode: "123456",
+          },
+        },
+        mongoUri,
+      );
 
       let signature = computeSignature(
         TEST_TIMESTAMP,
@@ -916,6 +943,20 @@ describe("Consumers", () => {
       const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+
+      await patchConsumer(
+        {
+          email: consumerEmail,
+          address: {
+            streetLine1: "123 main st",
+            countryCode: "US",
+            city: "irvene",
+            regionCode: "CA",
+            postalCode: "123456",
+          },
+        },
+        mongoUri,
+      );
 
       let signature = computeSignature(
         TEST_TIMESTAMP,
