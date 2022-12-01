@@ -2617,6 +2617,61 @@ describe("ZerohashAssetService", () => {
     });
   });
 
+  describe("transferAssetToNobaAccount()", () => {
+    it("executes a trade from the request", async () => {
+      const consumer: Consumer = Consumer.createConsumer({
+        _id: "1234567890",
+        email: "test@noba.com",
+        zhParticipantCode: "12345",
+        partners: [
+          {
+            partnerID: "partner-1",
+          },
+        ],
+      });
+
+      const request: ConsumerAccountTransferRequest = {
+        consumer: consumer.props,
+        cryptoCurrency: "ETH",
+        fiatCurrency: "USD",
+        cryptoAssetTradePrice: 1234,
+        totalCryptoAmount: 1234,
+        totalFiatAmount: 1234,
+        fiatAmountPreSpread: 1234,
+        transactionID: "ABCD1234",
+        transactionCreationTimestamp: new Date(),
+      };
+
+      when(zerohashService.getParticipantCode(request.consumer, request.transactionCreationTimestamp)).thenResolve(
+        consumer.props.zhParticipantCode,
+      );
+
+      const tradeRequest: ZerohashTradeRequest = {
+        boughtAssetID: request.cryptoCurrency,
+        soldAssetID: request.fiatCurrency,
+        buyAmount: request.totalCryptoAmount,
+        tradePrice: request.cryptoAssetTradePrice,
+        sellAmount: request.fiatAmountPreSpread,
+        totalFiatAmount: request.totalFiatAmount,
+        buyerParticipantCode: nobaPlatformCode,
+        sellerParticipantCode: consumer.props.zhParticipantCode,
+        idempotencyID: request.transactionID,
+        requestorEmail: request.consumer.email,
+        bankFee: Utils.roundTo2DecimalString(request.totalFiatAmount - request.fiatAmountPreSpread),
+      };
+
+      const response: ZerohashTradeResponse = {
+        tradeID: "1234",
+      };
+
+      when(zerohashService.executeTrade(deepEqual(tradeRequest))).thenResolve(response);
+
+      const tradeID = await zerohashAssetService.transferAssetToNobaAccount(request);
+
+      expect(tradeID).toEqual(response.tradeID);
+    });
+  });
+
   describe("pollAssetTransferToConsumerStatus()", () => {
     it("returns PENDING status if trade state is PENDING", async () => {
       const tradeID = "1234";
@@ -2746,6 +2801,49 @@ describe("ZerohashAssetService", () => {
           accountType: ZerohashAccountType.AVAILABLE.toString(),
           balance: "2000000",
           accountID: "acct-id-2",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+      ]);
+    });
+
+    it("gets the balances for the filtered by cryptocurrency", async () => {
+      const zhParticipantCode = "zh-participant-code";
+      const lastUpdateDate = new Date();
+
+      when(zerohashService.getParticipantBalance(zhParticipantCode)).thenResolve([
+        {
+          accountGroup: "acct-group-1",
+          accountID: "acct-id-1",
+          accountLabel: "acct-label-1",
+          accountOwner: "acct-owner-1",
+          accountType: ZerohashAccountType.AVAILABLE,
+          asset: "asset-1",
+          balance: "1000000",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+        {
+          accountGroup: "acct-group-2",
+          accountID: "acct-id-2",
+          accountLabel: "acct-label-2",
+          accountOwner: "acct-owner-2",
+          accountType: ZerohashAccountType.AVAILABLE,
+          asset: "asset-2",
+          balance: "2000000",
+          lastUpdate: lastUpdateDate.getTime(),
+        },
+      ]);
+
+      const returnedBalanceResponse = await zerohashAssetService.getConsumerAccountBalance(
+        zhParticipantCode,
+        "asset-1",
+      );
+      expect(returnedBalanceResponse).toEqual([
+        {
+          name: "acct-label-1",
+          asset: "asset-1",
+          accountType: ZerohashAccountType.AVAILABLE.toString(),
+          balance: "1000000",
+          accountID: "acct-id-1",
           lastUpdate: lastUpdateDate.getTime(),
         },
       ]);
