@@ -6,10 +6,10 @@ export function getMockCheckoutClientWithDefaults(): CheckoutClient {
   when(checkoutClient.addCreditCardPaymentMethod(anything(), anyString())).thenReject(new Error("Not implemented!"));
   when(checkoutClient.removePaymentMethod(anyString())).thenReject(new Error("Not implemented!"));
   when(
-    checkoutClient.makeCardPayment(anyNumber(), anyString(), anyString(), anyString(), anyString(), anything()),
+    checkoutClient.makeCardPayment(anyNumber(), anyString(), anyString(), anyString(), anything(), anyString()),
   ).thenReject(new Error("Method not implemented!"));
   when(
-    checkoutClient.makeACHPayment(anyNumber(), anyString(), anyString(), anyString(), anyString(), anything()),
+    checkoutClient.makeACHPayment(anyNumber(), anyString(), anyString(), anyString(), anything(), anyString()),
   ).thenReject(new Error("Method not implemented!"));
   when(checkoutClient.getPaymentDetails(anyString())).thenReject(new Error("Method not implemented!"));
   return checkoutClient;

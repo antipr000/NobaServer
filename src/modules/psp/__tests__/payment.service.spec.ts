@@ -514,8 +514,8 @@ describe("PaymentService", () => {
           "USD",
           "fake-payment-token",
           "Test_Transaction",
-          undefined,
           deepEqual(consumer),
+          undefined,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -612,8 +612,8 @@ describe("PaymentService", () => {
           "USD",
           "fake-payment-token",
           "Test_Transaction",
-          undefined,
           deepEqual(consumer),
+          undefined,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -710,8 +710,8 @@ describe("PaymentService", () => {
           "USD",
           "fake-payment-token",
           "Test_Transaction",
-          undefined,
           deepEqual(consumer),
+          undefined,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -773,8 +773,8 @@ describe("PaymentService", () => {
           "USD",
           "fake-payment-token",
           "Test_Transaction",
-          undefined,
           deepEqual(consumer),
+          undefined,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -824,8 +824,8 @@ describe("PaymentService", () => {
           "USD",
           "fake-payment-token",
           "Test_Transaction",
-          undefined,
           deepEqual(consumer),
+          undefined,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -1052,8 +1052,8 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
-          transaction.props._id,
           deepEqual(consumer),
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -1114,8 +1114,8 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
-          transaction.props._id,
           deepEqual(consumer),
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -1192,8 +1192,8 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
-          transaction.props._id,
           deepEqual(consumer),
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "fake-payment-1",
@@ -1254,8 +1254,8 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
-          transaction.props._id,
           deepEqual(consumer),
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "payment-1234",
@@ -1305,8 +1305,8 @@ describe("PaymentService", () => {
           transaction.props.leg1,
           paymentMethod.paymentToken,
           transaction.props._id,
-          transaction.props._id,
           deepEqual(consumer),
+          transaction.props._id,
         ),
       ).thenResolve({
         id: "payment-1234",

@@ -159,8 +159,8 @@ describe("CheckoutClient", () => {
         "USD",
         paymentToken,
         "order_id_1",
-        "idempotency-key",
         consumer,
+        "idempotency-key",
       );
 
       expect(response.id).toBeTruthy();
@@ -196,8 +196,8 @@ describe("CheckoutClient", () => {
         "USD",
         paymentToken,
         "order_id_1",
-        "idempotency-key",
         consumer,
+        "idempotency-key",
       );
 
       const response = await checkoutClient.getPaymentDetails(payment.id);

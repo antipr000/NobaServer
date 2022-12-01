@@ -129,8 +129,8 @@ export class PaymentService {
           "USD",
           addPaymentMethodResponse.instrumentID,
           "Test_Transaction",
-          undefined, // No idempotency key here as this is just a test transaction
           consumer,
+          undefined, // No idempotency key here as this is just a test transaction
         );
 
         creditCardBinData = CreditCardBinData.createCreditCardBinDataObject({
@@ -281,8 +281,8 @@ export class PaymentService {
       transaction.props.leg1,
       transaction.props.fiatPaymentInfo.paymentMethodID,
       transaction.props._id,
-      transaction.props._id, // Idempotency key to ensure a duplicate submission does not result in duplicate charge
       consumer,
+      transaction.props._id, // Idempotency key to ensure a duplicate submission does not result in duplicate charge
     );
 
     let creditCardBinData = await this.creditCardService.getBINDetails(paymentResponse.bin);
@@ -354,8 +354,8 @@ export class PaymentService {
       transaction.props.leg1,
       transaction.props.fiatPaymentInfo.paymentMethodID,
       transaction.props._id,
-      transaction.props._id,
       consumer,
+      transaction.props._id,
     );
 
     if (response.status !== "Pending") {
