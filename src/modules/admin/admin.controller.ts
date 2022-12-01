@@ -288,7 +288,7 @@ export class AdminController {
     return this.partnerAdminMapper.toDTO(partnerAdmin);
   }
 
-  @Get(`/partners/transactions/download`)
+  @Get("/partners/transactions/download")
   @ApiOperation({ summary: "Fetch the transactions based on different filters" })
   @ApiForbiddenResponse({
     description: "User forbidden from fetching the transactions for a Partner",
@@ -305,7 +305,7 @@ export class AdminController {
     const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
     const endDate = filters.endDate ? this.convertToLastMinuteOfDay(new Date(filters.endDate)) : undefined;
 
-    let includeIncompleteTransactions: boolean = true;
+    let includeIncompleteTransactions = true;
     if (filters.onlyCompletedTransactions !== undefined && filters.onlyCompletedTransactions !== null) {
       includeIncompleteTransactions =
         filters.onlyCompletedTransactions == false ||

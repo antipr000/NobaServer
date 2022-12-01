@@ -1,3 +1,4 @@
+// TODO: Separate this into what events support notifications on phone, email and webhook with a default preference for each?
 export enum NotificationEventType {
   SEND_OTP_EVENT = "otp",
   SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT = "wallet.update.verification.code",

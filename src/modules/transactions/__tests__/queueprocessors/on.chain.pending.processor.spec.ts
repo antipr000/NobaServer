@@ -26,7 +26,7 @@ import { AssetService } from "../../assets/asset.service";
 import { AssetServiceFactory } from "../../assets/asset.service.factory";
 import { ConsumerWalletTransferStatus, FundsAvailabilityResponse, PollStatus } from "../../domain/AssetTypes";
 import { Transaction, TransactionProps } from "../../domain/Transaction";
-import { TransactionQueueName, TransactionStatus } from "../../domain/Types";
+import { TransactionQueueName, TransactionStatus, TransactionType } from "../../domain/Types";
 import {
   getMockAssetServiceFactoryWithDefaultAssetService,
   getMockAssetServiceWithDefaults,
@@ -191,6 +191,7 @@ describe("OnChainPendingProcessor", () => {
     zhWithdrawalID: "010101",
     lastProcessingTimestamp: Date.now().valueOf(),
     lastStatusUpdateTimestamp: Date.now().valueOf(),
+    type: TransactionType.ONRAMP,
   });
   const paymentMethod: PaymentMethod = {
     status: PaymentMethodStatus.APPROVED,
@@ -293,7 +294,7 @@ describe("OnChainPendingProcessor", () => {
       transactionService.analyzeTransactionWalletExposure(
         deepEqual(Transaction.createTransaction(allTransactionsInDb[0])),
       ),
-    ).never();
+    ).once();
   });
 
   it("should not process a transaction that's in CRYPTO_OUTGOING_COMPLETED status if POLL status is PENDING", async () => {

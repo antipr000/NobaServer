@@ -129,6 +129,7 @@ export class PaymentService {
           "USD",
           addPaymentMethodResponse.instrumentID,
           "Test_Transaction",
+          consumer,
           undefined, // No idempotency key here as this is just a test transaction
         );
 
@@ -280,6 +281,7 @@ export class PaymentService {
       transaction.props.leg1,
       transaction.props.fiatPaymentInfo.paymentMethodID,
       transaction.props._id,
+      consumer,
       transaction.props._id, // Idempotency key to ensure a duplicate submission does not result in duplicate charge
     );
 
@@ -352,6 +354,7 @@ export class PaymentService {
       transaction.props.leg1,
       transaction.props.fiatPaymentInfo.paymentMethodID,
       transaction.props._id,
+      consumer,
       transaction.props._id,
     );
 

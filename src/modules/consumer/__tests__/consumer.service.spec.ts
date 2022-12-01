@@ -1,47 +1,48 @@
+import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
+import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
+import { Result } from "../../../core/logic/Result";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { Utils } from "../../../core/utils/Utils";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { Otp } from "../../../modules/auth/domain/Otp";
 import { getMockOtpRepoWithDefaults } from "../../../modules/auth/mocks/MockOtpRepo";
 import { IOTPRepo } from "../../../modules/auth/repo/OTPRepo";
-import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
-import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
-import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { PaymentService } from "../../psp/payment.service";
-import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
-import { KmsService } from "../../../modules/common/kms.service";
-import { ConsumerService } from "../consumer.service";
-import { Consumer, ConsumerProps } from "../domain/Consumer";
-import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
-import { IConsumerRepo } from "../repos/ConsumerRepo";
-import { Result } from "../../../core/logic/Result";
-import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
-import { PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
-import { AddPaymentMethodResponse } from "../../psp/domain/AddPaymentMethodResponse";
-import { Transaction } from "../../../modules/transactions/domain/Transaction";
-import { TransactionStatus } from "../../../modules/transactions/domain/Types";
-import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
-import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
-import { Otp } from "../../../modules/auth/domain/Otp";
-import { PartnerService } from "../../partner/partner.service";
-import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
-import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
-import { Partner } from "../../partner/domain/Partner";
-import { CryptoWallet } from "../domain/CryptoWallet";
+import { KmsService } from "../../../modules/common/kms.service";
+import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
-import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
-import { PaymentProvider } from "../domain/PaymentProvider";
-import { PlaidClient } from "../../psp/plaid.client";
-import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
-import { SMSService } from "../../common/sms.service";
-import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
-import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
-import { consumerIdentityIdentifier, IdentityType } from "../../auth/domain/IdentityType";
 import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
-import { Utils } from "../../../core/utils/Utils";
+import { Transaction } from "../../../modules/transactions/domain/Transaction";
+import { TransactionStatus } from "../../../modules/transactions/domain/Types";
+import { consumerIdentityIdentifier, IdentityType } from "../../auth/domain/IdentityType";
+import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
+import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
+import { SMSService } from "../../common/sms.service";
+import { Partner } from "../../partner/domain/Partner";
+import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
+import { PartnerService } from "../../partner/partner.service";
+import { AddPaymentMethodResponse } from "../../psp/domain/AddPaymentMethodResponse";
+import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
+import { PaymentService } from "../../psp/payment.service";
+import { PlaidClient } from "../../psp/plaid.client";
+import { ConsumerService } from "../consumer.service";
+import { Consumer, ConsumerProps } from "../domain/Consumer";
+import { CryptoWallet } from "../domain/CryptoWallet";
+import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
+import { PaymentProvider } from "../domain/PaymentProvider";
+import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
+import { PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { NotificationMethod } from "../dto/AddCryptoWalletDTO";
+import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
+import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
+import { IConsumerRepo } from "../repos/ConsumerRepo";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -1591,13 +1592,14 @@ describe("ConsumerService", () => {
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId)).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId, consumer.props._id)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
           otpExpiryTime: expiryDate.getTime(),
           identityType: "CONSUMER",
+          consumerID: consumer.props._id,
         }),
       );
 
@@ -1606,7 +1608,14 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId);
+      const response = await consumerService.confirmWalletUpdateOTP(
+        consumer,
+        walletAddress,
+        otp,
+        consumer.props._id,
+        partnerId,
+        NotificationMethod.EMAIL,
+      );
 
       expect(response).toStrictEqual(updatedConsumer);
 
@@ -1664,10 +1673,26 @@ describe("ConsumerService", () => {
       });
 
       expect(
-        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId),
+        async () =>
+          await consumerService.confirmWalletUpdateOTP(
+            consumer,
+            walletAddress,
+            otp,
+            consumer.props._id,
+            partnerId,
+            NotificationMethod.EMAIL,
+          ),
       ).rejects.toThrow(BadRequestException);
       expect(
-        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp, partnerId),
+        async () =>
+          await consumerService.confirmWalletUpdateOTP(
+            consumer,
+            walletAddress,
+            otp,
+            consumer.props._id,
+            partnerId,
+            NotificationMethod.EMAIL,
+          ),
       ).rejects.toThrow("Crypto wallet does not exist for user");
     });
 
@@ -1812,18 +1837,26 @@ describe("ConsumerService", () => {
         ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1")).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1", consumer.props._id)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
           otpExpiryTime: new Date().getTime(),
           identityType: "CONSUMER",
+          consumerID: consumer.props._id,
         }),
       );
 
       try {
-        await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, wrongOtp, "partner-1");
+        await consumerService.confirmWalletUpdateOTP(
+          consumer,
+          walletAddress,
+          wrongOtp,
+          consumer.props._id,
+          "partner-1",
+          NotificationMethod.EMAIL,
+        );
       } catch (e) {
         expect(e).toBeInstanceOf(UnauthorizedException);
       }
@@ -2252,6 +2285,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
+      when(mockOtpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier, "123")).thenResolve();
       const response = await consumerService.addOrUpdateCryptoWallet(consumer, toAddCryptoWallet);
 
       expect(response).toBe(updatedConsumer);
@@ -2535,8 +2569,8 @@ describe("ConsumerService", () => {
       const phone = "+12434252";
       when(smsService.sendSMS(phone, anyString())).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
-      when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier)).thenResolve();
-      await consumerService.sendOtpToPhone(phone);
+      when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, "123")).thenResolve();
+      await consumerService.sendOtpToPhone("123", phone, "12345");
       verify(smsService.sendSMS(phone, anyString())).once();
       verify(mockOtpRepo.saveOTPObject(anything())).once();
     });
@@ -2548,11 +2582,6 @@ describe("ConsumerService", () => {
       const email = "a@noba.com";
       const partnerId = "fake-partner-id2";
       const otp = 123456;
-      const otpObject = Otp.createOtp({
-        otp: otp,
-        emailOrPhone: phone,
-        identityType: IdentityType.consumer,
-      });
 
       const consumer = Consumer.createConsumer({
         _id: "1234rwrwrwrwrwrwrwrw",
@@ -2575,6 +2604,14 @@ describe("ConsumerService", () => {
         isAdmin: false,
       });
 
+      const otpObject = Otp.createOtp({
+        otp: otp,
+        emailOrPhone: phone,
+        identityType: IdentityType.consumer,
+        consumerID: consumer.props._id,
+        partnerID: partnerId,
+      });
+
       const phoneUpdateRequest: UserPhoneUpdateRequest = {
         phone: phone,
         otp: 123458, //incorrect otp
@@ -2585,10 +2622,10 @@ describe("ConsumerService", () => {
         phone: phone,
       });
 
-      when(mockOtpRepo.getOTP(phone, IdentityType.consumer)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, partnerId, consumer.props._id)).thenResolve(otpObject);
 
       try {
-        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
+        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, partnerId);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -2596,11 +2633,11 @@ describe("ConsumerService", () => {
       }
 
       phoneUpdateRequest.otp = otp; //correct otp
-
+      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
 
-      const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
+      const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, partnerId);
       verify(consumerRepo.updateConsumer(anything())).once();
       const [requestArg] = capture(consumerRepo.updateConsumer).last();
       expect(requestArg.props.phone).toBe(phone);
@@ -2637,9 +2674,9 @@ describe("ConsumerService", () => {
         }),
       ).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
-      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier)).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props._id)).thenResolve();
       await consumerService.sendOtpToEmail(email, consumer, partnerID);
-      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier)).once();
+      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier, partnerID, consumer.props._id)).once();
     });
   });
 
@@ -2674,6 +2711,7 @@ describe("ConsumerService", () => {
       };
 
       when(mockOtpRepo.getOTP(email, IdentityType.consumer)).thenResolve(otpObject);
+      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
 
       try {
         await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);

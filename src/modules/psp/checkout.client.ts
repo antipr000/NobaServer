@@ -10,6 +10,7 @@ import { PspAddPaymentMethodResponse } from "./domain/PspAddPaymentMethodRespons
 import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
 import axios from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Consumer } from "../consumer/domain/Consumer";
 
 @Injectable()
 export class CheckoutClient {
@@ -105,6 +106,7 @@ export class CheckoutClient {
     currency: string,
     paymentMethodId: string,
     transactionId: string,
+    consumer: Consumer,
     idempotencyKey: string,
   ): Promise<PspACHPaymentResponse> {
     try {
@@ -118,6 +120,14 @@ export class CheckoutClient {
             token: paymentMethodId,
             account_holder: {
               type: "individual",
+              billing_address: {
+                address_line_1: consumer.props.address.streetLine1,
+                address_line_2: consumer.props.address.streetLine2,
+                city: consumer.props.address.city,
+                country: consumer.props.address.countryCode,
+                state: consumer.props.address.regionCode,
+                zip: consumer.props.address.postalCode,
+              },
             },
           },
           description: "Noba Customer Payment at UTC " + Date.now(),
@@ -125,6 +135,7 @@ export class CheckoutClient {
           metadata: {
             order_id: transactionId,
           },
+          reference: transactionId,
         },
         idempotencyKey,
       );
@@ -151,6 +162,7 @@ export class CheckoutClient {
     currency: string,
     paymentMethodId: string,
     transactionId: string,
+    consumer: Consumer,
     idempotencyKey: string,
   ): Promise<PspCardPaymentResponse> {
     try {
@@ -167,6 +179,20 @@ export class CheckoutClient {
           metadata: {
             order_id: transactionId,
           },
+          sender: {
+            first_name: consumer.props.firstName,
+            last_name: consumer.props.lastName,
+            address: {
+              address_line_1: consumer.props.address.streetLine1,
+              address_line_2: consumer.props.address.streetLine2,
+              city: consumer.props.address.city,
+              country: consumer.props.address.countryCode,
+              state: consumer.props.address.regionCode,
+              zip: consumer.props.address.postalCode,
+            },
+          },
+          reference: transactionId,
+          reference_type: "other",
         },
         idempotencyKey,
       );

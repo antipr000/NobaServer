@@ -1,11 +1,11 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "./Types";
 import Joi from "joi";
 import { BINValidity, CardType } from "../dto/CreditCardDTO";
 import { creditCardMaskGenerator } from "../../../core/utils/CreditCardMaskGenerator";
 
-export interface CreditCardBinDataProps extends VersioningInfo {
+export interface CreditCardBinDataProps extends BaseProps {
   _id: string;
   issuer?: string;
   bin: string;
@@ -18,7 +18,7 @@ export interface CreditCardBinDataProps extends VersioningInfo {
 }
 
 export const creditCardBinDataKeys: KeysRequired<CreditCardBinDataProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().required(),
   issuer: Joi.string().optional().allow("", null),
   bin: Joi.string()

@@ -1,5 +1,5 @@
-import { Entity, VersioningInfo } from "./Entity";
+import { Entity, BaseProps } from "./Entity";
 
-export abstract class AggregateRoot<T extends VersioningInfo> extends Entity<T> {
+export abstract class AggregateRoot<T extends BaseProps> extends Entity<T> {
   //TODO add domain events
 }

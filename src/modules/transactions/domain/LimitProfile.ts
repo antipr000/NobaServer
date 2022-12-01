@@ -1,5 +1,5 @@
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 
@@ -11,7 +11,7 @@ export interface Limits {
   minTransaction: number;
 }
 
-export interface LimitProfileProps extends VersioningInfo {
+export interface LimitProfileProps extends BaseProps {
   _id: string;
   name: string;
   cardLimits: Limits;
@@ -28,7 +28,7 @@ const limitsJoiValidationKeys: KeysRequired<Limits> = {
 };
 
 export const limitProfileJoiValidationKeys: KeysRequired<LimitProfileProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().required(),
   name: Joi.string().required(),
   cardLimits: Joi.object().keys(limitsJoiValidationKeys).required(),

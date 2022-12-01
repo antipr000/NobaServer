@@ -1,37 +1,38 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import BadWordFilter from "bad-words-es";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
 import { Result } from "../../core/logic/Result";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { Utils } from "../../core/utils/Utils";
+import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
+import { Otp } from "../auth/domain/Otp";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
-import { PaymentService } from "../psp/payment.service";
-import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
+import { SMSService } from "../common/sms.service";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { NotificationService } from "../notifications/notification.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerService } from "../partner/partner.service";
+import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
+import { PaymentService } from "../psp/payment.service";
 import { Transaction } from "../transactions/domain/Transaction";
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { PaymentMethod } from "./domain/PaymentMethod";
+import { PaymentProvider } from "./domain/PaymentProvider";
 import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { PaymentMethodStatus, WalletStatus } from "./domain/VerificationStatus";
+import { NotificationMethod } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
-import { IConsumerRepo } from "./repos/ConsumerRepo";
-import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import { PaymentProvider } from "./domain/PaymentProvider";
-import { Utils } from "../../core/utils/Utils";
-import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
-import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
-import { SMSService } from "../common/sms.service";
-import { Otp } from "../auth/domain/Otp";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
-import BadWordFilter from "bad-words-es";
-import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
+import { IConsumerRepo } from "./repos/ConsumerRepo";
 
 @Injectable()
 export class ConsumerService {
@@ -169,24 +170,38 @@ export class ConsumerService {
     return updatedConsumer;
   }
 
-  async sendOtpToPhone(phone: string) {
+  async sendOtpToPhone(consumerID: string, phone: string, partnerID: string) {
     const otp = this.generateOTP();
-    await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier);
-    await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
+    await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, consumerID);
+
     const otpObject = Otp.createOtp({
       emailOrPhone: Utils.stripSpaces(phone),
       identityType: consumerIdentityIdentifier,
-      otp,
+      otp: otp,
+      consumerID: consumerID,
+      partnerID: partnerID,
     });
     this.otpRepo.saveOTPObject(otpObject);
+
+    await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
   }
 
-  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest): Promise<Consumer> {
-    const otpResult = await this.otpRepo.getOTP(reqData.phone, consumerIdentityIdentifier);
+  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest, partnerID: string): Promise<Consumer> {
+    console.log(
+      `Calling getOTP with ${reqData.phone}, ${consumerIdentityIdentifier}, ${partnerID}, ${consumer.props._id}`,
+    );
+    const otpResult = await this.otpRepo.getOTP(
+      reqData.phone,
+      consumerIdentityIdentifier,
+      partnerID,
+      consumer.props._id,
+    );
 
     if (otpResult.props.otp !== reqData.otp) {
       throw new BadRequestException("OTP is incorrect");
     }
+
+    await this.otpRepo.deleteOTP(otpResult.props._id);
 
     const updatedConsumer = await this.updateConsumer({
       _id: consumer.props._id,
@@ -197,8 +212,9 @@ export class ConsumerService {
 
   async sendOtpToEmail(email: string, consumer: Consumer, partnerID: string) {
     const otp = this.generateOTP();
-    await this.otpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier);
-    await this.otpRepo.saveOTP(email, otp, consumerIdentityIdentifier);
+    await this.otpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props._id);
+
+    await this.otpRepo.saveOTP(email, otp, consumerIdentityIdentifier, partnerID, consumer.props._id);
 
     await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
       email: email,
@@ -213,6 +229,8 @@ export class ConsumerService {
     if (otpResult.props.otp !== reqData.otp) {
       throw new BadRequestException("OTP is incorrect");
     }
+
+    await this.otpRepo.deleteOTP(otpResult.props._id);
 
     const updatedConsumer = await this.updateConsumer({
       _id: consumer.props._id,
@@ -405,24 +423,44 @@ export class ConsumerService {
     });
   }
 
-  async sendWalletVerificationOTP(consumer: Consumer, walletAddress: string, partnerId: string) {
-    const otp: number = this.generateOTP();
-    await this.otpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier);
-    await this.otpRepo.saveOTP(consumer.props.email, otp, consumerIdentityIdentifier, partnerId);
-    await this.notificationService.sendNotification(
-      NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
-      partnerId,
-      {
-        email: consumer.props.displayEmail,
-        otp: otp.toString(),
-        walletAddress: walletAddress,
-        firstName: consumer.props.firstName,
-        nobaUserID: consumer.props._id,
-      },
-    );
+  async sendWalletVerificationOTP(
+    consumer: Consumer,
+    walletAddress: string,
+    partnerId: string,
+    notificationMethod: NotificationMethod = NotificationMethod.EMAIL,
+  ) {
+    const otp = this.generateOTP();
+
+    // Set otp reference to consumer email if notification method is email, else set to phone number
+    const otpReference = notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone;
+
+    await this.otpRepo.deleteAllOTPsForUser(otpReference, consumerIdentityIdentifier, consumer.props._id);
+    await this.otpRepo.saveOTP(otpReference, otp, consumerIdentityIdentifier, partnerId, consumer.props._id);
+    if (notificationMethod == NotificationMethod.EMAIL) {
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+        partnerId,
+        {
+          email: consumer.props.displayEmail,
+          otp: otp.toString(),
+          walletAddress: walletAddress,
+          firstName: consumer.props.firstName,
+          nobaUserID: consumer.props._id,
+        },
+      );
+    } else if (notificationMethod == NotificationMethod.PHONE) {
+      await this.smsService.sendSMS(consumer.props.phone, `${otp} is your wallet verification code`);
+    }
   }
 
-  async confirmWalletUpdateOTP(consumer: Consumer, walletAddress: string, otp: number, partnerID: string) {
+  async confirmWalletUpdateOTP(
+    consumer: Consumer,
+    walletAddress: string,
+    otp: number,
+    consumerID: string,
+    partnerID: string,
+    notificationMethod: NotificationMethod,
+  ) {
     // Verify if the otp is correct
     const cryptoWallet = this.getCryptoWallet(consumer, walletAddress, partnerID);
 
@@ -430,19 +468,23 @@ export class ConsumerService {
       throw new BadRequestException("Crypto wallet does not exist for user");
     }
 
-    const actualOtp = await this.otpRepo.getOTP(consumer.props.email, consumerIdentityIdentifier, partnerID);
+    const actualOtp = await this.otpRepo.getOTP(
+      notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone,
+      consumerIdentityIdentifier,
+      partnerID,
+      consumerID,
+    );
     const currentDateTime: number = new Date().getTime();
 
     if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {
       // If otp doesn't match or if it is expired then raise unauthorized exception
-      throw new UnauthorizedException();
+      throw new UnauthorizedException("Invalid OTP");
     } else {
       // Just delete the OTP and proceed further
       await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
     }
 
-    // mark the wallet verified
-
+    // Check wallet sanctions status
     const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(cryptoWallet.address);
     if (isSanctionedWallet) {
       // Flag the wallet if it is a sanctioned wallet address.
@@ -450,8 +492,8 @@ export class ConsumerService {
       this.logger.error(
         `Failed to add a sanctioned wallet: ${cryptoWallet.address} for consumer: ${consumer.props._id}`,
       );
-      await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
-      throw new BadRequestException({ message: "Failed to add wallet: sanctioned wallet" });
+      await this.addOrUpdateCryptoWallet(consumer, cryptoWallet, NotificationMethod.EMAIL);
+      throw new BadRequestException({ message: "Failed to add wallet" });
     }
     cryptoWallet.status = WalletStatus.APPROVED;
 
@@ -470,7 +512,11 @@ export class ConsumerService {
     return cryptoWallets[0];
   }
 
-  async addOrUpdateCryptoWallet(consumer: Consumer, cryptoWallet: CryptoWallet): Promise<Consumer> {
+  async addOrUpdateCryptoWallet(
+    consumer: Consumer,
+    cryptoWallet: CryptoWallet,
+    notificationMethod?: NotificationMethod,
+  ): Promise<Consumer> {
     let allCryptoWallets = consumer.props.cryptoWallets;
 
     const selectedWallet = allCryptoWallets.filter(
@@ -481,8 +527,8 @@ export class ConsumerService {
       wallet => !(wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID),
     );
     // Send the verification OTP to the user
-    if (cryptoWallet.status == WalletStatus.PENDING) {
-      await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, cryptoWallet.partnerID);
+    if (cryptoWallet.status === WalletStatus.PENDING) {
+      await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, cryptoWallet.partnerID, notificationMethod);
     }
     const partner: Partner = await this.partnerService.getPartner(cryptoWallet.partnerID);
     if (partner.props.config === null || partner.props.config === undefined) {
@@ -501,11 +547,10 @@ export class ConsumerService {
       allCryptoWallets = [...remainingWallets, cryptoWallet];
     }
 
-    const updatedConsumer = await this.updateConsumer({
+    return await this.updateConsumer({
       ...consumer.props,
       cryptoWallets: allCryptoWallets,
     });
-    return updatedConsumer;
   }
 
   async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string, partnerID: string): Promise<Consumer> {

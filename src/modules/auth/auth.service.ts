@@ -38,7 +38,6 @@ export abstract class AuthService {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
   }
 
-  // TODO: try to separate 'emailOrPhone' by introducing an interface.
   async validateAndGetUserId(
     emailOrPhone: string,
     enteredOtp: number,

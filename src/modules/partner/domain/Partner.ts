@@ -1,5 +1,5 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { VersioningInfo, versioningInfoJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
+import { BaseProps, basePropsJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 import { KybStatusInfo } from "./KybStatus";
@@ -11,7 +11,7 @@ import {
   NotificationEventType,
 } from "../../../modules/notifications/domain/NotificationTypes";
 
-export interface PartnerProps extends VersioningInfo {
+export interface PartnerProps extends BaseProps {
   _id: string;
   name: string;
   apiKey: string;
@@ -60,7 +60,7 @@ const partnerWebhookJoiKeys: KeysRequired<PartnerWebhook> = {
 };
 
 export const partnerKeys: KeysRequired<PartnerProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   name: Joi.string().min(2).max(100).required(),
   apiKey: Joi.string().required(),
