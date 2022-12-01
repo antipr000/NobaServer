@@ -6,7 +6,7 @@ import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../conf
 import mongoose from "mongoose";
 import { MongoClient, Collection } from "mongodb";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { Transaction, TransactionProps } from "../domain/Transaction";
+import { FiatPaymentInfo, Transaction, TransactionProps } from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/TransactionRepo";
 import { MongoDBTransactionRepo } from "../repo/MongoDBTransactionRepo";
 import { TransactionMapper } from "../mapper/TransactionMapper";
@@ -1625,6 +1625,150 @@ describe("MongoDBTransactionRepoTests", () => {
       });
     });
   });
+
+  describe("getUserAchUnsettledTransactionAmount", () => {
+    it("should filter all unsettled ach transactions for user", async () => {
+      const userId = "fake-user-1234";
+      const achPaymentMethodIds = ["fake-id-1", "fake-id-3", "fake-id-4"];
+
+      // Inserting some completed transactions
+      await transactionRepo.createTransaction(
+        getRandomTransaction("3", {
+          userId: userId,
+          status: TransactionStatus.COMPLETED,
+          fiatPaymentInfo: {
+            details: [],
+            isCompleted: true,
+            isApproved: true,
+            isFailed: false,
+            paymentMethodID: "fake-id-1",
+            paymentID: "checkoutPaymentID",
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
+        }),
+      );
+
+      await transactionRepo.createTransaction(
+        getRandomTransaction("5", {
+          userId: userId,
+          status: TransactionStatus.COMPLETED,
+          fiatPaymentInfo: {
+            details: [],
+            isCompleted: true,
+            isApproved: true,
+            isFailed: false,
+            paymentMethodID: "fake-id-2",
+            paymentID: "checkoutPaymentID",
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
+        }),
+      );
+
+      // Insert some unsettled ach payments
+
+      await transactionRepo.createTransaction(
+        getRandomTransaction("4", {
+          userId: userId,
+          status: TransactionStatus.COMPLETED,
+          fiatPaymentInfo: {
+            details: [],
+            isCompleted: false,
+            isApproved: true,
+            isFailed: false,
+            paymentMethodID: "fake-id-3",
+            paymentID: "checkoutPaymentID",
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
+        }),
+      );
+
+      await transactionRepo.createTransaction(
+        getRandomTransaction("7", {
+          userId: userId,
+          status: TransactionStatus.COMPLETED,
+          fiatPaymentInfo: {
+            details: [],
+            isCompleted: false,
+            isApproved: true,
+            isFailed: false,
+            paymentMethodID: "fake-id-4",
+            paymentID: "checkoutPaymentID",
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
+        }),
+      );
+
+      // Insert some non setted non ach transactions
+      await transactionRepo.createTransaction(
+        getRandomTransaction("6", {
+          userId: userId,
+          status: TransactionStatus.COMPLETED,
+          fiatPaymentInfo: {
+            details: [],
+            isCompleted: false,
+            isApproved: true,
+            isFailed: false,
+            paymentMethodID: "fake-id-5",
+            paymentID: "checkoutPaymentID",
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
+        }),
+      );
+
+      const totalUnsettledACHTransactionAmount = await transactionRepo.getUserACHUnsettledTransactionAmount(
+        userId,
+        achPaymentMethodIds,
+      );
+
+      expect(totalUnsettledACHTransactionAmount).toBe(2 * TEST_NUMBER);
+    });
+
+    it("should return 0 when there is no unsettled ach transaction", async () => {
+      const userId = "fake-user-1234";
+      const achPaymentMethodIds = ["fake-id-1", "fake-id-3", "fake-id-4"];
+
+      // Inserting some completed transactions
+      await transactionRepo.createTransaction(
+        getRandomTransaction("3", {
+          userId: userId,
+          status: TransactionStatus.COMPLETED,
+          fiatPaymentInfo: {
+            details: [],
+            isCompleted: true,
+            isApproved: true,
+            isFailed: false,
+            paymentMethodID: "fake-id-1",
+            paymentID: "checkoutPaymentID",
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
+        }),
+      );
+
+      // Insert some non setted non ach transactions
+      await transactionRepo.createTransaction(
+        getRandomTransaction("6", {
+          userId: userId,
+          status: TransactionStatus.COMPLETED,
+          fiatPaymentInfo: {
+            details: [],
+            isCompleted: false,
+            isApproved: true,
+            isFailed: false,
+            paymentMethodID: "fake-id-5",
+            paymentID: "checkoutPaymentID",
+            paymentProvider: PaymentProvider.CHECKOUT,
+          },
+        }),
+      );
+
+      const totalUnsettledACHTransactionAmount = await transactionRepo.getUserACHUnsettledTransactionAmount(
+        userId,
+        achPaymentMethodIds,
+      );
+
+      expect(totalUnsettledACHTransactionAmount).toBe(0);
+    });
+  });
 });
 
 const getRandomTransaction = (
@@ -1635,6 +1779,7 @@ const getRandomTransaction = (
     partnerID?: string;
     fiatCurrency?: string;
     cryptoCurrency?: string;
+    fiatPaymentInfo?: FiatPaymentInfo;
   } = {},
 ): Transaction => {
   const props: TransactionProps = {
@@ -1647,7 +1792,7 @@ const getRandomTransaction = (
     type: TransactionType.ONRAMP,
     leg1Amount: TEST_NUMBER,
     leg2Amount: TEST_NUMBER,
-    fiatPaymentInfo: {
+    fiatPaymentInfo: options.fiatPaymentInfo ?? {
       details: [],
       isCompleted: true,
       isApproved: true,

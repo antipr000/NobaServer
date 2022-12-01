@@ -1,5 +1,5 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 
@@ -50,7 +50,7 @@ const PartnerAdminRolePrivileges = {
   },
 };
 
-export interface PartnerAdminProps extends VersioningInfo {
+export interface PartnerAdminProps extends BaseProps {
   _id: string;
   name?: string;
   email: string;
@@ -59,7 +59,7 @@ export interface PartnerAdminProps extends VersioningInfo {
 }
 
 export const partnerAdminKeys: KeysRequired<PartnerAdminProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   name: Joi.string().min(2).max(100).optional(),
   email: Joi.string()

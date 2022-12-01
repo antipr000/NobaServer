@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { Utils } from "../../../core/utils/Utils";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { Entity, VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { CurrencyType, KeysRequired } from "../../common/domain/Types";
 import { TransactionStatus, TransactionType } from "./Types";
 import { PaymentProvider } from "src/modules/consumer/domain/PaymentProvider";
@@ -22,7 +22,7 @@ const transactionEventJoiSchema = Joi.object()
   .keys(transactionEventJoiSchemaKeys)
   .meta({ className: TransactionEvent.name });
 
-export interface TransactionProps extends VersioningInfo {
+export interface TransactionProps extends BaseProps {
   _id: string;
   transactionID: string;
   userId: string;
@@ -90,7 +90,7 @@ export interface Discounts {
 }
 
 export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   transactionID: Joi.string()
     .required()

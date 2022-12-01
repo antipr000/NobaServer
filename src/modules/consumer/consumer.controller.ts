@@ -97,7 +97,6 @@ export class ConsumerController {
     entity.props.cryptoWallets = entity.props.cryptoWallets.filter(wallet => {
       return wallet.partnerID === partner.props._id || wallet.isPrivate === false;
     });
-
     return this.consumerMapper.toDTO(entity);
   }
 

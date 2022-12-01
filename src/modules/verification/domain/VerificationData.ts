@@ -1,17 +1,17 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { VersioningInfo, versioningInfoJoiSchemaKeys } from "../../../core/domain/Entity";
+import { BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 import { Entity } from "../../../core/domain/Entity";
 
-export interface VerificationDataProps extends VersioningInfo {
+export interface VerificationDataProps extends BaseProps {
   _id: string;
   userID?: string;
   transactionID?: string;
 }
 
 export const verificationDataValidationKeys: KeysRequired<VerificationDataProps> = {
-  ...versioningInfoJoiSchemaKeys,
+  ...basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
   userID: Joi.string().optional(),
   transactionID: Joi.string().optional(),
