@@ -158,12 +158,6 @@ export class ConsumerController {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.phone);
-    if (existingConsumer.isSuccess) {
-      // Somebody else already has this phone number, so deny update
-      throw new BadRequestException("User already exists with this phone number");
-    }
-
     const res = await this.consumerService.updateConsumerPhone(consumer, requestBody, request.user.partnerId);
     return this.consumerMapper.toDTO(res);
   }
@@ -171,7 +165,7 @@ export class ConsumerController {
   @Post("/phone/verify")
   @ApiOperation({ summary: "Sends OTP to user's phone to verify update of user profile" })
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.CREATED,
     description: "OTP sent to user's phone",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
@@ -206,12 +200,6 @@ export class ConsumerController {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.email);
-    if (existingConsumer.isSuccess) {
-      // Somebody else already has this email number, so deny update
-      throw new BadRequestException("User already exists with this email address");
-    }
-
     const res = await this.consumerService.updateConsumerEmail(consumer, requestBody);
     return this.consumerMapper.toDTO(res);
   }
@@ -219,7 +207,7 @@ export class ConsumerController {
   @Post("/email/verify")
   @ApiOperation({ summary: "Sends OTP to user's email to verify update of user profile" })
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.CREATED,
     description: "OTP sent to user's email address",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
