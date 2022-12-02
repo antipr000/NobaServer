@@ -459,7 +459,7 @@ export class ConsumerService {
     otp: number,
     consumerID: string,
     partnerID: string,
-    notificationMethod: NotificationMethod,
+    notificationMethod: NotificationMethod = NotificationMethod.EMAIL,
   ) {
     // Verify if the otp is correct
     const cryptoWallet = this.getCryptoWallet(consumer, walletAddress, partnerID);
