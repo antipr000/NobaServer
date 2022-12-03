@@ -45,6 +45,7 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
   when(mockConsumerService.updateConsumerEmail(anything(), anything())).thenReject(
     new Error("Method not implemented!"),
   );
+  when(mockConsumerService.getConsumerCircleWalletID(anyString())).thenReject(new Error("Method not implemented!"));
 
   return mockConsumerService;
 }

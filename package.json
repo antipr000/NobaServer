@@ -79,6 +79,7 @@
     "ts-mockito": "^2.6.1",
     "tunnel": "^0.0.6",
     "twilio": "^3.80.1",
+    "uuidv4": "^6.2.13",
     "winston": "^3.3.3"
   },
   "devDependencies": {

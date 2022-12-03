@@ -17,6 +17,7 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { NotificationService } from "../notifications/notification.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerService } from "../partner/partner.service";
+import { CircleClient } from "../psp/circle.client";
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { PaymentService } from "../psp/payment.service";
 import { Transaction } from "../transactions/domain/Transaction";
@@ -63,6 +64,9 @@ export class ConsumerService {
   @Inject()
   private readonly smsService: SMSService;
 
+  @Inject()
+  private readonly circleClient: CircleClient;
+
   private otpOverride: number;
 
   constructor(private readonly configService: CustomConfigService) {
@@ -71,6 +75,32 @@ export class ConsumerService {
 
   async getConsumer(consumerID: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerID);
+  }
+
+  // One thing to note here is that "idempotencyKey" is "determinstic" rather than
+  // a short-lived value. This is an "intended" and an important design because -
+  //
+  // Multiple threads & multiple machines might be calling this function and if "idempotencyKey" is
+  // not determintistic, it is very well possible that multiple Circle wallets are
+  // created for same consumer.
+  // Further, this problem will magnifies "significantly" because different there
+  // might be lost transaction history because of certain race conditions where
+  // the first assigned wallet is chosen for certain transactions and then the next
+  // thread overrides the previous wallet after creating a new wallet
+  // (because of it's local state) and thus all the further transactions will happen
+  // on the new wallet and all the transactions made to the previous wallet are lost.
+  // This is analogous to the classic "Lost Update" problem in database world :)
+  //
+  async getConsumerCircleWalletID(consumerID: string): Promise<string> {
+    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
+    if (consumer.props.circleWalletID) {
+      return consumer.props.circleWalletID;
+    }
+
+    const circleWalletID: string = await this.circleClient.createWallet(consumerID);
+    await this.consumerRepo.updateConsumerCircleWalletID(consumerID, circleWalletID);
+
+    return circleWalletID;
   }
 
   private analyseHandle(handle: string): void {

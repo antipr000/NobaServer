@@ -49,6 +49,15 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     return false;
   }
 
+  async updateConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<void> {
+    const userModel = await this.dbProvider.getUserModel();
+    await userModel
+      .findByIdAndUpdate(consumerID, {
+        $set: { circleWalletID: circleWalletID },
+      })
+      .exec();
+  }
+
   async getConsumer(consumerID: string): Promise<Consumer> {
     const userModel = await this.dbProvider.getUserModel();
     const result: any = await userModel.findById(consumerID).exec();

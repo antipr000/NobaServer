@@ -43,6 +43,8 @@ import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
+import { getMockCircleClientWithDefaults } from "../../psp/mocks/mock.circle.client";
+import { CircleClient } from "../../psp/circle.client";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -54,6 +56,7 @@ describe("ConsumerService", () => {
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
   let partnerService: PartnerService;
   let plaidClient: PlaidClient;
+  let circleClient: CircleClient;
 
   jest.setTimeout(30000);
 
@@ -66,6 +69,7 @@ describe("ConsumerService", () => {
     plaidClient = getMockPlaidClientWithDefaults();
     smsService = getMockSmsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
+    circleClient = getMockCircleClientWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -113,6 +117,10 @@ describe("ConsumerService", () => {
         {
           provide: PlaidClient,
           useFactory: () => instance(plaidClient),
+        },
+        {
+          provide: CircleClient,
+          useFactory: () => instance(circleClient),
         },
         KmsService,
       ],
@@ -2852,6 +2860,74 @@ describe("ConsumerService", () => {
 
       const isHandleAvaialble = await consumerService.isHandleAvailable("test");
       expect(isHandleAvaialble).toBe(true);
+    });
+  });
+
+  describe("getConsumerCircleWalletID", () => {
+    it("should return the circleWalletID if already present in the Consumer record", async () => {
+      const consumerID = "mock_consumer_id";
+      when(consumerRepo.getConsumer(anyString())).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerID,
+          firstName: "firstName",
+          lastName: "lastName",
+          email: "test@noba.com",
+          phone: "+9876541230",
+          partners: [{ partnerID: "DEFAULT_PARTNER_ID" }],
+          handle: "test",
+          circleWalletID: "mock_circle_wallet_id",
+        }),
+      );
+
+      const receivedCircleWalletID = await consumerService.getConsumerCircleWalletID(consumerID);
+
+      expect(receivedCircleWalletID).toBe("mock_circle_wallet_id");
+      const [getConsumerMethodParam] = capture(consumerRepo.getConsumer).last();
+      expect(getConsumerMethodParam).toBe(consumerID);
+    });
+
+    it("should call the Circle client to create a new Wallet & also update the Consumer record if the circleWalletID if not present in the Consumer record", async () => {
+      const consumerID = "mock_consumer_id";
+      const circleWalletID = "mock_circle_wallet_id";
+
+      when(consumerRepo.getConsumer(anyString())).thenResolve(
+        Consumer.createConsumer({
+          _id: consumerID,
+          firstName: "firstName",
+          lastName: "lastName",
+          email: "test@noba.com",
+          phone: "+9876541230",
+          partners: [{ partnerID: "DEFAULT_PARTNER_ID" }],
+          handle: "test",
+        }),
+      );
+      when(circleClient.createWallet(anyString())).thenResolve(circleWalletID);
+      when(consumerRepo.updateConsumerCircleWalletID(anyString(), anyString())).thenResolve();
+
+      const receivedCircleWalletID = await consumerService.getConsumerCircleWalletID(consumerID);
+
+      const [getConsumerMethodParam] = capture(consumerRepo.getConsumer).last();
+      expect(getConsumerMethodParam).toBe(consumerID);
+      const [createWalletMethodParams] = capture(circleClient.createWallet).last();
+      expect(createWalletMethodParams).toBe(consumerID);
+
+      expect(receivedCircleWalletID).toBe(circleWalletID);
+
+      const [updateConsumerConsumerIdParam, updateConsumerCircleWalletIdParam] = capture(
+        consumerRepo.updateConsumerCircleWalletID,
+      ).last();
+      expect(updateConsumerConsumerIdParam).toBe(consumerID);
+      expect(updateConsumerCircleWalletIdParam).toBe(circleWalletID);
+    });
+
+    it("should throw error if the consumerRepo throws it", async () => {
+      when(consumerRepo.getConsumer("mock_consumer_id")).thenReject(new BadRequestException());
+      try {
+        await consumerService.getConsumerCircleWalletID("mock_consumer_id");
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(BadRequestException);
+      }
     });
   });
 });

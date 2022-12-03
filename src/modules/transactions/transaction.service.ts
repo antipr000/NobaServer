@@ -21,6 +21,7 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { NotificationService } from "../notifications/notification.service";
 import { Partner } from "../partner/domain/Partner";
 import { PartnerService } from "../partner/partner.service";
+import { CircleClient } from "../psp/circle.client";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
@@ -57,6 +58,7 @@ export class TransactionService {
     private readonly ellipticService: EllipticService,
     private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService,
     private readonly limitService: LimitsService,
+    private readonly circleClient: CircleClient,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
     @Inject(NotificationService) private readonly notificationService: NotificationService,
@@ -162,8 +164,28 @@ export class TransactionService {
     return this.transactionsMapper.toDTO(transaction);
   }
 
-  async getParticipantBalance(participantID: string, asset?: string): Promise<ConsumerAccountBalance[]> {
-    return await this.assetServiceFactory.getWalletProviderService().getConsumerAccountBalance(participantID, asset);
+  async getParticipantBalance(
+    zhParticipantID: string,
+    consumerID: string,
+    asset?: string,
+  ): Promise<ConsumerAccountBalance[]> {
+    const circleWalletID = await this.consumerService.getConsumerCircleWalletID(consumerID);
+
+    const zhWalletBalance: ConsumerAccountBalance[] = await this.assetServiceFactory
+      .getWalletProviderService()
+      .getConsumerAccountBalance(zhParticipantID, asset);
+
+    const circleWalletUSDBalance: number = await this.circleClient.getWalletBalance(circleWalletID);
+    zhWalletBalance.push({
+      accountID: circleWalletID,
+      accountType: "CIRCLE",
+      asset: "USD",
+      balance: circleWalletUSDBalance.toPrecision(2).toString(),
+      lastUpdate: undefined,
+      name: undefined,
+    });
+
+    return zhWalletBalance;
   }
 
   async getUserTransactions(

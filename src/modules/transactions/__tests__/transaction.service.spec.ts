@@ -73,6 +73,8 @@ import { Utils } from "../../../core/utils/Utils";
 import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { WalletProviderService } from "../assets/wallet.provider.service";
 import { getMockWalletProviderServiceWithDefaults } from "../mocks/mock.wallet.provider.service";
+import { CircleClient } from "../../../modules/psp/circle.client";
+import { getMockCircleClientWithDefaults } from "../../../modules/psp/mocks/mock.circle.client";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -104,6 +106,7 @@ describe("TransactionService", () => {
   let ellipticService: EllipticService;
   let limitService: LimitsService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
+  let circleClient: CircleClient;
 
   const userId = "1234567890";
   const consumer: Consumer = Consumer.createConsumer({
@@ -129,6 +132,7 @@ describe("TransactionService", () => {
     limitService = getMockLimitsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
     walletProviderService = getMockWalletProviderServiceWithDefaults();
+    circleClient = getMockCircleClientWithDefaults();
 
     transactionMapper = new TransactionMapper();
 
@@ -180,6 +184,10 @@ describe("TransactionService", () => {
         {
           provide: LimitsService,
           useFactory: () => instance(limitService),
+        },
+        {
+          provide: CircleClient,
+          useFactory: () => instance(circleClient),
         },
       ],
     }).compile();
@@ -3216,18 +3224,27 @@ describe("TransactionService", () => {
       when(assetService.needsIntermediaryLeg()).thenReturn(false);
     });
 
-    it("returns an empty balance", async () => {
+    it("returns Circle wallet balance 'always'", async () => {
       const participantID = "participant-12345";
+      const consumerID = "mock_consumer_id";
+      const consumerCircleWalletID = "mock_circle_wallet_id";
 
+      when(consumerService.getConsumerCircleWalletID(consumerID)).thenResolve(consumerCircleWalletID);
       when(walletProviderService.getConsumerAccountBalance(participantID, undefined)).thenResolve([]);
+      when(circleClient.getWalletBalance(consumerCircleWalletID)).thenResolve(0);
 
-      const balance = await transactionService.getParticipantBalance(participantID);
+      const balance = await transactionService.getParticipantBalance(participantID, consumerID);
 
-      expect(balance).toEqual([]);
+      expect(balance).toHaveLength(1);
+      expect(balance[0].accountID).toBe(consumerCircleWalletID);
+      expect(balance[0].asset).toBe("USD");
+      expect(balance[0].balance).toBe("0.0");
     });
 
     it("returns a structured balance object", async () => {
       const participantID = "participant-12345";
+      const consumerID = "mock_consumer_id";
+      const consumerCircleWalletID = "mock_circle_wallet_id";
 
       const lastUpdateDate = new Date();
       const balanceObj: ConsumerAccountBalance[] = [
@@ -3249,11 +3266,36 @@ describe("TransactionService", () => {
         },
       ];
 
+      when(consumerService.getConsumerCircleWalletID(consumerID)).thenResolve(consumerCircleWalletID);
+      when(circleClient.getWalletBalance(consumerCircleWalletID)).thenResolve(0);
       when(walletProviderService.getConsumerAccountBalance(participantID, undefined)).thenResolve(balanceObj);
 
-      const balance = await transactionService.getParticipantBalance(participantID);
+      const receivedBalances = await transactionService.getParticipantBalance(participantID, consumerID);
 
-      expect(balance).toEqual(balance);
+      expect(receivedBalances).toContainEqual({
+        accountID: "acct-id-1",
+        name: "acct-label-1",
+        accountType: "available",
+        asset: "asset-1",
+        balance: "1000000",
+        lastUpdate: lastUpdateDate.getTime(),
+      });
+      expect(receivedBalances).toContainEqual({
+        accountID: "acct-id-2",
+        name: "acct-label-2",
+        accountType: "available",
+        asset: "asset-2",
+        balance: "2000000",
+        lastUpdate: lastUpdateDate.getTime(),
+      });
+      expect(receivedBalances).toContainEqual({
+        accountID: consumerCircleWalletID,
+        accountType: "CIRCLE",
+        asset: "USD",
+        balance: "0.0",
+        name: undefined,
+        lastUpdate: undefined,
+      });
     });
   });
 });

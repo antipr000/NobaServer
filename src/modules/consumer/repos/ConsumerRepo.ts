@@ -10,4 +10,5 @@ export interface IConsumerRepo {
   updateConsumer(consumer: Consumer): Promise<Consumer>;
   getAllConsumersForPartner(partnerID: string): Promise<Consumer[]>;
   isHandleTaken(handle: string): Promise<boolean>;
+  updateConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<void>;
 }

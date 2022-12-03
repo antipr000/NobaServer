@@ -37,6 +37,7 @@ export interface ConsumerProps extends BaseProps {
   verificationData?: VerificationData;
   paymentMethods?: PaymentMethod[];
   cryptoWallets?: CryptoWallet[];
+  circleWalletID?: string;
 }
 
 const partnerValidationJoiKeys: KeysRequired<PartnerDetails> = {
@@ -135,6 +136,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   verificationData: Joi.object().keys(verificationDataValidationJoiKeys).optional(),
   paymentMethods: Joi.array().items(paymentMethodsValidationJoiKeys).default([]),
   cryptoWallets: Joi.array().items(cryptoWalletsValidationJoiKeys).default([]),
+  circleWalletID: Joi.string().optional(),
 };
 
 export const consumerJoiSchema = Joi.object(consumerJoiValidationKeys).options({

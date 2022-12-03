@@ -514,6 +514,79 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(result).toBe(false);
     });
   });
+
+  describe("updateConsumerCircleWalletID", () => {
+    it("should set the 'circleWalletID' field if not present at all", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test",
+      };
+      await consumerCollection.insertOne({
+        ...consumerProps,
+        _id: consumerProps._id as any,
+      });
+
+      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      expect(consumerBeforeUpdate.props.circleWalletID).toBeUndefined();
+
+      await consumerRepo.updateConsumerCircleWalletID(consumerProps._id, "dummy_circle_wallet_id");
+      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      expect(consumerAfterUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id");
+    });
+
+    it("should update the 'circleWalletID' field if already present", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test",
+        circleWalletID: "dummy_circle_wallet_id_1",
+      };
+      await consumerCollection.insertOne({
+        ...consumerProps,
+        _id: consumerProps._id as any,
+      });
+
+      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      expect(consumerBeforeUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_1");
+
+      await consumerRepo.updateConsumerCircleWalletID(consumerProps._id, "dummy_circle_wallet_id_2");
+      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      expect(consumerAfterUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_2");
+    });
+
+    it("shouldn't perform anything if the 'consumerID' itself is not valid", async () => {
+      const consumerProps: ConsumerProps = {
+        _id: "test-consumer-id",
+        firstName: "firstName",
+        lastName: "lastName",
+        email: "test@noba.com",
+        phone: "+9876541230",
+        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+        handle: "test",
+        circleWalletID: "dummy_circle_wallet_id_1",
+      };
+      await consumerCollection.insertOne({
+        ...consumerProps,
+        _id: consumerProps._id as any,
+      });
+
+      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      expect(consumerBeforeUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_1");
+
+      await consumerRepo.updateConsumerCircleWalletID("dummy_consumer_id", "dummy_circle_wallet_id_2");
+      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      expect(consumerAfterUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_1");
+    });
+  });
 });
 
 const getRandomUser = (email: string, phone?: string): Consumer => {
