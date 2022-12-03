@@ -133,6 +133,13 @@ plaid:
   secretKey: ""
   awsSecretNameForSecretKey: "PROD_PLAID_SECRET_KEY"
 
+circle:
+  env: "production"
+  apiKey: ""
+  awsSecretNameForApiKey: "PROD_CIRCLE_API_KEY"
+  masterWalletID: ""
+  awsSecretNameForMasterWalletID: "PROD_CIRCLE_MASTER_WALLET_ID"
+
 dependencies:
   emailClient: "SENDGRID"
 

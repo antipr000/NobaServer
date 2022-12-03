@@ -109,6 +109,12 @@ import {
   DEPENDENCY_CONFIG_KEY,
   DEPENDENCY_EMAIL_CLIENT,
   DEV_TEST_ONLY_VARIABLES,
+  CIRCLE_CONFIG_KEY,
+  CIRCLE_ENVIRONMENT,
+  CIRCLE_API_KEY,
+  CIRCLE_AWS_SECRET_KEY_FOR_API_KEY,
+  CIRCLE_AWS_SECRET_KEY_FOR_MASTER_WALLET_ID,
+  CIRCLE_MASTER_WALLET_ID,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -127,6 +133,7 @@ import { SquidConfigs } from "./configtypes/SquidConfigs";
 import { PartnerConfigs } from "./configtypes/PartnerConfigs";
 import { PlaidConfigs } from "./configtypes/PlaidConfigs";
 import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs";
+import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -290,6 +297,7 @@ async function configureAllVendorCredentials(
     configurePartnerConfigurations,
     configurePlaidCredentials,
     configureDependencies,
+    configureCircleConfigurations,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -689,6 +697,39 @@ async function configureSquidCredentials(
 
   configs[SQUID_CONFIG_KEY] = squidConfigs;
 
+  return configs;
+}
+
+async function configureCircleConfigurations(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const circleConfigs: CircleConfigs = configs[CIRCLE_CONFIG_KEY];
+
+  if (circleConfigs === undefined) {
+    const errorMessage =
+      "\n'Circle' configurations are required. Please configure the Circle configurations in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${CIRCLE_CONFIG_KEY}" and populate ` +
+      `("${CIRCLE_API_KEY}" or "${CIRCLE_AWS_SECRET_KEY_FOR_API_KEY}") ` +
+      `("${CIRCLE_MASTER_WALLET_ID}" or "${CIRCLE_AWS_SECRET_KEY_FOR_MASTER_WALLET_ID}") AND ` +
+      `"${CIRCLE_ENVIRONMENT}" ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  circleConfigs.apiKey = await getParameterValue(circleConfigs.awsSecretNameForApiKey, circleConfigs.apiKey);
+  circleConfigs.masterWalletID = await getParameterValue(
+    circleConfigs.awsSecretNameForMasterWalletID,
+    circleConfigs.masterWalletID,
+  );
+
+  circleConfigs.env = await getParameterValue(null, circleConfigs.env);
+  if (!isValidCircleEnvironment(circleConfigs.env)) {
+    throw Error(`"${circleConfigs.env}" is not a valid Circle envs.`);
+  }
+
+  configs[CIRCLE_CONFIG_KEY] = circleConfigs;
   return configs;
 }
 

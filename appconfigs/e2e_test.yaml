@@ -137,6 +137,13 @@ plaid:
   secretKey: "3efe6f2aef4a7ab5d609149f96a35b"
   awsSecretNameForSecretKey: ""
 
+circle:
+  env: "sandbox"
+  apiKey: "QVBJX0tFWToyZDNhYTVjMGFhZDE5NWYzZDI5ZjU4OTRiYzgwYzg4YToxMmIzYTkwZmYwZGYzYmJmZWEwYzc3MzFiNzJhNzkwMw=="
+  awsSecretNameForApiKey: ""
+  masterWalletID: "1001404309"
+  awsSecretNameForMasterWalletID: ""
+
 dependencies:
   emailClient: "STUB"
 

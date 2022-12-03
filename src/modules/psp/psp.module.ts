@@ -11,6 +11,7 @@ import { TransactionRepoModule } from "../transactions/repo/transaction.repo.mod
 import { getWinstonModule } from "../../core/utils/WinstonModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { CircleClient } from "./circle.client";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
@@ -27,7 +28,7 @@ export const CheckoutClientProvider: Provider = {
 @Module({
   imports: [getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule],
   controllers: [PaymentWebhooksController],
-  providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper],
-  exports: [CheckoutClient, PlaidClient, PaymentService],
+  providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper, CircleClient],
+  exports: [CheckoutClient, PlaidClient, PaymentService, CircleClient],
 })
 export class PspModule {}

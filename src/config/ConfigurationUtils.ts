@@ -156,6 +156,13 @@ export const PLAID_AWS_SECRET_KEY_FOR_CLIENT_ID = "awsSecretNameForClientID";
 export const DEPENDENCY_CONFIG_KEY = "dependencies";
 export const DEPENDENCY_EMAIL_CLIENT = "emailClient";
 
+export const CIRCLE_CONFIG_KEY = "circle";
+export const CIRCLE_ENVIRONMENT = "env";
+export const CIRCLE_API_KEY = "apiKey";
+export const CIRCLE_AWS_SECRET_KEY_FOR_API_KEY = "awsSecretNameForApiKey";
+export const CIRCLE_MASTER_WALLET_ID = "masterWalletID";
+export const CIRCLE_AWS_SECRET_KEY_FOR_MASTER_WALLET_ID = "awsSecretNameForMasterWalletID";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),
