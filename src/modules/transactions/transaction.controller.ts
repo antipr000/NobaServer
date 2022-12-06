@@ -209,10 +209,10 @@ export class TransactionController {
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getConsumerBalance(@AuthUser() authUser: Consumer): Promise<ConsumerBalanceDTO[]> {
-    const balances = await this.transactionService.getParticipantBalance(
-      authUser.props.zhParticipantCode,
-      authUser.props._id,
-    );
+    const balances =
+      authUser.props.zhParticipantCode !== undefined
+        ? await this.transactionService.getParticipantBalance(authUser.props.zhParticipantCode, authUser.props._id)
+        : [];
 
     const dto: ConsumerBalanceDTO[] = [];
     balances.forEach(balance => {

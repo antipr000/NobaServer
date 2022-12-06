@@ -2630,6 +2630,7 @@ describe("ConsumerService", () => {
         phone: phone,
       });
 
+      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
       when(mockOtpRepo.getOTP(phone, IdentityType.consumer, partnerId, consumer.props._id)).thenResolve(otpObject);
 
       try {
@@ -2641,6 +2642,7 @@ describe("ConsumerService", () => {
       }
 
       phoneUpdateRequest.otp = otp; //correct otp
+      when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.fail(anything()));
       when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
@@ -2650,6 +2652,62 @@ describe("ConsumerService", () => {
       const [requestArg] = capture(consumerRepo.updateConsumer).last();
       expect(requestArg.props.phone).toBe(phone);
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
+    });
+
+    it("doesn't update user if identifier already exists", async () => {
+      const phone = "+12434252";
+      const email = "a@noba.com";
+      const partnerId = "fake-partner-id2";
+      const otp = 123456;
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        email: email,
+        displayEmail: email,
+
+        paymentProviderAccounts: [
+          {
+            providerCustomerID: "test-customer-1",
+            providerID: PaymentProvider.CHECKOUT,
+          },
+        ],
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+      });
+
+      const otpObject = Otp.createOtp({
+        otp: otp,
+        emailOrPhone: phone,
+        identityType: IdentityType.consumer,
+        consumerID: consumer.props._id,
+        partnerID: partnerId,
+      });
+
+      const phoneUpdateRequest: UserPhoneUpdateRequest = {
+        phone: phone,
+        otp: otp, //correct otp
+      };
+
+      when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.ok(anything()));
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, partnerId, consumer.props._id)).thenResolve(otpObject);
+      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
+
+      try {
+        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, partnerId);
+        expect(true).toBe(false);
+      } catch (err) {
+        console.log(err);
+        expect(err).toBeInstanceOf(BadRequestException);
+        expect(err.message).toEqual("User already exists with this phone number");
+      }
+
+      expect(consumer.props.phone).toBeUndefined();
     });
   });
 
@@ -2696,7 +2754,7 @@ describe("ConsumerService", () => {
       const otp = 123456;
       const otpObject = Otp.createOtp({
         otp: otp,
-        emailOrPhone: phone,
+        emailOrPhone: email,
         identityType: IdentityType.consumer,
       });
 
@@ -2731,6 +2789,7 @@ describe("ConsumerService", () => {
 
       emailUpdateRequest.otp = otp; //correct otp
 
+      when(consumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.fail(anything()));
       const expectedUpdatedConsumer = Consumer.createConsumer({
         ...consumer.props,
         email: email.toLowerCase(),
@@ -2773,6 +2832,52 @@ describe("ConsumerService", () => {
       //update consumer again, this time notification shouldn't be sent
       await consumerService.updateConsumerEmail(updateConsumerResponse, emailUpdateRequest);
       verify(notificationService.sendNotification(anything(), anything(), anything())).once(); //already called above
+    });
+
+    it("doesn't update user if identifier already exists", async () => {
+      const phone = "+12434252";
+      const email = "Rosie@Noba.com";
+      const partnerId = "fake-partner-id";
+      const otp = 123456;
+      const otpObject = Otp.createOtp({
+        otp: otp,
+        emailOrPhone: email,
+        identityType: IdentityType.consumer,
+      });
+
+      const consumer = Consumer.createConsumer({
+        _id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        partners: [
+          {
+            partnerID: partnerId,
+          },
+        ],
+        isAdmin: false,
+        phone: phone,
+      });
+
+      const emailUpdateRequest: UserEmailUpdateRequest = {
+        email: email,
+        otp: otp, //correct otp
+      };
+
+      when(consumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.ok(anything()));
+      when(mockOtpRepo.getOTP(email, IdentityType.consumer)).thenResolve(otpObject);
+      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
+
+      try {
+        await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
+        expect(true).toBe(false);
+      } catch (err) {
+        console.log(err);
+        expect(err).toBeInstanceOf(BadRequestException);
+        expect(err.message).toEqual("User already exists with this email address");
+      }
+
+      expect(consumer.props.email).toBeUndefined();
+      expect(consumer.props.displayEmail).toBeUndefined();
     });
   });
 

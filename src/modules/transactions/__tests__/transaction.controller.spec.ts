@@ -224,4 +224,63 @@ describe("TransactionController", () => {
       expect(result).toStrictEqual(transactionDTO);
     });
   });
+
+  describe("GET /consumers/balances", () => {
+    it("should return empty balance for undefined participant", async () => {
+      const spy = jest.spyOn(transactionService, "getParticipantBalance");
+
+      const response = await transactionController.getConsumerBalance(consumer);
+
+      expect(spy).toHaveBeenCalledTimes(0);
+
+      expect(response).toStrictEqual([]);
+    });
+
+    it("should return consumer balance", async () => {
+      const updateDate = Date.now();
+      const balances = [
+        {
+          name: "balance-name-1",
+          asset: "asset-1",
+          accountType: "acctType-1",
+          balance: "balance-1",
+          accountID: "account-id-1",
+          lastUpdate: updateDate,
+        },
+        {
+          name: "balance-name-2",
+          asset: "asset-2",
+          accountType: "acctType-2",
+          balance: "balance-2",
+          accountID: "account-id-2",
+          lastUpdate: updateDate,
+        },
+      ];
+
+      const zhParticipantCode = "1234567890";
+      when(transactionService.getParticipantBalance(zhParticipantCode)).thenResolve(balances);
+
+      consumer.props.zhParticipantCode = zhParticipantCode;
+      const response = await transactionController.getConsumerBalance(consumer);
+
+      expect(response).toStrictEqual([
+        {
+          name: "balance-name-1",
+          asset: "asset-1",
+          accountType: "acctType-1",
+          balance: "balance-1",
+          accountID: "account-id-1",
+          lastUpdate: updateDate,
+        },
+        {
+          name: "balance-name-2",
+          asset: "asset-2",
+          accountType: "acctType-2",
+          balance: "balance-2",
+          accountID: "account-id-2",
+          lastUpdate: updateDate,
+        },
+      ]);
+    });
+  });
 });
