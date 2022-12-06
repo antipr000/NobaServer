@@ -187,9 +187,6 @@ export class ConsumerService {
   }
 
   async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest, partnerID: string): Promise<Consumer> {
-    console.log(
-      `Calling getOTP with ${reqData.phone}, ${consumerIdentityIdentifier}, ${partnerID}, ${consumer.props._id}`,
-    );
     const otpResult = await this.otpRepo.getOTP(
       reqData.phone,
       consumerIdentityIdentifier,
@@ -202,6 +199,14 @@ export class ConsumerService {
     }
 
     await this.otpRepo.deleteOTP(otpResult.props._id);
+
+    // Before updating the consumer, check to be sure this phone number isn't already linked to another account.
+    // If it is, it would have been a signup within the period of time this OTP was valid.
+    const existingConsumer = await this.findConsumerByEmailOrPhone(reqData.phone);
+    if (existingConsumer.isSuccess) {
+      // Somebody else already has this phone number, so deny update
+      throw new BadRequestException("User already exists with this phone number");
+    }
 
     const updatedConsumer = await this.updateConsumer({
       _id: consumer.props._id,
@@ -231,6 +236,15 @@ export class ConsumerService {
     }
 
     await this.otpRepo.deleteOTP(otpResult.props._id);
+
+    // Before updating the consumer, check to be sure this email address isn't already linked to another account.
+    // If it is, it would have been a signup within the period of time this OTP was valid.
+    const existingConsumer = await this.findConsumerByEmailOrPhone(reqData.email);
+    if (existingConsumer.isSuccess) {
+      // Somebody else already has this email number, so deny update
+      // WARNING: Do not change this text as the app depends on this specific text string (to be fixed later)
+      throw new BadRequestException("User already exists with this email address");
+    }
 
     const updatedConsumer = await this.updateConsumer({
       _id: consumer.props._id,

@@ -820,9 +820,9 @@ describe("ConsumerController", () => {
         otp: 123456,
       };
 
-      when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(
-        Result.ok(Consumer.createConsumer({ phone: phone, partners: [{ partnerID: partnerID }] })),
-      );
+      when(
+        consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, consumer.props.partners[0].partnerID),
+      ).thenThrow(new BadRequestException());
 
       try {
         await consumerController.updatePhone(
@@ -1049,10 +1049,7 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).thenResolve(expectedUpdatedConsumer);
-      when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(
-        Result.ok(Consumer.createConsumer({ email: email, partners: [{ partnerID: partnerID }] })),
-      );
+      when(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).thenThrow(new BadRequestException());
 
       try {
         await consumerController.updateEmail(
