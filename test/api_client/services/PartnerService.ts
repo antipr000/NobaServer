@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddPartnerAdminRequestDTO } from "../models/AddPartnerAdminRequestDTO";
+import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { PartnerAdminDTO } from "../models/PartnerAdminDTO";
 import type { PartnerDTO } from "../models/PartnerDTO";
 import type { TransactionDTO } from "../models/TransactionDTO";
@@ -267,7 +268,7 @@ export class PartnerService {
 
   /**
    * Gets all consumers for the partner
-   * @returns PartnerAdminDTO All consumers of the partner
+   * @returns ConsumerDTO All consumers of the partner
    * @throws ApiError
    */
   public static getAllPartnerConsumers({
@@ -281,7 +282,7 @@ export class PartnerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<Array<PartnerAdminDTO>> {
+  }): CancelablePromise<Array<ConsumerDTO>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/partners/consumers",
