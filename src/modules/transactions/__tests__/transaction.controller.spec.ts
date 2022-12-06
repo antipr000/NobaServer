@@ -29,6 +29,7 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Transaction } from "../domain/Transaction";
 import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
 import { TransactionMapper } from "../mapper/TransactionMapper";
+import { ConsumerAccountProvider } from "../domain/AssetTypes";
 
 describe("TransactionController", () => {
   let transactionService: TransactionService;
@@ -240,45 +241,33 @@ describe("TransactionController", () => {
       const updateDate = Date.now();
       const balances = [
         {
-          name: "balance-name-1",
           asset: "asset-1",
-          accountType: "acctType-1",
+          accountType: ConsumerAccountProvider.ZEROHASH,
           balance: "balance-1",
-          accountID: "account-id-1",
-          lastUpdate: updateDate,
         },
         {
-          name: "balance-name-2",
           asset: "asset-2",
-          accountType: "acctType-2",
+          accountType: ConsumerAccountProvider.ZEROHASH,
           balance: "balance-2",
-          accountID: "account-id-2",
-          lastUpdate: updateDate,
         },
       ];
 
       const zhParticipantCode = "1234567890";
-      when(transactionService.getParticipantBalance(zhParticipantCode)).thenResolve(balances);
+      when(transactionService.getParticipantBalance(zhParticipantCode, userId)).thenResolve(balances);
 
       consumer.props.zhParticipantCode = zhParticipantCode;
       const response = await transactionController.getConsumerBalance(consumer);
 
       expect(response).toStrictEqual([
         {
-          name: "balance-name-1",
           asset: "asset-1",
-          accountType: "acctType-1",
+          accountType: ConsumerAccountProvider.ZEROHASH,
           balance: "balance-1",
-          accountID: "account-id-1",
-          lastUpdate: updateDate,
         },
         {
-          name: "balance-name-2",
           asset: "asset-2",
-          accountType: "acctType-2",
+          accountType: ConsumerAccountProvider.ZEROHASH,
           balance: "balance-2",
-          accountID: "account-id-2",
-          lastUpdate: updateDate,
         },
       ]);
     });
