@@ -78,12 +78,14 @@ export interface ConsumerAccountTransferStatus {
 }
 
 export interface ConsumerAccountBalance {
-  name: string;
   asset: string;
-  accountType: string;
+  accountType: ConsumerAccountTypes;
   balance: string;
-  accountID: string;
-  lastUpdate: number;
+}
+
+export enum ConsumerAccountTypes {
+  ZEROHASH = "ZEROHASH",
+  CIRCLE = "CIRCLE",
 }
 
 export interface ConsumerWalletTransferRequest {

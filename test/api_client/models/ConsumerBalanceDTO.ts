@@ -5,8 +5,5 @@
 export type ConsumerBalanceDTO = {
   asset: string;
   balance: string;
-  accountType?: string;
-  accountID?: string;
-  lastUpdate?: number;
-  name?: string;
+  accountType?: "ZEROHASH" | "CIRCLE";
 };

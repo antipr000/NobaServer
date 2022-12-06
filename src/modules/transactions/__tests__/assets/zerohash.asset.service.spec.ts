@@ -15,6 +15,7 @@ import {
   CombinedNobaQuote,
   ConsumerAccountTransferRequest,
   ConsumerAccountTransferStatus,
+  ConsumerAccountTypes,
   ConsumerWalletTransferRequest,
   ExecutedQuote,
   ExecuteQuoteRequest,
@@ -2788,20 +2789,14 @@ describe("ZerohashAssetService", () => {
       const returnedBalanceResponse = await zerohashAssetService.getConsumerAccountBalance(zhParticipantCode);
       expect(returnedBalanceResponse).toEqual([
         {
-          name: "acct-label-1",
           asset: "asset-1",
-          accountType: ZerohashAccountType.AVAILABLE.toString(),
+          accountType: ConsumerAccountTypes.ZEROHASH,
           balance: "1000000",
-          accountID: "acct-id-1",
-          lastUpdate: lastUpdateDate.getTime(),
         },
         {
-          name: "acct-label-2",
           asset: "asset-2",
-          accountType: ZerohashAccountType.AVAILABLE.toString(),
+          accountType: ConsumerAccountTypes.ZEROHASH,
           balance: "2000000",
-          accountID: "acct-id-2",
-          lastUpdate: lastUpdateDate.getTime(),
         },
       ]);
     });
@@ -2839,12 +2834,9 @@ describe("ZerohashAssetService", () => {
       );
       expect(returnedBalanceResponse).toEqual([
         {
-          name: "acct-label-1",
           asset: "asset-1",
-          accountType: ZerohashAccountType.AVAILABLE.toString(),
+          accountType: ConsumerAccountTypes.ZEROHASH,
           balance: "1000000",
-          accountID: "acct-id-1",
-          lastUpdate: lastUpdateDate.getTime(),
         },
       ]);
     });

@@ -571,7 +571,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-    transactionType?: "onramp" | "offramp" | "swap" | "wallet";
+    transactionType?: "onramp" | "offramp" | "swap" | "internal_withdrawal" | "wallet";
   }): CancelablePromise<ConsumerLimitsDTO> {
     return __request(OpenAPI, {
       method: "GET",

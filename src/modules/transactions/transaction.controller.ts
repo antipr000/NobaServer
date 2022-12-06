@@ -220,9 +220,6 @@ export class TransactionController {
         balance: balance.balance,
         accountType: balance.accountType,
         asset: balance.asset,
-        accountID: balance.accountID,
-        lastUpdate: balance.lastUpdate,
-        name: balance.name,
       });
     });
 

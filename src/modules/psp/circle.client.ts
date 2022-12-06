@@ -62,6 +62,7 @@ export class CircleClient {
     }
   }
 
+  // TODO: Complete the Withdrawal flow after the Transaction schemas are changed.
   async withdraw(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
     try {
       return null;

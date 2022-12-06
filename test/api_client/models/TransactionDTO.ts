@@ -35,6 +35,7 @@ export type TransactionDTO = {
     | "CRYPTO_OUTGOING_INITIATED"
     | "CRYPTO_OUTGOING_COMPLETED"
     | "CRYPTO_OUTGOING_FAILED"
+    | "INTERNAL_TRANSFER_PENDING"
     | "COMPLETED"
     | "FAILED";
   /**
@@ -64,5 +65,5 @@ export type TransactionDTO = {
   /**
    * Type of the transaction. Can be one of 'onramp', 'offramp', 'wallet', 'swap'
    */
-  type: "onramp" | "offramp" | "swap" | "wallet";
+  type: "onramp" | "offramp" | "swap" | "internal_withdrawal" | "wallet";
 };

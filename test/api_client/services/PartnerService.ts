@@ -382,6 +382,7 @@ export class PartnerService {
       | "CRYPTO_OUTGOING_INITIATED"
       | "CRYPTO_OUTGOING_COMPLETED"
       | "CRYPTO_OUTGOING_FAILED"
+      | "INTERNAL_TRANSFER_PENDING"
       | "COMPLETED"
       | "FAILED";
   }): CancelablePromise<TransactionsQueryResultsDTO> {

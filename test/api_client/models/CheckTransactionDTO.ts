@@ -11,7 +11,8 @@ export type CheckTransactionDTO = {
     | "DAILY_LIMIT_REACHED"
     | "WEEKLY_LIMIT_REACHED"
     | "MONTHLY_LIMIT_REACHED"
-    | "MAX_LIMIT_REACHED";
+    | "MAX_LIMIT_REACHED"
+    | "UNSETTLED_EXPOSURE_LIMIT_REACHED";
   rangeMin: number;
   rangeMax: number;
 };

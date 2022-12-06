@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ConsumerAccountTypes } from "../domain/AssetTypes";
 
 export class PeriodLimit {
   @ApiProperty()
@@ -35,15 +36,6 @@ export class ConsumerBalanceDTO {
   @ApiProperty()
   balance: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: Object.values(ConsumerAccountTypes) })
   accountType?: string;
-
-  @ApiPropertyOptional()
-  accountID?: string;
-
-  @ApiPropertyOptional()
-  lastUpdate?: number;
-
-  @ApiPropertyOptional()
-  name?: string;
 }

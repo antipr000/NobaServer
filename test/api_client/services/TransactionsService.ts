@@ -33,7 +33,7 @@ export class TransactionsService {
     cryptoCurrencyCode: string;
     fixedSide: "fiat" | "crypto";
     fixedAmount: number;
-    transactionType: "onramp" | "offramp" | "swap" | "wallet";
+    transactionType: "onramp" | "offramp" | "swap" | "internal_withdrawal" | "wallet";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -78,7 +78,7 @@ export class TransactionsService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    type: "onramp" | "offramp" | "swap" | "wallet";
+    type: "onramp" | "offramp" | "swap" | "internal_withdrawal" | "wallet";
     transactionAmount: number;
     baseCurrency: string;
     xNobaSignature?: string;
@@ -264,6 +264,7 @@ export class TransactionsService {
       | "CRYPTO_OUTGOING_INITIATED"
       | "CRYPTO_OUTGOING_COMPLETED"
       | "CRYPTO_OUTGOING_FAILED"
+      | "INTERNAL_TRANSFER_PENDING"
       | "COMPLETED"
       | "FAILED";
   }): CancelablePromise<TransactionsQueryResultsDTO> {
@@ -384,6 +385,7 @@ export class TransactionsService {
       | "CRYPTO_OUTGOING_INITIATED"
       | "CRYPTO_OUTGOING_COMPLETED"
       | "CRYPTO_OUTGOING_FAILED"
+      | "INTERNAL_TRANSFER_PENDING"
       | "COMPLETED"
       | "FAILED";
   }): CancelablePromise<Array<TransactionDTO>> {

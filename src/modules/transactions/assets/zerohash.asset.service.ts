@@ -12,6 +12,7 @@ import {
   FundsAvailabilityRequest,
   ConsumerWalletTransferResponse,
   ConsumerAccountBalance,
+  ConsumerAccountTypes,
 } from "../domain/AssetTypes";
 import { ZeroHashService } from "../zerohash.service";
 import {
@@ -252,12 +253,9 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
     zhBalances.forEach(balance => {
       if (asset === undefined || asset == balance.asset) {
         consumerAccountBalances.push({
-          name: balance.accountLabel,
           asset: balance.asset,
-          accountID: balance.accountID,
-          lastUpdate: balance.lastUpdate,
           balance: balance.balance,
-          accountType: balance.accountType,
+          accountType: ConsumerAccountTypes.ZEROHASH,
         });
       }
     });

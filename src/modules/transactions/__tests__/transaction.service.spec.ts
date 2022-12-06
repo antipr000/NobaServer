@@ -44,7 +44,7 @@ import { getMockVerificationServiceWithDefaults } from "../../verification/mocks
 import { VerificationService } from "../../verification/verification.service";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { CombinedNobaQuote, ConsumerAccountBalance, NobaQuote } from "../domain/AssetTypes";
+import { CombinedNobaQuote, ConsumerAccountBalance, ConsumerAccountTypes, NobaQuote } from "../domain/AssetTypes";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus, TransactionType } from "../domain/Types";
 import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
@@ -3236,9 +3236,9 @@ describe("TransactionService", () => {
       const balance = await transactionService.getParticipantBalance(participantID, consumerID);
 
       expect(balance).toHaveLength(1);
-      expect(balance[0].accountID).toBe(consumerCircleWalletID);
       expect(balance[0].asset).toBe("USD");
       expect(balance[0].balance).toBe("0.0");
+      expect(balance[0].accountType).toBe(ConsumerAccountTypes.CIRCLE);
     });
 
     it("returns a structured balance object", async () => {
@@ -3249,20 +3249,14 @@ describe("TransactionService", () => {
       const lastUpdateDate = new Date();
       const balanceObj: ConsumerAccountBalance[] = [
         {
-          accountID: "acct-id-1",
-          name: "acct-label-1",
-          accountType: "available",
           asset: "asset-1",
           balance: "1000000",
-          lastUpdate: lastUpdateDate.getTime(),
+          accountType: ConsumerAccountTypes.ZEROHASH,
         },
         {
-          accountID: "acct-id-2",
-          name: "acct-label-2",
-          accountType: "available",
           asset: "asset-2",
           balance: "2000000",
-          lastUpdate: lastUpdateDate.getTime(),
+          accountType: ConsumerAccountTypes.ZEROHASH,
         },
       ];
 
@@ -3273,28 +3267,19 @@ describe("TransactionService", () => {
       const receivedBalances = await transactionService.getParticipantBalance(participantID, consumerID);
 
       expect(receivedBalances).toContainEqual({
-        accountID: "acct-id-1",
-        name: "acct-label-1",
-        accountType: "available",
+        accountType: ConsumerAccountTypes.ZEROHASH,
         asset: "asset-1",
         balance: "1000000",
-        lastUpdate: lastUpdateDate.getTime(),
       });
       expect(receivedBalances).toContainEqual({
-        accountID: "acct-id-2",
-        name: "acct-label-2",
-        accountType: "available",
+        accountType: ConsumerAccountTypes.ZEROHASH,
         asset: "asset-2",
         balance: "2000000",
-        lastUpdate: lastUpdateDate.getTime(),
       });
       expect(receivedBalances).toContainEqual({
-        accountID: consumerCircleWalletID,
-        accountType: "CIRCLE",
+        accountType: ConsumerAccountTypes.CIRCLE,
         asset: "USD",
         balance: "0.0",
-        name: undefined,
-        lastUpdate: undefined,
       });
     });
   });
