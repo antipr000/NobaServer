@@ -216,7 +216,7 @@ export class PartnerController {
   @ApiOperation({ summary: "Gets all consumers for the partner" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: [PartnerAdminDTO],
+    type: [ConsumerDTO],
     description: "All consumers of the partner",
   })
   @ApiForbiddenResponse({ description: "User lacks permission to retrieve partner admin list" })
