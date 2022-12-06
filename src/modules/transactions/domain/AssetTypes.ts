@@ -79,11 +79,11 @@ export interface ConsumerAccountTransferStatus {
 
 export interface ConsumerAccountBalance {
   asset: string;
-  accountType: ConsumerAccountTypes;
+  accountType: ConsumerAccountProvider;
   balance: string;
 }
 
-export enum ConsumerAccountTypes {
+export enum ConsumerAccountProvider {
   ZEROHASH = "ZEROHASH",
   CIRCLE = "CIRCLE",
 }

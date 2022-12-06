@@ -25,7 +25,7 @@ import { ConsumerService } from "../../../consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../consumer/mocks/mock.consumer.service";
 import { AssetService } from "../../assets/asset.service";
 import { AssetServiceFactory } from "../../assets/asset.service.factory";
-import { FundsAvailabilityResponse, PollStatus } from "../../domain/AssetTypes";
+import { ConsumerAccountProvider, FundsAvailabilityResponse, PollStatus } from "../../domain/AssetTypes";
 import { Transaction, TransactionProps } from "../../domain/Transaction";
 import { TransactionQueueName, TransactionStatus } from "../../domain/Types";
 import { getMockAssetServiceFactoryWithDefaultAssetService } from "../../mocks/mock.asset.service";
@@ -256,12 +256,9 @@ describe("InternalTransferInitiator", () => {
 
     when(transactionService.getParticipantBalance(consumer.props.zhParticipantCode, cryptocurrency)).thenResolve([
       {
-        accountID: "acct-id-1",
-        name: "acct-label-1",
-        accountType: "available",
+        accountType: ConsumerAccountProvider.ZEROHASH,
         asset: cryptocurrency,
         balance: "0",
-        lastUpdate: new Date().getTime(),
       },
     ]);
 
@@ -299,12 +296,9 @@ describe("InternalTransferInitiator", () => {
 
     when(transactionService.getParticipantBalance(consumer.props.zhParticipantCode, cryptocurrency)).thenResolve([
       {
-        accountID: "acct-id-1",
-        name: "acct-label-1",
-        accountType: "available",
+        accountType: ConsumerAccountProvider.ZEROHASH,
         asset: cryptocurrency,
         balance: "2000",
-        lastUpdate: new Date().getTime(),
       },
     ]);
 

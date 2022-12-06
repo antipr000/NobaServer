@@ -48,6 +48,8 @@ export class CircleClient {
       response.data.data.balances.forEach(balance => {
         if (balance.currency === "USD") {
           result = Number(balance.amount);
+        } else {
+          this.logger.error(`Circle returns an invalid currency for wallet "${walletID}": ${JSON.stringify(balance)}`);
         }
       });
 

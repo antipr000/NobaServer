@@ -26,7 +26,12 @@ import { TransactionInformation } from "../verification/domain/TransactionInform
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
-import { ConsumerAccountBalance, ConsumerAccountTypes, NobaQuote, QuoteRequestForFixedFiat } from "./domain/AssetTypes";
+import {
+  ConsumerAccountBalance,
+  ConsumerAccountProvider,
+  NobaQuote,
+  QuoteRequestForFixedFiat,
+} from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { PartnerTransactionFilterOptions } from "./domain/TransactionRepoTypes";
@@ -177,7 +182,7 @@ export class TransactionService {
 
     const circleWalletUSDBalance: number = await this.circleClient.getWalletBalance(circleWalletID);
     zhWalletBalance.push({
-      accountType: ConsumerAccountTypes.CIRCLE,
+      accountType: ConsumerAccountProvider.CIRCLE,
       asset: "USD",
       balance: circleWalletUSDBalance.toPrecision(2).toString(),
     });

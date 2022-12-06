@@ -15,7 +15,7 @@ import {
   CombinedNobaQuote,
   ConsumerAccountTransferRequest,
   ConsumerAccountTransferStatus,
-  ConsumerAccountTypes,
+  ConsumerAccountProvider,
   ConsumerWalletTransferRequest,
   ExecutedQuote,
   ExecuteQuoteRequest,
@@ -2790,12 +2790,12 @@ describe("ZerohashAssetService", () => {
       expect(returnedBalanceResponse).toEqual([
         {
           asset: "asset-1",
-          accountType: ConsumerAccountTypes.ZEROHASH,
+          accountType: ConsumerAccountProvider.ZEROHASH,
           balance: "1000000",
         },
         {
           asset: "asset-2",
-          accountType: ConsumerAccountTypes.ZEROHASH,
+          accountType: ConsumerAccountProvider.ZEROHASH,
           balance: "2000000",
         },
       ]);
@@ -2835,7 +2835,7 @@ describe("ZerohashAssetService", () => {
       expect(returnedBalanceResponse).toEqual([
         {
           asset: "asset-1",
-          accountType: ConsumerAccountTypes.ZEROHASH,
+          accountType: ConsumerAccountProvider.ZEROHASH,
           balance: "1000000",
         },
       ]);

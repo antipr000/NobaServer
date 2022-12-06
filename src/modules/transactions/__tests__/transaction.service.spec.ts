@@ -44,7 +44,7 @@ import { getMockVerificationServiceWithDefaults } from "../../verification/mocks
 import { VerificationService } from "../../verification/verification.service";
 import { AssetService } from "../assets/asset.service";
 import { AssetServiceFactory } from "../assets/asset.service.factory";
-import { CombinedNobaQuote, ConsumerAccountBalance, ConsumerAccountTypes, NobaQuote } from "../domain/AssetTypes";
+import { CombinedNobaQuote, ConsumerAccountBalance, ConsumerAccountProvider, NobaQuote } from "../domain/AssetTypes";
 import { Transaction } from "../domain/Transaction";
 import { TransactionStatus, TransactionType } from "../domain/Types";
 import { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
@@ -3238,7 +3238,7 @@ describe("TransactionService", () => {
       expect(balance).toHaveLength(1);
       expect(balance[0].asset).toBe("USD");
       expect(balance[0].balance).toBe("0.0");
-      expect(balance[0].accountType).toBe(ConsumerAccountTypes.CIRCLE);
+      expect(balance[0].accountType).toBe(ConsumerAccountProvider.CIRCLE);
     });
 
     it("returns a structured balance object", async () => {
@@ -3251,12 +3251,12 @@ describe("TransactionService", () => {
         {
           asset: "asset-1",
           balance: "1000000",
-          accountType: ConsumerAccountTypes.ZEROHASH,
+          accountType: ConsumerAccountProvider.ZEROHASH,
         },
         {
           asset: "asset-2",
           balance: "2000000",
-          accountType: ConsumerAccountTypes.ZEROHASH,
+          accountType: ConsumerAccountProvider.ZEROHASH,
         },
       ];
 
@@ -3267,17 +3267,17 @@ describe("TransactionService", () => {
       const receivedBalances = await transactionService.getParticipantBalance(participantID, consumerID);
 
       expect(receivedBalances).toContainEqual({
-        accountType: ConsumerAccountTypes.ZEROHASH,
+        accountType: ConsumerAccountProvider.ZEROHASH,
         asset: "asset-1",
         balance: "1000000",
       });
       expect(receivedBalances).toContainEqual({
-        accountType: ConsumerAccountTypes.ZEROHASH,
+        accountType: ConsumerAccountProvider.ZEROHASH,
         asset: "asset-2",
         balance: "2000000",
       });
       expect(receivedBalances).toContainEqual({
-        accountType: ConsumerAccountTypes.CIRCLE,
+        accountType: ConsumerAccountProvider.CIRCLE,
         asset: "USD",
         balance: "0.0",
       });
