@@ -207,7 +207,10 @@ export default async function loadAppConfigs() {
 function ensureDevOnlyConfig(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
   // There are certain configurations we want to ensure are NOT set in non-dev/test envs. This ensures
   // that if they are set, they get removed.
-  if ([AppEnvironment.DEV, AppEnvironment.AWSDEV, AppEnvironment.E2E_TEST].indexOf(environment) == -1) {
+  if (
+    [AppEnvironment.DEV, AppEnvironment.AWSDEV, AppEnvironment.E2E_TEST, AppEnvironment.PARTNER].indexOf(environment) ==
+    -1
+  ) {
     DEV_TEST_ONLY_VARIABLES.forEach(
       item =>
         delete configs[item] &&
