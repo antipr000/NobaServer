@@ -218,11 +218,6 @@ const createFakeConsumer = (email: string): Consumer => {
   return Consumer.createConsumer({
     _id: "fake-consumer-id",
     email: email,
-    partners: [
-      {
-        partnerID: "fake-partner-1",
-      },
-    ],
     address: {
       streetLine1: "123 main st",
       countryCode: "US",

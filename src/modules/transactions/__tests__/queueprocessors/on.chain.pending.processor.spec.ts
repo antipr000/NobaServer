@@ -187,7 +187,6 @@ describe("OnChainPendingProcessor", () => {
     leg2Amount: cryptoAmount,
     leg1: "USD",
     leg2: cryptocurrency,
-    partnerID: "12345",
     zhWithdrawalID: "010101",
     lastProcessingTimestamp: Date.now().valueOf(),
     lastStatusUpdateTimestamp: Date.now().valueOf(),
@@ -208,11 +207,6 @@ describe("OnChainPendingProcessor", () => {
   const consumer: Consumer = Consumer.createConsumer({
     _id: consumerID,
     email: "test@noba.com",
-    partners: [
-      {
-        partnerID: "partner-1",
-      },
-    ],
     paymentMethods: [paymentMethod],
   });
 

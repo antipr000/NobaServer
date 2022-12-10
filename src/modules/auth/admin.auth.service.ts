@@ -17,7 +17,7 @@ export class AdminAuthService extends AuthService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected async getUserId(emailOrPhone: string, partnerID: string, partnerUserID?: string): Promise<string> {
+  protected async getUserId(emailOrPhone: string): Promise<string> {
     const isEmail = Utils.isEmail(emailOrPhone);
     if (!isEmail) throw new Error("Admin can only login with email");
     const admin: Admin = await this.adminService.getAdminByEmail(emailOrPhone);

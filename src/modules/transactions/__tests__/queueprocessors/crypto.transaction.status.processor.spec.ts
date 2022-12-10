@@ -185,7 +185,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
-      partnerID: "12345",
+
       transactionExceptions: [],
     });
 
@@ -198,11 +198,6 @@ describe("CryptoTransactionStatusProcessor", () => {
       Consumer.createConsumer({
         _id: transaction.props._id,
         email: "test+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "testpartner",
-          },
-        ],
       }),
     );
 
@@ -252,7 +247,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
-      partnerID: "12345",
+
       transactionExceptions: [],
     });
 
@@ -297,7 +292,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
-      partnerID: "12345",
+
       transactionExceptions: [],
     });
 
@@ -315,11 +310,6 @@ describe("CryptoTransactionStatusProcessor", () => {
       Consumer.createConsumer({
         _id: transaction.props._id,
         email: "test+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "testpartner",
-          },
-        ],
       }),
     );
 
@@ -362,7 +352,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
-      partnerID: "12345",
+
       transactionExceptions: [],
     });
 
@@ -380,11 +370,6 @@ describe("CryptoTransactionStatusProcessor", () => {
       Consumer.createConsumer({
         _id: transaction.props._id,
         email: "test+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "testpartner",
-          },
-        ],
       }),
     );
 
@@ -427,7 +412,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
-      partnerID: "12345",
+
       transactionExceptions: [],
     });
 
@@ -457,11 +442,6 @@ describe("CryptoTransactionStatusProcessor", () => {
       Consumer.createConsumer({
         _id: transaction.props._id,
         email: "test+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "testpartner",
-          },
-        ],
         paymentMethods: [paymentMethod],
       }),
     );
@@ -503,7 +483,7 @@ describe("CryptoTransactionStatusProcessor", () => {
       lastStatusUpdateTimestamp: Date.now().valueOf(),
       cryptoTransactionId: initiatedPaymentId,
       type: TransactionType.ONRAMP,
-      partnerID: "12345",
+
       transactionExceptions: [],
     });
 

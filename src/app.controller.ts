@@ -12,7 +12,6 @@ import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
-import { PartnerService } from "./modules/partner/partner.service";
 import { X_NOBA_API_KEY } from "./modules/auth/domain/HeaderConstants";
 
 @Controller()
@@ -22,7 +21,6 @@ export class AppController {
     private readonly currencyService: CurrencyService,
     private readonly locationService: LocationService,
     private readonly creditCardService: CreditCardService,
-    private readonly partnerService: PartnerService,
     private readonly configurationsProviderService: ConfigurationProviderService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -46,10 +44,7 @@ export class AppController {
   })
   @ApiTags("Assets")
   async supportedCryptocurrencies(@Headers() headers): Promise<Array<CurrencyDTO>> {
-    const partner = await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY]);
-    const allowedCrypto = partner.props.config.cryptocurrencyAllowList;
-
-    return await this.currencyService.getSupportedCryptocurrencies(allowedCrypto);
+    return await this.currencyService.getSupportedCryptocurrencies();
   }
 
   @Public()

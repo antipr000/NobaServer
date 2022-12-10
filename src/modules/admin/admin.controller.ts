@@ -18,7 +18,7 @@ import {
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AdminId, PartnerAdminID, PartnerID } from "../auth/roles.decorator";
+import { AdminId } from "../auth/roles.decorator";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -39,22 +39,11 @@ import { AdminMapper } from "./mappers/AdminMapper";
 import { Public } from "../auth/public.decorator";
 import { UpdateNobaAdminDTO } from "./dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "./dto/DeleteNobaAdminDTO";
-import { PartnerAdminDTO } from "../partner/dto/PartnerAdminDTO";
-import { AddPartnerAdminRequestDTO } from "../partner/dto/AddPartnerAdminRequestDTO";
-import { PartnerAdmin } from "../partner/domain/PartnerAdmin";
-import { PartnerAdminService } from "../partner/partneradmin.service";
-import { PartnerAdminMapper } from "../partner/mappers/PartnerAdminMapper";
-import { PartnerDTO } from "../partner/dto/PartnerDTO";
-import { PartnerService } from "../partner/partner.service";
-import { Partner } from "../partner/domain/Partner";
-import { PartnerMapper } from "../partner/mappers/PartnerMapper";
-import { UpdatePartnerAdminRequestDTO } from "../partner/dto/UpdatePartnerAdminRequestDTO";
 import { ConsumerDTO } from "../consumer/dto/ConsumerDTO";
 import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestDTO";
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
-import { CreatePartnerRequestDTO } from "../partner/dto/CreatePartnerRequestDTO";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 import { TransactionService } from "../transactions/transaction.service";
 import fs from "fs";
@@ -75,19 +64,11 @@ export class AdminController {
   private readonly adminMapper: AdminMapper;
 
   @Inject()
-  private readonly partnerAdminService: PartnerAdminService;
-
-  @Inject()
-  private readonly partnerService: PartnerService;
-
-  @Inject()
   private readonly consumerService: ConsumerService;
 
   @Inject()
   private readonly transactionService: TransactionService;
 
-  private readonly partnerAdminMapper: PartnerAdminMapper = new PartnerAdminMapper();
-  private readonly partnerMapper: PartnerMapper = new PartnerMapper();
   private readonly consumerMapper: ConsumerMapper = new ConsumerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -96,7 +77,7 @@ export class AdminController {
   // TODO: Add proper AuthN & AuthZ
   @Public()
   @Get(`/:${AdminId}/transactionmetrics`)
-  @ApiOperation({ summary: "Gets all transaction metrics for a given partner" })
+  @ApiOperation({ summary: "Gets all transaction metrics" })
   @ApiResponse({ status: HttpStatus.OK, type: TransactionStatsDTO, description: "Transaction statistics" })
   async getTransactionMetrics(@Param(AdminId) adminId: string): Promise<TransactionStatsDTO> {
     return this.adminService.getTransactionStatus();
@@ -207,161 +188,6 @@ export class AdminController {
     const result = new DeleteNobaAdminDTO();
     result._id = deletedAdminId;
     return result;
-  }
-
-  @Post(`/partners/:${PartnerID}/admins`)
-  @ApiOperation({ summary: "Adds a new partner admin" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerAdminDTO, description: "Adds a new partner admin" })
-  @ApiForbiddenResponse({
-    description: "User forbidden from adding a new partner admin",
-  })
-  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
-  @ApiNotFoundResponse({ description: "Partner admin not found" })
-  async addAdminsForPartners(
-    @Param(PartnerID) partnerId: string,
-    @Body() requestBody: AddPartnerAdminRequestDTO,
-    @Request() request,
-  ): Promise<PartnerAdminDTO> {
-    const authenticatedUser: Admin = request.user.entity;
-    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add PartnerAdmins.`);
-    }
-
-    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.addAdminForPartner(
-      partnerId,
-      requestBody.email,
-      requestBody.name,
-      requestBody.role,
-    );
-    return this.partnerAdminMapper.toDTO(partnerAdmin);
-  }
-
-  @Delete(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
-  @ApiOperation({ summary: "Deletes a partner admin" })
-  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Add a new partner admin" })
-  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
-  @ApiForbiddenResponse({
-    description: "User forbidden from deleting a partner admin",
-  })
-  @ApiNotFoundResponse({ description: "Partner admin not found" })
-  async deleteAdminsForPartners(
-    @Param(PartnerID) partnerId: string,
-    @Param(PartnerAdminID) partnerAdminId: string,
-    @Request() request,
-  ): Promise<PartnerAdminDTO> {
-    const authenticatedUser: Admin = request.user.entity;
-    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveAdminsFromPartner()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't remove PartnerAdmins.`);
-    }
-
-    const deletedPartnerAdmin: PartnerAdmin = await this.partnerAdminService.deleteAdminForPartner(
-      partnerId,
-      partnerAdminId,
-    );
-    return this.partnerAdminMapper.toDTO(deletedPartnerAdmin);
-  }
-
-  @Patch(`/partners/:${PartnerID}/admins/:${PartnerAdminID}`)
-  @ApiOperation({ summary: "Update details of a partner admin" })
-  @ApiResponse({ status: HttpStatus.OK, type: PartnerAdminDTO, description: "Update details of a partner admin" })
-  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
-  @ApiForbiddenResponse({
-    description: "User forbidden from updating a partner admin",
-  })
-  @ApiNotFoundResponse({ description: "Partner admin not found" })
-  async updateAdminForPartners(
-    @Param(PartnerID) partnerId: string,
-    @Param(PartnerAdminID) partnerAdminID: string,
-    @Body() requestBody: UpdatePartnerAdminRequestDTO,
-    @Request() request,
-  ): Promise<PartnerAdminDTO> {
-    const authenticatedUser: Admin = request.user.entity;
-    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateAdminsForPartner()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update PartnerAdmins.`);
-    }
-
-    const partnerAdmin: PartnerAdmin = await this.partnerAdminService.updateAdminForPartner(
-      partnerId,
-      partnerAdminID,
-      requestBody,
-    );
-    return this.partnerAdminMapper.toDTO(partnerAdmin);
-  }
-
-  @Get("/partners/transactions/download")
-  @ApiOperation({ summary: "Fetch the transactions based on different filters" })
-  @ApiForbiddenResponse({
-    description: "User forbidden from fetching the transactions for a Partner",
-  })
-  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
-  async fetchTransactionsForPartner(@Query() filters: TransactionFilterDTO, @Request() request, @Response() response) {
-    const authenticatedUser: Admin = request.user.entity;
-    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddAdminsToPartner()) {
-      throw new ForbiddenException(
-        `Admins with role '${authenticatedUser.props.role}' can't fetch transactions for Partners.`,
-      );
-    }
-
-    const startDate = filters.startDate ? new Date(filters.startDate) : undefined;
-    const endDate = filters.endDate ? this.convertToLastMinuteOfDay(new Date(filters.endDate)) : undefined;
-
-    let includeIncompleteTransactions = true;
-    if (filters.onlyCompletedTransactions !== undefined && filters.onlyCompletedTransactions !== null) {
-      includeIncompleteTransactions =
-        filters.onlyCompletedTransactions == false ||
-        (filters.onlyCompletedTransactions as any) == "false" ||
-        (filters.onlyCompletedTransactions as any) == 0;
-    }
-
-    const localCsvFileWithTransactions = await this.transactionService.populateCsvFileWithPartnerTransactions(
-      filters.partnerID,
-      startDate,
-      endDate,
-      includeIncompleteTransactions,
-    );
-
-    return new Promise((resolve, reject) => {
-      response.writeHead(200, { "Content-Type": "text/csv" });
-      fs.createReadStream(localCsvFileWithTransactions)
-        .on("end", () => {
-          this.logger.debug(`Deleting the file '${localCsvFileWithTransactions}'`);
-          fs.unlinkSync(localCsvFileWithTransactions);
-          resolve(0);
-        })
-        .on("error", err => {
-          this.logger.error(`Error while sending the stream in response: ${JSON.stringify(err)}`);
-          reject(err);
-        })
-        .pipe(response);
-    });
-  }
-
-  @Post("/partners")
-  @ApiOperation({ summary: "Adds a new partner" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: PartnerDTO, description: "New partner record" })
-  @ApiForbiddenResponse({
-    description: "User forbidden from adding a new partner",
-  })
-  @ApiBadRequestResponse({ description: "Invalid parameter(s)" })
-  async registerPartner(@Body() requestBody: CreatePartnerRequestDTO, @Request() request): Promise<PartnerDTO> {
-    const authenticatedUser: Admin = request.user.entity;
-    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRegisterPartner()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't register a Partner.`);
-    }
-
-    const createdPartner: Partner = await this.partnerService.createPartner({
-      name: requestBody.name,
-      allowedCryptoCurrencies: requestBody.allowedCryptoCurrencies,
-      bypassWalletOtp: requestBody.bypassWalletOtp,
-      creditCardFeeDiscountPercent: requestBody.creditCardFeeDiscountPercent,
-      keepWalletsPrivate: requestBody.keepWalletsPrivate,
-      makeOtherPartnerWalletsVisible: requestBody.makeOtherPartnerWalletsVisible,
-      networkFeeDiscountPercent: requestBody.networkFeeDiscountPercent,
-      nobaFeeDiscountPercent: requestBody.nobaFeeDiscountPercent,
-      processingFeeDiscountPercent: requestBody.processingFeeDiscountPercent,
-      spreadDiscountPercent: requestBody.spreadDiscountPercent,
-    });
-    return this.partnerMapper.toDTO(createdPartner);
   }
 
   @Patch("/consumers/:consumerID")

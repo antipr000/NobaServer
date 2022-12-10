@@ -1,46 +1,32 @@
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { PartnerService } from "../../../modules/partner/partner.service";
 import { anyString, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { AdminAuthService } from "../admin.auth.service";
 import { AuthController } from "../auth.controller";
-import {
-  consumerIdentityIdentifier,
-  nobaAdminIdentityIdentifier,
-  partnerAdminIdentityIdenitfier,
-} from "../domain/IdentityType";
+import { consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "../domain/IdentityType";
 import { VerifyOtpResponseDTO } from "../dto/VerifyOtpReponse";
 import { getMockAdminAuthServiceWithDefaults } from "../mocks/mock.admin.auth.service";
-import { getMockPartnerAuthServiceWithDefaults } from "../mocks/mock.partner.auth.service";
 import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.service";
-import { PartnerAuthService } from "../partner.auth.service";
 import { UserAuthService } from "../user.auth.service";
-import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { HeaderValidationService } from "../header.validation.service";
 import { getMockHeaderValidationServiceWithDefaults } from "../mocks/mock.header.validation.service";
-import { Partner } from "../../../modules/partner/domain/Partner";
 
 describe("AuthController", () => {
   jest.setTimeout(5000);
 
   let mockAdminAuthService: AdminAuthService;
   let mockConsumerAuthService: UserAuthService;
-  let mockPartnerAuthService: PartnerAuthService;
-  let mockPartnerService: PartnerService;
   let mockHeaderValidationService: HeaderValidationService;
 
   let authController: AuthController;
 
   const apiKey = "test-api-key";
-  const partnerId = "test-partner-1";
 
   beforeEach(async () => {
     mockAdminAuthService = getMockAdminAuthServiceWithDefaults();
     mockConsumerAuthService = getMockUserAuthServiceWithDefaults();
-    mockPartnerAuthService = getMockPartnerAuthServiceWithDefaults();
-    mockPartnerService = getMockPartnerServiceWithDefaults();
     mockHeaderValidationService = getMockHeaderValidationServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
@@ -56,14 +42,6 @@ describe("AuthController", () => {
           useFactory: () => instance(mockAdminAuthService),
         },
         {
-          provide: PartnerAuthService,
-          useFactory: () => instance(mockPartnerAuthService),
-        },
-        {
-          provide: PartnerService,
-          useFactory: () => instance(mockPartnerService),
-        },
-        {
           provide: HeaderValidationService,
           useFactory: () => instance(mockHeaderValidationService),
         },
@@ -71,13 +49,6 @@ describe("AuthController", () => {
     }).compile();
 
     authController = app.get<AuthController>(AuthController);
-
-    when(mockPartnerService.getPartnerFromApiKey(apiKey)).thenResolve(
-      Partner.createPartner({
-        _id: partnerId,
-        name: "Test Partner",
-      }),
-    );
   });
 
   describe("verifyOtp", () => {
@@ -91,8 +62,8 @@ describe("AuthController", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp, partnerId)).thenResolve(adminId);
-      when(mockAdminAuthService.generateAccessToken(adminId, partnerId)).thenResolve(generateAccessTokenResponse);
+      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
+      when(mockAdminAuthService.generateAccessToken(adminId)).thenResolve(generateAccessTokenResponse);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
         {
@@ -118,8 +89,8 @@ describe("AuthController", () => {
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
 
-      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp, partnerId)).thenResolve(consumerId);
-      when(mockConsumerAuthService.generateAccessToken(consumerId, partnerId)).thenResolve(generateAccessTokenResponse);
+      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp)).thenResolve(consumerId);
+      when(mockConsumerAuthService.generateAccessToken(consumerId)).thenResolve(generateAccessTokenResponse);
 
       const result: VerifyOtpResponseDTO = await authController.verifyOtp(
         {
@@ -144,7 +115,7 @@ describe("AuthController", () => {
 
       when(mockAdminAuthService.generateOTP()).thenReturn(otp);
       when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
-      when(mockAdminAuthService.sendOtp(adminEmail, otp.toString(), partnerId)).thenResolve();
+      when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
 
       await authController.loginUser(
@@ -164,8 +135,8 @@ describe("AuthController", () => {
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString(), partnerId)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(
@@ -185,8 +156,8 @@ describe("AuthController", () => {
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString(), partnerId)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(
@@ -207,8 +178,8 @@ describe("AuthController", () => {
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString(), partnerId)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(
@@ -228,8 +199,8 @@ describe("AuthController", () => {
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerPhone, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerPhone, otp.toString(), partnerId)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(consumerPhone, otp)).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerPhone, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(
@@ -243,14 +214,14 @@ describe("AuthController", () => {
       );
     });
 
-    it("should throw BadRequestException if phone used for partner admin or noba admin for login", async () => {
+    it("should throw BadRequestException if phone used for noba admin for login", async () => {
       const phone = "+123424242";
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(phone, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(phone, otp.toString(), partnerId)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(phone, otp)).thenResolve();
+      when(mockConsumerAuthService.sendOtp(phone, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
       try {
         await authController.loginUser(
@@ -273,8 +244,8 @@ describe("AuthController", () => {
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerEmail, otp, "partner-1")).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString(), partnerId)).thenResolve();
+      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
+      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser(
@@ -300,53 +271,6 @@ describe("AuthController", () => {
         );
       } catch (err) {
         expect(err).toBeInstanceOf(ForbiddenException);
-      }
-    });
-
-    it("should use 'PartnerAuthService' if 'identityType' is 'PARTNER_ADMIN'", async () => {
-      const partnerAdminEmail = "partner.admin@noba.com";
-      const identityType: string = partnerAdminIdentityIdenitfier;
-      const otp = 123456;
-
-      when(mockPartnerAuthService.generateOTP()).thenReturn(otp);
-      when(mockPartnerAuthService.saveOtp(partnerAdminEmail, otp)).thenResolve();
-      when(mockPartnerAuthService.sendOtp(partnerAdminEmail, otp.toString(), partnerId)).thenResolve();
-      when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-
-      await authController.loginUser(
-        {
-          email: partnerAdminEmail,
-          identityType: identityType,
-        },
-        {
-          "x-noba-api-key": apiKey,
-        },
-      );
-    });
-
-    it("should throw BadRequestException if phone number is used for partner admin or noba admin'", async () => {
-      const partnerAdminPhone = "+1424242424"; // using phone for partner loging
-      const identityType: string = partnerAdminIdentityIdenitfier;
-      const otp = 123456;
-
-      when(mockPartnerAuthService.generateOTP()).thenReturn(otp);
-      when(mockPartnerAuthService.saveOtp(partnerAdminPhone, otp)).thenResolve();
-      when(mockPartnerAuthService.sendOtp(partnerAdminPhone, otp.toString(), partnerId)).thenResolve();
-      when(mockPartnerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-
-      try {
-        await authController.loginUser(
-          {
-            email: partnerAdminPhone,
-            identityType: identityType,
-          },
-          {
-            "x-noba-api-key": apiKey,
-          },
-        );
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
       }
     });
 
@@ -383,28 +307,6 @@ describe("AuthController", () => {
         await authController.loginUser(
           {
             email: unregisteredAdminEmail,
-            identityType: identityType,
-          },
-          {
-            "x-noba-api-key": apiKey,
-          },
-        );
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(ForbiddenException);
-      }
-    });
-
-    it("should throw 'ForbiddenException' if unregistered PartnerAdmin tries to login as 'PARTNER_ADMIN'", async () => {
-      const unregisteredPartnerAdminEmail = "partner-admin@noba.com";
-      const identityType: string = partnerAdminIdentityIdenitfier;
-
-      when(mockPartnerAuthService.verifyUserExistence(unregisteredPartnerAdminEmail)).thenResolve(false);
-
-      try {
-        await authController.loginUser(
-          {
-            email: unregisteredPartnerAdminEmail,
             identityType: identityType,
           },
           {

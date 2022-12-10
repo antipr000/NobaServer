@@ -29,13 +29,6 @@ export class SwapAssetService implements AssetService {
       fiatCurrency: request.fiatCurrency,
       fiatAmount: request.fiatAmount,
       transactionType: request.transactionType,
-      discount: {
-        fixedCreditCardFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
-        networkFeeDiscountPercent: request.discount.networkFeeDiscountPercent,
-        nobaFeeDiscountPercent: request.discount.nobaFeeDiscountPercent,
-        nobaSpreadDiscountPercent: request.discount.nobaSpreadDiscountPercent,
-        processingFeeDiscountPercent: request.discount.processingFeeDiscountPercent,
-      },
     };
 
     // Quote for Fiat -> Intermediary

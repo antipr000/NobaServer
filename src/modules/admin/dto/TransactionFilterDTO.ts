@@ -12,11 +12,6 @@ export class TransactionFilterDTO {
   endDate?: string;
 
   @ApiPropertyOptional({
-    description: "Partner ID",
-  })
-  partnerID?: string;
-
-  @ApiPropertyOptional({
     description: "Whether to include 'only' COMPLETED Transactions. Default value is 'false'",
   })
   onlyCompletedTransactions?: boolean;

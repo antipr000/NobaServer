@@ -15,8 +15,6 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
 import { SMSService } from "../common/sms.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
-import { Partner } from "../partner/domain/Partner";
-import { PartnerService } from "../partner/partner.service";
 import { CircleClient } from "../psp/circle.client";
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { PaymentService } from "../psp/payment.service";
@@ -57,9 +55,6 @@ export class ConsumerService {
 
   @Inject("OTPRepo")
   private readonly otpRepo: IOTPRepo;
-
-  @Inject()
-  private readonly partnerService: PartnerService;
 
   @Inject()
   private readonly smsService: SMSService;
@@ -136,11 +131,7 @@ export class ConsumerService {
   }
 
   // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
-  async getOrCreateConsumerConditionally(
-    emailOrPhone: string,
-    partnerID: string,
-    partnerUserID?: string,
-  ): Promise<Consumer> {
+  async getOrCreateConsumerConditionally(emailOrPhone: string): Promise<Consumer> {
     const isEmail = Utils.isEmail(emailOrPhone);
     const email = isEmail ? emailOrPhone : null;
     const phone = !isEmail ? emailOrPhone : null;
@@ -151,16 +142,10 @@ export class ConsumerService {
         email: email ? email.toLowerCase() : undefined,
         displayEmail: email ?? undefined,
         phone,
-        partners: [
-          {
-            partnerID: partnerID,
-            partnerUserID: partnerUserID,
-          },
-        ],
       });
       const result = await this.consumerRepo.createConsumer(newConsumer);
       if (isEmail) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, partnerID, {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           email: emailOrPhone,
           firstName: result.props.firstName,
           lastName: result.props.lastName,
@@ -168,19 +153,6 @@ export class ConsumerService {
         });
       }
       return result;
-    } else if (
-      consumerResult.getValue().props.partners.filter(partner => partner.partnerID === partnerID).length === 0
-    ) {
-      return this.updateConsumer({
-        ...consumerResult.getValue().props,
-        partners: [
-          ...consumerResult.getValue().props.partners,
-          {
-            partnerID: partnerID,
-            partnerUserID: partnerUserID,
-          },
-        ],
-      });
     }
 
     return consumerResult.getValue();
@@ -200,7 +172,7 @@ export class ConsumerService {
     return updatedConsumer;
   }
 
-  async sendOtpToPhone(consumerID: string, phone: string, partnerID: string) {
+  async sendOtpToPhone(consumerID: string, phone: string) {
     const otp = this.generateOTP();
     await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, consumerID);
 
@@ -209,20 +181,14 @@ export class ConsumerService {
       identityType: consumerIdentityIdentifier,
       otp: otp,
       consumerID: consumerID,
-      partnerID: partnerID,
     });
     this.otpRepo.saveOTPObject(otpObject);
 
     await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
   }
 
-  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest, partnerID: string): Promise<Consumer> {
-    const otpResult = await this.otpRepo.getOTP(
-      reqData.phone,
-      consumerIdentityIdentifier,
-      partnerID,
-      consumer.props._id,
-    );
+  async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest): Promise<Consumer> {
+    const otpResult = await this.otpRepo.getOTP(reqData.phone, consumerIdentityIdentifier, consumer.props._id);
 
     if (otpResult.props.otp !== reqData.otp) {
       throw new BadRequestException("OTP is incorrect");
@@ -245,13 +211,13 @@ export class ConsumerService {
     return updatedConsumer;
   }
 
-  async sendOtpToEmail(email: string, consumer: Consumer, partnerID: string) {
+  async sendOtpToEmail(email: string, consumer: Consumer) {
     const otp = this.generateOTP();
     await this.otpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props._id);
 
-    await this.otpRepo.saveOTP(email, otp, consumerIdentityIdentifier, partnerID, consumer.props._id);
+    await this.otpRepo.saveOTP(email, otp, consumerIdentityIdentifier, consumer.props._id);
 
-    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
+    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
       email: email,
       otp: otp.toString(),
       firstName: consumer.props.firstName ?? undefined,
@@ -285,7 +251,7 @@ export class ConsumerService {
     if (!consumer.props.email) {
       //email being added for the first time
       this.logger.info(`User email updated for first time sending welcome note, userId: ${consumer.props._id}`);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, undefined, {
+      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
         email: updatedConsumer.props.email,
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
@@ -308,11 +274,10 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerId);
   }
 
-  async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO, partnerId: string): Promise<Consumer> {
+  async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
     const addPaymentMethodResponse: AddPaymentMethodResponse = await this.paymentService.addPaymentMethod(
       consumer,
       paymentMethod,
-      partnerId,
     );
 
     if (addPaymentMethodResponse.updatedConsumerData) {
@@ -326,7 +291,7 @@ export class ConsumerService {
           throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
         }
 
-        await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, partnerId, {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
           nobaUserID: consumer.props._id,
@@ -370,7 +335,7 @@ export class ConsumerService {
     }
   }
 
-  async removePaymentMethod(consumer: Consumer, paymentToken: string, partnerId: string): Promise<Consumer> {
+  async removePaymentMethod(consumer: Consumer, paymentToken: string): Promise<Consumer> {
     const paymentMethod = consumer.props.paymentMethods.filter(
       paymentMethod => paymentMethod.paymentToken === paymentToken,
     );
@@ -400,7 +365,7 @@ export class ConsumerService {
 
     const result = await this.updateConsumer(updatedConsumer);
 
-    await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_DELETED_EVENT, partnerId, {
+    await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_DELETED_EVENT, {
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,
       nobaUserID: consumer.props._id,
@@ -470,7 +435,6 @@ export class ConsumerService {
   async sendWalletVerificationOTP(
     consumer: Consumer,
     walletAddress: string,
-    partnerId: string,
     notificationMethod: NotificationMethod = NotificationMethod.EMAIL,
   ) {
     const otp = this.generateOTP();
@@ -479,11 +443,10 @@ export class ConsumerService {
     const otpReference = notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone;
 
     await this.otpRepo.deleteAllOTPsForUser(otpReference, consumerIdentityIdentifier, consumer.props._id);
-    await this.otpRepo.saveOTP(otpReference, otp, consumerIdentityIdentifier, partnerId, consumer.props._id);
+    await this.otpRepo.saveOTP(otpReference, otp, consumerIdentityIdentifier, consumer.props._id);
     if (notificationMethod == NotificationMethod.EMAIL) {
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
-        partnerId,
         {
           email: consumer.props.displayEmail,
           otp: otp.toString(),
@@ -502,11 +465,10 @@ export class ConsumerService {
     walletAddress: string,
     otp: number,
     consumerID: string,
-    partnerID: string,
     notificationMethod: NotificationMethod = NotificationMethod.EMAIL,
   ) {
     // Verify if the otp is correct
-    const cryptoWallet = this.getCryptoWallet(consumer, walletAddress, partnerID);
+    const cryptoWallet = this.getCryptoWallet(consumer, walletAddress);
 
     if (cryptoWallet === null) {
       throw new BadRequestException("Crypto wallet does not exist for user");
@@ -515,7 +477,6 @@ export class ConsumerService {
     const actualOtp = await this.otpRepo.getOTP(
       notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone,
       consumerIdentityIdentifier,
-      partnerID,
       consumerID,
     );
     const currentDateTime: number = new Date().getTime();
@@ -544,9 +505,9 @@ export class ConsumerService {
     return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
   }
 
-  getCryptoWallet(consumer: Consumer, address: string, partnerID: string): CryptoWallet {
+  getCryptoWallet(consumer: Consumer, address: string): CryptoWallet {
     const cryptoWallets = consumer.props.cryptoWallets.filter(
-      wallet => wallet.address === address && wallet.partnerID === partnerID && wallet.status !== WalletStatus.DELETED,
+      wallet => wallet.address === address && wallet.status !== WalletStatus.DELETED,
     );
 
     if (cryptoWallets.length === 0) {
@@ -563,26 +524,13 @@ export class ConsumerService {
   ): Promise<Consumer> {
     let allCryptoWallets = consumer.props.cryptoWallets;
 
-    const selectedWallet = allCryptoWallets.filter(
-      wallet => wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID,
-    );
+    const selectedWallet = allCryptoWallets.filter(wallet => wallet.address === cryptoWallet.address);
 
-    const remainingWallets = allCryptoWallets.filter(
-      wallet => !(wallet.address === cryptoWallet.address && wallet.partnerID === cryptoWallet.partnerID),
-    );
+    const remainingWallets = allCryptoWallets.filter(wallet => !(wallet.address === cryptoWallet.address));
     // Send the verification OTP to the user
     if (cryptoWallet.status === WalletStatus.PENDING) {
-      await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, cryptoWallet.partnerID, notificationMethod);
+      await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, notificationMethod);
     }
-    const partner: Partner = await this.partnerService.getPartner(cryptoWallet.partnerID);
-    if (partner.props.config === null || partner.props.config === undefined) {
-      partner.props.config = {} as any;
-    }
-    // By default the wallet is private.
-    cryptoWallet.isPrivate =
-      partner.props.config.privateWallets === null || partner.props.config.privateWallets === undefined
-        ? true
-        : partner.props.config.privateWallets;
 
     // It's an add
     if (selectedWallet.length === 0) {
@@ -597,16 +545,13 @@ export class ConsumerService {
     });
   }
 
-  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string, partnerID: string): Promise<Consumer> {
-    // You can have the same wallet for multiple partners so we want to be sure to only delete the one for the
-    // current partner.
+  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {
     const otherCryptoWallets = consumer.props.cryptoWallets.filter(
-      existingCryptoWallet =>
-        existingCryptoWallet.address !== cryptoWalletAddress || existingCryptoWallet.partnerID !== partnerID,
+      existingCryptoWallet => existingCryptoWallet.address !== cryptoWalletAddress,
     );
 
     const currentWallet = consumer.props.cryptoWallets.filter(
-      cryptoWallet => cryptoWallet.address === cryptoWalletAddress && cryptoWallet.partnerID === partnerID,
+      cryptoWallet => cryptoWallet.address === cryptoWalletAddress,
     )[0];
 
     if (!currentWallet) {

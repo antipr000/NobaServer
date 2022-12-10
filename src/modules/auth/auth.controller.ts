@@ -23,17 +23,13 @@ import {
   consumerIdentityIdentifier,
   IdentityType,
   nobaAdminIdentityIdentifier,
-  partnerAdminIdentityIdenitfier,
 } from "./domain/IdentityType";
 import { LoginRequestDTO } from "./dto/LoginRequest";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
-import { PartnerAuthService } from "./partner.auth.service";
 import { Public } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
-import { PartnerService } from "../partner/partner.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
-import { X_NOBA_API_KEY } from "./domain/HeaderConstants";
 import { Utils } from "../../core/utils/Utils";
 
 @Controller("auth")
@@ -44,10 +40,6 @@ export class AuthController {
   private readonly consumerAuthService: UserAuthService;
   @Inject()
   private readonly adminAuthService: AdminAuthService;
-  @Inject()
-  private readonly partnerAuthService: PartnerAuthService;
-  @Inject()
-  private readonly partnerService: PartnerService;
 
   private getAuthService(identityType: string): AuthService {
     switch (identityType) {
@@ -55,8 +47,6 @@ export class AuthController {
         return this.consumerAuthService;
       case nobaAdminIdentityIdentifier:
         return this.adminAuthService;
-      case partnerAdminIdentityIdenitfier:
-        return this.partnerAuthService;
       default:
         throw new BadRequestException(`"identityType" should be one of "${allIdentities}"`);
     }
@@ -70,7 +60,6 @@ export class AuthController {
   async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO, @Headers() headers): Promise<VerifyOtpResponseDTO> {
     const isEmail = Utils.isEmail(requestBody.emailOrPhone);
     const authService: AuthService = this.getAuthService(requestBody.identityType);
-    const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
 
     if (requestBody.identityType !== consumerIdentityIdentifier && !isEmail) {
       throw new BadRequestException(
@@ -78,9 +67,8 @@ export class AuthController {
       );
     }
 
-    // TODO: figure out how to get partner's user ID from request & pass as parameter 4 of this method:
-    const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp, partnerId);
-    return authService.generateAccessToken(userId, partnerId);
+    const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp);
+    return authService.generateAccessToken(userId);
   }
 
   @Public()
@@ -106,7 +94,6 @@ export class AuthController {
         case IdentityType.consumer:
           autoCreate = true;
           break;
-        case IdentityType.partnerAdmin:
         case IdentityType.nobaAdmin:
           autoCreate = false;
           break;
@@ -125,8 +112,7 @@ export class AuthController {
     const otp = authService.generateOTP();
     await authService.deleteAnyExistingOTP(emailOrPhone);
 
-    const partnerID = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
-    await authService.saveOtp(emailOrPhone, otp, partnerID);
-    return authService.sendOtp(emailOrPhone, otp.toString(), partnerID);
+    await authService.saveOtp(emailOrPhone, otp);
+    return authService.sendOtp(emailOrPhone, otp.toString());
   }
 }

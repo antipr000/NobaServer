@@ -7,7 +7,7 @@ import { SMSService } from "../../common/sms.service";
 import { instance, when } from "ts-mockito";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../repo/OTPRepo";
-import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
 import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID, STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
@@ -18,8 +18,6 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Result } from "../../../core/logic/Result";
-import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
-import { PartnerService } from "../../../modules/partner/partner.service";
 import { Utils } from "../../../core/utils/Utils";
 
 describe("UserAuthService", () => {
@@ -30,11 +28,10 @@ describe("UserAuthService", () => {
     let mockOtpRepo: IOTPRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
-    let mockPartnerService: PartnerService;
 
     const testJwtSecret = "TEST_SECRET";
     const identityType: string = consumerIdentityIdentifier;
-    const nobaPartnerID = "TEST_PARTNER_ID";
+    const nobaPartnerID = "NOBA_PARTNER_ID";
 
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
@@ -59,7 +56,6 @@ describe("UserAuthService", () => {
       mockOtpRepo = getMockOtpRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
-      mockPartnerService = getMockPartnerServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -88,10 +84,6 @@ describe("UserAuthService", () => {
             provide: SMSService,
             useFactory: () => instance(mockSmsService),
           },
-          {
-            provide: PartnerService,
-            useFactory: () => instance(mockPartnerService),
-          },
           UserAuthService,
         ],
       }).compile();
@@ -103,10 +95,10 @@ describe("UserAuthService", () => {
       it("should throw NotFoundException if no OTP exists for the user", async () => {
         const NO_OTP_USER = "abcd@noba.com";
 
-        when(mockOtpRepo.getOTP(NO_OTP_USER, identityType, nobaPartnerID)).thenReject(new NotFoundException());
+        when(mockOtpRepo.getOTP(NO_OTP_USER, identityType)).thenReject(new NotFoundException());
 
         try {
-          await userAuthService.validateAndGetUserId(NO_OTP_USER, 123456, nobaPartnerID);
+          await userAuthService.validateAndGetUserId(NO_OTP_USER, 123456);
         } catch (err) {
           expect(err).toBeInstanceOf(NotFoundException);
         }
@@ -124,36 +116,20 @@ describe("UserAuthService", () => {
           otp: CORRECT_OTP,
           otpExpiryTime: TOMORROW_EXPIRY.getTime(),
           identityType: consumerIdentityIdentifier,
-          partnerID: nobaPartnerID,
         });
 
-        when(mockOtpRepo.getOTP(NON_EXISTING_USER_EMAIL, identityType, nobaPartnerID)).thenResolve(otpDomain);
+        when(mockOtpRepo.getOTP(NON_EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
         when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
-        when(mockConsumerService.getOrCreateConsumerConditionally(NON_EXISTING_USER_EMAIL, nobaPartnerID)).thenResolve(
+        when(mockConsumerService.getOrCreateConsumerConditionally(NON_EXISTING_USER_EMAIL)).thenResolve(
           Consumer.createConsumer({
             _id: consumerID,
             email: NON_EXISTING_USER_EMAIL,
-            partners: [{ partnerID: nobaPartnerID }],
           }),
         );
 
-        const id = await userAuthService.validateAndGetUserId(NON_EXISTING_USER_EMAIL, CORRECT_OTP, nobaPartnerID);
+        const id = await userAuthService.validateAndGetUserId(NON_EXISTING_USER_EMAIL, CORRECT_OTP);
         expect(id).toEqual(consumerID);
-      });
-
-      it("should throw BadRequestException if partnerID is not provided", async () => {
-        const NON_EXISTING_USER_EMAIL = "abcd@noba.com";
-
-        when(mockOtpRepo.getOTP(NON_EXISTING_USER_EMAIL, identityType, nobaPartnerID)).thenReject(
-          new NotFoundException(),
-        );
-
-        try {
-          await userAuthService.validateAndGetUserId(NON_EXISTING_USER_EMAIL, 12345, null);
-        } catch (err) {
-          expect(err).toBeInstanceOf(BadRequestException);
-        }
       });
 
       it("should throw UnauthorizedException if otp is incorrect", async () => {
@@ -167,12 +143,11 @@ describe("UserAuthService", () => {
           otp: CORRECT_OTP,
           otpExpiryTime: TOMORROW_EXPIRY.getTime(),
           identityType: consumerIdentityIdentifier,
-          partnerID: nobaPartnerID,
         });
-        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType, nobaPartnerID)).thenResolve(otpDomain);
+        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
 
         try {
-          await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, 1234567, nobaPartnerID);
+          await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, 1234567);
         } catch (err) {
           expect(err).toBeInstanceOf(UnauthorizedException);
         }
@@ -189,12 +164,11 @@ describe("UserAuthService", () => {
           otp: CORRECT_OTP,
           otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
           identityType: consumerIdentityIdentifier,
-          partnerID: nobaPartnerID,
         });
-        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType, nobaPartnerID)).thenResolve(otpDomain);
+        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
 
         try {
-          await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP, nobaPartnerID);
+          await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP);
           expect(true).toBe(false);
         } catch (err) {
           expect(err).toBeInstanceOf(UnauthorizedException);
@@ -209,12 +183,9 @@ describe("UserAuthService", () => {
         const consumer = Consumer.createConsumer({
           _id: "mock-consumer-1",
           email: EXISTING_USER_EMAIL,
-          partners: [{ partnerID: nobaPartnerID }],
         });
 
-        when(mockConsumerService.getOrCreateConsumerConditionally(EXISTING_USER_EMAIL, nobaPartnerID)).thenResolve(
-          consumer,
-        );
+        when(mockConsumerService.getOrCreateConsumerConditionally(EXISTING_USER_EMAIL)).thenResolve(consumer);
 
         const otpDomain: Otp = Otp.createOtp({
           _id: "1",
@@ -222,17 +193,12 @@ describe("UserAuthService", () => {
           otp: CORRECT_OTP,
           otpExpiryTime: TOMORROW_EXPIRY.getTime(),
           identityType: consumerIdentityIdentifier,
-          partnerID: nobaPartnerID,
         });
-        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType, nobaPartnerID)).thenResolve(otpDomain);
+        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
 
         when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
-        const receivedConsumerID = await userAuthService.validateAndGetUserId(
-          EXISTING_USER_EMAIL,
-          CORRECT_OTP,
-          nobaPartnerID,
-        );
+        const receivedConsumerID = await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP);
         expect(receivedConsumerID).toEqual(consumer.props._id);
       });
     });
@@ -254,7 +220,7 @@ describe("UserAuthService", () => {
         const EXISTING_USER_EMAIL = "user@noba.com";
 
         when(mockConsumerService.findConsumerByEmailOrPhone(EXISTING_USER_EMAIL)).thenResolve(
-          Result.ok(Consumer.createConsumer({ email: EXISTING_USER_EMAIL, partners: [{ partnerID: nobaPartnerID }] })),
+          Result.ok(Consumer.createConsumer({ email: EXISTING_USER_EMAIL })),
         );
 
         const result = await userAuthService.verifyUserExistence(EXISTING_USER_EMAIL);
@@ -278,11 +244,9 @@ describe("UserAuthService", () => {
     let mockOtpRepo: IOTPRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
-    let mockPartnerService: PartnerService;
 
     const testJwtSecret = "TEST_SECRET";
-    const identityType: string = consumerIdentityIdentifier;
-    const nobaPartnerID = "TEST_PARTNER_ID";
+    const nobaPartnerID = "NOBA_PARTNER_ID";
 
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
@@ -308,7 +272,6 @@ describe("UserAuthService", () => {
       mockOtpRepo = getMockOtpRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
-      mockPartnerService = getMockPartnerServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -336,10 +299,6 @@ describe("UserAuthService", () => {
           {
             provide: SMSService,
             useFactory: () => instance(mockSmsService),
-          },
-          {
-            provide: PartnerService,
-            useFactory: () => instance(mockPartnerService),
           },
           UserAuthService,
         ],

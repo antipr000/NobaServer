@@ -90,38 +90,34 @@ export class TransactionFailedProcessor extends MessageProcessor {
         transaction.props.transactionExceptions[transaction.props.transactionExceptions.length - 1].message;
     }
 
-    await this.notificationService.sendNotification(
-      NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
-      transaction.props.partnerID,
-      {
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
-        email: consumer.props.displayEmail,
-        orderFailedParams: {
-          transactionID: transaction.props.transactionID,
-          transactionTimestamp: transaction.props.transactionTimestamp,
-          paymentMethod:
-            paymentMethod.type === PaymentMethodType.CARD
-              ? paymentMethod.cardData.cardType
-              : paymentMethod.achData.accountType,
-          last4Digits:
-            paymentMethod.type === PaymentMethodType.CARD
-              ? paymentMethod.cardData.last4Digits
-              : paymentMethod.achData.mask,
-          fiatCurrency: transaction.props.leg1,
-          conversionRate: transaction.props.exchangeRate,
-          processingFee: transaction.props.processingFee,
-          networkFee: transaction.props.networkFee,
-          nobaFee: transaction.props.nobaFee,
-          totalPrice: transaction.props.leg1Amount,
-          cryptoAmount: transaction.props.leg2Amount,
-          cryptocurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
-          failureReason: errorMessage,
-          destinationWalletAddress: transaction.props.destinationWalletAddress,
-          status: transaction.props.transactionStatus,
-        },
+    await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_FAILED_EVENT, {
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      nobaUserID: consumer.props._id,
+      email: consumer.props.displayEmail,
+      orderFailedParams: {
+        transactionID: transaction.props.transactionID,
+        transactionTimestamp: transaction.props.transactionTimestamp,
+        paymentMethod:
+          paymentMethod.type === PaymentMethodType.CARD
+            ? paymentMethod.cardData.cardType
+            : paymentMethod.achData.accountType,
+        last4Digits:
+          paymentMethod.type === PaymentMethodType.CARD
+            ? paymentMethod.cardData.last4Digits
+            : paymentMethod.achData.mask,
+        fiatCurrency: transaction.props.leg1,
+        conversionRate: transaction.props.exchangeRate,
+        processingFee: transaction.props.processingFee,
+        networkFee: transaction.props.networkFee,
+        nobaFee: transaction.props.nobaFee,
+        totalPrice: transaction.props.leg1Amount,
+        cryptoAmount: transaction.props.leg2Amount,
+        cryptocurrency: transaction.props.leg2, // This will be the final settled amount; may differ from original
+        failureReason: errorMessage,
+        destinationWalletAddress: transaction.props.destinationWalletAddress,
+        status: transaction.props.transactionStatus,
       },
-    );
+    });
   }
 }

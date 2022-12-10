@@ -22,11 +22,9 @@ import {
   clearAccessTokenForNextRequests,
   computeSignature,
   insertNobaAdmin,
-  insertPartnerAdmin,
   loginAndGetResponse,
   patchConsumer,
   setAccessTokenForTheNextRequests,
-  setupPartner,
   TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
@@ -58,7 +56,6 @@ describe("Consumers", () => {
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
-    await setupPartner(mongoUri, "dummy-partner");
 
     const environmentVaraibles = {
       MONGO_URI: mongoUri,
@@ -88,29 +85,6 @@ describe("Consumers", () => {
       })) as PlaidTokenDTO & ResponseStatus;
 
       expect(generatePlaidTokenResponse.__status).toBe(401);
-    });
-
-    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-
-      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-      const signature = computeSignature(
-        TEST_TIMESTAMP,
-        "GET",
-        "/v1/consumers/paymentmethods/plaid/token",
-        JSON.stringify({}),
-      );
-      const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-      })) as PlaidTokenDTO & ResponseStatus;
-
-      expect(generatePlaidTokenResponse.__status).toBe(403);
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
@@ -175,30 +149,6 @@ describe("Consumers", () => {
       })) as ConsumerHandleDTO & ResponseStatus;
 
       expect(getHandleAvailabilityResponse.__status).toBe(401);
-    });
-
-    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-
-      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-      const signature = computeSignature(
-        TEST_TIMESTAMP,
-        "GET",
-        "/v1/consumers/handles/availability",
-        JSON.stringify({}),
-      );
-      const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
-        handle: "test",
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-      })) as ConsumerHandleDTO & ResponseStatus;
-
-      expect(getHandleAvailabilityResponse.__status).toBe(403);
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
@@ -295,23 +245,6 @@ describe("Consumers", () => {
       expect(getConsumerResponse.__status).toBe(401);
     });
 
-    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-
-      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
-      const getConsumerResponse = (await ConsumerService.getConsumer({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-      })) as ConsumerDTO & ResponseStatus;
-      expect(getConsumerResponse.__status).toBe(403);
-    });
-
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
       const nobaAdminEmail = getRandomEmail("test.noba.admin");
       const nobaAdminId = getRandomID("AAAAAAAAA");
@@ -393,25 +326,6 @@ describe("Consumers", () => {
       })) as ConsumerDTO & ResponseStatus;
 
       expect(updateConsumerResponse.__status).toBe(401);
-    });
-
-    it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-
-      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-
-      const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
-      const updateConsumerResponse = (await ConsumerService.updateConsumer({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-        requestBody: {},
-      })) as ConsumerDTO & ResponseStatus;
-      expect(updateConsumerResponse.__status).toBe(403);
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
@@ -745,23 +659,6 @@ describe("Consumers", () => {
     //   expect(addPaymentMethodResponse.__status).toBe(401);
     // });
 
-    // it("should throw 403 if PartnerAdmin identity tries to call this API", async () => {
-    //   const partnerAdminEmail = "test.partner.admin@noba.com";
-    //   expect(await insertPartnerAdmin(mongoUri, partnerAdminEmail, "PAPAPAPAPA", "BASIC", "PPPPPPPPPP")).toBe(true);
-
-    //   const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-    //   setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-
-    //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
-    //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
-    //     xNobaApiKey: TEST_API_KEY,
-    //     xNobaSignature: signature,
-    //     xNobaTimestamp: TEST_TIMESTAMP,
-    //     requestBody: {} as any,
-    //   })) as ConsumerDTO & ResponseStatus;
-    //   expect(addPaymentMethodResponse.__status).toBe(403);
-    // });
-
     // it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
     //   const nobaAdminEmail = "test.noba.admin@noba.com";
     //   const nobaAdminId = "AAAAAAAAAA";
@@ -1073,9 +970,7 @@ describe("Consumers", () => {
         cryptoWallets: [
           {
             address: "wallet-1",
-            partnerID: "dummy-partner",
             status: WalletStatus.APPROVED,
-            isPrivate: false,
           },
         ],
       };

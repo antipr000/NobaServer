@@ -333,17 +333,11 @@ describe("SardineTests", () => {
         paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
-        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
         _id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
         paymentMethods: [
           {
             imageUri: "image-uri",
@@ -400,17 +394,11 @@ describe("SardineTests", () => {
         paymentMethodID: plaidCheckoutProcessorToken,
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
-        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
         _id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
         paymentMethods: [
           {
             type: PaymentMethodType.ACH,
@@ -473,7 +461,6 @@ describe("SardineTests", () => {
             },
           },
         },
-        partnerId: transactionInformation.partnerName,
         checkpoints: ["aml", "payment"],
       };
 
@@ -529,17 +516,11 @@ describe("SardineTests", () => {
         paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "risk+wallet",
-        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
         _id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
         paymentMethods: [
           {
             imageUri: "image-uri",
@@ -587,17 +568,11 @@ describe("SardineTests", () => {
         paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
-        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
         _id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
         paymentMethods: [
           {
             imageUri: "image-uri",
@@ -645,17 +620,12 @@ describe("SardineTests", () => {
         paymentMethodID: "card-1234",
         cryptoCurrencyCode: "ETH",
         walletAddress: "good+wallet",
-        partnerName: "Fake partner",
       };
 
       const consumer = Consumer.createConsumer({
         _id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         paymentMethods: [
           {
             imageUri: "image-uri",
@@ -704,11 +674,7 @@ describe("SardineTests", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         address: {
           streetLine1: "Fake Street",
           streetLine2: "Fake Street Line 2",
@@ -754,11 +720,7 @@ describe("SardineTests", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         address: {
           streetLine1: "Fake Street",
           streetLine2: "Fake Street Line 2",
@@ -847,11 +809,7 @@ describe("SardineTests", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         verificationData: {
           kycVerificationStatus: KYCStatus.APPROVED,
           verificationProvider: VerificationProviders.SARDINE,
@@ -905,11 +863,7 @@ describe("SardineTests", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         verificationData: {
           kycVerificationStatus: KYCStatus.APPROVED,
           verificationProvider: VerificationProviders.SARDINE,
@@ -962,11 +916,7 @@ describe("SardineTests", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         verificationData: {
           kycVerificationStatus: KYCStatus.APPROVED,
           verificationProvider: VerificationProviders.SARDINE,
@@ -1025,11 +975,7 @@ describe("SardineTests", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         verificationData: {
           kycVerificationStatus: KYCStatus.APPROVED,
           verificationProvider: VerificationProviders.SARDINE,

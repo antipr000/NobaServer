@@ -19,8 +19,6 @@ import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
 import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
-import { Partner } from "../partner/domain/Partner";
-import { PartnerService } from "../partner/partner.service";
 import { CircleClient } from "../psp/circle.client";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
@@ -34,7 +32,6 @@ import {
 } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
-import { PartnerTransactionFilterOptions } from "./domain/TransactionRepoTypes";
 import { TransactionFilterOptions, TransactionStatus, TransactionType } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
@@ -59,7 +56,6 @@ export class TransactionService {
     private readonly verificationService: VerificationService,
     private readonly consumerService: ConsumerService,
     private readonly assetServiceFactory: AssetServiceFactory,
-    private readonly partnerService: PartnerService,
     private readonly ellipticService: EllipticService,
     private readonly sanctionedCryptoWalletService: SanctionedCryptoWalletService,
     private readonly limitService: LimitsService,
@@ -73,21 +69,8 @@ export class TransactionService {
   }
 
   async requestTransactionQuote(transactionQuoteQuery: TransactionQuoteQueryDTO): Promise<TransactionQuoteDTO> {
-    // TODO transactionQuoteQuery.partnerID can optionally be used to quote differently per partner.
-    // Note that that field is not required and will not be populated for unauthenticated users,
-    // so we can't depend on it being there.
-    const partner = await this.partnerService.getPartner(transactionQuoteQuery.partnerID);
-    if (partner === null || partner === undefined) throw new BadRequestException("Unknown Partner ID");
-
     if (transactionQuoteQuery.fixedAmount <= 0 || Number.isNaN(transactionQuoteQuery.fixedAmount)) {
       throw new BadRequestException("Invalid amount");
-    }
-
-    if (!this.isCryptocurrencyAllowed(partner, transactionQuoteQuery.cryptoCurrencyCode)) {
-      throw new BadRequestException(
-        `Unsupported crypto currency "${transactionQuoteQuery.cryptoCurrencyCode}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
-      );
     }
 
     const assetService: AssetService = await this.assetServiceFactory.getAssetService(
@@ -106,13 +89,6 @@ export class TransactionService {
             transactionQuoteQuery.fixedAmount,
           ),
           transactionType: transactionQuoteQuery.transactionType,
-          discount: {
-            fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
-            networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-            nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-            nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-            processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-          },
         };
         if (assetService.needsIntermediaryLeg())
           quoteRequest.intermediateCryptoCurrency = assetService.getIntermediaryLeg();
@@ -130,13 +106,6 @@ export class TransactionService {
               transactionQuoteQuery.fixedAmount,
             ),
             transactionType: transactionQuoteQuery.transactionType,
-            discount: {
-              fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
-              networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-              nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-              nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-              processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-            },
           })
         ).quote;
         break;
@@ -192,41 +161,16 @@ export class TransactionService {
 
   async getUserTransactions(
     userID: string,
-    partnerID: string,
     transactionQuery?: TransactionFilterOptions,
   ): Promise<PaginatedResult<TransactionDTO>> {
     transactionQuery.consumerID = userID;
-    transactionQuery.partnerID = partnerID;
     const transactionsResult = await this.transactionsRepo.getFilteredTransactions(transactionQuery);
     return { ...transactionsResult, items: transactionsResult.items.map(this.transactionsMapper.toDTO) };
   }
 
-  async populateCsvFileWithPartnerTransactions(
-    partnerID: string,
-    startDate: Date,
-    endDate: Date,
-    includeIncompleteTransactions: boolean,
-  ): Promise<string> {
-    const filters: PartnerTransactionFilterOptions = {
-      partnerID: partnerID,
-      startDate: startDate,
-      endDate: endDate,
-      includeIncompleteTransactions: includeIncompleteTransactions ?? true,
-    };
-
-    const filePath = `/tmp/txn-${partnerID}-${Date.now().valueOf()}.csv`;
-    await this.transactionsRepo.getPartnerTransactions(filters, filePath);
-    return filePath;
-  }
-
-  async getTransactionsInInterval(
-    userID: string,
-    partnerID: string,
-    fromDate: Date,
-    toDate: Date,
-  ): Promise<TransactionDTO[]> {
-    return (await this.transactionsRepo.getUserTransactionInAnInterval(userID, partnerID, fromDate, toDate)).map(
-      transaction => this.transactionsMapper.toDTO(transaction),
+  async getTransactionsInInterval(userID: string, fromDate: Date, toDate: Date): Promise<TransactionDTO[]> {
+    return (await this.transactionsRepo.getUserTransactionInAnInterval(userID, fromDate, toDate)).map(transaction =>
+      this.transactionsMapper.toDTO(transaction),
     );
   }
 
@@ -256,7 +200,6 @@ export class TransactionService {
   //TODO add checks like no more than N transactions per user per day, no more than N transactions per day, etc, no more than N doller transaction per day/month etc.
   async initiateTransaction(
     consumerID: string,
-    partnerID: string,
     sessionKey: string,
     transactionRequest: CreateTransactionDTO,
   ): Promise<TransactionDTO> {
@@ -264,23 +207,6 @@ export class TransactionService {
       // This should only ever happen on accident by a developer so not worth defining a new
       // TransactionSubmissionFailureExceptionText type for this scenario.
       throw new Error("Invalid transaction type");
-    }
-
-    if (partnerID === null || partnerID === undefined)
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER);
-
-    const partner = await this.partnerService.getPartner(partnerID);
-    if (partner === null || partner === undefined) {
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER);
-    }
-
-    // Null or empty crypto allow list means "allow all"
-    if (!this.isCryptocurrencyAllowed(partner, transactionRequest.leg2)) {
-      this.logger.debug(
-        `Unsupported cryptocurrency "${transactionRequest.leg2}". ` +
-          `Allowed currencies are "${partner.props.config.cryptocurrencyAllowList}".`,
-      );
-      throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.UNKNOWN_CRYPTO);
     }
 
     const transactionType = transactionRequest.type;
@@ -299,7 +225,6 @@ export class TransactionService {
         const cryptoWallet = this.consumerService.getCryptoWallet(
           consumer,
           transactionRequest.destinationWalletAddress,
-          partnerID,
         );
         cryptoWallet.status = WalletStatus.FLAGGED;
         await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
@@ -324,7 +249,6 @@ export class TransactionService {
     const transactionLimits = await this.limitService.canMakeTransaction(
       consumer,
       fiatAmount,
-      partnerID,
       transactionRequest.type,
       paymentMethod.type,
     );
@@ -354,7 +278,6 @@ export class TransactionService {
       leg2: transactionRequest.leg2,
       fixedSide: transactionRequest.fixedSide,
       transactionStatus: TransactionStatus.PENDING,
-      partnerID: partnerID,
       destinationWalletAddress: transactionRequest.destinationWalletAddress,
       type: transactionType,
     });
@@ -376,13 +299,6 @@ export class TransactionService {
         fiatAmount: await this.roundToProperDecimalsForFiatCurrency(transactionRequest.leg1, fiatAmount),
         intermediateCryptoCurrency: newTransaction.props.intermediaryLeg,
         transactionType: transactionRequest.type,
-        discount: {
-          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
-          networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-          nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-          nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-          processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-        },
       });
       quote = combinedQuote.quote;
     } else {
@@ -391,13 +307,6 @@ export class TransactionService {
         cryptoCurrency: transactionRequest.leg2,
         cryptoQuantity: await this.roundToProperDecimalsForCryptocurrency(transactionRequest.leg2, cryptoAmount),
         transactionType: transactionRequest.type,
-        discount: {
-          fixedCreditCardFeeDiscountPercent: partner.props.config.fees.creditCardFeeDiscountPercent,
-          networkFeeDiscountPercent: partner.props.config.fees.networkFeeDiscountPercent,
-          nobaFeeDiscountPercent: partner.props.config.fees.nobaFeeDiscountPercent,
-          nobaSpreadDiscountPercent: partner.props.config.fees.spreadDiscountPercent,
-          processingFeeDiscountPercent: partner.props.config.fees.processingFeeDiscountPercent,
-        },
       });
       quote = combinedQuote.quote;
     }
@@ -501,11 +410,7 @@ export class TransactionService {
 
   // Returns valid CryptoWallet or throws exception if invalid
   private async validateCryptoWallet(consumer: Consumer, transaction: Transaction): Promise<CryptoWallet> {
-    const cryptoWallet = this.consumerService.getCryptoWallet(
-      consumer,
-      transaction.props.destinationWalletAddress,
-      transaction.props.partnerID,
-    );
+    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
     if (cryptoWallet == null || cryptoWallet.status != WalletStatus.APPROVED) {
       this.logger.error(
         `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
@@ -527,15 +432,6 @@ export class TransactionService {
     paymentMethod: PaymentMethod,
     cryptoWallet: CryptoWallet,
   ) {
-    const partner = await this.partnerService.getPartner(transaction.props.partnerID);
-    if (partner == null) {
-      throw new TransactionSubmissionException(
-        TransactionSubmissionFailureExceptionText.UNKNOWN_PARTNER,
-        "Unknown partner",
-        `Unable to find record for partner ID ${transaction.props.partnerID}`,
-      );
-    }
-
     // Check Sardine for AML
     const sardineTransactionInformation: TransactionInformation = {
       transactionID: transaction.props._id,
@@ -545,7 +441,6 @@ export class TransactionService {
       cryptoCurrencyCode: transaction.props.leg2,
       walletAddress: transaction.props.destinationWalletAddress,
       walletStatus: cryptoWallet.status,
-      partnerName: partner.props.name,
     };
 
     const result = await this.verificationService.transactionVerification(
@@ -597,38 +492,34 @@ export class TransactionService {
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
-        transaction.props.partnerID,
-        {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
-          email: consumer.props.displayEmail,
-          transactionInitiatedParams: {
-            transactionID: transaction.props.transactionID,
-            transactionTimestamp: transaction.props.transactionTimestamp,
-            paymentMethod:
-              paymentMethod.type === PaymentMethodType.CARD
-                ? paymentMethod.cardData.cardType
-                : paymentMethod.achData.accountType,
-            last4Digits:
-              paymentMethod.type === PaymentMethodType.CARD
-                ? paymentMethod.cardData.last4Digits
-                : paymentMethod.achData.mask,
-            fiatCurrency: transaction.props.leg1,
-            conversionRate: transaction.props.exchangeRate,
-            processingFee: transaction.props.processingFee,
-            networkFee: transaction.props.networkFee,
-            nobaFee: transaction.props.nobaFee,
-            totalPrice: transaction.props.leg1Amount,
-            cryptoAmount: transaction.props.leg2Amount,
-            cryptocurrency: transaction.props.leg2,
-            destinationWalletAddress: transaction.props.destinationWalletAddress,
-            status: transaction.props.transactionStatus,
-          },
+      await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT, {
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+        email: consumer.props.displayEmail,
+        transactionInitiatedParams: {
+          transactionID: transaction.props.transactionID,
+          transactionTimestamp: transaction.props.transactionTimestamp,
+          paymentMethod:
+            paymentMethod.type === PaymentMethodType.CARD
+              ? paymentMethod.cardData.cardType
+              : paymentMethod.achData.accountType,
+          last4Digits:
+            paymentMethod.type === PaymentMethodType.CARD
+              ? paymentMethod.cardData.last4Digits
+              : paymentMethod.achData.mask,
+          fiatCurrency: transaction.props.leg1,
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.leg2Amount,
+          cryptocurrency: transaction.props.leg2,
+          destinationWalletAddress: transaction.props.destinationWalletAddress,
+          status: transaction.props.transactionStatus,
         },
-      );
+      });
     } catch (e) {
       this.logger.error("Failed to send email at transaction initiation. " + e);
     }
@@ -641,38 +532,34 @@ export class TransactionService {
   ) {
     try {
       // TODO(CRYPTO-411): need new email for Noba wallet transactions
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
-        transaction.props.partnerID,
-        {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
-          email: consumer.props.displayEmail,
-          transactionInitiatedParams: {
-            transactionID: transaction.props.transactionID,
-            transactionTimestamp: transaction.props.transactionTimestamp,
-            paymentMethod:
-              paymentMethod.type === PaymentMethodType.CARD
-                ? paymentMethod.cardData.cardType
-                : paymentMethod.achData.accountType,
-            last4Digits:
-              paymentMethod.type === PaymentMethodType.CARD
-                ? paymentMethod.cardData.last4Digits
-                : paymentMethod.achData.mask,
-            fiatCurrency: transaction.props.leg1,
-            conversionRate: transaction.props.exchangeRate,
-            processingFee: transaction.props.processingFee,
-            networkFee: transaction.props.networkFee,
-            nobaFee: transaction.props.nobaFee,
-            totalPrice: transaction.props.leg1Amount,
-            cryptoAmount: transaction.props.leg2Amount,
-            cryptocurrency: transaction.props.leg2,
-            destinationWalletAddress: transaction.props.destinationWalletAddress,
-            status: transaction.props.transactionStatus,
-          },
+      await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT, {
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+        email: consumer.props.displayEmail,
+        transactionInitiatedParams: {
+          transactionID: transaction.props.transactionID,
+          transactionTimestamp: transaction.props.transactionTimestamp,
+          paymentMethod:
+            paymentMethod.type === PaymentMethodType.CARD
+              ? paymentMethod.cardData.cardType
+              : paymentMethod.achData.accountType,
+          last4Digits:
+            paymentMethod.type === PaymentMethodType.CARD
+              ? paymentMethod.cardData.last4Digits
+              : paymentMethod.achData.mask,
+          fiatCurrency: transaction.props.leg1,
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.leg2Amount,
+          cryptocurrency: transaction.props.leg2,
+          destinationWalletAddress: transaction.props.destinationWalletAddress,
+          status: transaction.props.transactionStatus,
         },
-      );
+      });
     } catch (e) {
       this.logger.error("Failed to send email at transaction initiation. " + e);
     }
@@ -685,39 +572,35 @@ export class TransactionService {
     try {
       // This is where transaction is accepted by us. Send email here. However this should not break the flow so addded
       // try catch block
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
-        transaction.props.partnerID,
-        {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
-          email: consumer.props.displayEmail,
-          transactionInitiatedParams: {
-            transactionID: transaction.props.transactionID,
-            transactionTimestamp: transaction.props.transactionTimestamp,
-            paymentMethod: null,
-            last4Digits: null,
-            /*  paymentMethod.type === PaymentMethodType.CARD
+      await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT, {
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+        email: consumer.props.displayEmail,
+        transactionInitiatedParams: {
+          transactionID: transaction.props.transactionID,
+          transactionTimestamp: transaction.props.transactionTimestamp,
+          paymentMethod: null,
+          last4Digits: null,
+          /*  paymentMethod.type === PaymentMethodType.CARD
                 ? paymentMethod.cardData.cardType
                 : paymentMethod.achData.accountType,
             last4Digits:
               paymentMethod.type === PaymentMethodType.CARD
                 ? paymentMethod.cardData.last4Digits
                 : paymentMethod.achData.mask,*/
-            fiatCurrency: transaction.props.leg1,
-            conversionRate: transaction.props.exchangeRate,
-            processingFee: transaction.props.processingFee,
-            networkFee: transaction.props.networkFee,
-            nobaFee: transaction.props.nobaFee,
-            totalPrice: transaction.props.leg1Amount,
-            cryptoAmount: transaction.props.leg2Amount,
-            cryptocurrency: transaction.props.leg2,
-            destinationWalletAddress: transaction.props.destinationWalletAddress,
-            status: transaction.props.transactionStatus,
-          },
+          fiatCurrency: transaction.props.leg1,
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.leg2Amount,
+          cryptocurrency: transaction.props.leg2,
+          destinationWalletAddress: transaction.props.destinationWalletAddress,
+          status: transaction.props.transactionStatus,
         },
-      );
+      });
     } catch (e) {
       this.logger.error("Failed to send email at transaction initiation. " + e);
     }
@@ -743,11 +626,7 @@ export class TransactionService {
     const walletExposureResponse = await this.ellipticService.transactionAnalysis(transaction);
 
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
-    const cryptoWallet = this.consumerService.getCryptoWallet(
-      consumer,
-      transaction.props.destinationWalletAddress,
-      transaction.props.partnerID,
-    );
+    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
 
     cryptoWallet.riskScore = walletExposureResponse.riskScore;
 
@@ -771,15 +650,6 @@ export class TransactionService {
     const networkType = isProductionEnvironment() ? "prod" : "testnet";
 
     return validate(destinationWalletAddress, checkCurr, networkType);
-  }
-
-  private isCryptocurrencyAllowed(partner: Partner, cryptocurrency: string) {
-    return (
-      partner.props.config.cryptocurrencyAllowList === null ||
-      partner.props.config.cryptocurrencyAllowList === undefined ||
-      partner.props.config.cryptocurrencyAllowList.length == 0 ||
-      partner.props.config.cryptocurrencyAllowList.includes(cryptocurrency)
-    );
   }
 
   private convertLimitErrorToTransactionSubmissionException(

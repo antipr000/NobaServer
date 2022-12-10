@@ -13,8 +13,6 @@ import { MongoDBOtpRepo } from "./repo/MongoDBOtpRepo";
 import { UserAuthService } from "./user.auth.service";
 import { AdminAuthService } from "./admin.auth.service";
 import { AdminModule } from "../admin/admin.module";
-import { PartnerModule } from "../partner/partner.module";
-import { PartnerAuthService } from "./partner.auth.service";
 import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
@@ -23,7 +21,6 @@ import { NotificationsModule } from "../notifications/notification.module";
   imports: [
     ConsumerModule,
     AdminModule,
-    PartnerModule,
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,
@@ -44,7 +41,6 @@ import { NotificationsModule } from "../notifications/notification.module";
     },
     UserAuthService,
     AdminAuthService,
-    PartnerAuthService,
     DeleteExpiredOTPs,
   ],
   controllers: [AuthController],

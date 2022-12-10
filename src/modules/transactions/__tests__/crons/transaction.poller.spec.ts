@@ -110,7 +110,6 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
         });
         transactionsWithPendingStatus.push(transaction);
       });
@@ -155,7 +154,6 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
         });
         transactionsWithValidationPassedStatus.push(transaction);
       });
@@ -194,7 +192,6 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
         });
         transactionsWithFiatIncomingInitiatedStatus.push(transaction);
       });
@@ -234,7 +231,6 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
         });
         transactionsWithFiatTransactionCompletedStatus.push(transaction);
       });
@@ -256,7 +252,6 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
         });
         transactionsWithFiatTransactionCompletedStatus.push(transaction);
       });
@@ -299,7 +294,6 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
         });
         transactionsWithCryptoTransactionInitiatedStatus.push(transaction);
       });
@@ -338,7 +332,6 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
         });
         transactionsWithOnChainPendingTransactionStatus.push(transaction);
       });
@@ -385,7 +378,7 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
+
           lastProcessingTimestamp: Date.now() - 60 * 60 * 1000,
           lastStatusUpdateTimestamp: Date.now().valueOf() - 15 * 60 * 1000,
         });
@@ -438,7 +431,7 @@ describe("TransactionPoller", () => {
           leg2Amount: 1,
           leg1: "USD",
           leg2: "ETH",
-          partnerID: "12345",
+
           lastProcessingTimestamp: Date.now() - 60 * 60 * 1000,
           lastStatusUpdateTimestamp: Date.now().valueOf() - 15 * 60 * 1000,
         });

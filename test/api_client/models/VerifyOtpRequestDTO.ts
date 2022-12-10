@@ -14,7 +14,7 @@ export type VerifyOtpRequestDTO = {
   /**
    * Identity type of the user logging in
    */
-  identityType: "CONSUMER" | "PARTNER_ADMIN" | "NOBA_ADMIN";
+  identityType: "CONSUMER" | "NOBA_ADMIN";
   /**
    * One-time password sent to email or phone
    */

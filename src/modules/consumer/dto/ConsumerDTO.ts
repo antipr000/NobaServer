@@ -67,9 +67,6 @@ export class CryptoWalletsDTO {
 
   @ApiPropertyOptional()
   isEVMCompatible?: boolean;
-
-  // Keep from API as this should not be exposed to user
-  //partnerID: string;
 }
 
 export class KycVerificationDTO {

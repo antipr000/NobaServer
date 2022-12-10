@@ -71,11 +71,10 @@ export class PaymentService {
   public async addPaymentMethod(
     consumer: Consumer,
     paymentMethod: AddPaymentMethodDTO,
-    partnerId: string,
   ): Promise<AddPaymentMethodResponse> {
     switch (paymentMethod.type) {
       case PaymentType.CARD:
-        return await this.addCreditCardPaymentMethod(consumer, paymentMethod, partnerId);
+        return await this.addCreditCardPaymentMethod(consumer, paymentMethod);
       case PaymentType.ACH:
         return await this.addACHPaymentMethod(consumer, paymentMethod);
     }
@@ -84,7 +83,6 @@ export class PaymentService {
   private async addCreditCardPaymentMethod(
     consumer: Consumer,
     paymentMethod: AddPaymentMethodDTO,
-    partnerId: string,
   ): Promise<AddPaymentMethodResponse> {
     let creditCardBinData: CreditCardDTO;
 
@@ -157,7 +155,6 @@ export class PaymentService {
         cardNumber: paymentMethod.cardDetails.cardNumber,
         sessionID: "verification",
         transactionID: "verification",
-        partnerID: partnerId,
         binData: creditCardBinData,
       });
     } catch (e) {
@@ -171,7 +168,7 @@ export class PaymentService {
     if (response.paymentMethodStatus === PaymentMethodStatus.REJECTED) {
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT,
-        partnerId,
+
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
@@ -330,7 +327,6 @@ export class PaymentService {
       cardNumber: null,
       sessionID: transaction.props.sessionKey,
       transactionID: transaction.props.transactionID,
-      partnerID: transaction.props.partnerID,
       binData: creditCardBinData,
     });
 
@@ -441,7 +437,6 @@ export class PaymentService {
     cardNumber,
     sessionID,
     transactionID,
-    partnerID,
     binData,
   }: HandlePaymentResponse): Promise<CheckoutResponseData> {
     if (!paymentResponse) {
@@ -524,7 +519,7 @@ export class PaymentService {
       }
     } finally {
       if (sendNobaEmail) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, partnerID, {
+        await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
           nobaUserID: consumer.props._id,

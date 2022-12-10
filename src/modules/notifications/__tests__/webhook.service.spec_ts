@@ -71,7 +71,6 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       otp: "123456",
       name: "Fake",
-      partnerID: "fake-partner-1234",
     });
 
     const partner = createFakePartner();
@@ -109,7 +108,6 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       otp: "123456",
       name: "Fake",
-      partnerID: "fake-partner-1234",
     });
 
     const partner = createFakePartner();
@@ -153,7 +151,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       otp: "123456",
       name: "Fake",
-      partnerID: "fake-partner-1234",
+
       walletAddress: "fake-wallet",
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
@@ -195,7 +193,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -234,7 +232,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -274,7 +272,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -314,7 +312,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -354,7 +352,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -394,7 +392,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -434,7 +432,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -474,7 +472,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
     });
@@ -513,7 +511,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
@@ -558,7 +556,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       last4Digits: "1234",
@@ -601,7 +599,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
@@ -646,7 +644,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       params: {} as any,
@@ -689,7 +687,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       params: {} as any,
@@ -732,7 +730,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       params: {} as any,
@@ -775,7 +773,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       params: {} as any,
@@ -818,7 +816,7 @@ describe("WebhookService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
+
       partnerUserID: "fake-partner-user-id",
       nobaUserID: "fake-noba-user-id",
       sessionID: "fake-session-id",

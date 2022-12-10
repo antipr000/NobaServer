@@ -26,7 +26,6 @@ export class TransactionsService {
     transactionType,
     xNobaSignature,
     xNobaTimestamp,
-    partnerId,
   }: {
     xNobaApiKey: string;
     fiatCurrencyCode: string;
@@ -39,7 +38,6 @@ export class TransactionsService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-    partnerId?: string;
   }): CancelablePromise<TransactionQuoteDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -55,7 +53,6 @@ export class TransactionsService {
         fixedSide: fixedSide,
         fixedAmount: fixedAmount,
         transactionType: transactionType,
-        partnerID: partnerId,
       },
       errors: {
         400: `Invalid currency code (fiat or crypto)`,
@@ -189,7 +186,6 @@ export class TransactionsService {
     xNobaSignature,
     xNobaTimestamp,
     consumerId,
-    partnerId,
     startDate,
     endDate,
     pageOffset,
@@ -210,10 +206,6 @@ export class TransactionsService {
      * Consumer ID whose transactions is needed
      */
     consumerId?: string;
-    /**
-     * Partner ID whose transactions needs to be filtered
-     */
-    partnerId?: string;
     /**
      * Format: YYYY-MM-DD, example: 2010-04-27
      */
@@ -278,7 +270,6 @@ export class TransactionsService {
       },
       query: {
         consumerID: consumerId,
-        partnerID: partnerId,
         startDate: startDate,
         endDate: endDate,
         pageOffset: pageOffset,
@@ -306,7 +297,6 @@ export class TransactionsService {
     xNobaSignature,
     xNobaTimestamp,
     consumerId,
-    partnerId,
     startDate,
     endDate,
     pageOffset,
@@ -331,10 +321,6 @@ export class TransactionsService {
      * Consumer ID whose transactions is needed
      */
     consumerId?: string;
-    /**
-     * Partner ID whose transactions needs to be filtered
-     */
-    partnerId?: string;
     /**
      * Format: YYYY-MM-DD, example: 2010-04-27
      */
@@ -399,7 +385,6 @@ export class TransactionsService {
       },
       query: {
         consumerID: consumerId,
-        partnerID: partnerId,
         startDate: startDate,
         endDate: endDate,
         pageOffset: pageOffset,

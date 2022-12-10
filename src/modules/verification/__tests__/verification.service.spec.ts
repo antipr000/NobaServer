@@ -46,7 +46,6 @@ describe("VerificationService", () => {
   let consumerService: ConsumerService;
   let idvProvider: IDVProvider;
   let notificationService: NotificationService;
-  let partnerId;
 
   jest.setTimeout(30000);
   const OLD_ENV = process.env;
@@ -64,7 +63,6 @@ describe("VerificationService", () => {
     idvProvider = getMockIdvProviderIntegrationWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
-    partnerId = "partner-1";
 
     const verificationDataRepoProvider = {
       provide: "VerificationDataRepo",
@@ -144,7 +142,6 @@ describe("VerificationService", () => {
           testConsumerInformation.userID,
           "session-1234",
           testConsumerInformation,
-          partnerId,
         );
         expect(true).toBe(false);
       } catch (e) {
@@ -173,7 +170,6 @@ describe("VerificationService", () => {
           testConsumerInformation.userID,
           "session-1234",
           testConsumerInformation,
-          partnerId,
         );
         expect(true).toBe(false);
       } catch (e) {
@@ -202,7 +198,6 @@ describe("VerificationService", () => {
           testConsumerInformation.userID,
           "session-1234",
           testConsumerInformation,
-          partnerId,
         );
         expect(true).toBe(false);
       } catch (e) {
@@ -249,13 +244,11 @@ describe("VerificationService", () => {
         consumer.props._id,
         sessionKey,
         consumerInformation,
-        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
-          partnerId,
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
@@ -304,13 +297,12 @@ describe("VerificationService", () => {
         consumer.props._id,
         sessionKey,
         consumerInformation,
-        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
@@ -360,13 +352,12 @@ describe("VerificationService", () => {
         consumer.props._id,
         sessionKey,
         consumerInformation,
-        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_DENIED_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
@@ -415,13 +406,12 @@ describe("VerificationService", () => {
         consumer.props._id,
         sessionKey,
         consumerInformation,
-        partnerId,
       );
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
@@ -456,16 +446,12 @@ describe("VerificationService", () => {
         Consumer.createConsumer(newConsumerProps),
       );
 
-      const result = await verificationService.getDocumentVerificationResult(
-        consumer.props._id,
-        verificationId,
-        partnerId,
-      );
+      const result = await verificationService.getDocumentVerificationResult(consumer.props._id, verificationId);
       expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: newConsumerProps.firstName,
             lastName: newConsumerProps.lastName,
@@ -498,16 +484,12 @@ describe("VerificationService", () => {
         Consumer.createConsumer(newConsumerProps),
       );
 
-      const result = await verificationService.getDocumentVerificationResult(
-        consumer.props._id,
-        verificationId,
-        partnerId,
-      );
+      const result = await verificationService.getDocumentVerificationResult(consumer.props._id, verificationId);
       expect(result.status).toBe(DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: newConsumerProps.firstName,
             lastName: newConsumerProps.lastName,
@@ -612,7 +594,7 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
-          undefined,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -667,7 +649,7 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
-          undefined,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -772,7 +754,7 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
-          undefined,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -817,7 +799,7 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
-          undefined,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -861,7 +843,7 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_DENIED_EVENT,
-          undefined,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -896,12 +878,7 @@ describe("VerificationService", () => {
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
 
-      const result = await verificationService.verifyDocument(
-        consumer.props._id,
-        sessionKey,
-        documentInformation,
-        partnerId,
-      );
+      const result = await verificationService.verifyDocument(consumer.props._id, sessionKey, documentInformation);
       const updateUserArgs = capture(consumerService.updateConsumer).first()[0];
 
       expect(result).toBe(verificationId);
@@ -909,7 +886,7 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -932,11 +909,6 @@ function getFakeConsumer(): Consumer {
     lastName: "Consumer",
     email: "fake+consumer@noba.com",
     displayEmail: "fake+consumer@noba.com",
-    partners: [
-      {
-        partnerID: "fake-partner",
-      },
-    ],
     verificationData: {
       verificationProvider: VerificationProviders.SARDINE,
       kycVerificationStatus: KYCStatus.NOT_SUBMITTED,
@@ -1034,7 +1006,6 @@ function getFakeTransactionInformation(): TransactionInformation {
     paymentMethodID: "fake-card",
     cryptoCurrencyCode: "ETH",
     walletAddress: "fake-wallet-address",
-    partnerName: "fake-partner-name",
   };
 }
 

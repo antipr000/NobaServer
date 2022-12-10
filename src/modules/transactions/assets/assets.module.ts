@@ -7,8 +7,6 @@ import { ZeroHashService } from "../zerohash.service";
 import { AssetServiceFactory, CommonAssetServiceFactory } from "./asset.service.factory";
 import { USDCPolygonAssetService } from "./usdc.polygon.asset.service";
 import { ZerohashAssetService } from "./zerohash.asset.service";
-import { SwapAssetService } from "./swap.asset.service";
-import { SquidService } from "../squid.service";
 
 @Module({
   imports: [CommonModule, ConsumerModule, getWinstonModule()],
@@ -19,16 +17,8 @@ import { SquidService } from "../squid.service";
     USDCPolygonAssetService,
     AssetServiceFactory,
     ZerohashAssetService,
-    SwapAssetService,
-    SquidService,
     CommonAssetServiceFactory,
   ],
-  exports: [
-    AssetServiceFactory,
-    USDCPolygonAssetService,
-    ZerohashAssetService,
-    SwapAssetService,
-    CommonAssetServiceFactory,
-  ],
+  exports: [AssetServiceFactory, USDCPolygonAssetService, ZerohashAssetService, CommonAssetServiceFactory],
 })
 export class AssetsModule {}

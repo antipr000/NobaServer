@@ -3,7 +3,6 @@ import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { MongoDBOtpRepo } from "../auth/repo/MongoDBOtpRepo";
 import { CommonModule } from "../common/common.module";
-import { PartnerModule } from "../partner/partner.module";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { ConsumerController } from "./consumer.controller";
 import { ConsumerService } from "./consumer.service";
@@ -13,7 +12,7 @@ import { PspModule } from "../psp/psp.module";
 import { SMSService } from "../common/sms.service";
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule, PartnerModule, NotificationsModule, PspModule],
+  imports: [InfraProvidersModule, CommonModule, NotificationsModule, PspModule],
   controllers: [ConsumerController],
   providers: [
     ConsumerService,

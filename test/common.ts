@@ -46,28 +46,6 @@ export const insertNobaAdmin = async (mongoUri: string, email: string, id: strin
   return true;
 };
 
-export const insertPartnerAdmin = async (
-  mongoUri: string,
-  email: string,
-  id: string,
-  role: string,
-  partnerId: string,
-): Promise<boolean> => {
-  // Setup a mongodb client for interacting with "admins" collection.
-  const mongoClient = new MongoClient(mongoUri);
-  await mongoClient.connect();
-
-  const partnerAdminCollection = mongoClient.db("").collection("partneradmins");
-  await partnerAdminCollection.insertOne({
-    _id: id as any,
-    email: email,
-    role: role,
-    partnerId: partnerId,
-  });
-  await mongoClient.close();
-  return true;
-};
-
 export const setAccessTokenForTheNextRequests = accessToken => {
   process.env.ACCESS_TOKEN = accessToken;
 };
@@ -130,48 +108,6 @@ export async function patchConsumer(consumer: Partial<ConsumerProps>, mongoUri: 
   await mongoClient.close();
 }
 
-export const setupPartner = async (mongoUri: string, partnerId: string) => {
-  const mongoClient = new MongoClient(mongoUri);
-  await mongoClient.connect();
-
-  const partnersCollection = mongoClient.db("").collection("partners");
-  await partnersCollection.insertOne({
-    _id: partnerId as any,
-    name: "Test Partner",
-    apiKey: TEST_API_KEY,
-    secretKey: TEST_SECRET_KEY,
-    isAPIEnabled: true,
-    isEmbedEnabled: true,
-  });
-
-  await mongoClient.close();
-  return true;
-};
-
-export const setupCustomPartner = async (
-  mongoUri: string,
-  partnerId: string,
-  name: string,
-  apiKey: string,
-  secretKey: string,
-) => {
-  const mongoClient = new MongoClient(mongoUri);
-  await mongoClient.connect();
-
-  const partnersCollection = mongoClient.db("").collection("partners");
-  await partnersCollection.insertOne({
-    _id: partnerId as any,
-    name: name,
-    apiKey: apiKey,
-    secretKey: secretKey,
-    isAPIEnabled: true,
-    isEmbedEnabled: true,
-  });
-
-  await mongoClient.close();
-  return true;
-};
-
 export const computeSignature = (
   timestamp: string,
   requestMethod: string,
@@ -189,16 +125,7 @@ export const computeSignature = (
 export const dropAllCollections = async (mongoUri: string) => {
   const mongoClient = new MongoClient(mongoUri);
   await mongoClient.connect();
-  const collections = [
-    "partners",
-    "admins",
-    "locks",
-    "otps",
-    "partneradmins",
-    "transactions",
-    "consumers",
-    "verificationdatas",
-  ];
+  const collections = ["admins", "locks", "otps", "transactions", "consumers", "verificationdatas"];
 
   const promises = collections.map(collection => mongoClient.db("").dropCollection(collection));
   await Promise.all(promises);

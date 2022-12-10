@@ -22,7 +22,6 @@
     "gen-test-api-client": "npx openapi-typescript-codegen --useOptions --input ./swagger-internal.json --output ./test/api_client/ --useUnionTypes --exportCore false -c axios && npx prettier --write ."
   },
   "dependencies": {
-    "@0xsquid/sdk": "^1.0.0-beta.16",
     "@aws-crypto/client-node": "^3.1.1",
     "@circle-fin/circle-sdk": "^1.2.0",
     "@ethersproject/bignumber": "^5.7.0",

@@ -11,7 +11,6 @@ export interface OtpProps extends BaseProps {
   otp: number;
   otpExpiryTime?: number;
   identityType: string;
-  partnerID?: string;
   consumerID?: string;
   // any context related to the otp to make sure the latest otp is being used in the same context as it was generated
   // consumer-business-logic of this attribute is free to put any sort of data in this field to make sure they are using the same otp they generated
@@ -25,7 +24,6 @@ export const otpValidationKeys: KeysRequired<OtpProps> = {
   otp: Joi.number().required(),
   otpExpiryTime: Joi.number().required(),
   identityType: Joi.string().valid(...allIdentities),
-  partnerID: Joi.string().optional(),
   consumerID: Joi.string().optional(),
   otpContext: Joi.any().optional(),
 };

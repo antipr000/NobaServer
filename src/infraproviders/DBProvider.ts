@@ -7,10 +7,6 @@ import { UserModel } from "../infra/mongodb/models/UserModel";
 import Mongoose from "mongoose";
 import { TransactionProps } from "../modules/transactions/domain/Transaction";
 import { TransactionModel } from "../infra/mongodb/models/TransactionModel";
-import { PartnerProps } from "../modules/partner/domain/Partner";
-import { PartnerAdminProps } from "../modules/partner/domain/PartnerAdmin";
-import { PartnerModel } from "../infra/mongodb/models/PartnerModel";
-import { PartnerAdminModel } from "../infra/mongodb/models/PartnerAdminModel";
 import { AdminProps } from "../modules/admin/domain/Admin";
 import { AdminModel } from "../infra/mongodb/models/AdminModel";
 import { MongoConfigs } from "../config/configtypes/MongoConfigs";
@@ -75,16 +71,6 @@ export class DBProvider {
     await this.connectToDb();
     await TransactionModel.ensureIndexes();
     return TransactionModel;
-  }
-
-  async getPartnerModel(): Promise<Model<PartnerProps>> {
-    await this.connectToDb();
-    return PartnerModel;
-  }
-
-  async getPartnerAdminModel(): Promise<Model<PartnerAdminProps>> {
-    await this.connectToDb();
-    return PartnerAdminModel;
   }
 
   async getAdminModel(): Promise<Model<AdminProps>> {

@@ -1291,11 +1291,6 @@ describe("USDCPolygonAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ConsumerAccountTransferRequest = {
@@ -1431,11 +1426,6 @@ describe("USDCPolygonAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ConsumerWalletTransferRequest = {

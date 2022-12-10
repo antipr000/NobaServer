@@ -39,9 +39,6 @@ import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../../transaction.service";
 import { getMockCurrencyServiceWithDefaults } from "../../../common/mocks/mock.currency.service";
 import { PaymentProvider } from "../../../consumer/domain/PaymentProvider";
-import { getMockPartnerServiceWithDefaults } from "../../../partner/mocks/mock.partner.service";
-import { PartnerService } from "../../../partner/partner.service";
-import { Partner } from "../../../partner/domain/Partner";
 import { InternalTransferInitiator } from "../../queueprocessors/InternalTransferInitiator";
 import { WalletProviderService } from "../../assets/wallet.provider.service";
 import { getMockWalletProviderServiceWithDefaults } from "../../mocks/mock.wallet.provider.service";
@@ -83,7 +80,6 @@ describe("InternalTransferInitiator", () => {
   let verificationService: VerificationService;
   let lockService: LockService;
   let currencyService: CurrencyService;
-  let partnerService: PartnerService;
   let assetServiceInstance: AssetService;
 
   beforeEach(async () => {
@@ -111,7 +107,6 @@ describe("InternalTransferInitiator", () => {
     assetService = getMockAssetServiceWithDefaults();
     walletProviderService = getMockWalletProviderServiceWithDefaults();
     currencyService = getMockCurrencyServiceWithDefaults();
-    partnerService = getMockPartnerServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `InternalTransferInitiated` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -158,10 +153,6 @@ describe("InternalTransferInitiator", () => {
           provide: CurrencyService,
           useFactory: () => instance(currencyService),
         },
-        {
-          provide: PartnerService,
-          useFactory: () => instance(partnerService),
-        },
         InternalTransferStatusProcessor,
       ],
     }).compile();
@@ -188,7 +179,6 @@ describe("InternalTransferInitiator", () => {
   const cryptocurrency = "ETH";
   const consumerID = "UUUUUUUUUU";
   const paymentMethodID = "XXXXXXXXXX";
-  const noDiscountPartnerID = "Partner-1234";
 
   const transaction = {
     _id: "1111111111" as any,
@@ -199,7 +189,6 @@ describe("InternalTransferInitiator", () => {
     leg2Amount: 1.234,
     leg1: "USD",
     leg2: cryptocurrency,
-    partnerID: noDiscountPartnerID,
     exchangeRate: 1,
     amountPreSpread: 1000,
     cryptoTransactionId: "CryptoTransID-12345",
@@ -218,39 +207,6 @@ describe("InternalTransferInitiator", () => {
     paymentToken: "XXXXXXXXXX",
     paymentProviderID: PaymentProvider.CHECKOUT,
     isDefault: false,
-  };
-  const consumer: Consumer = Consumer.createConsumer({
-    _id: consumerID,
-    email: "test@noba.com",
-    partners: [
-      {
-        partnerID: noDiscountPartnerID,
-      },
-    ],
-    paymentMethods: [paymentMethod],
-    zhParticipantCode: "zh-participant-code",
-  });
-
-  const noDiscountPartner: Partner = Partner.createPartner({
-    _id: noDiscountPartnerID,
-    name: "Noba",
-    config: {
-      notificationConfig: undefined,
-      fees: {
-        creditCardFeeDiscountPercent: 0,
-        networkFeeDiscountPercent: 0,
-        nobaFeeDiscountPercent: 0,
-        processingFeeDiscountPercent: 0,
-        spreadDiscountPercent: 0,
-        takeRate: 0,
-      },
-    },
-  });
-
-  const fundsAvailabilityResponse: FundsAvailabilityResponse = {
-    transferID: "123",
-    transferredCrypto: cryptoAmount,
-    cryptocurrency: cryptocurrency,
   };
 
   // TODO(#): Have an independent 'transaction' instance here & check for the final transaction state.

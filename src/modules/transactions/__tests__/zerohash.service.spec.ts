@@ -206,11 +206,6 @@ describe("Zerohash Service", () => {
           kycVerificationStatus: KYCStatus.APPROVED,
         },
         riskRating: "0",
-        partners: [
-          {
-            partnerID: "partner-1234",
-          },
-        ],
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -288,11 +283,6 @@ describe("Zerohash Service", () => {
           kycVerificationStatus: KYCStatus.NOT_SUBMITTED,
         },
         riskRating: "0",
-        partners: [
-          {
-            partnerID: "partner-1234",
-          },
-        ],
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -341,11 +331,6 @@ describe("Zerohash Service", () => {
           kycVerificationStatus: KYCStatus.APPROVED,
         },
         riskRating: "0",
-        partners: [
-          {
-            partnerID: "partner-1234",
-          },
-        ],
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -394,11 +379,6 @@ describe("Zerohash Service", () => {
           sanctionLevel: RiskLevel.HIGH,
         },
         riskRating: "0",
-        partners: [
-          {
-            partnerID: "partner-1234",
-          },
-        ],
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -802,11 +782,6 @@ describe("Zerohash Service", () => {
           kycVerificationStatus: KYCStatus.APPROVED,
         },
         riskRating: "0",
-        partners: [
-          {
-            partnerID: "partner-1234",
-          },
-        ],
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -848,11 +823,6 @@ describe("Zerohash Service", () => {
           kycVerificationStatus: KYCStatus.APPROVED,
         },
         riskRating: "0",
-        partners: [
-          {
-            partnerID: "partner-1234",
-          },
-        ],
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],

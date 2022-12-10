@@ -57,7 +57,6 @@ export class WebhookService {
 
   @OnEvent(`webhook.${NotificationEventType.SEND_OTP_EVENT}`)
   public async sendOtp(payload: SendOtpEvent) {
-    const partner: Partner = await this.partnerService.getPartner(payload.partnerID);
     const webhook = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION);
     const webhookRequestPayload: NotificationDTO = {
       event: NotificationEventType.SEND_OTP_EVENT,

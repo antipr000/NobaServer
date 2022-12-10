@@ -1,8 +1,6 @@
 import { Module, Provider } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { PartnerModule } from "../partner/partner.module";
 import { NotificationService } from "./notification.service";
-import { WebhookService } from "./webhook.service";
 import { CommonModule } from "../common/common.module";
 import { EventHandler } from "./event.handler";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
@@ -32,9 +30,9 @@ export const EmailProvider: Provider = {
 };
 
 @Module({
-  imports: [ConfigModule, PartnerModule, CommonModule],
+  imports: [ConfigModule, CommonModule],
   controllers: [],
-  providers: [NotificationService, EventHandler, WebhookService, EmailProvider],
+  providers: [NotificationService, EventHandler, EmailProvider],
   exports: [NotificationService],
 })
 export class NotificationsModule {}

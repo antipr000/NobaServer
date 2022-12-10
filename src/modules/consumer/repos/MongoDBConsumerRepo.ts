@@ -174,15 +174,4 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
       return this.consumerMapper.toDomain(consumerProps);
     }
   }
-
-  async getAllConsumersForPartner(partnerID: string): Promise<Consumer[]> {
-    const userModel = await this.dbProvider.getUserModel();
-    const result: any = await userModel
-      .find({
-        "partners.partnerID": partnerID,
-      })
-      .exec();
-    const consumers: Consumer[] = result.map(obj => this.consumerMapper.toDomain(convertDBResponseToJsObject(obj)));
-    return consumers;
-  }
 }

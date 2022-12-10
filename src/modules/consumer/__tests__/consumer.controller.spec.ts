@@ -8,12 +8,9 @@ import { Result } from "../../../core/logic/Result";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
-import { Partner } from "../../../modules/partner/domain/Partner";
 import { getMockPlaidClientWithDefaults } from "../../../modules/psp/mocks/mock.plaid.client";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { X_NOBA_API_KEY } from "../../auth/domain/HeaderConstants";
-import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
-import { PartnerService } from "../../partner/partner.service";
 import { ConsumerController } from "../consumer.controller";
 import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
@@ -40,7 +37,6 @@ import { getMockConsumerServiceWithDefaults } from "../mocks/mock.consumer.servi
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
   let consumerService: ConsumerService;
-  let partnerService: PartnerService;
   let plaidClient: PlaidClient;
 
   const consumerMapper = new ConsumerMapper();
@@ -49,7 +45,6 @@ describe("ConsumerController", () => {
 
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
-    partnerService = getMockPartnerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
@@ -59,10 +54,6 @@ describe("ConsumerController", () => {
         {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
-        },
-        {
-          provide: PartnerService,
-          useFactory: () => instance(partnerService),
         },
         {
           provide: PlaidClient,
@@ -75,260 +66,11 @@ describe("ConsumerController", () => {
   });
 
   describe("consumer controller tests", () => {
-    it("should return only wallets belonging to the 'partner' if 'viewOtherWallets' is false", async () => {
-      const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
-        firstName: "Mock",
-        lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
-        dateOfBirth: "1998-01-01",
-        email: "mock@noba.com",
-        cryptoWallets: [
-          {
-            address: "wallet-1",
-            partnerID: "1111111111",
-            status: WalletStatus.APPROVED,
-            isPrivate: false,
-          },
-          {
-            address: "wallet-2",
-            partnerID: "2222222222",
-            status: WalletStatus.APPROVED,
-            isPrivate: false,
-          },
-          {
-            address: "wallet-3",
-            partnerID: "1111111111",
-            status: WalletStatus.APPROVED,
-            isPrivate: false,
-          },
-        ],
-      });
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-
-      const partner1: Partner = Partner.createPartner({
-        _id: "1111111111",
-        apiKey: "partner-1-api-key",
-        name: "partner1",
-        config: {
-          viewOtherWallets: false,
-        } as any,
-      });
-      const partner2: Partner = Partner.createPartner({
-        _id: "2222222222",
-        apiKey: "partner-2-api-key",
-        name: "partner2",
-        config: {
-          viewOtherWallets: false,
-        } as any,
-      });
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
-      when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
-
-      const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
-        { user: { entity: consumer } },
-      );
-
-      const filteredConsumer: Consumer = consumer;
-      filteredConsumer.props.cryptoWallets = [
-        {
-          address: "wallet-1",
-          partnerID: "1111111111",
-          status: WalletStatus.APPROVED,
-          isPrivate: false,
-        },
-        {
-          address: "wallet-3",
-          partnerID: "1111111111",
-          status: WalletStatus.APPROVED,
-          isPrivate: false,
-        },
-      ];
-      expect(result).toStrictEqual(consumerMapper.toDTO(filteredConsumer));
-    });
-
-    it("should filter the private wallets of 'other partners' in the response", async () => {
-      const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
-        firstName: "Mock",
-        lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
-        dateOfBirth: "1998-01-01",
-        email: "mock@noba.com",
-        cryptoWallets: [
-          {
-            address: "wallet-1",
-            partnerID: "1111111111",
-            status: WalletStatus.APPROVED,
-            isPrivate: true,
-          },
-          {
-            address: "wallet-2",
-            partnerID: "2222222222",
-            status: WalletStatus.APPROVED,
-            isPrivate: true,
-          },
-          {
-            address: "wallet-3",
-            partnerID: "1111111111",
-            status: WalletStatus.APPROVED,
-            isPrivate: true,
-          },
-        ],
-      });
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-
-      const partner1: Partner = Partner.createPartner({
-        _id: "1111111111",
-        apiKey: "partner-1-api-key",
-        name: "partner1",
-        config: {
-          viewOtherWallets: true,
-        } as any,
-      });
-      const partner2: Partner = Partner.createPartner({
-        _id: "2222222222",
-        apiKey: "partner-2-api-key",
-        name: "partner2",
-        config: {
-          viewOtherWallets: false,
-        } as any,
-      });
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
-      when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
-
-      const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
-        { user: { entity: consumer } },
-      );
-
-      const filteredConsumer: Consumer = consumer;
-      filteredConsumer.props.cryptoWallets = [
-        {
-          address: "wallet-1",
-          partnerID: "1111111111",
-          status: WalletStatus.APPROVED,
-          isPrivate: true,
-        },
-        {
-          address: "wallet-3",
-          partnerID: "1111111111",
-          status: WalletStatus.APPROVED,
-          isPrivate: true,
-        },
-      ];
-      expect(result).toStrictEqual(consumerMapper.toDTO(filteredConsumer));
-    });
-
-    it("shouldn't filter wallets belonging to the 'partner' if 'viewOtherWallets' is true", async () => {
-      const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
-        firstName: "Mock",
-        lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
-        dateOfBirth: "1998-01-01",
-        email: "mock@noba.com",
-        cryptoWallets: [
-          {
-            address: "wallet-1",
-            partnerID: "1111111111",
-            status: WalletStatus.APPROVED,
-            isPrivate: false,
-          },
-          {
-            address: "wallet-2",
-            partnerID: "2222222222",
-            status: WalletStatus.APPROVED,
-            isPrivate: false,
-          },
-          {
-            address: "wallet-3",
-            partnerID: "1111111111",
-            status: WalletStatus.APPROVED,
-            isPrivate: false,
-          },
-        ],
-      });
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-
-      const partner1: Partner = Partner.createPartner({
-        _id: "1111111111",
-        apiKey: "partner-1-api-key",
-        name: "partner1",
-        config: {
-          viewOtherWallets: true,
-        } as any,
-      });
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
-
-      const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
-        { user: { entity: consumer } },
-      );
-
-      expect(result).toStrictEqual(consumerMapper.toDTO(consumer));
-    });
-
-    it("should works if there are no wallets belonging to the 'partner' in context", async () => {
-      const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
-        firstName: "Mock",
-        lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
-        dateOfBirth: "1998-01-01",
-        email: "mock@noba.com",
-        cryptoWallets: [],
-      });
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-
-      const partner1: Partner = Partner.createPartner({
-        _id: "1111111111",
-        apiKey: "partner-1-api-key",
-        name: "partner1",
-      });
-      const partner2: Partner = Partner.createPartner({
-        _id: "2222222222",
-        apiKey: "partner-2-api-key",
-        name: "partner2",
-      });
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(partner1);
-      when(partnerService.getPartnerFromApiKey("partner-2-api-key")).thenResolve(partner2);
-
-      const result: ConsumerDTO = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
-        { user: { entity: consumer } },
-      );
-
-      expect(result).toStrictEqual(consumerMapper.toDTO(consumer));
-    });
-
     it("should update consumer details", async () => {
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
@@ -385,18 +127,11 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
 
-      when(
-        consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest), "partner-1"),
-      ).thenResolve(
+      when(consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
           paymentMethods: [
@@ -421,7 +156,6 @@ describe("ConsumerController", () => {
       const result = await consumerController.addPaymentMethod(paymentMethodRequest, {
         user: {
           entity: consumer,
-          partnerId: "partner-1",
         } as AuthenticatedUser,
       });
 
@@ -435,7 +169,6 @@ describe("ConsumerController", () => {
         await consumerController.addPaymentMethod(undefined, {
           user: {
             entity: undefined,
-            partnerId: "partner-1",
           } as AuthenticatedUser,
         });
       }).rejects.toThrow(ForbiddenException);
@@ -454,11 +187,6 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-id",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
@@ -467,7 +195,6 @@ describe("ConsumerController", () => {
         await consumerController.addPaymentMethod(paymentMethodRequest, {
           user: {
             entity: consumer,
-            partnerId: "partner-1",
           } as AuthenticatedUser,
         });
         expect(true).toBe(false);
@@ -492,11 +219,6 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-id",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
@@ -505,7 +227,6 @@ describe("ConsumerController", () => {
         await consumerController.addPaymentMethod(paymentMethodRequest, {
           user: {
             entity: consumer,
-            partnerId: "partner-1",
           } as AuthenticatedUser,
         });
         expect(true).toBe(false);
@@ -530,18 +251,11 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
 
-      when(
-        consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest), "partner-1"),
-      ).thenResolve(
+      when(consumerService.addPaymentMethod(deepEqual(consumer), deepEqual(paymentMethodRequest))).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
           paymentMethods: [
@@ -565,7 +279,6 @@ describe("ConsumerController", () => {
       const result = await consumerController.addPaymentMethod(paymentMethodRequest, {
         user: {
           entity: consumer,
-          partnerId: "partner-1",
         } as AuthenticatedUser,
       });
 
@@ -578,11 +291,6 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         paymentMethods: [
@@ -641,11 +349,6 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
@@ -658,21 +361,18 @@ describe("ConsumerController", () => {
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(
-        consumerService.sendOtpToPhone(consumer.props._id, phone, consumer.props.partners[0].partnerID),
-      ).thenResolve();
+      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
 
       await consumerController.requestOtpToUpdatePhone(
         {
           user: {
             entity: consumer,
-            partnerId: "partner-1",
           } as AuthenticatedUser,
         },
         phoneUpdateOtpRequest,
       );
 
-      verify(consumerService.sendOtpToPhone(consumer.props._id, phone, consumer.props.partners[0].partnerID)).called();
+      verify(consumerService.sendOtpToPhone(consumer.props._id, phone)).called();
     });
 
     it("should reject the request for non-consumers", async () => {
@@ -681,7 +381,6 @@ describe("ConsumerController", () => {
           {
             user: {
               entity: undefined,
-              partnerId: "partner-1",
             } as AuthenticatedUser,
           },
           undefined,
@@ -690,16 +389,10 @@ describe("ConsumerController", () => {
     });
 
     it("should reject the request if phone already exists for this or another account", async () => {
-      const partnerID = "partner-1";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerID,
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
@@ -711,19 +404,16 @@ describe("ConsumerController", () => {
       };
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(
-        Result.ok(Consumer.createConsumer({ phone: phone, partners: [{ partnerID: partnerID }] })),
+        Result.ok(Consumer.createConsumer({ phone: phone })),
       );
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(
-        consumerService.sendOtpToPhone(consumer.props._id, phone, consumer.props.partners[0].partnerID),
-      ).thenResolve();
+      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
 
       try {
         await consumerController.requestOtpToUpdatePhone(
           {
             user: {
               entity: consumer,
-              partnerId: "partner-1",
             } as AuthenticatedUser,
           },
           phoneUpdateOtpRequest,
@@ -740,11 +430,6 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
@@ -763,23 +448,18 @@ describe("ConsumerController", () => {
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(
-        consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, consumer.props.partners[0].partnerID),
-      ).thenResolve(expectedUpdatedConsumer);
+      when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenResolve(expectedUpdatedConsumer);
 
       const updatedConsumer = await consumerController.updatePhone(
         {
           user: {
             entity: consumer,
-            partnerId: "partner-1",
           } as AuthenticatedUser,
         },
         phoneUpdateRequest,
       );
 
-      verify(
-        consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, consumer.props.partners[0].partnerID),
-      ).called();
+      verify(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).called();
 
       expect(updatedConsumer).toEqual(consumerMapper.toDTO(expectedUpdatedConsumer));
     });
@@ -790,7 +470,6 @@ describe("ConsumerController", () => {
           {
             user: {
               entity: undefined,
-              partnerId: "partner-1",
             } as AuthenticatedUser,
           },
           undefined,
@@ -799,16 +478,10 @@ describe("ConsumerController", () => {
     });
 
     it("should reject the request if phone already exists for this or another account", async () => {
-      const partnerID = "partner-1";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerID,
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
       });
@@ -820,16 +493,13 @@ describe("ConsumerController", () => {
         otp: 123456,
       };
 
-      when(
-        consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, consumer.props.partners[0].partnerID),
-      ).thenThrow(new BadRequestException());
+      when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenThrow(new BadRequestException());
 
       try {
         await consumerController.updatePhone(
           {
             user: {
               entity: consumer,
-              partnerId: "partner-1",
             } as AuthenticatedUser,
           },
           phoneUpdateRequest,
@@ -842,22 +512,10 @@ describe("ConsumerController", () => {
 
   describe("emailUpdateOtpRequest", () => {
     it("should send an email update OTP request", async () => {
-      const partnerID = "partner-1234";
-      const partner = Partner.createPartner({
-        _id: partnerID,
-        name: "Mock Partner",
-        apiKey: "mockPublicKey",
-        secretKey: "mockPrivateKey",
-      });
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerID,
-          },
-        ],
         dateOfBirth: "1998-01-01",
         phone: "+123456789",
       });
@@ -871,14 +529,12 @@ describe("ConsumerController", () => {
       const apiKey = "1234567890";
       when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(Result.fail("Non-existent user"));
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToEmail(email, consumer, partnerID)).thenResolve();
-      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+      when(consumerService.sendOtpToEmail(email, consumer)).thenResolve();
 
       await consumerController.requestOtpToUpdateEmail(
         {
           user: {
             entity: consumer,
-            partnerId: partnerID,
           } as AuthenticatedUser,
         },
         {
@@ -887,7 +543,7 @@ describe("ConsumerController", () => {
         emailUpdateOtpRequest,
       );
 
-      verify(consumerService.sendOtpToEmail(email, consumer, partnerID)).called();
+      verify(consumerService.sendOtpToEmail(email, consumer)).called();
     });
 
     it("should reject the request for non-consumers", async () => {
@@ -896,7 +552,6 @@ describe("ConsumerController", () => {
           {
             user: {
               entity: undefined,
-              partnerId: "partner-1",
             } as AuthenticatedUser,
           },
           undefined,
@@ -906,22 +561,10 @@ describe("ConsumerController", () => {
     });
 
     it("should reject the request if email already exists for this or another account", async () => {
-      const partnerID = "partner-1234";
-      const partner = Partner.createPartner({
-        _id: partnerID,
-        name: "Mock Partner",
-        apiKey: "mockPublicKey",
-        secretKey: "mockPrivateKey",
-      });
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerID,
-          },
-        ],
         dateOfBirth: "1998-01-01",
         phone: "+123456789",
       });
@@ -934,10 +577,9 @@ describe("ConsumerController", () => {
 
       const apiKey = "1234567890";
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToEmail(email, consumer, partnerID)).thenResolve();
-      when(partnerService.getPartnerFromApiKey(apiKey)).thenResolve(partner);
+      when(consumerService.sendOtpToEmail(email, consumer)).thenResolve();
       when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(
-        Result.ok(Consumer.createConsumer({ email: email, partners: [{ partnerID: partnerID }] })),
+        Result.ok(Consumer.createConsumer({ email: email })),
       );
 
       try {
@@ -945,7 +587,6 @@ describe("ConsumerController", () => {
           {
             user: {
               entity: consumer,
-              partnerId: partnerID,
             } as AuthenticatedUser,
           },
           {
@@ -965,11 +606,6 @@ describe("ConsumerController", () => {
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         phone: "+123456789",
       });
@@ -995,7 +631,6 @@ describe("ConsumerController", () => {
         {
           user: {
             entity: consumer,
-            partnerId: "partner-1",
           } as AuthenticatedUser,
         },
         emailUpdateRequest,
@@ -1012,7 +647,6 @@ describe("ConsumerController", () => {
           {
             user: {
               entity: undefined,
-              partnerId: "partner-1",
             } as AuthenticatedUser,
           },
           undefined,
@@ -1021,16 +655,10 @@ describe("ConsumerController", () => {
     });
 
     it("should reject the request if email already exists for this or another account", async () => {
-      const partnerID = "partner-1";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerID,
-          },
-        ],
         dateOfBirth: "1998-01-01",
         phone: "+123456789",
       });
@@ -1056,7 +684,6 @@ describe("ConsumerController", () => {
           {
             user: {
               entity: consumer,
-              partnerId: partnerID,
             } as AuthenticatedUser,
           },
           emailUpdateRequest,
@@ -1076,19 +703,12 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [
           {
             address: "wallet-1",
-            partnerID: "fake-partner-1",
             status: WalletStatus.APPROVED,
-            isPrivate: false,
           },
         ],
         paymentMethods: [
@@ -1114,14 +734,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1140,25 +754,16 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [
           {
             address: "wallet-1",
-            partnerID: "fake-partner-1",
             status: WalletStatus.APPROVED,
-            isPrivate: false,
           },
           {
             address: "wallet-2",
-            partnerID: "fake-partner-1",
             status: WalletStatus.PENDING,
-            isPrivate: false,
           },
         ],
         paymentMethods: [
@@ -1184,14 +789,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1210,25 +809,16 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [
           {
             address: "wallet-1",
-            partnerID: "fake-partner-1",
             status: WalletStatus.APPROVED,
-            isPrivate: false,
           },
           {
             address: "wallet-2",
-            partnerID: "fake-partner-1",
             status: WalletStatus.REJECTED,
-            isPrivate: false,
           },
         ],
         paymentMethods: [
@@ -1254,14 +844,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1279,19 +863,12 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [
           {
             address: "wallet-1",
-            partnerID: "fake-partner-1",
             status: WalletStatus.APPROVED,
-            isPrivate: false,
           },
         ],
         paymentMethods: [
@@ -1317,14 +894,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1344,19 +915,12 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [
           {
             address: "wallet-1",
-            partnerID: "fake-partner-1",
             status: WalletStatus.APPROVED,
-            isPrivate: false,
           },
         ],
         paymentMethods: [
@@ -1384,14 +948,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1413,11 +971,6 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [],
@@ -1430,14 +983,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1458,11 +1005,6 @@ describe("ConsumerController", () => {
         isDisabled: true,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [],
@@ -1475,14 +1017,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1497,11 +1033,6 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [],
@@ -1530,14 +1061,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 
@@ -1552,19 +1077,12 @@ describe("ConsumerController", () => {
         isDisabled: false,
         isLocked: false,
         isSuspectedFraud: false,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
         cryptoWallets: [
           {
             address: "wallet-1",
-            partnerID: "fake-partner-1",
             status: WalletStatus.DELETED,
-            isPrivate: false,
           },
         ],
         paymentMethods: [
@@ -1590,14 +1108,8 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(partnerService.getPartnerFromApiKey("partner-1-api-key")).thenResolve(
-        Partner.createPartner({
-          name: "Test Partner",
-          _id: "fake-partner-1",
-        }),
-      );
       const response = await consumerController.getConsumer(
-        { [X_NOBA_API_KEY]: "partner-1-api-key" },
+        { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
       );
 

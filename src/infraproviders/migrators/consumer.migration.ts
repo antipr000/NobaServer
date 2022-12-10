@@ -57,9 +57,7 @@ export class ConsumerMigrator {
       chainType: cryptoWallet.chainType,
       isEVMCompatible: cryptoWallet.isEVMCompatible,
       status: cryptoWallet.status ?? WalletStatus.PENDING,
-      partnerID: cryptoWallet.partnerID ?? this.nobaPartnerId,
       riskScore: cryptoWallet.riskScore,
-      isPrivate: cryptoWallet.isPrivate ?? true,
     };
 
     return migratedRecord;

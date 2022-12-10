@@ -6,7 +6,6 @@ import { TransactionType } from "./Types";
 
 interface LimitConfigurationCriteria {
   transactionType?: TransactionType[];
-  partnerID?: string;
   minProfileAge?: number;
   minBalanceInWallet?: number;
   minTotalTransactionAmount?: number;
@@ -24,7 +23,6 @@ const limitConfigurationCriteriaValidationKeys: KeysRequired<LimitConfigurationC
   transactionType: Joi.array()
     .items(Joi.string().valid(...Object.values(TransactionType)))
     .default([]),
-  partnerID: Joi.string().optional(),
   minProfileAge: Joi.number().optional(),
   minBalanceInWallet: Joi.number().optional(),
   minTotalTransactionAmount: Joi.number().optional(),

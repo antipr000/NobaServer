@@ -74,7 +74,6 @@ export type SardineCustomerRequest = {
   sessionKey: string;
   customer: Customer;
   transaction?: Transaction; // Only for transaction flow
-  partnerId?: string; // Only for transaction flow
   checkpoints: string[];
 };
 

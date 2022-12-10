@@ -7,7 +7,6 @@ import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { NotificationService } from "../notifications/notification.service";
 import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { PartnerService } from "../partner/partner.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { Utils } from "../../core/utils/Utils";
 import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
@@ -29,40 +28,28 @@ export abstract class AuthService {
   @Inject()
   private readonly jwtService: JwtService;
 
-  @Inject()
-  private readonly partnerService: PartnerService;
-
   private otpOverride: number;
 
   constructor(private readonly configService: CustomConfigService) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
   }
 
-  async validateAndGetUserId(
-    emailOrPhone: string,
-    enteredOtp: number,
-    partnerID: string,
-    partnerUserID?: string,
-  ): Promise<string> {
-    if (!partnerID || partnerID.length == 0) {
-      throw new BadRequestException("Partner ID is required");
-    }
-    const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType(), partnerID);
+  async validateAndGetUserId(emailOrPhone: string, enteredOtp: number): Promise<string> {
+    const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType());
     const currentDateTime: number = new Date().getTime();
 
     if (actualOtp.props.otp != enteredOtp || currentDateTime > actualOtp.props.otpExpiryTime) {
       throw new UnauthorizedException();
     } else {
       await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
-      return this.getUserId(emailOrPhone, actualOtp.props.partnerID, partnerUserID);
+      return this.getUserId(emailOrPhone);
     }
   }
 
-  async generateAccessToken(id: string, partnerId: string): Promise<VerifyOtpResponseDTO> {
+  async generateAccessToken(id: string): Promise<VerifyOtpResponseDTO> {
     const payload = {
       id: id,
       identityType: this.getIdentityType(),
-      partnerId: partnerId,
     };
     return {
       access_token: this.jwtService.sign(payload),
@@ -74,18 +61,14 @@ export abstract class AuthService {
     await this.otpRepo.deleteAllOTPsForUser(emailOrPhone, this.getIdentityType());
   }
 
-  async saveOtp(emailOrPhone: string, otp: number, partnerID?: string): Promise<void> {
-    if (!partnerID || partnerID.length == 0) {
-      throw new BadRequestException("Partner ID is required");
-    }
-
-    await this.otpRepo.saveOTP(emailOrPhone, otp, this.getIdentityType(), partnerID);
+  async saveOtp(emailOrPhone: string, otp: number): Promise<void> {
+    await this.otpRepo.saveOTP(emailOrPhone, otp, this.getIdentityType());
   }
 
-  async sendOtp(emailOrPhone: string, otp: string, partnerId: string): Promise<void> {
+  async sendOtp(emailOrPhone: string, otp: string): Promise<void> {
     const isEmail = Utils.isEmail(emailOrPhone);
     if (isEmail) {
-      await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerId, {
+      await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
         email: emailOrPhone,
         otp: otp,
       });
@@ -108,6 +91,6 @@ export abstract class AuthService {
 
   protected abstract getIdentityType();
 
-  protected abstract getUserId(emailOrPhone: string, partnerID: string, partnerUserID?: string): Promise<string>;
+  protected abstract getUserId(emailOrPhone: string): Promise<string>;
   protected abstract isUserSignedUp(emailOrPhone: string): Promise<boolean>;
 }

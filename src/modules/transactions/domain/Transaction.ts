@@ -39,7 +39,6 @@ export interface TransactionProps extends BaseProps {
   smartContractData?: string;
   fixedSide: CurrencyType;
   type: TransactionType;
-  partnerID: string;
   tradeQuoteID: string;
   nobaTransferTradeID?: string;
   nobaTransferSettlementID?: string;
@@ -114,7 +113,6 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   type: Joi.string()
     .valid(...Object.values(TransactionType))
     .default(TransactionType.ONRAMP),
-  partnerID: Joi.string().required(),
   tradeQuoteID: Joi.string().optional(), // Optional as it may get set after initial transaction record is created
   nobaTransferTradeID: Joi.string().optional(),
   nobaTransferSettlementID: Joi.string().optional(),

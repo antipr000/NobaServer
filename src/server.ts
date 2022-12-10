@@ -19,7 +19,6 @@ import { TransactionModule } from "./modules/transactions/transaction.module";
 import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { VerificationModule } from "./modules/verification/verification.module";
 import { SeederService } from "./infraproviders/seeders/seeder.service";
-import { PartnerModule } from "./modules/partner/partner.module";
 import { MigratorService } from "./infraproviders/migrators/migrator.service";
 import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
 
@@ -87,25 +86,9 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     .addServer(`https://${apiSubDomain}.noba.com/`)
     .build();
 
-  // need to generate swagger doc for to generate api docs for partners from generated swagger so need to hardcode the server path
-  const partnerConfig = new DocumentBuilder()
-    .setTitle("Noba Server")
-    .setDescription(`Noba Server API (${appEnvType.toUpperCase()})`)
-    .setVersion("1.0")
-    .addBearerAuth(
-      {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-      },
-      "JWT-auth",
-    )
-    .addServer("https://api-partner.noba.com/")
-    .build();
-
-  // Any API which we want to expose publicly (to partners) must be explicitly declared here
+  // Any API which we want to expose publicly must be explicitly declared here
   const publicOptions = {
-    include: [AppModule, AuthModule, ConsumerModule, TransactionModule, VerificationModule, PartnerModule],
+    include: [AppModule, AuthModule, ConsumerModule, TransactionModule, VerificationModule],
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
 
@@ -129,7 +112,6 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
 
-  const swaggerDocumentPartner = generateSwaggerDoc("swagger-partner.json", app, partnerConfig, publicOptions);
   const swaggerDocumentPublic = generateSwaggerDoc("swagger.json", app, publicConfig, publicOptions);
   const swaggerDocumentPrivate = generateSwaggerDoc("swagger-internal.json", app, privateConfig, privateOptions);
 

@@ -16,11 +16,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PaginatedResult, SortOrder, EMPTY_PAGE_RESULT } from "../../../core/infra/PaginationTypes";
 import { SortOptions, paginationPipeLine } from "../../../infra/mongodb/paginate/PaginationPipeline";
-import {
-  PartnerTransaction,
-  PartnerTransactionFilterOptions,
-  UpdateFiatTransactionInfoRequest,
-} from "../domain/TransactionRepoTypes";
+import { UpdateFiatTransactionInfoRequest } from "../domain/TransactionRepoTypes";
 import { CurrencyType } from "../../../modules/common/domain/Types";
 import { createObjectCsvStringifier as createCsvStringifier } from "csv-writer";
 import fs from "fs";
@@ -103,76 +99,6 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     );
 
     return results.map(x => this.transactionMapper.toDomain(convertDBResponseToJsObject(x)));
-  }
-
-  async getPartnerTransactions(filters: PartnerTransactionFilterOptions, outputCsvFilePath: string): Promise<any> {
-    const timestampFilters = {};
-    if (filters.startDate !== undefined && filters.startDate !== null) {
-      timestampFilters["$gte"] = filters.startDate;
-    }
-    if (filters.endDate !== undefined && filters.endDate !== null) {
-      timestampFilters["$lte"] = filters.endDate;
-    }
-
-    const transactionFilters = {};
-    if (filters.partnerID !== undefined && filters.partnerID !== null) {
-      transactionFilters["partnerID"] = filters.partnerID;
-    }
-    if (Object.keys(timestampFilters).length !== 0) {
-      transactionFilters["transactionTimestamp"] = timestampFilters;
-    }
-    if (!filters.includeIncompleteTransactions) {
-      transactionFilters["transactionStatus"] = TransactionStatus.COMPLETED;
-    }
-
-    const headers = [
-      { id: "partnerID", title: "PARTNER_ID" },
-      { id: "transactionID", title: "TRANSACTION_ID" },
-      { id: "userID", title: "USER_ID" },
-      { id: "transactionCreationDate", title: "TRANSACTION_CREATION_DATE" },
-      { id: "status", title: "STATUS" },
-      { id: "fiatAmount", title: "FIAT_AMOUNT" },
-      { id: "fiatCurrency", title: "FIAT_CURRENCY" },
-      { id: "cryptoQuantity", title: "CRYPTO_QUANTITY" },
-      { id: "cryptoCurrency", title: "CRYPTO_CURRENCY" },
-      { id: "processingFeeCharged", title: "PROCESSING_FEE_CHARGED" },
-      { id: "networkFeeCharged", title: "NETWORK_FEE_CHARGED" },
-      { id: "nobaFeeCharged", title: "NOBA_FEE_CHARGED" },
-      { id: "fixedCreditCardFeeWaived", title: "FIXED_CREDIT_CARD_FEE_WAIVED" },
-      { id: "dynamicCreditCardFeeWaived", title: "DYNAMIC_CREDIT_CARD_FEE_WAIVED" },
-      { id: "nobaFeeWaived", title: "NOBA_FEE_WAIVED" },
-      { id: "networkFeeWaived", title: "NETWORK_FEE_WAIVED" },
-      { id: "spreadAmountWaived", title: "SPREAD_AMOUNT_WAIVED" },
-    ];
-
-    const csvStringifier = createCsvStringifier({
-      header: headers,
-    });
-    fs.appendFileSync(outputCsvFilePath, csvStringifier.getHeaderString());
-
-    let recordsQueried = 0;
-
-    const transactionModel = await this.dbProvider.getTransactionModel();
-    const result = new Promise((resolve, reject) => {
-      transactionModel
-        .find(transactionFilters)
-        .cursor()
-        .on("data", async doc => {
-          recordsQueried++;
-
-          const partnerTransaction: PartnerTransaction = this.convertToPartnerTransactionSchema(doc);
-          fs.appendFileSync(outputCsvFilePath, csvStringifier.stringifyRecords([partnerTransaction]));
-        })
-        .on("end", () => {
-          resolve(0);
-          this.logger.debug(`Fetched ${recordsQueried} transactions with status.`);
-        })
-        .on("error", err => {
-          reject(err);
-        });
-    });
-
-    return result;
   }
 
   async updateFiatTransactionInfo(request: UpdateFiatTransactionInfoRequest): Promise<void> {
@@ -326,7 +252,6 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
 
     const filterQuery = {
       ...(filterOpts.consumerID && { userId: filterOpts.consumerID }),
-      ...(filterOpts.partnerID && { partnerID: filterOpts.partnerID }),
       ...(filterOpts.transactionStatus && { transactionStatus: filterOpts.transactionStatus }),
       ...(filterOpts.fiatCurrency && { leg1: filterOpts.fiatCurrency }),
       ...(filterOpts.cryptoCurrency && { leg2: filterOpts.cryptoCurrency }),
@@ -444,12 +369,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
     return unsettledAchTransactions.reduce((acc, val) => acc + val.leg1Amount, 0);
   }
 
-  async getUserTransactionInAnInterval(
-    userId: string,
-    partnerID: string,
-    fromDate: Date,
-    toDate: Date,
-  ): Promise<Transaction[]> {
+  async getUserTransactionInAnInterval(userId: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
     const transactionModel = await this.dbProvider.getTransactionModel();
 
     const query = transactionModel.find({ userId: userId });
@@ -473,53 +393,8 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
       ]);
     }
 
-    if (partnerID != undefined) {
-      query.and([{ partnerID: partnerID }]);
-    }
-
     const result: any = await query.sort({ transactionTimestamp: "desc" }).exec();
     const transactionPropsList: TransactionProps[] = convertDBResponseToJsObject(result);
     return transactionPropsList.map(userTransaction => this.transactionMapper.toDomain(userTransaction));
-  }
-
-  convertToPartnerTransactionSchema(transactionDocument): PartnerTransaction {
-    const result: PartnerTransaction = {
-      partnerID: transactionDocument.partnerID,
-      transactionID: transactionDocument.transactionID,
-      userID: transactionDocument.userId,
-      status: transactionDocument.transactionStatus,
-      transactionCreationDate: new Date(transactionDocument.transactionTimestamp).toUTCString(),
-      fiatAmount: 0,
-      fiatCurrency: "",
-      cryptoQuantity: 0,
-      cryptoCurrency: "",
-      processingFeeCharged: transactionDocument.processingFee,
-      networkFeeCharged: transactionDocument.networkFee,
-      nobaFeeCharged: transactionDocument.nobaFee,
-      fixedCreditCardFeeWaived: transactionDocument.discounts.fixedCreditCardFeeDiscount,
-      dynamicCreditCardFeeWaived: transactionDocument.discounts.dynamicCreditCardFeeDiscount,
-      nobaFeeWaived: transactionDocument.discounts.nobaFeeDiscount,
-      networkFeeWaived: transactionDocument.discounts.networkFeeDiscount,
-      spreadAmountWaived: transactionDocument.discounts.spreadDiscount,
-    };
-
-    switch (transactionDocument.fixedSide) {
-      case CurrencyType.FIAT: {
-        result.fiatAmount = transactionDocument.leg1Amount;
-        result.fiatCurrency = transactionDocument.leg1;
-        result.cryptoQuantity = transactionDocument.leg2Amount;
-        result.cryptoCurrency = transactionDocument.leg2;
-        break;
-      }
-      case CurrencyType.CRYPTO: {
-        result.fiatAmount = transactionDocument.leg2Amount;
-        result.fiatCurrency = transactionDocument.leg2;
-        result.cryptoQuantity = transactionDocument.leg1Amount;
-        result.cryptoCurrency = transactionDocument.leg1;
-        break;
-      }
-    }
-
-    return result;
   }
 }

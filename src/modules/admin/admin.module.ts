@@ -5,13 +5,12 @@ import { AdminController } from "./admin.controller";
 import { AdminService } from "./admin.service";
 import { MongoDBAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
 import { AdminMapper } from "./mappers/AdminMapper";
-import { PartnerModule } from "../partner/partner.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { TransactionModule } from "../transactions/transaction.module";
 
 @Module({
-  imports: [ConfigModule, CommonModule, PartnerModule, ConsumerModule, TransactionModule],
+  imports: [ConfigModule, CommonModule, ConsumerModule, TransactionModule],
   controllers: [AdminController],
   providers: [
     AdminService,

@@ -167,7 +167,6 @@ describe("ValidatePendingTransaction", () => {
       leg2: "ETH",
       destinationWalletAddress: "12345",
       lastStatusUpdateTimestamp: Date.now().valueOf(),
-      partnerID: "12345",
     });
 
     const paymentMethod: PaymentMethod = {
@@ -187,11 +186,6 @@ describe("ValidatePendingTransaction", () => {
       _id: consumerID,
       firstName: "Mock",
       lastName: "Consumer",
-      partners: [
-        {
-          partnerID: "partner-1",
-        },
-      ],
       paymentMethods: [paymentMethod],
       dateOfBirth: "1998-01-01",
       email: "mock@noba.com",

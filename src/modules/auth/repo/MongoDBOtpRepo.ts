@@ -18,16 +18,12 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   private readonly otpMapper: OtpMapper = new OtpMapper();
 
-  async getOTP(emailOrPhone: string, identityType: string, partnerID?: string, consumerID?: string): Promise<Otp> {
+  async getOTP(emailOrPhone: string, identityType: string, consumerID?: string): Promise<Otp> {
     const otpModel = await this.dbProvider.getOtpModel();
     const queryParams = {
       emailOrPhone: Utils.stripSpaces(emailOrPhone),
       identityType: identityType,
     };
-
-    if (identityType === consumerIdentityIdentifier && partnerID) {
-      queryParams["partnerID"] = partnerID;
-    }
 
     if (consumerID) {
       queryParams["consumerID"] = consumerID;
@@ -59,7 +55,6 @@ export class MongoDBOtpRepo implements IOTPRepo {
     otpIdentifier: string,
     otp: number,
     identityType: string,
-    partnerID?: string,
     consumerID?: string,
     expiryTimeInMs?: number,
   ): Promise<void> {
@@ -70,7 +65,6 @@ export class MongoDBOtpRepo implements IOTPRepo {
         otp: otp,
         identityType: identityType,
         otpExpiryTime: expiryTimeInMs,
-        partnerID: partnerID,
         consumerID: consumerID,
       });
     } else {

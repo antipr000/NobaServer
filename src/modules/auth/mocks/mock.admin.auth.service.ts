@@ -4,14 +4,12 @@ import { AdminAuthService } from "../admin.auth.service";
 export const getMockAdminAuthServiceWithDefaults = () => {
   const mockAdminAuthService: AdminAuthService = mock(AdminAuthService);
 
-  when(mockAdminAuthService.validateAndGetUserId(anyString(), anyNumber(), anyString(), anyString())).thenReject(
-    new Error("Not implemented!"),
-  );
-  when(mockAdminAuthService.generateAccessToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
+  when(mockAdminAuthService.validateAndGetUserId(anyString(), anyNumber())).thenReject(new Error("Not implemented!"));
+  when(mockAdminAuthService.generateAccessToken(anyString())).thenReject(new Error("Not implemented!"));
   when(mockAdminAuthService.saveOtp(anyString(), anyString())).thenReject(
     new Error("Save OTP method not implemented!"),
   );
-  when(mockAdminAuthService.sendOtp(anyString(), anyString(), anyString())).thenReject(
+  when(mockAdminAuthService.sendOtp(anyString(), anyString())).thenReject(
     new Error("Send OTP method not implemented!"),
   );
   when(mockAdminAuthService.generateOTP()).thenReject(new Error("Not implemented!"));

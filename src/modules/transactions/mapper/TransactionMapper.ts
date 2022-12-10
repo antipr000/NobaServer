@@ -23,7 +23,6 @@ export class TransactionMapper implements Mapper<Transaction> {
       transactionHash: props.blockchainTransactionId,
       transactionTimestamp: props.transactionTimestamp,
       destinationWalletAddress: props.destinationWalletAddress,
-      partnerID: props.partnerID,
       paymentMethodID: props.fiatPaymentInfo.paymentMethodID,
       type: props.type,
       amounts: {

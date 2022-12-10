@@ -32,13 +32,9 @@ export class LimitsService {
   private match(
     config: LimitConfiguration,
     consumer: Consumer,
-    partnerID: string,
     totalTransactionAmount: number,
     transactionType: TransactionType,
   ): boolean {
-    if (config.props.criteria.partnerID && config.props.criteria.partnerID !== partnerID) {
-      return config.props.isDefault;
-    }
     if (
       config.props.criteria.transactionType.length > 0 &&
       !config.props.criteria.transactionType.includes(transactionType)
@@ -58,13 +54,13 @@ export class LimitsService {
     return true;
   }
 
-  async getLimits(consumer: Consumer, partnerID: string, transactionType?: TransactionType): Promise<LimitProfile> {
+  async getLimits(consumer: Consumer, transactionType?: TransactionType): Promise<LimitProfile> {
     if (!this.allLimitConfigs) {
       this.allLimitConfigs = await this.limitConfigRepo.getAllLimitConfigs();
     }
     const totalTransactionAmount = await this.transactionsRepo.getTotalUserTransactionAmount(consumer.props._id);
     const limitConfig: LimitConfiguration = this.allLimitConfigs.find(config =>
-      this.match(config, consumer, partnerID, totalTransactionAmount, transactionType),
+      this.match(config, consumer, totalTransactionAmount, transactionType),
     );
 
     return await this.limitProfileRepo.getProfile(limitConfig.props.profile);
@@ -73,11 +69,10 @@ export class LimitsService {
   async canMakeTransaction(
     consumer: Consumer,
     transactionAmount: number,
-    partnerID: string,
     transactionType: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<CheckTransactionDTO> {
-    const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
+    const limitProfile = await this.getLimits(consumer, transactionType);
     if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
     const limits: Limits =
       paymentMethodType === PaymentMethodType.CARD ? limitProfile.props.cardLimits : limitProfile.props.bankLimits;
@@ -210,11 +205,10 @@ export class LimitsService {
 
   async getConsumerLimits(
     consumer: Consumer,
-    partnerID: string,
     transactionType: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<ConsumerLimitsDTO> {
-    const limitProfile = await this.getLimits(consumer, partnerID, transactionType);
+    const limitProfile = await this.getLimits(consumer, transactionType);
     if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
     let limits: Limits;
 

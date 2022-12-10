@@ -4,14 +4,10 @@ import { UserAuthService } from "../user.auth.service";
 export const getMockUserAuthServiceWithDefaults = () => {
   const mockUserAuthService: UserAuthService = mock(UserAuthService);
 
-  when(mockUserAuthService.validateAndGetUserId(anyString(), anyNumber(), anyString(), anyString())).thenReject(
-    new Error("Not implemented!"),
-  );
-  when(mockUserAuthService.generateAccessToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
+  when(mockUserAuthService.validateAndGetUserId(anyString(), anyNumber())).thenReject(new Error("Not implemented!"));
+  when(mockUserAuthService.generateAccessToken(anyString())).thenReject(new Error("Not implemented!"));
   when(mockUserAuthService.saveOtp(anyString(), anyString())).thenReject(new Error("Not implemented!"));
-  when(mockUserAuthService.sendOtp(anyString(), anyString(), anyString())).thenReject(
-    new Error("Send Otp not implemented!"),
-  );
+  when(mockUserAuthService.sendOtp(anyString(), anyString())).thenReject(new Error("Send Otp not implemented!"));
   when(mockUserAuthService.generateOTP()).thenReject(new Error("Not implemented!"));
   when(mockUserAuthService.verifyUserExistence(anyString())).thenReject(new Error("Not implemented!"));
 

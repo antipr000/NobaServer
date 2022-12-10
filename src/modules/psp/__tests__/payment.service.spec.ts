@@ -130,7 +130,6 @@ describe("PaymentService", () => {
   describe("addACHPaymentMethod", () => {
     it("adds a payment method of 'ACH' type", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
 
       const checkoutCustomerID = "checkout-customer-for-mock-consumer";
 
@@ -150,11 +149,6 @@ describe("PaymentService", () => {
           {
             providerCustomerID: checkoutCustomerID,
             providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        partners: [
-          {
-            partnerID: partnerId,
           },
         ],
         isAdmin: false,
@@ -209,11 +203,6 @@ describe("PaymentService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
         isAdmin: false,
         paymentMethods: [
           {
@@ -236,7 +225,7 @@ describe("PaymentService", () => {
         cryptoWallets: [],
       };
 
-      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod);
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.updatedConsumerData).toStrictEqual(expectedConsumerProps);
@@ -244,7 +233,6 @@ describe("PaymentService", () => {
 
     it("adds ACH payment method that was previously deleted", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
 
       const checkoutCustomerID = "checkout-customer-for-mock-consumer";
 
@@ -266,11 +254,7 @@ describe("PaymentService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -340,11 +324,7 @@ describe("PaymentService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -367,7 +347,7 @@ describe("PaymentService", () => {
         cryptoWallets: [],
       };
 
-      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod);
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.updatedConsumerData).toStrictEqual(expectedConsumerProps);
@@ -375,7 +355,6 @@ describe("PaymentService", () => {
 
     it("adds a payment method of 'ACH' type AFTER creating Checkout customer if this is the first payment method", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
 
       const checkoutCustomerID = "checkout-customer-for-mock-consumer";
 
@@ -392,11 +371,7 @@ describe("PaymentService", () => {
         email: email,
         displayEmail: email,
         paymentProviderAccounts: [],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -451,11 +426,7 @@ describe("PaymentService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -478,7 +449,7 @@ describe("PaymentService", () => {
         cryptoWallets: [],
       };
 
-      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+      const response = await paymentService.addPaymentMethod(consumer, addPaymentMethod);
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.updatedConsumerData).toStrictEqual(expectedConsumerProps);
@@ -530,7 +501,7 @@ describe("PaymentService", () => {
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
       when(creditCardService.updateBinData(anything())).thenResolve();
 
-      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod);
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.newPaymentMethod).toBeTruthy();
@@ -628,7 +599,7 @@ describe("PaymentService", () => {
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
       when(creditCardService.updateBinData(anything())).thenResolve();
 
-      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod);
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.newPaymentMethod).toBeTruthy();
@@ -726,7 +697,7 @@ describe("PaymentService", () => {
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
       when(creditCardService.updateBinData(anything())).thenResolve();
 
-      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod);
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.newPaymentMethod).toBeTruthy();
@@ -788,12 +759,12 @@ describe("PaymentService", () => {
 
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
 
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow(BadRequestException);
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow("SOFT-DECLINE");
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow(
+        "SOFT-DECLINE",
+      );
     });
 
     it("should throw error when card is rejected and send HARD DECLINE and CARD_ADDITION_FAILED notification", async () => {
@@ -839,50 +810,13 @@ describe("PaymentService", () => {
 
       when(creditCardService.getBINDetails("424242")).thenResolve(null);
 
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow(BadRequestException);
-
-      // verify(
-      //   notificationService.sendNotification(
-      //     NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT,
-      //     "fake-partner-1",
-      //     deepEqual({
-      //       firstName: consumer.props.firstName,
-      //       lastName: consumer.props.lastName,
-      //       nobaUserID: consumer.props._id,
-      //       email: consumer.props.displayEmail,
-      //       last4Digits: paymentMethod.cardDetails.cardNumber.substring(
-      //         paymentMethod.cardDetails.cardNumber.length - 4,
-      //       ),
-      //     }),
-      //   ),
-      // ).once();
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow(
+        BadRequestException,
+      );
 
       console.log(capture(notificationService.sendNotification));
 
-      // verify(
-      //   notificationService.sendNotification(
-      //     NotificationEventType.SEND_HARD_DECLINE_EVENT,
-      //     "fake-partner-1",
-      //     deepEqual({
-      //       firstName: consumer.props.firstName,
-      //       lastName: consumer.props.lastName,
-      //       nobaUserID: consumer.props._id,
-      //       email: consumer.props.displayEmail,
-      //       sessionID: "verification",
-      //       transactionID: "verification",
-      //       paymentToken: "fake-payment-token",
-      //       processor: PaymentProvider.CHECKOUT,
-      //       responseCode: "30000",
-      //       responseSummary: "Rejected",
-      //     }),
-      //   ),
-      // ).once();
-
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow("DECLINE");
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow("DECLINE");
     });
 
     it("should throw error when card is already added", async () => {
@@ -922,13 +856,13 @@ describe("PaymentService", () => {
         cardType: "CREDIT",
       });
 
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow(BadRequestException);
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow(
+        BadRequestException,
+      );
 
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow("Card already added");
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow(
+        "Card already added",
+      );
     });
 
     it("should throw error when bin is not supported", async () => {
@@ -953,13 +887,11 @@ describe("PaymentService", () => {
 
       when(creditCardService.isBINSupported("424242")).thenResolve(BINValidity.NOT_SUPPORTED);
 
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow(BadRequestException);
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow(
+        BadRequestException,
+      );
 
-      expect(
-        async () => await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1"),
-      ).rejects.toThrow("NO-CRYPTO");
+      expect(async () => await paymentService.addPaymentMethod(consumer, paymentMethod)).rejects.toThrow("NO-CRYPTO");
     });
 
     it("should add a new card for exisiting checkout customer when BIN is supported", async () => {
@@ -994,7 +926,7 @@ describe("PaymentService", () => {
       });
       when(creditCardService.updateBinData(anything())).thenResolve();
 
-      const response = await paymentService.addPaymentMethod(consumer, paymentMethod, "fake-partner-1");
+      const response = await paymentService.addPaymentMethod(consumer, paymentMethod);
 
       expect(response.updatedConsumerData).toBeTruthy();
       expect(response.newPaymentMethod).toBeTruthy();
@@ -1349,12 +1281,7 @@ function createFakeConsumerRecord(
     email: "fake+consumer@noba.com",
     displayEmail: "fake+consumer@noba.com",
     dateOfBirth: "1980-02-02",
-    partners: [
-      {
-        partnerID: "fake-partner-1",
-        partnerUserID: "fake-user-1",
-      },
-    ],
+
     paymentProviderAccounts: paymentProviderAccounts,
     paymentMethods: paymentMethods,
   });
@@ -1377,7 +1304,6 @@ function createFakeTransaction(consumer: Consumer, paymentMethod: PaymentMethod)
     leg2Amount: 0.01,
     leg1: "USD",
     leg2: "ETH",
-    partnerID: "fake-partner-1",
     lastProcessingTimestamp: Date.now().valueOf(),
     lastStatusUpdateTimestamp: Date.now().valueOf(),
   });

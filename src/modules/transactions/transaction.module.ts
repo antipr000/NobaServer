@@ -4,13 +4,11 @@ import { CommonModule } from "../common/common.module";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { VerificationModule } from "../verification/verification.module";
 import { LimitsService } from "./limits.service";
-import { PartnerModule } from "../partner/partner.module";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
 import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
 import { AssetsModule } from "./assets/assets.module";
-import { SquidService } from "./squid.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
@@ -22,7 +20,6 @@ import { TransactionRepoModule } from "./repo/transaction.repo.module";
     CommonModule,
     ConsumerModule,
     VerificationModule,
-    PartnerModule,
     AsyncTransactionProcessorModule,
     AssetsModule,
     NotificationsModule,
@@ -30,7 +27,7 @@ import { TransactionRepoModule } from "./repo/transaction.repo.module";
     TransactionRepoModule,
   ],
   controllers: [TransactionController],
-  providers: [LimitsService, TransactionService, ZeroHashService, SquidService, SanctionedCryptoWalletService],
+  providers: [LimitsService, TransactionService, ZeroHashService, SanctionedCryptoWalletService],
   exports: [TransactionService], //Need to access in PublicController
 })
 export class TransactionModule {}

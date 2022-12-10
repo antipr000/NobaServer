@@ -12,7 +12,6 @@ import { TransactionModule } from "./modules/transactions/transaction.module";
 import { VerificationModule, VerificationWebhookModule } from "./modules/verification/verification.module";
 import { CommonModule } from "./modules/common/common.module";
 import { AdminModule } from "./modules/admin/admin.module";
-import { PartnerModule } from "./modules/partner/partner.module";
 import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 
@@ -29,7 +28,6 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
     VerificationWebhookModule,
     TransactionModule,
     AdminModule,
-    PartnerModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

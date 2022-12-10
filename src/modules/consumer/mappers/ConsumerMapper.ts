@@ -23,7 +23,6 @@ export class ConsumerMapper implements Mapper<Consumer> {
       address: cryptoWallet.address,
       chainType: cryptoWallet.chainType,
       isEVMCompatible: cryptoWallet.isEVMCompatible,
-      //partnerID: cryptoWallet.partnerID,
     };
   }
 

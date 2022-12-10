@@ -49,7 +49,6 @@ import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { TransactionSubmissionException } from "./exceptions/TransactionSubmissionException";
 import { TransactionsQueryResultsDTO } from "./dto/TransactionsQueryResultsDTO";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { PartnerService } from "../partner/partner.service";
 import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
@@ -61,9 +60,6 @@ import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 export class TransactionController {
   // @Inject(WINSTON_MODULE_PROVIDER)
   // private readonly logger: Logger;
-
-  @Inject()
-  private readonly partnerService: PartnerService;
 
   constructor(
     private readonly transactionService: TransactionService,
@@ -85,14 +81,6 @@ export class TransactionController {
     @Request() request,
     @Query() transactionQuoteQuery: TransactionQuoteQueryDTO,
   ): Promise<TransactionQuoteDTO> {
-    if (transactionQuoteQuery.partnerID === undefined) {
-      transactionQuoteQuery.partnerID = request.user?.partnerId;
-      if (!transactionQuoteQuery.partnerID) {
-        // If still empty, it means we're unauthenticated. Get by API key instead.
-        const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY])).props._id;
-        transactionQuoteQuery.partnerID = partnerId;
-      }
-    }
     const transactionQuote = await this.transactionService.requestTransactionQuote(transactionQuoteQuery);
     return transactionQuote;
   }
@@ -109,11 +97,9 @@ export class TransactionController {
     @Request() request,
   ): Promise<CheckTransactionDTO> {
     const tAmount = checkTransactionQuery.transactionAmount;
-    const partnerID = (request.user as AuthenticatedUser).partnerId;
     const checkTransactionResponse: CheckTransactionDTO = await this.limitsService.canMakeTransaction(
       authUser,
       tAmount,
-      partnerID,
       checkTransactionQuery.type,
     );
 
@@ -135,10 +121,6 @@ export class TransactionController {
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionDTO> {
     const dto = await this.transactionService.getTransaction(transactionID);
-    if (dto.userID !== authUser.props._id || dto.partnerID !== request.user.partnerId) {
-      // We can't return forbidden, as that would tell the user there IS a transaction - they just can't see it. So "pretend" it's not found.
-      throw new NotFoundException("Transaction does not exist");
-    }
     return dto;
   }
 
@@ -160,14 +142,7 @@ export class TransactionController {
     this.logger.debug(`uid ${user.props._id}, transact input:`, orderDetails);
 
     try {
-      return (
-        await this.transactionService.initiateTransaction(
-          user.props._id,
-          request.user.partnerId,
-          sessionKey,
-          orderDetails,
-        )
-      )._id;
+      return (await this.transactionService.initiateTransaction(user.props._id, sessionKey, orderDetails))._id;
     } catch (e) {
       if (e instanceof TransactionSubmissionException) {
         throw new BadRequestException(e.disposition, e.message);
@@ -194,7 +169,6 @@ export class TransactionController {
   ): Promise<TransactionsQueryResultsDTO> {
     return (await this.transactionService.getUserTransactions(
       authUser.props._id,
-      request.user.partnerId,
       transactionFilters,
     )) as TransactionsQueryResultsDTO;
   }
@@ -240,9 +214,8 @@ export class TransactionController {
     @AuthUser() authUser: Consumer,
     @Request() request,
   ): Promise<ConsumerLimitsDTO> {
-    const partnerID = (request.user as AuthenticatedUser).partnerId;
     if (!consumerLimitsQuery.transactionType) consumerLimitsQuery.transactionType = TransactionType.ONRAMP;
-    return this.limitsService.getConsumerLimits(authUser, partnerID, consumerLimitsQuery.transactionType);
+    return this.limitsService.getConsumerLimits(authUser, consumerLimitsQuery.transactionType);
   }
 
   @Get("/transactions/download")
@@ -262,7 +235,6 @@ export class TransactionController {
     let filePath = "";
     const transactions: PaginatedResult<TransactionDTO> = await this.transactionService.getUserTransactions(
       authUser.props._id,
-      request.user.partnerId,
       { ...params, pageLimit: params.pageLimit ?? 10000 },
     );
 

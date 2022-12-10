@@ -24,9 +24,6 @@ import { consumerIdentityIdentifier, IdentityType } from "../../auth/domain/Iden
 import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
 import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
 import { SMSService } from "../../common/sms.service";
-import { Partner } from "../../partner/domain/Partner";
-import { getMockPartnerServiceWithDefaults } from "../../partner/mocks/mock.partner.service";
-import { PartnerService } from "../../partner/partner.service";
 import { AddPaymentMethodResponse } from "../../psp/domain/AddPaymentMethodResponse";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { PaymentService } from "../../psp/payment.service";
@@ -54,7 +51,6 @@ describe("ConsumerService", () => {
   let mockOtpRepo: IOTPRepo;
   let paymentService: PaymentService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
-  let partnerService: PartnerService;
   let plaidClient: PlaidClient;
   let circleClient: CircleClient;
 
@@ -65,7 +61,6 @@ describe("ConsumerService", () => {
     notificationService = getMockNotificationServiceWithDefaults();
     mockOtpRepo = getMockOtpRepoWithDefaults();
     paymentService = getMockPaymentServiceWithDefaults();
-    partnerService = getMockPartnerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
     smsService = getMockSmsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
@@ -111,10 +106,6 @@ describe("ConsumerService", () => {
           useFactory: () => instance(sanctionedCryptoWalletService),
         },
         {
-          provide: PartnerService,
-          useFactory: () => instance(partnerService),
-        },
-        {
           provide: PlaidClient,
           useFactory: () => instance(plaidClient),
         },
@@ -132,7 +123,7 @@ describe("ConsumerService", () => {
   describe("createConsumerIfFirstTimeLogin", () => {
     it("should create user if not present", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         email: email,
@@ -142,11 +133,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -155,12 +142,12 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
       when(consumerRepo.createConsumer(anything())).thenResolve(consumer);
 
-      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
+      const response = await consumerService.getOrCreateConsumerConditionally(email);
       expect(response).toStrictEqual(consumer);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
-          partnerId,
+
           deepEqual({
             email: email,
             firstName: undefined,
@@ -170,82 +157,12 @@ describe("ConsumerService", () => {
         ),
       ).once();
     });
-
-    it("should update partner details if consumer already exists and is added for new partner", async () => {
-      const email = "mock-user@noba.com";
-      const partnerId = "partner-2";
-      const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
-        email: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-
-      const updatedConsumerData = Consumer.createConsumer({
-        ...consumer.props,
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-          {
-            partnerID: partnerId,
-          },
-        ],
-      });
-      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.ok(consumer));
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumerData);
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-
-      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
-      expect(response).toStrictEqual(updatedConsumerData);
-    });
-
-    it("should return consumer data if already exists and already is signed up with partner", async () => {
-      const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
-      const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
-        email: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-
-      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.ok(consumer));
-
-      const response = await consumerService.getOrCreateConsumerConditionally(email, partnerId);
-
-      expect(response).toStrictEqual(consumer);
-    });
   });
 
   describe("findConsumerById", () => {
     it("should find the consumer", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const consumerID = "mock-consumer-1";
       const consumer = Consumer.createConsumer({
         _id: consumerID,
@@ -256,11 +173,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -283,7 +196,7 @@ describe("ConsumerService", () => {
   describe("updateConsumer", () => {
     it("should update consumer details", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         email: email,
@@ -293,11 +206,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -343,7 +252,7 @@ describe("ConsumerService", () => {
   describe("addPaymentMethod", () => {
     it("adds a payment method of 'CARD' type", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -356,11 +265,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -381,7 +286,7 @@ describe("ConsumerService", () => {
         PaymentMethodStatus.APPROVED,
       );
 
-      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
+      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve(
         addPaymentMethodResponse,
       );
 
@@ -391,13 +296,13 @@ describe("ConsumerService", () => {
         consumerRepo.updateConsumer(deepEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData))),
       ).thenResolve(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData));
 
-      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod);
 
       expect(response).toStrictEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData));
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_CARD_ADDED_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -412,7 +317,7 @@ describe("ConsumerService", () => {
 
     it("throws error when payment method is UNSUPPORTED", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
         firstName: "Fake",
@@ -425,11 +330,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -450,7 +351,7 @@ describe("ConsumerService", () => {
         PaymentMethodStatus.UNSUPPORTED,
       );
 
-      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve(
+      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve(
         addPaymentMethodResponse,
       );
 
@@ -461,7 +362,7 @@ describe("ConsumerService", () => {
       );
 
       try {
-        await consumerService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+        await consumerService.addPaymentMethod(consumer, addPaymentMethod);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
         verify(
@@ -472,7 +373,6 @@ describe("ConsumerService", () => {
 
     it("adds a payment method of 'ACH' type", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
 
       const checkoutCustomerID = "checkout-customer-for-mock-consumer";
 
@@ -494,11 +394,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -537,7 +433,7 @@ describe("ConsumerService", () => {
         paymentMethods: [paymentMethod],
       });
 
-      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod), partnerId)).thenResolve({
+      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve({
         checkoutResponseData: null,
         updatedConsumerData: updatedConsumer.props,
       });
@@ -554,11 +450,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -585,7 +477,7 @@ describe("ConsumerService", () => {
         Consumer.createConsumer(expectedConsumerProps),
       );
 
-      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod, partnerId);
+      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod);
 
       expect(response).toStrictEqual(Consumer.createConsumer(expectedConsumerProps));
     });
@@ -594,7 +486,7 @@ describe("ConsumerService", () => {
   describe("requestPayment", () => {
     it("should make payment successfully", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const paymentMethod = {
         type: PaymentMethodType.CARD,
@@ -619,11 +511,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [paymentMethod],
         cryptoWallets: [],
@@ -645,7 +533,6 @@ describe("ConsumerService", () => {
         leg2Amount: 0.1,
         leg1: "USD",
         leg2: "ETH",
-        partnerID: partnerId,
         lastProcessingTimestamp: Date.now().valueOf(),
         lastStatusUpdateTimestamp: Date.now().valueOf(),
       });
@@ -666,7 +553,7 @@ describe("ConsumerService", () => {
 
     it("should throw error when payment method is DELETED", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const paymentMethod: PaymentMethod = {
         type: PaymentMethodType.CARD,
@@ -692,11 +579,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [paymentMethod],
         cryptoWallets: [],
@@ -718,7 +601,7 @@ describe("ConsumerService", () => {
         leg2Amount: 0.1,
         leg1: "USD",
         leg2: "ETH",
-        partnerID: partnerId,
+
         lastProcessingTimestamp: Date.now().valueOf(),
         lastStatusUpdateTimestamp: Date.now().valueOf(),
       });
@@ -734,7 +617,7 @@ describe("ConsumerService", () => {
 
     it("should throw error when payment provider is not supported", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const paymentProvider = "FakeProvider";
       const paymentMethod = {
@@ -760,11 +643,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [paymentMethod],
         cryptoWallets: [],
@@ -786,7 +665,7 @@ describe("ConsumerService", () => {
         leg2Amount: 0.1,
         leg1: "USD",
         leg2: "ETH",
-        partnerID: partnerId,
+
         lastProcessingTimestamp: Date.now().valueOf(),
         lastStatusUpdateTimestamp: Date.now().valueOf(),
       });
@@ -814,7 +693,7 @@ describe("ConsumerService", () => {
   describe("removePaymentMethod", () => {
     it("should throw error when payment token does not exist for the consumer", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -828,11 +707,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -850,18 +725,18 @@ describe("ConsumerService", () => {
         cryptoWallets: [],
       });
 
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
         NotFoundException,
       );
 
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
         "Payment Method id not found",
       );
     });
 
     it("should throw error when payment provider is not valid", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -875,11 +750,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -898,7 +769,7 @@ describe("ConsumerService", () => {
       });
 
       try {
-        await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
+        await consumerService.removePaymentMethod(consumer, paymentToken);
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
@@ -908,7 +779,7 @@ describe("ConsumerService", () => {
 
     it("should throw error when payment method is deleted for consumer", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -922,11 +793,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -945,18 +812,18 @@ describe("ConsumerService", () => {
         cryptoWallets: [],
       });
 
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
         NotFoundException,
       );
 
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken, partnerId)).rejects.toThrow(
+      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
         "Payment Method id not found",
       );
     });
 
     it("should delete payment method successfully", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -970,11 +837,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1019,13 +882,13 @@ describe("ConsumerService", () => {
       when(paymentService.removePaymentMethod(paymentToken)).thenResolve();
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
 
-      const response = await consumerService.removePaymentMethod(consumer, paymentToken, partnerId);
+      const response = await consumerService.removePaymentMethod(consumer, paymentToken);
       expect(response).toStrictEqual(updatedConsumer);
       expect(response.props.paymentMethods.length).toBe(1);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_CARD_DELETED_EVENT,
-          partnerId,
+
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
@@ -1054,11 +917,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "fake-partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1098,11 +957,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "fake-partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1143,11 +998,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "fake-partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1206,7 +1057,7 @@ describe("ConsumerService", () => {
   describe("updatePaymentMethod", () => {
     it("should update payment method for consumer", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1220,11 +1071,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1274,7 +1121,7 @@ describe("ConsumerService", () => {
 
     it("should replace existing default payment method", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1288,11 +1135,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1396,7 +1239,7 @@ describe("ConsumerService", () => {
 
     it("should throw error when paymentToken does not exist for consumer", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1410,11 +1253,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1459,7 +1298,7 @@ describe("ConsumerService", () => {
 
     it("should throw error when payment method is deleted for consumer", async () => {
       const email = "mock-user@noba.com";
-      const partnerId = "partner-1";
+
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1473,11 +1312,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1527,18 +1362,8 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
       const otp = 123456;
-      const partnerId = "fake-partner";
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
-
-      const partner: Partner = Partner.createPartner({
-        _id: partnerId,
-        name: "partner name",
-        config: {
-          privateWallets: false,
-        } as any,
-      });
-      when(partnerService.getPartner(partnerId)).thenResolve(partner);
 
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1552,11 +1377,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1578,8 +1399,6 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.PENDING,
-            partnerID: partnerId,
-            isPrivate: false,
           },
         ],
       });
@@ -1591,8 +1410,6 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.APPROVED,
-            partnerID: partnerId,
-            isPrivate: false,
           },
         ],
       });
@@ -1600,7 +1417,7 @@ describe("ConsumerService", () => {
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", partnerId, consumer.props._id)).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props._id)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
@@ -1621,7 +1438,7 @@ describe("ConsumerService", () => {
         walletAddress,
         otp,
         consumer.props._id,
-        partnerId,
+
         NotificationMethod.EMAIL,
       );
 
@@ -1634,7 +1451,6 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
       const otp = 123456;
-      const partnerId = "fake-partner";
 
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -1648,11 +1464,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1674,8 +1486,6 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.DELETED,
-            partnerID: partnerId,
-            isPrivate: false,
           },
         ],
       });
@@ -1687,7 +1497,7 @@ describe("ConsumerService", () => {
             walletAddress,
             otp,
             consumer.props._id,
-            partnerId,
+
             NotificationMethod.EMAIL,
           ),
       ).rejects.toThrow(BadRequestException);
@@ -1698,101 +1508,11 @@ describe("ConsumerService", () => {
             walletAddress,
             otp,
             consumer.props._id,
-            partnerId,
+
             NotificationMethod.EMAIL,
           ),
       ).rejects.toThrow("Crypto wallet does not exist for user");
     });
-
-    // it("throws an error for a sanctioned wallet", async () => {
-    //   const email = "mock-user@noba.com";
-    //   const walletAddress = "fake-wallet-address";
-    //   const otp = 123456;
-
-    //   when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(true);
-    //   const consumer = Consumer.createConsumer({
-    //     _id: "mock-consumer-1",
-    //     firstName: "Fake",
-    //     lastName: "Name",
-    //     email: email,
-    //     displayEmail: email,
-    //     paymentProviderAccounts: [
-    //       {
-    //         providerCustomerID: "test-customer-1",
-    //         providerID: PaymentProvider.CHECKOUT,
-    //       },
-    //     ],
-    //     partners: [
-    //       {
-    //         partnerID: "partner-1",
-    //       },
-    //     ],
-    //     isAdmin: false,
-    //     paymentMethods: [
-    //       {
-    //         paymentProviderID: "Checkout",
-    //         paymentToken: "fake-token",
-    //         first6Digits: "123456",
-    //         last4Digits: "7890",
-    //         imageUri: "fake-uri",
-    //         cardName: "Fake card",
-    //         cardType: "VISA",
-    //       },
-    //     ],
-    //     cryptoWallets: [
-    //       {
-    //         walletName: "Test wallet",
-    //         address: walletAddress,
-    //         status: WalletStatus.PENDING,
-    //         isPrivate: false,
-    //       },
-    //     ],
-    //   });
-
-    //   const flaggedWallet: CryptoWallet = {
-    //     walletName: "Test wallet",
-    //     address: walletAddress,
-    //     status: WalletStatus.FLAGGED,
-    //     isPrivate: false,
-    //   };
-    //   const updatedConsumer = Consumer.createConsumer({
-    //     ...consumer.props,
-    //     cryptoWallets: [flaggedWallet],
-    //   });
-
-    //   const expiryDate = new Date();
-    //   expiryDate.setMinutes(expiryDate.getMinutes() + 5);
-
-    //   when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER")).thenResolve(
-    //     Otp.createOtp({
-    //       _id: "fake-otp-id",
-    //       emailOrPhone: consumer.props.email,
-    //       otp: otp,
-    //       otpExpiryTime: expiryDate.getTime(),
-    //       identityType: "CONSUMER",
-    //     }),
-    //   );
-
-    //   when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-    //   when(mockOtpRepo.deleteOTP("fake-otp-id")).thenResolve();
-
-    //   when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
-    //   //when();
-
-    //   expect(async () => {
-    //     await consumerService.confirmWalletUpdateOTP(consumer, walletAddress, otp);
-    //   }).rejects.toThrow(BadRequestException);
-
-    //   when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(updatedConsumer);
-
-    //   expect(await consumerService.getConsumer(consumer.props._id)).toEqual(updatedConsumer);
-
-    //   //expect()
-
-    //   //expect(response).toStrictEqual(updatedConsumer);
-
-    //   //expect(consumerService.addOrUpdateCryptoWallet).toBeCalledTimes(1);
-    // });
 
     it("throws Unauthorized exception when otp is wrong", async () => {
       const email = "mock-user@noba.com";
@@ -1813,11 +1533,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1839,13 +1555,11 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: "partner-1",
           },
         ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", "partner-1", consumer.props._id)).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props._id)).thenResolve(
         Otp.createOtp({
           _id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
@@ -1862,7 +1576,7 @@ describe("ConsumerService", () => {
           walletAddress,
           wrongOtp,
           consumer.props._id,
-          "partner-1",
+
           NotificationMethod.EMAIL,
         );
       } catch (e) {
@@ -1889,11 +1603,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1915,13 +1625,11 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, walletAddress, "partner-1");
+      const response = await consumerService.getCryptoWallet(consumer, walletAddress);
       expect(response).toStrictEqual(consumer.props.cryptoWallets[0]);
     });
 
@@ -1941,11 +1649,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -1967,13 +1671,11 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address", "partner-1");
+      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address");
       expect(response).toStrictEqual(null);
     });
 
@@ -1993,11 +1695,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -2019,13 +1717,11 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.DELETED,
-            isPrivate: false,
-            partnerID: "partner-1",
           },
         ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, walletAddress, "partner-1");
+      const response = await consumerService.getCryptoWallet(consumer, walletAddress);
       expect(response).toStrictEqual(null);
     });
   });
@@ -2035,7 +1731,6 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
 
-      const partnerID = "partner-1";
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -2049,11 +1744,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerID,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [
           {
@@ -2075,22 +1766,16 @@ describe("ConsumerService", () => {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: partnerID,
           },
           {
             walletName: "Other wallet 1",
             address: walletAddress + "1",
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: partnerID,
           },
           {
             walletName: "Other wallet 2",
             address: walletAddress + "2",
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: "54321",
           },
         ],
       });
@@ -2102,22 +1787,16 @@ describe("ConsumerService", () => {
             walletName: "Other wallet 1",
             address: walletAddress + "1",
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: partnerID,
           },
           {
             walletName: "Other wallet 2",
             address: walletAddress + "2",
             status: WalletStatus.PENDING,
-            isPrivate: false,
-            partnerID: "54321",
           },
           {
             walletName: "Test wallet",
             address: walletAddress,
             status: WalletStatus.DELETED,
-            isPrivate: false,
-            partnerID: partnerID,
           },
         ],
       });
@@ -2125,7 +1804,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.removeCryptoWallet(consumer, walletAddress, "partner-1");
+      const response = await consumerService.removeCryptoWallet(consumer, walletAddress);
 
       expect(response).toStrictEqual(updatedConsumer);
       verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
@@ -2147,11 +1826,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [],
@@ -2183,70 +1858,10 @@ describe("ConsumerService", () => {
   });
 
   describe("addOrUpdateCryptoWallet", () => {
-    it("should add a second address if address exists for another partnerID", async () => {
-      const partner1Id = "fake-partner-id-1";
-      const partner2Id = "fake-partner-id-2";
-
-      const cryptoWallet: CryptoWallet = {
-        address: "fake-wallet-address",
-        status: WalletStatus.APPROVED,
-        partnerID: partner1Id,
-        isPrivate: false,
-      };
-      const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: "fake+email@noba.com",
-        displayEmail: "fake+email@noba.com",
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        partners: [
-          {
-            partnerID: partner1Id,
-          },
-        ],
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [cryptoWallet],
-      });
-
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        cryptoWallets: [cryptoWallet, { ...cryptoWallet, partnerID: partner2Id }],
-      });
-
-      const partner: Partner = Partner.createPartner({
-        _id: partner2Id,
-        name: "Fake Partner",
-        config: {
-          privateWallets: false,
-        } as any,
-      });
-      when(partnerService.getPartner(partner2Id)).thenResolve(partner);
-
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
-      const response = await consumerService.addOrUpdateCryptoWallet(consumer, {
-        ...cryptoWallet,
-        partnerID: partner2Id,
-      });
-
-      expect(response).toBe(updatedConsumer);
-    });
-
     it("should set wallet status to PENDING when wallet status is DELETED and method is called", async () => {
-      const partner1Id = "fake-partner-id-1";
-
       const cryptoWallet: CryptoWallet = {
         address: "fake-wallet-address",
         status: WalletStatus.DELETED,
-        partnerID: partner1Id,
-        isPrivate: false,
       };
       const consumer = Consumer.createConsumer({
         _id: "mock-consumer-1",
@@ -2258,11 +1873,6 @@ describe("ConsumerService", () => {
           {
             providerCustomerID: "test-customer-1",
             providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        partners: [
-          {
-            partnerID: partner1Id,
           },
         ],
         isAdmin: false,
@@ -2273,23 +1883,12 @@ describe("ConsumerService", () => {
       const toAddCryptoWallet: CryptoWallet = {
         address: "fake-wallet-address",
         status: WalletStatus.PENDING,
-        partnerID: partner1Id,
-        isPrivate: false,
       };
 
       const updatedConsumer = Consumer.createConsumer({
         ...consumer.props,
         cryptoWallets: [toAddCryptoWallet],
       });
-
-      const partner: Partner = Partner.createPartner({
-        _id: partner1Id,
-        name: "Fake Partner",
-        config: {
-          privateWallets: false,
-        } as any,
-      });
-      when(partnerService.getPartner(partner1Id)).thenResolve(partner);
 
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
@@ -2299,140 +1898,8 @@ describe("ConsumerService", () => {
       expect(response).toBe(updatedConsumer);
     });
 
-    it("should override the 'isPrivate' field based on the 'partnerID'", async () => {
-      const email = "fake.consumer@noba.com";
-      const partnerId = "fake-partner-id";
-      const consumerId = "mock_consumer_id";
-
-      const consumer = Consumer.createConsumer({
-        _id: consumerId,
-        firstName: "Mock",
-        lastName: "Consumer",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-      when(consumerRepo.getConsumer(consumerId)).thenResolve(consumer);
-
-      const partner: Partner = Partner.createPartner({
-        _id: partnerId,
-        name: "Fake Partner",
-        config: {
-          privateWallets: true,
-        } as any,
-      });
-      when(partnerService.getPartner(partnerId)).thenResolve(partner);
-
-      const newWallet: CryptoWallet = {
-        address: "wallet-address",
-        // "privateWallets" is set to "true" in the partner object.
-        isPrivate: false,
-        status: WalletStatus.APPROVED,
-        partnerID: partnerId,
-      };
-
-      const updatedConsumer: Consumer = consumer;
-      updatedConsumer.props.cryptoWallets.push({
-        address: "wallet-address",
-        status: WalletStatus.APPROVED,
-        partnerID: partnerId,
-        isPrivate: true,
-      });
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
-
-      const returnedConsumer = await consumerService.addOrUpdateCryptoWallet(consumer, newWallet);
-
-      expect(returnedConsumer).toEqual(updatedConsumer);
-      const [updateConsumerCallParams] = capture(consumerRepo.updateConsumer).last();
-      expect(updateConsumerCallParams.props.cryptoWallets).toHaveLength(1);
-      expect(updateConsumerCallParams.props.cryptoWallets[0]).toEqual({
-        address: "wallet-address",
-        status: WalletStatus.APPROVED,
-        partnerID: partnerId,
-        isPrivate: true,
-      });
-    });
-
-    it("should set 'isPrivate' to 'false' if 'privateWallet' config is missing in 'partner", async () => {
-      const email = "fake.consumer@noba.com";
-      const partnerId = "fake-partner-id";
-      const consumerId = "mock_consumer_id";
-
-      const consumer = Consumer.createConsumer({
-        _id: consumerId,
-        firstName: "Mock",
-        lastName: "Consumer",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-      when(consumerRepo.getConsumer(consumerId)).thenResolve(consumer);
-
-      const partner: Partner = Partner.createPartner({
-        _id: partnerId,
-        name: "Fake Partner",
-      });
-      when(partnerService.getPartner(partnerId)).thenResolve(partner);
-
-      const newWallet: CryptoWallet = {
-        address: "wallet-address",
-        // "privateWallets" is 'NOT' set in the partner object.
-        isPrivate: false,
-        status: WalletStatus.APPROVED,
-        partnerID: partnerId,
-      };
-
-      const updatedConsumer: Consumer = consumer;
-      updatedConsumer.props.cryptoWallets.push({
-        address: "wallet-address",
-        status: WalletStatus.APPROVED,
-        partnerID: partnerId,
-        isPrivate: true,
-      });
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
-
-      const returnedConsumer = await consumerService.addOrUpdateCryptoWallet(consumer, newWallet);
-
-      expect(returnedConsumer).toEqual(updatedConsumer);
-      const [updateConsumerCallParams] = capture(consumerRepo.updateConsumer).last();
-      expect(updateConsumerCallParams.props.cryptoWallets).toHaveLength(1);
-      expect(updateConsumerCallParams.props.cryptoWallets[0]).toEqual({
-        address: "wallet-address",
-        status: WalletStatus.APPROVED,
-        partnerID: partnerId,
-        isPrivate: true,
-      });
-    });
-
     it("should append to CryptWallets list if the wallet is new", async () => {
       const email = "fake.consumer@noba.com";
-      const partnerId = "fake-partner-id";
       const consumerId = "mock_consumer_id";
 
       const consumer = Consumer.createConsumer({
@@ -2447,47 +1914,29 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [
           {
             address: "fake_existing_wallet_address",
-            isPrivate: false,
+
             status: WalletStatus.APPROVED,
-            partnerID: partnerId,
           },
         ],
       });
       when(consumerRepo.getConsumer(consumerId)).thenResolve(consumer);
 
-      const partner: Partner = Partner.createPartner({
-        _id: partnerId,
-        name: "Fake Partner",
-        config: {
-          privateWallets: true,
-        } as any,
-      });
-      when(partnerService.getPartner(partnerId)).thenResolve(partner);
-
       const newWallet: CryptoWallet = {
         address: "new-wallet-address",
-        // "privateWallets" is set to "true" in the partner object.
-        isPrivate: false,
+
         status: WalletStatus.PENDING,
-        partnerID: partnerId,
       };
 
       const updatedConsumer: Consumer = consumer;
       updatedConsumer.props.cryptoWallets.push({
         address: "new-wallet-address",
         status: WalletStatus.PENDING,
-        partnerID: partnerId,
-        isPrivate: true,
       });
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
@@ -2498,15 +1947,12 @@ describe("ConsumerService", () => {
       expect(updateConsumerCallParams.props.cryptoWallets).toContainEqual({
         address: "new-wallet-address",
         status: WalletStatus.PENDING,
-        partnerID: partnerId,
-        isPrivate: true,
       });
       expect(updateConsumerCallParams.props.cryptoWallets).toContainEqual(consumer.props.cryptoWallets[0]);
     });
 
     it("should update the 'status' field of CryptoWallet if it's already there", async () => {
       const email = "fake.consumer@noba.com";
-      const partnerId = "fake-partner-id";
       const consumerId = "mock_consumer_id";
 
       const consumer = Consumer.createConsumer({
@@ -2521,38 +1967,23 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         paymentMethods: [],
         cryptoWallets: [
           {
             address: "fake_existing_wallet_address",
-            isPrivate: false,
+
             status: WalletStatus.PENDING,
-            partnerID: partnerId,
           },
         ],
       });
       when(consumerRepo.getConsumer(consumerId)).thenResolve(consumer);
 
-      const partner: Partner = Partner.createPartner({
-        _id: partnerId,
-        name: "Fake Partner",
-        config: {
-          privateWallets: false,
-        } as any,
-      });
-      when(partnerService.getPartner(partnerId)).thenResolve(partner);
-
       const newWallet: CryptoWallet = {
         address: "fake_existing_wallet_address",
-        isPrivate: false,
+
         status: WalletStatus.REJECTED,
-        partnerID: partnerId,
       };
 
       const updatedConsumer: Consumer = consumer;
@@ -2566,8 +1997,6 @@ describe("ConsumerService", () => {
       expect(updateConsumerCallParams.props.cryptoWallets).toContainEqual({
         address: "fake_existing_wallet_address",
         status: WalletStatus.REJECTED,
-        partnerID: partnerId,
-        isPrivate: false,
       });
     });
   });
@@ -2578,7 +2007,7 @@ describe("ConsumerService", () => {
       when(smsService.sendSMS(phone, anyString())).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
       when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, "123")).thenResolve();
-      await consumerService.sendOtpToPhone("123", phone, "12345");
+      await consumerService.sendOtpToPhone("123", phone);
       verify(smsService.sendSMS(phone, anyString())).once();
       verify(mockOtpRepo.saveOTPObject(anything())).once();
     });
@@ -2588,7 +2017,7 @@ describe("ConsumerService", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";
       const email = "a@noba.com";
-      const partnerId = "fake-partner-id2";
+
       const otp = 123456;
 
       const consumer = Consumer.createConsumer({
@@ -2604,11 +2033,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
       });
 
@@ -2617,7 +2042,6 @@ describe("ConsumerService", () => {
         emailOrPhone: phone,
         identityType: IdentityType.consumer,
         consumerID: consumer.props._id,
-        partnerID: partnerId,
       });
 
       const phoneUpdateRequest: UserPhoneUpdateRequest = {
@@ -2631,10 +2055,10 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
-      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, partnerId, consumer.props._id)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props._id)).thenResolve(otpObject);
 
       try {
-        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, partnerId);
+        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -2647,7 +2071,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
 
-      const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, partnerId);
+      const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
       verify(consumerRepo.updateConsumer(anything())).once();
       const [requestArg] = capture(consumerRepo.updateConsumer).last();
       expect(requestArg.props.phone).toBe(phone);
@@ -2657,7 +2081,7 @@ describe("ConsumerService", () => {
     it("doesn't update user if identifier already exists", async () => {
       const phone = "+12434252";
       const email = "a@noba.com";
-      const partnerId = "fake-partner-id2";
+
       const otp = 123456;
 
       const consumer = Consumer.createConsumer({
@@ -2673,11 +2097,7 @@ describe("ConsumerService", () => {
             providerID: PaymentProvider.CHECKOUT,
           },
         ],
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
       });
 
@@ -2686,7 +2106,6 @@ describe("ConsumerService", () => {
         emailOrPhone: phone,
         identityType: IdentityType.consumer,
         consumerID: consumer.props._id,
-        partnerID: partnerId,
       });
 
       const phoneUpdateRequest: UserPhoneUpdateRequest = {
@@ -2695,11 +2114,11 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.ok(anything()));
-      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, partnerId, consumer.props._id)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props._id)).thenResolve(otpObject);
       when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
 
       try {
-        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest, partnerId);
+        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
         expect(true).toBe(false);
       } catch (err) {
         console.log(err);
@@ -2714,7 +2133,6 @@ describe("ConsumerService", () => {
   describe("sendOtpToEmail", () => {
     it("should send otp to given email address with given context", async () => {
       const email = "Rosie@Noba.com";
-      const partnerID = "Partner-123456789";
       const firstName = "Rosie";
       const otp = 654321;
 
@@ -2722,18 +2140,14 @@ describe("ConsumerService", () => {
         _id: "1234rwrwrwrwrwrwrwrw",
         firstName: firstName,
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerID,
-          },
-        ],
+
         isAdmin: false,
         phone: "+15559993333",
       });
 
       jest.spyOn(Utils, "generateOTP").mockReturnValueOnce(otp);
       when(
-        notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, partnerID, {
+        notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
           email: email,
           otp: otp.toString(),
           firstName: "Rosie",
@@ -2741,8 +2155,8 @@ describe("ConsumerService", () => {
       ).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
       when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props._id)).thenResolve();
-      await consumerService.sendOtpToEmail(email, consumer, partnerID);
-      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier, partnerID, consumer.props._id)).once();
+      await consumerService.sendOtpToEmail(email, consumer);
+      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier, consumer.props._id)).once();
     });
   });
 
@@ -2750,7 +2164,7 @@ describe("ConsumerService", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";
       const email = "Rosie@Noba.com";
-      const partnerId = "fake-partner-id";
+
       const otp = 123456;
       const otpObject = Otp.createOtp({
         otp: otp,
@@ -2762,11 +2176,7 @@ describe("ConsumerService", () => {
         _id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         phone: phone,
       });
@@ -2799,7 +2209,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
       when(
-        notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, undefined, {
+        notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           email: email,
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
@@ -2816,12 +2226,9 @@ describe("ConsumerService", () => {
       expect(requestArg.props.displayEmail).toBe(email);
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
 
-      verify(notificationService.sendNotification(anything(), anything(), anything())).once();
-      const [notificationType, notificationPartnerId, notificationUserArgs] = capture(
-        notificationService.sendNotification,
-      ).last();
+      verify(notificationService.sendNotification(anything(), anything())).once();
+      const [notificationType, notificationUserArgs] = capture(notificationService.sendNotification).last();
       expect(notificationType).toBe(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT);
-      expect(notificationPartnerId).toBe(undefined);
       expect(notificationUserArgs).toStrictEqual({
         email: email.toLowerCase(),
         firstName: consumer.props.firstName,
@@ -2831,13 +2238,13 @@ describe("ConsumerService", () => {
 
       //update consumer again, this time notification shouldn't be sent
       await consumerService.updateConsumerEmail(updateConsumerResponse, emailUpdateRequest);
-      verify(notificationService.sendNotification(anything(), anything(), anything())).once(); //already called above
+      verify(notificationService.sendNotification(anything(), anything())).once(); //already called above
     });
 
     it("doesn't update user if identifier already exists", async () => {
       const phone = "+12434252";
       const email = "Rosie@Noba.com";
-      const partnerId = "fake-partner-id";
+
       const otp = 123456;
       const otpObject = Otp.createOtp({
         otp: otp,
@@ -2849,11 +2256,7 @@ describe("ConsumerService", () => {
         _id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: partnerId,
-          },
-        ],
+
         isAdmin: false,
         phone: phone,
       });
@@ -2978,7 +2381,6 @@ describe("ConsumerService", () => {
           lastName: "lastName",
           email: "test@noba.com",
           phone: "+9876541230",
-          partners: [{ partnerID: "DEFAULT_PARTNER_ID" }],
           handle: "test",
           circleWalletID: "mock_circle_wallet_id",
         }),
@@ -3002,7 +2404,6 @@ describe("ConsumerService", () => {
           lastName: "lastName",
           email: "test@noba.com",
           phone: "+9876541230",
-          partners: [{ partnerID: "DEFAULT_PARTNER_ID" }],
           handle: "test",
         }),
       );

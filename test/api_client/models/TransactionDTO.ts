@@ -51,10 +51,6 @@ export type TransactionDTO = {
    */
   destinationWalletAddress?: string;
   /**
-   * Unique ID of the partner through which this transaction was made
-   */
-  partnerID: string;
-  /**
    * Unique ID of the payment method used to fund this transaction
    */
   paymentMethodID: string;

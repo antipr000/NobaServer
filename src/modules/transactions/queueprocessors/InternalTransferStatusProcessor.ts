@@ -88,7 +88,6 @@ export class InternalTransferStatusProcessor extends MessageProcessor {
       /*
     await this.notificationService.sendNotification(
       NotificationEventType.SEND_CRYPTO_FAILED_EVENT,
-      transaction.props.partnerID,
       {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,

@@ -9,6 +9,5 @@ export type HandlePaymentResponse = {
   cardNumber: string;
   sessionID: string;
   transactionID: string;
-  partnerID: string;
   binData: CreditCardDTO;
 };

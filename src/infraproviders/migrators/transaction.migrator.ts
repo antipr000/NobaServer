@@ -81,7 +81,6 @@ export class TransactionMigrator {
       smartContractData: queriedTransactionRecord.smartContractData,
       fixedSide: queriedTransactionRecord.fixedSide,
       type: queriedTransactionRecord.type,
-      partnerID: queriedTransactionRecord.partnerID,
       tradeQuoteID: queriedTransactionRecord.tradeQuoteID,
       nobaTransferTradeID: queriedTransactionRecord.nobaTransferTradeID,
       nobaTransferSettlementID: queriedTransactionRecord.nobaTransferSettlementID,

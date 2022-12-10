@@ -100,14 +100,6 @@ elliptic:
   secretKey: "63a1e25708177ca72113ac07f659ea50"
   baseUrl: "https://aml-api.elliptic.co"
 
-squid:
-  awsSecretNameForApiKey: ""
-  apiKey: "testApiKey"
-  baseUrl: "https://testnet.api.0xsquid.com"
-  intermediaryLeg: "AVAX"
-  temporaryWalletAddress: "0xDb933AE704a2D8acF4201D75106464b30dEC1E4e"
-  slippage: 1
-
 configuration:
   lowAmountThreshold: 0.25
   highAmountThreshold: 75
@@ -115,7 +107,7 @@ configuration:
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
 
 partner:
-  embedSecretKey: "QnZSDgPC1Z3BY+du+u1LYmvlKH3i9lDgFPEexRLgY33yDBGGtoseqkf5oXP7aRRvU0wMScP5YHvqsxS45e3l2A=="
+  embedSecretKey: "Noba_Secret_1660840944064_6Y4zLkE21zmGmSdW4zQbT"
   publicS3Bucket: "noba-partner-data"
   publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 

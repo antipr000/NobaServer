@@ -6,16 +6,10 @@ import Joi from "joi";
 const Permissions = {
   viewNobaDashboard: "VIEW_NOBA_DASHBOARD",
   viewConsumerSupportTickets: "VIEW_CONSUMER_SUPPORT_TICKETS",
-  viewPartnersSupportTickets: "VIEW_PARTNER_SUPPORT_TICKETS",
-  registerPartner: "REGISTER_A_NEW_PARTNER",
-  addAdminsToPartner: "ADD_PARTNER_ADMIN",
-  updateAdminsForPartner: "UPDATE_PARTNER_ADMIN",
-  removePartnerAdmin: "REMOVE_PARTNER_ADMIN",
   addNobaAdmin: "ADD_NOBA_ADMIN",
   removeNobaAdmin: "REMOVE_NOBA_ADMIN",
   changeNobaAdminPrivileges: "CHANGE_NOBA_ADMIN_PRIVILEGES",
   updateConsumerData: "UPDATE_CONSUMER_DATA",
-  queryPartnerTransactions: "QUERY_PARTNER_TRANSACTIONS",
 };
 
 export enum NOBA_ADMIN_ROLE_TYPES {
@@ -29,31 +23,16 @@ const AdminRolesWithTheirPrivileges = {
     permissions: [Permissions.viewNobaDashboard, Permissions.viewConsumerSupportTickets],
   },
   INTERMEDIATE: {
-    permissions: [
-      Permissions.viewNobaDashboard,
-      Permissions.viewConsumerSupportTickets,
-      Permissions.viewPartnersSupportTickets,
-      Permissions.registerPartner,
-      Permissions.addAdminsToPartner,
-      Permissions.updateAdminsForPartner,
-      Permissions.removePartnerAdmin,
-      Permissions.queryPartnerTransactions,
-    ],
+    permissions: [Permissions.viewNobaDashboard, Permissions.viewConsumerSupportTickets],
   },
   ADMIN: {
     permissions: [
       Permissions.viewNobaDashboard,
       Permissions.viewConsumerSupportTickets,
-      Permissions.viewPartnersSupportTickets,
-      Permissions.registerPartner,
-      Permissions.addAdminsToPartner,
-      Permissions.removePartnerAdmin,
       Permissions.addNobaAdmin,
-      Permissions.updateAdminsForPartner,
       Permissions.removeNobaAdmin,
       Permissions.changeNobaAdminPrivileges,
       Permissions.updateConsumerData,
-      Permissions.queryPartnerTransactions,
     ],
   },
 };
@@ -103,26 +82,6 @@ export class Admin extends AggregateRoot<AdminProps> {
 
   public canViewCustomerSupportTickets(): boolean {
     return this.hasPermission(Permissions.viewConsumerSupportTickets);
-  }
-
-  public canViewPartnerSupportTickets(): boolean {
-    return this.hasPermission(Permissions.viewPartnersSupportTickets);
-  }
-
-  public canRegisterPartner(): boolean {
-    return this.hasPermission(Permissions.registerPartner);
-  }
-
-  public canAddAdminsToPartner(): boolean {
-    return this.hasPermission(Permissions.addAdminsToPartner);
-  }
-
-  public canUpdateAdminsForPartner(): boolean {
-    return this.hasPermission(Permissions.updateAdminsForPartner);
-  }
-
-  public canRemoveAdminsFromPartner(): boolean {
-    return this.hasPermission(Permissions.removePartnerAdmin);
   }
 
   public canAddNobaAdmin(): boolean {

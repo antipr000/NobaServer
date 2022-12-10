@@ -3,17 +3,15 @@ export class SendCardAdditionFailedEvent {
   public readonly firstName?: string;
   public readonly lastName?: string;
   public readonly nobaUserID?: string;
-  public readonly partnerUserID?: string;
-  public readonly last4Digits: string;
-  public readonly partnerID?: string;
 
-  constructor({ email, firstName, lastName, nobaUserID, partnerUserID, last4Digits, partnerID }) {
+  public readonly last4Digits: string;
+
+  constructor({ email, firstName, lastName, nobaUserID, last4Digits }) {
     this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
     this.nobaUserID = nobaUserID;
-    this.partnerUserID = partnerUserID;
+
     this.last4Digits = last4Digits;
-    this.partnerID = partnerID;
   }
 }

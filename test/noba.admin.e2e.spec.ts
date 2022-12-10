@@ -23,10 +23,8 @@ import {
   clearAccessTokenForNextRequests,
   computeSignature,
   insertNobaAdmin,
-  insertPartnerAdmin,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
-  setupPartner,
   TEST_API_KEY,
 } from "./common";
 import { getRandomEmail, getRandomID } from "./TestUtils";
@@ -45,7 +43,6 @@ describe("Noba Admin", () => {
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
-    await setupPartner(mongoUri, "dummy-partner");
 
     const environmentVaraibles = {
       MONGO_URI: mongoUri,
@@ -75,25 +72,6 @@ describe("Noba Admin", () => {
       })) as NobaAdminDTO & ResponseStatus;
 
       expect(getNobaAdminResponse.__status).toBe(401);
-    });
-
-    it("Should return 403 if requested with PartnerAdmin credentials with same EMAIL", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-
-      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-
-      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/admins", JSON.stringify({}));
-      const getNobaAdminResponse = (await AdminService.getNobaAdmin({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-      })) as NobaAdminDTO & ResponseStatus;
-      expect(getNobaAdminResponse.__status).toBe(403);
     });
 
     it("Should return 403 if requested with Consumer credentials with same EMAIL", async () => {
@@ -137,40 +115,6 @@ describe("Noba Admin", () => {
   });
 
   describe("POST /admins", () => {
-    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-      const partnerLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerLoginResponse.access_token);
-
-      // TODO(#189): Remove '_id' from the input DTO.
-      const signature = computeSignature(
-        TEST_TIMESTAMP,
-        "POST",
-        "/v1/admins",
-        JSON.stringify({
-          email: "test.noba.admin@noba.com",
-          name: "Test Admin",
-          role: "BASIC",
-        }),
-      );
-      const createNobaAdminResponse = (await AdminService.createNobaAdmin({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-        requestBody: {
-          email: "test.noba.admin@noba.com",
-          name: "Test Admin",
-          role: "BASIC",
-        },
-      })) as NobaAdminDTO & ResponseStatus;
-
-      expect(createNobaAdminResponse.__status).toBe(403);
-    });
-
     it("shouldn't allow requests with Consumer credentials", async () => {
       const consumerEmail = getRandomEmail("test.user");
 
@@ -317,43 +261,6 @@ describe("Noba Admin", () => {
   });
 
   describe("PATCH /admins/{id}", () => {
-    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-
-      const nobaAdminEmail = getRandomEmail("test.noba.admin.2");
-      const nobaAdminId = getRandomID("A2A2A2A2A2A2");
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
-
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-      const partnerLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerLoginResponse.access_token);
-
-      const signature = computeSignature(
-        TEST_TIMESTAMP,
-        "PATCH",
-        `/v1/admins/${nobaAdminId}`,
-        JSON.stringify({
-          name: "Updated Test Admin",
-          role: "ADMIN",
-        }),
-      );
-
-      const updateNobaAdminResponse = (await AdminService.updateNobaAdmin({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-        adminId: nobaAdminId,
-        requestBody: {
-          name: "Updated Test Admin",
-          role: "ADMIN",
-        },
-      })) as NobaAdminDTO & ResponseStatus;
-
-      expect(updateNobaAdminResponse.__status).toBe(403);
-    });
-
     it("shouldn't allow requests with Consumer credentials", async () => {
       const consumerEmail = getRandomEmail("test.user");
 
@@ -696,31 +603,6 @@ describe("Noba Admin", () => {
   });
 
   describe("DELETE /admins/{id}", () => {
-    it("shouldn't allow requests with PartnerAdmin credentials", async () => {
-      const partnerAdminEmail = getRandomEmail("test.partner.admin");
-      expect(
-        await insertPartnerAdmin(mongoUri, partnerAdminEmail, getRandomID("PAPAPAPAPA"), "BASIC", "PPPPPPPPPP"),
-      ).toBe(true);
-
-      const nobaAdminEmail = getRandomEmail("test.noba.admin.2");
-      const nobaAdminId = getRandomID("A2A2A2A2A2A2");
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
-
-      const partnerAdminLoginResponse = await loginAndGetResponse(mongoUri, partnerAdminEmail, "PARTNER_ADMIN");
-      setAccessTokenForTheNextRequests(partnerAdminLoginResponse.access_token);
-
-      const signature = computeSignature(TEST_TIMESTAMP, "DELETE", `/v1/admins/${nobaAdminId}`, JSON.stringify({}));
-
-      const deleteNobaAdminResponse = (await AdminService.deleteNobaAdmin({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-        adminId: nobaAdminId,
-      })) as DeleteNobaAdminDTO & ResponseStatus;
-
-      expect(deleteNobaAdminResponse.__status).toBe(403);
-    });
-
     it("shouldn't allow requests with Consumer credentials", async () => {
       const consumerEmail = getRandomEmail("test.consumer");
 

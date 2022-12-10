@@ -17,7 +17,4 @@ export class TransactionQuoteQueryDTO {
 
   @ApiProperty({ enum: TransactionType })
   transactionType: TransactionType;
-
-  @ApiPropertyOptional() // If not supplied, it will be added in the controller
-  partnerID?: string;
 }

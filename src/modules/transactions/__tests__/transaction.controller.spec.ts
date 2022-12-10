@@ -20,9 +20,6 @@ import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { TransactionQuoteQueryDTO } from "../dto/TransactionQuoteQueryDTO";
 import { CurrencyType } from "../../../modules/common/domain/Types";
 import { TransactionStatus, TransactionType } from "../domain/Types";
-import { PartnerService } from "../../../modules/partner/partner.service";
-import { Partner } from "../../../modules/partner/domain/Partner";
-import { getMockPartnerServiceWithDefaults } from "../../../modules/partner/mocks/mock.partner.service";
 import { TransactionQuoteDTO } from "../dto/TransactionQuoteDTO";
 import { X_NOBA_API_KEY } from "../../../modules/auth/domain/HeaderConstants";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
@@ -35,31 +32,18 @@ describe("TransactionController", () => {
   let transactionService: TransactionService;
   let transactionController: TransactionController;
   let limitsService: LimitsService;
-  let partnerService: PartnerService;
   let transactionMapper: TransactionMapper;
-
-  const partner = Partner.createPartner({
-    _id: "test-partner-1234",
-    apiKeyForEmbed: "test-api-key",
-    name: "Fake Partner",
-  });
 
   const userId = "1234567890";
   const consumer = Consumer.createConsumer({
     _id: userId,
     email: "test@noba.com",
-    partners: [
-      {
-        partnerID: "partner-1",
-      },
-    ],
   });
 
   beforeAll(async () => {
     transactionMapper = new TransactionMapper();
     transactionService = getMockTransactionServiceWithDefaults();
     limitsService = getMockLimitsServiceWithDefaults();
-    partnerService = getMockPartnerServiceWithDefaults();
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync({}), getTestWinstonModule()],
       providers: [
@@ -70,10 +54,6 @@ describe("TransactionController", () => {
         {
           provide: LimitsService,
           useFactory: () => instance(limitsService),
-        },
-        {
-          provide: PartnerService,
-          useFactory: () => instance(partnerService),
         },
       ],
       controllers: [TransactionController],
@@ -104,22 +84,15 @@ describe("TransactionController", () => {
         exchangeRate: 10,
       };
 
-      when(partnerService.getPartnerFromApiKey(partner.props.apiKeyForEmbed)).thenResolve(partner);
-
       when(
         transactionService.requestTransactionQuote(
           deepEqual({
             ...transactionQuoteQuery,
-            partnerID: partner.props._id,
           }),
         ),
       ).thenResolve(transactionQuote);
 
-      const response = await transactionController.getTransactionQuote(
-        { [X_NOBA_API_KEY]: partner.props.apiKeyForEmbed },
-        {},
-        transactionQuoteQuery,
-      );
+      const response = await transactionController.getTransactionQuote({}, {}, transactionQuoteQuery);
 
       expect(response).toStrictEqual(transactionQuote);
     });
@@ -146,20 +119,17 @@ describe("TransactionController", () => {
         exchangeRate: 10,
       };
 
-      when(partnerService.getPartnerFromApiKey(partner.props.apiKeyForEmbed)).thenResolve(partner);
-
       when(
         transactionService.requestTransactionQuote(
           deepEqual({
             ...transactionQuoteQuery,
-            partnerID: partner.props._id,
           }),
         ),
       ).thenResolve(transactionQuote);
 
       const response = await transactionController.getTransactionQuote(
-        { [X_NOBA_API_KEY]: partner.props.apiKeyForEmbed },
-        { user: { entity: consumer, partnerId: partner.props._id } },
+        {},
+        { user: { entity: consumer } },
         transactionQuoteQuery,
       );
 
@@ -190,7 +160,6 @@ describe("TransactionController", () => {
         leg2: "ETH",
         fixedSide: CurrencyType.FIAT,
         type: TransactionType.ONRAMP,
-        partnerID: partner.props._id,
         tradeQuoteID: "fake-trade-quote-id",
         nobaFee: 0.01,
         processingFee: 0.02,
@@ -218,7 +187,7 @@ describe("TransactionController", () => {
       when(transactionService.getTransaction(transaction.props._id)).thenResolve(transactionDTO);
 
       const result = await transactionController.getTransaction(
-        { user: { entity: consumer, partnerId: partner.props._id } },
+        { user: { entity: consumer } },
         transaction.props._id,
         consumer,
       );

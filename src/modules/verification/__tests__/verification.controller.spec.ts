@@ -78,20 +78,10 @@ describe("VerificationController", () => {
       const consumer: ConsumerProps = {
         _id: "testuser-1234",
         email: "test@noba.com",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       };
 
       when(
-        verificationService.verifyConsumerInformation(
-          consumerInfo.userID,
-          "test-session",
-          deepEqual(consumerInfo),
-          "partner-1",
-        ),
+        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
       ).thenResolve({
         status: KYCStatus.APPROVED,
       });
@@ -106,7 +96,7 @@ describe("VerificationController", () => {
           dateOfBirth: consumerInfo.dateOfBirth,
         },
         {
-          user: { entity: Consumer.createConsumer(consumer), partnerId: "partner-1" } as AuthenticatedUser,
+          user: { entity: Consumer.createConsumer(consumer) } as AuthenticatedUser,
         },
       );
 
@@ -133,20 +123,10 @@ describe("VerificationController", () => {
       const consumer: ConsumerProps = {
         _id: "testuser-1234",
         email: "fake@noba.com",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       };
 
       when(
-        verificationService.verifyConsumerInformation(
-          consumerInfo.userID,
-          "test-session",
-          deepEqual(consumerInfo),
-          "partner-1",
-        ),
+        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
       ).thenResolve({
         status: KYCStatus.REJECTED,
       });
@@ -161,7 +141,7 @@ describe("VerificationController", () => {
           dateOfBirth: consumerInfo.dateOfBirth,
         },
         {
-          user: { entity: Consumer.createConsumer(consumer), partnerId: "partner-1" } as AuthenticatedUser,
+          user: { entity: Consumer.createConsumer(consumer) } as AuthenticatedUser,
         },
       );
 
@@ -188,20 +168,10 @@ describe("VerificationController", () => {
       const consumer: ConsumerProps = {
         _id: "testuser-1234",
         email: "shadyemail@noba.com",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       };
 
       when(
-        verificationService.verifyConsumerInformation(
-          consumerInfo.userID,
-          "test-session",
-          deepEqual(consumerInfo),
-          "partner-1",
-        ),
+        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
       ).thenResolve({
         status: KYCStatus.FLAGGED,
       });
@@ -216,7 +186,7 @@ describe("VerificationController", () => {
           dateOfBirth: consumerInfo.dateOfBirth,
         },
         {
-          user: { entity: Consumer.createConsumer(consumer), partnerId: "partner-1" } as AuthenticatedUser,
+          user: { entity: Consumer.createConsumer(consumer) } as AuthenticatedUser,
         },
       );
 
@@ -231,11 +201,7 @@ describe("VerificationController", () => {
         firstName: "Fake",
         lastName: "Consumer",
         email: "fake+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         verificationData: {
           verificationProvider: VerificationProviders.SARDINE,
           kycVerificationStatus: KYCStatus.APPROVED,
@@ -244,15 +210,13 @@ describe("VerificationController", () => {
         },
       });
 
-      when(
-        verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2", "partner-1"),
-      ).thenResolve({
+      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
         status: DocumentVerificationStatus.APPROVED,
       });
 
       try {
         await verificationController.getDocumentVerificationResult("fake-transaction-2", {
-          user: { entity: consumer, partnerId: "partner-1" } as AuthenticatedUser,
+          user: { entity: consumer } as AuthenticatedUser,
         });
         expect(true).toBe(false);
       } catch (e) {
@@ -267,11 +231,7 @@ describe("VerificationController", () => {
         firstName: "Fake",
         lastName: "Consumer",
         email: "fake+consumer@noba.com",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         verificationData: {
           verificationProvider: VerificationProviders.SARDINE,
           kycVerificationStatus: KYCStatus.APPROVED,
@@ -280,14 +240,12 @@ describe("VerificationController", () => {
         },
       });
 
-      when(
-        verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2", "partner-1"),
-      ).thenResolve({
+      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
         status: DocumentVerificationStatus.APPROVED,
       });
 
       const result = await verificationController.getDocumentVerificationResult("fake-transaction-2", {
-        user: { entity: consumer, partnerId: "partner-1" } as AuthenticatedUser,
+        user: { entity: consumer } as AuthenticatedUser,
       });
       expect(result.status).toBe(DocumentVerificationState.VERIFIED);
     });
@@ -300,11 +258,7 @@ describe("VerificationController", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         address: {
           streetLine1: "Fake Street",
           streetLine2: "Fake Street Line 2",
@@ -344,7 +298,7 @@ describe("VerificationController", () => {
 
       const result = await verificationController.getIdentityDocumentVerificationURL(
         {
-          user: { entity: consumer, partnerId: "fake-partner" } as AuthenticatedUser,
+          user: { entity: consumer } as AuthenticatedUser,
         },
         "session-id",
         IDVerificationURLRequestLocale.EN_US,
@@ -361,11 +315,7 @@ describe("VerificationController", () => {
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
-        partners: [
-          {
-            partnerID: "fake-partner",
-          },
-        ],
+
         address: {
           streetLine1: "Fake Street",
           streetLine2: "Fake Street Line 2",
@@ -405,7 +355,7 @@ describe("VerificationController", () => {
 
       const result = await verificationController.getIdentityDocumentVerificationURL(
         {
-          user: { entity: consumer, partnerId: "fake-partner" } as AuthenticatedUser,
+          user: { entity: consumer } as AuthenticatedUser,
         },
         "session-id",
         IDVerificationURLRequestLocale.EN_US,
@@ -419,7 +369,7 @@ describe("VerificationController", () => {
       try {
         await verificationController.getIdentityDocumentVerificationURL(
           {
-            user: { entity: undefined, partnerId: "fake-partner" } as AuthenticatedUser,
+            user: { entity: undefined } as AuthenticatedUser,
           },
           "session-id",
           IDVerificationURLRequestLocale.EN_US,

@@ -2267,11 +2267,6 @@ describe("ZerohashAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ExecuteQuoteRequest = {
@@ -2355,11 +2350,6 @@ describe("ZerohashAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ExecuteQuoteRequest = {
@@ -2388,11 +2378,6 @@ describe("ZerohashAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ExecuteQuoteRequest = {
@@ -2569,11 +2554,6 @@ describe("ZerohashAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ConsumerAccountTransferRequest = {
@@ -2624,11 +2604,6 @@ describe("ZerohashAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ConsumerAccountTransferRequest = {
@@ -2857,11 +2832,6 @@ describe("ZerohashAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ConsumerWalletTransferRequest = {
@@ -2894,11 +2864,6 @@ describe("ZerohashAssetService", () => {
         _id: "1234567890",
         email: "test@noba.com",
         zhParticipantCode: "12345",
-        partners: [
-          {
-            partnerID: "partner-1",
-          },
-        ],
       });
 
       const request: ConsumerWalletTransferRequest = {

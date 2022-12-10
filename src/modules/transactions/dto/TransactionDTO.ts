@@ -62,9 +62,6 @@ export class TransactionDTO {
   @ApiPropertyOptional({ description: "Wallet address to which the crypto purchase was transferred" })
   destinationWalletAddress?: string;
 
-  @ApiProperty({ description: "Unique ID of the partner through which this transaction was made" })
-  partnerID?: string;
-
   @ApiProperty({ description: "Unique ID of the payment method used to fund this transaction" })
   paymentMethodID: string;
 

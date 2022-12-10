@@ -8,5 +8,4 @@ export type TransactionInformation = {
   cryptoCurrencyCode?: string;
   walletAddress?: string;
   walletStatus?: WalletStatus;
-  partnerName: string;
 };

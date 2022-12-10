@@ -38,11 +38,6 @@ describe("LimitsService", () => {
   const consumer: Consumer = Consumer.createConsumer({
     _id: userId,
     email: "test@noba.com",
-    partners: [
-      {
-        partnerID: "partner-1",
-      },
-    ],
     paymentMethods: [],
   });
 
@@ -124,7 +119,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         49,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -137,7 +132,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         18,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.ACH,
       );
@@ -150,7 +145,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         501,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -163,7 +158,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         201,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.ACH,
       );
@@ -178,7 +173,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         50,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -193,7 +188,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         50,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.ACH,
       );
@@ -208,7 +203,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         50,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -223,7 +218,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         50,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -240,7 +235,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         200,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -256,7 +251,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         200,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -272,7 +267,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         200,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -313,7 +308,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumerEntity,
         200,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.ACH,
       );
@@ -354,7 +349,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumerEntity,
         200,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.ACH,
       );
@@ -407,7 +402,7 @@ describe("LimitsService", () => {
 
       const result: ConsumerLimitsDTO = await limitsService.getConsumerLimits(
         consumer,
-        "fake-partner-1",
+
         TransactionType.ONRAMP,
         PaymentMethodType.CARD,
       );
@@ -420,7 +415,7 @@ describe("LimitsService", () => {
   });
 
   describe("getLimits", () => {
-    const partnerSpecificProfile = LimitProfile.createLimitProfile({
+    const specificLimitProfile = LimitProfile.createLimitProfile({
       _id: "partner-limit-profile",
       name: "Partner Limit Profile",
       cardLimits: {
@@ -510,16 +505,6 @@ describe("LimitsService", () => {
       },
     });
 
-    const partnerSpecificConfig = LimitConfiguration.createLimitConfiguration({
-      _id: "partner-config-1",
-      isDefault: false,
-      priority: 6,
-      profile: partnerSpecificProfile.props._id,
-      criteria: {
-        partnerID: "fake-partner-2",
-      },
-    });
-
     const walletSpecificConfig = LimitConfiguration.createLimitConfiguration({
       _id: "wallet-config-1",
       isDefault: false,
@@ -543,38 +528,31 @@ describe("LimitsService", () => {
     beforeAll(async () => {
       await setupTestModule(defaultEnvironmentVariables);
       when(limitConfigRepo.getAllLimitConfigs()).thenResolve([
-        partnerSpecificConfig,
         walletSpecificConfig,
         minTransactionAmountConfig,
         defaultLimitConfiguration,
       ]);
-      when(limitProfileRepo.getProfile(partnerSpecificProfile.props._id)).thenResolve(partnerSpecificProfile);
+      when(limitProfileRepo.getProfile(specificLimitProfile.props._id)).thenResolve(specificLimitProfile);
       when(limitProfileRepo.getProfile(walletTransactionProfile.props._id)).thenResolve(walletTransactionProfile);
       when(limitProfileRepo.getProfile(minTotalTransactionProfile.props._id)).thenResolve(minTotalTransactionProfile);
       when(limitProfileRepo.getProfile(defaultProfile.props._id)).thenResolve(defaultProfile);
     });
 
-    it("should return partner specific profile when partnerID matches", async () => {
-      when(transactionRepo.getTotalUserTransactionAmount(userId)).thenResolve(2000);
-      const profile = await limitsService.getLimits(consumer, "fake-partner-2", TransactionType.ONRAMP);
-      expect(profile).toStrictEqual(partnerSpecificProfile);
-    });
-
     it("should return wallet specific profile when transaction type is NOBA_WALLET", async () => {
       when(transactionRepo.getTotalUserTransactionAmount(userId)).thenResolve(2000);
-      const profile = await limitsService.getLimits(consumer, "fake-partner-1", TransactionType.NOBA_WALLET);
+      const profile = await limitsService.getLimits(consumer, TransactionType.NOBA_WALLET);
       expect(profile).toStrictEqual(walletTransactionProfile);
     });
 
     it("should return minimum transaction specific profile when total transaction amount exceeds", async () => {
       when(transactionRepo.getTotalUserTransactionAmount(userId)).thenResolve(2000);
-      const profile = await limitsService.getLimits(consumer, "fake-partner-1", TransactionType.ONRAMP);
+      const profile = await limitsService.getLimits(consumer, TransactionType.ONRAMP);
       expect(profile).toStrictEqual(minTotalTransactionProfile);
     });
 
     it("should return default profile when none of the conditions match", async () => {
       when(transactionRepo.getTotalUserTransactionAmount(userId)).thenResolve(200);
-      const profile = await limitsService.getLimits(consumer, "fake-partner-1", TransactionType.ONRAMP);
+      const profile = await limitsService.getLimits(consumer, TransactionType.ONRAMP);
       expect(profile).toStrictEqual(defaultProfile);
     });
   });

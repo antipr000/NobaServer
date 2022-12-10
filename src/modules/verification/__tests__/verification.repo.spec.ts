@@ -13,7 +13,6 @@ import { VerificationData, VerificationDataProps } from "../domain/VerificationD
 const VERIFICATION_ID_PREFIX = "verification_id_prefix";
 const TEST_NUMBER = 5;
 const DEFAULT_USER_ID = "user_id";
-const DEFAULT_PARTNER_ID = "partener_id";
 const DEFAULT_TRANSACTION_ID = "transaction_id";
 
 const mkid = (id: string): string => {

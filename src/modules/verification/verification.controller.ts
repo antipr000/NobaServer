@@ -100,16 +100,11 @@ export class VerificationController {
     if (!(user.entity instanceof Consumer))
       throw new BadRequestException("verifyConsumer is only allowed for consumer");
     const consumer: Consumer = user.entity;
-    const result = await this.verificationService.verifyConsumerInformation(
-      consumer.props._id,
-      sessionKey,
-      {
-        ...requestBody,
-        userID: consumer.props._id,
-        email: consumer.props.email,
-      },
-      user.partnerId,
-    );
+    const result = await this.verificationService.verifyConsumerInformation(consumer.props._id, sessionKey, {
+      ...requestBody,
+      userID: consumer.props._id,
+      email: consumer.props.email,
+    });
     return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }
 
@@ -161,18 +156,13 @@ export class VerificationController {
     const user: AuthenticatedUser = request.user;
     if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
-    const result = await this.verificationService.verifyDocument(
-      consumer.props._id,
-      sessionKey,
-      {
-        userID: consumer.props._id,
-        documentType: requestData.documentType,
-        documentFrontImage: files.frontImage[0],
-        documentBackImage: files.backImage?.length > 0 ? files.backImage[0] : undefined,
-        photoImage: files.photoImage?.length > 0 ? files.photoImage[0] : undefined,
-      },
-      user.partnerId,
-    );
+    const result = await this.verificationService.verifyDocument(consumer.props._id, sessionKey, {
+      userID: consumer.props._id,
+      documentType: requestData.documentType,
+      documentFrontImage: files.frontImage[0],
+      documentBackImage: files.backImage?.length > 0 ? files.backImage[0] : undefined,
+      photoImage: files.photoImage?.length > 0 ? files.photoImage[0] : undefined,
+    });
 
     return result;
   }
@@ -196,7 +186,7 @@ export class VerificationController {
     if (id !== consumer.props.verificationData.documentVerificationTransactionID) {
       throw new NotFoundException("No verification record is found for the user with the given id");
     }
-    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id, user.partnerId);
+    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 

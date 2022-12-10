@@ -2,9 +2,6 @@ import { Inject, Injectable } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { NotificationConfiguration } from "../partner/domain/NotificationConfiguration";
-import { WebhookType } from "../partner/domain/WebhookTypes";
-import { PartnerService } from "../partner/partner.service";
 import { NotificationPayload } from "./domain/NotificationPayload";
 import { NotificationEventHandler, NotificationEventType } from "./domain/NotificationTypes";
 import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
@@ -29,59 +26,21 @@ import { SendWelcomeMessageEvent } from "./events/SendWelcomeMessageEvent";
 @Injectable()
 export class NotificationService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
-  constructor(private readonly eventEmitter: EventEmitter2, private readonly partnerService: PartnerService) {}
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
-  async sendNotification(
-    eventType: NotificationEventType,
-    partnerID: string,
-    payload: NotificationPayload,
-  ): Promise<void> {
-    let notificationEvent: NotificationConfiguration = null;
-    if (partnerID) {
-      const partner = await this.partnerService.getPartner(partnerID);
-
-      if (partner) {
-        const notificationConfigs: NotificationConfiguration[] = partner.props.config?.notificationConfig ?? [];
-        const isWebhookConfigured = this.partnerService.getWebhook(partner, WebhookType.NOTIFICATION) != null;
-
-        const filteredNotificationEvents = notificationConfigs.filter(
-          notificationConfig => notificationConfig.notificationEventType === eventType,
-        );
-
-        // If webhooks are not properly configured for the environment, then don't even look for webhooks in config
-        if (!isWebhookConfigured || filteredNotificationEvents.length === 0) {
-          notificationEvent = {
-            notificationEventType: eventType,
-            notificationEventHandler: [NotificationEventHandler.EMAIL],
-          };
-        } else {
-          notificationEvent = filteredNotificationEvents[0];
-        }
-      } else {
-        notificationEvent = {
-          notificationEventType: eventType,
-          notificationEventHandler: [NotificationEventHandler.EMAIL],
-        };
-      }
-    } else {
-      notificationEvent = {
-        notificationEventType: eventType,
-        notificationEventHandler: [NotificationEventHandler.EMAIL],
-      };
-    }
+  async sendNotification(eventType: NotificationEventType, payload: NotificationPayload): Promise<void> {
+    const notificationEvent = {
+      notificationEventType: eventType,
+      notificationEventHandler: [NotificationEventHandler.EMAIL],
+    };
 
     notificationEvent.notificationEventHandler.forEach(eventHandler => {
       const eventName = `${eventHandler}.${eventType}`;
-      this.createEvent(eventName, eventType, payload, partnerID);
+      this.createEvent(eventName, eventType, payload);
     });
   }
 
-  private createEvent(
-    eventName: string,
-    eventType: NotificationEventType,
-    payload: NotificationPayload,
-    partnerID?: string,
-  ) {
+  private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
     switch (eventType) {
       case NotificationEventType.SEND_OTP_EVENT:
         this.eventEmitter.emitAsync(
@@ -90,7 +49,6 @@ export class NotificationService {
             email: payload.email,
             otp: payload.otp,
             name: payload.firstName,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -102,9 +60,8 @@ export class NotificationService {
             otp: payload.otp,
             name: payload.firstName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             walletAddress: payload.walletAddress,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -116,8 +73,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -129,8 +84,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -142,8 +95,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -155,8 +106,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -168,8 +117,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -181,8 +128,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -194,8 +139,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -207,8 +150,6 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -220,10 +161,9 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             cardNetwork: payload.cardNetwork,
             last4Digits: payload.last4Digits,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -235,9 +175,8 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             last4Digits: payload.last4Digits,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -249,10 +188,9 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             cardNetwork: payload.cardNetwork,
             last4Digits: payload.last4Digits,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -264,9 +202,8 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             params: payload.transactionInitiatedParams,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -278,9 +215,8 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             params: payload.cryptoFailedParams,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -292,9 +228,8 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             params: payload.orderExecutedParams,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -306,9 +241,8 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             params: payload.orderFailedParams,
-            partnerID: partnerID,
           }),
         );
         break;
@@ -320,14 +254,13 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-            partnerUserID: payload.partnerUserID,
+
             sessionID: payload.sessionID,
             transactionID: payload.transactionID,
             paymentToken: payload.paymentToken,
             processor: payload.processor,
             responseCode: payload.responseCode,
             responseSummary: payload.responseSummary,
-            partnerID: partnerID,
           }),
         );
         break;

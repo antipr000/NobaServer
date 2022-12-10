@@ -61,35 +61,31 @@ export class OnChainPendingProcessor extends MessageProcessor {
       );
 
       // TODO Update notification email once Gal is up with new template
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
-        transaction.props.partnerID,
-        {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
-          email: consumer.props.displayEmail,
-          orderExecutedParams: {
-            transactionID: transaction.props.transactionID,
-            transactionTimestamp: transaction.props.transactionTimestamp,
-            settledTimestamp: new Date(),
-            transactionHash: transaction.props.blockchainTransactionId,
-            paymentMethod: paymentMethod.cardData.cardType,
-            last4Digits: paymentMethod.cardData.last4Digits,
-            fiatCurrency: transaction.props.leg1,
-            conversionRate: transaction.props.exchangeRate,
-            processingFee: transaction.props.processingFee,
-            networkFee: transaction.props.networkFee,
-            nobaFee: transaction.props.nobaFee,
-            totalPrice: transaction.props.leg1Amount,
-            cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
-            cryptocurrency: transaction.props.leg2,
-            cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
-            destinationWalletAddress: "Your Noba Wallet",
-            status: transaction.props.transactionStatus,
-          },
+      await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT, {
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props._id,
+        email: consumer.props.displayEmail,
+        orderExecutedParams: {
+          transactionID: transaction.props.transactionID,
+          transactionTimestamp: transaction.props.transactionTimestamp,
+          settledTimestamp: new Date(),
+          transactionHash: transaction.props.blockchainTransactionId,
+          paymentMethod: paymentMethod.cardData.cardType,
+          last4Digits: paymentMethod.cardData.last4Digits,
+          fiatCurrency: transaction.props.leg1,
+          conversionRate: transaction.props.exchangeRate,
+          processingFee: transaction.props.processingFee,
+          networkFee: transaction.props.networkFee,
+          nobaFee: transaction.props.nobaFee,
+          totalPrice: transaction.props.leg1Amount,
+          cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+          cryptocurrency: transaction.props.leg2,
+          cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
+          destinationWalletAddress: "Your Noba Wallet",
+          status: transaction.props.transactionStatus,
         },
-      );
+      });
       // TODO Send notification here once Gal is ready with the email template
       return;
     }
@@ -149,35 +145,31 @@ export class OnChainPendingProcessor extends MessageProcessor {
       // pass
     }
 
-    await this.notificationService.sendNotification(
-      NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
-      transaction.props.partnerID,
-      {
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
-        email: consumer.props.displayEmail,
-        orderExecutedParams: {
-          transactionID: transaction.props.transactionID,
-          transactionTimestamp: transaction.props.transactionTimestamp,
-          settledTimestamp: new Date(),
-          transactionHash: transaction.props.blockchainTransactionId,
-          paymentMethod: paymentMethod.cardData.cardType,
-          last4Digits: paymentMethod.cardData.last4Digits,
-          fiatCurrency: transaction.props.leg1,
-          conversionRate: transaction.props.exchangeRate,
-          processingFee: transaction.props.processingFee,
-          networkFee: transaction.props.networkFee,
-          nobaFee: transaction.props.nobaFee,
-          totalPrice: transaction.props.leg1Amount,
-          cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
-          cryptocurrency: transaction.props.leg2,
-          cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
-          destinationWalletAddress: transaction.props.destinationWalletAddress,
-          status: transaction.props.transactionStatus,
-          // TODO(#): Evaluate if we need to send "settledAmount" as well :)
-        },
+    await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT, {
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      nobaUserID: consumer.props._id,
+      email: consumer.props.displayEmail,
+      orderExecutedParams: {
+        transactionID: transaction.props.transactionID,
+        transactionTimestamp: transaction.props.transactionTimestamp,
+        settledTimestamp: new Date(),
+        transactionHash: transaction.props.blockchainTransactionId,
+        paymentMethod: paymentMethod.cardData.cardType,
+        last4Digits: paymentMethod.cardData.last4Digits,
+        fiatCurrency: transaction.props.leg1,
+        conversionRate: transaction.props.exchangeRate,
+        processingFee: transaction.props.processingFee,
+        networkFee: transaction.props.networkFee,
+        nobaFee: transaction.props.nobaFee,
+        totalPrice: transaction.props.leg1Amount,
+        cryptoAmount: transaction.props.executedCrypto, // This will be the final settled amount; may differ from original
+        cryptocurrency: transaction.props.leg2,
+        cryptoAmountExpected: transaction.props.leg2Amount, // This is the original quoted amount
+        destinationWalletAddress: transaction.props.destinationWalletAddress,
+        status: transaction.props.transactionStatus,
+        // TODO(#): Evaluate if we need to send "settledAmount" as well :)
       },
-    );
+    });
   }
 }

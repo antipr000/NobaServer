@@ -6,7 +6,5 @@ export type CryptoWallet = {
   chainType?: string;
   isEVMCompatible?: boolean;
   status: WalletStatus;
-  partnerID: string;
   riskScore?: number;
-  isPrivate: boolean;
 };

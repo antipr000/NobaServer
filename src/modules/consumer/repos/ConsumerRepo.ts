@@ -8,7 +8,6 @@ export interface IConsumerRepo {
   getConsumerByEmail(email: string): Promise<Result<Consumer>>;
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
   updateConsumer(consumer: Consumer): Promise<Consumer>;
-  getAllConsumersForPartner(partnerID: string): Promise<Consumer[]>;
   isHandleTaken(handle: string): Promise<boolean>;
   updateConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<void>;
 }

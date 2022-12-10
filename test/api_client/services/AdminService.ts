@@ -2,18 +2,13 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddNobaAdminDTO } from "../models/AddNobaAdminDTO";
-import type { AddPartnerAdminRequestDTO } from "../models/AddPartnerAdminRequestDTO";
 import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
-import type { CreatePartnerRequestDTO } from "../models/CreatePartnerRequestDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
-import type { PartnerAdminDTO } from "../models/PartnerAdminDTO";
-import type { PartnerDTO } from "../models/PartnerDTO";
 import type { TransactionDTO } from "../models/TransactionDTO";
 import type { TransactionStatsDTO } from "../models/TransactionStatsDTO";
 import type { UpdateNobaAdminDTO } from "../models/UpdateNobaAdminDTO";
-import type { UpdatePartnerAdminRequestDTO } from "../models/UpdatePartnerAdminRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -21,7 +16,7 @@ import { request as __request } from "../core/request";
 
 export class AdminService {
   /**
-   * Gets all transaction metrics for a given partner
+   * Gets all transaction metrics
    * @returns TransactionStatsDTO Transaction statistics
    * @throws ApiError
    */
@@ -241,228 +236,6 @@ export class AdminService {
       errors: {
         403: `User forbidden from deleting Noba admin or attempt to delete one's own record`,
         404: `Noba admin not found`,
-      },
-    });
-  }
-
-  /**
-   * Adds a new partner admin
-   * @returns PartnerAdminDTO Adds a new partner admin
-   * @throws ApiError
-   */
-  public static addAdminsForPartners({
-    xNobaApiKey,
-    partnerId,
-    requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    partnerId: string;
-    requestBody: AddPartnerAdminRequestDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<PartnerAdminDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/admins/partners/{partnerID}/admins",
-      path: {
-        partnerID: partnerId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Invalid parameter(s)`,
-        403: `User forbidden from adding a new partner admin`,
-        404: `Partner admin not found`,
-      },
-    });
-  }
-
-  /**
-   * Deletes a partner admin
-   * @returns PartnerAdminDTO Add a new partner admin
-   * @throws ApiError
-   */
-  public static deleteAdminsForPartners({
-    xNobaApiKey,
-    partnerId,
-    partnerAdminId,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    partnerId: string;
-    partnerAdminId: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<PartnerAdminDTO> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/v1/admins/partners/{partnerID}/admins/{partnerAdminID}",
-      path: {
-        partnerID: partnerId,
-        partnerAdminID: partnerAdminId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      errors: {
-        400: `Invalid parameter(s)`,
-        403: `User forbidden from deleting a partner admin`,
-        404: `Partner admin not found`,
-      },
-    });
-  }
-
-  /**
-   * Update details of a partner admin
-   * @returns PartnerAdminDTO Update details of a partner admin
-   * @throws ApiError
-   */
-  public static updateAdminForPartners({
-    xNobaApiKey,
-    partnerId,
-    partnerAdminId,
-    requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    partnerId: string;
-    partnerAdminId: string;
-    requestBody: UpdatePartnerAdminRequestDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<PartnerAdminDTO> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/v1/admins/partners/{partnerID}/admins/{partnerAdminID}",
-      path: {
-        partnerID: partnerId,
-        partnerAdminID: partnerAdminId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Invalid parameter(s)`,
-        403: `User forbidden from updating a partner admin`,
-        404: `Partner admin not found`,
-      },
-    });
-  }
-
-  /**
-   * Fetch the transactions based on different filters
-   * @returns void
-   * @throws ApiError
-   */
-  public static fetchTransactionsForPartner({
-    xNobaApiKey,
-    xNobaSignature,
-    xNobaTimestamp,
-    startDate,
-    endDate,
-    partnerId,
-    onlyCompletedTransactions,
-  }: {
-    xNobaApiKey: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-    /**
-     * Format: YYYY-MM-DD. Example: '2010-04-27' means 27th Apr 2010 at 00:00:00 UTC
-     */
-    startDate?: string;
-    /**
-     * Format: YYYY-MM-DD. This is inclusive. Example: '2010-04-27' means 27th Apr 2010 at 23:59:59 UTC
-     */
-    endDate?: string;
-    /**
-     * Partner ID
-     */
-    partnerId?: string;
-    /**
-     * Whether to include 'only' COMPLETED Transactions. Default value is 'false'
-     */
-    onlyCompletedTransactions?: boolean;
-  }): CancelablePromise<void> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/admins/partners/transactions/download",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      query: {
-        startDate: startDate,
-        endDate: endDate,
-        partnerID: partnerId,
-        onlyCompletedTransactions: onlyCompletedTransactions,
-      },
-      errors: {
-        400: `Invalid parameter(s)`,
-        403: `User forbidden from fetching the transactions for a Partner`,
-      },
-    });
-  }
-
-  /**
-   * Adds a new partner
-   * @returns PartnerDTO New partner record
-   * @throws ApiError
-   */
-  public static registerPartner({
-    xNobaApiKey,
-    requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    requestBody: CreatePartnerRequestDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<PartnerDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/admins/partners",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Invalid parameter(s)`,
-        403: `User forbidden from adding a new partner`,
       },
     });
   }

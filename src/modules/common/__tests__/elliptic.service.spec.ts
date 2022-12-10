@@ -77,7 +77,7 @@ describe("Elliptic Tests", () => {
         leg1: "USD",
         leg2: "ETH",
         destinationWalletAddress: "fake-wallet",
-        partnerID: "12345",
+
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
@@ -158,7 +158,7 @@ describe("Elliptic Tests", () => {
         leg1: "USD",
         leg2: "LTC",
         destinationWalletAddress: "fake-wallet",
-        partnerID: "12345",
+
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
@@ -241,7 +241,7 @@ describe("Elliptic Tests", () => {
         leg1: "USD",
         leg2: "AAVE.ETH",
         destinationWalletAddress: "fake-wallet",
-        partnerID: "12345",
+
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
@@ -322,7 +322,7 @@ describe("Elliptic Tests", () => {
         leg1: "USD",
         leg2: "XXX",
         destinationWalletAddress: "fake-wallet",
-        partnerID: "12345",
+
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
@@ -352,7 +352,7 @@ describe("Elliptic Tests", () => {
         leg1: "USD",
         leg2: "ETH",
         destinationWalletAddress: "fake-wallet",
-        partnerID: "12345",
+
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 
@@ -397,7 +397,7 @@ describe("Elliptic Tests", () => {
         leg1: "USD",
         leg2: "ETH",
         destinationWalletAddress: "fake-wallet",
-        partnerID: "12345",
+
         blockchainTransactionId: "fake-crypto-transaction-id",
       });
 

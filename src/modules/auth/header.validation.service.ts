@@ -1,7 +1,5 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, Logger } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { PartnerService } from "../partner/partner.service";
-import { Partner } from "../partner/domain/Partner";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
 import { isProductionEnvironment, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -12,8 +10,6 @@ import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
 export class HeaderValidationService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
-
-  @Inject() partnerService: PartnerService;
 
   private readonly embedSecretKey: string;
 
@@ -40,19 +36,7 @@ export class HeaderValidationService {
       throw new BadRequestException("Timestamp is more than 5 minutes different than expected");
     }
     try {
-      const partner: Partner = await this.partnerService.getPartnerFromApiKey(apiKey);
-      if (
-        (partner.props.apiKeyForEmbed === apiKey && !partner.props.isEmbedEnabled) ||
-        (partner.props.apiKey === apiKey && !partner.props.isAPIEnabled)
-      ) {
-        throw new ForbiddenException(
-          `Integration for ${partner.props.apiKey === apiKey ? "API" : "EMBED"} is not enabled`,
-        );
-      }
-      const secretKey =
-        partner.props.apiKey === apiKey
-          ? CryptoJS.enc.Utf8.parse(partner.props.secretKey)
-          : CryptoJS.enc.Utf8.parse(this.embedSecretKey);
+      const secretKey = CryptoJS.enc.Utf8.parse(this.embedSecretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(
         `${timestamp}${apiKey}${requestMethod}${requestPath}${requestBody}`,
       );

@@ -303,7 +303,6 @@ export class Sardine implements IDVProvider {
           },
         },
       },
-      partnerId: transactionInformation.partnerName,
       checkpoints: ["aml", "payment"],
     };
 

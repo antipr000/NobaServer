@@ -12,7 +12,6 @@ import { AdminSeeder } from "./seeders/admin.seed";
 import { CreditCardBinDataSeeder } from "./seeders/creditcard.bin.data.seed";
 import { LimitConfigSeeder } from "./seeders/limit.config.seed";
 import { LimitProfileSeeder } from "./seeders/limit.profile.seed";
-import { NobaPartnerSeed } from "./seeders/noba.partner.seed";
 import { SeederService } from "./seeders/seeder.service";
 
 @Module({
@@ -20,7 +19,6 @@ import { SeederService } from "./seeders/seeder.service";
     DBProvider,
     CreditCardBinDataSeeder,
     AdminSeeder,
-    NobaPartnerSeed,
     LimitProfileSeeder,
     LimitConfigSeeder,
     SeederService,

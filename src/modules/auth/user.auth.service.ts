@@ -15,11 +15,8 @@ export class UserAuthService extends AuthService {
     return this.identityType;
   }
 
-  protected async getUserId(emailOrPhone: string, partnerID: string, partnerUserID?: string): Promise<string> {
-    if (!partnerID || partnerID.length == 0) {
-      throw new BadRequestException("PartnerID is required");
-    }
-    const consumer: Consumer = await this.consumerService.getOrCreateConsumerConditionally(emailOrPhone, partnerID);
+  protected async getUserId(emailOrPhone: string): Promise<string> {
+    const consumer: Consumer = await this.consumerService.getOrCreateConsumerConditionally(emailOrPhone);
     return consumer.props._id;
   }
 

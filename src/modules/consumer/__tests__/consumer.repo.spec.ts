@@ -18,7 +18,6 @@ const TEST_NUMBER = 5;
 const DEFAULT_EMAIL_ID = "user@noba.com";
 const DEFAULT_PHONE_NUMBER = "+15555555555";
 const DEFAULT_USER_ID = "user_id";
-const DEFAULT_PARTNER_ID = "partener_id";
 
 const mkid = (id: string): string => {
   return CONSUMER_ID_PREFIX + id;
@@ -50,7 +49,6 @@ const getAllRecordsInConsumerCollection = async (consumerCollection: Collection)
       isLocked: consumerDocument.isLocked,
       isDisabled: consumerDocument.isDisabled,
       zhParticipantCode: consumerDocument.zhParticipantCode,
-      partners: consumerDocument.partners,
       paymentProviderAccounts: consumerDocument.paymentProviderAccounts,
       verificationData: consumerDocument.verificationData,
       paymentMethods: consumerDocument.paymentMethods,
@@ -156,7 +154,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test2",
       };
       const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
@@ -175,7 +173,6 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
       };
       const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
 
@@ -196,7 +193,6 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test.test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
       };
       const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
 
@@ -219,7 +215,6 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test.test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
       };
       const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
 
@@ -241,7 +236,6 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test.test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
       };
       const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
 
@@ -382,7 +376,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test-1@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test1",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
@@ -393,7 +387,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test-2@noba.com",
         phone: "+9876541231",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test2",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
@@ -412,7 +406,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test-1@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test1",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
@@ -423,7 +417,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test-2@noba.com",
         phone: "+9876541231",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test2",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
@@ -444,7 +438,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test-1@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test1",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
@@ -455,7 +449,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test-2@noba.com",
         phone: "+9876541231",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test2",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
@@ -470,17 +464,6 @@ describe("MongoDBConsumerRepoTests", () => {
     });
   });
 
-  describe("getAllConsumersForPartner", () => {
-    it("update a consumer", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-      const savedConsumer = await consumerRepo.createConsumer(consumer);
-
-      const result = await consumerRepo.getAllConsumersForPartner(DEFAULT_PARTNER_ID);
-      expect(result.length).toBe(1);
-      expect(result[0].props.email).toBe(savedConsumer.props.email);
-    });
-  });
-
   describe("isHandleTaken", () => {
     it("should return 'true' if there already exist an user with same handle", async () => {
       const consumerProps: ConsumerProps = {
@@ -489,7 +472,6 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
         handle: "test",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
@@ -505,7 +487,6 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
         handle: "test2",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
@@ -523,7 +504,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test",
       };
       await consumerCollection.insertOne({
@@ -546,7 +527,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test",
         circleWalletID: "dummy_circle_wallet_id_1",
       };
@@ -570,7 +551,7 @@ describe("MongoDBConsumerRepoTests", () => {
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-        partners: [{ partnerID: DEFAULT_PARTNER_ID }],
+
         handle: "test",
         circleWalletID: "dummy_circle_wallet_id_1",
       };
@@ -596,7 +577,6 @@ const getRandomUser = (email: string, phone?: string): Consumer => {
     lastName: "lastName",
     email: email,
     phone: phone,
-    partners: [{ partnerID: DEFAULT_PARTNER_ID }],
   };
   return Consumer.createConsumer(props);
 };

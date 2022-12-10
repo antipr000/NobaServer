@@ -21,7 +21,6 @@ import {
   computeSignature,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
-  setupPartner,
   TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
@@ -56,7 +55,6 @@ describe("Verification", () => {
     // Spin up an in-memory mongodb server
     mongoServer = await MongoMemoryServer.create();
     mongoUri = mongoServer.getUri();
-    await setupPartner(mongoUri, "dummy-partner");
 
     const environmentVaraibles = {
       MONGO_URI: mongoUri,

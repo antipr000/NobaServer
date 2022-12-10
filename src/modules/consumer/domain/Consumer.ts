@@ -6,7 +6,6 @@ import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
 import { Address } from "./Address";
 import { CryptoWallet } from "./CryptoWallet";
-import { PartnerDetails } from "./PartnerDetails";
 import { CardData, PaymentMethod } from "./PaymentMethod";
 import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
@@ -32,18 +31,12 @@ export interface ConsumerProps extends BaseProps {
   isLocked?: boolean;
   isDisabled?: boolean;
   zhParticipantCode?: string;
-  partners?: PartnerDetails[];
   paymentProviderAccounts?: PaymentProviderDetails[];
   verificationData?: VerificationData;
   paymentMethods?: PaymentMethod[];
   cryptoWallets?: CryptoWallet[];
   circleWalletID?: string;
 }
-
-const partnerValidationJoiKeys: KeysRequired<PartnerDetails> = {
-  partnerID: Joi.string().required(),
-  partnerUserID: Joi.string().optional(),
-};
 
 const paymentProviderValidationJoiKeys: KeysRequired<PaymentProviderDetails> = {
   providerID: Joi.string().required(),
@@ -88,9 +81,7 @@ const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
   chainType: Joi.string().optional(),
   isEVMCompatible: Joi.boolean().optional(),
   status: Joi.string().optional(),
-  partnerID: Joi.string().required(), // TODO(#466) - Make required
   riskScore: Joi.number().optional(),
-  isPrivate: Joi.boolean().optional(),
 };
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
@@ -131,7 +122,6 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   isLocked: Joi.boolean().optional(),
   isDisabled: Joi.boolean().optional(),
   zhParticipantCode: Joi.string().optional(),
-  partners: Joi.array().items(partnerValidationJoiKeys).required(),
   paymentProviderAccounts: Joi.array().items(paymentProviderValidationJoiKeys).optional(),
   verificationData: Joi.object().keys(verificationDataValidationJoiKeys).optional(),
   paymentMethods: Joi.array().items(paymentMethodsValidationJoiKeys).default([]),

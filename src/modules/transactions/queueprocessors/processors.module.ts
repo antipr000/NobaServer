@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { PartnerModule } from "../../../modules/partner/partner.module";
 import { getWinstonModule } from "../../../core/utils/WinstonModule";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { CommonModule } from "../../../modules/common/common.module";
@@ -7,7 +6,6 @@ import { ConsumerModule } from "../../../modules/consumer/consumer.module";
 import { VerificationModule } from "../../../modules/verification/verification.module";
 import { AssetsModule } from "../assets/assets.module";
 import { TransactionPollerService } from "../crons/transaction.poller.cron";
-import { TransactionQueueName } from "../domain/Types";
 import { MongoDBTransactionRepo } from "../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../transaction.service";
 import { ZeroHashService } from "../zerohash.service";
@@ -34,7 +32,6 @@ import { InternalTransferStatusProcessor } from "./InternalTransferStatusProcess
     InfraProvidersModule,
     ConsumerModule,
     VerificationModule,
-    PartnerModule,
     getWinstonModule(),
     NotificationsModule,
     PspModule,

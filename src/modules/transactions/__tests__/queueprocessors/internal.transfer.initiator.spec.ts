@@ -36,9 +36,6 @@ import { MongoDBTransactionRepo } from "../../repo/MongoDBTransactionRepo";
 import { TransactionService } from "../../transaction.service";
 import { getMockCurrencyServiceWithDefaults } from "../../../common/mocks/mock.currency.service";
 import { PaymentProvider } from "../../../consumer/domain/PaymentProvider";
-import { getMockPartnerServiceWithDefaults } from "../../../partner/mocks/mock.partner.service";
-import { PartnerService } from "../../../partner/partner.service";
-import { Partner } from "../../../partner/domain/Partner";
 import { InternalTransferInitiator } from "../../queueprocessors/InternalTransferInitiator";
 import { WalletProviderService } from "../../assets/wallet.provider.service";
 import { getMockWalletProviderServiceWithDefaults } from "../../mocks/mock.wallet.provider.service";
@@ -78,7 +75,6 @@ describe("InternalTransferInitiator", () => {
   let verificationService: VerificationService;
   let lockService: LockService;
   let currencyService: CurrencyService;
-  let partnerService: PartnerService;
 
   beforeEach(async () => {
     process.env[NODE_ENV_CONFIG_KEY] = "development";
@@ -104,7 +100,6 @@ describe("InternalTransferInitiator", () => {
     assetServiceFactory = getMockAssetServiceFactoryWithDefaultAssetService();
     walletProviderService = getMockWalletProviderServiceWithDefaults();
     currencyService = getMockCurrencyServiceWithDefaults();
-    partnerService = getMockPartnerServiceWithDefaults();
 
     // This behaviour is in the 'beforeEach' because `InternalTransferInitiator` will be initiated
     // by Nest in the `createTestingModule()` method.
@@ -151,10 +146,6 @@ describe("InternalTransferInitiator", () => {
           provide: CurrencyService,
           useFactory: () => instance(currencyService),
         },
-        {
-          provide: PartnerService,
-          useFactory: () => instance(partnerService),
-        },
         InternalTransferInitiator,
       ],
     }).compile();
@@ -178,7 +169,6 @@ describe("InternalTransferInitiator", () => {
   const cryptocurrency = "ETH";
   const consumerID = "UUUUUUUUUU";
   const paymentMethodID = "XXXXXXXXXX";
-  const noDiscountPartnerID = "Partner-1234";
 
   const transaction = {
     _id: "1111111111" as any,
@@ -189,7 +179,6 @@ describe("InternalTransferInitiator", () => {
     leg2Amount: 1.234,
     leg1: "USD",
     leg2: cryptocurrency,
-    partnerID: noDiscountPartnerID,
     exchangeRate: 1,
     amountPreSpread: 1000,
     transactionTimestamp: new Date(),
@@ -212,11 +201,6 @@ describe("InternalTransferInitiator", () => {
   const consumer: Consumer = Consumer.createConsumer({
     _id: consumerID,
     email: "test@noba.com",
-    partners: [
-      {
-        partnerID: noDiscountPartnerID,
-      },
-    ],
     paymentMethods: [paymentMethod],
     zhParticipantCode: "zh-participant-code",
   });

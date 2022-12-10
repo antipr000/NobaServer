@@ -70,7 +70,6 @@ describe("Elliptic Integration Test", () => {
       leg1: "USD",
       leg2: "ALGO",
       destinationWalletAddress: "GX3XLHSRMFTADVKJBBQBTZ6BKINW6ZO5JHXWGCWB4CPDNPDQ2PIYN4AVHQ",
-      partnerID: "12345",
       blockchainTransactionId: "2NF4ETR2TQPVLLELQNJDBGRWJOJ3CH6BR4HEZWRI5V2OK5LPVTKQ",
     });
 

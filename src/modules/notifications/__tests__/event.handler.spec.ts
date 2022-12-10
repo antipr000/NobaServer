@@ -83,7 +83,6 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       otp: "123456",
       name: "Fake",
-      partnerID: "fake-partner-1234",
     });
 
     await eventHandler.sendOtp(payload);
@@ -106,9 +105,9 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       otp: "123456",
       name: "Fake",
-      partnerID: "fake-partner-1234",
+
       walletAddress: "fake-wallet",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -133,8 +132,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -157,8 +155,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -181,8 +178,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -205,8 +201,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendKycDeniedEmail(payload);
@@ -229,8 +224,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendKycPendingOrFlaggedEmail(payload);
@@ -244,8 +238,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -268,8 +261,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -292,8 +284,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendDocVerificationFailedTechEmail(payload);
@@ -315,8 +306,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
       last4Digits: "1234",
@@ -343,8 +333,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       last4Digits: "1234",
     });
@@ -369,8 +358,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
       last4Digits: "1234",
@@ -397,8 +385,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -464,8 +451,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -526,8 +512,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -596,8 +581,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -669,8 +653,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -738,8 +721,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      partnerID: "fake-partner-1234",
-      partnerUserID: "fake-partner-user-id",
+
       nobaUserID: "fake-noba-user-id",
       sessionID: "fake-session-id",
       transactionID: "fake-transaction-id",
