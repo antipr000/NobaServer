@@ -69,8 +69,8 @@ sardine:
   sardineBaseUri: "https://api.sardine.ai"
 
 noba:
-  partnerID: "r9816P4uZO0wJpaeLlKod"
-  apiKeyForEmbed: "Noba-Partner-zXA_bmJxR6fsxEm-YzuOW"
+  appSecretKey: ""
+  awsSecretKeyForAppSecretKey: "PROD_NOBA_APP_SECRET"
   transaction:
     spreadPercentage: ""
     awsSecretKeyForSpreadPercentage: "PROD_NOBA_SPREAD_PERCENTAGE"
@@ -109,11 +109,6 @@ configuration:
   highAmountThreshold: 200
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
-
-partner:
-  embedSecretKey: "Noba_Secret_1660782381688_28XX_BVWjNR8v67tmnVSJ"
-  publicS3Bucket: "noba-partner-data"
-  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "sandbox"

@@ -14,7 +14,6 @@ import { InternalServerErrorException, NotFoundException, UnauthorizedException 
 import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
-import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID } from "../../../config/ConfigurationUtils";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 
@@ -30,24 +29,7 @@ describe("AdminAuthService", () => {
 
   const testJwtSecret = "TEST_SECRET";
   const identityType: string = nobaAdminIdentityIdentifier;
-  const nobaPartnerID = "NOBA_PARTNER_ID";
 
-  // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-  /**
-   *
-   * This will be used to configure the testing module and will decouple
-   * the testing module from the actual module.
-   *
-   * Never hard-code the environment variables "KEY_NAME" in the testing module.
-   * All the keys used in 'appconfigs' are defined in
-   * `config/ConfigurationUtils` and it should be used for all the testing modules.
-   *
-   **/
-  const appConfigurations = {
-    [NOBA_CONFIG_KEY]: {
-      [NOBA_PARTNER_ID]: nobaPartnerID,
-    },
-  };
   // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
   beforeEach(async () => {
@@ -58,7 +40,7 @@ describe("AdminAuthService", () => {
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [
-        TestConfigModule.registerAsync(appConfigurations),
+        TestConfigModule.registerAsync({}),
         getTestWinstonModule(),
         JwtModule.register({
           secret: testJwtSecret,

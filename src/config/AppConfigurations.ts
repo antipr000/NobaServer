@@ -85,8 +85,6 @@ import {
   ELLIPTIC_BASE_URL,
   ELLIPTIC_AWS_SECRET_KEY_FOR_SECRET_KEY_ATTR,
   ELLIPTIC_SECRET_KEY,
-  PARTNER_CONFIG_KEY,
-  PARTNER_CONFIG_EMBED_SECRET_KEY,
   PLAID_CONFIG_KEY,
   PLAID_CLIENT_ID,
   PLAID_AWS_SECRET_KEY_FOR_CLIENT_ID,
@@ -108,6 +106,8 @@ import {
   CIRCLE_AWS_SECRET_KEY_FOR_API_KEY,
   CIRCLE_AWS_SECRET_KEY_FOR_MASTER_WALLET_ID,
   CIRCLE_MASTER_WALLET_ID,
+  NOBA_APP_SECRET_KEY,
+  AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -122,7 +122,6 @@ import { KmsConfigs } from "./configtypes/KmsConfigs";
 import { CommonConfigs } from "./configtypes/CommonConfigs";
 import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 import { EllipticConfigs } from "./configtypes/EllipticConfig";
-import { PartnerConfigs } from "./configtypes/PartnerConfigs";
 import { PlaidConfigs } from "./configtypes/PlaidConfigs";
 import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs";
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
@@ -288,7 +287,6 @@ async function configureAllVendorCredentials(
     configureAwsKmsCredentials,
     configureCommonConfigurations,
     configureEllipticCredentials,
-    configurePartnerConfigurations,
     configurePlaidCredentials,
     configureDependencies,
     configureCircleConfigurations,
@@ -493,7 +491,8 @@ async function configureNobaParameters(
     const errorMessage =
       "\n'Noba' configurations are required. Please configure the Noba environment variables " +
       "in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${NOBA_CONFIG_KEY}.${NOBA_TRANSACTION_CONFIG_KEY}" ` +
+      `You should configure the keys "${NOBA_CONFIG_KEY}.${NOBA_TRANSACTION_CONFIG_KEY}" AND ` +
+      `("${NOBA_APP_SECRET_KEY}" or "${AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY}") AND ` +
       "and populate " +
       `("${SPREAD_PERCENTAGE}" or "${AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE}"), ` +
       `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
@@ -502,6 +501,11 @@ async function configureNobaParameters(
       "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
     throw Error(errorMessage);
   }
+
+  nobaConfigs.appSecretKey = await getParameterValue(
+    nobaConfigs.awsSecretKeyForNobaAppSecretKey,
+    nobaConfigs.appSecretKey,
+  );
 
   nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(
     await getParameterValue(
@@ -636,29 +640,6 @@ async function configureEllipticCredentials(
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
 
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
-
-  return configs;
-}
-
-async function configurePartnerConfigurations(
-  environment: AppEnvironment,
-  configs: Record<string, any>,
-): Promise<Record<string, any>> {
-  const partnerConfigs: PartnerConfigs = configs[PARTNER_CONFIG_KEY];
-
-  if (partnerConfigs === undefined) {
-    const errorMessage =
-      "\n'Partner' configurations are required. Please configure the Partner configurations in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${PARTNER_CONFIG_KEY}" and populate ` +
-      `("${PARTNER_CONFIG_EMBED_SECRET_KEY}"` +
-      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
-
-    throw Error(errorMessage);
-  }
-
-  partnerConfigs.embedSecretKey = await getParameterValue(null, partnerConfigs.embedSecretKey);
-
-  configs[PARTNER_CONFIG_KEY] = partnerConfigs;
 
   return configs;
 }
