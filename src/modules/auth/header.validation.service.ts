@@ -4,7 +4,7 @@ import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
 import { isProductionEnvironment, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { NobaConfigs } from "src/config/configtypes/NobaConfigs";
+import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 
 @Injectable()
 export class HeaderValidationService {
