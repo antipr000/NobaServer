@@ -73,7 +73,7 @@ sardine:
   sardineBaseUri: "https://api.sandbox.sardine.ai"
 
 noba:
-  appSecretKey: "7sjoNYZiZ3c6Z99wzVp2OLh0XbyRGtz9wj48MV6XfNscpY9W14kE4RDies/HuKsyCw7UJxz+RZAFoPx4t974Lw=="
+  appSecretKey: "testsecretkey"
   awsSecretKeyForAppSecretKey: ""
   transaction:
     spreadPercentage: "0.029"
