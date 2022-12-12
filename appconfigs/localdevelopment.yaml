@@ -64,7 +64,7 @@ sardine:
   webhookSecretKey: "bogus-value" # Useless in this environment because Sardine is not calling us
   sardineBaseUri: "https://api.sandbox.sardine.ai"
 
-noba:  
+noba:
   appSecretKey: "7sjoNYZiZ3c6Z99wzVp2OLh0XbyRGtz9wj48MV6XfNscpY9W14kE4RDies/HuKsyCw7UJxz+RZAFoPx4t974Lw=="
   awsSecretKeyForAppSecretKey: ""
   transaction:
