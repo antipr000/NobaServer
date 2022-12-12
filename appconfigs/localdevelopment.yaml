@@ -64,9 +64,9 @@ sardine:
   webhookSecretKey: "bogus-value" # Useless in this environment because Sardine is not calling us
   sardineBaseUri: "https://api.sandbox.sardine.ai"
 
-noba:
-  partnerID: "d4KZqfVKwSHWueOJhmgN-"
-  apiKeyForEmbed: "54a18bf17fa0474da0faec75b629d2a1"
+noba:  
+  appSecretKey: "7sjoNYZiZ3c6Z99wzVp2OLh0XbyRGtz9wj48MV6XfNscpY9W14kE4RDies/HuKsyCw7UJxz+RZAFoPx4t974Lw=="
+  awsSecretKeyForAppSecretKey: ""
   transaction:
     spreadPercentage: "0.029"
     awsSecretKeyForSpreadPercentage: ""
@@ -105,11 +105,6 @@ configuration:
   highAmountThreshold: 75
   cryptoImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto"
   fiatImageBaseUrl: "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/fiat"
-
-partner:
-  embedSecretKey: "Noba_Secret_1660840944064_6Y4zLkE21zmGmSdW4zQbT"
-  publicS3Bucket: "noba-partner-data"
-  publicDataCloudfrontUrl: "https://d1we8r7iaq9rpl.cloudfront.net/"
 
 plaid:
   env: "sandbox"

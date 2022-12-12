@@ -9,9 +9,7 @@ import {
   COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY,
   MONGO_CONFIG_KEY,
   MONGO_URI,
-  NOBA_API_KEY_FOR_EMBED,
   NOBA_CONFIG_KEY,
-  NOBA_PARTNER_ID,
   NODE_ENV_CONFIG_KEY,
   SERVER_LOG_FILE_PATH,
 } from "../../../config/ConfigurationUtils";
@@ -106,10 +104,6 @@ describe("LimitConfig Seeder", () => {
         [MONGO_URI]: mongoUri,
       },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
-      [NOBA_CONFIG_KEY]: {
-        [NOBA_PARTNER_ID]: "test-partner-id",
-        [NOBA_API_KEY_FOR_EMBED]: "test-api-key-for-embed",
-      },
       [COMMON_CONFIG_KEY]: {
         [COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY]: 50,
         [COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY]: 0.5,

@@ -2,19 +2,19 @@ import { BadRequestException, ForbiddenException, Inject, Injectable, Logger } f
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
-import { isProductionEnvironment, PARTNER_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { isProductionEnvironment, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { PartnerConfigs } from "../../config/configtypes/PartnerConfigs";
+import { NobaConfigs } from "src/config/configtypes/NobaConfigs";
 
 @Injectable()
 export class HeaderValidationService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  private readonly embedSecretKey: string;
+  private readonly appSecretKey: string;
 
   constructor(configService: CustomConfigService) {
-    this.embedSecretKey = configService.get<PartnerConfigs>(PARTNER_CONFIG_KEY).embedSecretKey;
+    this.appSecretKey = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).appSecretKey;
   }
 
   async validateApiKeyAndSignature(
@@ -36,7 +36,7 @@ export class HeaderValidationService {
       throw new BadRequestException("Timestamp is more than 5 minutes different than expected");
     }
     try {
-      const secretKey = CryptoJS.enc.Utf8.parse(this.embedSecretKey);
+      const secretKey = CryptoJS.enc.Utf8.parse(this.appSecretKey);
       const signatureString = CryptoJS.enc.Utf8.parse(
         `${timestamp}${apiKey}${requestMethod}${requestPath}${requestBody}`,
       );
