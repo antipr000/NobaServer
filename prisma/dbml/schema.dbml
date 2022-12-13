@@ -102,6 +102,7 @@ Table AchData {
 
 Table Circle {
   id String [pk]
+  accountID String [unique, not null]
   consumer Consumer [not null]
   consumerID String [unique, not null]
 }

@@ -130,8 +130,11 @@ model AchData {
 
 model Circle {
   id         String   @id
+  accountID  String   @unique()
   consumer   Consumer @relation(fields: [consumerID], references: [id])
   consumerID String   @unique()
+
+  @@index([accountID])
 }
 
 enum KYCStatus {
