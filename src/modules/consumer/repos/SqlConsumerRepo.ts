@@ -6,7 +6,7 @@ import { PrismaService } from "../../../infraproviders/PrismaService";
 import { Prisma } from "@prisma/client";
 
 @Injectable()
-export class SqlConsumerRepo implements IConsumerRepo {
+export class SQLConsumerRepo implements IConsumerRepo {
   @Inject()
   private readonly prisma: PrismaService;
 

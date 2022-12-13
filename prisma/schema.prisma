@@ -130,12 +130,14 @@ model AchData {
 }
 
 model Circle {
-  id         String   @id
-  accountID  String   @unique()
-  consumer   Consumer @relation(fields: [consumerID], references: [id])
-  consumerID String   @unique()
+  id               String    @id
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+  walletID         String    @unique()
+  consumer         Consumer  @relation(fields: [consumerID], references: [id])
+  consumerID       String    @unique()
 
-  @@index([accountID])
+  @@index([consumerID])
 }
 
 enum KYCStatus {

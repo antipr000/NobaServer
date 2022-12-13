@@ -3,7 +3,11 @@ import { Consumer } from "./consumer";
 export class Circle {
   id: string;
 
-  accountID: string;
+  createdTimestamp?: Date;
+
+  updatedTimestamp?: Date;
+
+  walletID: string;
 
   consumer: Consumer;
 

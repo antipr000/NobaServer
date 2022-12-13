@@ -417,4 +417,4 @@ package-lock.json
 src/generated/*
 
 swagger*.json
-.prisma
+.prisma/*

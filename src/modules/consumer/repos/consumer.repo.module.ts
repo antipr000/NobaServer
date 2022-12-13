@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { KmsService } from "../../../../src/modules/common/kms.service";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
-import { SqlConsumerRepo } from "./SqlConsumerRepo";
+import { SQLConsumerRepo } from "./SQLConsumerRepo";
 
 const ConsumerRepoProvider = {
   provide: "ConsumerRepo",
-  useClass: SqlConsumerRepo,
+  useClass: SQLConsumerRepo,
 };
 
 @Module({

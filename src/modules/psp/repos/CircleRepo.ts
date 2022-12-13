@@ -1,7 +1,8 @@
-import { Result } from "src/core/logic/Result";
+import { Circle } from "../domain/Circle";
+import { Result } from "../../../core/logic/Result";
 
 // Circle repo stub
 export interface ICircleRepo {
-  addConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<void>; // may need failure state/return
-  getWallet(consumerID): Promise<Result<string>>; // guessing result return object here to encapsulate more state
+  addConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<Circle>;
+  getCircleWalletID(consumerID: string): Promise<Result<string>>;
 }

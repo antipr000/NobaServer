@@ -19,8 +19,8 @@ CREATE TYPE "PaymentMethodStatus" AS ENUM ('FLAGGED', 'REJECTED', 'APPROVED', 'U
 -- CreateTable
 CREATE TABLE "Consumer" (
     "id" TEXT NOT NULL,
-    "firstName" VARCHAR(500),
-    "lastName" VARCHAR(500),
+    "firstName" TEXT,
+    "lastName" TEXT,
     "email" TEXT,
     "displayEmail" TEXT NOT NULL,
     "handle" TEXT,
@@ -28,8 +28,8 @@ CREATE TABLE "Consumer" (
     "dateOfBirth" VARCHAR(10),
     "isLocked" BOOLEAN NOT NULL DEFAULT false,
     "isDisabled" BOOLEAN NOT NULL DEFAULT false,
-    "createdTimestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedTimestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdTimestamp" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updatedTimestamp" TIMESTAMP(3),
     "socialSecurityNumber" TEXT,
 
     CONSTRAINT "Consumer_pkey" PRIMARY KEY ("id")
@@ -58,7 +58,8 @@ CREATE TABLE "Kyc" (
     "isSuspectedFraud" BOOLEAN NOT NULL DEFAULT false,
     "kycCheckStatus" "KYCStatus" NOT NULL DEFAULT 'NOT_SUBMITTED',
     "documentVerificationStatus" "DocumentVerificationStatus" NOT NULL DEFAULT 'REQUIRED',
-    "documentVerificationTimestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "documentVerificationTimestamp" TIMESTAMP(3) NOT NULL,
+    "kycVerificationTimestamp" TIMESTAMP(3) NOT NULL,
     "sanctionLevel" TEXT,
     "riskLevel" TEXT,
     "consumerID" TEXT NOT NULL,
@@ -122,8 +123,22 @@ CREATE TABLE "AchData" (
     CONSTRAINT "AchData_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Circle" (
+    "id" TEXT NOT NULL,
+    "createdTimestamp" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updatedTimestamp" TIMESTAMP(3),
+    "walletID" TEXT NOT NULL,
+    "consumerID" TEXT NOT NULL,
+
+    CONSTRAINT "Circle_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Consumer_email_key" ON "Consumer"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Consumer_handle_key" ON "Consumer"("handle");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Consumer_phone_key" ON "Consumer"("phone");
@@ -161,6 +176,15 @@ CREATE UNIQUE INDEX "Card_paymentMethodID_key" ON "Card"("paymentMethodID");
 -- CreateIndex
 CREATE UNIQUE INDEX "AchData_paymentMethodID_key" ON "AchData"("paymentMethodID");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Circle_walletID_key" ON "Circle"("walletID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Circle_consumerID_key" ON "Circle"("consumerID");
+
+-- CreateIndex
+CREATE INDEX "Circle_consumerID_idx" ON "Circle"("consumerID");
+
 -- AddForeignKey
 ALTER TABLE "Address" ADD CONSTRAINT "Address_consumerID_fkey" FOREIGN KEY ("consumerID") REFERENCES "Consumer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -178,3 +202,6 @@ ALTER TABLE "Card" ADD CONSTRAINT "Card_paymentMethodID_fkey" FOREIGN KEY ("paym
 
 -- AddForeignKey
 ALTER TABLE "AchData" ADD CONSTRAINT "AchData_paymentMethodID_fkey" FOREIGN KEY ("paymentMethodID") REFERENCES "PaymentMethod"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Circle" ADD CONSTRAINT "Circle_consumerID_fkey" FOREIGN KEY ("consumerID") REFERENCES "Consumer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
