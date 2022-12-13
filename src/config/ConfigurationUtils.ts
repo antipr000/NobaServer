@@ -77,8 +77,8 @@ export const SARDINE_WEBHOOK_SECRET_KEY = "webhookSecretKey";
 export const SARDINE_URI = "sardineBaseUri";
 
 export const NOBA_CONFIG_KEY = "noba";
-export const NOBA_PARTNER_ID = "partnerID";
-export const NOBA_API_KEY_FOR_EMBED = "apiKeyForEmbed";
+export const NOBA_APP_SECRET_KEY = "appSecretKey";
+export const AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY = "awsSecretKeyForAppSecretKey";
 
 export const NOBA_TRANSACTION_CONFIG_KEY = "transaction";
 export const SPREAD_PERCENTAGE = "spreadPercentage";
@@ -129,11 +129,6 @@ export const COMMON_CONFIG_LOW_AMOUNT_THRESHOLD_KEY = "lowAmountThreshold";
 export const COMMON_CONFIG_HIGH_AMOUNT_THRESHOLD_KEY = "highAmountThreshold";
 export const COMMON_CONFIG_CRYPTO_IMAGE_BASE_URL = "cryptoImageBaseUrl";
 export const COMMON_CONFIG_FIAT_IMAGE_BASE_URL = "fiatImageBaseUrl";
-
-export const PARTNER_CONFIG_KEY = "partner";
-export const PARTNER_CONFIG_EMBED_SECRET_KEY = "embedSecretKey";
-export const PARTNER_PUBLIC_DATA_S3_BUCKET_KEY = "publicS3Bucket";
-export const PARTNER_PUBLIC_CLOUDFRONT_URL_KEY = "publicDataCloudfrontUrl";
 
 export const PLAID_CONFIG_KEY = "plaid";
 export const PLAID_ENVIRONMENT = "env";

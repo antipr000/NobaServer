@@ -10,7 +10,7 @@ import { IOTPRepo } from "../repo/OTPRepo";
 import { NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
 import { Otp } from "../domain/Otp";
-import { NOBA_CONFIG_KEY, NOBA_PARTNER_ID, STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
+import { STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
 import { NotificationService } from "../../notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../notifications/mocks/mock.notification.service";
 import { UserAuthService } from "../user.auth.service";
@@ -31,24 +31,6 @@ describe("UserAuthService", () => {
 
     const testJwtSecret = "TEST_SECRET";
     const identityType: string = consumerIdentityIdentifier;
-    const nobaPartnerID = "NOBA_PARTNER_ID";
-
-    // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-    /**
-     *
-     * This will be used to configure the testing module and will decouple
-     * the testing module from the actual module.
-     *
-     * Never hard-code the environment variables "KEY_NAME" in the testing module.
-     * All the keys used in 'appconfigs' are defined in
-     * `config/ConfigurationUtils` and it should be used for all the testing modules.
-     *
-     **/
-    const appConfigurations = {
-      [NOBA_CONFIG_KEY]: {
-        [NOBA_PARTNER_ID]: nobaPartnerID,
-      },
-    };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
     beforeEach(async () => {
@@ -59,7 +41,7 @@ describe("UserAuthService", () => {
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
-          TestConfigModule.registerAsync(appConfigurations),
+          TestConfigModule.registerAsync({}),
           getTestWinstonModule(),
           JwtModule.register({
             secret: testJwtSecret,
@@ -246,7 +228,6 @@ describe("UserAuthService", () => {
     let mockSmsService: SMSService;
 
     const testJwtSecret = "TEST_SECRET";
-    const nobaPartnerID = "NOBA_PARTNER_ID";
 
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
@@ -260,9 +241,6 @@ describe("UserAuthService", () => {
      *
      **/
     const appConfigurations = {
-      [NOBA_CONFIG_KEY]: {
-        [NOBA_PARTNER_ID]: nobaPartnerID,
-      },
       [STATIC_DEV_OTP]: 222222,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************

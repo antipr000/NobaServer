@@ -3,9 +3,9 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import {
   AppEnvironment,
+  NOBA_APP_SECRET_KEY,
+  NOBA_CONFIG_KEY,
   NODE_ENV_CONFIG_KEY,
-  PARTNER_CONFIG_EMBED_SECRET_KEY,
-  PARTNER_CONFIG_KEY,
 } from "../../../config/ConfigurationUtils";
 import { HeaderValidationService } from "../header.validation.service";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
@@ -31,8 +31,8 @@ describe("HeaderValidationService", () => {
      **/
     const appConfigurations = {
       [NODE_ENV_CONFIG_KEY]: AppEnvironment.DEV,
-      [PARTNER_CONFIG_KEY]: {
-        [PARTNER_CONFIG_EMBED_SECRET_KEY]: "dev-fake-embed-secret",
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_APP_SECRET_KEY]: "dev-fake-embed-secret",
       },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
@@ -246,8 +246,8 @@ describe("HeaderValidationService", () => {
      **/
     const appConfigurations = {
       [NODE_ENV_CONFIG_KEY]: AppEnvironment.PROD,
-      [PARTNER_CONFIG_KEY]: {
-        [PARTNER_CONFIG_EMBED_SECRET_KEY]: "prod-fake-embed-secret",
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_APP_SECRET_KEY]: "prod-fake-embed-secret",
       },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
