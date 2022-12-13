@@ -7,7 +7,7 @@ import { PaymentMethod } from "../../../generated/domain/payment_method";
 import { CryptoWallet } from "../../../generated/domain/crypto_wallet";
 import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
-import { Address } from "./Address";
+import { Address } from "../../../generated/domain/address";
 import { VerificationData, VerificationProviders } from "./VerificationData";
 import { differenceInDays } from "date-fns";
 import { PaymentMethodStatus, DocumentVerificationStatus, KYCStatus } from "@prisma/client";
@@ -51,12 +51,15 @@ const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
 };
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
+  id: Joi.number().required(),
   streetLine1: Joi.string().optional(),
   streetLine2: Joi.string().optional(),
   city: Joi.string().optional(),
   regionCode: Joi.string().optional(),
   countryCode: Joi.string().optional(),
   postalCode: Joi.string().optional(),
+  consumerID: Joi.string().required(),
+  consumer: Joi.object().required(),
 };
 
 export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {

@@ -20,7 +20,7 @@ import { PaymentService } from "../psp/payment.service";
 import { Transaction } from "../transactions/domain/Transaction";
 import { Consumer } from "./domain/Consumer";
 import { Consumer as ConsumerProps } from "../../generated/domain/consumer";
-import { CryptoWallet } from "../../generated/domain/crypto_wallet";
+import { CryptoWallet } from "./domain/CryptoWallet";
 import { PaymentMethod } from "../../generated/domain/payment_method";
 import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
@@ -29,7 +29,7 @@ import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
-import { PaymentProvider, PaymentMethodStatus, WalletStatus } from "@prisma/client";
+import { PaymentProvider, PaymentMethodStatus, WalletStatus, Prisma } from "@prisma/client";
 
 @Injectable()
 export class ConsumerService {
@@ -166,13 +166,35 @@ export class ConsumerService {
     if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
       this.analyseHandle(consumerProps.handle);
     }
-    const updatedConsumer = await this.consumerRepo.updateConsumer(
-      consumer.props.id,
-      Consumer.createConsumer({
-        ...consumer.props,
-        ...consumerProps,
+
+    const updatedConsumerRecord = Consumer.createConsumer({
+      ...consumer.props,
+      ...consumerProps,
+    });
+    const consumerUpdateInput: Prisma.ConsumerUpdateInput = {
+      firstName: updatedConsumerRecord.props.firstName,
+      lastName: updatedConsumerRecord.props.lastName,
+      handle: updatedConsumerRecord.props.handle,
+      dateOfBirth: updatedConsumerRecord.props.dateOfBirth,
+      isDisabled: updatedConsumerRecord.props.isDisabled,
+      isLocked: updatedConsumerRecord.props.isLocked,
+      updatedTimestamp: new Date(),
+      ...(consumerProps.phone && { phone: updatedConsumerRecord.props.phone }),
+      ...(consumerProps.email && { phone: updatedConsumerRecord.props.email }),
+      ...(consumerProps.displayEmail && { phone: updatedConsumerRecord.props.displayEmail }),
+      ...(consumerProps.socialSecurityNumber && {
+        socialSecurityNumber: await this.kmsService.encryptString(
+          updatedConsumerRecord.props.socialSecurityNumber,
+          KmsKeyType.SSN,
+        ),
       }),
-    );
+      ...(consumerProps.address && { address: { update: { ...updatedConsumerRecord.props.address } } }),
+      ...(consumerProps.verificationData && {
+        verificationData: { update: { ...updatedConsumerRecord.props.verificationData } },
+      }),
+    };
+
+    const updatedConsumer = await this.consumerRepo.updateConsumer(consumer.props.id, consumerUpdateInput);
     return updatedConsumer;
   }
 
@@ -528,7 +550,7 @@ export class ConsumerService {
     cryptoWallet: CryptoWallet,
     notificationMethod?: NotificationMethod,
   ): Promise<Consumer> {
-    let allCryptoWallets = consumer.props.cryptoWallets;
+    const allCryptoWallets = consumer.props.cryptoWallets;
 
     const selectedWallet = allCryptoWallets.filter(wallet => wallet.address === cryptoWallet.address);
 
@@ -539,16 +561,17 @@ export class ConsumerService {
     }
 
     // It's an add
-    if (selectedWallet.length === 0) {
-      allCryptoWallets.push(cryptoWallet);
-    } else {
-      allCryptoWallets = [...remainingWallets, cryptoWallet];
-    }
+    // if (selectedWallet.length === 0) {
+    //   allCryptoWallets.push(cryptoWallet);
+    // } else {
+    //   allCryptoWallets = [...remainingWallets, cryptoWallet];
+    // }
 
-    return await this.updateConsumer({
-      ...consumer.props,
-      cryptoWallets: allCryptoWallets,
-    });
+    // return await this.updateConsumer({
+    //   ...consumer.props,
+    //   cryptoWallets: allCryptoWallets,
+    // });
+    return consumer;
   }
 
   async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {

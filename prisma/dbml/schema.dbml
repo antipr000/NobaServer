@@ -43,7 +43,8 @@ Table Kyc {
   isSuspectedFraud Boolean [not null, default: false]
   kycCheckStatus KYCStatus [not null, default: 'NOT_SUBMITTED']
   documentVerificationStatus DocumentVerificationStatus [not null, default: 'REQUIRED']
-  documentVerificationTimestamp DateTime [default: `now()`, not null]
+  documentVerificationTimestamp DateTime [not null]
+  kycVerificationTimestamp DateTime [not null]
   sanctionLevel String
   riskLevel String
   consumer Consumer [not null]

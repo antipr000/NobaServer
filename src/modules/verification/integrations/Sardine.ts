@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import { KYCStatus, DocumentVerificationStatus, WalletStatus } from "../../consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus, WalletStatus, PaymentMethodType } from "@prisma/client";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
@@ -37,7 +37,6 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { RetrieveAccountDataResponse, BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
@@ -281,7 +280,7 @@ export class Sardine implements IDVProvider {
       flow: "payment-submission",
       sessionKey: sessionKey,
       customer: {
-        id: consumer.props._id,
+        id: consumer.props.id,
       },
       transaction: {
         id: transactionInformation.transactionID,
@@ -293,7 +292,7 @@ export class Sardine implements IDVProvider {
         paymentMethod: sardinePaymentMethodData,
         recipient: {
           emailAddress: consumer.props.email,
-          isKycVerified: consumer.props.verificationData.kycVerificationStatus === KYCStatus.APPROVED,
+          isKycVerified: consumer.props.verificationData.kycCheckStatus === KYCStatus.APPROVED,
           paymentMethod: {
             type: PaymentMethodTypes.CRYPTO,
             crypto: {

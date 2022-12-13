@@ -37,7 +37,7 @@ import { PlaidClient } from "../psp/plaid.client";
 import { ConsumerService } from "./consumer.service";
 import { Consumer } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
-import { WalletStatus } from "./domain/VerificationStatus";
+import { WalletStatus } from "@prisma/client";
 import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO, NotificationMethod } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "./dto/ConsumerDTO";
@@ -165,7 +165,7 @@ export class ConsumerController {
       throw new BadRequestException("User already exists with this phone number");
     }
 
-    await this.consumerService.sendOtpToPhone(consumer.props._id, requestBody.phone);
+    await this.consumerService.sendOtpToPhone(consumer.props.id, requestBody.phone);
   }
 
   @Patch("/email")
@@ -230,7 +230,7 @@ export class ConsumerController {
     }
 
     return {
-      token: await this.plaidClient.generateLinkToken({ userID: consumer.props._id }),
+      token: await this.plaidClient.generateLinkToken({ userID: consumer.props.id }),
     };
   }
 
@@ -296,7 +296,7 @@ export class ConsumerController {
 
     if (updatePaymentMethodDTO.name) paymentMethod.name = updatePaymentMethodDTO.name;
     if (updatePaymentMethodDTO.isDefault) paymentMethod.isDefault = updatePaymentMethodDTO.isDefault;
-    const res = await this.consumerService.updatePaymentMethod(consumer.props._id, paymentMethod);
+    const res = await this.consumerService.updatePaymentMethod(consumer.props.id, paymentMethod);
     return this.consumerMapper.toDTO(res);
   }
 
@@ -404,7 +404,7 @@ export class ConsumerController {
       consumer,
       requestBody.address,
       requestBody.otp,
-      consumer.props._id,
+      consumer.props.id,
       notificationMethod,
     );
     return this.consumerMapper.toDTO(res);

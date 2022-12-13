@@ -100,9 +100,9 @@ export class VerificationController {
     if (!(user.entity instanceof Consumer))
       throw new BadRequestException("verifyConsumer is only allowed for consumer");
     const consumer: Consumer = user.entity;
-    const result = await this.verificationService.verifyConsumerInformation(consumer.props._id, sessionKey, {
+    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
       ...requestBody,
-      userID: consumer.props._id,
+      userID: consumer.props.id,
       email: consumer.props.email,
     });
     return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
@@ -156,8 +156,8 @@ export class VerificationController {
     const user: AuthenticatedUser = request.user;
     if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
-    const result = await this.verificationService.verifyDocument(consumer.props._id, sessionKey, {
-      userID: consumer.props._id,
+    const result = await this.verificationService.verifyDocument(consumer.props.id, sessionKey, {
+      userID: consumer.props.id,
       documentType: requestData.documentType,
       documentFrontImage: files.frontImage[0],
       documentBackImage: files.backImage?.length > 0 ? files.backImage[0] : undefined,
@@ -183,10 +183,10 @@ export class VerificationController {
     const user: AuthenticatedUser = request.user;
     if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
-    if (id !== consumer.props.verificationData.documentVerificationTransactionID) {
+    if (id !== consumer.props.verificationData.documentCheckReference) {
       throw new NotFoundException("No verification record is found for the user with the given id");
     }
-    const result = await this.verificationService.getDocumentVerificationResult(consumer.props._id, id);
+    const result = await this.verificationService.getDocumentVerificationResult(consumer.props.id, id);
     return this.verificationResponseMapper.toDocumentResultDTO(result);
   }
 
@@ -221,7 +221,7 @@ export class VerificationController {
 
     const result = await this.verificationService.getDocumentVerificationURL(
       sessionKey,
-      consumer.props._id,
+      consumer.props.id,
       locale,
       idBack === "true", // This and the next 2 lines are a way of getting around params coming through as strings even though declared as booleans
       selfie === "true",

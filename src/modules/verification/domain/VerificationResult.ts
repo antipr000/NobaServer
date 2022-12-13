@@ -1,10 +1,5 @@
-import {
-  KYCStatus,
-  DocumentVerificationStatus,
-  WalletStatus,
-  PaymentMethodStatus,
-  RiskLevel,
-} from "../../consumer/domain/VerificationStatus";
+import { RiskLevel } from "../../consumer/domain/VerificationStatus";
+import { KYCStatus, WalletStatus, PaymentMethodStatus, DocumentVerificationStatus } from "@prisma/client";
 
 export type ConsumerVerificationResult = {
   status: KYCStatus;

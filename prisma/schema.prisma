@@ -67,7 +67,8 @@ model Kyc {
   isSuspectedFraud              Boolean                    @default(false)
   kycCheckStatus                KYCStatus                  @default(NOT_SUBMITTED)
   documentVerificationStatus    DocumentVerificationStatus @default(REQUIRED)
-  documentVerificationTimestamp DateTime                   @default(now())
+  documentVerificationTimestamp DateTime
+  kycVerificationTimestamp      DateTime
   sanctionLevel                 String?
   riskLevel                     String?
   consumer                      Consumer                   @relation(fields: [consumerID], references: [id])

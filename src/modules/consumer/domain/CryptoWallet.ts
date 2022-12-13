@@ -1,4 +1,4 @@
-import { WalletStatus } from "./VerificationStatus";
+import { WalletStatus } from "@prisma/client";
 
 export type CryptoWallet = {
   walletName?: string;

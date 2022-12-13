@@ -18,6 +18,8 @@ export class Kyc {
 
   documentVerificationTimestamp: Date;
 
+  kycVerificationTimestamp: Date;
+
   sanctionLevel?: string;
 
   riskLevel?: string;
