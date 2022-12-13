@@ -31,25 +31,24 @@ const getAllRecordsInConsumerCollection = async (consumerCollection: Collection)
     const consumerDocument = await consumerDocumentsCursor.next();
 
     const currentRecord: ConsumerProps = {
-      _id: consumerDocument._id as any,
+      id: consumerDocument.id as any,
       firstName: consumerDocument.firstName,
       lastName: consumerDocument.lastName,
       email: consumerDocument.email,
       handle: consumerDocument.handle,
       displayEmail: consumerDocument.displayEmail,
       phone: consumerDocument.phone,
-      isAdmin: consumerDocument.isAdmin,
       dateOfBirth: consumerDocument.dateOfBirth,
       address: consumerDocument.address,
       socialSecurityNumber: consumerDocument.socialSecurityNumber,
-      nationalID: consumerDocument.nationalID,
-      nationalIDType: consumerDocument.nationalIDType,
-      riskRating: consumerDocument.riskRating,
-      isSuspectedFraud: consumerDocument.isSuspectedFraud,
+      //nationalID: consumerDocument.nationalID,
+      //nationalIDType: consumerDocument.nationalIDType,
+      //riskRating: consumerDocument.riskRating,
+      //isSuspectedFraud: consumerDocument.isSuspectedFraud,
       isLocked: consumerDocument.isLocked,
       isDisabled: consumerDocument.isDisabled,
-      zhParticipantCode: consumerDocument.zhParticipantCode,
-      paymentProviderAccounts: consumerDocument.paymentProviderAccounts,
+      //zhParticipantCode: consumerDocument.zhParticipantCode,
+      //paymentProviderAccounts: consumerDocument.paymentProviderAccounts,
       verificationData: consumerDocument.verificationData,
       paymentMethods: consumerDocument.paymentMethods,
       cryptoWallets: consumerDocument.cryptoWallets,
@@ -116,8 +115,8 @@ describe("MongoDBConsumerRepoTests", () => {
     it("should fail to create a duplicate consumer by email", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props._id);
-      expect(savedResult.props._id).toBe(result.props._id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.email).toBe(consumer.props.email);
       expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
         "Consumer with given email address already exists",
@@ -127,8 +126,8 @@ describe("MongoDBConsumerRepoTests", () => {
     it("should fail to create a duplicate consumer by phone", async () => {
       const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props._id);
-      expect(savedResult.props._id).toBe(result.props._id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.phone).toBe(consumer.props.phone);
       expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
         "Consumer with given phone number already exists",
@@ -138,8 +137,8 @@ describe("MongoDBConsumerRepoTests", () => {
     it("should fail to create a duplicate consumer by phone even with different spacing", async () => {
       const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props._id);
-      expect(savedResult.props._id).toBe(result.props._id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.phone).toBe(consumer.props.phone);
       consumer.props.phone = "+155 55555  555";
       expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
@@ -148,13 +147,12 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("shouldn't modify the 'handle', if already specified, before saving the consumer", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-
         handle: "test2",
       };
       const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
@@ -167,8 +165,8 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should add a 'default' handle (if not specified) before saving the consumer", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test@noba.com",
@@ -187,8 +185,8 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should add a 'default' handle which doesn't have 'dots' (.) even if email has it", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test.test@noba.com",
@@ -209,8 +207,8 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should add a 'default' handle which doesn't have 'dots' (.) even if firstname has it", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         firstName: "first.Name",
         lastName: "lastName",
         email: "test.test@noba.com",
@@ -231,8 +229,8 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should add a 'default' handle which doesn't have '_' as first character if firstname is not present", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         lastName: "lastName",
         email: "test.test@noba.com",
         phone: "+9876541230",
@@ -258,8 +256,8 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(async () => await consumerRepo.getConsumer(consumer.props.id)).rejects.toThrow(NotFoundException);
 
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props._id);
-      expect(savedResult.props._id).toBe(result.props._id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.email).toBe(consumer.props.email);
     });
   });
@@ -308,7 +306,7 @@ describe("MongoDBConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumerByEmail(consumer.props.email);
       expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props._id).toBe(consumer.props.id);
+      expect(savedResult.getValue().props.id).toBe(consumer.props.id);
     });
 
     it("should throw an error if passed an empty email address", async () => {
@@ -339,12 +337,12 @@ describe("MongoDBConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer);
       let savedResult = await consumerRepo.getConsumerByPhone(consumer.props.phone);
       expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props._id).toBe(consumer.props.id);
+      expect(savedResult.getValue().props.id).toBe(consumer.props.id);
 
       // should get consumer record even when requested phone number has spaces
       savedResult = await consumerRepo.getConsumerByPhone("+15 5555  55555");
       expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props._id).toBe(consumer.props.id);
+      expect(savedResult.getValue().props.id).toBe(consumer.props.id);
     });
 
     it("should throw an error if passed an empty phone number", async () => {
@@ -358,36 +356,34 @@ describe("MongoDBConsumerRepoTests", () => {
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
-      const result = await consumerRepo.getConsumer(savedconsumer.props.id);
+      const result = await consumerRepo.getConsumer(savedConsumer.props.id);
       expect(result.props.phone).toBe(undefined);
 
       const phone = "+134242424";
       const updatedConsumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
-      await consumerRepo.updateConsumer(updatedConsumer);
+      await consumerRepo.updateConsumer(consumer.props.id, updatedConsumer);
 
-      const result1 = await consumerRepo.getConsumer(result.props._id);
+      const result1 = await consumerRepo.getConsumer(result.props.id);
       expect(result1.props.phone).toBe(phone);
     });
 
     it("should throw error if tried to update 'handle' which already exists", async () => {
-      const consumerProps1: ConsumerProps = {
-        _id: "test-consumer-id-1",
+      const consumerProps1: Partial<ConsumerProps> = {
+        id: "test-consumer-id-1",
         firstName: "firstName",
         lastName: "lastName",
         email: "test-1@noba.com",
         phone: "+9876541230",
-
         handle: "test1",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
 
-      const consumerProps2: ConsumerProps = {
-        _id: "test-consumer-id-2",
+      const consumerProps2: Partial<ConsumerProps> = {
+        id: "test-consumer-id-2",
         firstName: "firstName",
         lastName: "lastName",
         email: "test-2@noba.com",
         phone: "+9876541231",
-
         handle: "test2",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
@@ -400,40 +396,38 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should update the consumer if 'handle' is not associated with any Consumer already", async () => {
-      const consumerProps1: ConsumerProps = {
-        _id: "test-consumer-id-1",
+      const consumerProps1: Partial<ConsumerProps> = {
+        id: "test-consumer-id-1",
         firstName: "firstName",
         lastName: "lastName",
         email: "test-1@noba.com",
         phone: "+9876541230",
-
         handle: "test1",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
 
-      const consumerProps2: ConsumerProps = {
-        _id: "test-consumer-id-2",
+      const consumerProps2: Partial<ConsumerProps> = {
+        id: "test-consumer-id-2",
         firstName: "firstName",
         lastName: "lastName",
         email: "test-2@noba.com",
         phone: "+9876541231",
-
         handle: "test2",
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
 
       consumerProps2.handle = "test3";
-      await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2));
+      await consumerRepo.updateConsumer(consumerProps2.id, Consumer.createConsumer(consumerProps2));
 
       const consumerRecordForId2 = (await getAllRecordsInConsumerCollection(consumerCollection)).filter(record => {
-        return record._id === "test-consumer-id-2";
+        return record.id === "test-consumer-id-2";
       })[0];
       expect(consumerRecordForId2.handle).toBe("test3");
     });
 
     it("shouldn't update the consumer 'handle' is not updated", async () => {
-      const consumerProps1: ConsumerProps = {
-        _id: "test-consumer-id-1",
+      const consumerProps1: Partial<ConsumerProps> = {
+        id: "test-consumer-id-1",
         firstName: "firstName",
         lastName: "lastName",
         email: "test-1@noba.com",
@@ -443,8 +437,8 @@ describe("MongoDBConsumerRepoTests", () => {
       };
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
 
-      const consumerProps2: ConsumerProps = {
-        _id: "test-consumer-id-2",
+      const consumerProps2: Partial<ConsumerProps> = {
+        id: "test-consumer-id-2",
         firstName: "firstName",
         lastName: "lastName",
         email: "test-2@noba.com",
@@ -455,10 +449,10 @@ describe("MongoDBConsumerRepoTests", () => {
       await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
 
       consumerProps2.phone = "+9876541235";
-      await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2));
+      await consumerRepo.updateConsumer(consumerProps2.id, Consumer.createConsumer(consumerProps2));
 
       const consumerRecordForId2 = (await getAllRecordsInConsumerCollection(consumerCollection)).filter(record => {
-        return record._id === "test-consumer-id-2";
+        return record.id === "test-consumer-id-2";
       })[0];
       expect(consumerRecordForId2.handle).toBe("test2");
     });
@@ -466,8 +460,8 @@ describe("MongoDBConsumerRepoTests", () => {
 
   describe("isHandleTaken", () => {
     it("should return 'true' if there already exist an user with same handle", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test@noba.com",
@@ -481,8 +475,8 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should return 'false' if there isn't an user with same handle", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test@noba.com",
@@ -495,34 +489,33 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(result).toBe(false);
     });
   });
-
+  /*
   describe("updateConsumerCircleWalletID", () => {
     it("should set the 'circleWalletID' field if not present at all", async () => {
-      const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+      const consumerProps: Partial<ConsumerProps> = {
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test@noba.com",
         phone: "+9876541230",
-
         handle: "test",
       };
       await consumerCollection.insertOne({
         ...consumerProps,
-        _id: consumerProps._id as any,
+        id: consumerProps.id as any,
       });
 
-      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps.id);
       expect(consumerBeforeUpdate.props.circleWalletID).toBeUndefined();
 
-      await consumerRepo.updateConsumerCircleWalletID(consumerProps._id, "dummy_circle_wallet_id");
-      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      await consumerRepo.updateConsumerCircleWalletID(consumerProps.id, "dummy_circle_wallet_id");
+      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps.id);
       expect(consumerAfterUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id");
     });
 
     it("should update the 'circleWalletID' field if already present", async () => {
       const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test@noba.com",
@@ -533,20 +526,20 @@ describe("MongoDBConsumerRepoTests", () => {
       };
       await consumerCollection.insertOne({
         ...consumerProps,
-        _id: consumerProps._id as any,
+        id: consumerProps.id as any,
       });
 
-      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps.id);
       expect(consumerBeforeUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_1");
 
-      await consumerRepo.updateConsumerCircleWalletID(consumerProps._id, "dummy_circle_wallet_id_2");
-      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      await consumerRepo.updateConsumerCircleWalletID(consumerProps.id, "dummy_circle_wallet_id_2");
+      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps.id);
       expect(consumerAfterUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_2");
     });
 
     it("shouldn't perform anything if the 'consumerID' itself is not valid", async () => {
       const consumerProps: ConsumerProps = {
-        _id: "test-consumer-id",
+        id: "test-consumer-id",
         firstName: "firstName",
         lastName: "lastName",
         email: "test@noba.com",
@@ -557,22 +550,22 @@ describe("MongoDBConsumerRepoTests", () => {
       };
       await consumerCollection.insertOne({
         ...consumerProps,
-        _id: consumerProps._id as any,
+        id: consumerProps.id as any,
       });
 
-      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      const consumerBeforeUpdate: Consumer = await consumerRepo.getConsumer(consumerProps.id);
       expect(consumerBeforeUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_1");
 
       await consumerRepo.updateConsumerCircleWalletID("dummy_consumer_id", "dummy_circle_wallet_id_2");
-      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps._id);
+      const consumerAfterUpdate: Consumer = await consumerRepo.getConsumer(consumerProps.id);
       expect(consumerAfterUpdate.props.circleWalletID).toBe("dummy_circle_wallet_id_1");
     });
-  });
+  });*/
 });
 
 const getRandomUser = (email: string, phone?: string): Consumer => {
-  const props: ConsumerProps = {
-    _id: mkid(email),
+  const props: Partial<ConsumerProps> = {
+    id: mkid(email),
     firstName: "firstName",
     lastName: "lastName",
     email: email,

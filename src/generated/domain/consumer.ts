@@ -25,9 +25,9 @@ export class Consumer {
 
   isDisabled: boolean;
 
-  createdTimestamp: Date;
+  createdTimestamp?: Date;
 
-  updatedTimestamp: Date;
+  updatedTimestamp?: Date;
 
   socialSecurityNumber?: string;
 

@@ -13,8 +13,8 @@ Table Consumer {
   dateOfBirth String
   isLocked Boolean [not null, default: false]
   isDisabled Boolean [not null, default: false]
-  createdTimestamp DateTime [default: `now()`, not null]
-  updatedTimestamp DateTime [default: `now()`, not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
   socialSecurityNumber String
   address Address
   verificationData Kyc

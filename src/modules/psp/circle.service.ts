@@ -27,6 +27,6 @@ export class CircleService {
 
     // await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
     // return circleWalletID;
-    return ''
+    return "";
   }
 }
