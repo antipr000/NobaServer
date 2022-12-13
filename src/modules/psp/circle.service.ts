@@ -18,6 +18,12 @@ export class CircleService {
   public async createWallet(
     consumerID: string,
   ): Promise<string> {
+    // assume there's only one wallet per consumer ID
+    const existingWalletResult = await this.circleRepo.getWallet(consumerID);
+    if(existingWalletResult.isSuccess){
+      return existingWalletResult.getValue()
+    }
+
     const circleWalletID: string = await this.circleClient.createWallet(consumerID);
 
     await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
