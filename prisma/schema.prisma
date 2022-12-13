@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+generator prismaClassGenerator {
+  provider      = "prisma-class-generator"
+  dryRun        = false
+  output        = "../src/generated/domain"
+  useSwagger    = false
+  makeIndexFile = false
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Consumer {
+  id                   String          @id
+  firstName            String?
+  lastName             String?
+  email                String?         @unique()
+  displayEmail         String
+  handle               String?
+  phone                String?         @unique()
+  dateOfBirth          String?         @db.VarChar(10)
+  isLocked             Boolean         @default(false)
+  isDisabled           Boolean         @default(false)
+  createdTimestamp     DateTime        @default(now())
+  updatedTimestamp     DateTime        @default(now())
+  socialSecurityNumber String?
+  address              Address?
+  verificationData     Kyc?
+  cryptoWallets        CryptoWallet[]
+  paymentMethods       PaymentMethod[]
+
+  @@index([email])
+  @@index([handle])
+  @@index([phone])
+}
+
+model Address {
+  id          Int      @id @default(autoincrement())
+  streetLine1 String
+  streetLine2 String?
+  city        String
+  countryCode String   @db.VarChar(3)
+  regionCode  String
+  postalCode  String
+  consumer    Consumer @relation(fields: [consumerID], references: [id])
+  consumerID  String   @unique()
+}
+
+model Kyc {
+  id                            Int                        @id @default(autoincrement())
+  kycCheckReference             String?
+  documentCheckReference        String?
+  riskRating                    String?
+  isSuspectedFraud              Boolean                    @default(false)
+  kycCheckStatus                KYCStatus                  @default(NOT_SUBMITTED)
+  documentVerificationStatus    DocumentVerificationStatus @default(REQUIRED)
+  documentVerificationTimestamp DateTime                   @default(now())
+  sanctionLevel                 String?
+  riskLevel                     String?
+  consumer                      Consumer                   @relation(fields: [consumerID], references: [id])
+  consumerID                    String                     @unique()
+}
+
+model CryptoWallet {
+  id              Int          @id @default(autoincrement())
+  address         String       @unique()
+  name            String
+  chainType       String?
+  isEVMCompatible Boolean?
+  status          WalletStatus @default(PENDING)
+  riskScore       Decimal?
+  consumer        Consumer     @relation(fields: [consumerID], references: [id])
+  consumerID      String
+
+  @@index([address])
+}
+
+model PaymentMethod {
+  id              Int                 @id @default(autoincrement())
+  name            String?
+  type            PaymentMethodType
+  paymentToken    String              @unique()
+  paymentProvider PaymentProvider
+  status          PaymentMethodStatus
+  isDefault       Boolean             @default(false)
+  imageUri        String?
+  consumer        Consumer            @relation(fields: [consumerID], references: [id])
+  consumerID      String
+  cardData        Card?
+  achData         AchData?
+
+  @@index([paymentToken])
+}
+
+model Card {
+  id              Int           @id @default(autoincrement())
+  cardType        String?
+  scheme          String?
+  first6Digits    String
+  last4Digits     String
+  authCode        String?
+  authReason      String?
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id])
+  paymentMethodID Int           @unique()
+}
+
+model AchData {
+  id              Int           @id @default(autoincrement())
+  accountID       String
+  accessToken     String
+  itemID          String
+  mask            String
+  accountType     String
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id])
+  paymentMethodID Int           @unique()
+}
+
+enum KYCStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  FLAGGED
+  REJECTED
+}
+
+enum DocumentVerificationStatus {
+  NOT_REQUIRED
+  REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+  REJECTED_DOCUMENT_REQUIRES_RECAPTURE
+  REJECTED_DOCUMENT_POOR_QUALITY
+  REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE
+  LIVE_PHOTO_VERIFIED
+}
+
+enum WalletStatus {
+  PENDING
+  FLAGGED
+  REJECTED
+  APPROVED
+  DELETED
+}
+
+enum PaymentMethodType {
+  CARD
+  ACH
+}
+
+enum PaymentProvider {
+  CHECKOUT
+}
+
+enum PaymentMethodStatus {
+  FLAGGED
+  REJECTED
+  APPROVED
+  UNSUPPORTED
+  DELETED
+}

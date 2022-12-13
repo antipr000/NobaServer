@@ -1,8 +1,10 @@
 import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
-import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
+import { Consumer } from "../consumer/domain/Consumer";
+import { Consumer as ConsumerProps } from "../../generated/domain/consumer";
+import { PaymentMethod } from "../../generated/domain/payment_method";
+import { PaymentMethodType, PaymentProvider } from "@prisma/client";
 import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";
 import {
@@ -21,7 +23,6 @@ import { PaymentRequestResponse, FiatTransactionStatus } from "../consumer/domai
 import { Utils } from "../../core/utils/Utils";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import { PaymentProvider } from "../consumer/domain/PaymentProvider";
 import { CreditCardBinData } from "../common/domain/CreditCardBinData";
 import creditCardType from "credit-card-type";
 import { CheckoutClient } from "./checkout.client";
@@ -56,9 +57,10 @@ export class PaymentService {
    * existed else false
    */
   public async createPspConsumerAccount(consumer: Consumer): Promise<[string, boolean]> {
-    const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
-      paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
-    );
+    // const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
+    //   paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
+    // );
+    const checkoutCustomerData = [];
 
     if (checkoutCustomerData.length === 0) {
       // new customer. Create customer id
@@ -84,6 +86,7 @@ export class PaymentService {
     consumer: Consumer,
     paymentMethod: AddPaymentMethodDTO,
   ): Promise<AddPaymentMethodResponse> {
+    throw new Error("Not implemented");
     let creditCardBinData: CreditCardDTO;
 
     const [checkoutCustomerID, hasCustomerIDSaved] = await this.createPspConsumerAccount(consumer);
@@ -172,7 +175,7 @@ export class PaymentService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
+          nobaUserID: consumer.props.id,
           email: consumer.props.displayEmail,
           last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
         },
@@ -181,34 +184,32 @@ export class PaymentService {
     } else if (response.paymentMethodStatus === PaymentMethodStatus.FLAGGED) {
       // TODO - we don't currently have a use case for FLAGGED
     } else {
-      const newPaymentMethod: PaymentMethod = {
-        name: paymentMethod.name,
-        type: PaymentMethodType.CARD,
-        cardData: {
-          cardType: addPaymentMethodResponse.cardType,
-          scheme: addPaymentMethodResponse.scheme,
-          first6Digits: paymentMethod.cardDetails.cardNumber.substring(0, 6),
-          last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
-          authCode: response.responseCode,
-          authReason: response.responseSummary,
-        },
-        imageUri: paymentMethod.imageUri,
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: addPaymentMethodResponse.instrumentID,
-        isDefault: paymentMethod.isDefault ?? false,
-      };
-
-      if (response.paymentMethodStatus) {
-        newPaymentMethod.status = response.paymentMethodStatus;
-      }
-
-      return this.prepareAddPaymentMethodResponse(
-        consumer,
-        newPaymentMethod,
-        hasCustomerIDSaved,
-        checkoutCustomerID,
-        response,
-      );
+      // const newPaymentMethod: PaymentMethod = {
+      //   name: paymentMethod.name,
+      //   type: PaymentMethodType.CARD,
+      //   cardData: {
+      //     cardType: addPaymentMethodResponse.cardType,
+      //     scheme: addPaymentMethodResponse.scheme,
+      //     first6Digits: paymentMethod.cardDetails.cardNumber.substring(0, 6),
+      //     last4Digits: paymentMethod.cardDetails.cardNumber.substring(paymentMethod.cardDetails.cardNumber.length - 4),
+      //     authCode: response.responseCode,
+      //     authReason: response.responseSummary,
+      //   },
+      //   imageUri: paymentMethod.imageUri,
+      //   paymentProvider: PaymentProvider.CHECKOUT,
+      //   paymentToken: addPaymentMethodResponse.instrumentID,
+      //   isDefault: paymentMethod.isDefault ?? false,
+      // };
+      // if (response.paymentMethodStatus) {
+      //   newPaymentMethod.status = response.paymentMethodStatus;
+      // }
+      // return this.prepareAddPaymentMethodResponse(
+      //   consumer,
+      //   newPaymentMethod,
+      //   hasCustomerIDSaved,
+      //   checkoutCustomerID,
+      //   response,
+      // );
     }
   }
 
@@ -216,6 +217,7 @@ export class PaymentService {
     consumer: Consumer,
     paymentMethod: AddPaymentMethodDTO,
   ): Promise<AddPaymentMethodResponse> {
+    throw new Error("Not implemented");
     const accessToken: string = await this.plaidClient.exchangeForAccessToken({
       publicToken: paymentMethod.achDetails.token,
     });
@@ -232,31 +234,31 @@ export class PaymentService {
     // that we can use by the time we make a payment
     const [checkoutCustomerID, hasCustomerIDSaved] = await this.createPspConsumerAccount(consumer);
 
-    const newPaymentMethod: PaymentMethod = {
-      name: accountData.name,
-      type: PaymentMethodType.ACH,
-      achData: {
-        // TODO(Plaid): Encrypt it.
-        accessToken: accessToken,
-        accountID: accountData.accountID,
-        itemID: accountData.itemID,
-        mask: accountData.mask,
-        accountType: accountData.accountType,
-      },
-      imageUri: paymentMethod.imageUri,
-      paymentProviderID: PaymentProvider.CHECKOUT,
-      paymentToken: processorToken,
-      status: PaymentMethodStatus.APPROVED,
-      isDefault: paymentMethod.isDefault ?? false,
-    };
+    // const newPaymentMethod: PaymentMethod = {
+    //   name: accountData.name,
+    //   type: PaymentMethodType.ACH,
+    //   achData: {
+    //     // TODO(Plaid): Encrypt it.
+    //     accessToken: accessToken,
+    //     accountID: accountData.accountID,
+    //     itemID: accountData.itemID,
+    //     mask: accountData.mask,
+    //     accountType: accountData.accountType,
+    //   },
+    //   imageUri: paymentMethod.imageUri,
+    //   paymentProvider: PaymentProvider.CHECKOUT,
+    //   paymentToken: processorToken,
+    //   // status: PaymentMethodStatus.APPROVED,
+    //   isDefault: paymentMethod.isDefault ?? false,
+    // };
 
-    return this.prepareAddPaymentMethodResponse(
-      consumer,
-      newPaymentMethod,
-      hasCustomerIDSaved,
-      checkoutCustomerID,
-      null,
-    );
+    // return this.prepareAddPaymentMethodResponse(
+    //   consumer,
+    //   newPaymentMethod,
+    //   hasCustomerIDSaved,
+    //   checkoutCustomerID,
+    //   null,
+    // );
   }
 
   public async requestCheckoutPayment(
@@ -411,22 +413,22 @@ export class PaymentService {
         paymentMethods: [...existingPaymentMethods, newPaymentMethod],
       };
     } else {
-      updatedConsumerProps = {
-        ...consumer.props,
-        paymentMethods: [...existingPaymentMethods, newPaymentMethod],
-        paymentProviderAccounts: [
-          ...consumer.props.paymentProviderAccounts,
-          {
-            providerID: PaymentProvider.CHECKOUT,
-            providerCustomerID: checkoutCustomerID,
-          },
-        ],
-      };
+      // updatedConsumerProps = {
+      //   ...consumer.props,
+      //   paymentMethods: [...existingPaymentMethods, newPaymentMethod],
+      //   paymentProviderAccounts: [
+      //     ...consumer.props.paymentProviderAccounts,
+      //     {
+      //       providerID: PaymentProvider.CHECKOUT,
+      //       providerCustomer: checkoutCustomerID,
+      //     },
+      //   ],
+      // };
     }
     return {
       checkoutResponseData: checkoutResponse,
       updatedConsumerData: updatedConsumerProps,
-      newPaymentMethod: newPaymentMethod,
+      // newPaymentMethod: newPaymentMethod,
     };
   }
 
@@ -522,7 +524,7 @@ export class PaymentService {
         await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
+          nobaUserID: consumer.props.id,
           email: consumer.props.displayEmail,
           sessionID: sessionID,
           transactionID: transactionID,

@@ -1,18 +1,18 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../consumer/consumer.service";
 import { IDVProvider } from "./integrations/IDVProvider";
 import { ConsumerInformation } from "./domain/ConsumerInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "./domain/VerificationResult";
-import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
+import { Consumer } from "../consumer/domain/Consumer";
+import { Consumer as ConsumerProps } from "../../generated/domain/consumer";
 import { DocumentInformation } from "./domain/DocumentInformation";
 import { KYCStatus, DocumentVerificationStatus } from "../consumer/domain/VerificationStatus";
 import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/IVerificationDataRepo";
 import { TransactionInformation } from "./domain/TransactionInformation";
-import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import {
   CaseNotificationWebhookRequest,
   DocumentVerificationWebhookRequest,
@@ -43,78 +43,75 @@ export class VerificationService {
     sessionKey: string,
     consumerInformation: ConsumerInformation,
   ): Promise<ConsumerVerificationResult> {
-    if (consumerInformation.dateOfBirth && !isValidDateOfBirth(consumerInformation.dateOfBirth)) {
-      throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
-    }
-    const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
-      sessionKey,
-      consumerInformation,
-    );
-    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
-    const newConsumerData: ConsumerProps = {
-      ...consumer.props,
-      address: consumerInformation.address,
-      firstName: consumerInformation.firstName,
-      lastName: consumerInformation.lastName,
-      dateOfBirth: consumerInformation.dateOfBirth,
-      phone: consumerInformation.phoneNumber,
-      riskRating: result.idvProviderRiskLevel,
-      verificationData: {
-        ...consumer.props.verificationData,
-        kycVerificationStatus: result.status,
-        kycVerificationTimestamp: new Date().getTime(),
-        documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
-          ? DocumentVerificationStatus.REQUIRED
-          : DocumentVerificationStatus.NOT_REQUIRED,
-      },
-      socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
-    };
-
-    const isUS = consumerInformation.address.countryCode === "US";
-    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
-
-    if (result.status === KYCStatus.APPROVED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, result);
-      if (isUS) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
-          firstName: updatedConsumer.props.firstName,
-          lastName: updatedConsumer.props.lastName,
-          nobaUserID: consumer.props._id,
-          email: updatedConsumer.props.displayEmail,
-        });
-      } else {
-        await this.notificationService.sendNotification(
-          NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
-
-          {
-            firstName: updatedConsumer.props.firstName,
-            lastName: updatedConsumer.props.lastName,
-            nobaUserID: consumer.props._id,
-            email: updatedConsumer.props.displayEmail,
-          },
-        );
-      }
-    } else if (result.status === KYCStatus.REJECTED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, result);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
-        nobaUserID: consumer.props._id,
-        email: updatedConsumer.props.displayEmail,
-      });
-    } else {
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
-
-        {
-          firstName: updatedConsumer.props.firstName,
-          lastName: updatedConsumer.props.lastName,
-          nobaUserID: consumer.props._id,
-          email: updatedConsumer.props.displayEmail,
-        },
-      );
-    }
-    return result;
+    throw new Error("Not implemented");
+    // if (consumerInformation.dateOfBirth && !isValidDateOfBirth(consumerInformation.dateOfBirth)) {
+    //   throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
+    // }
+    // const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
+    //   sessionKey,
+    //   consumerInformation,
+    // );
+    // const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    // const newConsumerData: ConsumerProps = {
+    //   ...consumer.props,
+    //   address: consumerInformation.address,
+    //   firstName: consumerInformation.firstName,
+    //   lastName: consumerInformation.lastName,
+    //   dateOfBirth: consumerInformation.dateOfBirth,
+    //   phone: consumerInformation.phoneNumber,
+    //   riskRating: result.idvProviderRiskLevel,
+    //   verificationData: {
+    //     ...consumer.props.verificationData,
+    //     kycVerificationStatus: result.status,
+    //     kycVerificationTimestamp: new Date().getTime(),
+    //     documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
+    //       ? DocumentVerificationStatus.REQUIRED
+    //       : DocumentVerificationStatus.NOT_REQUIRED,
+    //   },
+    //   socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
+    // };
+    // const isUS = consumerInformation.address.countryCode === "US";
+    // const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+    // if (result.status === KYCStatus.APPROVED) {
+    //   await this.idvProvider.postConsumerFeedback(sessionKey, result);
+    //   if (isUS) {
+    //     await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
+    //       firstName: updatedConsumer.props.firstName,
+    //       lastName: updatedConsumer.props.lastName,
+    //       nobaUserID: consumer.props.id,
+    //       email: updatedConsumer.props.displayEmail,
+    //     });
+    //   } else {
+    //     await this.notificationService.sendNotification(
+    //       NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
+    //       {
+    //         firstName: updatedConsumer.props.firstName,
+    //         lastName: updatedConsumer.props.lastName,
+    //         nobaUserID: consumer.props.id,
+    //         email: updatedConsumer.props.displayEmail,
+    //       },
+    //     );
+    //   }
+    // } else if (result.status === KYCStatus.REJECTED) {
+    //   await this.idvProvider.postConsumerFeedback(sessionKey, result);
+    //   await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
+    //     firstName: updatedConsumer.props.firstName,
+    //     lastName: updatedConsumer.props.lastName,
+    //     nobaUserID: consumer.props.id,
+    //     email: updatedConsumer.props.displayEmail,
+    //   });
+    // } else {
+    //   await this.notificationService.sendNotification(
+    //     NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
+    //     {
+    //       firstName: updatedConsumer.props.firstName,
+    //       lastName: updatedConsumer.props.lastName,
+    //       nobaUserID: consumer.props.id,
+    //       email: updatedConsumer.props.displayEmail,
+    //     },
+    //   );
+    // }
+    // return result;
   }
 
   async processKycVerificationWebhookRequest(requestBody: CaseNotificationWebhookRequest) {
@@ -122,15 +119,15 @@ export class VerificationService {
     const result: ConsumerVerificationResult = this.idvProvider.processKycVerificationWebhookResult(requestBody);
     if (result.status === KYCStatus.APPROVED || result.status === KYCStatus.REJECTED) {
       const consumer = await this.consumerService.getConsumer(consumerID);
-      const newConsumerData: ConsumerProps = {
-        ...consumer.props,
-        verificationData: {
-          ...consumer.props.verificationData,
-          kycVerificationStatus: result.status,
-        },
-      };
+      // const newConsumerData: ConsumerProps = {
+      //   ...consumer.props,
+      //   verificationData: {
+      //     ...consumer.props.verificationData,
+      //     kycVerificationStatus: result.status,
+      //   },
+      // };
 
-      await this.consumerService.updateConsumer(newConsumerData);
+      // await this.consumerService.updateConsumer(newConsumerData);
 
       await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, result);
 
@@ -142,7 +139,7 @@ export class VerificationService {
             {
               firstName: consumer.props.firstName,
               lastName: consumer.props.lastName,
-              nobaUserID: consumer.props._id,
+              nobaUserID: consumer.props.id,
               email: consumer.props.displayEmail,
             },
           );
@@ -153,7 +150,7 @@ export class VerificationService {
             {
               firstName: consumer.props.firstName,
               lastName: consumer.props.lastName,
-              nobaUserID: consumer.props._id,
+              nobaUserID: consumer.props.id,
               email: consumer.props.displayEmail,
             },
           );
@@ -165,7 +162,7 @@ export class VerificationService {
           {
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.displayEmail,
           },
         );
@@ -187,9 +184,9 @@ export class VerificationService {
         ...consumer.props,
         verificationData: {
           ...consumer.props.verificationData,
-          documentVerificationStatus: DocumentVerificationStatus.PENDING,
-          documentVerificationTimestamp: new Date().getTime(),
-          documentVerificationTransactionID: id,
+          // documentVerificationStatus: DocumentVerificationStatus.PENDING,
+          // documentVerificationTimestamp: new Date().getTime(),
+          // documentVerificationTransactionID: id,
         },
       };
     } catch (e) {
@@ -199,7 +196,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
+          nobaUserID: consumer.props.id,
           email: consumer.props.displayEmail,
         },
       );
@@ -212,7 +209,7 @@ export class VerificationService {
       {
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
-        nobaUserID: consumer.props._id,
+        nobaUserID: consumer.props.id,
         email: updatedConsumer.props.displayEmail,
       },
     );
@@ -226,7 +223,7 @@ export class VerificationService {
       ...consumer.props,
       verificationData: {
         ...consumer.props.verificationData,
-        documentVerificationStatus: result.status,
+        // documentVerificationStatus: result.status,
       },
     };
     await this.consumerService.updateConsumer(newConsumerData);
@@ -238,7 +235,7 @@ export class VerificationService {
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
+        nobaUserID: consumer.props.id,
         email: consumer.props.displayEmail,
       });
     } else if (
@@ -253,7 +250,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
+          nobaUserID: consumer.props.id,
           email: consumer.props.displayEmail,
         },
       );
@@ -285,10 +282,10 @@ export class VerificationService {
     const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
-      riskRating: result.riskRating,
+      // riskRating: result.riskRating,
       verificationData: {
         ...consumer.props.verificationData,
-        documentVerificationStatus: result.status,
+        // documentVerificationStatus: result.status,
       },
     };
     await this.consumerService.updateConsumer(newConsumerData);
@@ -304,7 +301,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
+          nobaUserID: consumer.props.id,
           email: consumer.props.displayEmail,
         },
       );
@@ -321,7 +318,7 @@ export class VerificationService {
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
-          nobaUserID: consumer.props._id,
+          nobaUserID: consumer.props.id,
           email: consumer.props.displayEmail,
         },
       );
@@ -340,7 +337,7 @@ export class VerificationService {
       ...consumer.props,
       verificationData: {
         ...consumer.props.verificationData,
-        kycVerificationStatus: result.status,
+        // kycVerificationStatus: result.status,
       },
     };
 

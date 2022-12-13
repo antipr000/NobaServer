@@ -3,7 +3,8 @@
 import { Schema, model, Model } from "mongoose";
 import Mongoose from "mongoose";
 import Joigoose from "joigoose";
-import { consumerJoiSchema, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
+import { Consumer as ConsumerProps } from "../../../generated/domain/consumer";
+import { consumerJoiSchema } from "../../../modules/consumer/domain/Consumer";
 
 const joigoose = Joigoose(Mongoose, null, {});
 

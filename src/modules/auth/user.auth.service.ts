@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ConsumerService } from "../consumer/consumer.service";
 import { AuthService } from "./auth.service";
 import { consumerIdentityIdentifier } from "./domain/IdentityType";
@@ -17,7 +17,8 @@ export class UserAuthService extends AuthService {
 
   protected async getUserId(emailOrPhone: string): Promise<string> {
     const consumer: Consumer = await this.consumerService.getOrCreateConsumerConditionally(emailOrPhone);
-    return consumer.props._id;
+    console.log("Here 3");
+    return consumer.props.id;
   }
 
   protected async isUserSignedUp(emailOrPhone: string): Promise<boolean> {

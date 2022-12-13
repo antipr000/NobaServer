@@ -31,7 +31,6 @@ import { Logger } from "winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { AuthUser } from "../auth/auth.decorator";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
-import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { PlaidClient } from "../psp/plaid.client";
@@ -79,7 +78,7 @@ export class ConsumerController {
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
-    const consumerID: string = consumer.props._id;
+    const consumerID: string = consumer.props.id;
     const entity: Consumer = await this.consumerService.getConsumer(consumerID);
     return this.consumerMapper.toDTO(entity);
   }

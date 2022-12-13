@@ -4,12 +4,10 @@ import { KeysRequired } from "../../modules/common/domain/Types";
 
 // Rename to something better as now it doesn't just refer to version information
 export type BaseProps = {
-  version?: number;
   createdTimestamp?: Date;
   updatedTimestamp?: Date;
 };
 export const basePropsJoiSchemaKeys: KeysRequired<BaseProps> = {
-  version: Joi.number().optional(),
   createdTimestamp: Joi.date().optional(),
   updatedTimestamp: Joi.date().optional(),
 };
@@ -18,10 +16,6 @@ export abstract class Entity<T extends BaseProps> {
   public readonly props: T;
   constructor(props: T) {
     this.props = props;
-  }
-
-  public get version() {
-    return this.props.version;
   }
 
   public static getNewID(): string {

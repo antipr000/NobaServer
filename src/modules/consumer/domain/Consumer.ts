@@ -1,47 +1,16 @@
 import { BadRequestException } from "@nestjs/common";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Consumer as ConsumerProps } from "../../../generated/domain/consumer";
+import { PaymentMethod } from "../../../generated/domain/payment_method";
+import { CryptoWallet } from "../../../generated/domain/crypto_wallet";
 import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
 import { Address } from "./Address";
-import { CryptoWallet } from "./CryptoWallet";
-import { CardData, PaymentMethod } from "./PaymentMethod";
-import { PaymentProviderDetails } from "./PaymentProviderDetails";
 import { VerificationData, VerificationProviders } from "./VerificationData";
-import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus } from "./VerificationStatus";
 import { differenceInDays } from "date-fns";
-
-export interface ConsumerProps extends BaseProps {
-  _id: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  handle?: string;
-  displayEmail?: string;
-  phone?: string;
-  isAdmin?: boolean;
-  dateOfBirth?: string;
-  address?: Address;
-  socialSecurityNumber?: string;
-  nationalID?: string;
-  nationalIDType?: string;
-  riskRating?: string;
-  isSuspectedFraud?: boolean;
-  isLocked?: boolean;
-  isDisabled?: boolean;
-  zhParticipantCode?: string;
-  paymentProviderAccounts?: PaymentProviderDetails[];
-  verificationData?: VerificationData;
-  paymentMethods?: PaymentMethod[];
-  cryptoWallets?: CryptoWallet[];
-  circleWalletID?: string;
-}
-
-const paymentProviderValidationJoiKeys: KeysRequired<PaymentProviderDetails> = {
-  providerID: Joi.string().required(),
-  providerCustomerID: Joi.string().required(),
-};
+import { PaymentMethodStatus, DocumentVerificationStatus, KYCStatus } from "@prisma/client";
 
 const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
   verificationProvider: Joi.string().required().default(VerificationProviders.SARDINE),
@@ -54,34 +23,31 @@ const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
   pepLevel: Joi.string().optional(),
 };
 
-const paymentMethodCardDataValidationJoiKeys: KeysRequired<CardData> = {
-  cardType: Joi.string().optional(),
-  scheme: Joi.string().optional(),
-  first6Digits: Joi.string().required(),
-  last4Digits: Joi.string().required(),
-  authCode: Joi.string().optional(),
-  authReason: Joi.string().optional(),
-};
-
 const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethod> = {
+  id: Joi.number().required(),
   name: Joi.string().optional().allow(""),
   type: Joi.string().required(),
-  cardData: Joi.object().keys(paymentMethodCardDataValidationJoiKeys).optional(),
+  cardData: Joi.object().keys().optional(),
   achData: Joi.object().optional(),
   imageUri: Joi.string().optional(),
   paymentToken: Joi.string().required(),
-  paymentProviderID: Joi.string().required(),
+  paymentProvider: Joi.string().required(),
   status: Joi.string().optional(),
   isDefault: Joi.boolean().default(false),
+  consumerID: Joi.string().required(),
+  consumer: Joi.object().required(),
 };
 
 const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
-  walletName: Joi.string().optional(),
+  id: Joi.number().required(),
+  name: Joi.string().optional(),
   address: Joi.string().required(),
   chainType: Joi.string().optional(),
   isEVMCompatible: Joi.boolean().optional(),
   status: Joi.string().optional(),
   riskScore: Joi.number().optional(),
+  consumerID: Joi.string().required(),
+  consumer: Joi.object().required(),
 };
 
 const addressValidationJoiKeys: KeysRequired<Address> = {
@@ -95,38 +61,25 @@ const addressValidationJoiKeys: KeysRequired<Address> = {
 
 export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   ...basePropsJoiSchemaKeys,
-  _id: Joi.string().min(10).required(),
-  firstName: Joi.string().min(2).max(100).optional(),
-  lastName: Joi.string().min(2).max(100).optional(),
-  email: Joi.string()
-    .email()
-    .allow(null)
-    .optional()
-    .meta({ _mongoose: { index: true } }),
-  handle: Joi.string().optional(),
-  displayEmail: Joi.string().email().optional(),
+  id: Joi.string().min(10).required(),
+  firstName: Joi.string().min(2).max(100).optional().allow(null),
+  lastName: Joi.string().min(2).max(100).optional().allow(null),
+  email: Joi.string().email().allow(null).optional(),
+  handle: Joi.string().optional().allow(null),
+  displayEmail: Joi.string().email().optional().allow(null),
   phone: Joi.string()
     .pattern(/^\+[0-9 ]+$/) // allows digits, spaces, and + sign TODO(CRYPTO-402) Remove space after all envs have been migrated.
     .max(35) // allows for country code and extension with some spaces in between
     .optional()
-    .allow(null)
-    .meta({ _mongoose: { index: true } }),
-  isAdmin: Joi.boolean().default(false),
-  dateOfBirth: Joi.string().optional(),
+    .allow(null),
+  dateOfBirth: Joi.string().optional().allow(null),
   address: Joi.object().keys(addressValidationJoiKeys).optional(),
-  socialSecurityNumber: Joi.string().optional(),
-  nationalID: Joi.string().optional(),
-  nationalIDType: Joi.string().optional(),
-  riskRating: Joi.string().optional(),
-  isSuspectedFraud: Joi.boolean().optional(),
+  socialSecurityNumber: Joi.string().optional().allow(null),
   isLocked: Joi.boolean().optional(),
   isDisabled: Joi.boolean().optional(),
-  zhParticipantCode: Joi.string().optional(),
-  paymentProviderAccounts: Joi.array().items(paymentProviderValidationJoiKeys).optional(),
   verificationData: Joi.object().keys(verificationDataValidationJoiKeys).optional(),
   paymentMethods: Joi.array().items(paymentMethodsValidationJoiKeys).default([]),
   cryptoWallets: Joi.array().items(cryptoWalletsValidationJoiKeys).default([]),
-  circleWalletID: Joi.string().optional(),
 };
 
 export const consumerJoiSchema = Joi.object(consumerJoiValidationKeys).options({
@@ -141,7 +94,7 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
 
   public static createConsumer(consumerProps: Partial<ConsumerProps>): Consumer {
     //set email verified to true when user authenticates via third party and not purely via email
-    if (!consumerProps._id) consumerProps._id = Entity.getNewID();
+    if (!consumerProps.id) consumerProps.id = Entity.getNewID();
 
     if (!consumerProps.phone && !consumerProps.email) throw new Error("User must have either phone or email");
 

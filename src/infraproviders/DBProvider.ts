@@ -2,7 +2,7 @@ import { Injectable, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Model } from "mongoose";
-import { ConsumerProps } from "../modules/consumer/domain/Consumer";
+import { Consumer as ConsumerProps } from "../generated/domain/consumer";
 import { UserModel } from "../infra/mongodb/models/UserModel";
 import Mongoose from "mongoose";
 import { TransactionProps } from "../modules/transactions/domain/Transaction";

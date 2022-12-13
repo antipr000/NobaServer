@@ -1,0 +1,157 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Consumer {
+  id String [pk]
+  firstName String
+  lastName String
+  email String [unique]
+  displayEmail String [not null]
+  handle String
+  phone String [unique]
+  dateOfBirth String
+  isLocked Boolean [not null, default: false]
+  isDisabled Boolean [not null, default: false]
+  createdTimestamp DateTime [default: `now()`, not null]
+  updatedTimestamp DateTime [default: `now()`, not null]
+  socialSecurityNumber String
+  address Address
+  verificationData Kyc
+  cryptoWallets CryptoWallet [not null]
+  paymentMethods PaymentMethod [not null]
+}
+
+Table Address {
+  id Int [pk, increment]
+  streetLine1 String [not null]
+  streetLine2 String
+  city String [not null]
+  countryCode String [not null]
+  regionCode String [not null]
+  postalCode String [not null]
+  consumer Consumer [not null]
+  consumerID String [unique, not null]
+}
+
+Table Kyc {
+  id Int [pk, increment]
+  kycCheckReference String
+  documentCheckReference String
+  riskRating String
+  isSuspectedFraud Boolean [not null, default: false]
+  kycCheckStatus KYCStatus [not null, default: 'NOT_SUBMITTED']
+  documentVerificationStatus DocumentVerificationStatus [not null, default: 'REQUIRED']
+  documentVerificationTimestamp DateTime [default: `now()`, not null]
+  sanctionLevel String
+  riskLevel String
+  consumer Consumer [not null]
+  consumerID String [unique, not null]
+}
+
+Table CryptoWallet {
+  id Int [pk, increment]
+  address String [unique, not null]
+  name String [not null]
+  chainType String
+  isEVMCompatible Boolean
+  status WalletStatus [not null, default: 'PENDING']
+  riskScore Decimal
+  consumer Consumer [not null]
+  consumerID String [not null]
+}
+
+Table PaymentMethod {
+  id Int [pk, increment]
+  name String
+  type PaymentMethodType [not null]
+  paymentToken String [unique, not null]
+  paymentProvider PaymentProvider [not null]
+  status PaymentMethodStatus [not null]
+  isDefault Boolean [not null, default: false]
+  imageUri String
+  consumer Consumer [not null]
+  consumerID String [not null]
+  cardData Card
+  achData AchData
+}
+
+Table Card {
+  id Int [pk, increment]
+  cardType String
+  scheme String
+  first6Digits String [not null]
+  last4Digits String [not null]
+  authCode String
+  authReason String
+  paymentMethod PaymentMethod [not null]
+  paymentMethodID Int [unique, not null]
+}
+
+Table AchData {
+  id Int [pk, increment]
+  accountID String [not null]
+  accessToken String [not null]
+  itemID String [not null]
+  mask String [not null]
+  accountType String [not null]
+  paymentMethod PaymentMethod [not null]
+  paymentMethodID Int [unique, not null]
+}
+
+Enum KYCStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  FLAGGED
+  REJECTED
+}
+
+Enum DocumentVerificationStatus {
+  NOT_REQUIRED
+  REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+  REJECTED_DOCUMENT_REQUIRES_RECAPTURE
+  REJECTED_DOCUMENT_POOR_QUALITY
+  REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE
+  LIVE_PHOTO_VERIFIED
+}
+
+Enum WalletStatus {
+  PENDING
+  FLAGGED
+  REJECTED
+  APPROVED
+  DELETED
+}
+
+Enum PaymentMethodType {
+  CARD
+  ACH
+}
+
+Enum PaymentProvider {
+  CHECKOUT
+}
+
+Enum PaymentMethodStatus {
+  FLAGGED
+  REJECTED
+  APPROVED
+  UNSUPPORTED
+  DELETED
+}
+
+Ref: Address.consumerID - Consumer.id
+
+Ref: Kyc.consumerID - Consumer.id
+
+Ref: CryptoWallet.consumerID > Consumer.id
+
+Ref: PaymentMethod.consumerID > Consumer.id
+
+Ref: Card.paymentMethodID - PaymentMethod.id
+
+Ref: AchData.paymentMethodID - PaymentMethod.id

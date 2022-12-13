@@ -18,8 +18,8 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
 import { ConsumerService } from "../consumer/consumer.service";
-import { ConsumerProps } from "../consumer/domain/Consumer";
-import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../consumer/domain/VerificationStatus";
+import { Consumer as ConsumerProps } from "../../generated/domain/consumer";
+import { RiskLevel } from "../consumer/domain/VerificationStatus";
 import {
   OnChainState,
   TradeState,
@@ -138,16 +138,16 @@ export class ZeroHashService {
   }
 
   async createParticipant(consumer: ConsumerProps, transactionTimestamp: Date) {
-    if (consumer.verificationData.kycVerificationStatus != KYCStatus.APPROVED) {
-      return null; // Is handled in the caller
-    }
+    // if (consumer.verificationData.kycVerificationStatus != KYCStatus.APPROVED) {
+    //   return null; // Is handled in the caller
+    // }
 
-    if (
-      consumer.verificationData.documentVerificationStatus != DocumentVerificationStatus.APPROVED &&
-      consumer.verificationData.documentVerificationStatus != DocumentVerificationStatus.NOT_REQUIRED
-    ) {
-      return null; // Is handled in the caller
-    }
+    // if (
+    //   consumer.verificationData.documentVerificationStatus != DocumentVerificationStatus.APPROVED &&
+    //   consumer.verificationData.documentVerificationStatus != DocumentVerificationStatus.NOT_REQUIRED
+    // ) {
+    //   return null; // Is handled in the caller
+    // }
 
     if (consumer.verificationData.sanctionLevel == RiskLevel.HIGH) {
       return null; // Is handled in the caller
@@ -172,11 +172,11 @@ export class ZeroHashService {
       signed_timestamp: transactionTimestamp.getTime(),
       metadata: {
         cip_kyc: "Pass", // We do not allow failed KYC to get here, so this is always pass
-        cip_timestamp: consumer.verificationData.kycVerificationTimestamp,
+        // cip_timestamp: consumer.verificationData.kycVerificationTimestamp,
         sanction_screening: "Pass", // We do not allow failed sanctions screening to get here, so this is always pass
-        sanction_screening_timestamp: consumer.verificationData.kycVerificationTimestamp,
+        // sanction_screening_timestamp: consumer.verificationData.kycVerificationTimestamp,
       },
-      risk_rating: consumer.riskRating,
+      risk_rating: consumer.verificationData.riskRating,
     };
 
     let participant = await this.makeRequest("/participants/customers/new", "POST", consumerData);
@@ -556,35 +556,36 @@ export class ZeroHashService {
   }
 
   async getParticipantCode(consumer: ConsumerProps, transactionTimestamp: Date) {
-    let participantCode: string = consumer.zhParticipantCode;
+    throw new Error("Not implemented");
+    // let participantCode: string = consumer.zhParticipantCode;
     // If the participant doesn't have a ZH participant code, first look them up and if not existing, create them:
-    if (participantCode == undefined) {
-      let participant: string;
-      // Check if the user is already registered with ZeroHash
-      try {
-        participant = await this.getParticipant(consumer.email);
-      } catch (e) {
-        // Generally just a 404 here, but log anyway.
-        this.logger.info(`Error looking up participant ${consumer.email} (possibly not created yet, which is OK)`);
-      }
-      // If the user is not registered, register them
-      if (participant == null) {
-        const newParticipant = await this.createParticipant(consumer, transactionTimestamp);
-        if (newParticipant == null) {
-          this.logger.error("Failed to create participant for email:" + consumer.email);
-          throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
-        }
-        participantCode = newParticipant["message"]["participant_code"];
-        // Update consumer record with participant_code
-        await this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
-        this.logger.debug("Created new participant: " + participantCode);
-      } else {
-        participantCode = participant["message"]["participant_code"];
-        await this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
-        this.logger.debug("Existing participant: " + participantCode);
-      }
-    }
+    // if (participantCode == undefined) {
+    //   let participant: string;
+    //   // Check if the user is already registered with ZeroHash
+    //   try {
+    //     participant = await this.getParticipant(consumer.email);
+    //   } catch (e) {
+    //     // Generally just a 404 here, but log anyway.
+    //     this.logger.info(`Error looking up participant ${consumer.email} (possibly not created yet, which is OK)`);
+    //   }
+    //   // If the user is not registered, register them
+    //   if (participant == null) {
+    //     const newParticipant = await this.createParticipant(consumer, transactionTimestamp);
+    //     if (newParticipant == null) {
+    //       this.logger.error("Failed to create participant for email:" + consumer.email);
+    //       throw new BadRequestError({ messageForClient: "Something went wrong. Contact noba support for resolution!" });
+    //     }
+    //     participantCode = newParticipant["message"]["participant_code"];
+    //     // Update consumer record with participant_code
+    //     await this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
+    //     this.logger.debug("Created new participant: " + participantCode);
+    //   } else {
+    //     participantCode = participant["message"]["participant_code"];
+    //     await this.consumerService.addZeroHashParticipantCode(consumer._id, participantCode);
+    //     this.logger.debug("Existing participant: " + participantCode);
+    //   }
+    // }
 
-    return participantCode;
+    // return participantCode;
   }
 }

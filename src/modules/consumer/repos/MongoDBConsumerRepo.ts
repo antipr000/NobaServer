@@ -7,7 +7,8 @@ import { Result } from "../../../core/logic/Result";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { KmsService } from "../../../modules/common/kms.service";
-import { Consumer, ConsumerProps } from "../domain/Consumer";
+import { Consumer } from "../domain/Consumer";
+import { Consumer as ConsumerProps } from "../../../generated/domain/consumer";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
 
@@ -79,7 +80,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     try {
       const result = await userModel
         .findByIdAndUpdate(
-          consumer.props._id,
+          consumer.props.id,
           {
             $set: consumer.props,
           },
