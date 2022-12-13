@@ -502,10 +502,7 @@ async function configureNobaParameters(
     throw Error(errorMessage);
   }
 
-  nobaConfigs.appSecretKey = await getParameterValue(
-    nobaConfigs.awsSecretKeyForNobaAppSecretKey,
-    nobaConfigs.appSecretKey,
-  );
+  nobaConfigs.appSecretKey = await getParameterValue(nobaConfigs.awsSecretKeyForAppSecretKey, nobaConfigs.appSecretKey);
 
   nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(
     await getParameterValue(
