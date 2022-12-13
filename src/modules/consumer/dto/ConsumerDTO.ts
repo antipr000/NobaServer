@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Address } from "../domain/Address";
+import { Address } from "../../../generated/domain/address";
 import {
   AggregatedPaymentMethodState,
   AggregatedWalletState,
