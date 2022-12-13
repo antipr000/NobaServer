@@ -9,24 +9,24 @@ export class CircleService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  @Inject("CircleRepo")
-  private readonly circleRepo: ICircleRepo;
+  // @Inject("CircleRepo")
+  // private readonly circleRepo: ICircleRepo;
 
   @Inject()
   private readonly circleClient: CircleClient;
 
-  public async createWallet(
-    consumerID: string,
-  ): Promise<string> { // may want to return a Result object here as well
-    // assume there's only one wallet per consumer ID
-    const existingWalletResult = await this.circleRepo.getWallet(consumerID);
-    if(existingWalletResult.isSuccess){
-      return existingWalletResult.getValue()
-    }
+  public async createWallet(consumerID: string): Promise<string> {
+    // // may want to return a Result object here as well
+    // // assume there's only one wallet per consumer ID
+    // const existingWalletResult = await this.circleRepo.getWallet(consumerID);
+    // if (existingWalletResult.isSuccess) {
+    //   return existingWalletResult.getValue();
+    // }
 
-    const circleWalletID: string = await this.circleClient.createWallet(consumerID);
+    // const circleWalletID: string = await this.circleClient.createWallet(consumerID);
 
-    await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
-    return circleWalletID;
+    // await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
+    // return circleWalletID;
+    return ''
   }
 }

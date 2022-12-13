@@ -10,16 +10,15 @@ import { CircleService } from "./circle.service";
 
 @Controller()
 @Roles(Role.User)
-@ApiBearerAuth("JWT-auth") 
-@Controller("circle") // This defines the path prefix 
-@ApiTags("Consumer") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping. 
+@ApiBearerAuth("JWT-auth")
+@Controller("circle") // This defines the path prefix
+@ApiTags("Consumer") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
 @ApiHeaders(getCommonHeaders()) // Adds the requirement for all the X-Noba-xxx headers.
 export class CircleController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-		private readonly circleService: CircleService,
-  ) {
-	  }
+    private readonly circleService: CircleService,
+  ) {}
 
   @Post("/wallet")
   @ApiTags("Wallet")
@@ -35,9 +34,9 @@ export class CircleController {
     return res;
   }
 
-	@Get('/wallet/balance')
-	@ApiTags("Wallet")
-	@ApiOperation({ summary: "Get current consumer's circle wallet balance" })
+  @Get("/wallet/balance")
+  @ApiTags("Wallet")
+  @ApiOperation({ summary: "Get current consumer's circle wallet balance" })
   @ApiResponse({ status: HttpStatus.OK })
   async getConsumerWalletBalance(@Request() request, @Headers() headers) {
     const consumer = request.user.entity;
