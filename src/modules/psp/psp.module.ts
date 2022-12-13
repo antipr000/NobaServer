@@ -13,6 +13,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CircleClient } from "./circle.client";
 import { CircleController } from "./circle.controller";
+import { CircleService } from "./circle.service";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
@@ -29,7 +30,7 @@ export const CheckoutClientProvider: Provider = {
 @Module({
   imports: [getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule],
   controllers: [PaymentWebhooksController, CircleController],
-  providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper, CircleClient],
+  providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper, CircleClient, CircleService],
   exports: [CheckoutClient, PlaidClient, PaymentService, CircleClient],
 })
 export class PspModule {}
