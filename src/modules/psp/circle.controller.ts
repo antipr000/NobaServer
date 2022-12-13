@@ -30,7 +30,7 @@ export class CircleController {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    const res = await this.circleService.createWallet(consumer.props._id);
+    const res = await this.circleService.createWallet(consumer.props.id);
     return res;
   }
 
@@ -39,12 +39,13 @@ export class CircleController {
   @ApiOperation({ summary: "Get current consumer's circle wallet balance" })
   @ApiResponse({ status: HttpStatus.OK })
   async getConsumerWalletBalance(@Request() request, @Headers() headers) {
+    //TODO: Fix
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    const res = await this.circleService.createWallet(consumer.props._id);
+    const res = await this.circleService.createWallet(consumer.props.id);
     return res;
   }
 }
