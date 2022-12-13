@@ -142,7 +142,7 @@ describe("TransactionController", () => {
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-1",
         transactionID: "faketransactionid",
-        userId: consumer.props._id,
+        userId: consumer.props.id,
         sessionKey: "fake-session-1",
         fiatPaymentInfo: {
           paymentMethodID: "fake-payment-id",

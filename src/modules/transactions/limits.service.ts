@@ -58,7 +58,7 @@ export class LimitsService {
     if (!this.allLimitConfigs) {
       this.allLimitConfigs = await this.limitConfigRepo.getAllLimitConfigs();
     }
-    const totalTransactionAmount = await this.transactionsRepo.getTotalUserTransactionAmount(consumer.props._id);
+    const totalTransactionAmount = await this.transactionsRepo.getTotalUserTransactionAmount(consumer.props.id);
     const limitConfig: LimitConfiguration = this.allLimitConfigs.find(config =>
       this.match(config, consumer, totalTransactionAmount, transactionType),
     );
@@ -99,7 +99,7 @@ export class LimitsService {
     If we do bring them back, let's check each one after we retrieve the total so we don't execute more queries than necessary. */
 
     const monthlyTransactionAmount: number = await this.transactionsRepo.getMonthlyUserTransactionAmount(
-      consumer.props._id,
+      consumer.props.id,
     );
 
     // For some reason without casting the operands to a Number, this ends up doing string concat
@@ -134,7 +134,7 @@ export class LimitsService {
       };
     }
 
-    const weeklyTransactionAmount = await this.transactionsRepo.getWeeklyUserTransactionAmount(consumer.props._id);
+    const weeklyTransactionAmount = await this.transactionsRepo.getWeeklyUserTransactionAmount(consumer.props.id);
 
     const totalWeekly = Number(weeklyTransactionAmount) + Number(transactionAmount);
 
@@ -151,7 +151,7 @@ export class LimitsService {
       };
     }
 
-    const dailyTransactionAmount = await this.transactionsRepo.getDailyUserTransactionAmount(consumer.props._id);
+    const dailyTransactionAmount = await this.transactionsRepo.getDailyUserTransactionAmount(consumer.props.id);
 
     const totalDaily = Number(dailyTransactionAmount) + Number(transactionAmount);
 
@@ -179,7 +179,7 @@ export class LimitsService {
         .map(pMethod => pMethod.paymentToken);
 
       const totalUnsettledACHPaymentAmount = await this.transactionsRepo.getUserACHUnsettledTransactionAmount(
-        consumer.props._id,
+        consumer.props.id,
         achPaymentMethodIds,
       );
 
@@ -219,7 +219,7 @@ export class LimitsService {
     }
 
     const monthlyTransactionAmount: number = await this.transactionsRepo.getMonthlyUserTransactionAmount(
-      consumer.props._id,
+      consumer.props.id,
     );
 
     const limitsDTO: ConsumerLimitsDTO = {

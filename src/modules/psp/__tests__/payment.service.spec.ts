@@ -1290,7 +1290,7 @@ function createFakeConsumerRecord(
 function createFakeTransaction(consumer: Consumer, paymentMethod: PaymentMethod): Transaction {
   return Transaction.createTransaction({
     _id: "1111111111",
-    userId: consumer.props._id,
+    userId: consumer.props.id,
     transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
     fiatPaymentInfo: {
       paymentMethodID: paymentMethod.paymentToken,

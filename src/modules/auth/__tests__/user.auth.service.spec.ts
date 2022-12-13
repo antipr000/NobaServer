@@ -181,7 +181,7 @@ describe("UserAuthService", () => {
         when(mockOtpRepo.deleteOTP("1")).thenResolve();
 
         const receivedConsumerID = await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP);
-        expect(receivedConsumerID).toEqual(consumer.props._id);
+        expect(receivedConsumerID).toEqual(consumer.props.id);
       });
     });
 

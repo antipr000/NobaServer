@@ -413,3 +413,8 @@ package-lock.json
 *.bson
 *dump/
 *dumps/
+
+src/generated/*
+
+swagger*.json
+.prisma

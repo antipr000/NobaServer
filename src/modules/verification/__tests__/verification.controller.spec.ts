@@ -210,7 +210,7 @@ describe("VerificationController", () => {
         },
       });
 
-      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
+      when(verificationService.getDocumentVerificationResult(consumer.props.id, "fake-transaction-2")).thenResolve({
         status: DocumentVerificationStatus.APPROVED,
       });
 
@@ -240,7 +240,7 @@ describe("VerificationController", () => {
         },
       });
 
-      when(verificationService.getDocumentVerificationResult(consumer.props._id, "fake-transaction-2")).thenResolve({
+      when(verificationService.getDocumentVerificationResult(consumer.props.id, "fake-transaction-2")).thenResolve({
         status: DocumentVerificationStatus.APPROVED,
       });
 
@@ -276,7 +276,7 @@ describe("VerificationController", () => {
       when(
         verificationService.getDocumentVerificationURL(
           "session-id",
-          consumer.props._id,
+          consumer.props.id,
           IDVerificationURLRequestLocale.EN_US,
           true,
           true,
@@ -333,7 +333,7 @@ describe("VerificationController", () => {
       when(
         verificationService.getDocumentVerificationURL(
           "session-id",
-          consumer.props._id,
+          consumer.props.id,
           IDVerificationURLRequestLocale.EN_US,
           false,
           false,

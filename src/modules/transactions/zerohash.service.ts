@@ -18,7 +18,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { LocationService } from "../common/location.service";
 import { ConsumerService } from "../consumer/consumer.service";
-import { Consumer as ConsumerProps } from "../../generated/domain/consumer";
+import { ConsumerProps } from "../consumer/domain/Consumer";
 import { RiskLevel } from "../consumer/domain/VerificationStatus";
 import {
   OnChainState,

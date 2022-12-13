@@ -125,7 +125,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         email: email,
         paymentProviderAccounts: [
           {
@@ -152,7 +152,7 @@ describe("ConsumerService", () => {
             email: email,
             firstName: undefined,
             lastName: undefined,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
           }),
         ),
       ).once();
@@ -165,7 +165,7 @@ describe("ConsumerService", () => {
 
       const consumerID = "mock-consumer-1";
       const consumer = Consumer.createConsumer({
-        _id: consumerID,
+        id: consumerID,
         email: email,
         paymentProviderAccounts: [
           {
@@ -198,7 +198,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         email: email,
         paymentProviderAccounts: [
           {
@@ -221,11 +221,11 @@ describe("ConsumerService", () => {
         lastName: lastName,
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumerData))).thenResolve(updatedConsumerData);
 
       const response = await consumerService.updateConsumer({
-        _id: consumer.props._id,
+        id: consumer.props.id,
         firstName: firstName,
         lastName: lastName,
       });
@@ -240,7 +240,7 @@ describe("ConsumerService", () => {
 
       try {
         await consumerService.updateConsumer({
-          _id: consumerId,
+          id: consumerId,
           firstName: "Fake",
         });
       } catch (e) {
@@ -254,7 +254,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -290,7 +290,7 @@ describe("ConsumerService", () => {
         addPaymentMethodResponse,
       );
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       when(
         consumerRepo.updateConsumer(deepEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData))),
@@ -306,7 +306,7 @@ describe("ConsumerService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.email,
             cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
             last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
@@ -319,7 +319,7 @@ describe("ConsumerService", () => {
       const email = "mock-user@noba.com";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -355,7 +355,7 @@ describe("ConsumerService", () => {
         addPaymentMethodResponse,
       );
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       when(consumerRepo.updateConsumer(anything())).thenResolve(
         Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData),
@@ -383,7 +383,7 @@ describe("ConsumerService", () => {
       const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -409,7 +409,7 @@ describe("ConsumerService", () => {
         imageUri: "https://noba.com",
       } as any;
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       const paymentMethod: PaymentMethod = {
         name: "Bank Account",
@@ -439,7 +439,7 @@ describe("ConsumerService", () => {
       });
 
       const expectedConsumerProps: ConsumerProps = {
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -500,7 +500,7 @@ describe("ConsumerService", () => {
         isDefault: false,
       };
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -518,8 +518,8 @@ describe("ConsumerService", () => {
       });
 
       const transaction = Transaction.createTransaction({
-        _id: "fake-transaction-id",
-        userId: consumer.props._id,
+        id: "fake-transaction-id",
+        userId: consumer.props.id,
         transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
         fiatPaymentInfo: {
           paymentMethodID: paymentToken,
@@ -542,7 +542,7 @@ describe("ConsumerService", () => {
         paymentID: "fake-payment-id",
       };
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
       ).thenResolve(paymentRequestResponse);
@@ -568,7 +568,7 @@ describe("ConsumerService", () => {
         isDefault: false,
       };
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -586,8 +586,8 @@ describe("ConsumerService", () => {
       });
 
       const transaction = Transaction.createTransaction({
-        _id: "fake-transaction-id",
-        userId: consumer.props._id,
+        id: "fake-transaction-id",
+        userId: consumer.props.id,
         transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
         fiatPaymentInfo: {
           paymentMethodID: paymentToken,
@@ -632,7 +632,7 @@ describe("ConsumerService", () => {
         isDefault: false,
       };
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -650,8 +650,8 @@ describe("ConsumerService", () => {
       });
 
       const transaction = Transaction.createTransaction({
-        _id: "fake-transaction-id",
-        userId: consumer.props._id,
+        id: "fake-transaction-id",
+        userId: consumer.props.id,
         transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
         fiatPaymentInfo: {
           paymentMethodID: paymentToken,
@@ -675,7 +675,7 @@ describe("ConsumerService", () => {
         paymentID: "fake-payment-id",
       };
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
       ).thenResolve(paymentRequestResponse);
@@ -696,7 +696,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -739,7 +739,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -782,7 +782,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -826,7 +826,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -878,7 +878,7 @@ describe("ConsumerService", () => {
         ],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(paymentService.removePaymentMethod(paymentToken)).thenResolve();
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
 
@@ -892,7 +892,7 @@ describe("ConsumerService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.email,
             cardNetwork: consumer.props.paymentMethods[0].cardData.cardType,
             last4Digits: consumer.props.paymentMethods[0].cardData.last4Digits,
@@ -906,7 +906,7 @@ describe("ConsumerService", () => {
     it("get payment provider for payment method", async () => {
       const paymentToken = "fake-payment-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: "fake+email@noba.com",
@@ -937,16 +937,16 @@ describe("ConsumerService", () => {
         cryptoWallets: [],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
-      const response = await consumerService.getPaymentMethodProvider(consumer.props._id, paymentToken);
+      const response = await consumerService.getPaymentMethodProvider(consumer.props.id, paymentToken);
       expect(response).toBe(PaymentProvider.CHECKOUT);
     });
 
     it("throws NotFoundException when paymentToken does not exist for consumer", async () => {
       const paymentToken = "fake-payment-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: "fake+email@noba.com",
@@ -977,17 +977,17 @@ describe("ConsumerService", () => {
         cryptoWallets: [],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       expect(
-        async () => await consumerService.getPaymentMethodProvider(consumer.props._id, "new-fake-payment-token"),
+        async () => await consumerService.getPaymentMethodProvider(consumer.props.id, "new-fake-payment-token"),
       ).rejects.toThrow(NotFoundException);
     });
 
     it("throws NotFoundException when payment method is deleted for consumer", async () => {
       const paymentToken = "fake-payment-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: "fake+email@noba.com",
@@ -1019,10 +1019,10 @@ describe("ConsumerService", () => {
         cryptoWallets: [],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       expect(
-        async () => await consumerService.getPaymentMethodProvider(consumer.props._id, paymentToken),
+        async () => await consumerService.getPaymentMethodProvider(consumer.props.id, paymentToken),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -1060,7 +1060,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1110,10 +1110,10 @@ describe("ConsumerService", () => {
         paymentMethods: [updatedPaymentMethod],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod);
+      const response = await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod);
 
       expect(response).toStrictEqual(updatedConsumer);
       verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
@@ -1124,7 +1124,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1228,10 +1228,10 @@ describe("ConsumerService", () => {
         ],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const response = await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod);
+      const response = await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod);
 
       expect(response).toStrictEqual(updatedConsumer);
       verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
@@ -1242,7 +1242,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1287,12 +1287,12 @@ describe("ConsumerService", () => {
         isDefault: false,
       };
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
       ).rejects.toThrow(BadRequestException);
       expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
       ).rejects.toThrow(`Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`);
     });
 
@@ -1301,7 +1301,7 @@ describe("ConsumerService", () => {
 
       const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1347,12 +1347,12 @@ describe("ConsumerService", () => {
         isDefault: false,
       };
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
       ).rejects.toThrow(BadRequestException);
       expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props._id, updatedPaymentMethod),
+        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
       ).rejects.toThrow(`Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`);
     });
   });
@@ -1366,7 +1366,7 @@ describe("ConsumerService", () => {
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1417,18 +1417,18 @@ describe("ConsumerService", () => {
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props._id)).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props.id)).thenResolve(
         Otp.createOtp({
-          _id: "fake-otp-id",
+          id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
           otpExpiryTime: expiryDate.getTime(),
           identityType: "CONSUMER",
-          consumerID: consumer.props._id,
+          consumerID: consumer.props.id,
         }),
       );
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(mockOtpRepo.deleteOTP("fake-otp-id")).thenResolve();
 
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
@@ -1437,7 +1437,7 @@ describe("ConsumerService", () => {
         consumer,
         walletAddress,
         otp,
-        consumer.props._id,
+        consumer.props.id,
 
         NotificationMethod.EMAIL,
       );
@@ -1453,7 +1453,7 @@ describe("ConsumerService", () => {
       const otp = 123456;
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1496,7 +1496,7 @@ describe("ConsumerService", () => {
             consumer,
             walletAddress,
             otp,
-            consumer.props._id,
+            consumer.props.id,
 
             NotificationMethod.EMAIL,
           ),
@@ -1507,7 +1507,7 @@ describe("ConsumerService", () => {
             consumer,
             walletAddress,
             otp,
-            consumer.props._id,
+            consumer.props.id,
 
             NotificationMethod.EMAIL,
           ),
@@ -1522,7 +1522,7 @@ describe("ConsumerService", () => {
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1559,14 +1559,14 @@ describe("ConsumerService", () => {
         ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props._id)).thenResolve(
+      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props.id)).thenResolve(
         Otp.createOtp({
-          _id: "fake-otp-id",
+          id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
           otpExpiryTime: new Date().getTime(),
           identityType: "CONSUMER",
-          consumerID: consumer.props._id,
+          consumerID: consumer.props.id,
         }),
       );
 
@@ -1575,7 +1575,7 @@ describe("ConsumerService", () => {
           consumer,
           walletAddress,
           wrongOtp,
-          consumer.props._id,
+          consumer.props.id,
 
           NotificationMethod.EMAIL,
         );
@@ -1592,7 +1592,7 @@ describe("ConsumerService", () => {
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1638,7 +1638,7 @@ describe("ConsumerService", () => {
       const walletAddress = "fake-wallet-address";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1684,7 +1684,7 @@ describe("ConsumerService", () => {
       const walletAddress = "fake-wallet-address";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1733,7 +1733,7 @@ describe("ConsumerService", () => {
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1801,7 +1801,7 @@ describe("ConsumerService", () => {
         ],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
       const response = await consumerService.removeCryptoWallet(consumer, walletAddress);
@@ -1815,7 +1815,7 @@ describe("ConsumerService", () => {
     it("should add zeroHash participation code to user", async () => {
       const email = "fake+consumer@noba.com";
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -1834,7 +1834,7 @@ describe("ConsumerService", () => {
 
       const zhParticipantCode = "fake-zh-participation-code";
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
@@ -1842,7 +1842,7 @@ describe("ConsumerService", () => {
         }),
       );
 
-      const response = await consumerService.addZeroHashParticipantCode(consumer.props._id, zhParticipantCode);
+      const response = await consumerService.addZeroHashParticipantCode(consumer.props.id, zhParticipantCode);
       expect(response.props.zhParticipantCode).toBe(zhParticipantCode);
       verify(
         consumerRepo.updateConsumer(
@@ -1864,7 +1864,7 @@ describe("ConsumerService", () => {
         status: WalletStatus.DELETED,
       };
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: "fake+email@noba.com",
@@ -1890,7 +1890,7 @@ describe("ConsumerService", () => {
         cryptoWallets: [toAddCryptoWallet],
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
       when(mockOtpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier, "123")).thenResolve();
       const response = await consumerService.addOrUpdateCryptoWallet(consumer, toAddCryptoWallet);
@@ -1903,7 +1903,7 @@ describe("ConsumerService", () => {
       const consumerId = "mock_consumer_id";
 
       const consumer = Consumer.createConsumer({
-        _id: consumerId,
+        id: consumerId,
         firstName: "Mock",
         lastName: "Consumer",
         email: email,
@@ -1956,7 +1956,7 @@ describe("ConsumerService", () => {
       const consumerId = "mock_consumer_id";
 
       const consumer = Consumer.createConsumer({
-        _id: consumerId,
+        id: consumerId,
         firstName: "Mock",
         lastName: "Consumer",
         email: email,
@@ -2021,7 +2021,7 @@ describe("ConsumerService", () => {
       const otp = 123456;
 
       const consumer = Consumer.createConsumer({
-        _id: "1234rwrwrwrwrwrwrwrw",
+        id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
         email: email,
@@ -2041,7 +2041,7 @@ describe("ConsumerService", () => {
         otp: otp,
         emailOrPhone: phone,
         identityType: IdentityType.consumer,
-        consumerID: consumer.props._id,
+        consumerID: consumer.props.id,
       });
 
       const phoneUpdateRequest: UserPhoneUpdateRequest = {
@@ -2055,7 +2055,7 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
-      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props._id)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props.id)).thenResolve(otpObject);
 
       try {
         await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
@@ -2068,7 +2068,7 @@ describe("ConsumerService", () => {
       phoneUpdateRequest.otp = otp; //correct otp
       when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.fail(anything()));
       when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
 
       const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
@@ -2085,7 +2085,7 @@ describe("ConsumerService", () => {
       const otp = 123456;
 
       const consumer = Consumer.createConsumer({
-        _id: "1234rwrwrwrwrwrwrwrw",
+        id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
         email: email,
@@ -2105,7 +2105,7 @@ describe("ConsumerService", () => {
         otp: otp,
         emailOrPhone: phone,
         identityType: IdentityType.consumer,
-        consumerID: consumer.props._id,
+        consumerID: consumer.props.id,
       });
 
       const phoneUpdateRequest: UserPhoneUpdateRequest = {
@@ -2114,7 +2114,7 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.ok(anything()));
-      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props._id)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props.id)).thenResolve(otpObject);
       when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
 
       try {
@@ -2137,7 +2137,7 @@ describe("ConsumerService", () => {
       const otp = 654321;
 
       const consumer = Consumer.createConsumer({
-        _id: "1234rwrwrwrwrwrwrwrw",
+        id: "1234rwrwrwrwrwrwrwrw",
         firstName: firstName,
         lastName: "Consumer",
 
@@ -2154,9 +2154,9 @@ describe("ConsumerService", () => {
         }),
       ).thenResolve();
       when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
-      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props._id)).thenResolve();
+      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props.id)).thenResolve();
       await consumerService.sendOtpToEmail(email, consumer);
-      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier, consumer.props._id)).once();
+      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier, consumer.props.id)).once();
     });
   });
 
@@ -2173,7 +2173,7 @@ describe("ConsumerService", () => {
       });
 
       const consumer = Consumer.createConsumer({
-        _id: "1234rwrwrwrwrwrwrwrw",
+        id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
 
@@ -2206,7 +2206,7 @@ describe("ConsumerService", () => {
         displayEmail: email,
       });
 
-      when(consumerRepo.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
       when(
         notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
@@ -2233,7 +2233,7 @@ describe("ConsumerService", () => {
         email: email.toLowerCase(),
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
+        nobaUserID: consumer.props.id,
       });
 
       //update consumer again, this time notification shouldn't be sent
@@ -2253,7 +2253,7 @@ describe("ConsumerService", () => {
       });
 
       const consumer = Consumer.createConsumer({
-        _id: "1234rwrwrwrwrwrwrwrw",
+        id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
 
@@ -2376,7 +2376,7 @@ describe("ConsumerService", () => {
       const consumerID = "mock_consumer_id";
       when(consumerRepo.getConsumer(anyString())).thenResolve(
         Consumer.createConsumer({
-          _id: consumerID,
+          id: consumerID,
           firstName: "firstName",
           lastName: "lastName",
           email: "test@noba.com",
@@ -2399,7 +2399,7 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getConsumer(anyString())).thenResolve(
         Consumer.createConsumer({
-          _id: consumerID,
+          id: consumerID,
           firstName: "firstName",
           lastName: "lastName",
           email: "test@noba.com",

@@ -233,7 +233,7 @@ describe("VerificationService", () => {
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
@@ -241,7 +241,7 @@ describe("VerificationService", () => {
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(
-        consumer.props._id,
+        consumer.props.id,
         sessionKey,
         consumerInformation,
       );
@@ -286,7 +286,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
@@ -294,7 +294,7 @@ describe("VerificationService", () => {
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(
-        consumer.props._id,
+        consumer.props.id,
         sessionKey,
         consumerInformation,
       );
@@ -341,7 +341,7 @@ describe("VerificationService", () => {
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
@@ -349,7 +349,7 @@ describe("VerificationService", () => {
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(
-        consumer.props._id,
+        consumer.props.id,
         sessionKey,
         consumerInformation,
       );
@@ -396,14 +396,14 @@ describe("VerificationService", () => {
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
 
       const result = await verificationService.verifyConsumerInformation(
-        consumer.props._id,
+        consumer.props.id,
         sessionKey,
         consumerInformation,
       );
@@ -440,13 +440,13 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.getDocumentVerificationResult(verificationId)).thenResolve(documentVerificationResult);
       when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
         Consumer.createConsumer(newConsumerProps),
       );
 
-      const result = await verificationService.getDocumentVerificationResult(consumer.props._id, verificationId);
+      const result = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
       expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
       verify(
         notificationService.sendNotification(
@@ -478,13 +478,13 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.getDocumentVerificationResult(verificationId)).thenResolve(documentVerificationResult);
       when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
         Consumer.createConsumer(newConsumerProps),
       );
 
-      const result = await verificationService.getDocumentVerificationResult(consumer.props._id, verificationId);
+      const result = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
       expect(result.status).toBe(DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE);
       verify(
         notificationService.sendNotification(
@@ -505,7 +505,7 @@ describe("VerificationService", () => {
     it("should look up the consumer and return a URL", async () => {
       const consumer = getFakeConsumerWithCountryCode("US");
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       const sessionKey = "session-key";
 
@@ -538,7 +538,7 @@ describe("VerificationService", () => {
       };
       const result = await verificationService.getDocumentVerificationURL(
         sessionKey,
-        consumer.props._id,
+        consumer.props.id,
         IDVerificationURLRequestLocale.EN_US,
         true,
         true,
@@ -571,7 +571,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(
         idvProvider.processDocumentVerificationResult(
           deepEqual(documentVerificationWebhookRequest.documentVerificationResult),
@@ -598,7 +598,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.email,
           }),
         ),
@@ -626,7 +626,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(
         idvProvider.processDocumentVerificationResult(
           deepEqual(documentVerificationWebhookRequest.documentVerificationResult),
@@ -653,7 +653,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.displayEmail,
           }),
         ),
@@ -728,7 +728,7 @@ describe("VerificationService", () => {
         consumer.props.email,
         KYCStatus.APPROVED,
         sessionKey,
-        consumer.props._id,
+        consumer.props.id,
       );
 
       const newConsumerData: ConsumerProps = {
@@ -744,7 +744,7 @@ describe("VerificationService", () => {
         idvProviderRiskLevel: "fake-risk-level",
       };
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
       when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
 
@@ -758,7 +758,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.displayEmail,
           }),
         ),
@@ -772,7 +772,7 @@ describe("VerificationService", () => {
         consumer.props.email,
         KYCStatus.APPROVED,
         sessionKey,
-        consumer.props._id,
+        consumer.props.id,
       );
 
       const newConsumerData: ConsumerProps = {
@@ -788,7 +788,7 @@ describe("VerificationService", () => {
         idvProviderRiskLevel: "fake-risk-level",
       };
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
       when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
 
@@ -803,7 +803,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.displayEmail,
           }),
         ),
@@ -817,7 +817,7 @@ describe("VerificationService", () => {
         consumer.props.email,
         KYCStatus.REJECTED,
         sessionKey,
-        consumer.props._id,
+        consumer.props.id,
       );
 
       const newConsumerData: ConsumerProps = {
@@ -833,7 +833,7 @@ describe("VerificationService", () => {
         idvProviderRiskLevel: "fake-risk-level",
       };
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
       when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
 
@@ -847,7 +847,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.email,
           }),
         ),
@@ -872,13 +872,13 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyDocument(sessionKey, deepEqual(documentInformation), deepEqual(consumer))).thenResolve(
         verificationId,
       );
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData));
 
-      const result = await verificationService.verifyDocument(consumer.props._id, sessionKey, documentInformation);
+      const result = await verificationService.verifyDocument(consumer.props.id, sessionKey, documentInformation);
       const updateUserArgs = capture(consumerService.updateConsumer).first()[0];
 
       expect(result).toBe(verificationId);
@@ -890,7 +890,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
-            nobaUserID: consumer.props._id,
+            nobaUserID: consumer.props.id,
             email: consumer.props.email,
           }),
         ),
@@ -934,7 +934,7 @@ function getFakeConsumerWithCountryCode(countryCode: string): Consumer {
 
 function getFakeConsumerInformation(consumer: Consumer, countryCode: string): ConsumerInformation {
   const consumerInfo: ConsumerInformation = {
-    userID: consumer.props._id,
+    userID: consumer.props.id,
     firstName: "Fake",
     lastName: "Consumer",
     address: {
@@ -974,7 +974,7 @@ function getDocumentVerificationWebhookRequest(
           },
           case: {
             sessionKey: "fake-session-key",
-            customerID: consumer.props._id,
+            customerID: consumer.props.id,
           },
         },
         documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
@@ -990,7 +990,7 @@ function getDocumentVerificationWebhookRequest(
           },
           case: {
             sessionKey: "fake-session-key",
-            customerID: consumer.props._id,
+            customerID: consumer.props.id,
           },
         },
         documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
@@ -1051,7 +1051,7 @@ function getFakeDocumentInformation(consumer: Consumer): DocumentInformation {
   };
 
   return {
-    userID: consumer.props._id,
+    userID: consumer.props.id,
     documentType: DocumentTypes.DRIVER_LICENSE,
     documentFrontImage: fileData,
   };

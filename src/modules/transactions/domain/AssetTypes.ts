@@ -1,5 +1,5 @@
 import { CurrencyType } from "../../../modules/common/domain/Types";
-import { Consumer as ConsumerProps } from "../../../generated/domain/consumer";
+import { ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { TransactionType } from "./Types";
 
 export enum PollStatus {

@@ -2,8 +2,8 @@ import { ApiProperty } from "@nestjs/swagger";
 
 export class VerifyOtpResponseDTO {
   @ApiProperty()
-  access_token: string;
+  accessToken: string;
 
   @ApiProperty()
-  user_id: string;
+  userID: string;
 }

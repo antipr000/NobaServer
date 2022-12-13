@@ -7,8 +7,7 @@ import { Result } from "../../../core/logic/Result";
 import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { KmsService } from "../../../modules/common/kms.service";
-import { Consumer } from "../domain/Consumer";
-import { Consumer as ConsumerProps } from "../../../generated/domain/consumer";
+import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "./ConsumerRepo";
 

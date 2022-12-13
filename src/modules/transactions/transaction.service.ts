@@ -396,7 +396,7 @@ export class TransactionService {
 
     if (!paymentMethod || paymentMethod.status != PaymentMethodStatus.APPROVED) {
       this.logger.error(
-        `Unknown payment method "${paymentMethod}" for consumer ${consumer.props._id}, Transaction ID: ${transaction.props._id}`,
+        `Unknown payment method "${paymentMethod}" for consumer ${consumer.props.id}, Transaction ID: ${transaction.props._id}`,
       );
       throw new TransactionSubmissionException(
         TransactionSubmissionFailureExceptionText.UNKNOWN_PAYMENT_METHOD,
@@ -455,7 +455,7 @@ export class TransactionService {
     }
 
     if (result.paymentMethodStatus) {
-      consumer = await this.consumerService.updatePaymentMethod(consumer.props._id, {
+      consumer = await this.consumerService.updatePaymentMethod(consumer.props.id, {
         ...paymentMethod,
         status: result.paymentMethodStatus,
       });
@@ -495,7 +495,7 @@ export class TransactionService {
       await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
+        nobaUserID: consumer.props.id,
         email: consumer.props.displayEmail,
         transactionInitiatedParams: {
           transactionID: transaction.props.transactionID,
@@ -535,7 +535,7 @@ export class TransactionService {
       await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
+        nobaUserID: consumer.props.id,
         email: consumer.props.displayEmail,
         transactionInitiatedParams: {
           transactionID: transaction.props.transactionID,
@@ -575,7 +575,7 @@ export class TransactionService {
       await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT, {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
-        nobaUserID: consumer.props._id,
+        nobaUserID: consumer.props.id,
         email: consumer.props.displayEmail,
         transactionInitiatedParams: {
           transactionID: transaction.props.transactionID,
@@ -632,7 +632,7 @@ export class TransactionService {
 
     if (walletExposureResponse.riskScore !== null && walletExposureResponse.riskScore > 0) {
       this.logger.debug(
-        `Wallet ${transaction.props.destinationWalletAddress} for consumer ${consumer.props._id} has been flagged with risk score: ${walletExposureResponse.riskScore}`,
+        `Wallet ${transaction.props.destinationWalletAddress} for consumer ${consumer.props.id} has been flagged with risk score: ${walletExposureResponse.riskScore}`,
       );
       cryptoWallet.status = WalletStatus.FLAGGED;
     }

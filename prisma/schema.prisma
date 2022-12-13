@@ -34,7 +34,7 @@ model Consumer {
   isLocked             Boolean         @default(false)
   isDisabled           Boolean         @default(false)
   createdTimestamp     DateTime        @default(now())
-  updatedTimestamp     DateTime        @default(now())
+  updatedTimestamp     DateTime        @updatedAt
   socialSecurityNumber String?
   address              Address?
   verificationData     Kyc?

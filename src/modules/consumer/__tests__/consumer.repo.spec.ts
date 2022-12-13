@@ -255,7 +255,7 @@ describe("MongoDBConsumerRepoTests", () => {
   describe("getConsumer", () => {
     it("should get a consumer", async () => {
       const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-      expect(async () => await consumerRepo.getConsumer(consumer.props._id)).rejects.toThrow(NotFoundException);
+      expect(async () => await consumerRepo.getConsumer(consumer.props.id)).rejects.toThrow(NotFoundException);
 
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props._id);
@@ -308,7 +308,7 @@ describe("MongoDBConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumerByEmail(consumer.props.email);
       expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
+      expect(savedResult.getValue().props._id).toBe(consumer.props.id);
     });
 
     it("should throw an error if passed an empty email address", async () => {
@@ -339,12 +339,12 @@ describe("MongoDBConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer);
       let savedResult = await consumerRepo.getConsumerByPhone(consumer.props.phone);
       expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
+      expect(savedResult.getValue().props._id).toBe(consumer.props.id);
 
       // should get consumer record even when requested phone number has spaces
       savedResult = await consumerRepo.getConsumerByPhone("+15 5555  55555");
       expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props._id).toBe(consumer.props._id);
+      expect(savedResult.getValue().props._id).toBe(consumer.props.id);
     });
 
     it("should throw an error if passed an empty phone number", async () => {
@@ -358,7 +358,7 @@ describe("MongoDBConsumerRepoTests", () => {
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
-      const result = await consumerRepo.getConsumer(savedConsumer.props._id);
+      const result = await consumerRepo.getConsumer(savedconsumer.props.id);
       expect(result.props.phone).toBe(undefined);
 
       const phone = "+134242424";

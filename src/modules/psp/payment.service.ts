@@ -1,9 +1,7 @@
 import { Injectable, BadRequestException, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { Consumer } from "../consumer/domain/Consumer";
-import { Consumer as ConsumerProps } from "../../generated/domain/consumer";
-import { PaymentMethod } from "../../generated/domain/payment_method";
+import { Consumer, ConsumerProps, PaymentMethod } from "../consumer/domain/Consumer";
 import { PaymentMethodType, PaymentProvider } from "@prisma/client";
 import { AddPaymentMethodDTO, PaymentType } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethodStatus } from "../consumer/domain/VerificationStatus";

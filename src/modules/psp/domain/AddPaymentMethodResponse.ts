@@ -1,5 +1,5 @@
 import { PaymentMethod } from "../../consumer/domain/PaymentMethod";
-import { Consumer as ConsumerProps } from "../../../generated/domain/consumer";
+import { ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { CheckoutResponseData } from "../../common/domain/CheckoutResponseData";
 
 export type AddPaymentMethodResponse = {

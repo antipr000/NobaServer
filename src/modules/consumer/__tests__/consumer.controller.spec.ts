@@ -159,7 +159,7 @@ describe("ConsumerController", () => {
         } as AuthenticatedUser,
       });
 
-      expect(result._id).toBe(consumer.props._id);
+      expect(result._id).toBe(consumer.props.id);
       expect(result.paymentMethods.length).toBe(1);
       expect(result.paymentMethods[0].name).toBe(paymentMethodRequest.name);
     });
@@ -282,7 +282,7 @@ describe("ConsumerController", () => {
         } as AuthenticatedUser,
       });
 
-      expect(result._id).toBe(consumer.props._id);
+      expect(result._id).toBe(consumer.props.id);
       expect(result.paymentMethods.length).toBe(1);
     });
 
@@ -319,7 +319,7 @@ describe("ConsumerController", () => {
         isDefault: true,
       };
 
-      when(consumerService.updatePaymentMethod(consumer.props._id, deepEqual(updatedPaymentMethod))).thenResolve(
+      when(consumerService.updatePaymentMethod(consumer.props.id, deepEqual(updatedPaymentMethod))).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
           paymentMethods: [updatedPaymentMethod],
@@ -360,8 +360,8 @@ describe("ConsumerController", () => {
       };
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.sendOtpToPhone(consumer.props.id, phone)).thenResolve();
 
       await consumerController.requestOtpToUpdatePhone(
         {
@@ -372,7 +372,7 @@ describe("ConsumerController", () => {
         phoneUpdateOtpRequest,
       );
 
-      verify(consumerService.sendOtpToPhone(consumer.props._id, phone)).called();
+      verify(consumerService.sendOtpToPhone(consumer.props.id, phone)).called();
     });
 
     it("should reject the request for non-consumers", async () => {
@@ -406,8 +406,8 @@ describe("ConsumerController", () => {
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(
         Result.ok(Consumer.createConsumer({ phone: phone })),
       );
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
-      when(consumerService.sendOtpToPhone(consumer.props._id, phone)).thenResolve();
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.sendOtpToPhone(consumer.props.id, phone)).thenResolve();
 
       try {
         await consumerController.requestOtpToUpdatePhone(
@@ -447,7 +447,7 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.findConsumerByEmailOrPhone(phone)).thenResolve(Result.fail("Non-existent user"));
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).thenResolve(expectedUpdatedConsumer);
 
       const updatedConsumer = await consumerController.updatePhone(
@@ -528,7 +528,7 @@ describe("ConsumerController", () => {
 
       const apiKey = "1234567890";
       when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(Result.fail("Non-existent user"));
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.sendOtpToEmail(email, consumer)).thenResolve();
 
       await consumerController.requestOtpToUpdateEmail(
@@ -576,7 +576,7 @@ describe("ConsumerController", () => {
       };
 
       const apiKey = "1234567890";
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.sendOtpToEmail(email, consumer)).thenResolve();
       when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(
         Result.ok(Consumer.createConsumer({ email: email })),
@@ -624,7 +624,7 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.findConsumerByEmailOrPhone(email)).thenResolve(Result.fail("Non-existent user"));
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).thenResolve(expectedUpdatedConsumer);
 
       const updatedConsumer = await consumerController.updateEmail(
@@ -676,7 +676,7 @@ describe("ConsumerController", () => {
         displayEmail: email,
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).thenThrow(new BadRequestException());
 
       try {
@@ -733,7 +733,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -788,7 +788,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -843,7 +843,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -893,7 +893,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -947,7 +947,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -982,7 +982,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -1016,7 +1016,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -1060,7 +1060,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },
@@ -1107,7 +1107,7 @@ describe("ConsumerController", () => {
         },
       });
 
-      when(consumerService.getConsumer(consumer.props._id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const response = await consumerController.getConsumer(
         { [X_NOBA_API_KEY]: "noba-api-key" },
         { user: { entity: consumer } },

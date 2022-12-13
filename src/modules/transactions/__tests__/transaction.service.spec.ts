@@ -908,7 +908,7 @@ describe("TransactionService", () => {
     });
 
     it("throws TransactionSubmissionException when destination wallet address is invalid", async () => {
-      const consumerId = consumer.props._id;
+      const consumerId = consumer.props.id;
 
       const sessionKey = "fake-session-key";
       const walletAddress = "fake-wallet-1234";
@@ -935,7 +935,7 @@ describe("TransactionService", () => {
     // TODO: Fix and uncomment this test, it is breaking with TypeError, but SANCTION wallet codeflow is working fine.
     //
     // it("throws TransactionSubmissionException when destination wallet address is sanctioned", async () => {
-    //   const consumerId = consumer.props._id;
+    //   const consumerId = consumer.props.id;
     //
     //   const sessionKey = "fake-session-key";
     //   when(sanctionedCryptoWalletService.isWalletSanctioned(FAKE_VALID_WALLET)).thenResolve(true);
@@ -965,7 +965,7 @@ describe("TransactionService", () => {
     it("throws TransactionSubmissionException when leg2 is invalid", async () => {
       when(currencyService.getCryptocurrency("ABC")).thenResolve(null);
 
-      const consumerId = consumer.props._id;
+      const consumerId = consumer.props.id;
       const sessionKey = "fake-session-key";
       const transactionRequest: CreateTransactionDTO = {
         paymentToken: "fake-payment-token",
@@ -991,7 +991,7 @@ describe("TransactionService", () => {
     it("throws TransactionSubmissionException when leg1 is invalid", async () => {
       when(currencyService.getFiatCurrency("ABC")).thenResolve(null);
 
-      const consumerId = consumer.props._id;
+      const consumerId = consumer.props.id;
 
       const sessionKey = "fake-session-key";
       const transactionRequest: CreateTransactionDTO = {
@@ -2228,7 +2228,7 @@ describe("TransactionService", () => {
     it("should get transaction with given id from database", async () => {
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
-        userId: consumer.props._id,
+        userId: consumer.props.id,
         sessionKey: "fake-session-key",
         fiatPaymentInfo: {
           paymentMethodID: "fake-payment-token",
@@ -2276,7 +2276,7 @@ describe("TransactionService", () => {
     it("should return all user transactions from database", async () => {
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
-        userId: consumer.props._id,
+        userId: consumer.props.id,
         sessionKey: "fake-session-key",
         fiatPaymentInfo: {
           paymentMethodID: "fake-payment-token",
@@ -2329,7 +2329,7 @@ describe("TransactionService", () => {
     it("should return all transactions from database", async () => {
       const transaction = Transaction.createTransaction({
         _id: "fake-transaction-id",
-        userId: consumer.props._id,
+        userId: consumer.props.id,
         sessionKey: "fake-session-key",
         fiatPaymentInfo: {
           paymentMethodID: "fake-payment-token",
@@ -2372,7 +2372,7 @@ describe("TransactionService", () => {
       const transactionID = "fake-transaction-id";
       const transaction = Transaction.createTransaction({
         _id: transactionID,
-        userId: consumer.props._id,
+        userId: consumer.props.id,
         sessionKey: "fake-session",
         transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
         fiatPaymentInfo: {
@@ -2403,7 +2403,7 @@ describe("TransactionService", () => {
       });
 
       when(ellipticService.transactionAnalysis(anything())).thenResolve({ riskScore: 10 });
-      when(consumerService.getConsumer(currentConsumer.props._id)).thenResolve(currentConsumer);
+      when(consumerService.getConsumer(currentconsumer.props.id)).thenResolve(currentConsumer);
       when(consumerService.addOrUpdateCryptoWallet(anything(), anything())).thenResolve(currentConsumer);
       when(consumerService.getCryptoWallet(deepEqual(currentConsumer), cryptoWallet.address)).thenReturn(cryptoWallet);
       await transactionService.analyzeTransactionWalletExposure(transaction);

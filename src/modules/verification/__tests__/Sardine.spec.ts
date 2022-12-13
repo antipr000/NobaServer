@@ -428,7 +428,7 @@ describe("SardineTests", () => {
         flow: "payment-submission",
         sessionKey: "aml-123",
         customer: {
-          id: consumer.props._id,
+          id: consumer.props.id,
         },
         transaction: {
           id: "transaction-1",

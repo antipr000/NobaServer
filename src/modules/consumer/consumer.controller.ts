@@ -327,7 +327,7 @@ export class ConsumerController {
     description: "Get SSN of currently logged-in consumer",
   })
   async getConsumerSSN(@Request() request): Promise<string> {
-    const consumerID: string = request.consumer.props._id;
+    const consumerID: string = request.consumer.props.id;
     const consumer = await this.consumerService.getConsumer(consumerID);
     const decrypted = await new KMSUtil("ssn-encryption-key").decryptString(consumer.props.socialSecurityNumber);
     return decrypted;

@@ -7,7 +7,6 @@ import { LimitsService } from "./limits.service";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
-import { AsyncTransactionProcessorModule } from "./queueprocessors/processors.module";
 import { AssetsModule } from "./assets/assets.module";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { NotificationsModule } from "../notifications/notification.module";
@@ -20,7 +19,6 @@ import { TransactionRepoModule } from "./repo/transaction.repo.module";
     CommonModule,
     ConsumerModule,
     VerificationModule,
-    AsyncTransactionProcessorModule,
     AssetsModule,
     NotificationsModule,
     PspModule,

@@ -3,16 +3,21 @@ import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { Consumer as ConsumerModel } from "../../../generated/domain/consumer";
-import { PaymentMethod } from "../../../generated/domain/payment_method";
-import { CryptoWallet } from "../../../generated/domain/crypto_wallet";
+import { Kyc as KycModel } from "../../../generated/domain/kyc";
+import { PaymentMethod as PaymentMethodModel } from "../../../generated/domain/payment_method";
+import { CryptoWallet as CryptoWalletModel } from "../../../generated/domain/crypto_wallet";
 import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
-import { Address } from "../../../generated/domain/address";
+import { Address as AddressModel } from "../../../generated/domain/address";
 import { VerificationData, VerificationProviders } from "./VerificationData";
 import { differenceInDays } from "date-fns";
 import { PaymentMethodStatus, DocumentVerificationStatus, KYCStatus } from "@prisma/client";
 
 export class ConsumerProps extends ConsumerModel {}
+export class Address extends AddressModel {}
+export class KYC extends KycModel {}
+export class PaymentMethod extends PaymentMethodModel {}
+export class CryptoWallet extends CryptoWalletModel {}
 
 const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
   verificationProvider: Joi.string().required().default(VerificationProviders.SARDINE),
