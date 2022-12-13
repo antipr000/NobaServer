@@ -28,7 +28,7 @@ model Consumer {
   lastName             String?
   email                String?         @unique()
   displayEmail         String
-  handle               String?
+  handle               String?         @unique()
   phone                String?         @unique()
   dateOfBirth          String?         @db.VarChar(10)
   isLocked             Boolean         @default(false)
@@ -40,6 +40,7 @@ model Consumer {
   verificationData     Kyc?
   cryptoWallets        CryptoWallet[]
   paymentMethods       PaymentMethod[]
+  circleAccountData    Circle?
 
   @@index([email])
   @@index([handle])
@@ -125,6 +126,12 @@ model AchData {
   accountType     String
   paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id])
   paymentMethodID Int           @unique()
+}
+
+model Circle {
+  id         String   @id
+  consumer   Consumer @relation(fields: [consumerID], references: [id])
+  consumerID String   @unique()
 }
 
 enum KYCStatus {

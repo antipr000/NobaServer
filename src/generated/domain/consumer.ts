@@ -2,6 +2,7 @@ import { Address } from "./address";
 import { Kyc } from "./kyc";
 import { CryptoWallet } from "./crypto_wallet";
 import { PaymentMethod } from "./payment_method";
+import { Circle } from "./circle";
 
 export class Consumer {
   id: string;
@@ -37,4 +38,6 @@ export class Consumer {
   cryptoWallets: CryptoWallet[];
 
   paymentMethods: PaymentMethod[];
+
+  circleAccountData?: Circle;
 }

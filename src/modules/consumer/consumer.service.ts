@@ -167,6 +167,7 @@ export class ConsumerService {
       this.analyseHandle(consumerProps.handle);
     }
     const updatedConsumer = await this.consumerRepo.updateConsumer(
+      consumer.props.id,
       Consumer.createConsumer({
         ...consumer.props,
         ...consumerProps,

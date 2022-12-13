@@ -8,7 +8,7 @@ Table Consumer {
   lastName String
   email String [unique]
   displayEmail String [not null]
-  handle String
+  handle String [unique]
   phone String [unique]
   dateOfBirth String
   isLocked Boolean [not null, default: false]
@@ -20,6 +20,7 @@ Table Consumer {
   verificationData Kyc
   cryptoWallets CryptoWallet [not null]
   paymentMethods PaymentMethod [not null]
+  circleAccountData Circle
 }
 
 Table Address {
@@ -99,6 +100,12 @@ Table AchData {
   paymentMethodID Int [unique, not null]
 }
 
+Table Circle {
+  id String [pk]
+  consumer Consumer [not null]
+  consumerID String [unique, not null]
+}
+
 Enum KYCStatus {
   NOT_SUBMITTED
   PENDING
@@ -155,3 +162,5 @@ Ref: PaymentMethod.consumerID > Consumer.id
 Ref: Card.paymentMethodID - PaymentMethod.id
 
 Ref: AchData.paymentMethodID - PaymentMethod.id
+
+Ref: Circle.consumerID - Consumer.id

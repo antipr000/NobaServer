@@ -71,7 +71,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     return this.consumerMapper.toDomain(consumerData);
   }
 
-  async updateConsumer(consumer: Consumer): Promise<Consumer> {
+  async updateConsumer(consumerID: string, consumer: Consumer): Promise<Consumer> {
     const userModel = await this.dbProvider.getUserModel();
 
     // Encrypt SSN
@@ -80,7 +80,7 @@ export class MongoDBConsumerRepo implements IConsumerRepo {
     try {
       const result = await userModel
         .findByIdAndUpdate(
-          consumer.props.id,
+          consumerID,
           {
             $set: consumer.props,
           },

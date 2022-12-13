@@ -14,32 +14,47 @@ export class SqlConsumerRepo implements IConsumerRepo {
     const consumerProps = await this.prisma.consumer.findUnique({ where: { id: consumerID } });
     return Consumer.createConsumer(consumerProps);
   }
+
   async createConsumer(consumer: Prisma.ConsumerCreateInput): Promise<Consumer> {
     const consumerProps = await this.prisma.consumer.create({ data: consumer });
     return Consumer.createConsumer(consumerProps);
   }
+
   async exists(emailOrPhone: string): Promise<boolean> {
     const consumerProps = await this.prisma.consumer.findUnique({ where: { email: emailOrPhone } });
     if (consumerProps) return true;
     return false;
   }
+
   async getConsumerByEmail(email: string): Promise<Result<Consumer>> {
     const consumerProps = await this.prisma.consumer.findUnique({ where: { email: email } });
     if (consumerProps) {
       return Result.ok(Consumer.createConsumer(consumerProps));
     } else {
-      return Result.fail("Couldn't find consumer in the db");
+      return Result.fail("Couldn't find consumer with given email in the db");
     }
   }
-  getConsumerByPhone(phone: string): Promise<Result<Consumer>> {
-    throw new Error("Method not implemented.");
+
+  async getConsumerByPhone(phone: string): Promise<Result<Consumer>> {
+    const consumerProps = await this.prisma.consumer.findUnique({ where: { phone: phone } });
+    if (consumerProps) {
+      return Result.ok(Consumer.createConsumer(consumerProps));
+    } else {
+      return Result.fail("Couldn't find consumer with given phone number in the db");
+    }
   }
-  updateConsumer(consumer: Consumer): Promise<Consumer> {
-    throw new Error("Method not implemented.");
+
+  async updateConsumer(consumerID: string, consumer: Prisma.ConsumerUpdateInput): Promise<Consumer> {
+    const consumerProps = await this.prisma.consumer.update({ where: { id: consumerID }, data: consumer });
+    return Consumer.createConsumer(consumerProps);
   }
-  isHandleTaken(handle: string): Promise<boolean> {
-    throw new Error("Method not implemented.");
+
+  async isHandleTaken(handle: string): Promise<boolean> {
+    const consumerProps = await this.prisma.consumer.findUnique({ where: { handle: handle } });
+    if (!consumerProps) return false;
+    return true;
   }
+
   updateConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<void> {
     throw new Error("Method not implemented.");
   }
