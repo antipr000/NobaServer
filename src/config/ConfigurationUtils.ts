@@ -78,7 +78,7 @@ export const SARDINE_URI = "sardineBaseUri";
 
 export const NOBA_CONFIG_KEY = "noba";
 export const NOBA_APP_SECRET_KEY = "appSecretKey";
-export const AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY = "awsSecretKeyForNobaAppSecretKey";
+export const AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY = "awsSecretKeyForAppSecretKey";
 
 export const NOBA_TRANSACTION_CONFIG_KEY = "transaction";
 export const SPREAD_PERCENTAGE = "spreadPercentage";
