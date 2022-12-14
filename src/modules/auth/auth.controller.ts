@@ -91,10 +91,10 @@ export class AuthController {
     if (autoCreate === undefined) {
       // Set defaults
       switch (requestBody.identityType) {
-        case IdentityType.consumer:
+        case IdentityType.CONSUMER:
           autoCreate = true;
           break;
-        case IdentityType.nobaAdmin:
+        case IdentityType.NOBA_ADMIN:
           autoCreate = false;
           break;
       }

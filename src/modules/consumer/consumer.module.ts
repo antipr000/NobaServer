@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { MongoDBOtpRepo } from "../auth/repo/MongoDBOtpRepo";
 import { CommonModule } from "../common/common.module";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { ConsumerController } from "./consumer.controller";
@@ -10,6 +9,7 @@ import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
 import { SMSService } from "../common/sms.service";
 import { ConsumerRepoModule } from "./repos/consumer.repo.module";
+import { SQLOTPRepo } from "../auth/repo/SQLOTPRepo";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, NotificationsModule, PspModule, ConsumerRepoModule],
@@ -19,7 +19,7 @@ import { ConsumerRepoModule } from "./repos/consumer.repo.module";
     DBProvider,
     {
       provide: "OTPRepo",
-      useClass: MongoDBOtpRepo,
+      useClass: SQLOTPRepo,
     },
     SanctionedCryptoWalletService,
     SMSService,

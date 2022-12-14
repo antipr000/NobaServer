@@ -9,7 +9,7 @@ import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../repo/OTPRepo";
 import { NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
-import { Otp } from "../domain/Otp";
+import { OTP } from "../domain/OTP";
 import { STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
 import { NotificationService } from "../../notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../notifications/mocks/mock.notification.service";
@@ -92,7 +92,7 @@ describe("UserAuthService", () => {
         const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
         const consumerID = "1234567890";
 
-        const otpDomain: Otp = Otp.createOtp({
+        const otpDomain: OTP = OTP.createOtp({
           _id: "1",
           emailOrPhone: NON_EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,
@@ -119,7 +119,7 @@ describe("UserAuthService", () => {
         const CORRECT_OTP = 123456;
         const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
-        const otpDomain: Otp = Otp.createOtp({
+        const otpDomain: OTP = OTP.createOtp({
           _id: "1",
           emailOrPhone: EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,
@@ -140,7 +140,7 @@ describe("UserAuthService", () => {
         const CORRECT_OTP = 123456;
         const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
-        const otpDomain: Otp = Otp.createOtp({
+        const otpDomain: OTP = OTP.createOtp({
           _id: "1",
           emailOrPhone: EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,
@@ -169,7 +169,7 @@ describe("UserAuthService", () => {
 
         when(mockConsumerService.getOrCreateConsumerConditionally(EXISTING_USER_EMAIL)).thenResolve(consumer);
 
-        const otpDomain: Otp = Otp.createOtp({
+        const otpDomain: OTP = OTP.createOtp({
           _id: "1",
           emailOrPhone: EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,

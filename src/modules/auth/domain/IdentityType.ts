@@ -1,8 +1,11 @@
+import { IdentityType as IdentityTypeModel } from "@prisma/client";
+
+// Backward compatibility
 export const IdentityType = {
-  consumer: "CONSUMER",
-  nobaAdmin: "NOBA_ADMIN",
+  CONSUMER: IdentityTypeModel.CONSUMER,
+  NOBA_ADMIN: IdentityTypeModel.NOBA_ADMIN,
 };
 
 export const allIdentities = Object.values(IdentityType);
-export const consumerIdentityIdentifier = IdentityType.consumer;
-export const nobaAdminIdentityIdentifier = IdentityType.nobaAdmin;
+export const consumerIdentityIdentifier = IdentityType.CONSUMER;
+export const nobaAdminIdentityIdentifier = IdentityType.NOBA_ADMIN;

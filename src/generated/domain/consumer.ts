@@ -3,6 +3,7 @@ import { Kyc } from "./kyc";
 import { CryptoWallet } from "./crypto_wallet";
 import { PaymentMethod } from "./payment_method";
 import { Circle } from "./circle";
+import { Otp } from "./otp";
 
 export class Consumer {
   id: string;
@@ -40,4 +41,6 @@ export class Consumer {
   paymentMethods: PaymentMethod[];
 
   circleAccountData?: Circle;
+
+  OTP?: Otp;
 }

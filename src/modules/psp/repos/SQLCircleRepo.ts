@@ -1,14 +1,18 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Result } from "../../../core/logic/Result";
 import { Circle } from "../domain/Circle";
 import { ICircleRepo } from "./CircleRepo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { Prisma } from "@prisma/client";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 
 @Injectable()
 export class SQLCircleRepo implements ICircleRepo {
   @Inject()
   private readonly prisma: PrismaService;
+
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
 
   async addConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<Circle> {
     const circle: Circle = Circle.createCircle({ consumerID: consumerID, walletID: circleWalletID });

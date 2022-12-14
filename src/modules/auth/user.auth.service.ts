@@ -17,7 +17,6 @@ export class UserAuthService extends AuthService {
 
   protected async getUserId(emailOrPhone: string): Promise<string> {
     const consumer: Consumer = await this.consumerService.getOrCreateConsumerConditionally(emailOrPhone);
-    console.log("Here 3");
     return consumer.props.id;
   }
 

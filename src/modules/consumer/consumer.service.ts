@@ -8,7 +8,7 @@ import { Result } from "../../core/logic/Result";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Utils } from "../../core/utils/Utils";
 import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
-import { Otp } from "../auth/domain/Otp";
+import { OTP } from "../auth/domain/OTP";
 import { IOTPRepo } from "../auth/repo/OTPRepo";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
@@ -132,7 +132,6 @@ export class ConsumerService {
     const isEmail = Utils.isEmail(emailOrPhone);
     const email = isEmail ? emailOrPhone : null;
     const phone = !isEmail ? emailOrPhone : null;
-    console.log("Here");
     const consumerResult = await this.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumerResult.isFailure) {
       const newConsumer = Consumer.createConsumer({
@@ -200,7 +199,7 @@ export class ConsumerService {
     const otp = this.generateOTP();
     await this.otpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, consumerID);
 
-    const otpObject = Otp.createOtp({
+    const otpObject = OTP.createOtp({
       emailOrPhone: Utils.stripSpaces(phone),
       identityType: consumerIdentityIdentifier,
       otp: otp,
@@ -218,7 +217,7 @@ export class ConsumerService {
       throw new BadRequestException("OTP is incorrect");
     }
 
-    await this.otpRepo.deleteOTP(otpResult.props._id);
+    await this.otpRepo.deleteOTP(otpResult.props.id);
 
     // Before updating the consumer, check to be sure this phone number isn't already linked to another account.
     // If it is, it would have been a signup within the period of time this OTP was valid.
@@ -255,7 +254,7 @@ export class ConsumerService {
       throw new BadRequestException("OTP is incorrect");
     }
 
-    await this.otpRepo.deleteOTP(otpResult.props._id);
+    await this.otpRepo.deleteOTP(otpResult.props.id);
 
     // Before updating the consumer, check to be sure this email address isn't already linked to another account.
     // If it is, it would have been a signup within the period of time this OTP was valid.
@@ -512,7 +511,7 @@ export class ConsumerService {
       throw new UnauthorizedException("Invalid OTP");
     } else {
       // Just delete the OTP and proceed further
-      await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
+      await this.otpRepo.deleteOTP(actualOtp.props.id); // Delete the OTP
     }
 
     // Check wallet sanctions status

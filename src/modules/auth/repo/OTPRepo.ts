@@ -1,8 +1,8 @@
-import { Otp } from "../domain/Otp";
+import { OTP } from "../domain/OTP";
 
 export interface IOTPRepo {
-  getOTP(emailOrPhone: string, identityType: string, consumerID?: string): Promise<Otp>;
-  getAllOTPsForUser(emailOrPhone: string, identityType: string, consumerID?: string): Promise<Otp[]>;
+  getOTP(emailOrPhone: string, identityType: string, consumerID?: string): Promise<OTP>;
+  getAllOTPsForUser(emailOrPhone: string, identityType: string, consumerID?: string): Promise<OTP[]>;
   saveOTP(
     emailOrPhone: string,
     otp: number,
@@ -10,7 +10,7 @@ export interface IOTPRepo {
     consumerID?: string,
     expiryTimeInMs?: number,
   ): Promise<void>;
-  saveOTPObject(otp: Otp): Promise<void>;
+  saveOTPObject(otp: OTP): Promise<void>;
   deleteOTP(id: string): Promise<void>;
   deleteAllOTPsForUser(emailOrPhone: string, identityType: string, consumerID?: string): Promise<void>;
   deleteAllExpiredOTPs(): Promise<void>;

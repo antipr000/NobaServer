@@ -41,6 +41,7 @@ model Consumer {
   cryptoWallets        CryptoWallet[]
   paymentMethods       PaymentMethod[]
   circleAccountData    Circle?
+  OTP                  Otp?
 
   @@index([email])
   @@index([handle])
@@ -138,6 +139,25 @@ model Circle {
   consumerID       String    @unique()
 
   @@index([consumerID])
+}
+
+model Otp {
+  id                     String       @id
+  createdTimestamp       DateTime?    @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp       DateTime?    @updatedAt // Marking optional so we don't need to set in tests
+  emailOrPhone           String
+  otp                    Int
+  otpExpirationTimestamp DateTime
+  identityType           IdentityType
+  consumer               Consumer?    @relation(fields: [consumerID], references: [id])
+  consumerID             String?      @unique()
+
+  @@index([otp])
+}
+
+enum IdentityType {
+  CONSUMER
+  NOBA_ADMIN
 }
 
 enum KYCStatus {

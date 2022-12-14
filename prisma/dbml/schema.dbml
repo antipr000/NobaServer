@@ -21,6 +21,7 @@ Table Consumer {
   cryptoWallets CryptoWallet [not null]
   paymentMethods PaymentMethod [not null]
   circleAccountData Circle
+  OTP Otp
 }
 
 Table Address {
@@ -110,6 +111,23 @@ Table Circle {
   consumerID String [unique, not null]
 }
 
+Table Otp {
+  id String [pk]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+  emailOrPhone String [not null]
+  otp Int [not null]
+  otpExpirationTimestamp DateTime [not null]
+  identityType IdentityType [not null]
+  consumer Consumer
+  consumerID String [unique]
+}
+
+Enum IdentityType {
+  CONSUMER
+  NOBA_ADMIN
+}
+
 Enum KYCStatus {
   NOT_SUBMITTED
   PENDING
@@ -168,3 +186,5 @@ Ref: Card.paymentMethodID - PaymentMethod.id
 Ref: AchData.paymentMethodID - PaymentMethod.id
 
 Ref: Circle.consumerID - Consumer.id
+
+Ref: Otp.consumerID - Consumer.id

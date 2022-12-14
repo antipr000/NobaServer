@@ -7,11 +7,11 @@ import mongoose from "mongoose";
 import { MongoClient } from "mongodb";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IOTPRepo } from "../repo/OTPRepo";
-import { OtpMapper } from "../mapper/OtpMapper";
+import { OTPMapper } from "../mapper/OtpMapper";
 import { MongoDBOtpRepo } from "../repo/MongoDBOtpRepo";
 import { IdentityType } from "../domain/IdentityType";
 import { NotFoundException } from "@nestjs/common";
-import { Otp } from "../domain/Otp";
+import { OTP } from "../domain/OTP";
 
 const DEFAULT_CONSUMER_ID = "consumer_id";
 
@@ -50,7 +50,7 @@ describe("MongoDBOtpRepoTests", () => {
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [OtpMapper, DBProvider, MongoDBOtpRepo],
+      providers: [OTPMapper, DBProvider, MongoDBOtpRepo],
     }).compile();
 
     otpRepo = app.get<MongoDBOtpRepo>(MongoDBOtpRepo);
@@ -70,8 +70,8 @@ describe("MongoDBOtpRepoTests", () => {
     it("should return an otp without ConsumerID", async () => {
       const emailID = "user@noba.com";
       const otp = 123457;
-      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_CONSUMER_ID);
-      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, otp, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
+      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
       expect(savedOtp.props.emailOrPhone).toBe(emailID);
       expect(savedOtp.props.otp).toBe(otp);
     });
@@ -79,8 +79,8 @@ describe("MongoDBOtpRepoTests", () => {
     it("should return an otp with ConsumerID", async () => {
       const emailID = "user@noba.com";
       const otp = 123457;
-      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_CONSUMER_ID);
-      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, otp, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
+      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
       expect(savedOtp.props.emailOrPhone).toBe(emailID);
       expect(savedOtp.props.otp).toBe(otp);
     });
@@ -90,13 +90,13 @@ describe("MongoDBOtpRepoTests", () => {
     it("should save an otp object", async () => {
       const emailID = "user@noba.com";
       const otp = 123457;
-      const otpObject = Otp.createOtp({
+      const otpObject = OTP.createOtp({
         emailOrPhone: emailID,
         otp,
-        identityType: IdentityType.consumer,
+        identityType: IdentityType.CONSUMER,
       });
       await otpRepo.saveOTPObject(otpObject);
-      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer);
+      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.CONSUMER);
       expect(savedOtp.props.emailOrPhone).toBe(emailID);
       expect(savedOtp.props.otp).toBe(otp);
     });
@@ -104,13 +104,13 @@ describe("MongoDBOtpRepoTests", () => {
     it("should save an otp object", async () => {
       const emailID = "user@noba.com";
       const otp = 123457;
-      const otpObject = Otp.createOtp({
+      const otpObject = OTP.createOtp({
         emailOrPhone: emailID,
         otp,
-        identityType: IdentityType.consumer,
+        identityType: IdentityType.CONSUMER,
       });
       await otpRepo.saveOTPObject(otpObject);
-      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer);
+      const savedOtp = await otpRepo.getOTP(emailID, IdentityType.CONSUMER);
       expect(savedOtp.props.emailOrPhone).toBe(emailID);
       expect(savedOtp.props.otp).toBe(otp);
     });
@@ -122,10 +122,10 @@ describe("MongoDBOtpRepoTests", () => {
       const otp = 123457;
       const otp2 = 123456;
 
-      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_CONSUMER_ID);
-      await otpRepo.saveOTP(emailID, otp2, IdentityType.consumer, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, otp, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, otp2, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
 
-      const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.consumer, DEFAULT_CONSUMER_ID);
+      const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
       expect(savedOtps.length).toBe(2);
     });
   });
@@ -136,14 +136,14 @@ describe("MongoDBOtpRepoTests", () => {
       const otp = 123457;
       const otp2 = 123456;
 
-      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_CONSUMER_ID);
-      const obj = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, otp, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
+      const obj = await otpRepo.getOTP(emailID, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
 
-      await otpRepo.deleteOTP(obj.props._id);
+      await otpRepo.deleteOTP(obj.props.id);
 
       let thrown = false;
       try {
-        const savedOtp = await otpRepo.getOTP(emailID, IdentityType.consumer, DEFAULT_CONSUMER_ID);
+        const savedOtp = await otpRepo.getOTP(emailID, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
       } catch (ex) {
         if (ex instanceof NotFoundException) {
           thrown = true;
@@ -160,15 +160,15 @@ describe("MongoDBOtpRepoTests", () => {
       const otp2 = 123456;
       const opt3 = 1342424;
 
-      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, DEFAULT_CONSUMER_ID);
-      await otpRepo.saveOTP(emailID, otp2, IdentityType.consumer, DEFAULT_CONSUMER_ID);
-      await otpRepo.saveOTP(emailID, opt3, IdentityType.nobaAdmin, "Noba-Admin-ID");
+      await otpRepo.saveOTP(emailID, otp, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, otp2, IdentityType.CONSUMER, DEFAULT_CONSUMER_ID);
+      await otpRepo.saveOTP(emailID, opt3, IdentityType.NOBA_ADMIN, "Noba-Admin-ID");
 
-      await otpRepo.deleteAllOTPsForUser(emailID, IdentityType.consumer);
-      const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.consumer);
+      await otpRepo.deleteAllOTPsForUser(emailID, IdentityType.CONSUMER);
+      const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.CONSUMER);
       expect(savedOtps.length).toBe(0);
 
-      const savedOtpsForNobaAdmin = await otpRepo.getAllOTPsForUser(emailID, IdentityType.nobaAdmin);
+      const savedOtpsForNobaAdmin = await otpRepo.getAllOTPsForUser(emailID, IdentityType.NOBA_ADMIN);
       expect(savedOtpsForNobaAdmin.length).toBe(1);
     });
   });
@@ -181,14 +181,14 @@ describe("MongoDBOtpRepoTests", () => {
       const opt3 = 1342424;
       const consumerID = "1234567890";
 
-      await otpRepo.saveOTP(emailID, otp, IdentityType.consumer, consumerID, 100);
-      await otpRepo.saveOTP(emailID, otp2, IdentityType.consumer, consumerID, 100);
-      await otpRepo.saveOTP(emailID, opt3, IdentityType.consumer);
-      const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.consumer);
+      await otpRepo.saveOTP(emailID, otp, IdentityType.CONSUMER, consumerID, 100);
+      await otpRepo.saveOTP(emailID, otp2, IdentityType.CONSUMER, consumerID, 100);
+      await otpRepo.saveOTP(emailID, opt3, IdentityType.CONSUMER);
+      const savedOtps = await otpRepo.getAllOTPsForUser(emailID, IdentityType.CONSUMER);
       expect(savedOtps.length).toBe(3);
       await new Promise(r => setTimeout(r, 100));
       await otpRepo.deleteAllExpiredOTPs();
-      const savedOtpsAfterDeletion = await otpRepo.getAllOTPsForUser(emailID, IdentityType.consumer);
+      const savedOtpsAfterDeletion = await otpRepo.getAllOTPsForUser(emailID, IdentityType.CONSUMER);
       expect(savedOtpsAfterDeletion.length).toBe(1);
     });
   });

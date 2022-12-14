@@ -2,16 +2,17 @@ import { IOTPRepo } from "./OTPRepo";
 import { OTP, OTPProps } from "../domain/OTP";
 import { OTPMapper } from "../mapper/OtpMapper";
 import { Inject, Injectable, NotFoundException, Logger } from "@nestjs/common";
-import { convertDBResponseToJsObject } from "../../../../src/infra/mongodb/MongoDBUtils";
-import { DBProvider } from "../../../infraproviders/DBProvider";
+import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { Prisma } from "@prisma/client";
 import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
-export class MongoDBOtpRepo implements IOTPRepo {
+export class SQLOTPRepo implements IOTPRepo {
   @Inject()
-  private readonly dbProvider: DBProvider;
+  private readonly prisma: PrismaService;
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
@@ -19,59 +20,53 @@ export class MongoDBOtpRepo implements IOTPRepo {
   private readonly otpMapper: OTPMapper = new OTPMapper();
 
   async getOTP(emailOrPhone: string, identityType: string, consumerID?: string): Promise<OTP> {
-    const otpModel = await this.dbProvider.getOtpModel();
     const queryParams = {
       emailOrPhone: Utils.stripSpaces(emailOrPhone),
-      identityType: identityType,
+      identityType: OTP.getIdentityTypeFromString(identityType),
     };
 
     if (consumerID) {
       queryParams["consumerID"] = consumerID;
     }
 
-    const result = await otpModel.findOne(queryParams).exec();
+    const query = Prisma.validator<Prisma.OtpWhereInput>()({ ...queryParams });
+    const result = await this.prisma.otp.findFirst({ where: query });
     if (result === undefined || result === null) {
-      throw new NotFoundException(`No OTP found for ${emailOrPhone}`);
+      return null;
     }
+
     const otpProps: OTPProps = convertDBResponseToJsObject(result);
     return this.otpMapper.toDomain(otpProps);
   }
 
   async getAllOTPsForUser(emailOrPhone: string, identityType: string, consumerID?: string): Promise<OTP[]> {
-    const otpModel = await this.dbProvider.getOtpModel();
-    let result;
+    let queryParams;
     if (consumerID) {
-      result = await otpModel.find({ consumerID: consumerID }).exec();
+      queryParams = { consumerID: consumerID };
     } else {
-      result = await otpModel
-        .find({ emailOrPhone: Utils.stripSpaces(emailOrPhone), identityType: identityType })
-        .exec();
+      queryParams = { emailOrPhone: Utils.stripSpaces(emailOrPhone), identityType: identityType };
     }
+
+    const query = Prisma.validator<Prisma.OtpWhereInput>()({ ...queryParams });
+    const result = await this.prisma.otp.findMany({ where: query });
     const otpProps: OTPProps[] = convertDBResponseToJsObject(result);
     return otpProps.map(otpResult => this.otpMapper.toDomain(otpResult));
   }
 
-  async saveOTP(
-    otpIdentifier: string,
-    otp: number,
-    identityType: string,
-    consumerID?: string,
-    expiryTimeInMs?: number,
-  ): Promise<void> {
-    let otpInstance;
+  async saveOTP(otpIdentifier: string, otp: number, identityTypeStr: string, consumerID?: string): Promise<void> {
+    const identityType = OTP.getIdentityTypeFromString(identityTypeStr);
+    let otpInstance: OTP;
     if (identityType === consumerIdentityIdentifier) {
       otpInstance = OTP.createOtp({
         emailOrPhone: Utils.stripSpaces(otpIdentifier),
         otp: otp,
         identityType: identityType,
-        otpExpiryTime: expiryTimeInMs,
         consumerID: consumerID,
       });
     } else {
       otpInstance = OTP.createOtp({
         emailOrPhone: Utils.stripSpaces(otpIdentifier),
         otp: otp,
-        otpExpiryTime: expiryTimeInMs,
         identityType: identityType,
       });
     }
@@ -80,9 +75,9 @@ export class MongoDBOtpRepo implements IOTPRepo {
   }
 
   async saveOTPObject(otp: OTP): Promise<void> {
-    const otpModel = await this.dbProvider.getOtpModel();
+    const saveObj: Prisma.OtpUncheckedCreateInput = { ...otp.props };
     try {
-      await otpModel.create(otp.props);
+      await this.prisma.otp.create({ data: saveObj });
     } catch (e) {
       // Already exists, which should never happen since we delete OTPs when generating new
       this.logger.warn(`Error while creating new OTP in db. Error: ${e}`);
@@ -92,37 +87,35 @@ export class MongoDBOtpRepo implements IOTPRepo {
 
   async deleteOTP(id: string): Promise<void> {
     try {
-      const otpModel = await this.dbProvider.getOtpModel();
-      await otpModel.deleteOne({ _id: id });
+      await this.prisma.otp.delete({ where: { id: id } });
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
       this.logger.warn(`Error deleting OTP by ID: ${e}`);
     }
   }
 
-  async deleteAllOTPsForUser(emailOrPhone: string, identityType: string, consumerID?: string): Promise<void> {
+  async deleteAllOTPsForUser(emailOrPhone: string, identityTypeStr: string, consumerID?: string): Promise<void> {
     try {
-      const otpModel = await this.dbProvider.getOtpModel();
+      const identityType = OTP.getIdentityTypeFromString(identityTypeStr);
       if (consumerID) {
-        await otpModel.deleteMany({ identityType: identityType, consumerID: consumerID });
+        await this.prisma.otp.deleteMany({ where: { consumerID: consumerID, identityType: identityType } });
       }
       // To be full proof, always delete by emailOrPhone passed too, in case there are multiple users with same email or phone
-      await otpModel.deleteMany({ emailOrPhone: emailOrPhone, identityType: identityType });
+      await this.prisma.otp.deleteMany({ where: { emailOrPhone: emailOrPhone, identityType: identityType } });
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
-      console.log(e);
+      this.logger.warn(`Error deleting OTPs for user: ${e}`);
     }
   }
 
   async deleteAllExpiredOTPs(): Promise<void> {
     try {
-      const otpModel = await this.dbProvider.getOtpModel();
-      const date = new Date().getTime();
-      const result = await otpModel.deleteMany({ otpExpiryTime: { $lt: date } });
-      this.logger.debug(`Deleted ${result.deletedCount} OTPs with expiration timestamp < ${date}`);
+      const date = new Date();
+      const result = await this.prisma.otp.deleteMany({ where: { otpExpirationTimestamp: { lt: date } } });
+      this.logger.debug(`Deleted ${result.count} OTPs with expiration timestamp < ${date}`);
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
-      console.log(e);
+      this.logger.warn(`Error deleting OTPs for user: ${e}`);
     }
   }
 }

@@ -91,6 +91,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   paymentMethods: Joi.array().items(paymentMethodsValidationJoiKeys).default([]),
   cryptoWallets: Joi.array().items(cryptoWalletsValidationJoiKeys).default([]),
   circleAccountData: Joi.object().optional(), // TODO: add schema here once defined for Circle
+  OTP: Joi.object().optional(),
 };
 
 export const consumerJoiSchema = Joi.object(consumerJoiValidationKeys).options({

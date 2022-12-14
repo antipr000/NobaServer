@@ -7,7 +7,7 @@ import { Result } from "../../../core/logic/Result";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Utils } from "../../../core/utils/Utils";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { Otp } from "../../../modules/auth/domain/Otp";
+import { OTP } from "../../auth/domain/OTP";
 import { getMockOtpRepoWithDefaults } from "../../../modules/auth/mocks/MockOtpRepo";
 import { IOTPRepo } from "../../../modules/auth/repo/OTPRepo";
 import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
@@ -1418,7 +1418,7 @@ describe("ConsumerService", () => {
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
       when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props.id)).thenResolve(
-        Otp.createOtp({
+        OTP.createOtp({
           id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
@@ -1560,7 +1560,7 @@ describe("ConsumerService", () => {
       });
 
       when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props.id)).thenResolve(
-        Otp.createOtp({
+        OTP.createOtp({
           id: "fake-otp-id",
           emailOrPhone: consumer.props.email,
           otp: otp,
@@ -2037,10 +2037,10 @@ describe("ConsumerService", () => {
         isAdmin: false,
       });
 
-      const otpObject = Otp.createOtp({
+      const otpObject = OTP.createOtp({
         otp: otp,
         emailOrPhone: phone,
-        identityType: IdentityType.consumer,
+        identityType: IdentityType.CONSUMER,
         consumerID: consumer.props.id,
       });
 
@@ -2055,7 +2055,7 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
-      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props.id)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(phone, IdentityType.CONSUMER, consumer.props.id)).thenResolve(otpObject);
 
       try {
         await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
@@ -2101,10 +2101,10 @@ describe("ConsumerService", () => {
         isAdmin: false,
       });
 
-      const otpObject = Otp.createOtp({
+      const otpObject = OTP.createOtp({
         otp: otp,
         emailOrPhone: phone,
-        identityType: IdentityType.consumer,
+        identityType: IdentityType.CONSUMER,
         consumerID: consumer.props.id,
       });
 
@@ -2114,7 +2114,7 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.ok(anything()));
-      when(mockOtpRepo.getOTP(phone, IdentityType.consumer, consumer.props.id)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(phone, IdentityType.CONSUMER, consumer.props.id)).thenResolve(otpObject);
       when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
 
       try {
@@ -2166,10 +2166,10 @@ describe("ConsumerService", () => {
       const email = "Rosie@Noba.com";
 
       const otp = 123456;
-      const otpObject = Otp.createOtp({
+      const otpObject = OTP.createOtp({
         otp: otp,
         emailOrPhone: email,
-        identityType: IdentityType.consumer,
+        identityType: IdentityType.CONSUMER,
       });
 
       const consumer = Consumer.createConsumer({
@@ -2186,7 +2186,7 @@ describe("ConsumerService", () => {
         otp: 123458, //incorrect otp
       };
 
-      when(mockOtpRepo.getOTP(email, IdentityType.consumer)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(email, IdentityType.CONSUMER)).thenResolve(otpObject);
       when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
 
       try {
@@ -2246,10 +2246,10 @@ describe("ConsumerService", () => {
       const email = "Rosie@Noba.com";
 
       const otp = 123456;
-      const otpObject = Otp.createOtp({
+      const otpObject = OTP.createOtp({
         otp: otp,
         emailOrPhone: email,
-        identityType: IdentityType.consumer,
+        identityType: IdentityType.CONSUMER,
       });
 
       const consumer = Consumer.createConsumer({
@@ -2267,7 +2267,7 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.ok(anything()));
-      when(mockOtpRepo.getOTP(email, IdentityType.consumer)).thenResolve(otpObject);
+      when(mockOtpRepo.getOTP(email, IdentityType.CONSUMER)).thenResolve(otpObject);
       when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
 
       try {

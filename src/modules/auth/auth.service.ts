@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/commo
 import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IOTPRepo } from "./repo/OTPRepo";
-import { Otp } from "./domain/Otp";
+import { OTP } from "./domain/OTP";
 import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 import { NotificationService } from "../notifications/notification.service";
 import { SMSService } from "../common/sms.service";
@@ -35,14 +35,13 @@ export abstract class AuthService {
   }
 
   async validateAndGetUserId(emailOrPhone: string, enteredOtp: number): Promise<string> {
-    const actualOtp: Otp = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType());
-    const currentDateTime: number = new Date().getTime();
-    console.log("Here 1");
-    if (actualOtp.props.otp != enteredOtp || currentDateTime > actualOtp.props.otpExpiryTime) {
+    const actualOtp: OTP = await this.otpRepo.getOTP(emailOrPhone, this.getIdentityType());
+    const currentDateTime: Date = new Date();
+
+    if (actualOtp.props.otp != enteredOtp || currentDateTime > actualOtp.props.otpExpirationTimestamp) {
       throw new UnauthorizedException();
     } else {
-      await this.otpRepo.deleteOTP(actualOtp.props._id); // Delete the OTP
-      console.log("Here2");
+      await this.otpRepo.deleteOTP(actualOtp.props.id); // Delete the OTP
       return this.getUserId(emailOrPhone);
     }
   }
@@ -53,8 +52,8 @@ export abstract class AuthService {
       identityType: this.getIdentityType(),
     };
     return {
-      access_token: this.jwtService.sign(payload),
-      user_id: id,
+      accessToken: this.jwtService.sign(payload),
+      userID: id,
     };
   }
 

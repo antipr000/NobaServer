@@ -12,7 +12,7 @@ import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../repo/OTPRepo";
 import { InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
-import { Otp } from "../domain/Otp";
+import { OTP } from "../domain/OTP";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
@@ -92,7 +92,7 @@ describe("AdminAuthService", () => {
       const CORRECT_OTP = 123456;
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
-      const otpDomain: Otp = Otp.createOtp({
+      const otpDomain: OTP = OTP.createOtp({
         _id: "1",
         emailOrPhone: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
@@ -115,7 +115,7 @@ describe("AdminAuthService", () => {
       const CORRECT_OTP = 123456;
       const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
-      const otpDomain: Otp = Otp.createOtp({
+      const otpDomain: OTP = OTP.createOtp({
         _id: "1",
         emailOrPhone: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
@@ -139,7 +139,7 @@ describe("AdminAuthService", () => {
       const CORRECT_OTP = 123456;
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
-      const otpDomain: Otp = Otp.createOtp({
+      const otpDomain: OTP = OTP.createOtp({
         _id: "1",
         emailOrPhone: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,

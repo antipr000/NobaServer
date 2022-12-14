@@ -9,13 +9,13 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { ConfigModule } from "@nestjs/config";
 import { AuthController } from "./auth.controller";
 import { CommonModule } from "../common/common.module";
-import { MongoDBOtpRepo } from "./repo/MongoDBOtpRepo";
 import { UserAuthService } from "./user.auth.service";
 import { AdminAuthService } from "./admin.auth.service";
 import { AdminModule } from "../admin/admin.module";
 import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
+import { SQLOTPRepo } from "./repo/SQLOTPRepo";
 
 @Module({
   imports: [
@@ -37,7 +37,7 @@ import { NotificationsModule } from "../notifications/notification.module";
     DBProvider,
     {
       provide: "OTPRepo",
-      useClass: MongoDBOtpRepo,
+      useClass: SQLOTPRepo,
     },
     UserAuthService,
     AdminAuthService,

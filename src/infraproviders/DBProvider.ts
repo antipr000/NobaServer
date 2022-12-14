@@ -12,7 +12,7 @@ import { AdminModel } from "../infra/mongodb/models/AdminModel";
 import { MongoConfigs } from "../config/configtypes/MongoConfigs";
 import { MONGO_CONFIG_KEY } from "../config/ConfigurationUtils";
 import { OtpModel } from "../infra/mongodb/models/OtpModel";
-import { OtpProps } from "../modules/auth/domain/Otp";
+import { OTPProps } from "../modules/auth/domain/OTP";
 import { CustomConfigService } from "../core/utils/AppConfigModule";
 import { VerificationDataProps } from "../modules/verification/domain/VerificationData";
 import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataModel";
@@ -57,7 +57,7 @@ export class DBProvider {
   //   this.connectToDb();
   // }
 
-  async getOtpModel(): Promise<Model<OtpProps>> {
+  async getOtpModel(): Promise<Model<OTPProps>> {
     await this.connectToDb();
     return OtpModel;
   }
