@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Inject,
   Post,
+  UnauthorizedException,
 } from "@nestjs/common";
 import {
   ApiForbiddenResponse,
@@ -25,12 +26,13 @@ import {
   nobaAdminIdentityIdentifier,
 } from "./domain/IdentityType";
 import { LoginRequestDTO } from "./dto/LoginRequest";
-import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
+import { LoginResponseDTO } from "./dto/LoginResponse";
 import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { Public } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Utils } from "../../core/utils/Utils";
+import { NewAccessTokenRequestDTO } from "./dto/NewAccessTokenRequest";
 
 @Controller("auth")
 @ApiTags("Authentication")
@@ -53,11 +55,32 @@ export class AuthController {
   }
 
   @Public()
+  @Post("/accesstoken")
+  @ApiOperation({ summary: "returns a new JWT based access token with a refresh token" })
+  @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API new access token and refresh token" })
+  @ApiUnauthorizedResponse({ description: "Invalid Refresh Token, either already used or expired" })
+  async newAccessToken(@Body() requestBody: NewAccessTokenRequestDTO, @Headers() headers): Promise<LoginResponseDTO> {
+    const authService: AuthService = this.getAuthService(consumerIdentityIdentifier);
+
+    const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
+
+    const isValidToken = await authService.validateToken(requestBody.refreshToken, requestBody.userId);
+
+    if (!isValidToken) {
+      throw new UnauthorizedException("Invalid refresh token, either it is already used or expired");
+    }
+
+    await authService.invalidateToken(requestBody.refreshToken, requestBody.userId);
+
+    return authService.generateAccessToken(requestBody.userId, partnerId, true);
+  }
+
+  @Public()
   @Post("/verifyotp")
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
-  @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "API access token" })
+  @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API access token" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
-  async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO, @Headers() headers): Promise<VerifyOtpResponseDTO> {
+  async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO, @Headers() headers): Promise<LoginResponseDTO> {
     const isEmail = Utils.isEmail(requestBody.emailOrPhone);
     const authService: AuthService = this.getAuthService(requestBody.identityType);
 

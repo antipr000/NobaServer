@@ -15,4 +15,7 @@ export class VerifyOtpRequestDTO {
 
   @ApiProperty({ description: "One-time password sent to email or phone" })
   otp: number;
+
+  @ApiPropertyOptional({ description: "include refresh token to get new token on expiry of current access token" })
+  includeRefreshToken?: boolean;
 }

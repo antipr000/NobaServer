@@ -5,8 +5,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { AdminAuthService } from "../admin.auth.service";
 import { AuthController } from "../auth.controller";
-import { consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "../domain/IdentityType";
-import { VerifyOtpResponseDTO } from "../dto/VerifyOtpReponse";
+import { LoginResponseDTO } from "../dto/LoginResponse";
 import { getMockAdminAuthServiceWithDefaults } from "../mocks/mock.admin.auth.service";
 import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.service";
 import { UserAuthService } from "../user.auth.service";
@@ -57,7 +56,7 @@ describe("AuthController", () => {
       const adminEmail = "admin@noba.com";
       const identityType: string = nobaAdminIdentityIdentifier;
       const otp = 123456;
-      const generateAccessTokenResponse: VerifyOtpResponseDTO = {
+      const generateAccessTokenResponse: LoginResponseDTO = {
         user_id: adminId,
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
@@ -65,7 +64,7 @@ describe("AuthController", () => {
       when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
       when(mockAdminAuthService.generateAccessToken(adminId)).thenResolve(generateAccessTokenResponse);
 
-      const result: VerifyOtpResponseDTO = await authController.verifyOtp(
+      const result: LoginResponseDTO = await authController.verifyOtp(
         {
           emailOrPhone: adminEmail,
           identityType: identityType,
@@ -84,7 +83,7 @@ describe("AuthController", () => {
       const consumerEmail = "consumer@noba.com";
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
-      const generateAccessTokenResponse: VerifyOtpResponseDTO = {
+      const generateAccessTokenResponse: LoginResponseDTO = {
         user_id: consumerId,
         access_token: "xxxxxx-yyyyyy-zzzzzz",
       };
@@ -92,7 +91,7 @@ describe("AuthController", () => {
       when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp)).thenResolve(consumerId);
       when(mockConsumerAuthService.generateAccessToken(consumerId)).thenResolve(generateAccessTokenResponse);
 
-      const result: VerifyOtpResponseDTO = await authController.verifyOtp(
+      const result: LoginResponseDTO = await authController.verifyOtp(
         {
           emailOrPhone: consumerEmail,
           identityType: identityType,

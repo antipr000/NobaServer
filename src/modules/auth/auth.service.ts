@@ -1,15 +1,17 @@
-import { BadRequestException, Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IOTPRepo } from "./repo/OTPRepo";
 import { Otp } from "./domain/Otp";
-import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
+import { LoginResponseDTO } from "./dto/LoginResponse";
 import { NotificationService } from "../notifications/notification.service";
 import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { Utils } from "../../core/utils/Utils";
 import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
+import { ITokenRepo } from "./repo/TokenRepo";
+import { Token } from "./domain/Token";
 
 @Injectable()
 export abstract class AuthService {
@@ -18,6 +20,9 @@ export abstract class AuthService {
 
   @Inject("OTPRepo")
   private readonly otpRepo: IOTPRepo;
+
+  @Inject("TokenRepo")
+  private readonly tokenRepo: ITokenRepo;
 
   @Inject()
   private readonly notificationService: NotificationService;
@@ -46,7 +51,23 @@ export abstract class AuthService {
     }
   }
 
-  async generateAccessToken(id: string): Promise<VerifyOtpResponseDTO> {
+  async validateToken(rawToken: string, userId: string): Promise<boolean> {
+    const token: Token = await this.tokenRepo.getToken(rawToken, userId);
+    return token.isMatching(rawToken);
+  }
+
+  async invalidateToken(rawToken: string, userId: string): Promise<void> {
+    await this.tokenRepo.deleteToken(rawToken, userId);
+  }
+
+  async generateAccessToken(id: string, includeRefreshToken?: boolean): Promise<LoginResponseDTO> {
+    let refreshToken = "";
+    if (includeRefreshToken) {
+      const { rawToken, saltifiedToken } = Token.generateToken(id);
+      refreshToken = rawToken;
+      const token = Token.createTokenObject({ _id: saltifiedToken, userId: id });
+      await this.tokenRepo.saveToken(token);
+    }
     const payload = {
       id: id,
       identityType: this.getIdentityType(),
@@ -54,6 +75,7 @@ export abstract class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
       user_id: id,
+      refresh_token: refreshToken,
     };
   }
 
