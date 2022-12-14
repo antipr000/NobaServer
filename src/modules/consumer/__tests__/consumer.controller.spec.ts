@@ -24,10 +24,9 @@ import {
 } from "../domain/ExternalStates";
 import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
 import { PaymentProvider } from "../domain/PaymentProvider";
-import { VerificationProviders } from "../domain/VerificationData";
+import { VerificationProviders } from "../domain/KYC";
 import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
 import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
-import { ConsumerDTO } from "../dto/ConsumerDTO";
 import { EmailVerificationOtpRequest } from "../dto/EmailVerificationDTO";
 import { UpdateConsumerRequestDTO } from "../dto/UpdateConsumerRequestDTO";
 import { UpdatePaymentMethodDTO } from "../dto/UpdatePaymentMethodDTO";

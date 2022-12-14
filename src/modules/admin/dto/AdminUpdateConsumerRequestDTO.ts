@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { VerificationData, VerificationProviders } from "../../consumer/domain/VerificationData";
+import { VerificationData, VerificationProviders } from "../../consumer/domain/KYC";
 import { Address } from "../../consumer/domain/Address";
 import { KYCStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
 class AddressDTO implements Address {

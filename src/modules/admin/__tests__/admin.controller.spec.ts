@@ -15,11 +15,10 @@ import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KYCStatus, DocumentVerificationStatus } from "../../../modules/consumer/domain/VerificationStatus";
-import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
+import { VerificationProviders } from "../../consumer/domain/KYC";
 import { DocumentVerificationState, KycVerificationState } from "../../../modules/consumer/domain/ExternalStates";
 import { TransactionService } from "../../../modules/transactions/transaction.service";
 import { getMockTransactionServiceWithDefaults } from "../../../modules/transactions/mocks/mock.transactions.repo";
-import fs from "fs";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";

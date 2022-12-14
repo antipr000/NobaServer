@@ -13,6 +13,8 @@ import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
 import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRepo";
+import { SQLOTPRepo } from "./repo/SqlOtpRepo";
+import { OTPService } from "./otp.service";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -35,6 +37,11 @@ import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRep
       provide: "CreditCardBinDataRepo",
       useClass: MongoDBCreditCardBinDataRepo,
     },
+    {
+      provide: "OTPRepo",
+      useClass: SQLOTPRepo,
+    },
+    OTPService,
   ],
   exports: [
     CsvService,
@@ -46,6 +53,7 @@ import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRep
     ConfigurationProviderService,
     LockService,
     EllipticService,
+    OTPService,
   ],
 })
 export class CommonModule {}

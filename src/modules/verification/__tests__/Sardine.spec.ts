@@ -23,7 +23,7 @@ import {
 } from "../integrations/fakes/FakeSardineResponses";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { Consumer } from "../../consumer/domain/Consumer";
-import { VerificationProviders } from "../../consumer/domain/VerificationData";
+import { VerificationProviders } from "../../consumer/domain/KYC";
 import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { DocumentTypes } from "../domain/DocumentTypes";

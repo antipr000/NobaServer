@@ -15,7 +15,6 @@ import { AdminModule } from "../admin/admin.module";
 import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
-import { SQLOTPRepo } from "./repo/SQLOTPRepo";
 
 @Module({
   imports: [
@@ -31,18 +30,7 @@ import { SQLOTPRepo } from "./repo/SQLOTPRepo";
     CommonModule,
     NotificationsModule,
   ],
-  providers: [
-    JwtStrategy,
-    HeaderValidationService,
-    DBProvider,
-    {
-      provide: "OTPRepo",
-      useClass: SQLOTPRepo,
-    },
-    UserAuthService,
-    AdminAuthService,
-    DeleteExpiredOTPs,
-  ],
+  providers: [JwtStrategy, HeaderValidationService, DBProvider, UserAuthService, AdminAuthService, DeleteExpiredOTPs],
   controllers: [AuthController],
   exports: [HeaderValidationService],
 })

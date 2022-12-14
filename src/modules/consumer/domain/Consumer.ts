@@ -2,72 +2,30 @@ import { BadRequestException } from "@nestjs/common";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
-import { Consumer as ConsumerModel } from "../../../generated/domain/consumer";
-import { Kyc as KycModel } from "../../../generated/domain/kyc";
-import { PaymentMethod as PaymentMethodModel } from "../../../generated/domain/payment_method";
-import { CryptoWallet as CryptoWalletModel } from "../../../generated/domain/crypto_wallet";
+import { Consumer as ConsumerModel } from "@prisma/client";
+import { Address, addressValidationJoiKeys } from "./Address";
 import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
-import { Address as AddressModel } from "../../../generated/domain/address";
-import { VerificationData, VerificationProviders } from "./VerificationData";
 import { differenceInDays } from "date-fns";
-import { PaymentMethodStatus, DocumentVerificationStatus, KYCStatus } from "@prisma/client";
+import { KYC, kycValidationJoiKeys } from "./KYC";
 
-export class ConsumerProps extends ConsumerModel {}
-export class Address extends AddressModel {}
-export class KYC extends KycModel {}
-export class PaymentMethod extends PaymentMethodModel {}
-export class CryptoWallet extends CryptoWalletModel {}
-
-const verificationDataValidationJoiKeys: KeysRequired<VerificationData> = {
-  verificationProvider: Joi.string().required().default(VerificationProviders.SARDINE),
-  kycVerificationStatus: Joi.string().default(KYCStatus.NOT_SUBMITTED),
-  kycVerificationTimestamp: Joi.number().optional(),
-  documentVerificationStatus: Joi.string().default(DocumentVerificationStatus.NOT_REQUIRED),
-  documentVerificationTimestamp: Joi.number().optional(),
-  documentVerificationTransactionID: Joi.string().optional(),
-  sanctionLevel: Joi.string().optional(),
-  pepLevel: Joi.string().optional(),
-};
-
-const paymentMethodsValidationJoiKeys: KeysRequired<PaymentMethod> = {
-  id: Joi.number().required(),
-  name: Joi.string().optional().allow(""),
-  type: Joi.string().required(),
-  cardData: Joi.object().keys().optional(),
-  achData: Joi.object().optional(),
-  imageUri: Joi.string().optional(),
-  paymentToken: Joi.string().required(),
-  paymentProvider: Joi.string().required(),
-  status: Joi.string().optional(),
-  isDefault: Joi.boolean().default(false),
-  consumerID: Joi.string().required(),
-  consumer: Joi.object().required(),
-};
-
-const cryptoWalletsValidationJoiKeys: KeysRequired<CryptoWallet> = {
-  id: Joi.number().required(),
-  name: Joi.string().optional(),
-  address: Joi.string().required(),
-  chainType: Joi.string().optional(),
-  isEVMCompatible: Joi.boolean().optional(),
-  status: Joi.string().optional(),
-  riskScore: Joi.number().optional(),
-  consumerID: Joi.string().required(),
-  consumer: Joi.object().required(),
-};
-
-const addressValidationJoiKeys: KeysRequired<Address> = {
-  id: Joi.number().required(),
-  streetLine1: Joi.string().optional(),
-  streetLine2: Joi.string().optional(),
-  city: Joi.string().optional(),
-  regionCode: Joi.string().optional(),
-  countryCode: Joi.string().optional(),
-  postalCode: Joi.string().optional(),
-  consumerID: Joi.string().required(),
-  consumer: Joi.object().required(),
-};
+export class ConsumerProps implements ConsumerModel {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  displayEmail: string | null;
+  handle: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  isLocked: boolean;
+  isDisabled: boolean;
+  createdTimestamp: Date | null;
+  updatedTimestamp: Date | null;
+  socialSecurityNumber: string | null;
+  address?: Address;
+  verificationData?: KYC;
+}
 
 export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   ...basePropsJoiSchemaKeys,
@@ -87,11 +45,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   socialSecurityNumber: Joi.string().optional().allow(null),
   isLocked: Joi.boolean().optional(),
   isDisabled: Joi.boolean().optional(),
-  verificationData: Joi.object().keys(verificationDataValidationJoiKeys).optional(),
-  paymentMethods: Joi.array().items(paymentMethodsValidationJoiKeys).default([]),
-  cryptoWallets: Joi.array().items(cryptoWalletsValidationJoiKeys).default([]),
-  circleAccountData: Joi.object().optional(), // TODO: add schema here once defined for Circle
-  OTP: Joi.object().optional(),
+  verificationData: Joi.object().keys(kycValidationJoiKeys).optional(),
 };
 
 export const consumerJoiSchema = Joi.object(consumerJoiValidationKeys).options({
@@ -117,19 +71,6 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     }
 
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));
-  }
-
-  public getPaymentMethodByID(paymentMethodID: string): PaymentMethod {
-    const paymentMethodList: PaymentMethod[] = this.props.paymentMethods.filter(
-      paymentMethod =>
-        paymentMethod.paymentToken === paymentMethodID && paymentMethod.status !== PaymentMethodStatus.DELETED,
-    );
-
-    if (paymentMethodList.length === 0) {
-      return null;
-    }
-
-    return paymentMethodList[0];
   }
 
   public getAccountAge(): number {

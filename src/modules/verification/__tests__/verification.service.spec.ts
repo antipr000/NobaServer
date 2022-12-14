@@ -16,7 +16,7 @@ import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consum
 import { DocumentVerificationStatus, KYCStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { NationalIDTypes } from "../domain/NationalIDTypes";
-import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
+import { VerificationProviders } from "../../consumer/domain/KYC";
 import {
   CaseAction,
   CaseNotificationWebhookRequest,

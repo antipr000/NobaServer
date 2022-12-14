@@ -54,8 +54,4 @@ export class SQLConsumerRepo implements IConsumerRepo {
     if (!consumerProps) return false;
     return true;
   }
-
-  updateConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
 }

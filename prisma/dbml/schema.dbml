@@ -17,11 +17,10 @@ Table Consumer {
   updatedTimestamp DateTime
   socialSecurityNumber String
   address Address
-  verificationData Kyc
+  verificationData KYC
   cryptoWallets CryptoWallet [not null]
   paymentMethods PaymentMethod [not null]
   circleAccountData Circle
-  OTP Otp
 }
 
 Table Address {
@@ -36,16 +35,17 @@ Table Address {
   consumerID String [unique, not null]
 }
 
-Table Kyc {
+Table KYC {
   id Int [pk, increment]
   kycCheckReference String
   documentCheckReference String
+  provider KYCProvider [not null, default: 'SARDINE']
   riskRating String
   isSuspectedFraud Boolean [not null, default: false]
   kycCheckStatus KYCStatus [not null, default: 'NOT_SUBMITTED']
   documentVerificationStatus DocumentVerificationStatus [not null, default: 'REQUIRED']
-  documentVerificationTimestamp DateTime [not null]
-  kycVerificationTimestamp DateTime [not null]
+  documentVerificationTimestamp DateTime
+  kycVerificationTimestamp DateTime
   sanctionLevel String
   riskLevel String
   consumer Consumer [not null]
@@ -55,7 +55,7 @@ Table Kyc {
 Table CryptoWallet {
   id Int [pk, increment]
   address String [unique, not null]
-  name String [not null]
+  name String
   chainType String
   isEVMCompatible Boolean
   status WalletStatus [not null, default: 'PENDING']
@@ -76,7 +76,7 @@ Table PaymentMethod {
   consumer Consumer [not null]
   consumerID String [not null]
   cardData Card
-  achData AchData
+  achData ACH
 }
 
 Table Card {
@@ -91,7 +91,7 @@ Table Card {
   paymentMethodID Int [unique, not null]
 }
 
-Table AchData {
+Table ACH {
   id Int [pk, increment]
   accountID String [not null]
   accessToken String [not null]
@@ -112,15 +112,16 @@ Table Circle {
 }
 
 Table Otp {
-  id String [pk]
+  id String [not null]
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
-  emailOrPhone String [not null]
   otp Int [not null]
   otpExpirationTimestamp DateTime [not null]
   identityType IdentityType [not null]
-  consumer Consumer
-  consumerID String [unique]
+
+  indexes {
+    (id, identityType) [pk]
+  }
 }
 
 Enum IdentityType {
@@ -173,9 +174,13 @@ Enum PaymentMethodStatus {
   DELETED
 }
 
+Enum KYCProvider {
+  SARDINE
+}
+
 Ref: Address.consumerID - Consumer.id
 
-Ref: Kyc.consumerID - Consumer.id
+Ref: KYC.consumerID - Consumer.id
 
 Ref: CryptoWallet.consumerID > Consumer.id
 
@@ -183,8 +188,6 @@ Ref: PaymentMethod.consumerID > Consumer.id
 
 Ref: Card.paymentMethodID - PaymentMethod.id
 
-Ref: AchData.paymentMethodID - PaymentMethod.id
+Ref: ACH.paymentMethodID - PaymentMethod.id
 
 Ref: Circle.consumerID - Consumer.id
-
-Ref: Otp.consumerID - Consumer.id

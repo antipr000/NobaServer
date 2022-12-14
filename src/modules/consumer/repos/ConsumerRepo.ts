@@ -10,5 +10,4 @@ export interface IConsumerRepo {
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
   updateConsumer(consumerID: string, consumer: Consumer | Prisma.ConsumerUpdateInput): Promise<Consumer>;
   isHandleTaken(handle: string): Promise<boolean>;
-  updateConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<void>;
 }

@@ -1,43 +1,59 @@
-import { PaymentProvider } from "./PaymentProvider";
-import { PaymentMethodStatus } from "./VerificationStatus";
+import {
+  PaymentMethod as PaymentMethodModel,
+  PaymentMethodStatus,
+  PaymentMethodType,
+  PaymentProvider,
+  Card as CardModel,
+  ACH as ACHModel,
+} from "@prisma/client";
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
-export type PaymentMethod = {
-  // User provided name of the payment method.
-  name?: string;
+export class PaymentMethod implements PaymentMethodModel {
+  id: number;
+  name: string | null;
   type: PaymentMethodType;
-  cardData?: CardData; // (will be populated if type == Card)
-  achData?: ACHData; // (will be populated if type == ACH)
-  imageUri: string;
-  // External opaque ID which "payment provider" uses to refer this payment method.
   paymentToken: string;
-  paymentProviderID: PaymentProvider;
-  status?: PaymentMethodStatus;
+  paymentProvider: PaymentProvider;
+  status: PaymentMethodStatus;
   isDefault: boolean;
-};
-
-export enum PaymentMethodType {
-  CARD = "Card",
-  ACH = "ACH",
+  imageUri: string | null;
+  consumerID: string;
+  cardData?: Card;
+  achData?: ACH;
 }
 
-export type CardData = {
-  cardType?: string; // Debit, Credit, Prepaid, etc.
-  scheme?: string; // Visa, Mastercard, Discover, etc.
+class Card implements CardModel {
+  id: number;
+  cardType: string | null;
+  scheme: string | null;
   first6Digits: string;
   last4Digits: string;
-  authCode?: string;
-  authReason?: string;
-};
+  authCode: string | null;
+  authReason: string | null;
+  paymentMethodID: number;
+}
 
-export type ACHData = {
-  // Plaid's unique ID for this account.
+class ACH implements ACHModel {
+  id: number;
   accountID: string;
-  // [Encrypted] token from Plaid required to access this account.
   accessToken: string;
-  // Identifier known to Plaid for referencing this account.
   itemID: string;
-  // Usually last 4 digits of linked account number
   mask: string;
-  // Type of account (checking, savings, etc)
   accountType: string;
+  paymentMethodID: number;
+}
+
+export const paymentMethodJoiValidationKeys: KeysRequired<PaymentMethod> = {
+  id: Joi.number().required(),
+  name: Joi.string().optional().allow(null),
+  type: Joi.string().required().valid(Object.keys(PaymentMethodType)),
+  paymentToken: Joi.string().required(),
+  paymentProvider: Joi.string().valid(Object.keys(PaymentProvider)).default(PaymentProvider.CHECKOUT),
+  status: Joi.string().required().valid(Object.keys(PaymentMethodStatus)),
+  isDefault: Joi.boolean().default(false),
+  imageUri: Joi.string().optional().allow(null),
+  consumerID: Joi.string().required(),
+  cardData: Joi.object().optional(),
+  achData: Joi.object().optional(),
 };

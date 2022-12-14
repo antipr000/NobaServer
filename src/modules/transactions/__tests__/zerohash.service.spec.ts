@@ -17,7 +17,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { LocationService } from "../../../modules/common/location.service";
 import { getMockLocationServiceWithDefaults } from "../../../modules/common/mocks/mock.location.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
-import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
+import { VerificationProviders } from "../../consumer/domain/KYC";
 import { DocumentVerificationStatus, KYCStatus, RiskLevel } from "../../../modules/consumer/domain/VerificationStatus";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";

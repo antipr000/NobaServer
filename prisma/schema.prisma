@@ -9,13 +9,13 @@ generator dbml {
   provider = "prisma-dbml-generator"
 }
 
-generator prismaClassGenerator {
-  provider      = "prisma-class-generator"
-  dryRun        = false
-  output        = "../src/generated/domain"
-  useSwagger    = false
-  makeIndexFile = false
-}
+// generator prismaClassGenerator {
+//   provider      = "prisma-class-generator"
+//   dryRun        = false
+//   output        = "../src/generated/domain"
+//   useSwagger    = false
+//   makeIndexFile = false
+// }
 
 datasource db {
   provider = "postgresql"
@@ -37,11 +37,10 @@ model Consumer {
   updatedTimestamp     DateTime?       @updatedAt // Marking optional so we don't need to set in tests
   socialSecurityNumber String?
   address              Address?
-  verificationData     Kyc?
+  verificationData     KYC?
   cryptoWallets        CryptoWallet[]
   paymentMethods       PaymentMethod[]
   circleAccountData    Circle?
-  OTP                  Otp?
 
   @@index([email])
   @@index([handle])
@@ -60,16 +59,17 @@ model Address {
   consumerID  String   @unique()
 }
 
-model Kyc {
+model KYC {
   id                            Int                        @id @default(autoincrement())
   kycCheckReference             String?
   documentCheckReference        String?
+  provider                      KYCProvider                @default(SARDINE)
   riskRating                    String?
   isSuspectedFraud              Boolean                    @default(false)
   kycCheckStatus                KYCStatus                  @default(NOT_SUBMITTED)
   documentVerificationStatus    DocumentVerificationStatus @default(REQUIRED)
-  documentVerificationTimestamp DateTime
-  kycVerificationTimestamp      DateTime
+  documentVerificationTimestamp DateTime?
+  kycVerificationTimestamp      DateTime?
   sanctionLevel                 String?
   riskLevel                     String?
   consumer                      Consumer                   @relation(fields: [consumerID], references: [id])
@@ -79,7 +79,7 @@ model Kyc {
 model CryptoWallet {
   id              Int          @id @default(autoincrement())
   address         String       @unique()
-  name            String
+  name            String?
   chainType       String?
   isEVMCompatible Boolean?
   status          WalletStatus @default(PENDING)
@@ -102,7 +102,7 @@ model PaymentMethod {
   consumer        Consumer            @relation(fields: [consumerID], references: [id])
   consumerID      String
   cardData        Card?
-  achData         AchData?
+  achData         ACH?
 
   @@index([paymentToken])
 }
@@ -119,7 +119,7 @@ model Card {
   paymentMethodID Int           @unique()
 }
 
-model AchData {
+model ACH {
   id              Int           @id @default(autoincrement())
   accountID       String
   accessToken     String
@@ -142,16 +142,14 @@ model Circle {
 }
 
 model Otp {
-  id                     String       @id
+  id                     String
   createdTimestamp       DateTime?    @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp       DateTime?    @updatedAt // Marking optional so we don't need to set in tests
-  emailOrPhone           String
   otp                    Int
   otpExpirationTimestamp DateTime
   identityType           IdentityType
-  consumer               Consumer?    @relation(fields: [consumerID], references: [id])
-  consumerID             String?      @unique()
 
+  @@id([id, identityType])
   @@index([otp])
 }
 
@@ -203,4 +201,8 @@ enum PaymentMethodStatus {
   APPROVED
   UNSUPPORTED
   DELETED
+}
+
+enum KYCProvider {
+  SARDINE
 }

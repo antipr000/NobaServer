@@ -1,13 +1,4 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  ForbiddenException,
-  Headers,
-  HttpStatus,
-  Inject,
-  Post,
-} from "@nestjs/common";
+import { BadRequestException, Body, Controller, ForbiddenException, HttpStatus, Inject, Post } from "@nestjs/common";
 import {
   ApiForbiddenResponse,
   ApiHeaders,
@@ -57,7 +48,7 @@ export class AuthController {
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyOtpResponseDTO, description: "API access token" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
-  async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO, @Headers() headers): Promise<VerifyOtpResponseDTO> {
+  async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
     const isEmail = Utils.isEmail(requestBody.emailOrPhone);
     const authService: AuthService = this.getAuthService(requestBody.identityType);
 
@@ -76,8 +67,8 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, description: "OTP successfully sent." })
   @ApiForbiddenResponse({ description: "Access denied" })
   @Post("/login")
-  async loginUser(@Body() requestBody: LoginRequestDTO, @Headers() headers) {
-    const emailOrPhone = requestBody.emailOrPhone ?? requestBody.email;
+  async loginUser(@Body() requestBody: LoginRequestDTO) {
+    const emailOrPhone = requestBody.emailOrPhone;
     const isEmail = Utils.isEmail(emailOrPhone);
     const isConsumer = requestBody.identityType === consumerIdentityIdentifier;
 
@@ -110,7 +101,6 @@ export class AuthController {
     }
 
     const otp = authService.generateOTP();
-    await authService.deleteAnyExistingOTP(emailOrPhone);
 
     await authService.saveOtp(emailOrPhone, otp);
     return authService.sendOtp(emailOrPhone, otp.toString());

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Address } from "../../consumer/domain/Consumer";
+import { Address } from "../domain/Address";
 import {
   AggregatedPaymentMethodState,
   AggregatedWalletState,
@@ -8,7 +8,7 @@ import {
   KycVerificationState,
   UserState,
 } from "../domain/ExternalStates";
-import { PaymentMethodType } from "../domain/PaymentMethod";
+import { PaymentMethodType } from "@prisma/client";
 
 export class PaymentMethodCardDataDTO {
   @ApiPropertyOptional()

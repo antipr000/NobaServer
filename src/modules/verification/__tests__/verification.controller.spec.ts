@@ -9,7 +9,7 @@ import { DocumentVerificationStatus, KYCStatus } from "../../consumer/domain/Ver
 import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { VerificationProviders } from "../../../modules/consumer/domain/VerificationData";
+import { VerificationProviders } from "../../consumer/domain/KYC";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { AuthenticatedUser } from "src/modules/auth/domain/AuthenticatedUser";
 import { IDVerificationURLRequestLocale, IDVerificationURLResponseDTO } from "../dto/IDVerificationRequestURLDTO";

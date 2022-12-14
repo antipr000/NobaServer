@@ -6,7 +6,7 @@
   "scripts": {
     "aatest": "npx ts-node ./test/testRun.ts",
     "prebuild": "rimraf dist",
-    "prisma-generate": "yarn prisma generate && yarn rimraf  \"src/generated/domain/*.dto.ts\" -delete",
+    "prisma-generate": "yarn prisma generate",
     "build": "nest build  -c nest-cli.json --webpack --webpackPath webpack.config.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "yarn start:dev",

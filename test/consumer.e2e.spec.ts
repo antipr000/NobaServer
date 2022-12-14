@@ -31,7 +31,7 @@ import { ResponseStatus } from "./api_client/core/request";
 import { PlaidTokenDTO } from "./api_client";
 import { getRandomEmail, getRandomID } from "./TestUtils";
 import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
-import { VerificationProviders } from "../src/modules/consumer/domain/VerificationData";
+import { VerificationProviders } from "../src/modules/consumer/domain/KYC";
 import {
   DocumentVerificationStatus,
   KYCStatus,
