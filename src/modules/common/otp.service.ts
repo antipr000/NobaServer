@@ -11,8 +11,7 @@ export class OTPService {
 
   async checkIfOTPIsValidAndCleanup(otpIdentifier: string, identityType: IdentityType, otp: number): Promise<boolean> {
     const otpRecord = await this.otpRepo.getOTP(Utils.stripSpaces(otpIdentifier), identityType);
-
-    if (otpRecord.props.otp !== otp || isAfter(new Date(), otpRecord.props.otpExpirationTimestamp)) {
+    if (!otpRecord || otpRecord.props.otp !== otp || isAfter(new Date(), otpRecord.props.otpExpirationTimestamp)) {
       return false;
     }
 

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { ConsumerProps } from "../domain/Consumer";
+import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 
 export class ConsumerRepoMapper {
@@ -12,8 +13,8 @@ export class ConsumerRepoMapper {
       ...(consumerUpdateProps.isDisabled && { isDisabled: consumerUpdateProps.isDisabled }),
       ...(consumerUpdateProps.isLocked && { isLocked: consumerUpdateProps.isLocked }),
       ...(consumerUpdateProps.phone && { phone: consumerUpdateProps.phone }),
-      ...(consumerUpdateProps.email && { phone: consumerUpdateProps.email }),
-      ...(consumerUpdateProps.displayEmail && { phone: consumerUpdateProps.displayEmail }),
+      ...(consumerUpdateProps.email && { email: consumerUpdateProps.email }),
+      ...(consumerUpdateProps.displayEmail && { displayEmail: consumerUpdateProps.displayEmail }),
       ...(consumerUpdateProps.socialSecurityNumber && {
         socialSecurityNumber: consumerUpdateProps.socialSecurityNumber,
       }),
@@ -24,10 +25,10 @@ export class ConsumerRepoMapper {
         verificationData: {
           upsert: {
             update: {
-              ...consumerUpdateProps.address,
+              ...consumerUpdateProps.verificationData,
             },
             create: {
-              ...consumerUpdateProps.address,
+              ...consumerUpdateProps.verificationData,
             },
           },
         },
@@ -70,6 +71,31 @@ export class ConsumerRepoMapper {
       ...(paymentMethodProps.status && { status: paymentMethodProps.status }),
       ...(paymentMethodProps.isDefault && { isDefault: paymentMethodProps.isDefault }),
       ...(paymentMethodProps.imageUri && { imageUri: paymentMethodProps.imageUri }),
+    };
+  }
+
+  toCreateWalletInput(wallet: CryptoWallet): Prisma.CryptoWalletCreateInput {
+    return {
+      id: wallet.props.id,
+      name: wallet.props.name,
+      chainType: wallet.props.chainType,
+      status: wallet.props.status,
+      address: wallet.props.address,
+      consumer: {
+        connect: {
+          id: wallet.props.consumerID,
+        },
+      },
+      isEVMCompatible: wallet.props.isEVMCompatible,
+      riskScore: wallet.props.riskScore,
+    };
+  }
+
+  toUpdateWalletInput(wallet: Partial<CryptoWalletProps>): Prisma.CryptoWalletUpdateInput {
+    return {
+      ...(wallet.name && { name: wallet.name }),
+      ...(wallet.status && { status: wallet.status }),
+      ...(wallet.riskScore && { riskScore: wallet.riskScore }),
     };
   }
 }

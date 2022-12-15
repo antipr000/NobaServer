@@ -34,7 +34,7 @@ import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { PlaidClient } from "../psp/plaid.client";
 import { ConsumerService } from "./consumer.service";
-import { Consumer } from "./domain/Consumer";
+import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO, NotificationMethod } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
@@ -47,6 +47,7 @@ import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
 import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
+import { WalletStatus } from "@prisma/client";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -111,14 +112,12 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async updateConsumer(@Request() request, @Body() requestBody: UpdateConsumerRequestDTO): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
-    const consumerProps = {
-      ...consumer.props,
+  async updateConsumer(
+    @AuthUser() consumer: Consumer,
+    @Body() requestBody: UpdateConsumerRequestDTO,
+  ): Promise<ConsumerDTO> {
+    const consumerProps: Partial<ConsumerProps> = {
+      id: consumer.props.id,
       ...requestBody,
     };
     const res = await this.consumerService.updateConsumer(consumerProps);
@@ -332,30 +331,25 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid crypto wallet details" })
-  async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @Headers() headers, @Request() request): Promise<any> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @AuthUser() consumer: Consumer): Promise<any> {
     // Sanitize notification method for OTP
     const notificationMethod = this.verifyOrReplaceNotificationMethod(requestBody.notificationMethod, consumer);
 
     // Initialise the crypto wallet object with a pending status here in case any updates made to wallet or addition of a new wallet
-    // const cryptoWallet: Partial<CryptoWallet> = {
-    //   name: requestBody.walletName,
-    //   address: requestBody.address,
-    //   chainType: requestBody.chainType,
-    //   isEVMCompatible: requestBody.isEVMCompatible,
-    //   status: WalletStatus.PENDING,
-    // };
+    const cryptoWallet = CryptoWallet.createCryptoWallet({
+      name: requestBody.walletName,
+      address: requestBody.address,
+      chainType: requestBody.chainType,
+      isEVMCompatible: requestBody.isEVMCompatible,
+      status: WalletStatus.PENDING,
+    });
 
     // // Ignore the response from the below method, as we don't return the updated consumer in this API.
-    // await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
+    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
     return { notificationMethod: notificationMethod };
   }
 
-  @Delete("/wallets/:walletAddress")
+  @Delete("/wallets/:walletID")
   @ApiOperation({ summary: "Deletes a saved wallet for the logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -364,11 +358,8 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid wallet address" })
-  async deleteCryptoWallet(
-    @Param("walletAddress") walletAddress: string,
-    @AuthUser() consumer: Consumer,
-  ): Promise<ConsumerDTO> {
-    await this.consumerService.removeCryptoWallet(consumer, walletAddress);
+  async deleteCryptoWallet(@Param("walletID") walletID: string, @AuthUser() consumer: Consumer): Promise<ConsumerDTO> {
+    await this.consumerService.removeCryptoWallet(consumer, walletID);
     return this.mapToDTO(consumer);
   }
 
@@ -385,9 +376,8 @@ export class ConsumerController {
 
     await this.consumerService.confirmWalletUpdateOTP(
       consumer,
-      requestBody.address,
+      requestBody.walletID,
       requestBody.otp,
-      consumer.props.id,
       notificationMethod,
     );
     return this.mapToDTO(consumer);

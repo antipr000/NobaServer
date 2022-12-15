@@ -2,24 +2,24 @@ import { KYC as KYCModel, KYCStatus, DocumentVerificationStatus, KYCProvider } f
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
-export class KYC implements KYCModel {
-  id: string;
+export class KYC implements Partial<KYCModel> {
+  id?: string; //Marking it as optional as it is not needed internally
   provider: KYCProvider;
-  kycCheckReference: string | null;
-  documentCheckReference: string | null;
-  riskRating: string | null;
+  kycCheckReference?: string | null;
+  documentCheckReference?: string | null;
+  riskRating?: string | null;
   isSuspectedFraud: boolean;
   kycCheckStatus: KYCStatus;
   documentVerificationStatus: DocumentVerificationStatus;
   documentVerificationTimestamp: Date;
   kycVerificationTimestamp: Date;
-  sanctionLevel: string | null;
-  riskLevel: string | null;
-  consumerID: string;
+  sanctionLevel?: string | null;
+  riskLevel?: string | null;
+  consumerID?: string; //Marking it as optional as it is not needed internally
 }
 
 export const kycValidationJoiKeys: KeysRequired<KYC> = {
-  id: Joi.string().required(),
+  id: Joi.string().optional(),
   provider: Joi.string().required().default(KYCProvider.SARDINE),
   kycCheckStatus: Joi.string().default(KYCStatus.NOT_SUBMITTED),
   kycVerificationTimestamp: Joi.date().optional().allow(null),
@@ -31,5 +31,5 @@ export const kycValidationJoiKeys: KeysRequired<KYC> = {
   riskRating: Joi.string().optional().allow(null),
   isSuspectedFraud: Joi.boolean().optional().default(false),
   riskLevel: Joi.string().optional().allow(null),
-  consumerID: Joi.string().required(),
+  consumerID: Joi.string().optional(),
 };

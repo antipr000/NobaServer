@@ -3,9 +3,10 @@ import { Result } from "../../../core/logic/Result";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { IConsumerRepo } from "./ConsumerRepo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { PaymentMethodStatus, Prisma } from "@prisma/client";
+import { PaymentMethodStatus, Prisma, WalletStatus } from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
+import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -91,5 +92,32 @@ export class SQLConsumerRepo implements IConsumerRepo {
     const updatePaymentMethodInput = this.mapper.toUpdatePaymentMethodInput(paymentMethodProps);
     const updatedProps = await this.prisma.paymentMethod.update({ where: { id: id }, data: updatePaymentMethodInput });
     return PaymentMethod.createPaymentMethod(updatedProps);
+  }
+
+  async addCryptoWallet(cryptoWallet: CryptoWallet): Promise<CryptoWallet> {
+    const cryptoWalletCreateInput = this.mapper.toCreateWalletInput(cryptoWallet);
+    const walletProps = await this.prisma.cryptoWallet.create({ data: cryptoWalletCreateInput });
+    return CryptoWallet.createCryptoWallet(walletProps);
+  }
+
+  async getCryptoWalletForConsumer(id: string, consumerID: string): Promise<CryptoWallet> {
+    const walletProps = await this.prisma.cryptoWallet.findFirst({
+      where: { id: id, consumerID: consumerID, status: { not: WalletStatus.DELETED } },
+    });
+    if (!walletProps) return null;
+    return CryptoWallet.createCryptoWallet(walletProps);
+  }
+
+  async getAllCryptoWalletsForConsumer(consumerID: string): Promise<CryptoWallet[]> {
+    const allWallets = await this.prisma.cryptoWallet.findMany({
+      where: { consumerID: consumerID, status: { not: WalletStatus.DELETED } },
+    });
+    return allWallets.map(wallet => CryptoWallet.createCryptoWallet(wallet));
+  }
+
+  async updateCryptoWallet(id: string, cryptoWalletProps: Partial<CryptoWalletProps>): Promise<CryptoWallet> {
+    const walletUpdateInput = this.mapper.toUpdateWalletInput(cryptoWalletProps);
+    const updatedWalletProps = await this.prisma.cryptoWallet.update({ where: { id: id }, data: walletUpdateInput });
+    return CryptoWallet.createCryptoWallet(updatedWalletProps);
   }
 }

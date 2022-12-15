@@ -52,6 +52,7 @@ import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhook
 import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
+import { AuthUser } from "../auth/auth.decorator";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -94,19 +95,14 @@ export class VerificationController {
   async verifyConsumer(
     @Query("sessionKey") sessionKey: string,
     @Body() requestBody: IDVerificationRequestDTO,
-    @Request() request,
+    @AuthUser() consumer: Consumer,
   ): Promise<VerificationResultDTO> {
-    const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer))
-      throw new BadRequestException("verifyConsumer is only allowed for consumer");
-    const consumer: Consumer = user.entity;
-    // const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
-    //   ...requestBody,
-    //   userID: consumer.props.id,
-    //   email: consumer.props.email,
-    // });
-    // return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
-    throw new Error("");
+    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
+      ...requestBody,
+      userID: consumer.props.id,
+      email: consumer.props.email,
+    });
+    return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }
 
   @Post("/document")

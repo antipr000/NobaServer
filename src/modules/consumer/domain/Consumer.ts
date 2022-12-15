@@ -2,7 +2,7 @@ import { BadRequestException } from "@nestjs/common";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
-import { Consumer as ConsumerModel } from "@prisma/client";
+import { Consumer as ConsumerModel, KYCProvider } from "@prisma/client";
 import { Address, addressValidationJoiKeys } from "./Address";
 import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
@@ -69,6 +69,9 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
         throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
       }
     }
+
+    if (consumerProps.verificationData && !consumerProps.verificationData.provider)
+      consumerProps.verificationData.provider = KYCProvider.SARDINE;
 
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));
   }

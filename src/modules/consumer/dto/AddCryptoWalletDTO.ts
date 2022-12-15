@@ -24,7 +24,7 @@ export class AddCryptoWalletDTO {
 
 export class ConfirmWalletUpdateDTO {
   @ApiProperty()
-  address: string;
+  walletID: string;
 
   @ApiProperty()
   otp: number;

@@ -1,10 +1,11 @@
 import { CryptoWallet as CryptoWalletModel, WalletStatus } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime";
 import Joi from "joi";
+import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
-export class CryptoWallet implements CryptoWalletModel {
+export class CryptoWalletProps implements CryptoWalletModel {
   id: string;
   address: string;
   name: string | null;
@@ -17,7 +18,7 @@ export class CryptoWallet implements CryptoWalletModel {
   updatedTimestamp: Date | null;
 }
 
-export const cryptoWalletJoiValidationKeys: KeysRequired<CryptoWallet> = {
+export const cryptoWalletJoiValidationKeys: KeysRequired<CryptoWalletProps> = {
   ...basePropsJoiSchemaKeys,
   id: Joi.string().required(),
   address: Joi.string().required(),
@@ -28,3 +29,20 @@ export const cryptoWalletJoiValidationKeys: KeysRequired<CryptoWallet> = {
   riskScore: Joi.number().optional().allow(null),
   consumerID: Joi.string().required(),
 };
+
+export const cryptoWalletJoiSchema = Joi.object(cryptoWalletJoiValidationKeys).options({
+  allowUnknown: true,
+  stripUnknown: false,
+});
+
+export class CryptoWallet extends AggregateRoot<CryptoWalletProps> {
+  constructor(cryptoWalletProps: CryptoWalletProps) {
+    super(cryptoWalletProps);
+  }
+
+  public static createCryptoWallet(cryptoWalletProps: Partial<CryptoWalletProps>): CryptoWallet {
+    if (!cryptoWalletProps.id) cryptoWalletProps.id = this.getNewID();
+    if (!cryptoWalletProps.status) cryptoWalletProps.status = WalletStatus.PENDING;
+    return new CryptoWallet(Joi.attempt(cryptoWalletProps, cryptoWalletJoiSchema));
+  }
+}

@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import BadWordFilter from "bad-words-es";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -27,7 +27,7 @@ import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
-import { PaymentMethodStatus, PaymentMethodType, PaymentProvider } from "@prisma/client";
+import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus } from "@prisma/client";
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { CardFailureExceptionText } from "./CardProcessingException";
 
@@ -395,14 +395,14 @@ export class ConsumerService {
   }
 
   async getAllConsumerWallets(consumerID: string): Promise<CryptoWallet[]> {
-    throw new Error("Not implemented!");
+    return this.consumerRepo.getAllCryptoWalletsForConsumer(consumerID);
   }
 
   async sendWalletVerificationOTP(
     consumer: Consumer,
     walletAddress: string,
     notificationMethod: NotificationMethod = NotificationMethod.EMAIL,
-  ) {
+  ): Promise<void> {
     const otp = this.generateOTP();
 
     // Set otp reference to consumer email if notification method is email, else set to phone number
@@ -427,111 +427,77 @@ export class ConsumerService {
 
   async confirmWalletUpdateOTP(
     consumer: Consumer,
-    walletAddress: string,
+    cryptoWalletID: string,
     otp: number,
-    consumerID: string,
     notificationMethod: NotificationMethod = NotificationMethod.EMAIL,
-  ) {
-    throw new Error("Not implemented!");
+  ): Promise<CryptoWallet> {
     // Verify if the otp is correct
-    // const cryptoWallet = this.getCryptoWallet(consumer, walletAddress);
+    const cryptoWallet = await this.getCryptoWallet(consumer, cryptoWalletID);
 
-    // if (cryptoWallet === null) {
-    //   throw new BadRequestException("Crypto wallet does not exist for user");
-    // }
+    if (cryptoWallet === null) {
+      throw new BadRequestException("Crypto wallet does not exist for user");
+    }
 
-    // const actualOtp = await this.otpRepo.getOTP(
-    //   notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone,
-    //   consumerIdentityIdentifier,
-    //   consumerID,
-    // );
-    // const currentDateTime: number = new Date().getTime();
+    const isOtpValid = await this.otpService.checkIfOTPIsValidAndCleanup(
+      notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone,
+      consumerIdentityIdentifier,
+      otp,
+    );
 
-    // if (actualOtp.props.otp !== otp || currentDateTime > actualOtp.props.otpExpiryTime) {
-    //   // If otp doesn't match or if it is expired then raise unauthorized exception
-    //   throw new UnauthorizedException("Invalid OTP");
-    // } else {
-    //   // Just delete the OTP and proceed further
-    //   await this.otpRepo.deleteOTP(actualOtp.props.id); // Delete the OTP
-    // }
+    if (!isOtpValid) {
+      // If otp doesn't match or if it is expired then raise unauthorized exception
+      throw new UnauthorizedException("Invalid OTP");
+    }
 
-    // // Check wallet sanctions status
-    // const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(cryptoWallet.address);
-    // if (isSanctionedWallet) {
-    //   // Flag the wallet if it is a sanctioned wallet address.
-    //   cryptoWallet.status = WalletStatus.FLAGGED;
-    //   this.logger.error(
-    //     `Failed to add a sanctioned wallet: ${cryptoWallet.address} for consumer: ${consumer.props.id}`,
-    //   );
-    //   await this.addOrUpdateCryptoWallet(consumer, cryptoWallet, NotificationMethod.EMAIL);
-    //   throw new BadRequestException({ message: "Failed to add wallet" });
-    // }
-    // cryptoWallet.status = WalletStatus.APPROVED;
+    // Check wallet sanctions status
+    const isSanctionedWallet = await this.sanctionedCryptoWalletService.isWalletSanctioned(cryptoWallet.props.address);
+    if (isSanctionedWallet) {
+      // Flag the wallet if it is a sanctioned wallet address.
+      cryptoWallet.props.status = WalletStatus.FLAGGED;
+      this.logger.error(
+        `Failed to add a sanctioned wallet: ${cryptoWallet.props.address} for consumer: ${consumer.props.id}`,
+      );
+      await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+      throw new BadRequestException({ message: "Failed to add wallet" });
+    }
+    cryptoWallet.props.status = WalletStatus.APPROVED;
 
-    // return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+    return await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);
   }
 
-  getCryptoWallet(consumer: Consumer, address: string): CryptoWallet {
-    throw new Error("Not implemented");
-    // const cryptoWallets = consumer.props.cryptoWallets.filter(
-    //   wallet => wallet.address === address && wallet.status !== WalletStatus.DELETED,
-    // );
-    // if (cryptoWallets.length === 0) {
-    //   return null;
-    // }
-    // return cryptoWallets[0];
+  async getCryptoWallet(consumer: Consumer, cryptoWalletID: string): Promise<CryptoWallet> {
+    return this.consumerRepo.getCryptoWalletForConsumer(cryptoWalletID, consumer.props.id);
   }
 
   async addOrUpdateCryptoWallet(
     consumer: Consumer,
     cryptoWallet: CryptoWallet,
     notificationMethod?: NotificationMethod,
-  ): Promise<Consumer> {
-    // const allCryptoWallets = consumer.props.cryptoWallets;
-
-    // const selectedWallet = allCryptoWallets.filter(wallet => wallet.address === cryptoWallet.address);
-
-    // const remainingWallets = allCryptoWallets.filter(wallet => !(wallet.address === cryptoWallet.address));
-    // // Send the verification OTP to the user
-    // if (cryptoWallet.status === WalletStatus.PENDING) {
-    //   await this.sendWalletVerificationOTP(consumer, cryptoWallet.address, notificationMethod);
-    // }
-
+  ): Promise<CryptoWallet> {
+    const selectedWallet = await this.consumerRepo.getCryptoWalletForConsumer(cryptoWallet.props.id, consumer.props.id);
+    let result: CryptoWallet;
     // It's an add
-    // if (selectedWallet.length === 0) {
-    //   allCryptoWallets.push(cryptoWallet);
-    // } else {
-    //   allCryptoWallets = [...remainingWallets, cryptoWallet];
-    // }
 
-    // return await this.updateConsumer({
-    //   ...consumer.props,
-    //   cryptoWallets: allCryptoWallets,
-    // });
-    return consumer;
+    if (cryptoWallet.props.status === WalletStatus.PENDING) {
+      await this.sendWalletVerificationOTP(consumer, cryptoWallet.props.address, notificationMethod);
+    }
+
+    if (!selectedWallet) {
+      result = await this.consumerRepo.addCryptoWallet(cryptoWallet);
+    } else {
+      result = await this.consumerRepo.updateCryptoWallet(cryptoWallet.props.id, cryptoWallet.props);
+    }
+
+    return result;
   }
 
-  async removeCryptoWallet(consumer: Consumer, cryptoWalletAddress: string): Promise<Consumer> {
-    throw new Error("Not implemented!");
-    // const otherCryptoWallets = consumer.props.cryptoWallets.filter(
-    //   existingCryptoWallet => existingCryptoWallet.address !== cryptoWalletAddress,
-    // );
-
-    // const currentWallet = consumer.props.cryptoWallets.filter(
-    //   cryptoWallet => cryptoWallet.address === cryptoWalletAddress,
-    // )[0];
-
-    // if (!currentWallet) {
-    //   throw new NotFoundException("Crypto wallet not found for user");
-    // }
-
-    // currentWallet.status = WalletStatus.DELETED;
-
-    // const updatedConsumer = await this.updateConsumer({
-    //   ...consumer.props,
-    //   cryptoWallets: [...otherCryptoWallets, currentWallet],
-    // });
-    // return updatedConsumer;
+  async removeCryptoWallet(consumer: Consumer, cryptoWalletID: string): Promise<void> {
+    const selectedWallet = await this.consumerRepo.getCryptoWalletForConsumer(cryptoWalletID, consumer.props.id);
+    if (!selectedWallet) {
+      throw new NotFoundException(`Crypto wallet with id ${cryptoWalletID} not found for consumer`);
+    }
+    selectedWallet.props.status = WalletStatus.DELETED;
+    await this.addOrUpdateCryptoWallet(consumer, selectedWallet);
   }
 
   // Be VERY cautious about using this. We should only need it to send to ZeroHash.
