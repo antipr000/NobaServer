@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Address } from "../domain/Address";
 import {
   AggregatedPaymentMethodState,
   AggregatedWalletState,
@@ -77,6 +76,26 @@ export class KycVerificationDTO {
   updatedTimestamp?: number;
 }
 
+export class AddressDTO {
+  @ApiProperty()
+  streetLine1: string;
+
+  @ApiPropertyOptional()
+  streetLine2?: string;
+
+  @ApiProperty()
+  city: string;
+
+  @ApiProperty()
+  regionCode: string;
+
+  @ApiProperty()
+  countryCode: string;
+
+  @ApiProperty()
+  postalCode: string;
+}
+
 export class DocumentVerificationDTO {
   @ApiPropertyOptional({ enum: DocumentVerificationState })
   documentVerificationStatus?: DocumentVerificationState;
@@ -119,7 +138,7 @@ export class ConsumerDTO {
   dateOfBirth?: string;
 
   @ApiPropertyOptional()
-  address?: Address;
+  address?: AddressDTO;
 
   @ApiPropertyOptional({ type: [PaymentMethodsDTO] })
   paymentMethods?: PaymentMethodsDTO[];

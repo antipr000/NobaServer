@@ -48,6 +48,7 @@ import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { WalletStatus } from "@prisma/client";
+import { AddCryptoWalletResponseDTO } from "./dto/AddCryptoWalletResponse";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -326,12 +327,15 @@ export class ConsumerController {
   @ApiOperation({ summary: "Adds a crypto wallet for the logged-in consumer" })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    type: ConsumerDTO,
-    description: "Updated consumer record with the crypto wallet",
+    type: AddCryptoWalletResponseDTO,
+    description: "Notficiation type and created wallet id",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid crypto wallet details" })
-  async addCryptoWallet(@Body() requestBody: AddCryptoWalletDTO, @AuthUser() consumer: Consumer): Promise<any> {
+  async addCryptoWallet(
+    @Body() requestBody: AddCryptoWalletDTO,
+    @AuthUser() consumer: Consumer,
+  ): Promise<AddCryptoWalletResponseDTO> {
     // Sanitize notification method for OTP
     const notificationMethod = this.verifyOrReplaceNotificationMethod(requestBody.notificationMethod, consumer);
 
@@ -342,11 +346,12 @@ export class ConsumerController {
       chainType: requestBody.chainType,
       isEVMCompatible: requestBody.isEVMCompatible,
       status: WalletStatus.PENDING,
+      consumerID: consumer.props.id,
     });
 
     // // Ignore the response from the below method, as we don't return the updated consumer in this API.
-    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
-    return { notificationMethod: notificationMethod };
+    const addedWallet = await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
+    return { notificationMethod: notificationMethod, walletID: addedWallet.props.id };
   }
 
   @Delete("/wallets/:walletID")
