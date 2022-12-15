@@ -25,10 +25,10 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
   public toCryptoWalletsDTO(cryptoWallet: CryptoWallet): CryptoWalletsDTO {
     return {
-      walletName: cryptoWallet.name,
-      address: cryptoWallet.address,
-      chainType: cryptoWallet.chainType,
-      isEVMCompatible: cryptoWallet.isEVMCompatible,
+      walletName: cryptoWallet.props.name,
+      address: cryptoWallet.props.address,
+      chainType: cryptoWallet.props.chainType,
+      isEVMCompatible: cryptoWallet.props.isEVMCompatible,
     };
   }
 
@@ -67,7 +67,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
   private getCryptoWalletsDTO(cryptoWallets: CryptoWallet[]): CryptoWalletsDTO[] {
     return cryptoWallets
-      .filter(cryptoWallet => cryptoWallet.status === WalletStatus.APPROVED)
+      .filter(cryptoWallet => cryptoWallet.props.status === WalletStatus.APPROVED)
       .map(cryptoWallet => this.toCryptoWalletsDTO(cryptoWallet));
   }
 
@@ -95,12 +95,18 @@ export class ConsumerMapper implements Mapper<Consumer> {
         kycVerificationStatus: this.statesMapper.getKycVerificationState(
           p.verificationData ? p.verificationData.kycCheckStatus : KYCStatus.NOT_SUBMITTED,
         ),
-        updatedTimestamp: p.verificationData ? p.verificationData.kycVerificationTimestamp.getTime() : 0,
+        updatedTimestamp:
+          p.verificationData && p.verificationData.kycVerificationTimestamp
+            ? p.verificationData.kycVerificationTimestamp.getTime()
+            : 0,
       },
       documentVerificationData: {
         documentVerificationStatus: documentVerificationStatus,
         documentVerificationErrorReason: documentVerificationErrorReason,
-        updatedTimestamp: p.verificationData ? p.verificationData.documentVerificationTimestamp.getTime() : 0,
+        updatedTimestamp:
+          p.verificationData && p.verificationData.documentVerificationTimestamp
+            ? p.verificationData.documentVerificationTimestamp.getTime()
+            : 0,
       },
       dateOfBirth: p.dateOfBirth,
       address: p.address,

@@ -14,12 +14,12 @@ import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatu
 export class StatesMapper {
   private getAggregatedWalletStatus(allWallets: CryptoWallet[]): WalletStatus {
     // Filter out wallets that has not been deleted
-    const wallets = allWallets.filter(wallet => wallet.status !== WalletStatus.DELETED);
+    const wallets = allWallets.filter(wallet => wallet.props.status !== WalletStatus.DELETED);
 
     // At least one wallet is rejected
-    if (wallets.filter(wallet => wallet.status === WalletStatus.REJECTED).length > 0) {
+    if (wallets.filter(wallet => wallet.props.status === WalletStatus.REJECTED).length > 0) {
       return WalletStatus.REJECTED;
-    } else if (wallets.filter(wallet => wallet.status === WalletStatus.FLAGGED).length > 0) {
+    } else if (wallets.filter(wallet => wallet.props.status === WalletStatus.FLAGGED).length > 0) {
       // We do not count wallets with PENDING status as it means the otp verification is not completed. This should not block the consumer from transacting using APPROVED wallets
       return WalletStatus.PENDING;
     } else if (wallets.length > 0) {

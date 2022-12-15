@@ -41,11 +41,11 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
     .optional()
     .allow(null),
   dateOfBirth: Joi.string().optional().allow(null),
-  address: Joi.object().keys(addressValidationJoiKeys).optional(),
+  address: Joi.object().keys(addressValidationJoiKeys).optional().allow(null),
   socialSecurityNumber: Joi.string().optional().allow(null),
   isLocked: Joi.boolean().optional(),
   isDisabled: Joi.boolean().optional(),
-  verificationData: Joi.object().keys(kycValidationJoiKeys).optional(),
+  verificationData: Joi.object().keys(kycValidationJoiKeys).optional().allow(null),
 };
 
 export const consumerJoiSchema = Joi.object(consumerJoiValidationKeys).options({

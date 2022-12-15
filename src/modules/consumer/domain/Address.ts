@@ -16,7 +16,7 @@ export class Address implements Partial<AddressModel> {
 export const addressValidationJoiKeys: KeysRequired<Address> = {
   id: Joi.string().optional(),
   streetLine1: Joi.string().optional(),
-  streetLine2: Joi.string().optional(),
+  streetLine2: Joi.string().optional().allow(null),
   city: Joi.string().optional(),
   regionCode: Joi.string().optional(),
   countryCode: Joi.string().optional(),

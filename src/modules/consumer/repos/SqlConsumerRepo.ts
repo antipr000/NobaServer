@@ -20,7 +20,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
-    const consumerProps = await this.prisma.consumer.findUnique({ where: { id: consumerID } });
+    const consumerProps = await this.prisma.consumer.findUnique({
+      where: { id: consumerID },
+      include: { address: true, verificationData: true },
+    });
     if (!consumerProps) return null;
     return Consumer.createConsumer(consumerProps);
   }
@@ -37,7 +40,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async getConsumerByEmail(email: string): Promise<Result<Consumer>> {
-    const consumerProps = await this.prisma.consumer.findUnique({ where: { email: email } });
+    const consumerProps = await this.prisma.consumer.findUnique({
+      where: { email: email },
+      include: { address: true, verificationData: true },
+    });
     if (consumerProps) {
       return Result.ok(Consumer.createConsumer(consumerProps));
     } else {
@@ -46,7 +52,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async getConsumerByPhone(phone: string): Promise<Result<Consumer>> {
-    const consumerProps = await this.prisma.consumer.findUnique({ where: { phone: phone } });
+    const consumerProps = await this.prisma.consumer.findUnique({
+      where: { phone: phone },
+      include: { address: true, verificationData: true },
+    });
     if (consumerProps) {
       return Result.ok(Consumer.createConsumer(consumerProps));
     } else {
