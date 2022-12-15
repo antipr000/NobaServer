@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
 import { SMSService } from "../../common/sms.service";
-import { instance, when } from "ts-mockito";
+import { anything, instance, when } from "ts-mockito";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../repo/OTPRepo";
 import { NotFoundException, UnauthorizedException } from "@nestjs/common";
@@ -21,6 +21,7 @@ import { Result } from "../../../core/logic/Result";
 import { Utils } from "../../../core/utils/Utils";
 import { ITokenRepo } from "../repo/TokenRepo";
 import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
+import { Token } from "../domain/Token";
 
 describe("UserAuthService", () => {
   jest.setTimeout(5000);
@@ -79,6 +80,58 @@ describe("UserAuthService", () => {
       }).compile();
 
       userAuthService = app.get<UserAuthService>(UserAuthService);
+    });
+
+    describe("validateToken", () => {
+      it("should validate the token correctly", async () => {
+        const rawToken = "nobatoken";
+        const userID = "nobauser";
+        const token = Token.createTokenObject({ _id: Token.saltifyToken(rawToken, userID), userID: userID });
+
+        when(mockTokenRepo.getToken(rawToken, userID)).thenResolve(token);
+
+        const valid = await userAuthService.validateToken(rawToken, userID);
+        expect(valid).toBe(true);
+      });
+      it("token shouldn't be valid", async () => {
+        const rawToken = "nobatoken";
+        const userID = "nobauser";
+        const token = Token.createTokenObject({ _id: Token.saltifyToken(rawToken, userID), userID: userID });
+
+        when(mockTokenRepo.getToken(rawToken, userID)).thenResolve(token);
+
+        const valid = await userAuthService.validateToken("nonexisting token", userID);
+        expect(valid).toBe(false);
+      });
+    });
+
+    describe("invalidateToken", () => {
+      it("token should be deleted", async () => {
+        const rawToken = "nobatoken";
+        const userID = "nobauser";
+        when(mockTokenRepo.deleteToken(rawToken, userID)).thenResolve();
+
+        await userAuthService.invalidateToken(rawToken, userID);
+      });
+    });
+
+    describe("generateAccessToken", () => {
+      it("generate access token without refresh token", async () => {
+        const id = "nobauser";
+        const jwt = await userAuthService.generateAccessToken(id, false);
+        expect(jwt.access_token).toBeDefined();
+        expect(jwt.user_id).toBe(id);
+        expect(jwt.refresh_token).toBe("");
+      });
+
+      it("generate access token with refresh token", async () => {
+        const id = "nobauser";
+        when(mockTokenRepo.saveToken(anything())).thenResolve();
+        const jwt = await userAuthService.generateAccessToken(id, true);
+        expect(jwt.access_token).toBeDefined();
+        expect(jwt.user_id).toBe(id);
+        expect(jwt.refresh_token).toBeDefined();
+      });
     });
 
     describe("validateAndGetUserId", () => {
