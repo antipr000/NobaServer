@@ -37,12 +37,12 @@ import { MongoDBTokenRepo } from "./repo/MongoDBTokenRepo";
     HeaderValidationService,
     DBProvider,
     {
-      provide: "OTPRepo",
-      useClass: MongoDBOtpRepo,
-    },
-    {
       provide: "TokenRepo",
       useClass: MongoDBTokenRepo,
+    },
+    {
+      provide: "OTPRepo",
+      useClass: MongoDBOtpRepo,
     },
     UserAuthService,
     AdminAuthService,

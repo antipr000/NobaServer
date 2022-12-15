@@ -55,16 +55,16 @@ describe("UserAuthService", () => {
         controllers: [],
         providers: [
           {
+            provide: "TokenRepo",
+            useFactory: () => instance(mockTokenRepo),
+          },
+          {
             provide: ConsumerService,
             useFactory: () => instance(mockConsumerService),
           },
           {
             provide: "OTPRepo",
             useFactory: () => instance(mockOtpRepo),
-          },
-          {
-            provide: "TokenRepo",
-            useFactory: () => instance(mockTokenRepo),
           },
           {
             provide: NotificationService,
@@ -232,6 +232,7 @@ describe("UserAuthService", () => {
     let mockConsumerService: ConsumerService;
     let userAuthService: UserAuthService;
     let mockOtpRepo: IOTPRepo;
+    let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
 
@@ -256,6 +257,7 @@ describe("UserAuthService", () => {
     beforeEach(async () => {
       mockConsumerService = getMockConsumerServiceWithDefaults();
       mockOtpRepo = getMockOtpRepoWithDefaults();
+      mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
 
@@ -273,6 +275,10 @@ describe("UserAuthService", () => {
           {
             provide: ConsumerService,
             useFactory: () => instance(mockConsumerService),
+          },
+          {
+            provide: "TokenRepo",
+            useFactory: () => instance(mockTokenRepo),
           },
           {
             provide: "OTPRepo",
