@@ -68,7 +68,7 @@ jobs:
           yarn build
           ls -l
           echo [SUCCESS] yarn build succeeded.
-          zip -r artifacts.zip ./ "./node_modules/@prisma/client" -x "./.git*" "./test/*" ./src/*" "./node_modules/*"
+          zip -r artifacts.zip ./ "./node_modules/@prisma/client" -x "./.git*" "./test/*" "./src/*" "./node_modules/*"
 
       - name: Check If should deploy and Decide deployment type
         id: check-tag
