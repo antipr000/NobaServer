@@ -140,7 +140,7 @@ describe("PaymentService", () => {
       const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -192,7 +192,7 @@ describe("PaymentService", () => {
       ).thenResolve(plaidCheckoutProcessorToken);
 
       const expectedConsumerProps: ConsumerProps = {
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -243,7 +243,7 @@ describe("PaymentService", () => {
       const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -313,7 +313,7 @@ describe("PaymentService", () => {
       ).thenResolve(plaidCheckoutProcessorToken);
 
       const expectedConsumerProps: ConsumerProps = {
-        _id: "mock-consumer-1",
+        id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -365,7 +365,7 @@ describe("PaymentService", () => {
       const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
 
       const consumer = Consumer.createConsumer({
-        _id: "mock-consumer-2",
+        id: "mock-consumer-2",
         firstName: "Fake",
         lastName: "Name",
         email: email,
@@ -415,19 +415,11 @@ describe("PaymentService", () => {
       when(checkoutClient.createConsumer(consumer.props.email)).thenResolve(checkoutCustomerID);
 
       const expectedConsumerProps: ConsumerProps = {
-        _id: "mock-consumer-2",
+        id: "mock-consumer-2",
         firstName: "Fake",
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: checkoutCustomerID,
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
         paymentMethods: [
           {
             type: PaymentMethodType.ACH,
@@ -1275,7 +1267,7 @@ function createFakeConsumerRecord(
   paymentMethods: PaymentMethod[],
 ): Consumer {
   return Consumer.createConsumer({
-    _id: "fake-consumer-1",
+    id: "fake-consumer-1",
     firstName: "Fake",
     lastName: "Consumer",
     email: "fake+consumer@noba.com",

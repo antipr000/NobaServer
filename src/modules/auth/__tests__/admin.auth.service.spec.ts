@@ -9,10 +9,10 @@ import { SMSService } from "../../../../src/modules/common/sms.service";
 import { instance, when } from "ts-mockito";
 import { AdminAuthService } from "../admin.auth.service";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
-import { IOTPRepo } from "../repo/OTPRepo";
+import { IOTPRepo } from "../../../modules/common/repo/OTPRepo";
 import { InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
-import { OTP } from "../domain/OTP";
+import { OTP } from "../../../modules/common/domain/OTP";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
@@ -28,7 +28,7 @@ describe("AdminAuthService", () => {
   let adminAuthService: AdminAuthService;
 
   const testJwtSecret = "TEST_SECRET";
-  const identityType: string = nobaAdminIdentityIdentifier;
+  const identityType = nobaAdminIdentityIdentifier;
 
   // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -93,10 +93,10 @@ describe("AdminAuthService", () => {
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: OTP = OTP.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_ADMIN_EMAIL,
+        id: "1",
+        otpIdentifier: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
-        otpExpiryTime: TOMORROW_EXPIRY.getTime(),
+        otpExpirationTimestamp: TOMORROW_EXPIRY,
         identityType: nobaAdminIdentityIdentifier,
       });
       when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
@@ -116,10 +116,10 @@ describe("AdminAuthService", () => {
       const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
       const otpDomain: OTP = OTP.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_ADMIN_EMAIL,
+        id: "1",
+        otpIdentifier: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
-        otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
+        otpExpirationTimestamp: YESTERDAY_EXPIRY,
         identityType: nobaAdminIdentityIdentifier,
       });
       when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
@@ -140,10 +140,10 @@ describe("AdminAuthService", () => {
       const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
       const otpDomain: OTP = OTP.createOtp({
-        _id: "1",
-        emailOrPhone: EXISTING_ADMIN_EMAIL,
+        id: "1",
+        otpIdentifier: EXISTING_ADMIN_EMAIL,
         otp: CORRECT_OTP,
-        otpExpiryTime: TOMORROW_EXPIRY.getTime(),
+        otpExpirationTimestamp: TOMORROW_EXPIRY,
         identityType: nobaAdminIdentityIdentifier,
       });
       when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);

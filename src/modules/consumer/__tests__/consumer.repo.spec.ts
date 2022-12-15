@@ -50,8 +50,8 @@ const getAllRecordsInConsumerCollection = async (consumerCollection: Collection)
       //zhParticipantCode: consumerDocument.zhParticipantCode,
       //paymentProviderAccounts: consumerDocument.paymentProviderAccounts,
       verificationData: consumerDocument.verificationData,
-      paymentMethods: consumerDocument.paymentMethods,
-      cryptoWallets: consumerDocument.cryptoWallets,
+      //paymentMethods: consumerDocument.paymentMethods,
+      //cryptoWallets: consumerDocument.cryptoWallets,
     };
     allRecords.push(currentRecord);
   }

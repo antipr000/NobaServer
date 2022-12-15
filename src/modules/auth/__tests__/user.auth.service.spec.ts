@@ -6,10 +6,10 @@ import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.servi
 import { SMSService } from "../../common/sms.service";
 import { instance, when } from "ts-mockito";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
-import { IOTPRepo } from "../repo/OTPRepo";
+import { IOTPRepo } from "../../../modules/common/repo/OTPRepo";
 import { NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
-import { OTP } from "../domain/OTP";
+import { OTP } from "../../../modules/common/domain/OTP";
 import { STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
 import { NotificationService } from "../../notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../notifications/mocks/mock.notification.service";
@@ -30,7 +30,7 @@ describe("UserAuthService", () => {
     let mockSmsService: SMSService;
 
     const testJwtSecret = "TEST_SECRET";
-    const identityType: string = consumerIdentityIdentifier;
+    const identityType = consumerIdentityIdentifier;
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
     beforeEach(async () => {
@@ -93,10 +93,10 @@ describe("UserAuthService", () => {
         const consumerID = "1234567890";
 
         const otpDomain: OTP = OTP.createOtp({
-          _id: "1",
-          emailOrPhone: NON_EXISTING_USER_EMAIL,
+          id: "1",
+          otpIdentifier: NON_EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,
-          otpExpiryTime: TOMORROW_EXPIRY.getTime(),
+          otpExpirationTimestamp: TOMORROW_EXPIRY,
           identityType: consumerIdentityIdentifier,
         });
 
@@ -105,7 +105,6 @@ describe("UserAuthService", () => {
 
         when(mockConsumerService.getOrCreateConsumerConditionally(NON_EXISTING_USER_EMAIL)).thenResolve(
           Consumer.createConsumer({
-            _id: consumerID,
             email: NON_EXISTING_USER_EMAIL,
           }),
         );
@@ -120,10 +119,10 @@ describe("UserAuthService", () => {
         const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
         const otpDomain: OTP = OTP.createOtp({
-          _id: "1",
-          emailOrPhone: EXISTING_USER_EMAIL,
+          id: "1",
+          otpIdentifier: EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,
-          otpExpiryTime: TOMORROW_EXPIRY.getTime(),
+          otpExpirationTimestamp: TOMORROW_EXPIRY,
           identityType: consumerIdentityIdentifier,
         });
         when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
@@ -141,10 +140,10 @@ describe("UserAuthService", () => {
         const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
 
         const otpDomain: OTP = OTP.createOtp({
-          _id: "1",
-          emailOrPhone: EXISTING_USER_EMAIL,
+          id: "1",
+          otpIdentifier: EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,
-          otpExpiryTime: YESTERDAY_EXPIRY.getTime(),
+          otpExpirationTimestamp: YESTERDAY_EXPIRY,
           identityType: consumerIdentityIdentifier,
         });
         when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
@@ -163,17 +162,17 @@ describe("UserAuthService", () => {
         const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
         const consumer = Consumer.createConsumer({
-          _id: "mock-consumer-1",
+          id: "mock-consumer-1",
           email: EXISTING_USER_EMAIL,
         });
 
         when(mockConsumerService.getOrCreateConsumerConditionally(EXISTING_USER_EMAIL)).thenResolve(consumer);
 
         const otpDomain: OTP = OTP.createOtp({
-          _id: "1",
-          emailOrPhone: EXISTING_USER_EMAIL,
+          id: "1",
+          otpIdentifier: EXISTING_USER_EMAIL,
           otp: CORRECT_OTP,
-          otpExpiryTime: TOMORROW_EXPIRY.getTime(),
+          otpExpirationTimestamp: TOMORROW_EXPIRY,
           identityType: consumerIdentityIdentifier,
         });
         when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);

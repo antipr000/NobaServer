@@ -20,10 +20,7 @@ import { getMockLimitConfigRepoWithDefaults } from "../mocks/mock.limit.config.r
 import { LimitProfile, Limits } from "../domain/LimitProfile";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
 import { TransactionType } from "../domain/Types";
-import { PaymentMethodType } from "../../../modules/consumer/domain/PaymentMethod";
-import { BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
-import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
-import { PaymentMethodStatus } from "../../../modules/consumer/domain/VerificationStatus";
+import { PaymentMethodType } from "../../../modules/consumer/domain/Types";
 
 const defaultEnvironmentVariables = {};
 
@@ -36,9 +33,8 @@ describe("LimitsService", () => {
 
   const userId = "1234567890";
   const consumer: Consumer = Consumer.createConsumer({
-    _id: userId,
+    id: userId,
     email: "test@noba.com",
-    paymentMethods: [],
   });
 
   const setupTestModule = async (environmentVariables: Record<string, any>): Promise<void> => {
@@ -274,88 +270,6 @@ describe("LimitsService", () => {
       expect(result.status).toBe(TransactionAllowedStatus.ALLOWED);
       expect(result.rangeMin).toBe(50);
       expect(result.rangeMax).toBe(500);
-    });
-
-    it("Is within range so should be allowed for ach", async () => {
-      const consumerEntity = Consumer.createConsumer({
-        ...consumer.props,
-        paymentMethods: [
-          {
-            name: "Bank Account",
-            type: PaymentMethodType.ACH,
-            achData: {
-              accessToken: "plaid-access-token",
-              accountID: "plaidAccountID",
-              itemID: "plaidAuthGetItemID",
-              mask: "7890",
-              accountType: BankAccountType.CHECKING,
-            },
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-payment-token",
-            imageUri: "https://noba.com",
-            status: PaymentMethodStatus.APPROVED,
-            isDefault: false,
-          },
-        ],
-      });
-      when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(500);
-      when(transactionRepo.getDailyUserTransactionAmount(userId)).thenResolve(0);
-      when(transactionRepo.getWeeklyUserTransactionAmount(userId)).thenResolve(200);
-      when(transactionRepo.getUserACHUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
-        0,
-      );
-
-      const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
-        consumerEntity,
-        200,
-
-        TransactionType.ONRAMP,
-        PaymentMethodType.ACH,
-      );
-      expect(result.status).toBe(TransactionAllowedStatus.ALLOWED);
-      expect(result.rangeMin).toBe(20);
-      expect(result.rangeMax).toBe(200);
-    });
-
-    it("Is exceed unsettled exposure amount for ach payments", async () => {
-      const consumerEntity = Consumer.createConsumer({
-        ...consumer.props,
-        paymentMethods: [
-          {
-            name: "Bank Account",
-            type: PaymentMethodType.ACH,
-            achData: {
-              accessToken: "plaid-access-token",
-              accountID: "plaidAccountID",
-              itemID: "plaidAuthGetItemID",
-              mask: "7890",
-              accountType: BankAccountType.CHECKING,
-            },
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-payment-token",
-            imageUri: "https://noba.com",
-            status: PaymentMethodStatus.APPROVED,
-            isDefault: false,
-          },
-        ],
-      });
-      when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(50);
-      when(transactionRepo.getDailyUserTransactionAmount(userId)).thenResolve(0);
-      when(transactionRepo.getWeeklyUserTransactionAmount(userId)).thenResolve(20);
-      when(transactionRepo.getUserACHUnsettledTransactionAmount(userId, deepEqual(["fake-payment-token"]))).thenResolve(
-        100,
-      );
-
-      const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
-        consumerEntity,
-        200,
-
-        TransactionType.ONRAMP,
-        PaymentMethodType.ACH,
-      );
-      expect(result.status).toBe(TransactionAllowedStatus.UNSETTLED_EXPOSURE_LIMIT_REACHED);
-      expect(result.rangeMin).toBe(20);
-      expect(result.rangeMax).toBe(150);
     });
   });
 
