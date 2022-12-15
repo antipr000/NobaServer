@@ -26,7 +26,12 @@ jobs:
       - name: Install all packages
         run: |
           yarn install
-          echo [SUCCESS] yarn install succeeded.
+          echo [SUCCESS] yarn installed
+
+      - name: Generate prisma artifacts
+        run: |
+          yarn prisma-generate
+          echo [SUCCESS] Prisma artifacts generated
 
       - name: Cache environment
         id: cache-environment
