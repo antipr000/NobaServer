@@ -1,54 +1,51 @@
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyNumber, anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
-import { CHECKOUT_CONFIG_KEY, CHECKOUT_PUBLIC_KEY, CHECKOUT_SECRET_KEY } from "../../../config/ConfigurationUtils";
+import {
+  CHECKOUT_CONFIG_KEY,
+  CHECKOUT_PUBLIC_KEY,
+  CHECKOUT_SECRET_KEY,
+  STATIC_DEV_OTP,
+} from "../../../config/ConfigurationUtils";
 import { Result } from "../../../core/logic/Result";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Utils } from "../../../core/utils/Utils";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { OTP } from "../../auth/domain/OTP";
-import { getMockOtpRepoWithDefaults } from "../../../modules/auth/mocks/MockOtpRepo";
-import { IOTPRepo } from "../../../modules/auth/repo/OTPRepo";
-import { CheckoutResponseData } from "../../../modules/common/domain/CheckoutResponseData";
+import { getMockOTPServiceWithDefaults } from "../../../modules/common/mocks/mock.otp.service.spec";
 import { KmsService } from "../../../modules/common/kms.service";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationService } from "../../../modules/notifications/notification.service";
-import { BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
 import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
-import { Transaction } from "../../../modules/transactions/domain/Transaction";
-import { TransactionStatus } from "../../../modules/transactions/domain/Types";
 import { consumerIdentityIdentifier, IdentityType } from "../../auth/domain/IdentityType";
 import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
 import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
 import { SMSService } from "../../common/sms.service";
-import { AddPaymentMethodResponse } from "../../psp/domain/AddPaymentMethodResponse";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { PaymentService } from "../../psp/payment.service";
 import { PlaidClient } from "../../psp/plaid.client";
 import { ConsumerService } from "../consumer.service";
-import { Consumer, ConsumerProps } from "../domain/Consumer";
+import { Consumer } from "../domain/Consumer";
 import { CryptoWallet } from "../domain/CryptoWallet";
-import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
-import { PaymentProvider } from "../domain/PaymentProvider";
-import { FiatTransactionStatus, PaymentRequestResponse } from "../domain/Types";
-import { PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
+import { FiatTransactionStatus } from "../domain/Types";
 import { NotificationMethod } from "../dto/AddCryptoWalletDTO";
-import { AddPaymentMethodDTO, PaymentType } from "../dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
 import { getMockCircleClientWithDefaults } from "../../psp/mocks/mock.circle.client";
 import { CircleClient } from "../../psp/circle.client";
+import { OTPService } from "../../../modules/common/otp.service";
+import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus } from "@prisma/client";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
   let smsService: SMSService;
   let consumerRepo: IConsumerRepo;
   let notificationService: NotificationService;
-  let mockOtpRepo: IOTPRepo;
+  let otpService: OTPService;
   let paymentService: PaymentService;
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
   let plaidClient: PlaidClient;
@@ -59,7 +56,7 @@ describe("ConsumerService", () => {
   beforeEach(async () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
-    mockOtpRepo = getMockOtpRepoWithDefaults();
+    otpService = getMockOTPServiceWithDefaults();
     paymentService = getMockPaymentServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
     smsService = getMockSmsServiceWithDefaults();
@@ -78,6 +75,7 @@ describe("ConsumerService", () => {
             [CHECKOUT_PUBLIC_KEY]: "Dummy Checkout Public Key",
             [CHECKOUT_SECRET_KEY]: "Dummy Checkout Secret Key",
           },
+          [STATIC_DEV_OTP]: 111111,
         }),
         getTestWinstonModule(),
       ],
@@ -94,8 +92,8 @@ describe("ConsumerService", () => {
           useFactory: () => instance(smsService),
         },
         {
-          provide: "OTPRepo",
-          useFactory: () => instance(mockOtpRepo),
+          provide: OTPService,
+          useFactory: () => instance(otpService),
         },
         {
           provide: PaymentService,
@@ -127,16 +125,6 @@ describe("ConsumerService", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
       });
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
@@ -167,16 +155,6 @@ describe("ConsumerService", () => {
       const consumer = Consumer.createConsumer({
         id: consumerID,
         email: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
       });
 
       when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
@@ -200,16 +178,6 @@ describe("ConsumerService", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
       });
 
       const firstName = "First";
@@ -222,7 +190,16 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(deepEqual(updatedConsumerData))).thenResolve(updatedConsumerData);
+      when(
+        consumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: firstName,
+            lastName: lastName,
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
 
       const response = await consumerService.updateConsumer({
         id: consumer.props.id,
@@ -249,449 +226,8 @@ describe("ConsumerService", () => {
     });
   });
 
-  describe("addPaymentMethod", () => {
-    it("adds a payment method of 'CARD' type", async () => {
-      const email = "mock-user@noba.com";
-
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-
-      const addPaymentMethod: AddPaymentMethodDTO = {
-        type: PaymentType.CARD,
-        cardDetails: {
-          cardNumber: "1234567890",
-          expiryMonth: 8,
-          expiryYear: 2023,
-          cvv: "123",
-        },
-      } as any;
-
-      const addPaymentMethodResponse: AddPaymentMethodResponse = constructAddPaymentMethodResponse(
-        consumer,
-        PaymentMethodStatus.APPROVED,
-      );
-
-      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve(
-        addPaymentMethodResponse,
-      );
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-
-      when(
-        consumerRepo.updateConsumer(deepEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData))),
-      ).thenResolve(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData));
-
-      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod);
-
-      expect(response).toStrictEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData));
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_CARD_ADDED_EVENT,
-
-          deepEqual({
-            firstName: consumer.props.firstName,
-            lastName: consumer.props.lastName,
-            nobaUserID: consumer.props.id,
-            email: consumer.props.email,
-            cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
-            last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
-          }),
-        ),
-      ).once();
-    });
-
-    it("throws error when payment method is UNSUPPORTED", async () => {
-      const email = "mock-user@noba.com";
-
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-
-      const addPaymentMethod: AddPaymentMethodDTO = {
-        type: PaymentType.CARD,
-        cardDetails: {
-          cardNumber: "1234567890",
-          expiryMonth: 8,
-          expiryYear: 2023,
-          cvv: "123",
-        },
-      } as any;
-
-      const addPaymentMethodResponse: AddPaymentMethodResponse = constructAddPaymentMethodResponse(
-        consumer,
-        PaymentMethodStatus.UNSUPPORTED,
-      );
-
-      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve(
-        addPaymentMethodResponse,
-      );
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-
-      when(consumerRepo.updateConsumer(anything())).thenResolve(
-        Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData),
-      );
-
-      try {
-        await consumerService.addPaymentMethod(consumer, addPaymentMethod);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        verify(
-          consumerRepo.updateConsumer(deepEqual(Consumer.createConsumer(addPaymentMethodResponse.updatedConsumerData))),
-        ).once();
-      }
-    });
-
-    it("adds a payment method of 'ACH' type", async () => {
-      const email = "mock-user@noba.com";
-
-      const checkoutCustomerID = "checkout-customer-for-mock-consumer";
-
-      const plaidPublicToken = "public-token-by-plain-embed-ui";
-      const plaidAccessToken = "plaid-access-token-for-public-token";
-      const plaidAuthGetItemID = "plaid-itemID-for-auth-get-request";
-      const plaidAccountID = "plaid-account-id-for-the-consumer-bank-account";
-      const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
-
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: checkoutCustomerID,
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-
-      const addPaymentMethod: AddPaymentMethodDTO = {
-        type: PaymentType.ACH,
-        name: "Bank Account",
-        achDetails: {
-          token: plaidPublicToken,
-        },
-        imageUri: "https://noba.com",
-      } as any;
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-
-      const paymentMethod: PaymentMethod = {
-        name: "Bank Account",
-        type: PaymentMethodType.ACH,
-        achData: {
-          accessToken: plaidAccessToken,
-          accountID: plaidAccountID,
-          itemID: plaidAuthGetItemID,
-          mask: "7890",
-          accountType: BankAccountType.CHECKING,
-        },
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: plaidCheckoutProcessorToken,
-        imageUri: "https://noba.com",
-        status: PaymentMethodStatus.APPROVED,
-        isDefault: false,
-      };
-
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        paymentMethods: [paymentMethod],
-      });
-
-      when(paymentService.addPaymentMethod(deepEqual(consumer), deepEqual(addPaymentMethod))).thenResolve({
-        checkoutResponseData: null,
-        updatedConsumerData: updatedConsumer.props,
-      });
-
-      const expectedConsumerProps: ConsumerProps = {
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: checkoutCustomerID,
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            name: "Bank Account",
-            type: PaymentMethodType.ACH,
-            achData: {
-              accessToken: plaidAccessToken,
-              accountID: plaidAccountID,
-              itemID: plaidAuthGetItemID,
-              mask: "7890",
-              accountType: BankAccountType.CHECKING,
-            },
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: plaidCheckoutProcessorToken,
-            imageUri: "https://noba.com",
-            status: PaymentMethodStatus.APPROVED,
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
-      };
-
-      when(consumerRepo.updateConsumer(deepEqual(Consumer.createConsumer(expectedConsumerProps)))).thenResolve(
-        Consumer.createConsumer(expectedConsumerProps),
-      );
-
-      const response = await consumerService.addPaymentMethod(consumer, addPaymentMethod);
-
-      expect(response).toStrictEqual(Consumer.createConsumer(expectedConsumerProps));
-    });
-  });
-
-  describe("requestPayment", () => {
-    it("should make payment successfully", async () => {
-      const email = "mock-user@noba.com";
-
-      const paymentToken = "fake-token";
-      const paymentMethod = {
-        type: PaymentMethodType.CARD,
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: paymentToken,
-        cardData: {
-          first6Digits: "123456",
-          last4Digits: "7890",
-        },
-        imageUri: "fake-uri",
-        isDefault: false,
-      };
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [paymentMethod],
-        cryptoWallets: [],
-      });
-
-      const transaction = Transaction.createTransaction({
-        id: "fake-transaction-id",
-        userId: consumer.props.id,
-        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-        fiatPaymentInfo: {
-          paymentMethodID: paymentToken,
-          isCompleted: false,
-          isApproved: false,
-          isFailed: false,
-          details: [],
-          paymentProvider: PaymentProvider.CHECKOUT,
-        },
-        leg1Amount: 1000,
-        leg2Amount: 0.1,
-        leg1: "USD",
-        leg2: "ETH",
-        lastProcessingTimestamp: Date.now().valueOf(),
-        lastStatusUpdateTimestamp: Date.now().valueOf(),
-      });
-
-      const paymentRequestResponse: PaymentRequestResponse = {
-        status: PaymentMethodStatus.APPROVED,
-        paymentID: "fake-payment-id",
-      };
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(
-        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
-      ).thenResolve(paymentRequestResponse);
-
-      const response = await consumerService.requestPayment(consumer, transaction);
-      expect(response).toStrictEqual(paymentRequestResponse);
-    });
-
-    it("should throw error when payment method is DELETED", async () => {
-      const email = "mock-user@noba.com";
-
-      const paymentToken = "fake-token";
-      const paymentMethod: PaymentMethod = {
-        type: PaymentMethodType.CARD,
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: paymentToken,
-        cardData: {
-          first6Digits: "123456",
-          last4Digits: "7890",
-        },
-        imageUri: "fake-uri",
-        status: PaymentMethodStatus.DELETED,
-        isDefault: false,
-      };
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [paymentMethod],
-        cryptoWallets: [],
-      });
-
-      const transaction = Transaction.createTransaction({
-        id: "fake-transaction-id",
-        userId: consumer.props.id,
-        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-        fiatPaymentInfo: {
-          paymentMethodID: paymentToken,
-          isCompleted: false,
-          isApproved: false,
-          isFailed: false,
-          details: [],
-          paymentProvider: PaymentProvider.CHECKOUT,
-        },
-        leg1Amount: 1000,
-        leg2Amount: 0.1,
-        leg1: "USD",
-        leg2: "ETH",
-
-        lastProcessingTimestamp: Date.now().valueOf(),
-        lastStatusUpdateTimestamp: Date.now().valueOf(),
-      });
-
-      expect(async () => await consumerService.requestPayment(consumer, transaction)).rejects.toThrow(
-        BadRequestException,
-      );
-
-      expect(async () => await consumerService.requestPayment(consumer, transaction)).rejects.toThrow(
-        "Payment method does not exist for user",
-      );
-    });
-
-    it("should throw error when payment provider is not supported", async () => {
-      const email = "mock-user@noba.com";
-
-      const paymentToken = "fake-token";
-      const paymentProvider = "FakeProvider";
-      const paymentMethod = {
-        type: PaymentMethodType.CARD,
-        paymentProviderID: paymentProvider as any,
-        paymentToken: paymentToken,
-        cardData: {
-          first6Digits: "123456",
-          last4Digits: "7890",
-        },
-        imageUri: "fake-uri",
-        isDefault: false,
-      };
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [paymentMethod],
-        cryptoWallets: [],
-      });
-
-      const transaction = Transaction.createTransaction({
-        id: "fake-transaction-id",
-        userId: consumer.props.id,
-        transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-        fiatPaymentInfo: {
-          paymentMethodID: paymentToken,
-          isCompleted: false,
-          isApproved: false,
-          isFailed: false,
-          details: [],
-          paymentProvider: PaymentProvider.CHECKOUT,
-        },
-        leg1Amount: 1000,
-        leg2Amount: 0.1,
-        leg1: "USD",
-        leg2: "ETH",
-
-        lastProcessingTimestamp: Date.now().valueOf(),
-        lastStatusUpdateTimestamp: Date.now().valueOf(),
-      });
-
-      const paymentRequestResponse: PaymentRequestResponse = {
-        status: PaymentMethodStatus.APPROVED,
-        paymentID: "fake-payment-id",
-      };
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(
-        paymentService.requestCheckoutPayment(deepEqual(consumer), deepEqual(transaction), deepEqual(paymentMethod)),
-      ).thenResolve(paymentRequestResponse);
-
-      try {
-        await consumerService.requestPayment(consumer, transaction);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-        expect(e.message).toBe(`Payment provider ${paymentProvider} is not supported`);
-      }
-    });
-  });
-
   describe("removePaymentMethod", () => {
-    it("should throw error when payment token does not exist for the consumer", async () => {
+    it("should throw error when payment method id does not exist for the consumer", async () => {
       const email = "mock-user@noba.com";
 
       const paymentToken = "fake-token";
@@ -701,31 +237,11 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token-2",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            imageUri: "fake-uri",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
       });
 
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
+      when(consumerRepo.getPaymentMethodForConsumer("fake-card-id", consumer.props.id)).thenReturn(null);
+
+      expect(async () => await consumerService.removePaymentMethod(consumer, "fake-card-id")).rejects.toThrow(
         NotFoundException,
       );
 
@@ -744,80 +260,27 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: "FakeProvider" as any,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            imageUri: "fake-uri",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
       });
 
-      try {
-        await consumerService.removePaymentMethod(consumer, paymentToken);
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(NotFoundException);
-        expect(e.message).toBe("Payment provider not found");
-      }
-    });
-
-    it("should throw error when payment method is deleted for consumer", async () => {
-      const email = "mock-user@noba.com";
-
-      const paymentToken = "fake-token";
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            imageUri: "fake-uri",
-            status: PaymentMethodStatus.DELETED,
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
+      const paymentMethod = PaymentMethod.createPaymentMethod({
+        type: PaymentMethodType.CARD,
+        paymentProvider: "FakeProvider" as any,
+        paymentToken: paymentToken,
+        cardData: {} as any,
+        imageUri: "fake-uri",
+        isDefault: false,
+        id: "fake-pm-id",
+        consumerID: consumer.props.id,
+        status: PaymentMethodStatus.APPROVED,
       });
 
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
+      when(consumerRepo.getPaymentMethodForConsumer("fake-pm-id", consumer.props.id)).thenResolve(paymentMethod);
+
+      expect(async () => await consumerService.removePaymentMethod(consumer, "fake-pm-id")).rejects.toThrow(
         NotFoundException,
       );
-
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
-        "Payment Method id not found",
+      expect(async () => await consumerService.removePaymentMethod(consumer, "fake-pm-id")).rejects.toThrow(
+        "Payment provider not found",
       );
     });
 
@@ -831,60 +294,38 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            status: PaymentMethodStatus.APPROVED,
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
       });
 
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            status: PaymentMethodStatus.DELETED,
-            isDefault: false,
-          },
-        ],
+      const paymentMethod = PaymentMethod.createPaymentMethod({
+        type: PaymentMethodType.CARD,
+        paymentProvider: PaymentProvider.CHECKOUT,
+        paymentToken: paymentToken,
+        cardData: {
+          id: "card-id",
+          scheme: "VISA",
+          first6Digits: "123456",
+          last4Digits: "7890",
+          authCode: "100000",
+          authReason: "Approved",
+          cardType: "Credit",
+          paymentMethodID: "fake-method",
+        },
+        imageUri: "fake-uri",
+        name: "Fake card",
+        status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
+        id: "fake-id",
+        consumerID: consumer.props.id,
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(paymentService.removePaymentMethod(paymentToken)).thenResolve();
-      when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
+      when(paymentService.removePaymentMethod(anyString())).thenResolve();
+      when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(paymentMethod);
+      when(
+        consumerRepo.updatePaymentMethod("fake-id", deepEqual({ id: "fake-id", status: PaymentMethodStatus.DELETED })),
+      ).thenResolve();
 
-      const response = await consumerService.removePaymentMethod(consumer, paymentToken);
-      expect(response).toStrictEqual(updatedConsumer);
-      expect(response.props.paymentMethods.length).toBe(1);
+      await consumerService.removePaymentMethod(consumer, "fake-id");
+
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_CARD_DELETED_EVENT,
@@ -894,8 +335,8 @@ describe("ConsumerService", () => {
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
             email: consumer.props.email,
-            cardNetwork: consumer.props.paymentMethods[0].cardData.cardType,
-            last4Digits: consumer.props.paymentMethods[0].cardData.last4Digits,
+            cardNetwork: paymentMethod.props.cardData.cardType,
+            last4Digits: paymentMethod.props.cardData.last4Digits,
           }),
         ),
       ).once();
@@ -911,39 +352,37 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: "fake+email@noba.com",
         displayEmail: "fake+email@noba.com",
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      const paymentMethod = PaymentMethod.createPaymentMethod({
+        type: PaymentMethodType.CARD,
+        paymentProvider: PaymentProvider.CHECKOUT,
+        paymentToken: paymentToken,
+        cardData: {
+          id: "card-id",
+          scheme: "VISA",
+          first6Digits: "123456",
+          last4Digits: "7890",
+          authCode: "100000",
+          authReason: "Approved",
+          cardType: "Credit",
+          paymentMethodID: "fake-method",
+        },
+        imageUri: "fake-uri",
+        name: "Fake card",
+        status: PaymentMethodStatus.APPROVED,
+        isDefault: false,
+        id: "fake-id",
+        consumerID: consumer.props.id,
+      });
 
-      const response = await consumerService.getPaymentMethodProvider(consumer.props.id, paymentToken);
+      when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(paymentMethod);
+
+      const response = await consumerService.getPaymentMethodProvider(consumer.props.id, "fake-id");
       expect(response).toBe(PaymentProvider.CHECKOUT);
     });
 
-    it("throws NotFoundException when paymentToken does not exist for consumer", async () => {
+    it("throws NotFoundException when paymentMethodID does not exist for consumer", async () => {
       const paymentToken = "fake-payment-token";
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
@@ -951,78 +390,12 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: "fake+email@noba.com",
         displayEmail: "fake+email@noba.com",
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(null);
 
       expect(
         async () => await consumerService.getPaymentMethodProvider(consumer.props.id, "new-fake-payment-token"),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it("throws NotFoundException when payment method is deleted for consumer", async () => {
-      const paymentToken = "fake-payment-token";
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: "fake+email@noba.com",
-        displayEmail: "fake+email@noba.com",
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            status: PaymentMethodStatus.DELETED,
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
-      });
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-
-      expect(
-        async () => await consumerService.getPaymentMethodProvider(consumer.props.id, paymentToken),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -1065,295 +438,74 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
       });
 
-      const updatedPaymentMethod: PaymentMethod = {
+      const paymentMethod = PaymentMethod.createPaymentMethod({
         type: PaymentMethodType.CARD,
-        paymentProviderID: PaymentProvider.CHECKOUT,
+        paymentProvider: PaymentProvider.CHECKOUT,
         paymentToken: paymentToken,
         cardData: {
+          id: "card-id",
+          scheme: "VISA",
           first6Digits: "123456",
           last4Digits: "7890",
-          cardType: "VISA",
+          authCode: "100000",
+          authReason: "Approved",
+          cardType: "Credit",
+          paymentMethodID: "fake-method",
         },
         imageUri: "fake-uri",
-        name: "New Fake Name",
+        name: "Fake card",
+        status: PaymentMethodStatus.APPROVED,
         isDefault: false,
-      };
-
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        paymentMethods: [updatedPaymentMethod],
+        id: "fake-id",
+        consumerID: consumer.props.id,
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
+      const updatedPaymentMethod: Partial<PaymentMethodProps> = {
+        id: "fake-id",
+        name: "New Fake Name",
+      };
+
+      when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(paymentMethod);
+      when(consumerRepo.updatePaymentMethod(updatedPaymentMethod.id, deepEqual(updatedPaymentMethod))).thenResolve(
+        PaymentMethod.createPaymentMethod({
+          ...paymentMethod.props,
+          name: "New Fake Name",
+        }),
+      );
 
       const response = await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod);
 
-      expect(response).toStrictEqual(updatedConsumer);
-      verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
+      expect(response).toStrictEqual(
+        PaymentMethod.createPaymentMethod({
+          ...paymentMethod.props,
+          name: "New Fake Name",
+        }),
+      );
     });
 
-    it("should replace existing default payment method", async () => {
+    it("should throw error when paymentMethodID does not exist for consumer", async () => {
       const email = "mock-user@noba.com";
 
-      const paymentToken = "fake-token";
+      const paymentMethodID = "fake-token";
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token-1",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: true,
-          },
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token-2",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
       });
 
-      const updatedPaymentMethod: PaymentMethod = {
-        type: PaymentMethodType.CARD,
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: paymentToken,
-        cardData: {
-          first6Digits: "123456",
-          last4Digits: "7890",
-          cardType: "VISA",
-        },
-        imageUri: "fake-uri",
-        name: "New Fake Name",
-        isDefault: true,
-      };
-
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token-2",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token-1",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-          updatedPaymentMethod,
-        ],
-      });
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
-
-      const response = await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod);
-
-      expect(response).toStrictEqual(updatedConsumer);
-      verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
-    });
-
-    it("should throw error when paymentToken does not exist for consumer", async () => {
-      const email = "mock-user@noba.com";
-
-      const paymentToken = "fake-token";
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
-      });
-
-      const updatedPaymentMethod: PaymentMethod = {
-        type: PaymentMethodType.CARD,
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: "new-token",
-        cardData: {
-          first6Digits: "123456",
-          last4Digits: "7890",
-          cardType: "VISA",
-        },
-        imageUri: "fake-uri",
-        name: "New Fake Name",
-        isDefault: false,
-      };
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerRepo.getPaymentMethodForConsumer(paymentMethodID, consumer.props.id)).thenResolve(null);
       expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
+        async () =>
+          await consumerService.updatePaymentMethod(consumer.props.id, { id: paymentMethodID, name: "Fake Name" }),
       ).rejects.toThrow(BadRequestException);
       expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
-      ).rejects.toThrow(`Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`);
-    });
-
-    it("should throw error when payment method is deleted for consumer", async () => {
-      const email = "mock-user@noba.com";
-
-      const paymentToken = "fake-token";
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: paymentToken,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            status: PaymentMethodStatus.DELETED,
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [],
-      });
-
-      const updatedPaymentMethod: PaymentMethod = {
-        type: PaymentMethodType.CARD,
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        paymentToken: paymentToken,
-        cardData: {
-          first6Digits: "123456",
-          last4Digits: "7890",
-          cardType: "VISA",
-        },
-        imageUri: "fake-uri",
-        name: "New Fake Name",
-        isDefault: false,
-      };
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
-      ).rejects.toThrow(BadRequestException);
-      expect(
-        async () => await consumerService.updatePaymentMethod(consumer.props.id, updatedPaymentMethod),
-      ).rejects.toThrow(`Payment method with token ${updatedPaymentMethod.paymentToken} does not exist for consumer`);
+        async () =>
+          await consumerService.updatePaymentMethod(consumer.props.id, { id: paymentMethodID, name: "Fake Name" }),
+      ).rejects.toThrow(`Payment method with id ${paymentMethodID} does not exist for consumer`);
     });
   });
 
@@ -1361,7 +513,7 @@ describe("ConsumerService", () => {
     it("updates existing crypto wallet", async () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
-      const otp = 123456;
+      const otp = 111111;
 
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
 
@@ -1371,86 +523,39 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.PENDING,
-          },
-        ],
       });
-
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.APPROVED,
-          },
-        ],
+      const wallet = CryptoWallet.createCryptoWallet({
+        id: "fake-wallet",
+        name: "Test wallet",
+        address: walletAddress,
+        status: WalletStatus.PENDING,
+        consumerID: consumer.props.id,
       });
 
       const expiryDate = new Date();
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props.id)).thenResolve(
-        OTP.createOtp({
-          id: "fake-otp-id",
-          emailOrPhone: consumer.props.email,
-          otp: otp,
-          otpExpiryTime: expiryDate.getTime(),
-          identityType: "CONSUMER",
-          consumerID: consumer.props.id,
-        }),
-      );
+      when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, otp)).thenResolve(true);
+      when(consumerRepo.getCryptoWalletForConsumer("fake-wallet", consumer.props.id)).thenResolve(wallet);
+      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
+      when(consumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
+      await consumerService.confirmWalletUpdateOTP(consumer, "fake-wallet", otp, NotificationMethod.EMAIL);
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(mockOtpRepo.deleteOTP("fake-otp-id")).thenResolve();
-
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
-
-      const response = await consumerService.confirmWalletUpdateOTP(
-        consumer,
-        walletAddress,
-        otp,
-        consumer.props.id,
-
-        NotificationMethod.EMAIL,
-      );
-
-      expect(response).toStrictEqual(updatedConsumer);
-
-      verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
+      verify(
+        consumerRepo.updateCryptoWallet(
+          "fake-wallet",
+          deepEqual({
+            ...wallet.props,
+            status: WalletStatus.APPROVED,
+          }),
+        ),
+      ).once();
     });
 
-    it("throws BadRequestException when cryptoWallet is deleted", async () => {
+    it("throws BadRequestException when cryptoWallet is not found", async () => {
       const email = "mock-user@noba.com";
-      const walletAddress = "fake-wallet-address";
-      const otp = 123456;
+      const walletID = "fake-wallet-id";
+      const otp = 111111;
 
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
@@ -1458,184 +563,80 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.DELETED,
-          },
-        ],
       });
 
-      expect(
-        async () =>
-          await consumerService.confirmWalletUpdateOTP(
-            consumer,
-            walletAddress,
-            otp,
-            consumer.props.id,
+      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
 
-            NotificationMethod.EMAIL,
-          ),
+      expect(
+        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletID, otp, NotificationMethod.EMAIL),
       ).rejects.toThrow(BadRequestException);
       expect(
-        async () =>
-          await consumerService.confirmWalletUpdateOTP(
-            consumer,
-            walletAddress,
-            otp,
-            consumer.props.id,
-
-            NotificationMethod.EMAIL,
-          ),
+        async () => await consumerService.confirmWalletUpdateOTP(consumer, walletID, otp, NotificationMethod.EMAIL),
       ).rejects.toThrow("Crypto wallet does not exist for user");
     });
 
     it("throws Unauthorized exception when otp is wrong", async () => {
       const email = "mock-user@noba.com";
       const walletAddress = "fake-wallet-address";
-      const otp = 123456;
+      const otp = 111111;
       const wrongOtp = 234567;
 
-      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.PENDING,
-          },
-        ],
       });
 
-      when(mockOtpRepo.getOTP(consumer.props.email, "CONSUMER", consumer.props.id)).thenResolve(
-        OTP.createOtp({
-          id: "fake-otp-id",
-          emailOrPhone: consumer.props.email,
-          otp: otp,
-          otpExpiryTime: new Date().getTime(),
-          identityType: "CONSUMER",
-          consumerID: consumer.props.id,
-        }),
-      );
+      const wallet = CryptoWallet.createCryptoWallet({
+        id: "fake-wallet",
+        name: "Test wallet",
+        address: walletAddress,
+        status: WalletStatus.PENDING,
+        consumerID: consumer.props.id,
+      });
 
-      try {
-        await consumerService.confirmWalletUpdateOTP(
-          consumer,
-          walletAddress,
-          wrongOtp,
-          consumer.props.id,
+      when(consumerRepo.getCryptoWalletForConsumer("fake-wallet", consumer.props.id)).thenResolve(wallet);
 
-          NotificationMethod.EMAIL,
-        );
-      } catch (e) {
-        expect(e).toBeInstanceOf(UnauthorizedException);
-      }
+      when(otpService.checkIfOTPIsValidAndCleanup(consumer.props.email, IdentityType.CONSUMER, otp)).thenResolve(false);
+
+      expect(
+        async () =>
+          await consumerService.confirmWalletUpdateOTP(consumer, "fake-wallet", wrongOtp, NotificationMethod.EMAIL),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 
   describe("getCryptoWallet", () => {
-    it("gets crypto wallet for consumer given address", async () => {
+    it("gets crypto wallet for consumer given id", async () => {
       const email = "mock-user@noba.com";
-      const walletAddress = "fake-wallet-address";
+      const walletID = "fake-wallet-id";
 
-      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.PENDING,
-          },
-        ],
       });
 
-      const response = await consumerService.getCryptoWallet(consumer, walletAddress);
-      expect(response).toStrictEqual(consumer.props.cryptoWallets[0]);
+      const wallet = CryptoWallet.createCryptoWallet({
+        id: walletID,
+        address: "fake-address",
+        status: WalletStatus.APPROVED,
+        consumerID: consumer.props.id,
+      });
+
+      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
+
+      const response = await consumerService.getCryptoWallet(consumer, walletID);
+      expect(response).toStrictEqual(wallet);
     });
 
-    it("returns null when walletAddress does not exist for consumer", async () => {
+    it("returns null when walletID does not exist for consumer", async () => {
       const email = "mock-user@noba.com";
-      const walletAddress = "fake-wallet-address";
+      const walletID = "fake-wallet-id";
 
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
@@ -1643,85 +644,10 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.PENDING,
-          },
-        ],
       });
+      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
 
-      const response = await consumerService.getCryptoWallet(consumer, "new-wallet-address");
-      expect(response).toStrictEqual(null);
-    });
-
-    it("returns null when wallet is deleted for consumer", async () => {
-      const email = "mock-user@noba.com";
-      const walletAddress = "fake-wallet-address";
-
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.DELETED,
-          },
-        ],
-      });
-
-      const response = await consumerService.getCryptoWallet(consumer, walletAddress);
+      const response = await consumerService.getCryptoWallet(consumer, walletID);
       expect(response).toStrictEqual(null);
     });
   });
@@ -1729,275 +655,107 @@ describe("ConsumerService", () => {
   describe("removeCryptoWallet", () => {
     it("Sets wallet status to DELETED for user without touching other wallets", async () => {
       const email = "mock-user@noba.com";
-      const walletAddress = "fake-wallet-address";
+      const walletID = "fake-wallet-id";
 
-      when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [
-          {
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: "fake-token",
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-              cardType: "VISA",
-            },
-            imageUri: "fake-uri",
-            name: "Fake card",
-            isDefault: false,
-          },
-        ],
-        cryptoWallets: [
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.PENDING,
-          },
-          {
-            walletName: "Other wallet 1",
-            address: walletAddress + "1",
-            status: WalletStatus.PENDING,
-          },
-          {
-            walletName: "Other wallet 2",
-            address: walletAddress + "2",
-            status: WalletStatus.PENDING,
-          },
-        ],
       });
 
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        cryptoWallets: [
-          {
-            walletName: "Other wallet 1",
-            address: walletAddress + "1",
-            status: WalletStatus.PENDING,
-          },
-          {
-            walletName: "Other wallet 2",
-            address: walletAddress + "2",
-            status: WalletStatus.PENDING,
-          },
-          {
-            walletName: "Test wallet",
-            address: walletAddress,
-            status: WalletStatus.DELETED,
-          },
-        ],
+      const wallet = CryptoWallet.createCryptoWallet({
+        id: walletID,
+        address: "fake-address",
+        status: WalletStatus.APPROVED,
+        consumerID: consumer.props.id,
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
-
-      const response = await consumerService.removeCryptoWallet(consumer, walletAddress);
-
-      expect(response).toStrictEqual(updatedConsumer);
-      verify(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).once();
-    });
-  });
-
-  describe("addZeroHashParticipantCode", () => {
-    it("should add zeroHash participation code to user", async () => {
-      const email = "fake+consumer@noba.com";
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Fake",
-        lastName: "Name",
-        email: email,
-        displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [],
-      });
-
-      const zhParticipantCode = "fake-zh-participation-code";
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anything())).thenResolve(
-        Consumer.createConsumer({
-          ...consumer.props,
-          zhParticipantCode: zhParticipantCode,
-        }),
-      );
-
-      const response = await consumerService.addZeroHashParticipantCode(consumer.props.id, zhParticipantCode);
-      expect(response.props.zhParticipantCode).toBe(zhParticipantCode);
+      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
+      when(consumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
+      await consumerService.removeCryptoWallet(consumer, walletID);
       verify(
-        consumerRepo.updateConsumer(
-          deepEqual(
-            Consumer.createConsumer({
-              ...consumer.props,
-              zhParticipantCode: zhParticipantCode,
-            }),
-          ),
+        consumerRepo.updateCryptoWallet(
+          walletID,
+          deepEqual({
+            ...wallet.props,
+            status: WalletStatus.DELETED,
+          }),
         ),
-      ).once();
+      );
     });
   });
 
   describe("addOrUpdateCryptoWallet", () => {
-    it("should set wallet status to PENDING when wallet status is DELETED and method is called", async () => {
-      const cryptoWallet: CryptoWallet = {
-        address: "fake-wallet-address",
-        status: WalletStatus.DELETED,
-      };
+    it("should add new crypto wallet", async () => {
+      const email = "mock-user@noba.com";
+      const walletID = "fake-wallet-id";
+
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Fake",
         lastName: "Name",
-        email: "fake+email@noba.com",
-        displayEmail: "fake+email@noba.com",
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [cryptoWallet],
-      });
-
-      const toAddCryptoWallet: CryptoWallet = {
-        address: "fake-wallet-address",
-        status: WalletStatus.PENDING,
-      };
-
-      const updatedConsumer = Consumer.createConsumer({
-        ...consumer.props,
-        cryptoWallets: [toAddCryptoWallet],
-      });
-
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(deepEqual(updatedConsumer))).thenResolve(updatedConsumer);
-      when(mockOtpRepo.deleteAllOTPsForUser(consumer.props.email, consumerIdentityIdentifier, "123")).thenResolve();
-      const response = await consumerService.addOrUpdateCryptoWallet(consumer, toAddCryptoWallet);
-
-      expect(response).toBe(updatedConsumer);
-    });
-
-    it("should append to CryptWallets list if the wallet is new", async () => {
-      const email = "fake.consumer@noba.com";
-      const consumerId = "mock_consumer_id";
-
-      const consumer = Consumer.createConsumer({
-        id: consumerId,
-        firstName: "Mock",
-        lastName: "Consumer",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [
-          {
-            address: "fake_existing_wallet_address",
-
-            status: WalletStatus.APPROVED,
-          },
-        ],
       });
-      when(consumerRepo.getConsumer(consumerId)).thenResolve(consumer);
 
-      const newWallet: CryptoWallet = {
-        address: "new-wallet-address",
-
+      const wallet = CryptoWallet.createCryptoWallet({
+        id: walletID,
+        address: "fake-address",
         status: WalletStatus.PENDING,
-      };
-
-      const updatedConsumer: Consumer = consumer;
-      updatedConsumer.props.cryptoWallets.push({
-        address: "new-wallet-address",
-        status: WalletStatus.PENDING,
+        consumerID: consumer.props.id,
       });
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
 
-      const returnedConsumer = await consumerService.addOrUpdateCryptoWallet(consumer, newWallet);
+      when(otpService.saveOTP(consumer.props.email, IdentityType.CONSUMER, 111111)).thenResolve();
+      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
+      when(consumerRepo.addCryptoWallet(anything())).thenResolve();
+      await consumerService.addOrUpdateCryptoWallet(consumer, wallet, NotificationMethod.EMAIL);
 
-      expect(returnedConsumer).toEqual(updatedConsumer);
-      const [updateConsumerCallParams] = capture(consumerRepo.updateConsumer).last();
-      expect(updateConsumerCallParams.props.cryptoWallets).toContainEqual({
-        address: "new-wallet-address",
-        status: WalletStatus.PENDING,
-      });
-      expect(updateConsumerCallParams.props.cryptoWallets).toContainEqual(consumer.props.cryptoWallets[0]);
+      verify(consumerRepo.addCryptoWallet(deepEqual(wallet))).once();
+
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+          deepEqual({
+            email: consumer.props.displayEmail,
+            otp: "111111",
+            walletAddress: wallet.props.address,
+            firstName: consumer.props.firstName,
+            nobaUserID: consumer.props.id,
+          }),
+        ),
+      ).once();
     });
 
     it("should update the 'status' field of CryptoWallet if it's already there", async () => {
-      const email = "fake.consumer@noba.com";
-      const consumerId = "mock_consumer_id";
+      const email = "mock-user@noba.com";
+      const walletID = "fake-wallet-id";
 
       const consumer = Consumer.createConsumer({
-        id: consumerId,
-        firstName: "Mock",
-        lastName: "Consumer",
+        id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
         email: email,
         displayEmail: email,
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-        paymentMethods: [],
-        cryptoWallets: [
-          {
-            address: "fake_existing_wallet_address",
-
-            status: WalletStatus.PENDING,
-          },
-        ],
       });
-      when(consumerRepo.getConsumer(consumerId)).thenResolve(consumer);
 
-      const newWallet: CryptoWallet = {
-        address: "fake_existing_wallet_address",
-
-        status: WalletStatus.REJECTED,
-      };
-
-      const updatedConsumer: Consumer = consumer;
-      when(consumerRepo.updateConsumer(anything())).thenResolve(updatedConsumer);
-
-      const returnedConsumer = await consumerService.addOrUpdateCryptoWallet(consumer, newWallet);
-
-      expect(returnedConsumer).toEqual(updatedConsumer);
-      const [updateConsumerCallParams] = capture(consumerRepo.updateConsumer).last();
-      expect(updateConsumerCallParams.props.cryptoWallets).toHaveLength(1);
-      expect(updateConsumerCallParams.props.cryptoWallets).toContainEqual({
-        address: "fake_existing_wallet_address",
-        status: WalletStatus.REJECTED,
+      const wallet = CryptoWallet.createCryptoWallet({
+        id: walletID,
+        address: "fake-address",
+        status: WalletStatus.PENDING,
+        consumerID: consumer.props.id,
       });
+
+      const updatedWallet = CryptoWallet.createCryptoWallet({
+        ...wallet.props,
+        status: WalletStatus.APPROVED,
+      });
+      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
+      when(consumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
+      await consumerService.addOrUpdateCryptoWallet(consumer, updatedWallet, NotificationMethod.EMAIL);
+
+      verify(consumerRepo.updateCryptoWallet(walletID, deepEqual(updatedWallet.props))).once();
     });
   });
 
@@ -2005,11 +763,10 @@ describe("ConsumerService", () => {
     it("should send otp to given phone number with given context", async () => {
       const phone = "+12434252";
       when(smsService.sendSMS(phone, anyString())).thenResolve();
-      when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
-      when(mockOtpRepo.deleteAllOTPsForUser(phone, consumerIdentityIdentifier, "123")).thenResolve();
+      when(otpService.saveOTP(anyString(), anyString(), anyNumber())).thenResolve();
       await consumerService.sendOtpToPhone("123", phone);
       verify(smsService.sendSMS(phone, anyString())).once();
-      verify(mockOtpRepo.saveOTPObject(anything())).once();
+      verify(otpService.saveOTP(phone, IdentityType.CONSUMER, 111111)).once();
     });
   });
 
@@ -2018,7 +775,7 @@ describe("ConsumerService", () => {
       const phone = "+12434252";
       const email = "a@noba.com";
 
-      const otp = 123456;
+      const otp = 111111;
 
       const consumer = Consumer.createConsumer({
         id: "1234rwrwrwrwrwrwrwrw",
@@ -2026,22 +783,6 @@ describe("ConsumerService", () => {
         lastName: "Consumer",
         email: email,
         displayEmail: email,
-
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-      });
-
-      const otpObject = OTP.createOtp({
-        otp: otp,
-        emailOrPhone: phone,
-        identityType: IdentityType.CONSUMER,
-        consumerID: consumer.props.id,
       });
 
       const phoneUpdateRequest: UserPhoneUpdateRequest = {
@@ -2055,26 +796,24 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
-      when(mockOtpRepo.getOTP(phone, IdentityType.CONSUMER, consumer.props.id)).thenResolve(otpObject);
+      when(otpService.checkIfOTPIsValidAndCleanup(phone, IdentityType.CONSUMER, phoneUpdateRequest.otp)).thenResolve(
+        false,
+      );
 
-      try {
-        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
-        expect(true).toBe(false);
-      } catch (err) {
-        console.log(err);
-        expect(err).toBeInstanceOf(BadRequestException);
-      }
+      expect(async () => await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).rejects.toThrow(
+        BadRequestException,
+      );
 
       phoneUpdateRequest.otp = otp; //correct otp
       when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.fail(anything()));
-      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
+      when(otpService.checkIfOTPIsValidAndCleanup(phone, IdentityType.CONSUMER, phoneUpdateRequest.otp)).thenResolve(
+        true,
+      );
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
+      when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
 
       const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
-      verify(consumerRepo.updateConsumer(anything())).once();
-      const [requestArg] = capture(consumerRepo.updateConsumer).last();
-      expect(requestArg.props.phone).toBe(phone);
+      verify(consumerRepo.updateConsumer(consumer.props.id, deepEqual({ id: consumer.props.id, phone: phone }))).once();
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
     });
 
@@ -2082,7 +821,7 @@ describe("ConsumerService", () => {
       const phone = "+12434252";
       const email = "a@noba.com";
 
-      const otp = 123456;
+      const otp = 111111;
 
       const consumer = Consumer.createConsumer({
         id: "1234rwrwrwrwrwrwrwrw",
@@ -2090,22 +829,6 @@ describe("ConsumerService", () => {
         lastName: "Consumer",
         email: email,
         displayEmail: email,
-
-        paymentProviderAccounts: [
-          {
-            providerCustomerID: "test-customer-1",
-            providerID: PaymentProvider.CHECKOUT,
-          },
-        ],
-
-        isAdmin: false,
-      });
-
-      const otpObject = OTP.createOtp({
-        otp: otp,
-        emailOrPhone: phone,
-        identityType: IdentityType.CONSUMER,
-        consumerID: consumer.props.id,
       });
 
       const phoneUpdateRequest: UserPhoneUpdateRequest = {
@@ -2114,19 +837,16 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.ok(anything()));
-      when(mockOtpRepo.getOTP(phone, IdentityType.CONSUMER, consumer.props.id)).thenResolve(otpObject);
-      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
+      when(otpService.checkIfOTPIsValidAndCleanup(phone, IdentityType.CONSUMER, phoneUpdateRequest.otp)).thenResolve(
+        true,
+      );
 
-      try {
-        await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
-        expect(true).toBe(false);
-      } catch (err) {
-        console.log(err);
-        expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toEqual("User already exists with this phone number");
-      }
-
-      expect(consumer.props.phone).toBeUndefined();
+      expect(async () => await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(async () => await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest)).rejects.toThrow(
+        "User already exists with this phone number",
+      );
     });
   });
 
@@ -2134,14 +854,12 @@ describe("ConsumerService", () => {
     it("should send otp to given email address with given context", async () => {
       const email = "Rosie@Noba.com";
       const firstName = "Rosie";
-      const otp = 654321;
+      const otp = 111111;
 
       const consumer = Consumer.createConsumer({
         id: "1234rwrwrwrwrwrwrwrw",
         firstName: firstName,
         lastName: "Consumer",
-
-        isAdmin: false,
         phone: "+15559993333",
       });
 
@@ -2153,10 +871,9 @@ describe("ConsumerService", () => {
           firstName: "Rosie",
         }),
       ).thenResolve();
-      when(mockOtpRepo.saveOTPObject(anything())).thenResolve();
-      when(mockOtpRepo.deleteAllOTPsForUser(email, consumerIdentityIdentifier, consumer.props.id)).thenResolve();
+      when(otpService.saveOTP(anyString(), anything(), anyNumber())).thenResolve();
       await consumerService.sendOtpToEmail(email, consumer);
-      verify(mockOtpRepo.saveOTP(email, otp, consumerIdentityIdentifier, consumer.props.id)).once();
+      verify(otpService.saveOTP(email, consumerIdentityIdentifier, otp)).once();
     });
   });
 
@@ -2165,19 +882,12 @@ describe("ConsumerService", () => {
       const phone = "+12434252";
       const email = "Rosie@Noba.com";
 
-      const otp = 123456;
-      const otpObject = OTP.createOtp({
-        otp: otp,
-        emailOrPhone: email,
-        identityType: IdentityType.CONSUMER,
-      });
+      const otp = 111111;
 
       const consumer = Consumer.createConsumer({
         id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
-
-        isAdmin: false,
         phone: phone,
       });
 
@@ -2186,16 +896,13 @@ describe("ConsumerService", () => {
         otp: 123458, //incorrect otp
       };
 
-      when(mockOtpRepo.getOTP(email, IdentityType.CONSUMER)).thenResolve(otpObject);
-      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
+      when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, emailUpdateRequest.otp)).thenResolve(
+        false,
+      );
 
-      try {
-        await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
-        expect(true).toBe(false);
-      } catch (err) {
-        console.log(err);
-        expect(err).toBeInstanceOf(BadRequestException);
-      }
+      expect(async () => await consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).rejects.toThrow(
+        BadRequestException,
+      );
 
       emailUpdateRequest.otp = otp; //correct otp
 
@@ -2205,9 +912,11 @@ describe("ConsumerService", () => {
         email: email.toLowerCase(),
         displayEmail: email,
       });
-
+      when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, emailUpdateRequest.otp)).thenResolve(
+        true,
+      );
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anything())).thenResolve(expectedUpdatedConsumer);
+      when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
       when(
         notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           email: email,
@@ -2220,10 +929,17 @@ describe("ConsumerService", () => {
       // update consumer
       const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
 
-      verify(consumerRepo.updateConsumer(anything())).once();
-      const [requestArg] = capture(consumerRepo.updateConsumer).last();
-      expect(requestArg.props.email).toBe(email.toLowerCase());
-      expect(requestArg.props.displayEmail).toBe(email);
+      verify(
+        consumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            email: email.toLowerCase(),
+            displayEmail: email,
+          }),
+        ),
+      ).once();
+
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
 
       verify(notificationService.sendNotification(anything(), anything())).once();
@@ -2245,19 +961,12 @@ describe("ConsumerService", () => {
       const phone = "+12434252";
       const email = "Rosie@Noba.com";
 
-      const otp = 123456;
-      const otpObject = OTP.createOtp({
-        otp: otp,
-        emailOrPhone: email,
-        identityType: IdentityType.CONSUMER,
-      });
+      const otp = 111111;
 
       const consumer = Consumer.createConsumer({
         id: "1234rwrwrwrwrwrwrwrw",
         firstName: "Mock",
         lastName: "Consumer",
-
-        isAdmin: false,
         phone: phone,
       });
 
@@ -2267,20 +976,13 @@ describe("ConsumerService", () => {
       };
 
       when(consumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.ok(anything()));
-      when(mockOtpRepo.getOTP(email, IdentityType.CONSUMER)).thenResolve(otpObject);
-      when(mockOtpRepo.deleteOTP(otpObject.props._id)).thenResolve();
-
-      try {
-        await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
-        expect(true).toBe(false);
-      } catch (err) {
-        console.log(err);
-        expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toEqual("User already exists with this email address");
-      }
-
-      expect(consumer.props.email).toBeUndefined();
-      expect(consumer.props.displayEmail).toBeUndefined();
+      when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, otp)).thenResolve(true);
+      expect(async () => await consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(async () => await consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).rejects.toThrow(
+        "User already exists with this email address",
+      );
     });
   });
 
@@ -2370,104 +1072,4 @@ describe("ConsumerService", () => {
       expect(isHandleAvaialble).toBe(true);
     });
   });
-
-  describe("getConsumerCircleWalletID", () => {
-    it("should return the circleWalletID if already present in the Consumer record", async () => {
-      const consumerID = "mock_consumer_id";
-      when(consumerRepo.getConsumer(anyString())).thenResolve(
-        Consumer.createConsumer({
-          id: consumerID,
-          firstName: "firstName",
-          lastName: "lastName",
-          email: "test@noba.com",
-          phone: "+9876541230",
-          handle: "test",
-          circleWalletID: "mock_circle_wallet_id",
-        }),
-      );
-
-      const receivedCircleWalletID = await consumerService.getConsumerCircleWalletID(consumerID);
-
-      expect(receivedCircleWalletID).toBe("mock_circle_wallet_id");
-      const [getConsumerMethodParam] = capture(consumerRepo.getConsumer).last();
-      expect(getConsumerMethodParam).toBe(consumerID);
-    });
-
-    it("should call the Circle client to create a new Wallet & also update the Consumer record if the circleWalletID if not present in the Consumer record", async () => {
-      const consumerID = "mock_consumer_id";
-      const circleWalletID = "mock_circle_wallet_id";
-
-      when(consumerRepo.getConsumer(anyString())).thenResolve(
-        Consumer.createConsumer({
-          id: consumerID,
-          firstName: "firstName",
-          lastName: "lastName",
-          email: "test@noba.com",
-          phone: "+9876541230",
-          handle: "test",
-        }),
-      );
-      when(circleClient.createWallet(anyString())).thenResolve(circleWalletID);
-      when(consumerRepo.updateConsumerCircleWalletID(anyString(), anyString())).thenResolve();
-
-      const receivedCircleWalletID = await consumerService.getConsumerCircleWalletID(consumerID);
-
-      const [getConsumerMethodParam] = capture(consumerRepo.getConsumer).last();
-      expect(getConsumerMethodParam).toBe(consumerID);
-      const [createWalletMethodParams] = capture(circleClient.createWallet).last();
-      expect(createWalletMethodParams).toBe(consumerID);
-
-      expect(receivedCircleWalletID).toBe(circleWalletID);
-
-      const [updateConsumerConsumerIdParam, updateConsumerCircleWalletIdParam] = capture(
-        consumerRepo.updateConsumerCircleWalletID,
-      ).last();
-      expect(updateConsumerConsumerIdParam).toBe(consumerID);
-      expect(updateConsumerCircleWalletIdParam).toBe(circleWalletID);
-    });
-
-    it("should throw error if the consumerRepo throws it", async () => {
-      when(consumerRepo.getConsumer("mock_consumer_id")).thenReject(new BadRequestException());
-      try {
-        await consumerService.getConsumerCircleWalletID("mock_consumer_id");
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-      }
-    });
-  });
 });
-
-function constructAddPaymentMethodResponse(
-  consumer: Consumer,
-  paymentMethodStatus: PaymentMethodStatus,
-): AddPaymentMethodResponse {
-  const updatedConsumer = Consumer.createConsumer({
-    ...consumer.props,
-    paymentMethods: [
-      {
-        type: PaymentMethodType.CARD,
-        cardData: {
-          first6Digits: "123456",
-          last4Digits: "7890",
-        },
-        imageUri: "fake-uri",
-        paymentToken: "fake-token",
-        paymentProviderID: PaymentProvider.CHECKOUT,
-        isDefault: false,
-      },
-    ],
-  });
-
-  const checkoutResponseData: CheckoutResponseData = {
-    paymentMethodStatus: paymentMethodStatus,
-    responseCode: "fake-code",
-    responseSummary: "fake-summary",
-  };
-
-  return {
-    checkoutResponseData: checkoutResponseData,
-    updatedConsumerData: updatedConsumer.props,
-    newPaymentMethod: updatedConsumer.props.paymentMethods[0],
-  };
-}

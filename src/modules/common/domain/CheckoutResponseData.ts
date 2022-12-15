@@ -1,4 +1,4 @@
-import { PaymentMethodStatus } from "../../../modules/consumer/domain/VerificationStatus";
+import { PaymentMethodStatus } from "@prisma/client";
 
 export class CheckoutResponseData {
   paymentMethodStatus: PaymentMethodStatus;

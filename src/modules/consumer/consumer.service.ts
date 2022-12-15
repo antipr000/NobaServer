@@ -14,7 +14,6 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
 import { SMSService } from "../common/sms.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
-import { CircleClient } from "../psp/circle.client";
 import { PaymentService } from "../psp/payment.service";
 import { Transaction } from "../transactions/domain/Transaction";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
@@ -56,9 +55,6 @@ export class ConsumerService {
 
   @Inject()
   private readonly smsService: SMSService;
-
-  @Inject()
-  private readonly circleClient: CircleClient;
 
   private otpOverride: number;
 
@@ -340,7 +336,7 @@ export class ConsumerService {
       throw new NotFoundException("Payment Method id not found");
     }
 
-    const paymentProviderID = paymentMethod[0].paymentProvider;
+    const paymentProviderID = paymentMethod.props.paymentProvider;
     if (paymentProviderID === PaymentProvider.CHECKOUT) {
       await this.paymentService.removePaymentMethod(paymentMethod.props.paymentToken);
     } else {
@@ -354,8 +350,8 @@ export class ConsumerService {
       lastName: consumer.props.lastName,
       nobaUserID: consumer.props.id,
       email: consumer.props.displayEmail,
-      cardNetwork: paymentMethod[0].cardData.cardType,
-      last4Digits: paymentMethod[0].cardData.last4Digits,
+      cardNetwork: paymentMethod.props.cardData.cardType,
+      last4Digits: paymentMethod.props.cardData.last4Digits,
     });
   }
 

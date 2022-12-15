@@ -1,4 +1,4 @@
-import { PaymentMethodStatus } from "./VerificationStatus";
+import { PaymentMethodStatus } from "@prisma/client";
 
 export enum PaymentMethodType {
   CARD = "Card",
