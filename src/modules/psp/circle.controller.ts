@@ -29,7 +29,7 @@ export class CircleController {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    const res = await this.circleService.createWallet(consumer.props.id);
+    const res = await this.circleService.getOrCreateWallet(consumer.props.id);
     return res;
   }
 
@@ -44,7 +44,7 @@ export class CircleController {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    const res = await this.circleService.createWallet(consumer.props.id);
+    const res = await this.circleService.getOrCreateWallet(consumer.props.id);
     return res;
   }
 }

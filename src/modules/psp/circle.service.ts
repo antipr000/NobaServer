@@ -15,7 +15,7 @@ export class CircleService {
   @Inject()
   private readonly circleClient: CircleClient;
 
-  public async createWallet(consumerID: string): Promise<string> {
+  public async getOrCreateWallet(consumerID: string): Promise<string> {
     // may want to return a Result object here as well
     // assume there's only one wallet per consumer ID
     const existingWalletResult = await this.circleRepo.getCircleWalletID(consumerID);
@@ -29,5 +29,23 @@ export class CircleService {
 
     await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
     return circleWalletID;
+  }
+
+  public async getWalletBalance(consumerID: string, walletID: string): Promise<number> {
+    // Stub
+
+    return 100;
+  }
+
+  public async debitWalletBalance(consumerID: string, walletID: string, amount: number): Promise<number> {
+    // Stub
+
+    return (await this.getWalletBalance(consumerID, walletID)) - amount;
+  }
+
+  public async creditWalletBalance(consumerID: string, walletID: string, amount: number): Promise<number> {
+    // Stub
+
+    return (await this.getWalletBalance(consumerID, walletID)) + amount;
   }
 }
