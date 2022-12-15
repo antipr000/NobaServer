@@ -10,6 +10,8 @@ export const getMockUserAuthServiceWithDefaults = () => {
   when(mockUserAuthService.sendOtp(anyString(), anyString())).thenReject(new Error("Send Otp not implemented!"));
   when(mockUserAuthService.generateOTP()).thenReject(new Error("Not implemented!"));
   when(mockUserAuthService.verifyUserExistence(anyString())).thenReject(new Error("Not implemented!"));
+  when(mockUserAuthService.validateToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
+  when(mockUserAuthService.invalidateToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
 
   return mockUserAuthService;
 };

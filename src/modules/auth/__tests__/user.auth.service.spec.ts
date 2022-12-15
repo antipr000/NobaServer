@@ -19,6 +19,8 @@ import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mo
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Result } from "../../../core/logic/Result";
 import { Utils } from "../../../core/utils/Utils";
+import { ITokenRepo } from "../repo/TokenRepo";
+import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
 
 describe("UserAuthService", () => {
   jest.setTimeout(5000);
@@ -26,6 +28,7 @@ describe("UserAuthService", () => {
     let mockConsumerService: ConsumerService;
     let userAuthService: UserAuthService;
     let mockOtpRepo: IOTPRepo;
+    let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
 
@@ -36,6 +39,7 @@ describe("UserAuthService", () => {
     beforeEach(async () => {
       mockConsumerService = getMockConsumerServiceWithDefaults();
       mockOtpRepo = getMockOtpRepoWithDefaults();
+      mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
 
@@ -57,6 +61,10 @@ describe("UserAuthService", () => {
           {
             provide: "OTPRepo",
             useFactory: () => instance(mockOtpRepo),
+          },
+          {
+            provide: "TokenRepo",
+            useFactory: () => instance(mockTokenRepo),
           },
           {
             provide: NotificationService,

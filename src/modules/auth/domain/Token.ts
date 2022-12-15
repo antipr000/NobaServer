@@ -10,7 +10,7 @@ export enum TokenType {
 
 export interface TokenProps extends BaseProps {
   _id: string; //token hash, using this attribute as _id to avoid having separate index on token
-  userId: string;
+  userID: string;
   tokenType: TokenType;
   expiryTime?: number;
   isUsed: boolean; // its not needed we delete the token
@@ -19,8 +19,10 @@ export interface TokenProps extends BaseProps {
 export const tokenValidationKeys: KeysRequired<TokenProps> = {
   ...basePropsJoiSchemaKeys,
   _id: Joi.string().required(),
-  userId: Joi.string().required(),
-  tokenType: Joi.string().valid(Object.values(TokenType)),
+  userID: Joi.string().required(),
+  tokenType: Joi.string()
+    .valid(...Object.values(TokenType))
+    .default(TokenType.REFRESH_TOKEN),
   expiryTime: Joi.number().optional(),
   isUsed: Joi.boolean().default(false),
 };
@@ -53,6 +55,6 @@ export class Token extends AggregateRoot<TokenProps> {
   }
 
   public isMatching(rawToken: string): boolean {
-    return !this.isExpired() && this.props._id === Token.saltifyToken(rawToken, this.props.userId);
+    return !this.isExpired() && this.props._id === Token.saltifyToken(rawToken, this.props.userID);
   }
 }

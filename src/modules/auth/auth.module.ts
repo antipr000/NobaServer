@@ -16,6 +16,7 @@ import { AdminModule } from "../admin/admin.module";
 import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
+import { MongoDBTokenRepo } from "./repo/MongoDBTokenRepo";
 
 @Module({
   imports: [
@@ -38,6 +39,10 @@ import { NotificationsModule } from "../notifications/notification.module";
     {
       provide: "OTPRepo",
       useClass: MongoDBOtpRepo,
+    },
+    {
+      provide: "TokenRepo",
+      useClass: MongoDBTokenRepo,
     },
     UserAuthService,
     AdminAuthService,

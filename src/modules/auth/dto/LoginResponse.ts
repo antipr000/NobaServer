@@ -8,5 +8,5 @@ export class LoginResponseDTO {
   user_id: string;
 
   @ApiPropertyOptional()
-  refresh_token: string;
+  refresh_token?: string;
 }

@@ -62,17 +62,15 @@ export class AuthController {
   async newAccessToken(@Body() requestBody: NewAccessTokenRequestDTO, @Headers() headers): Promise<LoginResponseDTO> {
     const authService: AuthService = this.getAuthService(consumerIdentityIdentifier);
 
-    const partnerId = (await this.partnerService.getPartnerFromApiKey(headers[X_NOBA_API_KEY.toLowerCase()])).props._id;
-
-    const isValidToken = await authService.validateToken(requestBody.refreshToken, requestBody.userId);
+    const isValidToken = await authService.validateToken(requestBody.refreshToken, requestBody.userID);
 
     if (!isValidToken) {
       throw new UnauthorizedException("Invalid refresh token, either it is already used or expired");
     }
 
-    await authService.invalidateToken(requestBody.refreshToken, requestBody.userId);
+    await authService.invalidateToken(requestBody.refreshToken, requestBody.userID);
 
-    return authService.generateAccessToken(requestBody.userId, partnerId, true);
+    return authService.generateAccessToken(requestBody.userID, true);
   }
 
   @Public()
@@ -91,7 +89,7 @@ export class AuthController {
     }
 
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp);
-    return authService.generateAccessToken(userId);
+    return authService.generateAccessToken(userId, requestBody.includeRefreshToken);
   }
 
   @Public()

@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { anyString, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
@@ -11,6 +11,8 @@ import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.serv
 import { UserAuthService } from "../user.auth.service";
 import { HeaderValidationService } from "../header.validation.service";
 import { getMockHeaderValidationServiceWithDefaults } from "../mocks/mock.header.validation.service";
+import { consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "../domain/IdentityType";
+import { NewAccessTokenRequestDTO } from "../dto/NewAccessTokenRequest";
 
 describe("AuthController", () => {
   jest.setTimeout(5000);
@@ -50,6 +52,49 @@ describe("AuthController", () => {
     authController = app.get<AuthController>(AuthController);
   });
 
+  describe("newAccessToken", () => {
+    it("it should return new access token assuming refresh token valid", async () => {
+      const consumerId = "1111111111";
+      const token = "nobatoken";
+      const request: NewAccessTokenRequestDTO = {
+        userID: consumerId,
+        refreshToken: token,
+      };
+
+      const generateAccessTokenResponse: LoginResponseDTO = {
+        user_id: consumerId,
+        access_token: "xxxxxx-yyyyyy-zzzzzz",
+        refresh_token: "new-refresh-token",
+      };
+
+      when(mockConsumerAuthService.validateToken(token, consumerId)).thenResolve(true);
+      when(mockConsumerAuthService.invalidateToken(token, consumerId)).thenResolve();
+      when(mockConsumerAuthService.generateAccessToken(consumerId, true)).thenResolve(generateAccessTokenResponse);
+
+      const result: LoginResponseDTO = await authController.newAccessToken(request, undefined);
+
+      expect(result).toEqual(generateAccessTokenResponse);
+    });
+
+    it("it should throw unauthorized exception if token is not valid", async () => {
+      const consumerId = "1111111111";
+      const token = "nobatoken";
+      const request: NewAccessTokenRequestDTO = {
+        userID: consumerId,
+        refreshToken: token,
+      };
+
+      when(mockConsumerAuthService.validateToken(token, consumerId)).thenResolve(false);
+
+      try {
+        await authController.newAccessToken(request, undefined);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+      }
+    });
+  });
+
   describe("verifyOtp", () => {
     it("should use 'AdminAuthService' if 'identityType' is 'NOBA_ADMIN'", async () => {
       const adminId = "1111111111";
@@ -62,13 +107,14 @@ describe("AuthController", () => {
       };
 
       when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
-      when(mockAdminAuthService.generateAccessToken(adminId)).thenResolve(generateAccessTokenResponse);
+      when(mockAdminAuthService.generateAccessToken(adminId, false)).thenResolve(generateAccessTokenResponse);
 
       const result: LoginResponseDTO = await authController.verifyOtp(
         {
           emailOrPhone: adminEmail,
           identityType: identityType,
           otp: otp,
+          includeRefreshToken: false,
         },
         {
           "x-noba-api-key": apiKey,
@@ -89,13 +135,14 @@ describe("AuthController", () => {
       };
 
       when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp)).thenResolve(consumerId);
-      when(mockConsumerAuthService.generateAccessToken(consumerId)).thenResolve(generateAccessTokenResponse);
+      when(mockConsumerAuthService.generateAccessToken(consumerId, false)).thenResolve(generateAccessTokenResponse);
 
       const result: LoginResponseDTO = await authController.verifyOtp(
         {
           emailOrPhone: consumerEmail,
           identityType: identityType,
           otp: otp,
+          includeRefreshToken: false,
         },
         {
           "x-noba-api-key": apiKey,

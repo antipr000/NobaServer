@@ -51,13 +51,19 @@ export abstract class AuthService {
     }
   }
 
-  async validateToken(rawToken: string, userId: string): Promise<boolean> {
-    const token: Token = await this.tokenRepo.getToken(rawToken, userId);
-    return token.isMatching(rawToken);
+  async validateToken(rawToken: string, userID: string): Promise<boolean> {
+    try {
+      const token: Token = await this.tokenRepo.getToken(rawToken, userID);
+      return token.isMatching(rawToken);
+    } catch (error) {
+      this.logger.error(`Error while fetching token: ${rawToken} for user: ${userID}, error: ${error}`);
+    }
+
+    return false;
   }
 
-  async invalidateToken(rawToken: string, userId: string): Promise<void> {
-    await this.tokenRepo.deleteToken(rawToken, userId);
+  async invalidateToken(rawToken: string, userID: string): Promise<void> {
+    await this.tokenRepo.deleteToken(rawToken, userID);
   }
 
   async generateAccessToken(id: string, includeRefreshToken?: boolean): Promise<LoginResponseDTO> {
@@ -65,7 +71,7 @@ export abstract class AuthService {
     if (includeRefreshToken) {
       const { rawToken, saltifiedToken } = Token.generateToken(id);
       refreshToken = rawToken;
-      const token = Token.createTokenObject({ _id: saltifiedToken, userId: id });
+      const token = Token.createTokenObject({ _id: saltifiedToken, userID: id });
       await this.tokenRepo.saveToken(token);
     }
     const payload = {

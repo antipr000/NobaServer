@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { ConsumerService } from "../consumer/consumer.service";
 import { AuthService } from "./auth.service";
 import { consumerIdentityIdentifier } from "./domain/IdentityType";
