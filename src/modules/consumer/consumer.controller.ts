@@ -3,16 +3,15 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Headers,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Patch,
   Post,
   Query,
-  Request,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
@@ -29,7 +28,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { AuthUser } from "../auth/auth.decorator";
-import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { PlaidClient } from "../psp/plaid.client";
@@ -49,6 +47,7 @@ import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { WalletStatus } from "@prisma/client";
 import { AddCryptoWalletResponseDTO } from "./dto/AddCryptoWalletResponse";
+import { BadRequestError } from "../../core/exception/CommonAppException";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -74,13 +73,12 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getConsumer(@Headers() headers, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
+  async getConsumer(@AuthUser() consumer: Consumer): Promise<ConsumerDTO> {
     const consumerID: string = consumer.props.id;
     const entity: Consumer = await this.consumerService.getConsumer(consumerID);
+    if (!entity) {
+      throw new NotFoundException("Requested user details not found");
+    }
     return await this.mapToDTO(entity);
   }
 
@@ -92,12 +90,7 @@ export class ConsumerController {
     description: "False or True specifying whether the specified 'handle' is already in use or not",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async isHandleAvailable(@Query("handle") handle: string, @Request() request): Promise<ConsumerHandleDTO> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async isHandleAvailable(@Query("handle") handle: string, @AuthUser() consumer: Consumer): Promise<ConsumerHandleDTO> {
     return {
       isAvailable: await this.consumerService.isHandleAvailable(handle.toLocaleLowerCase()),
       handle: handle.toLocaleLowerCase(),
@@ -121,8 +114,16 @@ export class ConsumerController {
       id: consumer.props.id,
       ...requestBody,
     };
-    const res = await this.consumerService.updateConsumer(consumerProps);
-    return await this.mapToDTO(res);
+    try {
+      const res = await this.consumerService.updateConsumer(consumerProps);
+      return await this.mapToDTO(res);
+    } catch (e) {
+      if (e instanceof BadRequestError) {
+        throw new BadRequestException(e.message);
+      } else {
+        throw new BadRequestException("Failed to update requested details");
+      }
+    }
   }
 
   @Patch("/phone")
@@ -134,12 +135,7 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async updatePhone(@Request() request, @Body() requestBody: UserPhoneUpdateRequest): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async updatePhone(@AuthUser() consumer: Consumer, @Body() requestBody: UserPhoneUpdateRequest): Promise<ConsumerDTO> {
     const res = await this.consumerService.updateConsumerPhone(consumer, requestBody);
     return await this.mapToDTO(res);
   }
@@ -152,12 +148,7 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async requestOtpToUpdatePhone(@Request() request, @Body() requestBody: PhoneVerificationOtpRequest) {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async requestOtpToUpdatePhone(@AuthUser() consumer: Consumer, @Body() requestBody: PhoneVerificationOtpRequest) {
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.phone);
     if (existingConsumer.isSuccess) {
       // Somebody else already has this phone number, so deny update
@@ -176,12 +167,7 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async updateEmail(@Request() request, @Body() requestBody: UserEmailUpdateRequest): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async updateEmail(@AuthUser() consumer: Consumer, @Body() requestBody: UserEmailUpdateRequest): Promise<ConsumerDTO> {
     const res = await this.consumerService.updateConsumerEmail(consumer, requestBody);
     return await this.mapToDTO(res);
   }
@@ -194,16 +180,7 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async requestOtpToUpdateEmail(
-    @Request() request,
-    @Headers() headers,
-    @Body() requestBody: EmailVerificationOtpRequest,
-  ) {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async requestOtpToUpdateEmail(@AuthUser() consumer: Consumer, @Body() requestBody: EmailVerificationOtpRequest) {
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.email);
     if (existingConsumer.isSuccess) {
       // Somebody else already has this email number, so deny update
@@ -221,13 +198,7 @@ export class ConsumerController {
     description: "Plaid token",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async generatePlaidToken(@Request() request): Promise<PlaidTokenDTO> {
-    const user: AuthenticatedUser = request.user;
-    const consumer = user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async generatePlaidToken(@AuthUser() consumer: Consumer): Promise<PlaidTokenDTO> {
     return {
       token: await this.plaidClient.generateLinkToken({ userID: consumer.props.id }),
     };
@@ -349,9 +320,21 @@ export class ConsumerController {
       consumerID: consumer.props.id,
     });
 
-    // // Ignore the response from the below method, as we don't return the updated consumer in this API.
-    const addedWallet = await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
-    return { notificationMethod: notificationMethod, walletID: addedWallet.props.id };
+    try {
+      // // Ignore the response from the below method, as we don't return the updated consumer in this API.
+      const addedWallet = await this.consumerService.addOrUpdateCryptoWallet(
+        consumer,
+        cryptoWallet,
+        notificationMethod,
+      );
+      return { notificationMethod: notificationMethod, walletID: addedWallet.props.id };
+    } catch (e) {
+      if (e instanceof BadRequestError) {
+        throw new BadRequestException(e.message);
+      } else {
+        throw new BadRequestException("Failed to add wallet for consumer");
+      }
+    }
   }
 
   @Delete("/wallets/:walletID")

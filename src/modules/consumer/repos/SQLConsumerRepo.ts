@@ -7,6 +7,7 @@ import { PaymentMethodStatus, Prisma, WalletStatus } from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
+import { BadRequestError } from "../../../core/exception/CommonAppException";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -29,8 +30,14 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async createConsumer(consumer: Prisma.ConsumerCreateInput): Promise<Consumer> {
-    const consumerProps = await this.prisma.consumer.create({ data: consumer });
-    return Consumer.createConsumer(consumerProps);
+    try {
+      const consumerProps = await this.prisma.consumer.create({ data: consumer });
+      return Consumer.createConsumer(consumerProps);
+    } catch (e) {
+      throw new BadRequestError({
+        message: e.message,
+      });
+    }
   }
 
   async exists(emailOrPhone: string): Promise<boolean> {
@@ -64,9 +71,15 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async updateConsumer(consumerID: string, consumer: Partial<ConsumerProps>): Promise<Consumer> {
-    const updateConsumerInput = this.mapper.toUpdateConsumerInput(consumer);
-    const consumerProps = await this.prisma.consumer.update({ where: { id: consumerID }, data: updateConsumerInput });
-    return Consumer.createConsumer(consumerProps);
+    try {
+      const updateConsumerInput = this.mapper.toUpdateConsumerInput(consumer);
+      const consumerProps = await this.prisma.consumer.update({ where: { id: consumerID }, data: updateConsumerInput });
+      return Consumer.createConsumer(consumerProps);
+    } catch (e) {
+      throw new BadRequestError({
+        message: `Failed to update consumer. Reason: ${e.message}`,
+      });
+    }
   }
 
   async isHandleTaken(handle: string): Promise<boolean> {
@@ -104,9 +117,13 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async addCryptoWallet(cryptoWallet: CryptoWallet): Promise<CryptoWallet> {
-    const cryptoWalletCreateInput = this.mapper.toCreateWalletInput(cryptoWallet);
-    const walletProps = await this.prisma.cryptoWallet.create({ data: cryptoWalletCreateInput });
-    return CryptoWallet.createCryptoWallet(walletProps);
+    try {
+      const cryptoWalletCreateInput = this.mapper.toCreateWalletInput(cryptoWallet);
+      const walletProps = await this.prisma.cryptoWallet.create({ data: cryptoWalletCreateInput });
+      return CryptoWallet.createCryptoWallet(walletProps);
+    } catch (e) {
+      throw new BadRequestError({ message: `Failed to add crypto wallet. Reason: ${e.message}` });
+    }
   }
 
   async getCryptoWalletForConsumer(id: string, consumerID: string): Promise<CryptoWallet> {
@@ -125,8 +142,12 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async updateCryptoWallet(id: string, cryptoWalletProps: Partial<CryptoWalletProps>): Promise<CryptoWallet> {
-    const walletUpdateInput = this.mapper.toUpdateWalletInput(cryptoWalletProps);
-    const updatedWalletProps = await this.prisma.cryptoWallet.update({ where: { id: id }, data: walletUpdateInput });
-    return CryptoWallet.createCryptoWallet(updatedWalletProps);
+    try {
+      const walletUpdateInput = this.mapper.toUpdateWalletInput(cryptoWalletProps);
+      const updatedWalletProps = await this.prisma.cryptoWallet.update({ where: { id: id }, data: walletUpdateInput });
+      return CryptoWallet.createCryptoWallet(updatedWalletProps);
+    } catch (e) {
+      throw new BadRequestError({ message: `Failed to update crypto wallet. Reason: ${e.message}` });
+    }
   }
 }
