@@ -3,7 +3,7 @@ import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export class KYC implements KYCModel {
-  id: number;
+  id: string;
   provider: KYCProvider;
   kycCheckReference: string | null;
   documentCheckReference: string | null;
@@ -19,7 +19,7 @@ export class KYC implements KYCModel {
 }
 
 export const kycValidationJoiKeys: KeysRequired<KYC> = {
-  id: Joi.number().required(),
+  id: Joi.string().required(),
   provider: Joi.string().required().default(KYCProvider.SARDINE),
   kycCheckStatus: Joi.string().default(KYCStatus.NOT_SUBMITTED),
   kycVerificationTimestamp: Joi.date().optional().allow(null),

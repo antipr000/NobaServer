@@ -10,9 +10,9 @@ export const otpConstants = {
 
 export class OTPProps implements OTPModel {
   id: string;
+  otpIdentifier: string;
   createdTimestamp: Date | null;
   updatedTimestamp: Date | null;
-  emailOrPhone: string;
   otp: number;
   otpExpirationTimestamp: Date;
   identityType: IdentityType;
@@ -21,10 +21,10 @@ export class OTPProps implements OTPModel {
 export const otpValidationKeys: KeysRequired<OTPProps> = {
   ...basePropsJoiSchemaKeys,
   id: Joi.string().min(10).required(),
-  emailOrPhone: Joi.string().required(),
+  otpIdentifier: Joi.string().required(),
   otp: Joi.number().required(),
   otpExpirationTimestamp: Joi.date().required(),
-  identityType: Joi.string().valid(Object.keys(IdentityType)),
+  identityType: Joi.string().valid().required(),
 };
 
 export const otpJoiSchema = Joi.object(otpValidationKeys).options({ allowUnknown: true });

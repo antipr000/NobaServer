@@ -7,13 +7,17 @@ import {
   ACH as ACHModel,
 } from "@prisma/client";
 import Joi from "joi";
+import { basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
+import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
-export class PaymentMethod implements PaymentMethodModel {
-  id: number;
+export class PaymentMethodProps implements PaymentMethodModel {
+  id: string;
   name: string | null;
   type: PaymentMethodType;
   paymentToken: string;
+  createdTimestamp: Date | null;
+  updatedTimestamp: Date | null;
   paymentProvider: PaymentProvider;
   status: PaymentMethodStatus;
   isDefault: boolean;
@@ -24,36 +28,55 @@ export class PaymentMethod implements PaymentMethodModel {
 }
 
 class Card implements CardModel {
-  id: number;
+  id: string;
   cardType: string | null;
   scheme: string | null;
   first6Digits: string;
   last4Digits: string;
   authCode: string | null;
   authReason: string | null;
-  paymentMethodID: number;
+  paymentMethodID: string;
 }
 
 class ACH implements ACHModel {
-  id: number;
+  id: string;
   accountID: string;
   accessToken: string;
   itemID: string;
   mask: string;
   accountType: string;
-  paymentMethodID: number;
+  paymentMethodID: string;
 }
 
-export const paymentMethodJoiValidationKeys: KeysRequired<PaymentMethod> = {
-  id: Joi.number().required(),
+export const paymentMethodJoiValidationKeys: KeysRequired<PaymentMethodProps> = {
+  ...basePropsJoiSchemaKeys,
+  id: Joi.string().required(),
   name: Joi.string().optional().allow(null),
-  type: Joi.string().required().valid(Object.keys(PaymentMethodType)),
+  type: Joi.string().required(),
   paymentToken: Joi.string().required(),
-  paymentProvider: Joi.string().valid(Object.keys(PaymentProvider)).default(PaymentProvider.CHECKOUT),
-  status: Joi.string().required().valid(Object.keys(PaymentMethodStatus)),
+  paymentProvider: Joi.string().default(PaymentProvider.CHECKOUT),
+  status: Joi.string().required(),
   isDefault: Joi.boolean().default(false),
   imageUri: Joi.string().optional().allow(null),
   consumerID: Joi.string().required(),
   cardData: Joi.object().optional(),
   achData: Joi.object().optional(),
 };
+
+export const paymentMethodJoiSchema = Joi.object(paymentMethodJoiValidationKeys).options({
+  allowUnknown: true,
+  stripUnknown: false,
+});
+
+export class PaymentMethod extends AggregateRoot<PaymentMethodProps> {
+  private constructor(paymentMethodProps: PaymentMethodProps) {
+    super(paymentMethodProps);
+  }
+
+  public static createPaymentMethod(paymentMethodProps: Partial<PaymentMethodProps>): PaymentMethod {
+    if (!paymentMethodProps.id) paymentMethodProps.id = this.getNewID();
+    if (!paymentMethodProps.isDefault) paymentMethodProps.isDefault = false;
+
+    return new PaymentMethod(Joi.attempt(paymentMethodProps, paymentMethodJoiSchema));
+  }
+}

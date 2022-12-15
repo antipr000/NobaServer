@@ -12,7 +12,6 @@ import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
-import { X_NOBA_API_KEY } from "./modules/auth/domain/HeaderConstants";
 
 @Controller()
 @ApiHeaders(getCommonHeaders())

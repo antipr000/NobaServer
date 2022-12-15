@@ -16,14 +16,15 @@ export class SQLOTPRepo implements IOTPRepo {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  async getOTP(id: string, identityType: IdentityType): Promise<OTP> {
-    const query = Prisma.validator<Prisma.OtpWhereUniqueInput>()({
-      id_identityType: {
-        id: id,
-        identityType: identityType,
+  async getOTP(otpIdentifier: string, identityType: IdentityType): Promise<OTP> {
+    const result = await this.prisma.otp.findUnique({
+      where: {
+        uniqueIdentifier: {
+          otpIdentifier: otpIdentifier,
+          identityType: identityType,
+        },
       },
     });
-    const result = await this.prisma.otp.findUnique({ where: query });
     if (result === undefined || result === null) {
       return null;
     }
@@ -33,7 +34,7 @@ export class SQLOTPRepo implements IOTPRepo {
 
   async saveOTP(otpIdentifier: string, otp: number, identityType: IdentityType): Promise<void> {
     const otpInputObject: Prisma.OtpCreateInput = {
-      id: otpIdentifier,
+      otpIdentifier: otpIdentifier,
       otp: otp,
       identityType: identityType,
       createdTimestamp: new Date(),
@@ -44,14 +45,11 @@ export class SQLOTPRepo implements IOTPRepo {
     await this.prisma.otp.create({ data: otpInputObject });
   }
 
-  async deleteOTP(id: string, identityType: IdentityType): Promise<void> {
+  async deleteOTP(id: string): Promise<void> {
     try {
       await this.prisma.otp.delete({
         where: {
-          id_identityType: {
-            id: id,
-            identityType: identityType,
-          },
+          id: id,
         },
       });
     } catch (e) {
@@ -62,7 +60,7 @@ export class SQLOTPRepo implements IOTPRepo {
 
   async deleteAllOTPsForIdentifier(otpIdentifier: string, identityType: IdentityType): Promise<void> {
     try {
-      await this.prisma.otp.deleteMany({ where: { id: otpIdentifier, identityType: identityType } });
+      await this.prisma.otp.deleteMany({ where: { otpIdentifier: otpIdentifier, identityType: identityType } });
     } catch (e) {
       // If unable to find, it's unusable anyway. Still log as this could be a bigger issue.
       this.logger.warn(`Error deleting OTPs for user: ${e}`);

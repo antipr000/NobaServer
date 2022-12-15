@@ -1,8 +1,14 @@
 import { Mapper } from "../../../core/infra/Mapper";
 import { Consumer } from "../domain/Consumer";
 import { CryptoWallet } from "../domain/CryptoWallet";
-import { PaymentMethod, PaymentMethodType } from "../domain/PaymentMethod";
-import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { PaymentMethod } from "../domain/PaymentMethod";
+import {
+  DocumentVerificationStatus,
+  KYCStatus,
+  PaymentMethodStatus,
+  WalletStatus,
+  PaymentMethodType,
+} from "@prisma/client";
 import { ConsumerDTO, ConsumerSimpleDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
 import { StatesMapper } from "./StatesMapper";
 
@@ -19,7 +25,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
   public toCryptoWalletsDTO(cryptoWallet: CryptoWallet): CryptoWalletsDTO {
     return {
-      walletName: cryptoWallet.walletName,
+      walletName: cryptoWallet.name,
       address: cryptoWallet.address,
       chainType: cryptoWallet.chainType,
       isEVMCompatible: cryptoWallet.isEVMCompatible,
@@ -28,34 +34,34 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
   // TODO(Plaid) figure out mapping
   public toPaymentMethodsDTO(paymentMethod: PaymentMethod): PaymentMethodsDTO {
-    if (paymentMethod.type === PaymentMethodType.CARD) {
+    if (paymentMethod.props.type === PaymentMethodType.CARD) {
       return {
         type: PaymentMethodType.CARD,
-        name: paymentMethod.name,
-        imageUri: paymentMethod.imageUri,
-        paymentToken: paymentMethod.paymentToken,
+        name: paymentMethod.props.name,
+        imageUri: paymentMethod.props.imageUri,
+        paymentToken: paymentMethod.props.paymentToken,
         cardData: {
-          first6Digits: paymentMethod.cardData.first6Digits,
-          last4Digits: paymentMethod.cardData.last4Digits,
-          cardType: paymentMethod.cardData.cardType,
-          scheme: paymentMethod.cardData.scheme,
+          first6Digits: paymentMethod.props.cardData.first6Digits,
+          last4Digits: paymentMethod.props.cardData.last4Digits,
+          cardType: paymentMethod.props.cardData.cardType,
+          scheme: paymentMethod.props.cardData.scheme,
         },
-        isDefault: paymentMethod.isDefault,
+        isDefault: paymentMethod.props.isDefault,
       };
-    } else if (paymentMethod.type === PaymentMethodType.ACH) {
+    } else if (paymentMethod.props.type === PaymentMethodType.ACH) {
       return {
         type: PaymentMethodType.ACH,
-        name: paymentMethod.name,
-        imageUri: paymentMethod.imageUri,
-        paymentToken: paymentMethod.paymentToken,
+        name: paymentMethod.props.name,
+        imageUri: paymentMethod.props.imageUri,
+        paymentToken: paymentMethod.props.paymentToken,
         achData: {
-          accountMask: paymentMethod.achData.mask,
-          accountType: paymentMethod.achData.accountType,
+          accountMask: paymentMethod.props.achData.mask,
+          accountType: paymentMethod.props.achData.accountType,
         },
-        isDefault: paymentMethod.isDefault,
+        isDefault: paymentMethod.props.isDefault,
       };
     } else {
-      throw Error(`Unknown payment method type: ${paymentMethod.type}`);
+      throw Error(`Unknown payment method type: ${paymentMethod.props.type}`);
     }
   }
 
@@ -67,48 +73,48 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
   private getPaymentMethodsDTO(paymentMethods: PaymentMethod[]): PaymentMethodsDTO[] {
     return paymentMethods
-      .filter(paymentMethod => paymentMethod.status === PaymentMethodStatus.APPROVED)
+      .filter(paymentMethod => paymentMethod.props.status === PaymentMethodStatus.APPROVED)
       .map(paymentMethod => this.toPaymentMethodsDTO(paymentMethod));
   }
 
-  public toDTO(consumer: Consumer): ConsumerDTO {
+  public toDTO(consumer: Consumer, paymentMethods: PaymentMethod[], cryptoWallets: CryptoWallet[]): ConsumerDTO {
     const p = consumer.props;
     const [documentVerificationStatus, documentVerificationErrorReason] =
       this.statesMapper.getDocumentVerificationState(
         p.verificationData ? p.verificationData.documentVerificationStatus : DocumentVerificationStatus.NOT_REQUIRED,
       );
     return {
-      _id: p._id,
+      id: p.id,
       firstName: p.firstName,
       lastName: p.lastName,
       email: p.displayEmail ? p.displayEmail : p.email,
       handle: p.handle,
       phone: p.phone,
-      status: this.statesMapper.getUserState(consumer),
+      status: this.statesMapper.getUserState(consumer, paymentMethods, cryptoWallets),
       kycVerificationData: {
         kycVerificationStatus: this.statesMapper.getKycVerificationState(
-          p.verificationData ? p.verificationData.kycVerificationStatus : KYCStatus.NOT_SUBMITTED,
+          p.verificationData ? p.verificationData.kycCheckStatus : KYCStatus.NOT_SUBMITTED,
         ),
-        updatedTimestamp: p.verificationData ? p.verificationData.kycVerificationTimestamp : 0,
+        updatedTimestamp: p.verificationData ? p.verificationData.kycVerificationTimestamp.getTime() : 0,
       },
       documentVerificationData: {
         documentVerificationStatus: documentVerificationStatus,
         documentVerificationErrorReason: documentVerificationErrorReason,
-        updatedTimestamp: p.verificationData ? p.verificationData.documentVerificationTimestamp : 0,
+        updatedTimestamp: p.verificationData ? p.verificationData.documentVerificationTimestamp.getTime() : 0,
       },
       dateOfBirth: p.dateOfBirth,
       address: p.address,
-      cryptoWallets: this.getCryptoWalletsDTO(p.cryptoWallets),
-      paymentMethods: this.getPaymentMethodsDTO(p.paymentMethods),
-      paymentMethodStatus: this.statesMapper.getPaymentMethodState(consumer.props.paymentMethods),
-      walletStatus: this.statesMapper.getWalletState(consumer.props.cryptoWallets),
+      cryptoWallets: this.getCryptoWalletsDTO(cryptoWallets),
+      paymentMethods: this.getPaymentMethodsDTO(paymentMethods),
+      paymentMethodStatus: this.statesMapper.getPaymentMethodState(paymentMethods),
+      walletStatus: this.statesMapper.getWalletState(cryptoWallets),
     };
   }
 
   public toSimpleDTO(consumer: Consumer): ConsumerSimpleDTO {
     const p = consumer.props;
     return {
-      _id: p._id,
+      id: p.id,
       firstName: p.firstName,
       lastName: p.lastName,
       email: p.displayEmail ? p.displayEmail : p.email,

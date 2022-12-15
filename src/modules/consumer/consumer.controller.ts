@@ -8,7 +8,6 @@ import {
   Headers,
   HttpStatus,
   Inject,
-  NotFoundException,
   Param,
   Patch,
   Post,
@@ -37,7 +36,6 @@ import { PlaidClient } from "../psp/plaid.client";
 import { ConsumerService } from "./consumer.service";
 import { Consumer } from "./domain/Consumer";
 import { CryptoWallet } from "./domain/CryptoWallet";
-import { WalletStatus } from "@prisma/client";
 import { AddCryptoWalletDTO, ConfirmWalletUpdateDTO, NotificationMethod } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO, PaymentType } from "./dto/AddPaymentMethodDTO";
 import { ConsumerDTO } from "./dto/ConsumerDTO";
@@ -48,6 +46,7 @@ import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
 import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
 import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
+import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -80,7 +79,7 @@ export class ConsumerController {
     }
     const consumerID: string = consumer.props.id;
     const entity: Consumer = await this.consumerService.getConsumer(consumerID);
-    return this.consumerMapper.toDTO(entity);
+    return await this.mapToDTO(entity);
   }
 
   @Get("/handles/availability")
@@ -123,7 +122,7 @@ export class ConsumerController {
       ...requestBody,
     };
     const res = await this.consumerService.updateConsumer(consumerProps);
-    return this.consumerMapper.toDTO(res);
+    return await this.mapToDTO(res);
   }
 
   @Patch("/phone")
@@ -142,7 +141,7 @@ export class ConsumerController {
     }
 
     const res = await this.consumerService.updateConsumerPhone(consumer, requestBody);
-    return this.consumerMapper.toDTO(res);
+    return await this.mapToDTO(res);
   }
 
   @Post("/phone/verify")
@@ -184,7 +183,7 @@ export class ConsumerController {
     }
 
     const res = await this.consumerService.updateConsumerEmail(consumer, requestBody);
-    return this.consumerMapper.toDTO(res);
+    return await this.mapToDTO(res);
   }
 
   @Post("/email/verify")
@@ -239,17 +238,14 @@ export class ConsumerController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     type: ConsumerDTO,
-    description: "Updated consumer record",
+    description: "Updated payment method record",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
-  async addPaymentMethod(@Body() requestBody: AddPaymentMethodDTO, @Request() request): Promise<ConsumerDTO> {
-    const user: AuthenticatedUser = request.user;
-    const consumer = user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
+  async addPaymentMethod(
+    @Body() requestBody: AddPaymentMethodDTO,
+    @AuthUser() consumer: Consumer,
+  ): Promise<ConsumerDTO> {
     const requiredFields = [];
     switch (requestBody.type) {
       case PaymentType.CARD:
@@ -269,8 +265,8 @@ export class ConsumerController {
       }
     });
 
-    const res = await this.consumerService.addPaymentMethod(consumer, requestBody);
-    return this.consumerMapper.toDTO(res);
+    await this.consumerService.addPaymentMethod(consumer, requestBody);
+    return await this.mapToDTO(consumer);
   }
 
   @Patch("/paymentmethods/:paymentToken")
@@ -288,16 +284,12 @@ export class ConsumerController {
     @AuthUser() consumer: Consumer,
     @Body() updatePaymentMethodDTO: UpdatePaymentMethodDTO,
   ): Promise<ConsumerDTO> {
-    const paymentMethod = consumer.getPaymentMethodByID(paymentToken);
+    const paymentMethodProps: Partial<PaymentMethodProps> = {};
 
-    if (paymentMethod === null) {
-      throw new NotFoundException("Payment method not found for consumer");
-    }
-
-    if (updatePaymentMethodDTO.name) paymentMethod.name = updatePaymentMethodDTO.name;
-    if (updatePaymentMethodDTO.isDefault) paymentMethod.isDefault = updatePaymentMethodDTO.isDefault;
-    const res = await this.consumerService.updatePaymentMethod(consumer.props.id, paymentMethod);
-    return this.consumerMapper.toDTO(res);
+    if (updatePaymentMethodDTO.name) paymentMethodProps.name = updatePaymentMethodDTO.name;
+    if (updatePaymentMethodDTO.isDefault) paymentMethodProps.isDefault = updatePaymentMethodDTO.isDefault;
+    await this.consumerService.updatePaymentMethod(consumer.props.id, paymentMethodProps);
+    return this.mapToDTO(consumer);
   }
 
   @Delete("/paymentmethods/:paymentToken")
@@ -309,14 +301,12 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid payment method details" })
-  async deletePaymentMethod(@Param("paymentToken") paymentToken: string, @Request() request): Promise<ConsumerDTO> {
-    const user: AuthenticatedUser = request.user;
-    const consumer = user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-    const res = await this.consumerService.removePaymentMethod(consumer, paymentToken);
-    return this.consumerMapper.toDTO(res);
+  async deletePaymentMethod(
+    @Param("paymentToken") paymentToken: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<ConsumerDTO> {
+    await this.consumerService.removePaymentMethod(consumer, paymentToken);
+    return this.mapToDTO(consumer);
   }
 
   /* Example of how we can decrypt the SSN. This should only be available to the compliance team.
@@ -352,16 +342,16 @@ export class ConsumerController {
     const notificationMethod = this.verifyOrReplaceNotificationMethod(requestBody.notificationMethod, consumer);
 
     // Initialise the crypto wallet object with a pending status here in case any updates made to wallet or addition of a new wallet
-    const cryptoWallet: CryptoWallet = {
-      walletName: requestBody.walletName,
-      address: requestBody.address,
-      chainType: requestBody.chainType,
-      isEVMCompatible: requestBody.isEVMCompatible,
-      status: WalletStatus.PENDING,
-    };
+    // const cryptoWallet: Partial<CryptoWallet> = {
+    //   name: requestBody.walletName,
+    //   address: requestBody.address,
+    //   chainType: requestBody.chainType,
+    //   isEVMCompatible: requestBody.isEVMCompatible,
+    //   status: WalletStatus.PENDING,
+    // };
 
-    // Ignore the response from the below method, as we don't return the updated consumer in this API.
-    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
+    // // Ignore the response from the below method, as we don't return the updated consumer in this API.
+    // await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet, notificationMethod);
     return { notificationMethod: notificationMethod };
   }
 
@@ -374,14 +364,12 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid wallet address" })
-  async deleteCryptoWallet(@Param("walletAddress") walletAddress: string, @Request() request): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
-    const res = await this.consumerService.removeCryptoWallet(consumer, walletAddress);
-    return this.consumerMapper.toDTO(res);
+  async deleteCryptoWallet(
+    @Param("walletAddress") walletAddress: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<ConsumerDTO> {
+    await this.consumerService.removeCryptoWallet(consumer, walletAddress);
+    return this.mapToDTO(consumer);
   }
 
   @Post("/wallets/confirm")
@@ -391,23 +379,18 @@ export class ConsumerController {
   async confirmWalletUpdate(
     @Headers() headers,
     @Body() requestBody: ConfirmWalletUpdateDTO,
-    @Request() request,
+    @AuthUser() consumer: Consumer,
   ): Promise<ConsumerDTO> {
-    const consumer = request.user.entity;
-    if (!(consumer instanceof Consumer)) {
-      throw new ForbiddenException("Endpoint can only be called by consumers");
-    }
-
     const notificationMethod = this.verifyOrReplaceNotificationMethod(requestBody.notificationMethod, consumer);
 
-    const res = await this.consumerService.confirmWalletUpdateOTP(
+    await this.consumerService.confirmWalletUpdateOTP(
       consumer,
       requestBody.address,
       requestBody.otp,
       consumer.props.id,
       notificationMethod,
     );
-    return this.consumerMapper.toDTO(res);
+    return this.mapToDTO(consumer);
   }
 
   private verifyOrReplaceNotificationMethod(
@@ -429,5 +412,15 @@ export class ConsumerController {
       notificationMethod = NotificationMethod.EMAIL;
     }
     return notificationMethod;
+  }
+
+  private async mapToDTO(consumer: Consumer): Promise<ConsumerDTO> {
+    const allPaymentMethods: PaymentMethod[] = await this.consumerService.getAllPaymentMethodsForConsumer(
+      consumer.props.id,
+    );
+
+    const allCryptoWallets: CryptoWallet[] = await this.consumerService.getAllConsumerWallets(consumer.props.id);
+
+    return this.consumerMapper.toDTO(consumer, allPaymentMethods, allCryptoWallets);
   }
 }

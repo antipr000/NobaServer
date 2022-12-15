@@ -37,7 +37,7 @@ import { DocumentsFileUploadRequestDTO, DocVerificationRequestDTO } from "./dto/
 import { IDVerificationRequestDTO } from "./dto/IDVerificationRequestDTO";
 import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { VerificationService } from "./verification.service";
-import { IsNoApiKeyNeeded, Public } from "../auth/public.decorator";
+import { Public } from "../auth/public.decorator";
 import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
 import { Consumer } from "../consumer/domain/Consumer";
 import { DeviceVerificationResponseDTO } from "./dto/DeviceVerificationResponseDTO";
@@ -100,12 +100,13 @@ export class VerificationController {
     if (!(user.entity instanceof Consumer))
       throw new BadRequestException("verifyConsumer is only allowed for consumer");
     const consumer: Consumer = user.entity;
-    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
-      ...requestBody,
-      userID: consumer.props.id,
-      email: consumer.props.email,
-    });
-    return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
+    // const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
+    //   ...requestBody,
+    //   userID: consumer.props.id,
+    //   email: consumer.props.email,
+    // });
+    // return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
+    throw new Error("");
   }
 
   @Post("/document")
@@ -250,7 +251,7 @@ export class VerificationController {
 }
 
 @Roles(Role.User)
-@IsNoApiKeyNeeded()
+@Public()
 @Controller("verify/webhook")
 @ApiTags("VerificationWebhooks")
 export class VerificationWebhookController {

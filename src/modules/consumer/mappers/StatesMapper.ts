@@ -9,7 +9,7 @@ import {
   UserState,
 } from "../domain/ExternalStates";
 import { PaymentMethod } from "../domain/PaymentMethod";
-import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "../domain/VerificationStatus";
+import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, WalletStatus } from "@prisma/client";
 
 export class StatesMapper {
   private getAggregatedWalletStatus(allWallets: CryptoWallet[]): WalletStatus {
@@ -27,18 +27,15 @@ export class StatesMapper {
     } else return null;
   }
 
-  private getAggregatedPaymentMethodStatus(allPaymentMethods: PaymentMethod[]): PaymentMethodStatus {
-    // Filter out payment methods that has not been deleted
-    const paymentMethods = allPaymentMethods.filter(
-      paymentMethod => paymentMethod.status !== PaymentMethodStatus.DELETED,
-    );
-
-    if (paymentMethods.filter(paymentMethod => paymentMethod.status === PaymentMethodStatus.REJECTED).length > 0) {
+  private getAggregatedPaymentMethodStatus(paymentMethods: PaymentMethod[]): PaymentMethodStatus {
+    if (
+      paymentMethods.filter(paymentMethod => paymentMethod.props.status === PaymentMethodStatus.REJECTED).length > 0
+    ) {
       return PaymentMethodStatus.REJECTED;
     }
     if (paymentMethods.length === 0) return null;
     const numApproved = paymentMethods.filter(
-      paymentMethod => paymentMethod.status && paymentMethod.status === PaymentMethodStatus.APPROVED,
+      paymentMethod => paymentMethod.props.status && paymentMethod.props.status === PaymentMethodStatus.APPROVED,
     ).length;
     if (numApproved === paymentMethods.length) return PaymentMethodStatus.APPROVED;
     else return PaymentMethodStatus.FLAGGED;
@@ -106,12 +103,11 @@ export class StatesMapper {
     }
   }
 
-  getUserState(consumer: Consumer): UserState {
-    const paymentMethodStatus = this.getAggregatedPaymentMethodStatus(consumer.props.paymentMethods);
-    const walletStatus = this.getAggregatedWalletStatus(consumer.props.cryptoWallets);
+  getUserState(consumer: Consumer, paymentMethods: PaymentMethod[], cryptoWallets: CryptoWallet[]): UserState {
+    const paymentMethodStatus = this.getAggregatedPaymentMethodStatus(paymentMethods);
+    const walletStatus = this.getAggregatedWalletStatus(cryptoWallets);
 
-    const identityVerificationStatus =
-      consumer.props.verificationData?.kycVerificationStatus ?? KYCStatus.NOT_SUBMITTED;
+    const identityVerificationStatus = consumer.props.verificationData?.kycCheckStatus ?? KYCStatus.NOT_SUBMITTED;
 
     const identityVerificationState = this.getKycVerificationState(identityVerificationStatus);
 
@@ -130,7 +126,7 @@ export class StatesMapper {
       return UserState.PERMANENT_HOLD;
     }
 
-    if (consumer.props.isDisabled || consumer.props.isSuspectedFraud) {
+    if (consumer.props.isDisabled) {
       return UserState.TEMPORARY_HOLD;
     }
 

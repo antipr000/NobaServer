@@ -9,21 +9,11 @@ import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
 import { SMSService } from "../common/sms.service";
 import { ConsumerRepoModule } from "./repos/consumer.repo.module";
-import { SQLOTPRepo } from "../auth/repo/SQLOTPRepo";
 
 @Module({
   imports: [InfraProvidersModule, CommonModule, NotificationsModule, PspModule, ConsumerRepoModule],
   controllers: [ConsumerController],
-  providers: [
-    ConsumerService,
-    DBProvider,
-    {
-      provide: "OTPRepo",
-      useClass: SQLOTPRepo,
-    },
-    SanctionedCryptoWalletService,
-    SMSService,
-  ],
+  providers: [ConsumerService, DBProvider, SanctionedCryptoWalletService, SMSService],
   exports: [ConsumerService],
 })
 export class ConsumerModule {}

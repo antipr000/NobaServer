@@ -13,7 +13,6 @@ import {
   ForbiddenException,
   Patch,
   NotFoundException,
-  Response,
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -46,8 +45,6 @@ import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 import { TransactionService } from "../transactions/transaction.service";
-import fs from "fs";
-import { TransactionFilterDTO } from "./dto/TransactionFilterDTO";
 
 @Controller("admins")
 @ApiBearerAuth("JWT-auth")

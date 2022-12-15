@@ -3,7 +3,7 @@ import { KeysRequired } from "../../../modules/common/domain/Types";
 import Joi from "joi";
 
 export class Address implements AddressModel {
-  id: number;
+  id: string;
   streetLine1: string;
   streetLine2: string | null;
   city: string;
@@ -14,7 +14,7 @@ export class Address implements AddressModel {
 }
 
 export const addressValidationJoiKeys: KeysRequired<Address> = {
-  id: Joi.number().required(),
+  id: Joi.string().required(),
   streetLine1: Joi.string().optional(),
   streetLine2: Joi.string().optional(),
   city: Joi.string().optional(),

@@ -7,14 +7,13 @@ import { LocationService } from "./location.service";
 import { KmsService } from "./kms.service";
 import { SMSService } from "./sms.service";
 import { ConfigurationProviderService } from "./configuration.provider.service";
-import { MongoDBLockRepo } from "./repo/MongoDBLockRepo";
-import { LockService } from "./lock.service";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
 import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRepo";
-import { SQLOTPRepo } from "./repo/SqlOtpRepo";
+import { SQLOTPRepo } from "./repo/SQLOTPRepo";
 import { OTPService } from "./otp.service";
+import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -27,11 +26,6 @@ import { OTPService } from "./otp.service";
     CreditCardService,
     LocationService,
     ConfigurationProviderService,
-    {
-      provide: "LockRepo",
-      useClass: MongoDBLockRepo,
-    },
-    LockService,
     EllipticService,
     {
       provide: "CreditCardBinDataRepo",
@@ -42,6 +36,7 @@ import { OTPService } from "./otp.service";
       useClass: SQLOTPRepo,
     },
     OTPService,
+    DeleteExpiredOTPs,
   ],
   exports: [
     CsvService,
@@ -51,7 +46,6 @@ import { OTPService } from "./otp.service";
     CreditCardService,
     LocationService,
     ConfigurationProviderService,
-    LockService,
     EllipticService,
     OTPService,
   ],

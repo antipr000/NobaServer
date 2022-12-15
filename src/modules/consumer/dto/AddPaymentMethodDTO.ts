@@ -20,7 +20,7 @@ export class ACHDetailsDTO {
 }
 
 export enum PaymentType {
-  CARD = "Card", // Keep this consistent with PaymentMethodType.Card! Not a technical requirement but makes sense API-wise.
+  CARD = "CARD", // Keep this consistent with PaymentMethodType.Card! Not a technical requirement but makes sense API-wise.
   ACH = "ACH",
 }
 

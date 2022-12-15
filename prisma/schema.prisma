@@ -23,7 +23,7 @@ datasource db {
 }
 
 model Consumer {
-  id                   String          @id
+  id                   String          @id @default(uuid())
   firstName            String?
   lastName             String?
   email                String?         @unique()
@@ -48,7 +48,7 @@ model Consumer {
 }
 
 model Address {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   streetLine1 String
   streetLine2 String?
   city        String
@@ -60,7 +60,7 @@ model Address {
 }
 
 model KYC {
-  id                            Int                        @id @default(autoincrement())
+  id                            String                     @id @default(uuid())
   kycCheckReference             String?
   documentCheckReference        String?
   provider                      KYCProvider                @default(SARDINE)
@@ -77,38 +77,42 @@ model KYC {
 }
 
 model CryptoWallet {
-  id              Int          @id @default(autoincrement())
-  address         String       @unique()
-  name            String?
-  chainType       String?
-  isEVMCompatible Boolean?
-  status          WalletStatus @default(PENDING)
-  riskScore       Decimal?
-  consumer        Consumer     @relation(fields: [consumerID], references: [id])
-  consumerID      String
+  id               String       @id @default(uuid())
+  address          String       @unique()
+  createdTimestamp DateTime?    @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?    @updatedAt // Marking optional so we don't need to set in tests
+  name             String?
+  chainType        String?
+  isEVMCompatible  Boolean?
+  status           WalletStatus @default(PENDING)
+  riskScore        Decimal?
+  consumer         Consumer     @relation(fields: [consumerID], references: [id])
+  consumerID       String
 
   @@index([address])
 }
 
 model PaymentMethod {
-  id              Int                 @id @default(autoincrement())
-  name            String?
-  type            PaymentMethodType
-  paymentToken    String              @unique()
-  paymentProvider PaymentProvider
-  status          PaymentMethodStatus
-  isDefault       Boolean             @default(false)
-  imageUri        String?
-  consumer        Consumer            @relation(fields: [consumerID], references: [id])
-  consumerID      String
-  cardData        Card?
-  achData         ACH?
+  id               String              @id @default(uuid())
+  name             String?
+  type             PaymentMethodType
+  paymentToken     String              @unique()
+  createdTimestamp DateTime?           @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?           @updatedAt // Marking optional so we don't need to set in tests
+  paymentProvider  PaymentProvider
+  status           PaymentMethodStatus
+  isDefault        Boolean             @default(false)
+  imageUri         String?
+  consumer         Consumer            @relation(fields: [consumerID], references: [id])
+  consumerID       String
+  cardData         Card?
+  achData          ACH?
 
   @@index([paymentToken])
 }
 
 model Card {
-  id              Int           @id @default(autoincrement())
+  id              String        @id @default(uuid())
   cardType        String?
   scheme          String?
   first6Digits    String
@@ -116,18 +120,18 @@ model Card {
   authCode        String?
   authReason      String?
   paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id])
-  paymentMethodID Int           @unique()
+  paymentMethodID String        @unique()
 }
 
 model ACH {
-  id              Int           @id @default(autoincrement())
+  id              String        @id @default(uuid())
   accountID       String
   accessToken     String
   itemID          String
   mask            String
   accountType     String
   paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id])
-  paymentMethodID Int           @unique()
+  paymentMethodID String        @unique()
 }
 
 model Circle {
@@ -142,14 +146,16 @@ model Circle {
 }
 
 model Otp {
-  id                     String
+  id                     String       @id @default(uuid())
+  otpIdentifier          String
   createdTimestamp       DateTime?    @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp       DateTime?    @updatedAt // Marking optional so we don't need to set in tests
   otp                    Int
   otpExpirationTimestamp DateTime
   identityType           IdentityType
 
-  @@id([id, identityType])
+  @@unique([otpIdentifier, identityType], name: "uniqueIdentifier")
+  @@index([otpIdentifier, identityType])
   @@index([otp])
 }
 

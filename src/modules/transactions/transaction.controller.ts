@@ -5,7 +5,6 @@ import {
   Get,
   HttpStatus,
   Inject,
-  NotFoundException,
   Param,
   Post,
   Query,
@@ -49,8 +48,6 @@ import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { TransactionSubmissionException } from "./exceptions/TransactionSubmissionException";
 import { TransactionsQueryResultsDTO } from "./dto/TransactionsQueryResultsDTO";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { X_NOBA_API_KEY } from "../auth/domain/HeaderConstants";
-import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 
 @Roles(Role.User)

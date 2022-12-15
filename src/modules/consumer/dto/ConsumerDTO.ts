@@ -89,7 +89,7 @@ export class DocumentVerificationDTO {
 }
 export class ConsumerDTO {
   @ApiProperty()
-  _id: string;
+  id: string;
 
   @ApiPropertyOptional()
   firstName?: string;
@@ -136,7 +136,7 @@ export class ConsumerDTO {
 
 export class ConsumerSimpleDTO {
   @ApiProperty()
-  _id: string;
+  id: string;
 
   @ApiPropertyOptional()
   firstName?: string;

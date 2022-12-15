@@ -1,7 +1,7 @@
 import { Inject, Logger } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Cron } from "@nestjs/schedule";
-import { IOTPRepo } from "./repo/OTPRepo";
+import { IOTPRepo } from "../common/repo/OTPRepo";
 
 export class DeleteExpiredOTPs {
   @Inject(WINSTON_MODULE_PROVIDER)

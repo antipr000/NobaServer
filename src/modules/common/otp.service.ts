@@ -16,15 +16,13 @@ export class OTPService {
       return false;
     }
 
-    await this.otpRepo.deleteAllOTPsForIdentifier(otpIdentifier, identityType);
-    await this.otpRepo.deleteAllExpiredOTPs();
+    await this.otpRepo.deleteOTP(otpRecord.props.id);
     return true;
   }
 
   async saveOTP(otpIdentifier: string, identityType: IdentityType, otp: number): Promise<void> {
-    // Clean existing otps for identifier if any and expired otps
+    // Clean existing otps for identifier if any
     await this.otpRepo.deleteAllOTPsForIdentifier(otpIdentifier, identityType);
-    await this.otpRepo.deleteAllExpiredOTPs();
     await this.otpRepo.saveOTP(Utils.stripSpaces(otpIdentifier), otp, identityType);
   }
 }

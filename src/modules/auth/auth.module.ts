@@ -12,7 +12,6 @@ import { CommonModule } from "../common/common.module";
 import { UserAuthService } from "./user.auth.service";
 import { AdminAuthService } from "./admin.auth.service";
 import { AdminModule } from "../admin/admin.module";
-import { DeleteExpiredOTPs } from "./DeleteExpiredOTPs";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
 
@@ -30,7 +29,7 @@ import { NotificationsModule } from "../notifications/notification.module";
     CommonModule,
     NotificationsModule,
   ],
-  providers: [JwtStrategy, HeaderValidationService, DBProvider, UserAuthService, AdminAuthService, DeleteExpiredOTPs],
+  providers: [JwtStrategy, HeaderValidationService, DBProvider, UserAuthService, AdminAuthService],
   controllers: [AuthController],
   exports: [HeaderValidationService],
 })

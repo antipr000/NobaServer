@@ -24,7 +24,7 @@ Table Consumer {
 }
 
 Table Address {
-  id Int [pk, increment]
+  id String [pk]
   streetLine1 String [not null]
   streetLine2 String
   city String [not null]
@@ -36,7 +36,7 @@ Table Address {
 }
 
 Table KYC {
-  id Int [pk, increment]
+  id String [pk]
   kycCheckReference String
   documentCheckReference String
   provider KYCProvider [not null, default: 'SARDINE']
@@ -53,8 +53,10 @@ Table KYC {
 }
 
 Table CryptoWallet {
-  id Int [pk, increment]
+  id String [pk]
   address String [unique, not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
   name String
   chainType String
   isEVMCompatible Boolean
@@ -65,10 +67,12 @@ Table CryptoWallet {
 }
 
 Table PaymentMethod {
-  id Int [pk, increment]
+  id String [pk]
   name String
   type PaymentMethodType [not null]
   paymentToken String [unique, not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
   paymentProvider PaymentProvider [not null]
   status PaymentMethodStatus [not null]
   isDefault Boolean [not null, default: false]
@@ -80,7 +84,7 @@ Table PaymentMethod {
 }
 
 Table Card {
-  id Int [pk, increment]
+  id String [pk]
   cardType String
   scheme String
   first6Digits String [not null]
@@ -88,18 +92,18 @@ Table Card {
   authCode String
   authReason String
   paymentMethod PaymentMethod [not null]
-  paymentMethodID Int [unique, not null]
+  paymentMethodID String [unique, not null]
 }
 
 Table ACH {
-  id Int [pk, increment]
+  id String [pk]
   accountID String [not null]
   accessToken String [not null]
   itemID String [not null]
   mask String [not null]
   accountType String [not null]
   paymentMethod PaymentMethod [not null]
-  paymentMethodID Int [unique, not null]
+  paymentMethodID String [unique, not null]
 }
 
 Table Circle {
@@ -112,7 +116,8 @@ Table Circle {
 }
 
 Table Otp {
-  id String [not null]
+  id String [pk]
+  otpIdentifier String [not null]
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
   otp Int [not null]
@@ -120,7 +125,7 @@ Table Otp {
   identityType IdentityType [not null]
 
   indexes {
-    (id, identityType) [pk]
+    (otpIdentifier, identityType) [unique]
   }
 }
 

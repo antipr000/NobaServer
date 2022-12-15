@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Headers, HttpStatus, Inject, Post, Request } from "@nestjs/common";
+import { Controller, ForbiddenException, Get, Headers, HttpStatus, Inject, Post, Request } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeaders, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "src/core/utils/CommonHeaders";

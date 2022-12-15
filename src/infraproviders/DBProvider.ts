@@ -11,8 +11,6 @@ import { AdminProps } from "../modules/admin/domain/Admin";
 import { AdminModel } from "../infra/mongodb/models/AdminModel";
 import { MongoConfigs } from "../config/configtypes/MongoConfigs";
 import { MONGO_CONFIG_KEY } from "../config/ConfigurationUtils";
-import { OtpModel } from "../infra/mongodb/models/OtpModel";
-import { OTPProps } from "../modules/auth/domain/OTP";
 import { CustomConfigService } from "../core/utils/AppConfigModule";
 import { VerificationDataProps } from "../modules/verification/domain/VerificationData";
 import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataModel";
@@ -56,11 +54,6 @@ export class DBProvider {
   // constructor() {
   //   this.connectToDb();
   // }
-
-  async getOtpModel(): Promise<Model<OTPProps>> {
-    await this.connectToDb();
-    return OtpModel;
-  }
 
   async getUserModel(): Promise<Model<ConsumerProps>> {
     await this.connectToDb();

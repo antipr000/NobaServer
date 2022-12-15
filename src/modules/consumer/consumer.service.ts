@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import BadWordFilter from "bad-words-es";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -18,7 +18,7 @@ import { CircleClient } from "../psp/circle.client";
 import { PaymentService } from "../psp/payment.service";
 import { Transaction } from "../transactions/domain/Transaction";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
-import { PaymentMethod } from "./domain/PaymentMethod";
+import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { CryptoWallet } from "./domain/CryptoWallet";
 import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
@@ -27,7 +27,9 @@ import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { IConsumerRepo } from "./repos/ConsumerRepo";
-import { PaymentProvider, Prisma } from "@prisma/client";
+import { PaymentMethodStatus, PaymentMethodType, PaymentProvider } from "@prisma/client";
+import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
+import { CardFailureExceptionText } from "./CardProcessingException";
 
 @Injectable()
 export class ConsumerService {
@@ -164,34 +166,12 @@ export class ConsumerService {
       this.analyseHandle(consumerProps.handle);
     }
 
-    const updatedConsumerRecord = Consumer.createConsumer({
+    Consumer.createConsumer({
       ...consumer.props,
       ...consumerProps,
     });
-    const consumerUpdateInput: Prisma.ConsumerUpdateInput = {
-      firstName: updatedConsumerRecord.props.firstName,
-      lastName: updatedConsumerRecord.props.lastName,
-      handle: updatedConsumerRecord.props.handle,
-      dateOfBirth: updatedConsumerRecord.props.dateOfBirth,
-      isDisabled: updatedConsumerRecord.props.isDisabled,
-      isLocked: updatedConsumerRecord.props.isLocked,
-      updatedTimestamp: new Date(),
-      ...(consumerProps.phone && { phone: updatedConsumerRecord.props.phone }),
-      ...(consumerProps.email && { phone: updatedConsumerRecord.props.email }),
-      ...(consumerProps.displayEmail && { phone: updatedConsumerRecord.props.displayEmail }),
-      ...(consumerProps.socialSecurityNumber && {
-        socialSecurityNumber: await this.kmsService.encryptString(
-          updatedConsumerRecord.props.socialSecurityNumber,
-          KmsKeyType.SSN,
-        ),
-      }),
-      ...(consumerProps.address && { address: { update: { ...updatedConsumerRecord.props.address } } }),
-      ...(consumerProps.verificationData && {
-        verificationData: { update: { ...updatedConsumerRecord.props.verificationData } },
-      }),
-    };
 
-    const updatedConsumer = await this.consumerRepo.updateConsumer(consumer.props.id, consumerUpdateInput);
+    const updatedConsumer = await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
     return updatedConsumer;
   }
 
@@ -291,36 +271,35 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerId);
   }
 
-  async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<Consumer> {
-    // const addPaymentMethodResponse: AddPaymentMethodResponse = await this.paymentService.addPaymentMethod(
-    //   consumer,
-    //   paymentMethod,
-    // );
+  async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<PaymentMethod> {
+    const addPaymentMethodResponse: AddPaymentMethodResponse = await this.paymentService.addPaymentMethod(
+      consumer,
+      paymentMethod,
+    );
 
-    // if (addPaymentMethodResponse.updatedConsumerData) {
-    //   const result = await this.updateConsumer(addPaymentMethodResponse.updatedConsumerData);
+    if (addPaymentMethodResponse.newPaymentMethod) {
+      const result = await this.consumerRepo.addPaymentMethod(addPaymentMethodResponse.newPaymentMethod);
 
-    //   if (paymentMethod.type === PaymentType.CARD) {
-    //     if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
-    //       // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
-    //       // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
-    //       // we may want to let the user know some day when their bank allows crypto.
-    //       throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
-    //     }
+      if (paymentMethod.type === PaymentMethodType.CARD) {
+        if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
+          // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
+          // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
+          // we may want to let the user know some day when their bank allows crypto.
+          throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
+        }
 
-    //     await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, {
-    //       firstName: consumer.props.firstName,
-    //       lastName: consumer.props.lastName,
-    //       nobaUserID: consumer.props.id,
-    //       email: consumer.props.displayEmail,
-    //       cardNetwork: addPaymentMethodResponse.newPaymentMethod.cardData.cardType,
-    //       last4Digits: addPaymentMethodResponse.newPaymentMethod.cardData.last4Digits,
-    //     });
-    //   }
+        await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, {
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          nobaUserID: consumer.props.id,
+          email: consumer.props.displayEmail,
+          cardNetwork: addPaymentMethodResponse.newPaymentMethod.props.cardData.scheme,
+          last4Digits: addPaymentMethodResponse.newPaymentMethod.props.cardData.last4Digits,
+        });
+      }
 
-    //   return result;
-    // }
-    throw new Error("Not implemented!");
+      return result;
+    }
   }
 
   async requestPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
@@ -354,40 +333,30 @@ export class ConsumerService {
     // }
   }
 
-  async removePaymentMethod(consumer: Consumer, paymentToken: string): Promise<Consumer> {
-    throw new Error("Not implemented!");
-    // const paymentMethod = consumer.props.paymentMethods.filter(
-    //   paymentMethod => paymentMethod.paymentToken === paymentToken,
-    // );
-    // if (paymentMethod.length === 0 || paymentMethod[0].status === PaymentMethodStatus.DELETED) {
-    //   throw new NotFoundException("Payment Method id not found");
-    // }
-    // const paymentProviderID = paymentMethod[0].paymentProvider;
-    // if (paymentProviderID === PaymentProvider.CHECKOUT) {
-    //   await this.paymentService.removePaymentMethod(paymentToken);
-    // } else {
-    //   throw new NotFoundException("Payment provider not found");
-    // }
-    // const filteredPaymentMethods = consumer.props.paymentMethods.filter(
-    //   paymentMethod => paymentMethod.paymentToken !== paymentToken,
-    // );
-    // const deletedPaymentMethod = paymentMethod[0];
-    // deletedPaymentMethod.status = PaymentMethodStatus.DELETED;
-    // deletedPaymentMethod.isDefault = false;
-    // const updatedConsumer: ConsumerProps = {
-    //   ...consumer.props,
-    //   paymentMethods: [...filteredPaymentMethods, deletedPaymentMethod],
-    // };
-    // const result = await this.updateConsumer(updatedConsumer);
-    // await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_DELETED_EVENT, {
-    //   firstName: consumer.props.firstName,
-    //   lastName: consumer.props.lastName,
-    //   nobaUserID: consumer.props.id,
-    //   email: consumer.props.displayEmail,
-    //   cardNetwork: paymentMethod[0].cardData.cardType,
-    //   last4Digits: paymentMethod[0].cardData.last4Digits,
-    // });
-    // return result;
+  async removePaymentMethod(consumer: Consumer, paymentMethodID: string): Promise<void> {
+    const paymentMethod = await this.consumerRepo.getPaymentMethodForConsumer(paymentMethodID, consumer.props.id);
+
+    if (!paymentMethod) {
+      throw new NotFoundException("Payment Method id not found");
+    }
+
+    const paymentProviderID = paymentMethod[0].paymentProvider;
+    if (paymentProviderID === PaymentProvider.CHECKOUT) {
+      await this.paymentService.removePaymentMethod(paymentMethod.props.paymentToken);
+    } else {
+      throw new NotFoundException("Payment provider not found");
+    }
+
+    await this.updatePaymentMethod(consumer.props.id, { id: paymentMethodID, status: PaymentMethodStatus.DELETED });
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_DELETED_EVENT, {
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      nobaUserID: consumer.props.id,
+      email: consumer.props.displayEmail,
+      cardNetwork: paymentMethod[0].cardData.cardType,
+      last4Digits: paymentMethod[0].cardData.last4Digits,
+    });
   }
 
   async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProvider): Promise<FiatTransactionStatus> {
@@ -398,54 +367,35 @@ export class ConsumerService {
     }
   }
 
-  async getPaymentMethodProvider(consumerId: string, paymentToken: string): Promise<PaymentProvider> {
-    throw new Error("Not implemented!");
-    // const consumer = await this.getConsumer(consumerId);
-    // const paymentMethod = consumer.props.paymentMethods.filter(
-    //   paymentMethod =>
-    //     paymentMethod.paymentToken === paymentToken && paymentMethod.status !== PaymentMethodStatus.DELETED,
-    // );
-    // if (paymentMethod.length === 0) {
-    //   throw new NotFoundException(`Payment method with token ${paymentToken} not found for consumer: ${consumerId}`);
-    // }
-
-    // return paymentMethod[0].paymentProvider as PaymentProvider;
+  async getAllPaymentMethodsForConsumer(consumerID: string): Promise<PaymentMethod[]> {
+    return this.consumerRepo.getAllPaymentMethodsForConsumer(consumerID);
   }
 
-  async updatePaymentMethod(consumerID: string, paymentMethod: PaymentMethod): Promise<Consumer> {
+  async getPaymentMethodProvider(consumerID: string, paymentMethodID: string): Promise<PaymentProvider> {
+    const paymentMethod = await this.consumerRepo.getPaymentMethodForConsumer(paymentMethodID, consumerID);
+    if (!paymentMethod) throw new NotFoundException("Payment method with requested id is not found");
+
+    return paymentMethod.props.paymentProvider;
+  }
+
+  async updatePaymentMethod(
+    consumerID: string,
+    paymentMethodProps: Partial<PaymentMethodProps>,
+  ): Promise<PaymentMethod> {
+    const selectedPaymentMethod = await this.consumerRepo.getPaymentMethodForConsumer(
+      paymentMethodProps.id,
+      consumerID,
+    );
+
+    if (!selectedPaymentMethod) {
+      throw new BadRequestException(`Payment method with id ${paymentMethodProps.id} does not exist for consumer`);
+    }
+
+    return this.consumerRepo.updatePaymentMethod(paymentMethodProps.id, paymentMethodProps);
+  }
+
+  async getAllConsumerWallets(consumerID: string): Promise<CryptoWallet[]> {
     throw new Error("Not implemented!");
-    // const consumer = await this.getConsumer(consumerID);
-    // const otherPaymentMethods = consumer.props.paymentMethods.filter(
-    //   existingPaymentMethod => existingPaymentMethod.paymentToken !== paymentMethod.paymentToken,
-    // );
-
-    // const currentPaymentMethod = consumer.props.paymentMethods.filter(
-    //   currentMethod =>
-    //     currentMethod.paymentToken === paymentMethod.paymentToken &&
-    //     currentMethod.status !== PaymentMethodStatus.DELETED,
-    // );
-
-    // if (currentPaymentMethod.length === 0) {
-    //   throw new BadRequestException(
-    //     `Payment method with token ${paymentMethod.paymentToken} does not exist for consumer`,
-    //   );
-    // }
-
-    // let updatedPaymentMethods = [...otherPaymentMethods, paymentMethod];
-
-    // if (paymentMethod.isDefault) {
-    //   const existingDefaultPaymentMethod = otherPaymentMethods.filter(method => method.isDefault)[0];
-    //   const existingNonDefaultPaymentMethods = otherPaymentMethods.filter(method => !method.isDefault);
-    //   if (existingDefaultPaymentMethod) {
-    //     existingDefaultPaymentMethod.isDefault = false;
-    //     updatedPaymentMethods = [...existingNonDefaultPaymentMethods, existingDefaultPaymentMethod, paymentMethod];
-    //   }
-    // }
-
-    // return await this.updateConsumer({
-    //   ...consumer.props,
-    //   paymentMethods: updatedPaymentMethods,
-    // });
   }
 
   async sendWalletVerificationOTP(
