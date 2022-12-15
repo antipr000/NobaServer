@@ -3,6 +3,6 @@
 /* eslint-disable */
 
 export type VerifyOtpResponseDTO = {
-  access_token: string;
-  user_id: string;
+  accessToken: string;
+  userID: string;
 };

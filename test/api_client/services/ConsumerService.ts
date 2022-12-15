@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddCryptoWalletDTO } from "../models/AddCryptoWalletDTO";
+import type { AddCryptoWalletResponseDTO } from "../models/AddCryptoWalletResponseDTO";
 import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
 import type { ConsumerBalanceDTO } from "../models/ConsumerBalanceDTO";
@@ -302,7 +303,7 @@ export class ConsumerService {
 
   /**
    * Adds a payment method for the logged-in consumer
-   * @returns ConsumerDTO Updated consumer record
+   * @returns ConsumerDTO Updated payment method record
    * @throws ApiError
    */
   public static addPaymentMethod({
@@ -417,7 +418,7 @@ export class ConsumerService {
 
   /**
    * Adds a crypto wallet for the logged-in consumer
-   * @returns ConsumerDTO Updated consumer record with the crypto wallet
+   * @returns AddCryptoWalletResponseDTO Notficiation type and created wallet id
    * @throws ApiError
    */
   public static addCryptoWallet({
@@ -433,7 +434,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<ConsumerDTO> {
+  }): CancelablePromise<AddCryptoWalletResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/consumers/wallets",
@@ -458,12 +459,12 @@ export class ConsumerService {
    */
   public static deleteCryptoWallet({
     xNobaApiKey,
-    walletAddress,
+    walletId,
     xNobaSignature,
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    walletAddress: string;
+    walletId: string;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -472,9 +473,9 @@ export class ConsumerService {
   }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/v1/consumers/wallets/{walletAddress}",
+      url: "/v1/consumers/wallets/{walletID}",
       path: {
-        walletAddress: walletAddress,
+        walletID: walletId,
       },
       headers: {
         "x-noba-api-key": xNobaApiKey,
@@ -519,6 +520,62 @@ export class ConsumerService {
       mediaType: "application/json",
       errors: {
         401: `Invalid OTP`,
+      },
+    });
+  }
+
+  /**
+   * Add circle wallet to current consumer
+   * @returns any
+   * @throws ApiError
+   */
+  public static addConsumerWallet({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/circle/wallet",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+    });
+  }
+
+  /**
+   * Get current consumer's circle wallet balance
+   * @returns any
+   * @throws ApiError
+   */
+  public static getConsumerWalletBalance({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/circle/wallet/balance",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
       },
     });
   }

@@ -7,7 +7,7 @@ import type { CardDetailsDTO } from "./CardDetailsDTO";
 
 export type AddPaymentMethodDTO = {
   name?: string;
-  type: "Card" | "ACH";
+  type: "CARD" | "ACH";
   cardDetails?: CardDetailsDTO;
   achDetails?: ACHDetailsDTO;
   imageUri?: string;

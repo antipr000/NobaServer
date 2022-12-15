@@ -5,6 +5,7 @@
 export type { ACHDetailsDTO } from "./models/ACHDetailsDTO";
 export type { ActionDTO } from "./models/ActionDTO";
 export type { AddCryptoWalletDTO } from "./models/AddCryptoWalletDTO";
+export type { AddCryptoWalletResponseDTO } from "./models/AddCryptoWalletResponseDTO";
 export type { AddNobaAdminDTO } from "./models/AddNobaAdminDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
@@ -73,3 +74,4 @@ export { TransactionsService } from "./services/TransactionsService";
 export { VendorsService } from "./services/VendorsService";
 export { VerificationService } from "./services/VerificationService";
 export { VerificationWebhooksService } from "./services/VerificationWebhooksService";
+export { WalletService } from "./services/WalletService";

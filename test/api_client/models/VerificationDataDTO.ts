@@ -3,16 +3,7 @@
 /* eslint-disable */
 
 export type VerificationDataDTO = {
-  verificationProvider?: "sardine";
-  kycVerificationStatus?: "NotSubmitted" | "Pending" | "Approved" | "Flagged" | "Rejected";
-  documentVerificationStatus?:
-    | "NotRequired"
-    | "Required"
-    | "Pending"
-    | "Approved"
-    | "Rejected"
-    | "Rejected_RequiresRecapture"
-    | "Rejected_PoorQuality"
-    | "Rejected_SizeOrType"
-    | "LivePhotoVerified";
+  verificationProvider?: any;
+  kycVerificationStatus?: any;
+  documentVerificationStatus?: any;
 };

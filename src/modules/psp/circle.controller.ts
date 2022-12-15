@@ -8,7 +8,6 @@ import { Roles } from "../auth/roles.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { CircleService } from "./circle.service";
 
-@Controller()
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("circle") // This defines the path prefix

@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type ConfirmWalletUpdateDTO = {
-  address: string;
+  walletID: string;
   otp: number;
   notificationMethod?: "Email" | "Phone";
 };

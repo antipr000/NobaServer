@@ -2,13 +2,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { AddressDTO } from "./AddressDTO";
 import type { CryptoWalletsDTO } from "./CryptoWalletsDTO";
 import type { DocumentVerificationDTO } from "./DocumentVerificationDTO";
 import type { KycVerificationDTO } from "./KycVerificationDTO";
 import type { PaymentMethodsDTO } from "./PaymentMethodsDTO";
 
 export type ConsumerDTO = {
-  _id: string;
+  id: string;
   firstName?: string;
   lastName?: string;
   email: string;
@@ -18,7 +19,7 @@ export type ConsumerDTO = {
   documentVerificationData: DocumentVerificationDTO;
   phone?: string;
   dateOfBirth?: string;
-  address?: any;
+  address?: AddressDTO;
   paymentMethods?: Array<PaymentMethodsDTO>;
   cryptoWallets?: Array<CryptoWalletsDTO>;
   paymentMethodStatus?: "Approved" | "Pending" | "NotSubmitted";

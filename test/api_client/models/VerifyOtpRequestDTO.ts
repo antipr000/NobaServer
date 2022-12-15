@@ -8,10 +8,6 @@ export type VerifyOtpRequestDTO = {
    */
   emailOrPhone?: string;
   /**
-   * This attribute is deprecated and will be removed in future, please use emailOrPhone instead
-   */
-  email?: string;
-  /**
    * Identity type of the user logging in
    */
   identityType: "CONSUMER" | "NOBA_ADMIN";
