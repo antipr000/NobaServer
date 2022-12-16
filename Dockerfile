@@ -9,7 +9,6 @@ ENV AWS_DEFAULT_REGION=us-east-1
 ENV AWS_REGION=us-east-1
 RUN echo "DATABASE_URL=`aws secretsmanager get-secret-value --secret-id 'SANDBOX_DB_URL' --query 'SecretString' --output text | jq -r '.SANDBOX_DB_URL'`" > .env
 RUN yarn prisma-migrate-deploy
-
 COPY . .
 EXPOSE 8080
 CMD [ "node", "dist/main.js"]
