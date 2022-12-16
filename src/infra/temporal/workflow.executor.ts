@@ -8,6 +8,7 @@ import {
 } from "@temporalio/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { NOBA_CONFIG_KEY, NOBA_WORKFLOW_CONFIG_KEY } from "src/config/ConfigurationUtils";
 
 @Injectable()
 export class WorkflowExecutor {
@@ -17,10 +18,14 @@ export class WorkflowExecutor {
     customConfigService: CustomConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
-    this.workflowConfigs = customConfigService.get<NobaWorkflowConfig>("NobaWorkflowConfig");
+    this.workflowConfigs = customConfigService.get<NobaWorkflowConfig>(NOBA_WORKFLOW_CONFIG_KEY);
   }
 
-  private async executeWorkflow(workflowName: string, workflowID: string, params): Promise<string> {
+  private async executeWorkflow(
+    workflowName: string,
+    workflowID: string,
+    workflowParamsInOrder: any[],
+  ): Promise<string> {
     const connection = await TemporalConnection.connect({
       address: this.workflowConfigs.clientUrl,
       connectTimeout: this.workflowConfigs.connectionTimeoutInMs,
@@ -32,7 +37,7 @@ export class WorkflowExecutor {
     });
 
     const handle = await client.start(workflowName, {
-      args: [params],
+      args: [...workflowParamsInOrder],
       taskQueue: this.workflowConfigs.taskQueue,
       workflowId: workflowID,
     });
@@ -46,6 +51,6 @@ export class WorkflowExecutor {
     amountToTransact: number,
     workflowID: string,
   ): Promise<string> {
-    return await this.executeWorkflow("DebitConsumerWallet", workflowID, { consumerId, amount: amountToTransact });
+    return await this.executeWorkflow("DebitConsumerWallet", workflowID, [consumerId, amountToTransact]);
   }
 }

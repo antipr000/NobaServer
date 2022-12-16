@@ -183,16 +183,16 @@ Enum KYCProvider {
   SARDINE
 }
 
-Ref: Address.consumerID - Consumer.id
+Ref: Address.consumerID - Consumer.id [delete: Cascade]
 
-Ref: KYC.consumerID - Consumer.id
+Ref: KYC.consumerID - Consumer.id [delete: Cascade]
 
-Ref: CryptoWallet.consumerID > Consumer.id
+Ref: CryptoWallet.consumerID > Consumer.id [delete: Cascade]
 
-Ref: PaymentMethod.consumerID > Consumer.id
+Ref: PaymentMethod.consumerID > Consumer.id [delete: Cascade]
 
-Ref: Card.paymentMethodID - PaymentMethod.id
+Ref: Card.paymentMethodID - PaymentMethod.id [delete: Cascade]
 
-Ref: ACH.paymentMethodID - PaymentMethod.id
+Ref: ACH.paymentMethodID - PaymentMethod.id [delete: Cascade]
 
-Ref: Circle.consumerID - Consumer.id
+Ref: Circle.consumerID - Consumer.id [delete: Cascade]

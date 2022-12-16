@@ -8,4 +8,4 @@ import { WorkflowExecutor } from "./workflow.executor";
   providers: [WorkflowExecutor],
   exports: [WorkflowExecutor],
 })
-export class TransactionModule {}
+export class TemporalModule {}

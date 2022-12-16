@@ -126,9 +126,9 @@ circle:
 nobaWorkflow:
   taskQueue: "DEBIT_CONSUMER_WALLET"
   awsSecretNameForTaskQueue: ""
-  clientUrl: "http://localhost:7233"
+  clientUrl: "localhost:7233"
   awsSecretNameForClientUrl: ""
-  connectionTimeoutInMs: 1000
+  connectionTimeoutInMs: 2000
   namespace: "default"
 
 dependencies:
