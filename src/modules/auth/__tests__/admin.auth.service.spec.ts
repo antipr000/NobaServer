@@ -16,6 +16,8 @@ import { Otp } from "../domain/Otp";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
+import { ITokenRepo } from "../repo/TokenRepo";
+import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
 
 describe("AdminAuthService", () => {
   jest.setTimeout(5000);
@@ -24,6 +26,7 @@ describe("AdminAuthService", () => {
   let mockOtpRepo: IOTPRepo;
   let mockSmsService: SMSService;
   let mockNotificationService: NotificationService;
+  let mockTokenRepo: ITokenRepo;
 
   let adminAuthService: AdminAuthService;
 
@@ -37,6 +40,7 @@ describe("AdminAuthService", () => {
     mockOtpRepo = getMockOtpRepoWithDefaults();
     mockNotificationService = getMockNotificationServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
+    mockTokenRepo = getMockTokenRepoWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [
@@ -52,6 +56,10 @@ describe("AdminAuthService", () => {
         {
           provide: AdminService,
           useFactory: () => instance(mockAdminService),
+        },
+        {
+          provide: "TokenRepo",
+          useFactory: () => instance(mockTokenRepo),
         },
         {
           provide: "OTPRepo",
