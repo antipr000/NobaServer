@@ -1,21 +1,20 @@
 import { CryptoWallet as CryptoWalletModel, WalletStatus } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
-export class CryptoWalletProps implements CryptoWalletModel {
+export class CryptoWalletProps implements Partial<CryptoWalletModel> {
   id: string;
   address: string;
-  name: string | null;
-  chainType: string | null;
-  isEVMCompatible: boolean | null;
+  name?: string | null;
+  chainType?: string | null;
+  isEVMCompatible?: boolean | null;
   status: WalletStatus;
-  riskScore: Decimal | null;
+  riskScore?: number | null;
   consumerID: string;
-  createdTimestamp: Date | null;
-  updatedTimestamp: Date | null;
+  createdTimestamp?: Date | null;
+  updatedTimestamp?: Date | null;
 }
 
 export const cryptoWalletJoiValidationKeys: KeysRequired<CryptoWalletProps> = {

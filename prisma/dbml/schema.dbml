@@ -61,7 +61,7 @@ Table CryptoWallet {
   chainType String
   isEVMCompatible Boolean
   status WalletStatus [not null, default: 'PENDING']
-  riskScore Decimal
+  riskScore Float
   consumer Consumer [not null]
   consumerID String [not null]
 }

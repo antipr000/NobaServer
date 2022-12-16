@@ -55,7 +55,7 @@ model Address {
   countryCode String   @db.VarChar(3)
   regionCode  String
   postalCode  String
-  consumer    Consumer @relation(fields: [consumerID], references: [id])
+  consumer    Consumer @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID  String   @unique()
 }
 
@@ -72,7 +72,7 @@ model KYC {
   kycVerificationTimestamp      DateTime?
   sanctionLevel                 String?
   riskLevel                     String?
-  consumer                      Consumer                   @relation(fields: [consumerID], references: [id])
+  consumer                      Consumer                   @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID                    String                     @unique()
 }
 
@@ -85,8 +85,8 @@ model CryptoWallet {
   chainType        String?
   isEVMCompatible  Boolean?
   status           WalletStatus @default(PENDING)
-  riskScore        Decimal?
-  consumer         Consumer     @relation(fields: [consumerID], references: [id])
+  riskScore        Float?
+  consumer         Consumer     @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID       String
 
   @@index([address])
@@ -103,7 +103,7 @@ model PaymentMethod {
   status           PaymentMethodStatus
   isDefault        Boolean             @default(false)
   imageUri         String?
-  consumer         Consumer            @relation(fields: [consumerID], references: [id])
+  consumer         Consumer            @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID       String
   cardData         Card?
   achData          ACH?
@@ -119,7 +119,7 @@ model Card {
   last4Digits     String
   authCode        String?
   authReason      String?
-  paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id])
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id], onDelete: Cascade)
   paymentMethodID String        @unique()
 }
 
@@ -130,7 +130,7 @@ model ACH {
   itemID          String
   mask            String
   accountType     String
-  paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id])
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodID], references: [id], onDelete: Cascade)
   paymentMethodID String        @unique()
 }
 
@@ -139,7 +139,7 @@ model Circle {
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
   walletID         String    @unique()
-  consumer         Consumer  @relation(fields: [consumerID], references: [id])
+  consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID       String    @unique()
 
   @@index([consumerID])
