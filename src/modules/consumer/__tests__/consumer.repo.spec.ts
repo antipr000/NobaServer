@@ -337,7 +337,7 @@ describe("MongoDBConsumerRepoTests", () => {
       });
     });
 
-    describe("getAllCryptoWalletsForConsumer", async () => {
+    describe("getAllCryptoWalletsForConsumer", () => {
       it("should return empty list if no crypto wallet exists for consumer", async () => {
         const consumer = getRandomUser();
         await consumerRepo.createConsumer(consumer);
