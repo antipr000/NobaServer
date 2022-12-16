@@ -120,6 +120,14 @@ circle:
   masterWalletID: "1001404309"
   awsSecretNameForMasterWalletID: ""
 
+nobaWorkflow:
+  taskQueue: ""
+  awsSecretNameForTaskQueue: "TEST_NOBA_WORKFLOW_TASK_QUEUE"
+  clientUrl: ""
+  awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_CLIENT_URL"
+  connectionTimeoutInMs: 1000
+  namespace: "default"
+
 dependencies:
   emailClient: "SENDGRID"
 

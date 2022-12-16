@@ -131,6 +131,14 @@ circle:
   masterWalletID: "1001404309"
   awsSecretNameForMasterWalletID: ""
 
+nobaWorkflow:
+  taskQueue: "test"
+  awsSecretNameForTaskQueue: ""
+  clientUrl: "test"
+  awsSecretNameForClientUrl: ""
+  connectionTimeoutInMs: 1000
+  namespace: "default"
+
 dependencies:
   emailClient: "STUB"
 

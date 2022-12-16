@@ -108,6 +108,13 @@ import {
   CIRCLE_MASTER_WALLET_ID,
   NOBA_APP_SECRET_KEY,
   AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY,
+  NOBA_WORKFLOW_CONFIG_KEY,
+  NOBA_WORKFLOW_TASK_QUEUE,
+  NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TASK_QUEUE,
+  NOBA_WORKFLOW_CLIENT_URL,
+  NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_CLIENT_URL,
+  NOBA_WORKFLOW_NAMESPACE,
+  NOBA_WORKFLOW_CONNECTION_TIMEOUT_IN_MILLIS,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -125,6 +132,7 @@ import { EllipticConfigs } from "./configtypes/EllipticConfig";
 import { PlaidConfigs } from "./configtypes/PlaidConfigs";
 import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs";
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
+import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -290,6 +298,7 @@ async function configureAllVendorCredentials(
     configurePlaidCredentials,
     configureDependencies,
     configureCircleConfigurations,
+    configureNobaWorkflowCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -637,6 +646,43 @@ async function configureEllipticCredentials(
   ellipticConfigs.baseUrl = await getParameterValue(null, ellipticConfigs.baseUrl);
 
   configs[ELLIPTIC_CONFIG_KEY] = ellipticConfigs;
+
+  return configs;
+}
+
+async function configureNobaWorkflowCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const nobaWorkflowCofnigs: NobaWorkflowConfig = configs[NOBA_WORKFLOW_CONFIG_KEY];
+
+  if (nobaWorkflowCofnigs === undefined) {
+    const errorMessage =
+      "\n'Noba Workflow' configurations are required. Please configure the Noba Workflow credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${NOBA_WORKFLOW_CONFIG_KEY}" and populate ` +
+      `"${NOBA_WORKFLOW_NAMESPACE}", "${NOBA_WORKFLOW_CONNECTION_TIMEOUT_IN_MILLIS}" ` +
+      `("${NOBA_WORKFLOW_TASK_QUEUE}" or "${NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TASK_QUEUE}"), ` +
+      `("${NOBA_WORKFLOW_CLIENT_URL}" or "${NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_CLIENT_URL}"), ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  nobaWorkflowCofnigs.taskQueue = await getParameterValue(
+    nobaWorkflowCofnigs.awsSecretNameForTaskQueue,
+    nobaWorkflowCofnigs.taskQueue,
+  );
+  nobaWorkflowCofnigs.clientUrl = await getParameterValue(
+    nobaWorkflowCofnigs.awsSecretNameForClientUrl,
+    nobaWorkflowCofnigs.clientUrl,
+  );
+  nobaWorkflowCofnigs.namespace = await getParameterValue(null, nobaWorkflowCofnigs.namespace);
+  nobaWorkflowCofnigs.connectionTimeoutInMs = (await getParameterValue(
+    null,
+    nobaWorkflowCofnigs.connectionTimeoutInMs.toString(),
+  )) as any;
+
+  configs[NOBA_WORKFLOW_CONFIG_KEY] = nobaWorkflowCofnigs;
 
   return configs;
 }

@@ -150,6 +150,14 @@ export const CIRCLE_AWS_SECRET_KEY_FOR_API_KEY = "awsSecretNameForApiKey";
 export const CIRCLE_MASTER_WALLET_ID = "masterWalletID";
 export const CIRCLE_AWS_SECRET_KEY_FOR_MASTER_WALLET_ID = "awsSecretNameForMasterWalletID";
 
+export const NOBA_WORKFLOW_CONFIG_KEY = "nobaWorkflow";
+export const NOBA_WORKFLOW_TASK_QUEUE = "taskQueue";
+export const NOBA_WORKFLOW_CLIENT_URL = "clientUrl";
+export const NOBA_WORKFLOW_CONNECTION_TIMEOUT_IN_MILLIS = "connectionTimeoutInMs";
+export const NOBA_WORKFLOW_NAMESPACE = "namespace";
+export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TASK_QUEUE = "awsSecretNameForTaskQueue";
+export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_CLIENT_URL = "awsSecretNameForClientUrl";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

@@ -42,6 +42,7 @@
     "@nestjs/swagger": "^5.2.1",
     "@prisma/client": "^4.7.1",
     "@sendgrid/mail": "^7.6.2",
+    "@temporalio/client": "^1.5.2",
     "@types/crypto-js": "^4.1.1",
     "@types/sharp": "^0.31.0",
     "aws-sdk": "^2.1198.0",
