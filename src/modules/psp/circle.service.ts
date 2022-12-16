@@ -31,21 +31,21 @@ export class CircleService {
     return circleWalletID;
   }
 
-  public async getWalletBalance(consumerID: string, walletID: string): Promise<number> {
+  public async getWalletBalance(walletID: string): Promise<number> {
     // Stub
 
     return 100;
   }
 
-  public async debitWalletBalance(consumerID: string, walletID: string, amount: number): Promise<number> {
+  public async debitWalletBalance(walletID: string, amount: number): Promise<number> {
     // Stub
 
-    return (await this.getWalletBalance(consumerID, walletID)) - amount;
+    return (await this.getWalletBalance(walletID)) - amount;
   }
 
-  public async creditWalletBalance(consumerID: string, walletID: string, amount: number): Promise<number> {
+  public async creditWalletBalance(walletID: string, amount: number): Promise<number> {
     // Stub
 
-    return (await this.getWalletBalance(consumerID, walletID)) + amount;
+    return (await this.getWalletBalance(walletID)) + amount;
   }
 }
