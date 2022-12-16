@@ -230,7 +230,6 @@ describe("ConsumerService", () => {
     it("should throw error when payment method id does not exist for the consumer", async () => {
       const email = "mock-user@noba.com";
 
-      const paymentToken = "fake-token";
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Fake",
@@ -245,7 +244,7 @@ describe("ConsumerService", () => {
         NotFoundException,
       );
 
-      expect(async () => await consumerService.removePaymentMethod(consumer, paymentToken)).rejects.toThrow(
+      expect(async () => await consumerService.removePaymentMethod(consumer, "fake-card-id")).rejects.toThrow(
         "Payment Method id not found",
       );
     });
@@ -383,7 +382,6 @@ describe("ConsumerService", () => {
     });
 
     it("throws NotFoundException when paymentMethodID does not exist for consumer", async () => {
-      const paymentToken = "fake-payment-token";
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Fake",
@@ -394,9 +392,9 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(null);
 
-      expect(
-        async () => await consumerService.getPaymentMethodProvider(consumer.props.id, "new-fake-payment-token"),
-      ).rejects.toThrow(NotFoundException);
+      expect(async () => await consumerService.getPaymentMethodProvider(consumer.props.id, "fake-id")).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -599,7 +597,9 @@ describe("ConsumerService", () => {
 
       when(consumerRepo.getCryptoWalletForConsumer("fake-wallet", consumer.props.id)).thenResolve(wallet);
 
-      when(otpService.checkIfOTPIsValidAndCleanup(consumer.props.email, IdentityType.CONSUMER, otp)).thenResolve(false);
+      when(otpService.checkIfOTPIsValidAndCleanup(consumer.props.email, IdentityType.CONSUMER, wrongOtp)).thenResolve(
+        false,
+      );
 
       expect(
         async () =>
