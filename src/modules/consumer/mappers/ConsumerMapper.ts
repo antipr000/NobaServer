@@ -109,14 +109,16 @@ export class ConsumerMapper implements Mapper<Consumer> {
             : 0,
       },
       dateOfBirth: p.dateOfBirth,
-      address: {
-        streetLine1: p.address.streetLine1,
-        streetLine2: p.address.streetLine2,
-        city: p.address.city,
-        regionCode: p.address.regionCode,
-        countryCode: p.address.countryCode,
-        postalCode: p.address.postalCode,
-      },
+      address: p.address
+        ? {
+            streetLine1: p.address.streetLine1,
+            streetLine2: p.address.streetLine2,
+            city: p.address.city,
+            regionCode: p.address.regionCode,
+            countryCode: p.address.countryCode,
+            postalCode: p.address.postalCode,
+          }
+        : null,
       cryptoWallets: this.getCryptoWalletsDTO(cryptoWallets),
       paymentMethods: this.getPaymentMethodsDTO(paymentMethods),
       paymentMethodStatus: this.statesMapper.getPaymentMethodState(paymentMethods),

@@ -24,7 +24,7 @@ export const kycValidationJoiKeys: KeysRequired<KYC> = {
   kycCheckStatus: Joi.string().default(KYCStatus.NOT_SUBMITTED),
   kycVerificationTimestamp: Joi.date().optional().allow(null),
   documentVerificationStatus: Joi.string().default(DocumentVerificationStatus.NOT_REQUIRED),
-  documentVerificationTimestamp: Joi.number().optional().allow(null),
+  documentVerificationTimestamp: Joi.date().optional().allow(null),
   documentCheckReference: Joi.string().optional().allow(null),
   kycCheckReference: Joi.string().optional().allow(null),
   sanctionLevel: Joi.string().optional().allow(null),
