@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
 import { SMSService } from "../../common/sms.service";
-import { instance, when } from "ts-mockito";
+import { anything, instance, when } from "ts-mockito";
 import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
 import { IOTPRepo } from "../../../modules/common/repo/OTPRepo";
 import { NotFoundException, UnauthorizedException } from "@nestjs/common";
@@ -19,6 +19,9 @@ import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mo
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Result } from "../../../core/logic/Result";
 import { Utils } from "../../../core/utils/Utils";
+import { ITokenRepo } from "../repo/TokenRepo";
+import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
+import { Token } from "../domain/Token";
 
 describe("UserAuthService", () => {
   jest.setTimeout(5000);
@@ -26,6 +29,7 @@ describe("UserAuthService", () => {
     let mockConsumerService: ConsumerService;
     let userAuthService: UserAuthService;
     let mockOtpRepo: IOTPRepo;
+    let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
 
@@ -36,6 +40,7 @@ describe("UserAuthService", () => {
     beforeEach(async () => {
       mockConsumerService = getMockConsumerServiceWithDefaults();
       mockOtpRepo = getMockOtpRepoWithDefaults();
+      mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
 
@@ -50,6 +55,10 @@ describe("UserAuthService", () => {
         ],
         controllers: [],
         providers: [
+          {
+            provide: "TokenRepo",
+            useFactory: () => instance(mockTokenRepo),
+          },
           {
             provide: ConsumerService,
             useFactory: () => instance(mockConsumerService),
@@ -71,6 +80,58 @@ describe("UserAuthService", () => {
       }).compile();
 
       userAuthService = app.get<UserAuthService>(UserAuthService);
+    });
+
+    describe("validateToken", () => {
+      it("should validate the token correctly", async () => {
+        const rawToken = "nobatoken";
+        const userID = "nobauser";
+        const token = Token.createTokenObject({ _id: Token.saltifyToken(rawToken, userID), userID: userID });
+
+        when(mockTokenRepo.getToken(rawToken, userID)).thenResolve(token);
+
+        const valid = await userAuthService.validateToken(rawToken, userID);
+        expect(valid).toBe(true);
+      });
+      it("token shouldn't be valid", async () => {
+        const rawToken = "nobatoken";
+        const userID = "nobauser";
+        const token = Token.createTokenObject({ _id: Token.saltifyToken(rawToken, userID), userID: userID });
+
+        when(mockTokenRepo.getToken(rawToken, userID)).thenResolve(token);
+
+        const valid = await userAuthService.validateToken("nonexisting token", userID);
+        expect(valid).toBe(false);
+      });
+    });
+
+    describe("invalidateToken", () => {
+      it("token should be deleted", async () => {
+        const rawToken = "nobatoken";
+        const userID = "nobauser";
+        when(mockTokenRepo.deleteToken(rawToken, userID)).thenResolve();
+
+        await userAuthService.invalidateToken(rawToken, userID);
+      });
+    });
+
+    describe("generateAccessToken", () => {
+      it("generate access token without refresh token", async () => {
+        const id = "nobauser";
+        const jwt = await userAuthService.generateAccessToken(id, false);
+        expect(jwt.accessToken).toBeDefined();
+        expect(jwt.userID).toBe(id);
+        expect(jwt.refreshToken).toBe("");
+      });
+
+      it("generate access token with refresh token", async () => {
+        const id = "nobauser";
+        when(mockTokenRepo.saveToken(anything())).thenResolve();
+        const jwt = await userAuthService.generateAccessToken(id, true);
+        expect(jwt.accessToken).toBeDefined();
+        expect(jwt.userID).toBe(id);
+        expect(jwt.refreshToken).toBeDefined();
+      });
     });
 
     describe("validateAndGetUserId", () => {
@@ -223,6 +284,7 @@ describe("UserAuthService", () => {
     let mockConsumerService: ConsumerService;
     let userAuthService: UserAuthService;
     let mockOtpRepo: IOTPRepo;
+    let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
 
@@ -247,6 +309,7 @@ describe("UserAuthService", () => {
     beforeEach(async () => {
       mockConsumerService = getMockConsumerServiceWithDefaults();
       mockOtpRepo = getMockOtpRepoWithDefaults();
+      mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
 
@@ -264,6 +327,10 @@ describe("UserAuthService", () => {
           {
             provide: ConsumerService,
             useFactory: () => instance(mockConsumerService),
+          },
+          {
+            provide: "TokenRepo",
+            useFactory: () => instance(mockTokenRepo),
           },
           {
             provide: "OTPRepo",

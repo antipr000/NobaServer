@@ -14,6 +14,7 @@ import { AdminAuthService } from "./admin.auth.service";
 import { AdminModule } from "../admin/admin.module";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
+import { MongoDBTokenRepo } from "./repo/MongoDBTokenRepo";
 
 @Module({
   imports: [
@@ -29,7 +30,17 @@ import { NotificationsModule } from "../notifications/notification.module";
     CommonModule,
     NotificationsModule,
   ],
-  providers: [JwtStrategy, HeaderValidationService, DBProvider, UserAuthService, AdminAuthService],
+  providers: [
+    JwtStrategy,
+    HeaderValidationService,
+    DBProvider,
+    {
+      provide: "TokenRepo",
+      useClass: MongoDBTokenRepo,
+    },
+    UserAuthService,
+    AdminAuthService,
+  ],
   controllers: [AuthController],
   exports: [HeaderValidationService],
 })

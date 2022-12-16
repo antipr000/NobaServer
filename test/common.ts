@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { AuthenticationService, VerifyOtpResponseDTO } from "./api_client";
+import { AuthenticationService, LoginResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
 import CryptoJS from "crypto-js";
 import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
@@ -61,7 +61,7 @@ export const loginAndGetResponse = async (
   mongoUri: string,
   email: string,
   identityType: string,
-): Promise<VerifyOtpResponseDTO & ResponseStatus> => {
+): Promise<LoginResponseDTO & ResponseStatus> => {
   const requestBody = {
     email: email,
     identityType: identityType as any,
@@ -91,7 +91,7 @@ export const loginAndGetResponse = async (
     xNobaSignature: verifyOtpSignature,
     xNobaTimestamp: TEST_TIMESTAMP,
     requestBody: verifyOtpRequestBody,
-  })) as VerifyOtpResponseDTO & ResponseStatus;
+  })) as LoginResponseDTO & ResponseStatus;
 };
 
 export async function patchConsumer(consumer: Partial<ConsumerProps>, mongoUri: string) {

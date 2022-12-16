@@ -41,7 +41,9 @@ export type { IDVerificationURLResponseDTO } from "./models/IDVerificationURLRes
 export type { KycVerificationDTO } from "./models/KycVerificationDTO";
 export type { LocationDTO } from "./models/LocationDTO";
 export type { LoginRequestDTO } from "./models/LoginRequestDTO";
+export type { LoginResponseDTO } from "./models/LoginResponseDTO";
 export type { NationalIDDTO } from "./models/NationalIDDTO";
+export type { NewAccessTokenRequestDTO } from "./models/NewAccessTokenRequestDTO";
 export type { NobaAdminDTO } from "./models/NobaAdminDTO";
 export type { PaymentMethodACHDataDTO } from "./models/PaymentMethodACHDataDTO";
 export type { PaymentMethodCardDataDTO } from "./models/PaymentMethodCardDataDTO";
@@ -63,7 +65,6 @@ export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";
 export type { VerificationResultDTO } from "./models/VerificationResultDTO";
 export type { VerifyOtpRequestDTO } from "./models/VerifyOtpRequestDTO";
-export type { VerifyOtpResponseDTO } from "./models/VerifyOtpResponseDTO";
 
 export { AdminService } from "./services/AdminService";
 export { AssetsService } from "./services/AssetsService";

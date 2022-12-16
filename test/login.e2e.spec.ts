@@ -13,7 +13,7 @@ import { setUp } from "./setup";
 setUp();
 
 import { INestApplication } from "@nestjs/common";
-import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, VerifyOtpResponseDTO } from "./api_client";
+import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, LoginResponseDTO } from "./api_client";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import { ConsumerService } from "./api_client/services/ConsumerService";
@@ -100,7 +100,7 @@ describe("Authentication", () => {
         xNobaSignature: verifyOtpSignature,
         xNobaTimestamp: timestamp,
         requestBody: verifyOtpRequestBody,
-      })) as VerifyOtpResponseDTO & ResponseStatus;
+      })) as LoginResponseDTO & ResponseStatus;
       console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.access_token;
@@ -166,7 +166,7 @@ describe("Authentication", () => {
           otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
           identityType: "CONSUMER",
         },
-      })) as VerifyOtpResponseDTO & ResponseStatus;
+      })) as LoginResponseDTO & ResponseStatus;
 
       const newRequestConsumerEmail = consumerEmail.toLowerCase();
 
@@ -211,7 +211,7 @@ describe("Authentication", () => {
           otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
           identityType: "CONSUMER",
         },
-      })) as VerifyOtpResponseDTO & ResponseStatus;
+      })) as LoginResponseDTO & ResponseStatus;
       console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.access_token;
@@ -365,7 +365,7 @@ describe("Authentication", () => {
           otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
           identityType: "NOBA_ADMIN",
         },
-      })) as VerifyOtpResponseDTO & ResponseStatus;
+      })) as LoginResponseDTO & ResponseStatus;
 
       // TODO: Modify 'verifyOtp' to return 200.
       expect(verifyOtpResponse.__status).toBe(201);

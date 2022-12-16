@@ -23,6 +23,8 @@ import { LimitProfileModel } from "../infra/mongodb/models/LimitProfileModel";
 import { LimitProfileProps } from "../modules/transactions/domain/LimitProfile";
 import { LimitConfigurationProps } from "../modules/transactions/domain/LimitConfiguration";
 import { LimitConfigurationModel } from "../infra/mongodb/models/LimitConfigurationModel";
+import { TokenModel } from "../infra/mongodb/models/TokenModel";
+import { TokenProps } from "../modules/auth/domain/Token";
 
 @Injectable()
 export class DBProvider {
@@ -54,6 +56,11 @@ export class DBProvider {
   // constructor() {
   //   this.connectToDb();
   // }
+
+  async getTokenModel(): Promise<Model<TokenProps>> {
+    await this.connectToDb();
+    return TokenModel;
+  }
 
   async getUserModel(): Promise<Model<ConsumerProps>> {
     await this.connectToDb();
