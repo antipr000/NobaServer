@@ -137,11 +137,7 @@ export class ConsumerService {
         displayEmail: email ?? undefined,
         phone,
       });
-      const result = await this.consumerRepo.createConsumer({
-        email: newConsumer.props.email,
-        id: newConsumer.props.id,
-        displayEmail: newConsumer.props.displayEmail,
-      });
+      const result = await this.consumerRepo.createConsumer(newConsumer);
       if (isEmail) {
         await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           email: emailOrPhone,

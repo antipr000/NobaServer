@@ -1,9 +1,19 @@
 import { Prisma } from "@prisma/client";
-import { ConsumerProps } from "../domain/Consumer";
+import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 
 export class ConsumerRepoMapper {
+  toCreateConsumerInput(consumer: Consumer): Prisma.ConsumerCreateInput {
+    return {
+      id: consumer.props.id,
+      email: consumer.props.email,
+      displayEmail: consumer.props.displayEmail,
+      phone: consumer.props.phone,
+      handle: consumer.props.handle,
+    };
+  }
+
   toUpdateConsumerInput(consumerUpdateProps: Partial<ConsumerProps>): Prisma.ConsumerUpdateInput {
     return {
       ...(consumerUpdateProps.firstName && { firstName: consumerUpdateProps.firstName }),

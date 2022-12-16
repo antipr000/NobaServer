@@ -1,0 +1,6 @@
+FROM node:16
+COPY package*.json ./
+COPY prisma/* ./prisma/
+#COPY node_modules/@prisma/client/* ./node_modules/@prisma/client/
+RUN yarn install
+COPY . .

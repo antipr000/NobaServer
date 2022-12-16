@@ -1,180 +1,107 @@
-import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { MongoClient, Collection } from "mongodb";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
-import { KmsService } from "../../../../src/modules/common/kms.service";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { BadRequestError } from "../../../core/exception/CommonAppException";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { DBProvider } from "../../../infraproviders/DBProvider";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { IConsumerRepo } from "../repos/ConsumerRepo";
-import { MongoDBConsumerRepo } from "../repos/MongoDBConsumerRepo";
+import { SQLConsumerRepo } from "../repos/SQLConsumerRepo";
+import { uuid } from "uuidv4";
 
-const CONSUMER_ID_PREFIX = "consumer_id_prefix";
-const TEST_NUMBER = 5;
-const DEFAULT_EMAIL_ID = "user@noba.com";
-const DEFAULT_PHONE_NUMBER = "+15555555555";
-const DEFAULT_USER_ID = "user_id";
-
-const mkid = (id: string): string => {
-  return CONSUMER_ID_PREFIX + id;
-};
-
-const getAllRecordsInConsumerCollection = async (consumerCollection: Collection): Promise<ConsumerProps[]> => {
-  const consumerDocumentsCursor = consumerCollection.find({});
-  const allRecords: ConsumerProps[] = [];
-
-  while (await consumerDocumentsCursor.hasNext()) {
-    const consumerDocument = await consumerDocumentsCursor.next();
-
-    const currentRecord: ConsumerProps = {
-      id: consumerDocument.id as any,
-      firstName: consumerDocument.firstName,
-      lastName: consumerDocument.lastName,
-      email: consumerDocument.email,
-      handle: consumerDocument.handle,
-      displayEmail: consumerDocument.displayEmail,
-      phone: consumerDocument.phone,
-      dateOfBirth: consumerDocument.dateOfBirth,
-      address: consumerDocument.address,
-      socialSecurityNumber: consumerDocument.socialSecurityNumber,
-      //nationalID: consumerDocument.nationalID,
-      //nationalIDType: consumerDocument.nationalIDType,
-      //riskRating: consumerDocument.riskRating,
-      //isSuspectedFraud: consumerDocument.isSuspectedFraud,
-      isLocked: consumerDocument.isLocked,
-      isDisabled: consumerDocument.isDisabled,
-      //zhParticipantCode: consumerDocument.zhParticipantCode,
-      //paymentProviderAccounts: consumerDocument.paymentProviderAccounts,
-      verificationData: consumerDocument.verificationData,
-      //paymentMethods: consumerDocument.paymentMethods,
-      //cryptoWallets: consumerDocument.cryptoWallets,
-    };
-    allRecords.push(currentRecord);
-  }
-
-  return allRecords;
+const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
+  const allConsumerProps = await prismaService.consumer.findMany({});
+  return allConsumerProps;
 };
 
 describe("MongoDBConsumerRepoTests", () => {
   jest.setTimeout(20000);
 
   let consumerRepo: IConsumerRepo;
-  let mongoServer: MongoMemoryServer;
-  let mongoClient: MongoClient;
-  let consumerCollection: Collection;
+  let app: TestingModule;
+  let prismaService: PrismaService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
 
-    console.log("MongoMemoryServer running at: ", mongoUri);
-
-    // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-    /**
-     *
-     * This will be used to configure the testing module and will decouple
-     * the testing module from the actual module.
-     *
-     * Never hard-code the environment variables "KEY_NAME" in the testing module.
-     * All the keys used in 'appconfigs' are defined in
-     * `config/ConfigurationUtils` and it should be used for all the testing modules.
-     *
-     **/
     const appConfigurations = {
-      [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoUri,
-      },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [ConsumerMapper, DBProvider, MongoDBConsumerRepo, KmsService],
+      providers: [ConsumerMapper, PrismaService, SQLConsumerRepo],
     }).compile();
 
-    consumerRepo = app.get<MongoDBConsumerRepo>(MongoDBConsumerRepo);
-
-    mongoClient = new MongoClient(mongoUri);
-    await mongoClient.connect();
-    consumerCollection = mongoClient.db("").collection("consumers");
+    consumerRepo = app.get<SQLConsumerRepo>(SQLConsumerRepo);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  afterEach(async () => {
-    await mongoClient.close();
-    await mongoose.disconnect();
-    await mongoServer.stop();
+  afterAll(async () => {
+    app.close();
+  });
+
+  beforeEach(async () => {
+    await prismaService.consumer.deleteMany();
   });
 
   describe("createConsumer", () => {
     it("should fail to create a duplicate consumer by email", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
+      const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props.id);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.email).toBe(consumer.props.email);
-      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
-        "Consumer with given email address already exists",
-      );
+      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(BadRequestError);
     });
 
     it("should fail to create a duplicate consumer by phone", async () => {
-      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+      const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props.id);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.phone).toBe(consumer.props.phone);
-      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
-        "Consumer with given phone number already exists",
-      );
+
+      const newConsumer = getRandomUser();
+      newConsumer.props.phone = consumer.props.phone;
+      expect(async () => await consumerRepo.createConsumer(newConsumer)).rejects.toThrow(BadRequestError);
     });
 
     it("should fail to create a duplicate consumer by phone even with different spacing", async () => {
-      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+      const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props.id);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.phone).toBe(consumer.props.phone);
-      consumer.props.phone = "+155 55555  555";
-      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(
-        "Consumer with given phone number already exists",
-      );
+      const phone = consumer.props.phone;
+      const newConsumer = getRandomUser();
+      newConsumer.props.phone = phone.split("").join(" ");
+      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(BadRequestError);
     });
 
-    it("shouldn't modify the 'handle', if already specified, before saving the consumer", async () => {
-      const consumerProps: Partial<ConsumerProps> = {
-        id: "test-consumer-id",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test@noba.com",
-        phone: "+9876541230",
-        handle: "test2",
-      };
-      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+    it("should save handle for consumer", async () => {
+      const consumer = getRandomUser();
+      const handle = uuid();
+      consumer.props.handle = handle;
+      const returnedResult = await consumerRepo.createConsumer(consumer);
 
-      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
-      expect(savedResults).toHaveLength(1);
-      expect(savedResults[0].handle).toBe("test2");
+      const savedResults: ConsumerProps[] = await getAllConsumerRecords(prismaService);
+      const savedConsumerRecord = savedResults.filter(record => record.id === consumer.props.id);
+      expect(savedConsumerRecord.length).toBe(1);
+      expect(savedConsumerRecord[0].handle).toBe(handle);
 
-      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
+      expect(returnedResult.props.handle).toBe(savedConsumerRecord[0].handle);
     });
 
     it("should add a 'default' handle (if not specified) before saving the consumer", async () => {
-      const consumerProps: Partial<ConsumerProps> = {
-        id: "test-consumer-id",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test@noba.com",
-        phone: "+9876541230",
-      };
-      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+      const consumer = getRandomUser();
+      const returnedResult = await consumerRepo.createConsumer(consumer);
 
-      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      const savedResults: ConsumerProps[] = await (
+        await getAllConsumerRecords(prismaService)
+      ).filter(record => record.id === consumer.props.id);
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
@@ -184,17 +111,14 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
     });
 
-    it("should add a 'default' handle which doesn't have 'dots' (.) even if email has it", async () => {
-      const consumerProps: Partial<ConsumerProps> = {
-        id: "test-consumer-id",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test.test@noba.com",
-        phone: "+9876541230",
-      };
-      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+    it("should add a 'default' handle which doesn't have 'dots' (.) even if email has it and firstName is not present", async () => {
+      const consumer = getRandomUser();
+      consumer.props.firstName = null;
+      const returnedResult = await consumerRepo.createConsumer(consumer);
 
-      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      const savedResults: ConsumerProps[] = (await getAllConsumerRecords(prismaService)).filter(
+        record => record.id === consumer.props.id,
+      );
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
@@ -207,37 +131,13 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should add a 'default' handle which doesn't have 'dots' (.) even if firstname has it", async () => {
-      const consumerProps: Partial<ConsumerProps> = {
-        id: "test-consumer-id",
-        firstName: "first.Name",
-        lastName: "lastName",
-        email: "test.test@noba.com",
-        phone: "+9876541230",
-      };
-      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+      const consumer = getRandomUser();
+      consumer.props.firstName = "test.test";
+      const returnedResult = await consumerRepo.createConsumer(consumer);
 
-      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
-      expect(savedResults).toHaveLength(1);
-      expect(savedResults[0].handle).toBeDefined();
-      expect(savedResults[0].handle.indexOf(".")).toBe(-1);
-      expect(savedResults[0].handle.indexOf("_")).toBe(-1);
-      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
-      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
-      expect(savedResults[0].handle[0] != "-").toBeTruthy();
-
-      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
-    });
-
-    it("should add a 'default' handle which doesn't have '_' as first character if firstname is not present", async () => {
-      const consumerProps: Partial<ConsumerProps> = {
-        id: "test-consumer-id",
-        lastName: "lastName",
-        email: "test.test@noba.com",
-        phone: "+9876541230",
-      };
-      const returnedResult = await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
-
-      const savedResults: ConsumerProps[] = await getAllRecordsInConsumerCollection(consumerCollection);
+      const savedResults: ConsumerProps[] = (await getAllConsumerRecords(prismaService)).filter(
+        record => record.id === consumer.props.id,
+      );
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
@@ -252,8 +152,9 @@ describe("MongoDBConsumerRepoTests", () => {
 
   describe("getConsumer", () => {
     it("should get a consumer", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-      expect(async () => await consumerRepo.getConsumer(consumer.props.id)).rejects.toThrow(NotFoundException);
+      const consumer = getRandomUser();
+      const res = await consumerRepo.getConsumer(consumer.props.id);
+      expect(res).toBeNull();
 
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props.id);
@@ -264,7 +165,7 @@ describe("MongoDBConsumerRepoTests", () => {
 
   describe("checkIfUserExists", () => {
     it("should create and find a user by email", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
+      const consumer = getRandomUser();
       const result = await consumerRepo.exists(consumer.props.email);
       expect(result).toBe(false);
 
@@ -274,7 +175,7 @@ describe("MongoDBConsumerRepoTests", () => {
     });
 
     it("should create and find a user by phone", async () => {
-      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+      const consumer = getRandomUser();
       const result = await consumerRepo.exists(consumer.props.phone);
       expect(result).toBe(false);
 
@@ -285,53 +186,29 @@ describe("MongoDBConsumerRepoTests", () => {
   });
 
   describe("getConsumerByEmail", () => {
-    it("get a user by email", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
+    it("get a consumer by email", async () => {
+      const consumer = getRandomUser();
 
-      const resultNotFound = await consumerRepo.getConsumerByEmail(DEFAULT_EMAIL_ID);
+      const resultNotFound = await consumerRepo.getConsumerByEmail(consumer.props.email);
       expect(resultNotFound.isFailure).toBe(true);
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
       const result = await consumerRepo.getConsumerByEmail(savedConsumer.props.email);
+      expect(result.isSuccess).toBeTruthy();
       expect(result.getValue().props.email).toBe(consumer.props.email);
     });
 
-    it("should get a consumer by email if exists", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-
-      const resultNotFound = await consumerRepo.getConsumerByEmail("notExistingEmailID");
-      expect(resultNotFound.isFailure).toBe(true);
-
-      await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumerByEmail(consumer.props.email);
-      expect(savedResult.isSuccess).toBe(true);
-      expect(savedResult.getValue().props.id).toBe(consumer.props.id);
-    });
-
     it("should throw an error if passed an empty email address", async () => {
-      expect(async () => await consumerRepo.getConsumerByEmail(null)).rejects.toThrow(Error);
+      expect(await (await consumerRepo.getConsumerByEmail(null)).isFailure).toBeTruthy();
     });
   });
 
   describe("getConsumerByPhone", () => {
-    it("get a user by phone", async () => {
-      const phone = "+18242525124";
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
-
-      const savedConsumer = await consumerRepo.createConsumer(consumer);
-
-      const result = await consumerRepo.getConsumerByPhone(savedConsumer.props.phone);
-      expect(result.getValue().props.phone).toBe(consumer.props.phone);
-
-      const result1 = await consumerRepo.getConsumerByPhone("randomphonenumber");
-      expect(result1.isFailure).toBe(true);
-    });
-
     it("should get a consumer by phone if exists", async () => {
-      const consumer = getRandomUser(null, DEFAULT_PHONE_NUMBER);
+      const consumer = getRandomUser();
 
-      const resultNotFound = await consumerRepo.getConsumerByPhone("notExistingPhoneNumber");
+      const resultNotFound = await consumerRepo.getConsumerByPhone(consumer.props.phone);
       expect(resultNotFound.isFailure).toBe(true);
 
       await consumerRepo.createConsumer(consumer);
@@ -340,152 +217,79 @@ describe("MongoDBConsumerRepoTests", () => {
       expect(savedResult.getValue().props.id).toBe(consumer.props.id);
 
       // should get consumer record even when requested phone number has spaces
-      savedResult = await consumerRepo.getConsumerByPhone("+15 5555  55555");
+      const phone = consumer.props.phone.split("").join(" ");
+
+      savedResult = await consumerRepo.getConsumerByPhone(phone);
       expect(savedResult.isSuccess).toBe(true);
       expect(savedResult.getValue().props.id).toBe(consumer.props.id);
     });
 
-    it("should throw an error if passed an empty phone number", async () => {
-      expect(async () => await consumerRepo.getConsumerByPhone(null)).rejects.toThrow(Error);
+    it("should return failure if passed an empty phone number", async () => {
+      const result = await consumerRepo.getConsumerByPhone(null);
+      expect(result.isFailure).toBeTruthy();
     });
   });
 
   describe("updateConsumer", () => {
     it("should update a consumer", async () => {
-      const consumer = getRandomUser(DEFAULT_EMAIL_ID);
-
+      const consumer = getRandomUser();
+      consumer.props.phone = null;
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
       const result = await consumerRepo.getConsumer(savedConsumer.props.id);
-      expect(result.props.phone).toBe(undefined);
+      expect(result.props.phone).toBeNull();
 
-      const phone = "+134242424";
-      const updatedConsumer = getRandomUser(DEFAULT_EMAIL_ID, phone);
-      await consumerRepo.updateConsumer(consumer.props.id, updatedConsumer);
-
-      const result1 = await consumerRepo.getConsumer(result.props.id);
+      const phone = getRandomPhoneNumber();
+      const result1 = await consumerRepo.updateConsumer(consumer.props.id, { phone: phone });
       expect(result1.props.phone).toBe(phone);
+      const result2 = await consumerRepo.getConsumer(consumer.props.id);
+      expect(result2.props.phone).toBe(phone);
     });
 
     it("should throw error if tried to update 'handle' which already exists", async () => {
-      const consumerProps1: Partial<ConsumerProps> = {
-        id: "test-consumer-id-1",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test-1@noba.com",
-        phone: "+9876541230",
-        handle: "test1",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
+      const consumer1 = getRandomUser();
+      await consumerRepo.createConsumer(consumer1);
 
-      const consumerProps2: Partial<ConsumerProps> = {
-        id: "test-consumer-id-2",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test-2@noba.com",
-        phone: "+9876541231",
-        handle: "test2",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
-      // expect(async () => await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2))).rejects.toThrow(
-      //   BadRequestException,
-      // );
-      // expect(async () => await consumerRepo.updateConsumer(Consumer.createConsumer(consumerProps2))).rejects.toThrow(
-      //   "A user with same 'handle' already exists.",
-      // );
+      const consumer2 = getRandomUser();
+
+      await consumerRepo.createConsumer(consumer2);
+
+      expect(
+        async () => await consumerRepo.updateConsumer(consumer2.props.id, { handle: consumer1.props.handle }),
+      ).rejects.toThrow(BadRequestError);
     });
 
     it("should update the consumer if 'handle' is not associated with any Consumer already", async () => {
-      const consumerProps1: Partial<ConsumerProps> = {
-        id: "test-consumer-id-1",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test-1@noba.com",
-        phone: "+9876541230",
-        handle: "test1",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
+      const consumer1 = getRandomUser();
+      await consumerRepo.createConsumer(consumer1);
 
-      const consumerProps2: Partial<ConsumerProps> = {
-        id: "test-consumer-id-2",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test-2@noba.com",
-        phone: "+9876541231",
-        handle: "test2",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
+      const consumer2 = getRandomUser();
+      await consumerRepo.createConsumer(consumer2);
 
-      consumerProps2.handle = "test3";
-      await consumerRepo.updateConsumer(consumerProps2.id, Consumer.createConsumer(consumerProps2));
+      const newHandle = uuid();
+      await consumerRepo.updateConsumer(consumer2.props.id, { handle: newHandle });
 
-      const consumerRecordForId2 = (await getAllRecordsInConsumerCollection(consumerCollection)).filter(record => {
-        return record.id === "test-consumer-id-2";
+      const consumerRecordForId2 = (await getAllConsumerRecords(prismaService)).filter(record => {
+        return record.id === consumer2.props.id;
       })[0];
-      expect(consumerRecordForId2.handle).toBe("test3");
-    });
-
-    it("shouldn't update the consumer 'handle' is not updated", async () => {
-      const consumerProps1: Partial<ConsumerProps> = {
-        id: "test-consumer-id-1",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test-1@noba.com",
-        phone: "+9876541230",
-
-        handle: "test1",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps1));
-
-      const consumerProps2: Partial<ConsumerProps> = {
-        id: "test-consumer-id-2",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test-2@noba.com",
-        phone: "+9876541231",
-
-        handle: "test2",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps2));
-
-      consumerProps2.phone = "+9876541235";
-      await consumerRepo.updateConsumer(consumerProps2.id, Consumer.createConsumer(consumerProps2));
-
-      const consumerRecordForId2 = (await getAllRecordsInConsumerCollection(consumerCollection)).filter(record => {
-        return record.id === "test-consumer-id-2";
-      })[0];
-      expect(consumerRecordForId2.handle).toBe("test2");
+      expect(consumerRecordForId2.handle).toBe(newHandle);
     });
   });
 
   describe("isHandleTaken", () => {
     it("should return 'true' if there already exist an user with same handle", async () => {
-      const consumerProps: Partial<ConsumerProps> = {
-        id: "test-consumer-id",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test@noba.com",
-        phone: "+9876541230",
-        handle: "test",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
 
-      const result = await consumerRepo.isHandleTaken("test");
+      const result = await consumerRepo.isHandleTaken(consumer.props.handle);
       expect(result).toBe(true);
     });
 
     it("should return 'false' if there isn't an user with same handle", async () => {
-      const consumerProps: Partial<ConsumerProps> = {
-        id: "test-consumer-id",
-        firstName: "firstName",
-        lastName: "lastName",
-        email: "test@noba.com",
-        phone: "+9876541230",
-        handle: "test2",
-      };
-      await consumerRepo.createConsumer(Consumer.createConsumer(consumerProps));
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
 
-      const result = await consumerRepo.isHandleTaken("test");
+      const result = await consumerRepo.isHandleTaken("new_handle");
       expect(result).toBe(false);
     });
   });
@@ -563,13 +367,19 @@ describe("MongoDBConsumerRepoTests", () => {
   });*/
 });
 
-const getRandomUser = (email: string, phone?: string): Consumer => {
+const getRandomUser = (): Consumer => {
+  const email = `${uuid()}_${new Date().valueOf()}@noba.com`;
   const props: Partial<ConsumerProps> = {
-    id: mkid(email),
+    id: `${uuid()}_${new Date().valueOf()}`,
     firstName: "firstName",
     lastName: "lastName",
     email: email,
-    phone: phone,
+    displayEmail: email.toUpperCase(),
+    phone: getRandomPhoneNumber(),
   };
   return Consumer.createConsumer(props);
+};
+
+const getRandomPhoneNumber = (): string => {
+  return `+1${Math.floor(Math.random() * 1000000000)}`;
 };

@@ -3,11 +3,12 @@ import { Result } from "../../../core/logic/Result";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { IConsumerRepo } from "./ConsumerRepo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { PaymentMethodStatus, Prisma, WalletStatus } from "@prisma/client";
+import { PaymentMethodStatus, WalletStatus } from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -21,17 +22,33 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
-    const consumerProps = await this.prisma.consumer.findUnique({
-      where: { id: consumerID },
-      include: { address: true, verificationData: true },
-    });
-    if (!consumerProps) return null;
-    return Consumer.createConsumer(consumerProps);
+    try {
+      const consumerProps = await this.prisma.consumer.findUnique({
+        where: { id: consumerID },
+        include: { address: true, verificationData: true },
+      });
+      if (!consumerProps) return null;
+      return Consumer.createConsumer(consumerProps);
+    } catch (e) {
+      return null;
+    }
   }
 
-  async createConsumer(consumer: Prisma.ConsumerCreateInput): Promise<Consumer> {
+  async createConsumer(consumer: Consumer): Promise<Consumer> {
+    if (consumer.props.phone) {
+      consumer.props.phone = Utils.stripSpaces(consumer.props.phone);
+    }
+
+    if (consumer.props.handle === undefined || consumer.props.handle === null) {
+      consumer.props.handle =
+        this.removeAllUnsupportedHandleCharacters(
+          consumer.props.firstName ?? consumer.props.email.split("@")[0],
+        ).toLocaleLowerCase() + Date.now().valueOf().toString().substring(7);
+    }
+
+    const consumerInput = this.mapper.toCreateConsumerInput(consumer);
     try {
-      const consumerProps = await this.prisma.consumer.create({ data: consumer });
+      const consumerProps = await this.prisma.consumer.create({ data: consumerInput });
       return Consumer.createConsumer(consumerProps);
     } catch (e) {
       throw new BadRequestError({
@@ -41,31 +58,41 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async exists(emailOrPhone: string): Promise<boolean> {
-    const consumerProps = await this.prisma.consumer.findUnique({ where: { email: emailOrPhone } });
-    if (consumerProps) return true;
-    return false;
+    if (Utils.isEmail(emailOrPhone)) {
+      return (await this.getConsumerByEmail(emailOrPhone.toLowerCase())).isSuccess;
+    } else {
+      return (await this.getConsumerByPhone(emailOrPhone)).isSuccess;
+    }
   }
 
   async getConsumerByEmail(email: string): Promise<Result<Consumer>> {
-    const consumerProps = await this.prisma.consumer.findUnique({
-      where: { email: email },
-      include: { address: true, verificationData: true },
-    });
-    if (consumerProps) {
-      return Result.ok(Consumer.createConsumer(consumerProps));
-    } else {
+    try {
+      const consumerProps = await this.prisma.consumer.findUnique({
+        where: { email: email },
+        include: { address: true, verificationData: true },
+      });
+      if (consumerProps) {
+        return Result.ok(Consumer.createConsumer(consumerProps));
+      } else {
+        return Result.fail("Couldn't find consumer with given email in the db");
+      }
+    } catch (e) {
       return Result.fail("Couldn't find consumer with given email in the db");
     }
   }
 
   async getConsumerByPhone(phone: string): Promise<Result<Consumer>> {
-    const consumerProps = await this.prisma.consumer.findUnique({
-      where: { phone: phone },
-      include: { address: true, verificationData: true },
-    });
-    if (consumerProps) {
-      return Result.ok(Consumer.createConsumer(consumerProps));
-    } else {
+    try {
+      const consumerProps = await this.prisma.consumer.findUnique({
+        where: { phone: Utils.stripSpaces(phone) },
+        include: { address: true, verificationData: true },
+      });
+      if (consumerProps) {
+        return Result.ok(Consumer.createConsumer(consumerProps));
+      } else {
+        return Result.fail("Couldn't find consumer with given phone number in the db");
+      }
+    } catch (e) {
       return Result.fail("Couldn't find consumer with given phone number in the db");
     }
   }
@@ -149,5 +176,21 @@ export class SQLConsumerRepo implements IConsumerRepo {
     } catch (e) {
       throw new BadRequestError({ message: `Failed to update crypto wallet. Reason: ${e.message}` });
     }
+  }
+
+  private removeAllUnsupportedHandleCharacters(text: string): string {
+    if (text === undefined || text === null) return "user-";
+
+    const regex = new RegExp("^[a-zA-Z0-9-]{1,1}$");
+    let result = "";
+
+    for (let i = 0; i < text.length; i++) {
+      if (regex.test(text[i])) result += text[i];
+    }
+
+    if (result.length < 1) result += "user-";
+    while (result.length < 3) result += "-";
+
+    return result.substring(0, 7);
   }
 }
