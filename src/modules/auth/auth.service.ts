@@ -8,6 +8,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { Utils } from "../../core/utils/Utils";
 import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
+import { OTPService } from "../common/otp.service";
 import { ITokenRepo } from "./repo/TokenRepo";
 import { Token } from "./domain/Token";
 
@@ -27,6 +28,9 @@ export abstract class AuthService {
 
   @Inject()
   private readonly jwtService: JwtService;
+
+  @Inject()
+  private readonly otpService: OTPService;
 
   private otpOverride: number;
 

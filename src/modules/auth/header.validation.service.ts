@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Inject, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
