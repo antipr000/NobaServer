@@ -25,8 +25,8 @@ export class CircleWorkflowController {
     };
   }
 
-  @Get(`/wallets`)
-  @ApiOperation({ summary: "Get consumer's wallet ID" })
+  @Get(`/wallets/master`)
+  @ApiOperation({ summary: "Get master wallet ID" })
   @ApiResponse({ status: HttpStatus.OK })
   async getMasterWalletID(): Promise<any> {
     const res = await this.circleService.getMasterWalletID();
