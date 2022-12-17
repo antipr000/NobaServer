@@ -19,6 +19,10 @@ export class CircleClient {
     this.masterWalletID = circleConfigs.masterWalletID;
   }
 
+  async getMasterWalletID(): Promise<string> {
+    return this.masterWalletID;
+  }
+
   async createWallet(idempotencyKey: string): Promise<string> {
     try {
       const response: AxiosResponse<CreateWalletResponse> = await this.circleApi.wallets.createWallet({

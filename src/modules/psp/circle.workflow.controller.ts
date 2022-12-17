@@ -15,11 +15,19 @@ export class CircleWorkflowController {
     private readonly circleService: CircleService,
   ) {}
 
-  @Get(`/:consumerID/wallet`)
+  @Get(`/wallets/consumers/:consumerID`)
   @ApiOperation({ summary: "Get consumer's wallet ID" })
   @ApiResponse({ status: HttpStatus.OK })
   async getConsumerWalletID(@Param("consumerID") consumerID: string): Promise<string> {
     const res = await this.circleService.getOrCreateWallet(consumerID);
+    return res;
+  }
+
+  @Get(`/wallets`)
+  @ApiOperation({ summary: "Get consumer's wallet ID" })
+  @ApiResponse({ status: HttpStatus.OK })
+  async getMasterWalletID(): Promise<string> {
+    const res = await this.circleService.getMasterWalletID();
     return res;
   }
 

@@ -31,6 +31,10 @@ export class CircleService {
     return circleWalletID;
   }
 
+  public async getMasterWalletID(): Promise<string> {
+    return this.circleClient.getMasterWalletID();
+  }
+
   public async getWalletBalance(walletID: string): Promise<number> {
     // Stub
 
