@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Body,
-  Headers,
   Controller,
   ForbiddenException,
   HttpStatus,
@@ -33,7 +32,6 @@ import { UserAuthService } from "./user.auth.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Utils } from "../../core/utils/Utils";
 import { NewAccessTokenRequestDTO } from "./dto/NewAccessTokenRequest";
-import { VerifyOtpResponseDTO } from "./dto/VerifyOtpReponse";
 
 @Controller("auth")
 @ApiTags("Authentication")
@@ -60,7 +58,7 @@ export class AuthController {
   @ApiOperation({ summary: "returns a new JWT based access token with a refresh token" })
   @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API new access token and refresh token" })
   @ApiUnauthorizedResponse({ description: "Invalid Refresh Token, either already used or expired" })
-  async newAccessToken(@Body() requestBody: NewAccessTokenRequestDTO, @Headers() headers): Promise<LoginResponseDTO> {
+  async newAccessToken(@Body() requestBody: NewAccessTokenRequestDTO): Promise<LoginResponseDTO> {
     const authService: AuthService = this.getAuthService(consumerIdentityIdentifier);
 
     const isValidToken = await authService.validateToken(requestBody.refreshToken, requestBody.userID);
@@ -79,7 +77,7 @@ export class AuthController {
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
   @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API access token" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
-  async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO): Promise<VerifyOtpResponseDTO> {
+  async verifyOtp(@Body() requestBody: VerifyOtpRequestDTO): Promise<LoginResponseDTO> {
     const isEmail = Utils.isEmail(requestBody.emailOrPhone);
     const authService: AuthService = this.getAuthService(requestBody.identityType);
 

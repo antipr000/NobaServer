@@ -29,6 +29,9 @@ export abstract class AuthService {
   @Inject()
   private readonly jwtService: JwtService;
 
+  @Inject()
+  private readonly otpService: OTPService;
+
   private otpOverride: number;
 
   constructor(private readonly configService: CustomConfigService) {
