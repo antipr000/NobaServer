@@ -18,17 +18,21 @@ export class CircleWorkflowController {
   @Get(`/wallets/consumers/:consumerID`)
   @ApiOperation({ summary: "Get consumer's wallet ID" })
   @ApiResponse({ status: HttpStatus.OK })
-  async getConsumerWalletID(@Param("consumerID") consumerID: string): Promise<string> {
+  async getConsumerWalletID(@Param("consumerID") consumerID: string): Promise<any> {
     const res = await this.circleService.getOrCreateWallet(consumerID);
-    return res;
+    return {
+      walletID: res,
+    };
   }
 
   @Get(`/wallets`)
   @ApiOperation({ summary: "Get consumer's wallet ID" })
   @ApiResponse({ status: HttpStatus.OK })
-  async getMasterWalletID(): Promise<string> {
+  async getMasterWalletID(): Promise<any> {
     const res = await this.circleService.getMasterWalletID();
-    return res;
+    return {
+      walletID: res,
+    };
   }
 
   @Get("/wallets/:walletID/balance")
@@ -36,7 +40,10 @@ export class CircleWorkflowController {
   @ApiResponse({ status: HttpStatus.OK })
   async getWalletBalance(@Param("walletID") walletID: string) {
     const res = await this.circleService.getWalletBalance(walletID);
-    return res;
+    return {
+      walletID: walletID,
+      balance: res,
+    };
   }
 
   @Post("/wallets/:walletID/debit")
@@ -47,7 +54,10 @@ export class CircleWorkflowController {
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
     const res = await this.circleService.debitWalletBalance(walletID, fundsMovementRequest.amount);
-    return res;
+    return {
+      walletID: walletID,
+      balance: res,
+    };
   }
 
   @Post("/wallets/:walletID/credit")
@@ -58,6 +68,9 @@ export class CircleWorkflowController {
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
     const res = await this.circleService.creditWalletBalance(walletID, fundsMovementRequest.amount);
-    return res;
+    return {
+      walletID: walletID,
+      balance: res,
+    };
   }
 }
