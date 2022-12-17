@@ -85,8 +85,8 @@ export class ConsumerController {
       throw new NotFoundException("Requested user details not found");
     }
 
-    const workflowID = await this.workflowExecutor.executeDebitConsumerWalletWorkflow(consumerID, 1.0, consumerID);
-    this.logger.info(`Started workflow with ID: ${workflowID}`);
+    // const workflowID = await this.workflowExecutor.executeDebitConsumerWalletWorkflow(consumerID, 1.0, consumerID);
+    // this.logger.info(`Started workflow with ID: ${workflowID}`);
 
     return await this.mapToDTO(entity);
   }
