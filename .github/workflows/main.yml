@@ -69,34 +69,35 @@ jobs:
           ebEnvironment=none
           if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               ebEnvironment=production
-              DATABASE_URL=${{secrets.AURORA_BASE_URL_PROD}}?schema=$ebEnvironment
+              echo "DATABASE_URL=${{secrets.AURORA_BASE_URL_PROD}}?schema=$ebEnvironment" >> $GITHUB_ENV
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-partner$ ]]; then
               ebEnvironment=partner
-              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
+              echo "DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment" >> $GITHUB_ENV
           elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
               ebEnvironment=staging
-              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
+              echo "DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment" >> $GITHUB_ENV
           elif [[ ${GITHUB_REF:-noref} =~ main ]]; then
               ebEnvironment=dev
-              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=awsdev
-          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]]; then
-              ebEnvironment=sandbox
-              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
+              echo "DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment" >> $GITHUB_ENV
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ] || [github.event.pull_request.labels.*.name == 'deploy-sandbox'] ]; then
+              ebEnvironment=sandbox              
+              echo "DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment" >> $GITHUB_ENV
           fi
 
           echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
 
           echo "ebEnvironment: $ebEnvironment" >> build_info.yml
           echo "ebEnvironment=$ebEnvironment" >> $GITHUB_OUTPUT
-          #echo "$DATABASE_URL" > .env
+          echo "URL=$DATABASE_URL" >> $GITHUB_OUTPUT
 
       - name: Check If should deploy to sandbox environment based on pull request labels
         id: check-deploy-sandbox
         if: "contains(github.event.pull_request.labels.*.name, 'deploy-sandbox')"
         run: |
           ebEnvironment=sandbox
-          DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
+          echo "DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment" >> $GITHUB_ENV
           echo "ebEnvironment=sandbox" >> $GITHUB_OUTPUT
+          echo "URL=$DATABASE_URL" >> $GITHUB_OUTPUT
 
       # Database migration
       - name: Prisma Migrate
