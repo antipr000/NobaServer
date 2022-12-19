@@ -43,12 +43,6 @@ jobs:
       - name: Generate build info file
         id: build_info
         run: |
-          cat > build_info.yml <<- EOM
-          commitSHA: $GITHUB_SHA
-          commitRef: $GITHUB_REF
-          buildTime: $( date -u )
-          EOM
-
           refName=${GITHUB_REF##*/}
           shortSHA=$(git rev-parse --short HEAD)
           version_label="dev"
@@ -59,7 +53,42 @@ jobs:
             version_label="${refName}-${shortSHA}"
           fi
             
-          echo "version_label=$version_label" >> $GITHUB_OUTPUT
+          cat > build_info.yml <<- EOM
+          commitSHA: $GITHUB_SHA
+          commitRef: $GITHUB_REF
+          buildTime: $( date -u )
+          version: $version_label
+          EOM
+
+          echo "version_label=$version_label" >> $GITHUB_OUTPUT      
+
+      - name: Determine where to deploy
+        id: check-tag
+        run: |
+          #figure out AWS ElasticBeanstalk Environment
+          ebEnvironment=none
+          if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              ebEnvironment=production
+              DATABASE_URL=${{secrets.AURORA_BASE_URL_PROD}}?schema=$ebEnvironment
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-partner$ ]]; then
+              ebEnvironment=partner
+              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
+              ebEnvironment=staging
+              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
+          elif [[ ${GITHUB_REF:-noref} =~ main ]]; then
+              ebEnvironment=dev
+              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=awsdev
+          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]]; then
+              ebEnvironment=sandbox
+              DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
+          fi
+
+          echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
+
+          echo "ebEnvironment: $ebEnvironment" >> build_info.yml
+          echo "ebEnvironment=$ebEnvironment" >> $GITHUB_OUTPUT
+          echo "$DATABASE_URL" > .env
 
       # Runs a set of commands using the runners shell
       - name: Build
@@ -69,27 +98,6 @@ jobs:
           ls -l
           echo [SUCCESS] yarn build succeeded.
           zip -r artifacts.zip ./ "./node_modules/@prisma/client" -x "./.git*" "./test/*" "./src/*" "./node_modules/*"
-
-      - name: Check If should deploy and Decide deployment type
-        id: check-tag
-        run: |
-          #figure out AWS ElasticBeanstalk Environment
-          ebEnvironment=none
-          if [[ ${GITHUB_REF:-noref} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              ebEnvironment=production
-          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-partner$ ]]; then
-              ebEnvironment=partner
-          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/.*-staging$ ]]; then
-              ebEnvironment=staging
-          elif [[ ${GITHUB_REF:-noref} =~ main ]]; then
-              ebEnvironment=dev
-          elif [[ ${GITHUB_REF:-noref} =~ ^refs/tags/sandbox$ ]]; then
-              ebEnvironment=sandbox
-          fi
-
-          echo "*** Will deploy to ebEnvironment $ebEnvironment ***"
-
-          echo "ebEnvironment=$ebEnvironment" >> $GITHUB_OUTPUT
 
       - name: Check If should deploy to sandbox environment based on pull request labels
         id: check-deploy-sandbox
