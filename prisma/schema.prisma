@@ -159,6 +159,35 @@ model Otp {
   @@index([otp])
 }
 
+model LimitProfile {
+  id                 String               @id @default(uuid())
+  name               String
+  daily              Float?
+  weekly             Float?
+  monthly            Float
+  maxTransaction     Float
+  minTransaction     Float
+  unsettledExposure  Float?
+  LimitConfiguration LimitConfiguration[]
+  createdTimestamp   DateTime?            @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp   DateTime?            @updatedAt // Marking optional so we don't need to set in tests
+}
+
+model LimitConfiguration {
+  id                        String             @id @default(uuid())
+  isDefault                 Boolean            @default(false)
+  priority                  Int
+  profile                   LimitProfile       @relation(fields: [profileID], references: [id], onDelete: Cascade)
+  profileID                 String
+  transactionType           TransactionType?
+  minProfileAge             Int?
+  minBalanceInWallet        Float?
+  minTotalTransactionAmount Float?
+  paymentMethodType         PaymentMethodType?
+  createdTimestamp          DateTime?          @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp          DateTime?          @updatedAt // Marking optional so we don't need to set in tests
+}
+
 enum IdentityType {
   CONSUMER
   NOBA_ADMIN
@@ -211,4 +240,8 @@ enum PaymentMethodStatus {
 
 enum KYCProvider {
   SARDINE
+}
+
+enum TransactionType {
+  NOBA_WALLET
 }

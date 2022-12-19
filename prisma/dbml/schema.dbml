@@ -129,6 +129,35 @@ Table Otp {
   }
 }
 
+Table LimitProfile {
+  id String [pk]
+  name String [not null]
+  daily Float
+  weekly Float
+  monthly Float [not null]
+  maxTransaction Float [not null]
+  minTransaction Float [not null]
+  unsettledExposure Float
+  LimitConfiguration LimitConfiguration [not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
+Table LimitConfiguration {
+  id String [pk]
+  isDefault Boolean [not null, default: false]
+  priority Int [not null]
+  profile LimitProfile [not null]
+  profileID String [not null]
+  transactionType TransactionType
+  minProfileAge Int
+  minBalanceInWallet Float
+  minTotalTransactionAmount Float
+  paymentMethodType PaymentMethodType
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
 Enum IdentityType {
   CONSUMER
   NOBA_ADMIN
@@ -183,6 +212,10 @@ Enum KYCProvider {
   SARDINE
 }
 
+Enum TransactionType {
+  NOBA_WALLET
+}
+
 Ref: Address.consumerID - Consumer.id [delete: Cascade]
 
 Ref: KYC.consumerID - Consumer.id [delete: Cascade]
@@ -196,3 +229,5 @@ Ref: Card.paymentMethodID - PaymentMethod.id [delete: Cascade]
 Ref: ACH.paymentMethodID - PaymentMethod.id [delete: Cascade]
 
 Ref: Circle.consumerID - Consumer.id [delete: Cascade]
+
+Ref: LimitConfiguration.profileID > LimitProfile.id [delete: Cascade]

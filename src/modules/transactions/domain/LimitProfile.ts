@@ -1,39 +1,32 @@
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
+import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
+import { LimitProfile as LimitProfileModel } from "@prisma/client";
 
-export interface Limits {
+export class LimitProfileProps implements Partial<LimitProfileModel> {
+  id: string;
+  name: string;
   daily?: number;
   weekly?: number;
   monthly: number;
   maxTransaction: number;
   minTransaction: number;
-}
-
-export interface LimitProfileProps extends BaseProps {
-  _id: string;
-  name: string;
-  cardLimits: Limits;
-  bankLimits: Limits;
   unsettledExposure?: number;
+  createdTimestamp?: Date;
+  updatedTimestamp?: Date;
 }
 
-const limitsJoiValidationKeys: KeysRequired<Limits> = {
+export const limitProfileJoiValidationKeys: KeysRequired<LimitProfileProps> = {
+  ...basePropsJoiSchemaKeys,
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  unsettledExposure: Joi.number().optional(),
   daily: Joi.number().optional(),
   weekly: Joi.number().optional(),
   monthly: Joi.number().required(),
   maxTransaction: Joi.number().required(),
   minTransaction: Joi.number().required(),
-};
-
-export const limitProfileJoiValidationKeys: KeysRequired<LimitProfileProps> = {
-  ...basePropsJoiSchemaKeys,
-  _id: Joi.string().required(),
-  name: Joi.string().required(),
-  cardLimits: Joi.object().keys(limitsJoiValidationKeys).required(),
-  bankLimits: Joi.object().keys(limitsJoiValidationKeys).required(),
-  unsettledExposure: Joi.number().optional(),
 };
 
 export const limitProfileJoiSchema = Joi.object(limitProfileJoiValidationKeys).options({ allowUnknown: true }); // Needed for timstamps
@@ -44,7 +37,7 @@ export class LimitProfile extends AggregateRoot<LimitProfileProps> {
   }
 
   public static createLimitProfile(limitProfileProps: Partial<LimitProfileProps>): LimitProfile {
-    if (!limitProfileProps._id) limitProfileProps._id = Entity.getNewID();
+    if (!limitProfileProps.id) limitProfileProps.id = Entity.getNewID();
 
     return new LimitProfile(Joi.attempt(limitProfileProps, limitProfileJoiSchema));
   }

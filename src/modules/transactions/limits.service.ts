@@ -8,10 +8,9 @@ import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { ILimitProfileRepo } from "./repo/LimitProfileRepo";
 import { ILimitConfigurationRepo } from "./repo/LimitConfigurationRepo";
-import { TransactionType } from "./domain/Types";
-import { LimitProfile, Limits } from "./domain/LimitProfile";
+import { LimitProfile } from "./domain/LimitProfile";
 import { LimitConfiguration } from "./domain/LimitConfiguration";
-import { PaymentMethodType } from "../consumer/domain/PaymentMethod";
+import { PaymentMethodType, TransactionType } from "@prisma/client";
 
 @Injectable()
 export class LimitsService {
@@ -33,37 +32,36 @@ export class LimitsService {
     config: LimitConfiguration,
     consumer: Consumer,
     totalTransactionAmount: number,
+    paymentMethodType: PaymentMethodType,
     transactionType: TransactionType,
   ): boolean {
-    if (
-      config.props.criteria.transactionType.length > 0 &&
-      !config.props.criteria.transactionType.includes(transactionType)
-    ) {
-      return config.props.isDefault;
+    if (config.props.transactionType !== transactionType) {
+      return config.props.isDefault && config.props.paymentMethodType === paymentMethodType;
     }
-    if (
-      config.props.criteria.minTotalTransactionAmount &&
-      config.props.criteria.minTotalTransactionAmount > totalTransactionAmount
-    ) {
-      return config.props.isDefault;
+    if (config.props.minTotalTransactionAmount && config.props.minTotalTransactionAmount > totalTransactionAmount) {
+      return config.props.isDefault && config.props.paymentMethodType === paymentMethodType;
     }
-    if (config.props.criteria.minProfileAge && config.props.criteria.minProfileAge > consumer.getAccountAge()) {
-      return config.props.isDefault;
+    if (config.props.minProfileAge && config.props.minProfileAge > consumer.getAccountAge()) {
+      return config.props.isDefault && config.props.paymentMethodType === paymentMethodType;
     }
     // TODO(CRYPTO-416): Add check for Noba Wallet Balance
     return true;
   }
 
-  async getLimits(consumer: Consumer, transactionType?: TransactionType): Promise<LimitProfile> {
+  async getLimits(
+    consumer: Consumer,
+    transactionType?: TransactionType,
+    paymentMethodType?: PaymentMethodType,
+  ): Promise<LimitProfile> {
     if (!this.allLimitConfigs) {
       this.allLimitConfigs = await this.limitConfigRepo.getAllLimitConfigs();
     }
     const totalTransactionAmount = await this.transactionsRepo.getTotalUserTransactionAmount(consumer.props.id);
     const limitConfig: LimitConfiguration = this.allLimitConfigs.find(config =>
-      this.match(config, consumer, totalTransactionAmount, transactionType),
+      this.match(config, consumer, totalTransactionAmount, paymentMethodType, transactionType),
     );
 
-    return await this.limitProfileRepo.getProfile(limitConfig.props.profile);
+    return await this.limitProfileRepo.getProfile(limitConfig.props.profileID);
   }
 
   async canMakeTransaction(
@@ -72,26 +70,22 @@ export class LimitsService {
     transactionType: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<CheckTransactionDTO> {
-    const limitProfile = await this.getLimits(consumer, transactionType);
-    if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
-    const limits: Limits =
-      paymentMethodType === PaymentMethodType.CARD ? limitProfile.props.cardLimits : limitProfile.props.bankLimits;
-
+    const limitProfile = await this.getLimits(consumer, transactionType, paymentMethodType);
     // Check single transaction limit
 
-    if (transactionAmount < limits.minTransaction) {
+    if (transactionAmount < limitProfile.props.minTransaction) {
       return {
         status: TransactionAllowedStatus.TRANSACTION_TOO_SMALL,
-        rangeMin: limits.minTransaction,
-        rangeMax: limits.maxTransaction,
+        rangeMin: limitProfile.props.minTransaction,
+        rangeMax: limitProfile.props.maxTransaction,
       };
     }
 
-    if (transactionAmount > limits.maxTransaction) {
+    if (transactionAmount > limitProfile.props.maxTransaction) {
       return {
         status: TransactionAllowedStatus.TRANSACTION_TOO_LARGE,
-        rangeMin: limits.minTransaction,
-        rangeMax: limits.maxTransaction,
+        rangeMin: limitProfile.props.minTransaction,
+        rangeMax: limitProfile.props.maxTransaction,
       };
     }
 
@@ -104,10 +98,10 @@ export class LimitsService {
 
     // For some reason without casting the operands to a Number, this ends up doing string concat
     const totalMonthly: number = Number(transactionAmount) + Number(monthlyTransactionAmount);
-    if (totalMonthly > limits.monthly) {
+    if (totalMonthly > limitProfile.props.monthly) {
       // Spent + new amount exceeds monthly limit
-      const maxRemaining = Math.max(limits.monthly - monthlyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
-      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+      const maxRemaining = Math.max(limitProfile.props.monthly - monthlyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
+      const minRemaining = limitProfile.props.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
       /*
         Note that minRemaining will always be the minimum transaction limit but you can have a maximum of < the minimum.
@@ -138,11 +132,11 @@ export class LimitsService {
 
     const totalWeekly = Number(weeklyTransactionAmount) + Number(transactionAmount);
 
-    const weeklyLimit: number = limits.weekly ?? limits.monthly;
+    const weeklyLimit: number = limitProfile.props.weekly ?? limitProfile.props.monthly;
 
     if (totalWeekly > weeklyLimit) {
       const maxRemaining = Math.max(weeklyLimit - weeklyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
-      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+      const minRemaining = limitProfile.props.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
       return {
         status: TransactionAllowedStatus.WEEKLY_LIMIT_REACHED,
@@ -157,13 +151,13 @@ export class LimitsService {
 
     let dailyLimit = 0;
 
-    if (limits.daily) dailyLimit = limits.daily;
-    else if (limits.weekly) dailyLimit = limits.weekly;
-    else dailyLimit = limits.monthly;
+    if (limitProfile.props.daily) dailyLimit = limitProfile.props.daily;
+    else if (limitProfile.props.weekly) dailyLimit = limitProfile.props.weekly;
+    else dailyLimit = limitProfile.props.monthly;
 
     if (totalDaily > dailyLimit) {
       const maxRemaining = Math.max(dailyLimit - dailyTransactionAmount, 0); // We have our full limit minus what we've spent so far this month remaining
-      const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+      const minRemaining = limitProfile.props.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
       return {
         status: TransactionAllowedStatus.DAILY_LIMIT_REACHED,
@@ -174,9 +168,11 @@ export class LimitsService {
 
     // Check for unsettled exposure limit
     if (paymentMethodType === PaymentMethodType.ACH && limitProfile.props.unsettledExposure) {
-      const achPaymentMethodIds = consumer.props.paymentMethods
-        .filter(pMethod => pMethod.type === PaymentMethodType.ACH)
-        .map(pMethod => pMethod.paymentToken);
+      // TODO: Fix this
+      // const achPaymentMethodIds = consumer.props.paymentMethods
+      //   .filter(pMethod => pMethod.type === PaymentMethodType.ACH)
+      //   .map(pMethod => pMethod.paymentToken);
+      const achPaymentMethodIds = [];
 
       const totalUnsettledACHPaymentAmount = await this.transactionsRepo.getUserACHUnsettledTransactionAmount(
         consumer.props.id,
@@ -185,7 +181,7 @@ export class LimitsService {
 
       if (limitProfile.props.unsettledExposure < Number(totalUnsettledACHPaymentAmount) + Number(transactionAmount)) {
         const maxRemaining = Math.max(limitProfile.props.unsettledExposure - totalUnsettledACHPaymentAmount, 0);
-        const minRemaining = limits.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
+        const minRemaining = limitProfile.props.minTransaction; // Default the minimum at the min transaction limit. This will always be the case.
 
         return {
           status: TransactionAllowedStatus.UNSETTLED_EXPOSURE_LIMIT_REACHED,
@@ -198,8 +194,8 @@ export class LimitsService {
     // TODO(CRYPTO-393): Add wallet exposure check
     return {
       status: TransactionAllowedStatus.ALLOWED,
-      rangeMin: limits.minTransaction,
-      rangeMax: limits.maxTransaction,
+      rangeMin: limitProfile.props.minTransaction,
+      rangeMax: limitProfile.props.maxTransaction,
     };
   }
 
@@ -208,24 +204,16 @@ export class LimitsService {
     transactionType: TransactionType,
     paymentMethodType?: PaymentMethodType,
   ): Promise<ConsumerLimitsDTO> {
-    const limitProfile = await this.getLimits(consumer, transactionType);
-    if (!paymentMethodType) paymentMethodType = PaymentMethodType.CARD;
-    let limits: Limits;
-
-    if (paymentMethodType === PaymentMethodType.CARD) {
-      limits = limitProfile.props.cardLimits;
-    } else {
-      limits = limitProfile.props.bankLimits;
-    }
+    const limitProfile = await this.getLimits(consumer, transactionType, paymentMethodType);
 
     const monthlyTransactionAmount: number = await this.transactionsRepo.getMonthlyUserTransactionAmount(
       consumer.props.id,
     );
 
     const limitsDTO: ConsumerLimitsDTO = {
-      minTransaction: limits.minTransaction,
-      maxTransaction: limits.maxTransaction,
-      monthly: { max: limits.monthly, used: monthlyTransactionAmount, period: 30 },
+      minTransaction: limitProfile.props.minTransaction,
+      maxTransaction: limitProfile.props.maxTransaction,
+      monthly: { max: limitProfile.props.monthly, used: monthlyTransactionAmount, period: 30 },
     };
 
     return limitsDTO;

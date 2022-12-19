@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
-import { MongoDBLimitConfigurationRepo } from "./MongoDBLimitConfigurationRepo";
-import { MongoDBLimitProfileRepo } from "./MongoDBLimitProfileRepo";
 import { MongoDBTransactionRepo } from "./MongoDBTransactionRepo";
+import { SQLLimitConfigurationRepo } from "./SQLLimitConfigurationRepo";
+import { SQLLimitProfileRepo } from "./SQLLimitProfileRepo";
 
 const TransactionRepoProvider = {
   provide: "TransactionRepo",
@@ -11,12 +11,12 @@ const TransactionRepoProvider = {
 
 const LimitProfileRepoProvider = {
   provide: "LimitProfileRepo",
-  useClass: MongoDBLimitProfileRepo,
+  useClass: SQLLimitProfileRepo,
 };
 
 const LimitConfigurationRepoProvider = {
   provide: "LimitConfigurationRepo",
-  useClass: MongoDBLimitConfigurationRepo,
+  useClass: SQLLimitConfigurationRepo,
 };
 
 @Module({
