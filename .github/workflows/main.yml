@@ -88,7 +88,6 @@ jobs:
 
           echo "ebEnvironment: $ebEnvironment" >> build_info.yml
           echo "ebEnvironment=$ebEnvironment" >> $GITHUB_OUTPUT
-          echo "URL=$DATABASE_URL" >> $GITHUB_OUTPUT
 
       - name: Check If should deploy to sandbox environment based on pull request labels
         id: check-deploy-sandbox
@@ -97,7 +96,6 @@ jobs:
           ebEnvironment=sandbox
           echo "DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment" >> $GITHUB_ENV
           echo "ebEnvironment=sandbox" >> $GITHUB_OUTPUT
-          echo "URL=$DATABASE_URL" >> $GITHUB_OUTPUT
 
       # Database migration
       - name: Prisma Migrate
