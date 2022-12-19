@@ -4,7 +4,7 @@ COPY .env ./
 RUN yarn install --prod
 COPY ./prisma/* ./prisma/
 RUN apk add so:libssl.so.1.1
-RUN yarn prisma-generate
+RUN yarn prisma-migrate-deploy
 COPY . .
 EXPOSE 8080
 CMD [ "node", "dist/main.js"]

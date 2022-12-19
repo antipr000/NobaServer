@@ -98,11 +98,11 @@ jobs:
           echo "ebEnvironment=sandbox" >> $GITHUB_OUTPUT
 
       # Database migration
-      - name: Prisma Migrate
+      - name: Prisma generate
         if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
         run: |
           echo "DATABASE URL=$DATABASE_URL" >> $GITHUB_OUTPUT
-          yarn prisma-migrate-deploy
+          yarn prisma-generate
 
       # Runs a set of commands using the runners shell
       - name: Build
