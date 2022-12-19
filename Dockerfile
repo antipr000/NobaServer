@@ -12,8 +12,8 @@ RUN apk add so:libssl.so.1.1
 # ENV AWS_REGION=us-east-1
 # RUN echo "DATABASE_URL=`aws secretsmanager get-secret-value --secret-id 'TEST_BASE_DB_URL' --query 'SecretString' --output text | jq -r '.TEST_BASE_DB_URL'`?schema=`cat $ENV_NAME`" >> .env
 # #RUN echo $ENV > .hello
-RUN cat .env
-RUN yarn prisma-migrate-deploy
+#RUN cat .env
+#RUN yarn prisma-migrate-deploy
 COPY . .
 EXPOSE 8080
 CMD [ "node", "dist/main.js"]
