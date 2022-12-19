@@ -88,23 +88,29 @@ jobs:
 
           echo "ebEnvironment: $ebEnvironment" >> build_info.yml
           echo "ebEnvironment=$ebEnvironment" >> $GITHUB_OUTPUT
-          echo "$DATABASE_URL" > .env
-
-      # Runs a set of commands using the runners shell
-      - name: Build
-        run: |
-          yarn prisma-migrate-deploy
-          yarn build
-          ls -l
-          echo [SUCCESS] yarn build succeeded.
-          zip -r artifacts.zip ./ "./node_modules/@prisma/client" -x "./.git*" "./test/*" "./src/*" "./node_modules/*"
+          #echo "$DATABASE_URL" > .env
 
       - name: Check If should deploy to sandbox environment based on pull request labels
         id: check-deploy-sandbox
         if: "contains(github.event.pull_request.labels.*.name, 'deploy-sandbox')"
         run: |
           ebEnvironment=sandbox
+          DATABASE_URL=${{secrets.AURORA_BASE_URL_LOWERS}}?schema=$ebEnvironment
           echo "ebEnvironment=sandbox" >> $GITHUB_OUTPUT
+
+      # Database migration
+      - name: Prisma Migrate
+        if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
+        run: |
+          yarn prisma-migrate-deploy
+
+      # Runs a set of commands using the runners shell
+      - name: Build
+        run: |
+          yarn build
+          ls -l
+          echo [SUCCESS] yarn build succeeded.
+          zip -r artifacts.zip ./ "./node_modules/@prisma/client" -x "./.git*" "./test/*" "./src/*" "./node_modules/*"
 
       - name: Deploy to EB
         if: "!contains(steps.check-tag.outputs.ebEnvironment, 'none')" # run this job only if ebEnvironment is not none
