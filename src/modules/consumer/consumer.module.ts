@@ -9,10 +9,9 @@ import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
 import { SMSService } from "../common/sms.service";
 import { ConsumerRepoModule } from "./repos/consumer.repo.module";
-import { TemporalModule } from "../../infra/temporal/temporal.module";
 
 @Module({
-  imports: [InfraProvidersModule, TemporalModule, CommonModule, NotificationsModule, PspModule, ConsumerRepoModule],
+  imports: [InfraProvidersModule, CommonModule, NotificationsModule, PspModule, ConsumerRepoModule],
   controllers: [ConsumerController],
   providers: [ConsumerService, DBProvider, SanctionedCryptoWalletService, SMSService],
   exports: [ConsumerService],

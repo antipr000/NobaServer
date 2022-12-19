@@ -48,7 +48,6 @@ import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { WalletStatus } from "@prisma/client";
 import { AddCryptoWalletResponseDTO } from "./dto/AddCryptoWalletResponse";
 import { BadRequestError } from "../../core/exception/CommonAppException";
-import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -61,11 +60,7 @@ export class ConsumerController {
 
   private readonly consumerMapper: ConsumerMapper;
 
-  constructor(
-    private readonly consumerService: ConsumerService,
-    private readonly plaidClient: PlaidClient,
-    private readonly workflowExecutor: WorkflowExecutor,
-  ) {
+  constructor(private readonly consumerService: ConsumerService, private readonly plaidClient: PlaidClient) {
     this.consumerMapper = new ConsumerMapper();
   }
 
@@ -84,10 +79,6 @@ export class ConsumerController {
     if (!entity) {
       throw new NotFoundException("Requested user details not found");
     }
-
-    const workflowID = await this.workflowExecutor.executeDebitConsumerWalletWorkflow(consumerID, 1.0, consumerID);
-    this.logger.info(`Started workflow with ID: ${workflowID}`);
-
     return await this.mapToDTO(entity);
   }
 
