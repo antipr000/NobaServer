@@ -1,29 +1,29 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
+import { basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 import * as crypto from "crypto";
+import { Token as TokenModel, TokenType } from "@prisma/client";
+import { isAfter } from "date-fns";
 
-export enum TokenType {
-  REFRESH_TOKEN = "REFRESH_TOKEN",
-}
-
-export interface TokenProps extends BaseProps {
-  _id: string; //token hash, using this attribute as _id to avoid having separate index on token
+export class TokenProps implements Partial<TokenModel> {
+  id: string; //token hash, using this attribute as _id to avoid having separate index on token
   userID: string;
   tokenType: TokenType;
-  expiryTime?: number;
+  expiryTime?: Date | null;
   isUsed: boolean; // its not needed we delete the token
+  createdTimestamp?: Date;
+  updatedTimestamp?: Date;
 }
 
 export const tokenValidationKeys: KeysRequired<TokenProps> = {
   ...basePropsJoiSchemaKeys,
-  _id: Joi.string().required(),
+  id: Joi.string().required(),
   userID: Joi.string().required(),
   tokenType: Joi.string()
     .valid(...Object.values(TokenType))
     .default(TokenType.REFRESH_TOKEN),
-  expiryTime: Joi.number().optional(),
+  expiryTime: Joi.date().optional(),
   isUsed: Joi.boolean().default(false),
 };
 
@@ -51,10 +51,10 @@ export class Token extends AggregateRoot<TokenProps> {
   }
 
   public isExpired(): boolean {
-    return this.props.isUsed || (this.props.expiryTime && this.props.expiryTime < Date.now());
+    return this.props.isUsed || (this.props.expiryTime && isAfter(new Date(), this.props.expiryTime));
   }
 
   public isMatching(rawToken: string): boolean {
-    return !this.isExpired() && this.props._id === Token.saltifyToken(rawToken, this.props.userID);
+    return !this.isExpired() && this.props.id === Token.saltifyToken(rawToken, this.props.userID);
   }
 }

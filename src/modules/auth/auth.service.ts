@@ -71,7 +71,7 @@ export abstract class AuthService {
     if (includeRefreshToken) {
       const { rawToken, saltifiedToken } = Token.generateToken(id);
       refreshToken = rawToken;
-      const token = Token.createTokenObject({ _id: saltifiedToken, userID: id });
+      const token = Token.createTokenObject({ id: saltifiedToken, userID: id });
       await this.tokenRepo.saveToken(token);
     }
     const payload = {
