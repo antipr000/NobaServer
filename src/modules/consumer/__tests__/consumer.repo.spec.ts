@@ -23,7 +23,7 @@ const getAllAddressRecords = async (prismaService: PrismaService): Promise<Addre
   return allAddresses;
 };
 
-describe("MongoDBConsumerRepoTests", () => {
+describe("ConsumerRepoTests", () => {
   jest.setTimeout(20000);
 
   let consumerRepo: IConsumerRepo;
@@ -31,8 +31,6 @@ describe("MongoDBConsumerRepoTests", () => {
   let prismaService: PrismaService;
 
   beforeAll(async () => {
-    // Spin up an in-memory mongodb server
-
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };

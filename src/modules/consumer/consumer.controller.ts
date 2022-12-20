@@ -110,24 +110,24 @@ export class ConsumerController {
     @AuthUser() consumer: Consumer,
     @Body() requestBody: UpdateConsumerRequestDTO,
   ): Promise<ConsumerDTO> {
-    const consumerProps: Partial<ConsumerProps> = {
-      id: consumer.props.id,
-      ...(requestBody.firstName && { firstName: requestBody.firstName }),
-      ...(requestBody.lastName && { lastName: requestBody.lastName }),
-      ...(requestBody.address && {
-        address: {
-          streetLine1: requestBody.address.streetLine1,
-          streetLine2: requestBody.address.streetLine1,
-          postalCode: requestBody.address.postalCode,
-          regionCode: requestBody.address.regionCode,
-          countryCode: requestBody.address.countryCode,
-          city: requestBody.address.city,
-        },
-      }),
-      ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),
-      ...(requestBody.handle && { handle: requestBody.handle }),
-    };
     try {
+      const consumerProps: Partial<ConsumerProps> = {
+        id: consumer.props.id,
+        ...(requestBody.firstName && { firstName: requestBody.firstName }),
+        ...(requestBody.lastName && { lastName: requestBody.lastName }),
+        ...(requestBody.address && {
+          address: {
+            streetLine1: requestBody.address.streetLine1 ?? consumer.props.address.streetLine1,
+            streetLine2: requestBody.address.streetLine2 ?? consumer.props.address.streetLine2,
+            city: requestBody.address.city ?? consumer.props.address.city,
+            countryCode: requestBody.address.countryCode ?? consumer.props.address.countryCode,
+            regionCode: requestBody.address.regionCode ?? consumer.props.address.regionCode,
+            postalCode: requestBody.address.postalCode ?? consumer.props.address.postalCode,
+          },
+        }),
+        ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),
+        ...(requestBody.handle && { handle: requestBody.handle }),
+      };
       const res = await this.consumerService.updateConsumer(consumerProps);
       return await this.mapToDTO(res);
     } catch (e) {
