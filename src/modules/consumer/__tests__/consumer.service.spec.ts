@@ -995,7 +995,7 @@ describe("ConsumerService", () => {
     });
 
     it("should throw BadRequestException if 'handle' is greater than 22 characters", async () => {
-      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuvwx")).rejects.toThrow(
+      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuv")).rejects.toThrow(
         BadRequestException,
       );
       expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
@@ -1023,6 +1023,13 @@ describe("ConsumerService", () => {
       const response2 = await consumerService.isHandleAvailable("007-Bond");
       expect(response1).toBeTruthy();
       expect(response2).toBeTruthy();
+    });
+
+    it("should allow valid handle with spanish characters", async () => {
+      when(consumerRepo.isHandleTaken(anything())).thenResolve(false);
+
+      const response = await consumerService.isHandleAvailable("ñOBa-éícd");
+      expect(response).toBeTruthy();
     });
 
     it("should throw BadRequestException if 'handle' has special characters other than underscore", async () => {

@@ -187,7 +187,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
   private removeAllUnsupportedHandleCharacters(text: string): string {
     if (text === undefined || text === null) return "user-";
 
-    const regex = new RegExp("^[a-zA-Z0-9-]{1,1}$");
+    const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü-]{1,1}$");
     let result = "";
 
     for (let i = 0; i < text.length; i++) {
