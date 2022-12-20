@@ -986,49 +986,50 @@ describe("ConsumerService", () => {
     });
   });
 
-  describe("isHandleAvaialable", () => {
+  describe("isHandleAvailable", () => {
     it("should throw BadRequestException if 'handle' is less than 3 characters", async () => {
-      try {
-        await consumerService.isHandleAvailable("ab");
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toBe("'handle' should be between 3 and 15 charcters long.");
-      }
+      expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(BadRequestException);
+      expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
+        "'handle' should be between 3 and 23 charcters long.",
+      );
     });
 
-    it("should throw BadRequestException if 'handle' is greater than 15 characters", async () => {
-      try {
-        await consumerService.isHandleAvailable("abcdefghijklmnopqrstu");
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toBe("'handle' should be between 3 and 15 charcters long.");
-      }
+    it("should throw BadRequestException if 'handle' is greater than 23 characters", async () => {
+      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuvwx")).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
+        "'handle' should be between 3 and 23 charcters long.",
+      );
+    });
+
+    it("should allow handle less than 23 characters and different cases", async () => {
+      when(consumerRepo.isHandleTaken("aBCdEfghIjklMnopQRSTuv")).thenResolve(false);
+      const response = await consumerService.isHandleAvailable("aBCdEfghIjklMnopQRSTuv");
+      expect(response).toBeTruthy();
     });
 
     it("should throw BadRequestException if 'handle' starts with an underscore", async () => {
-      try {
-        await consumerService.isHandleAvailable("-abcd");
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toBe(
-          "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
-        );
-      }
+      expect(async () => await consumerService.isHandleAvailable("-abcd")).rejects.toThrow(BadRequestException);
+      expect(async () => await consumerService.isHandleAvailable("-abcd")).rejects.toThrow(
+        "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
+      );
+    });
+
+    it("should allow handle if it starts with upper case letter or number", async () => {
+      when(consumerRepo.isHandleTaken(anything())).thenResolve(false);
+
+      const response1 = await consumerService.isHandleAvailable("My-Name");
+      const response2 = await consumerService.isHandleAvailable("007-Bond");
+      expect(response1).toBeTruthy();
+      expect(response2).toBeTruthy();
     });
 
     it("should throw BadRequestException if 'handle' has special characters other than underscore", async () => {
-      try {
-        await consumerService.isHandleAvailable("ab_");
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-        expect(err.message).toBe(
-          "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
-        );
-      }
+      expect(async () => await consumerService.isHandleAvailable("ab_")).rejects.toThrow(BadRequestException);
+      expect(async () => await consumerService.isHandleAvailable("-abcd")).rejects.toThrow(
+        "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
+      );
     });
 
     it("should throw BadRequestException if 'handle' correspond to a spanish 'bad word'", async () => {
