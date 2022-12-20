@@ -990,20 +990,20 @@ describe("ConsumerService", () => {
     it("should throw BadRequestException if 'handle' is less than 3 characters", async () => {
       expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(BadRequestException);
       expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
-        "'handle' should be between 3 and 23 charcters long.",
+        "'handle' should be between 3 and 22 charcters long.",
       );
     });
 
-    it("should throw BadRequestException if 'handle' is greater than 23 characters", async () => {
+    it("should throw BadRequestException if 'handle' is greater than 22 characters", async () => {
       expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuvwx")).rejects.toThrow(
         BadRequestException,
       );
       expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
-        "'handle' should be between 3 and 23 charcters long.",
+        "'handle' should be between 3 and 22 charcters long.",
       );
     });
 
-    it("should allow handle less than 23 characters and different cases", async () => {
+    it("should allow handle less than 22 characters and different cases", async () => {
       when(consumerRepo.isHandleTaken("aBCdEfghIjklMnopQRSTuv")).thenResolve(false);
       const response = await consumerService.isHandleAvailable("aBCdEfghIjklMnopQRSTuv");
       expect(response).toBeTruthy();
