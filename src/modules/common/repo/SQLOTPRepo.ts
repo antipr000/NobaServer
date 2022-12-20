@@ -5,7 +5,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { IdentityType, Prisma } from "@prisma/client";
 import { addMinutes } from "date-fns";
-import { BadRequestError } from "src/core/exception/CommonAppException";
+import { BadRequestError } from "../../../core/exception/CommonAppException";
 
 const EXPIRY_TIME_IN_MINUTES = 15;
 
