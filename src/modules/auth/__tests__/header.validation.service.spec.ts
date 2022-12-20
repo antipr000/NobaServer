@@ -8,7 +8,7 @@ import {
   NODE_ENV_CONFIG_KEY,
 } from "../../../config/ConfigurationUtils";
 import { HeaderValidationService } from "../header.validation.service";
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { BadRequestException } from "@nestjs/common";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
 
