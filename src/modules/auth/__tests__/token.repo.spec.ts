@@ -25,7 +25,7 @@ describe("MongoDBTokenRepoTests", () => {
   let prismaService: PrismaService;
   let app: TestingModule;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
