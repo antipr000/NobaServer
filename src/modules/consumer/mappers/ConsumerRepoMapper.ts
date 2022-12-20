@@ -29,7 +29,7 @@ export class ConsumerRepoMapper {
         socialSecurityNumber: consumerUpdateProps.socialSecurityNumber,
       }),
       ...(consumerUpdateProps.address && {
-        address: { create: { ...consumerUpdateProps.address } },
+        address: { upsert: { create: { ...consumerUpdateProps.address }, update: { ...consumerUpdateProps.address } } },
       }),
       ...(consumerUpdateProps.verificationData && {
         verificationData: {

@@ -11,10 +11,16 @@ import { SQLConsumerRepo } from "../repos/SQLConsumerRepo";
 import { uuid } from "uuidv4";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { WalletStatus } from "@prisma/client";
+import { Address } from "../domain/Address";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
   return allConsumerProps;
+};
+
+const getAllAddressRecords = async (prismaService: PrismaService): Promise<Address[]> => {
+  const allAddresses = await prismaService.address.findMany();
+  return allAddresses;
 };
 
 describe("MongoDBConsumerRepoTests", () => {
@@ -276,6 +282,52 @@ describe("MongoDBConsumerRepoTests", () => {
         return record.id === consumer2.props.id;
       })[0];
       expect(consumerRecordForId2.handle).toBe(newHandle);
+    });
+
+    it("should add and update address of consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const updateRequest: Partial<ConsumerProps> = {
+        address: {
+          streetLine1: "Main st",
+          city: "irvene",
+          countryCode: "US",
+          regionCode: "CA",
+          postalCode: "123456",
+        },
+      };
+      let allAddresses = await getAllAddressRecords(prismaService);
+      let consumerAddresses = allAddresses.filter(address => address.consumerID === consumer.props.id);
+      expect(consumerAddresses).toHaveLength(0);
+
+      // adds address
+      await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
+
+      allAddresses = await getAllAddressRecords(prismaService);
+      consumerAddresses = allAddresses.filter(address => address.consumerID === consumer.props.id);
+      expect(consumerAddresses).toHaveLength(1);
+
+      // updates address
+      const newUpdateRequest: Partial<ConsumerProps> = {
+        address: {
+          streetLine1: "First street",
+          streetLine2: "Second",
+          city: "Santa Marta",
+          countryCode: "CO",
+          regionCode: "PA",
+          postalCode: "345678",
+        },
+      };
+
+      await consumerRepo.updateConsumer(consumer.props.id, newUpdateRequest);
+
+      allAddresses = await getAllAddressRecords(prismaService);
+      consumerAddresses = allAddresses.filter(address => address.consumerID === consumer.props.id);
+      expect(consumerAddresses).toHaveLength(1);
+      expect(consumerAddresses[0].countryCode).toBe("CO");
+      expect(consumerAddresses[0].streetLine2).toBe("Second");
+      expect(consumerAddresses[0].regionCode).toBe("PA");
     });
 
     describe("addCryptoWallet", () => {

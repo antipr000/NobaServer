@@ -112,7 +112,20 @@ export class ConsumerController {
   ): Promise<ConsumerDTO> {
     const consumerProps: Partial<ConsumerProps> = {
       id: consumer.props.id,
-      ...requestBody,
+      ...(requestBody.firstName && { firstName: requestBody.firstName }),
+      ...(requestBody.lastName && { lastName: requestBody.lastName }),
+      ...(requestBody.address && {
+        address: {
+          streetLine1: requestBody.address.streetLine1,
+          streetLine2: requestBody.address.streetLine1,
+          postalCode: requestBody.address.postalCode,
+          regionCode: requestBody.address.regionCode,
+          countryCode: requestBody.address.countryCode,
+          city: requestBody.address.city,
+        },
+      }),
+      ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),
+      ...(requestBody.handle && { handle: requestBody.handle }),
     };
     try {
       const res = await this.consumerService.updateConsumer(consumerProps);
