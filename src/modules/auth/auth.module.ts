@@ -14,7 +14,7 @@ import { AdminAuthService } from "./admin.auth.service";
 import { AdminModule } from "../admin/admin.module";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
-import { MongoDBTokenRepo } from "./repo/MongoDBTokenRepo";
+import { SQLTokenRepo } from "./repo/SQLTokenRepo";
 
 @Module({
   imports: [
@@ -36,7 +36,7 @@ import { MongoDBTokenRepo } from "./repo/MongoDBTokenRepo";
     DBProvider,
     {
       provide: "TokenRepo",
-      useClass: MongoDBTokenRepo,
+      useClass: SQLTokenRepo,
     },
     UserAuthService,
     AdminAuthService,

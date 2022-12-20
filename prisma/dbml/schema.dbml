@@ -158,6 +158,14 @@ Table LimitConfiguration {
   updatedTimestamp DateTime
 }
 
+Table Token {
+  id String [pk]
+  tokenType TokenType [not null]
+  expiryTime DateTime
+  userID String [not null]
+  isUsed Boolean [not null, default: false]
+}
+
 Enum IdentityType {
   CONSUMER
   NOBA_ADMIN
@@ -214,6 +222,10 @@ Enum KYCProvider {
 
 Enum TransactionType {
   NOBA_WALLET
+}
+
+Enum TokenType {
+  REFRESH_TOKEN
 }
 
 Ref: Address.consumerID - Consumer.id [delete: Cascade]
