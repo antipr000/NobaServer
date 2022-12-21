@@ -38,6 +38,7 @@ export class CircleClient {
           err.response.headers,
         )}`,
       );
+      // TODO: how should we handle generic exceptions from circle?
       throw new InternalServerErrorException("Service unavailable. Please try again.");
     }
   }
@@ -70,13 +71,16 @@ export class CircleClient {
 
   async transfer(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
     try {
-      this.circleApi.transfers.createTransfer({
+      const response = await this.circleApi.transfers.createTransfer({
         idempotencyKey: request.idempotencyKey,
         source: { id: request.sourceWalletID, type: "wallet" },
         destination: { id: request.destinationWalletID, type: "wallet" },
         amount: { amount: request.amountToWithdraw.toString(), currency: "USD" },
       });
-      return null;
+
+      // TODO: figure out best return here
+      // maybe source wallet balance and destination wallet balance?
+      // return response.data.data.;
     } catch (err) {
       this.logger.error(
         `Error while creating the wallet: ${JSON.stringify(err.response.data)}, ${JSON.stringify(

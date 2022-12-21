@@ -36,20 +36,30 @@ export class CircleService {
   }
 
   public async getWalletBalance(walletID: string): Promise<number> {
-    // Stub
-
-    return 100;
+    return this.circleClient.getWalletBalance(walletID);
   }
 
-  public async debitWalletBalance(walletID: string, amount: number): Promise<number> {
-    // Stub
+  public async debitWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
+    const masterWalletID = await this.getMasterWalletID();
+    const response = await this.circleClient.transfer({
+      sourceWalletID: walletID,
+      destinationWalletID: masterWalletID,
+      amountToWithdraw: amount,
+      idempotencyKey,
+    });
 
-    return (await this.getWalletBalance(walletID)) - amount;
+    return response.balanceAfterWithdrawal;
   }
 
-  public async creditWalletBalance(walletID: string, amount: number): Promise<number> {
-    // Stub
+  public async creditWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
+    const masterWalletID = await this.getMasterWalletID();
+    const response = await this.circleClient.transfer({
+      sourceWalletID: masterWalletID,
+      destinationWalletID: walletID,
+      amountToWithdraw: amount,
+      idempotencyKey,
+    });
 
-    return (await this.getWalletBalance(walletID)) + amount;
+    return response.balanceAfterWithdrawal;
   }
 }
