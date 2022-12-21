@@ -23,8 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.test
-    environment:
-      - DATABASE_URL=postgresql://prisma:prisma@db:5432/test?connect_timeout=300
+    env_file: .env
     command: yarn test:prisma-migrate
     depends_on:
       db:

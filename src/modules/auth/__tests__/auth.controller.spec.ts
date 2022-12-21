@@ -242,30 +242,6 @@ describe("AuthController", () => {
       }
     });
 
-    it("should not allow any OTP to be used more than once", async () => {
-      const consumerEmail = "consumer@noba.com";
-      const identityType: string = consumerIdentityIdentifier;
-      const otp = 123456;
-
-      when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
-      when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-
-      await authController.loginUser({
-        emailOrPhone: consumerEmail,
-        identityType: identityType,
-      });
-
-      expect(
-        async () =>
-          await authController.loginUser({
-            emailOrPhone: consumerEmail,
-            identityType: identityType,
-          }),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
     it("should throw 'ForbiddenException' if unregistered Consumer tries to log in with autoCreate set to false", async () => {
       const unregisteredConsumer = "rosie@noba.com";
       const identityType: string = consumerIdentityIdentifier;
