@@ -139,10 +139,7 @@ export class USDCPolygonAssetService extends DefaultAssetService {
 
   async transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string> {
     // Gets or creates participant code
-    const consumerParticipantCode: string = await this.zerohashService.getParticipantCode(
-      request.consumer,
-      request.transactionCreationTimestamp,
-    );
+    const consumerParticipantCode = "fake-code";
 
     const tradeRequest: ZerohashTradeRequest = {
       boughtAssetID: request.cryptoCurrency,
@@ -175,7 +172,7 @@ export class USDCPolygonAssetService extends DefaultAssetService {
       request.walletAddress,
       request.amount,
       request.assetId,
-      request.consumer.zhParticipantCode,
+      "fake-code",
       this.zerohashService.getNobaPlatformCode(),
       request.smartContractData,
     );

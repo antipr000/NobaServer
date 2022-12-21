@@ -40,6 +40,7 @@ import { Logger } from "winston";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
 import { RetrieveAccountDataResponse, BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -49,6 +50,7 @@ export class Sardine implements IDVProvider {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
     private readonly plaidClient: PlaidClient,
+    private readonly consumerService: ConsumerService,
   ) {
     this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
   }
@@ -233,19 +235,22 @@ export class Sardine implements IDVProvider {
     transactionInformation: TransactionInformation,
   ): Promise<ConsumerVerificationResult> {
     let sardinePaymentMethodData;
-    const paymentMethod = consumer.getPaymentMethodByID(transactionInformation.paymentMethodID);
-    if (paymentMethod.type === PaymentMethodType.CARD) {
+    const allPaymentMethods = await this.consumerService.getAllPaymentMethodsForConsumer(consumer.props.id);
+    const paymentMethod = allPaymentMethods.filter(
+      paymentMethod => paymentMethod.props.id === transactionInformation.paymentMethodID,
+    )[0];
+    if (paymentMethod.props.type === PaymentMethodType.CARD) {
       sardinePaymentMethodData = {
         type: PaymentMethodTypes.CARD,
         card: {
-          first6: paymentMethod.cardData.first6Digits,
-          last4: paymentMethod.cardData.last4Digits,
+          first6: paymentMethod.props.cardData.first6Digits,
+          last4: paymentMethod.props.cardData.last4Digits,
           hash: transactionInformation.paymentMethodID,
         },
       };
-    } else if (paymentMethod.type === PaymentMethodType.ACH) {
+    } else if (paymentMethod.props.type === PaymentMethodType.ACH) {
       const accountData: RetrieveAccountDataResponse = await this.plaidClient.retrieveAccountData({
-        accessToken: paymentMethod.achData.accessToken,
+        accessToken: paymentMethod.props.achData.accessToken,
       });
 
       let accountType = "";

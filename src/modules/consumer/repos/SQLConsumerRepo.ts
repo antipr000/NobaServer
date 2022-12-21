@@ -9,6 +9,7 @@ import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
+import { randomBytes } from "crypto";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -43,10 +44,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
       consumer.props.handle =
         this.removeAllUnsupportedHandleCharacters(
           consumer.props.firstName ?? consumer.props.email.split("@")[0],
-        ).toLocaleLowerCase() + Date.now().valueOf().toString().substring(7);
+        ).toLocaleLowerCase() + randomBytes(7).toString("hex");
     }
 
-    if (this.isHandleTaken(consumer.props.handle)) {
+    if (await this.isHandleTaken(consumer.props.handle)) {
       throw new BadRequestError({ message: "Handle is already taken!" });
     }
 

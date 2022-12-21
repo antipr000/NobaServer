@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { CurrencyType } from "../../common/domain/Types";
-import { TransactionType } from "../domain/Types";
+import { TransactionType } from "@prisma/client";
 
 export class TransactionQuoteQueryDTO {
   @ApiProperty()

@@ -1,30 +1,22 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { MongoClient } from "mongodb";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { DBProvider } from "../../../infraproviders/DBProvider";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
-import { TransactionType } from "../domain/Types";
 import { ILimitConfigurationRepo } from "../repo/LimitConfigurationRepo";
-import { MongoDBLimitConfigurationRepo } from "../repo/MongoDBLimitConfigurationRepo";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { SQLLimitConfigurationRepo } from "../repo/SQLLimitConfigurationRepo";
+import { uuid } from "uuidv4";
+import { TransactionType } from "@prisma/client";
 
-describe("MongoDBLimitConfigurationRepo", () => {
+describe("LimitConfigurationRepo tests", () => {
   jest.setTimeout(20000);
 
   let limitConfigurationRepo: ILimitConfigurationRepo;
-  let mongoServer: MongoMemoryServer;
-  let mongoClient: MongoClient;
+  let prismaService: PrismaService;
+  let app: TestingModule;
 
   beforeEach(async () => {
-    // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-
-    console.log("MongoMemoryServer running at: ", mongoUri);
-
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
      *
@@ -37,34 +29,31 @@ describe("MongoDBLimitConfigurationRepo", () => {
      *
      **/
     const appConfigurations = {
-      [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoUri,
-      },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    const app: TestingModule = await Test.createTestingModule({
+    const app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [DBProvider, MongoDBLimitConfigurationRepo],
+      providers: [SQLLimitConfigurationRepo, PrismaService],
     }).compile();
 
-    limitConfigurationRepo = app.get<MongoDBLimitConfigurationRepo>(MongoDBLimitConfigurationRepo);
-
-    mongoClient = new MongoClient(mongoUri);
-
-    await mongoClient.connect();
+    limitConfigurationRepo = app.get<SQLLimitConfigurationRepo>(SQLLimitConfigurationRepo);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
   afterEach(async () => {
-    await mongoClient.close();
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await prismaService.limitConfiguration.deleteMany();
+    await prismaService.limitProfile.deleteMany();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   describe("addLimitConfig", () => {
     it("should add a limit configuration", async () => {
-      const config1 = createLimitConfiguration(1, "fake-config-1");
+      const config1 = createLimitConfiguration(1);
       const response = await limitConfigurationRepo.addLimitConfig(config1);
       expect(response.props).toMatchObject(config1.props);
     });
@@ -72,9 +61,9 @@ describe("MongoDBLimitConfigurationRepo", () => {
 
   describe("getAllLimitConfigs", () => {
     it("should get all limit configurations sorted by priority in reverse oder", async () => {
-      const config1 = createLimitConfiguration(2, "fake-config-1");
-      const config2 = createLimitConfiguration(5, "fake-config-2");
-      const config3 = createLimitConfiguration(1, "fake-config-3");
+      const config1 = createLimitConfiguration(2);
+      const config2 = createLimitConfiguration(5);
+      const config3 = createLimitConfiguration(1);
 
       // add the configs to repo
       await limitConfigurationRepo.addLimitConfig(config1);
@@ -93,10 +82,10 @@ describe("MongoDBLimitConfigurationRepo", () => {
 
   describe("getLimitConfig", () => {
     it("should return limit configuration when present", async () => {
-      const config1 = createLimitConfiguration(1, "fake-config-1");
+      const config1 = createLimitConfiguration(1);
       await limitConfigurationRepo.addLimitConfig(config1);
 
-      const response = await limitConfigurationRepo.getLimitConfig("fake-config-1");
+      const response = await limitConfigurationRepo.getLimitConfig(config1.props.id);
       expect(response.props).toMatchObject(config1.props);
     });
 
@@ -107,17 +96,15 @@ describe("MongoDBLimitConfigurationRepo", () => {
   });
 });
 
-function createLimitConfiguration(priority: number, id: string): LimitConfiguration {
+function createLimitConfiguration(priority: number): LimitConfiguration {
   return LimitConfiguration.createLimitConfiguration({
-    _id: id,
+    id: `${uuid()}_${new Date().valueOf()}`,
     isDefault: false,
     priority: priority,
-    profile: "fake-profile-1",
-    criteria: {
-      transactionType: [TransactionType.ONRAMP],
-      minProfileAge: 365,
-      minBalanceInWallet: 100,
-      minTotalTransactionAmount: 1000,
-    },
+    profileID: "fake-profile-1",
+    transactionType: TransactionType.NOBA_WALLET,
+    minProfileAge: 365,
+    minBalanceInWallet: 100,
+    minTotalTransactionAmount: 1000,
   });
 }

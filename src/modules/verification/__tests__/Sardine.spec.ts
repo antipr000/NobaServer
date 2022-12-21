@@ -4,7 +4,6 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { Sardine } from "../integrations/Sardine";
 import mockAxios from "jest-mock-axios";
-import { DocumentVerificationStatus, KYCStatus, WalletStatus } from "../../consumer/domain/VerificationStatus";
 import {
   FAKE_DEVICE_INFORMATION_RESPONSE,
   FAKE_DOCUMENT_SUBMISSION_RESPONSE,
@@ -23,7 +22,6 @@ import {
 } from "../integrations/fakes/FakeSardineResponses";
 import { TransactionInformation } from "../domain/TransactionInformation";
 import { Consumer } from "../../consumer/domain/Consumer";
-import { VerificationProviders } from "../../consumer/domain/KYC";
 import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { DocumentTypes } from "../domain/DocumentTypes";
@@ -38,25 +36,34 @@ import {
   SardineRiskLevels,
 } from "../integrations/SardineTypeDefinitions";
 import { anything, instance, when } from "ts-mockito";
-import { PaymentMethodType } from "../../consumer/domain/PaymentMethod";
-import { PaymentProvider } from "../../consumer/domain/PaymentProvider";
 import { BankAccountType } from "../../psp/domain/PlaidTypes";
 import { PlaidClient } from "../../psp/plaid.client";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
+import {
+  DocumentVerificationStatus,
+  KYCStatus,
+  WalletStatus,
+  KYCProvider,
+  PaymentMethodType,
+  PaymentProvider,
+} from "@prisma/client";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
+import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 //TODO: Add assertions for request body
 describe("SardineTests", () => {
   let plaidClient: PlaidClient;
-
+  let consumerService: ConsumerService;
   jest.setTimeout(10000);
   let sardine: Sardine;
 
   beforeEach(async () => {
     plaidClient = getMockPlaidClientWithDefaults();
-
+    consumerService = getMockConsumerServiceWithDefaults();
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
@@ -75,6 +82,10 @@ describe("SardineTests", () => {
           useFactory: () => instance(plaidClient),
         },
         Sardine,
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(consumerService),
+        },
       ],
     }).compile();
 
@@ -336,27 +347,38 @@ describe("SardineTests", () => {
       };
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        paymentMethods: [
-          {
-            imageUri: "image-uri",
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: transactionInformation.paymentMethodID,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            isDefault: false,
-          },
-        ],
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
       });
+
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
+        PaymentMethod.createPaymentMethod({
+          id: "card-1234",
+          imageUri: "image-uri",
+          type: PaymentMethodType.CARD,
+          paymentProvider: PaymentProvider.CHECKOUT,
+          paymentToken: transactionInformation.paymentMethodID,
+          isDefault: false,
+          cardData: {
+            first6Digits: "123456",
+            last4Digits: "7890",
+            id: "card-type-1234",
+            scheme: "VISA",
+            cardType: "DEBIT",
+            authCode: "100001",
+            authReason: "Approved",
+            paymentMethodID: "card-1234",
+          },
+        }),
+      ]);
 
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
@@ -397,31 +419,39 @@ describe("SardineTests", () => {
       };
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        paymentMethods: [
-          {
-            type: PaymentMethodType.ACH,
-            name: "Bank Account",
-            achData: {
-              accessToken: plaidAccessToken,
-              accountID: plaidAccountID,
-              itemID: plaidAuthGetItemID,
-              mask: "7890",
-              accountType: BankAccountType.CHECKING,
-            },
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: plaidCheckoutProcessorToken,
-            imageUri: "https://noba.com",
-            isDefault: false,
-          },
-        ],
+
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
       });
+
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
+        PaymentMethod.createPaymentMethod({
+          id: plaidCheckoutProcessorToken,
+          imageUri: "image-uri",
+          type: PaymentMethodType.ACH,
+          name: "Bank Account",
+          paymentProvider: PaymentProvider.CHECKOUT,
+          paymentToken: plaidCheckoutProcessorToken,
+          isDefault: false,
+          achData: {
+            id: "fake-ach-id",
+            paymentMethodID: "fake-id",
+            accessToken: plaidAccessToken,
+            accountID: plaidAccountID,
+            itemID: plaidAuthGetItemID,
+            mask: "7890",
+            accountType: BankAccountType.CHECKING,
+          },
+        }),
+      ]);
 
       jest.spyOn(global.Date, "now").mockImplementation(() => 555555555);
       const expectedSanctionsCheckSardineRequest: SardineCustomerRequest = {
@@ -519,27 +549,38 @@ describe("SardineTests", () => {
       };
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-        paymentMethods: [
-          {
-            imageUri: "image-uri",
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: transactionInformation.paymentMethodID,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            isDefault: false,
-          },
-        ],
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
       });
+
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
+        PaymentMethod.createPaymentMethod({
+          id: "card-1234",
+          imageUri: "image-uri",
+          type: PaymentMethodType.CARD,
+          paymentProvider: PaymentProvider.CHECKOUT,
+          paymentToken: transactionInformation.paymentMethodID,
+          isDefault: false,
+          cardData: {
+            first6Digits: "123456",
+            last4Digits: "7890",
+            id: "card-type-1234",
+            scheme: "VISA",
+            cardType: "DEBIT",
+            authCode: "100001",
+            authReason: "Approved",
+            paymentMethodID: "card-1234",
+          },
+        }),
+      ]);
 
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
@@ -571,27 +612,37 @@ describe("SardineTests", () => {
       };
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
-        email: "fake+consumer@noba.com",
-        paymentMethods: [
-          {
-            imageUri: "image-uri",
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: transactionInformation.paymentMethodID,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            isDefault: false,
-          },
-        ],
+        id: "fake-consumer-1234",
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
       });
+
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
+        PaymentMethod.createPaymentMethod({
+          id: "card-1234",
+          imageUri: "image-uri",
+          type: PaymentMethodType.CARD,
+          paymentProvider: PaymentProvider.CHECKOUT,
+          paymentToken: transactionInformation.paymentMethodID,
+          isDefault: false,
+          cardData: {
+            first6Digits: "123456",
+            last4Digits: "7890",
+            id: "card-type-1234",
+            scheme: "VISA",
+            cardType: "DEBIT",
+            authCode: "100001",
+            authReason: "Approved",
+            paymentMethodID: "card-1234",
+          },
+        }),
+      ]);
 
       const responsePromise = sardine.transactionVerification(
         FAKE_FRAUDULENT_TRANSACTION.data.sessionKey,
@@ -623,28 +674,38 @@ describe("SardineTests", () => {
       };
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
-
-        paymentMethods: [
-          {
-            imageUri: "image-uri",
-            type: PaymentMethodType.CARD,
-            paymentProviderID: PaymentProvider.CHECKOUT,
-            paymentToken: transactionInformation.paymentMethodID,
-            cardData: {
-              first6Digits: "123456",
-              last4Digits: "7890",
-            },
-            isDefault: false,
-          },
-        ],
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
       });
+
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
+        PaymentMethod.createPaymentMethod({
+          id: "card-1234",
+          imageUri: "image-uri",
+          type: PaymentMethodType.CARD,
+          paymentProvider: PaymentProvider.CHECKOUT,
+          paymentToken: transactionInformation.paymentMethodID,
+          isDefault: false,
+          cardData: {
+            first6Digits: "123456",
+            last4Digits: "7890",
+            id: "card-type-1234",
+            scheme: "VISA",
+            cardType: "DEBIT",
+            authCode: "100001",
+            authReason: "Approved",
+            paymentMethodID: "card-1234",
+          },
+        }),
+      ]);
 
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
@@ -670,7 +731,7 @@ describe("SardineTests", () => {
   describe("getIdentityDocumentVerificationURL", () => {
     it("should return a URL to the identity provider", async () => {
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
@@ -716,7 +777,7 @@ describe("SardineTests", () => {
 
     it("should throw an Internal Server Error", async () => {
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
@@ -805,15 +866,18 @@ describe("SardineTests", () => {
       const sessionKey = "fake-session";
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
 
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
         address: {
           streetLine1: "Fake Street",
@@ -859,15 +923,18 @@ describe("SardineTests", () => {
       const sessionKey = "fake-session";
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
 
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
         address: {
           streetLine1: "Fake Street",
@@ -912,15 +979,18 @@ describe("SardineTests", () => {
       const sessionKey = "fake-session";
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
 
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
         address: {
           streetLine1: "Fake Street",
@@ -971,15 +1041,18 @@ describe("SardineTests", () => {
       const sessionKey = "fake-session";
 
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
 
         verificationData: {
-          kycVerificationStatus: KYCStatus.APPROVED,
-          verificationProvider: VerificationProviders.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
         address: {
           streetLine1: "Fake Street",

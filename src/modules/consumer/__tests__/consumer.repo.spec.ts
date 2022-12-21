@@ -112,7 +112,7 @@ describe("ConsumerRepoTests", () => {
       expect(savedResults).toHaveLength(1);
       expect(savedResults[0].handle).toBeDefined();
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
-      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
+      expect(savedResults[0].handle.length).toBeLessThanOrEqual(22);
       expect(savedResults[0].handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
@@ -131,7 +131,7 @@ describe("ConsumerRepoTests", () => {
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
       expect(savedResults[0].handle.indexOf("_")).toBe(-1);
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
-      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
+      expect(savedResults[0].handle.length).toBeLessThanOrEqual(22);
       expect(savedResults[0].handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
@@ -150,7 +150,7 @@ describe("ConsumerRepoTests", () => {
       expect(savedResults[0].handle.indexOf(".")).toBe(-1);
       expect(savedResults[0].handle.indexOf("_")).toBe(-1);
       expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
-      expect(savedResults[0].handle.length).toBeLessThanOrEqual(15);
+      expect(savedResults[0].handle.length).toBeLessThanOrEqual(22);
       expect(savedResults[0].handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBe(savedResults[0].handle);
@@ -504,7 +504,7 @@ const getRandomUser = (): Consumer => {
   const email = `${uuid()}_${new Date().valueOf()}@noba.com`;
   const props: Partial<ConsumerProps> = {
     id: `${uuid()}_${new Date().valueOf()}`,
-    firstName: "firstName",
+    firstName: "Noba",
     lastName: "lastName",
     email: email,
     displayEmail: email.toUpperCase(),
