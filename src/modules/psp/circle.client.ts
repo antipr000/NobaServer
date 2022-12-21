@@ -76,7 +76,7 @@ export class CircleClient {
         idempotencyKey: request.idempotencyKey,
         source: { id: request.sourceWalletID, type: "wallet" },
         destination: { id: request.destinationWalletID, type: "wallet" },
-        amount: { amount: Utils.roundTo2DecimalString(request.amountToWithdraw), currency: "USD" },
+        amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
       });
 
       // TODO: figure out best return here
