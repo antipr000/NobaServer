@@ -18,7 +18,7 @@ function createToken(rawToken: string, userID: string): Token {
   });
 }
 
-describe("MongoDBTokenRepoTests", () => {
+describe("TokenRepoTests", () => {
   jest.setTimeout(20000);
 
   let tokenRepo: ITokenRepo;

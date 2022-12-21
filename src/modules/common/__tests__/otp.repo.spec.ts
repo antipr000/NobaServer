@@ -9,7 +9,7 @@ import { PrismaService } from "../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 
-describe("MongoDBOtpRepoTests", () => {
+describe("OtpRepoTests", () => {
   jest.setTimeout(20000);
 
   let otpRepo: IOTPRepo;
