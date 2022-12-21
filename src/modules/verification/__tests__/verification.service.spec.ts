@@ -13,10 +13,9 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { BadRequestException } from "@nestjs/common";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
-import { DocumentVerificationStatus, KYCStatus } from "../../../modules/consumer/domain/VerificationStatus";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { NationalIDTypes } from "../domain/NationalIDTypes";
-import { VerificationProviders } from "../../consumer/domain/KYC";
+import { DocumentVerificationStatus, KYCStatus, KYCProvider } from "@prisma/client";
 import {
   CaseAction,
   CaseNotificationWebhookRequest,
@@ -223,12 +222,12 @@ describe("VerificationService", () => {
         lastName: consumerInformation.lastName,
         dateOfBirth: consumerInformation.dateOfBirth,
         phone: consumerInformation.phoneNumber,
-        riskRating: consumerVerificationResult.idvProviderRiskLevel,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: consumerVerificationResult.status,
-          kycVerificationTimestamp: 1,
+          kycCheckStatus: consumerVerificationResult.status,
+          kycVerificationTimestamp: new Date(),
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
@@ -252,7 +251,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
-            nobaUserID: newConsumerData._id,
+            nobaUserID: newConsumerData.id,
             email: newConsumerData.email,
           }),
         ),
@@ -277,12 +276,12 @@ describe("VerificationService", () => {
         lastName: consumerInformation.lastName,
         dateOfBirth: consumerInformation.dateOfBirth,
         phone: consumerInformation.phoneNumber,
-        riskRating: consumerVerificationResult.idvProviderRiskLevel,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: consumerVerificationResult.status,
-          kycVerificationTimestamp: 1,
+          kycCheckStatus: consumerVerificationResult.status,
+          kycVerificationTimestamp: new Date(),
           documentVerificationStatus: DocumentVerificationStatus.REQUIRED,
+          riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
       };
 
@@ -306,7 +305,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
-            nobaUserID: newConsumerData._id,
+            nobaUserID: newConsumerData.id,
             email: newConsumerData.email,
           }),
         ),
@@ -331,12 +330,12 @@ describe("VerificationService", () => {
         lastName: consumerInformation.lastName,
         dateOfBirth: consumerInformation.dateOfBirth,
         phone: consumerInformation.phoneNumber,
-        riskRating: consumerVerificationResult.idvProviderRiskLevel,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: consumerVerificationResult.status,
-          kycVerificationTimestamp: 1,
+          kycCheckStatus: consumerVerificationResult.status,
+          kycVerificationTimestamp: new Date(),
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
@@ -361,7 +360,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
-            nobaUserID: newConsumerData._id,
+            nobaUserID: newConsumerData.id,
             email: newConsumerData.email,
           }),
         ),
@@ -386,12 +385,12 @@ describe("VerificationService", () => {
         lastName: consumerInformation.lastName,
         dateOfBirth: consumerInformation.dateOfBirth,
         phone: consumerInformation.phoneNumber,
-        riskRating: consumerVerificationResult.idvProviderRiskLevel,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: consumerVerificationResult.status,
-          kycVerificationTimestamp: 1,
+          kycCheckStatus: consumerVerificationResult.status,
+          kycVerificationTimestamp: new Date(),
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
@@ -415,7 +414,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
-            nobaUserID: newConsumerData._id,
+            nobaUserID: newConsumerData.id,
             email: newConsumerData.email,
           }),
         ),
@@ -455,7 +454,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerProps.firstName,
             lastName: newConsumerProps.lastName,
-            nobaUserID: newConsumerProps._id,
+            nobaUserID: newConsumerProps.id,
             email: newConsumerProps.email,
           }),
         ),
@@ -493,7 +492,7 @@ describe("VerificationService", () => {
           deepEqual({
             firstName: newConsumerProps.firstName,
             lastName: newConsumerProps.lastName,
-            nobaUserID: newConsumerProps._id,
+            nobaUserID: newConsumerProps.id,
             email: newConsumerProps.email,
           }),
         ),
@@ -564,10 +563,10 @@ describe("VerificationService", () => {
 
       const newConsumerData: ConsumerProps = {
         ...consumer.props,
-        riskRating: documentVerificationResult.riskRating,
         verificationData: {
           ...consumer.props.verificationData,
           documentVerificationStatus: documentVerificationResult.status,
+          riskRating: documentVerificationResult.riskRating,
         },
       };
 
@@ -619,10 +618,10 @@ describe("VerificationService", () => {
 
       const newConsumerData: ConsumerProps = {
         ...consumer.props,
-        riskRating: documentVerificationResult.riskRating,
         verificationData: {
           ...consumer.props.verificationData,
           documentVerificationStatus: documentVerificationResult.status,
+          riskRating: documentVerificationResult.riskRating,
         },
       };
 
@@ -676,7 +675,7 @@ describe("VerificationService", () => {
         ...consumer.props,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: KYCStatus.APPROVED,
+          kycCheckStatus: KYCStatus.APPROVED,
         },
       };
 
@@ -735,7 +734,7 @@ describe("VerificationService", () => {
         ...consumer.props,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: KYCStatus.APPROVED,
+          kycCheckStatus: KYCStatus.APPROVED,
         },
       };
 
@@ -779,7 +778,7 @@ describe("VerificationService", () => {
         ...consumer.props,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: KYCStatus.APPROVED,
+          kycCheckStatus: KYCStatus.APPROVED,
         },
       };
 
@@ -824,7 +823,7 @@ describe("VerificationService", () => {
         ...consumer.props,
         verificationData: {
           ...consumer.props.verificationData,
-          kycVerificationStatus: KYCStatus.REJECTED,
+          kycCheckStatus: KYCStatus.REJECTED,
         },
       };
 
@@ -867,8 +866,8 @@ describe("VerificationService", () => {
         verificationData: {
           ...consumer.props.verificationData,
           documentVerificationStatus: DocumentVerificationStatus.PENDING,
-          documentVerificationTimestamp: new Date().getTime(),
-          documentVerificationTransactionID: verificationId,
+          documentVerificationTimestamp: new Date(),
+          documentCheckReference: verificationId,
         },
       };
 
@@ -897,22 +896,26 @@ describe("VerificationService", () => {
       ).once();
 
       expect(updateUserArgs.verificationData.documentVerificationStatus).toBe(DocumentVerificationStatus.PENDING);
-      expect(updateUserArgs.verificationData.documentVerificationTransactionID).toBe(verificationId);
+      expect(updateUserArgs.verificationData.documentCheckReference).toBe(verificationId);
     });
   });
 });
 
 function getFakeConsumer(): Consumer {
   return Consumer.createConsumer({
-    _id: "fake-consumer-1234",
+    id: "fake-consumer-1234",
     firstName: "Fake",
     lastName: "Consumer",
     email: "fake+consumer@noba.com",
     displayEmail: "fake+consumer@noba.com",
     verificationData: {
-      verificationProvider: VerificationProviders.SARDINE,
-      kycVerificationStatus: KYCStatus.NOT_SUBMITTED,
+      provider: KYCProvider.SARDINE,
+      kycCheckStatus: KYCStatus.NOT_SUBMITTED,
       documentVerificationStatus: DocumentVerificationStatus.REQUIRED,
+      documentVerificationTimestamp: new Date(),
+      kycVerificationTimestamp: new Date(),
+      isSuspectedFraud: false,
+      consumerID: "fake-consumer-1234",
     },
   });
 }
