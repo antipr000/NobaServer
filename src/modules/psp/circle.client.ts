@@ -8,6 +8,7 @@ import { Logger } from "winston";
 import { AxiosResponse } from "axios";
 import { CircleWithdrawalRequest, CircleWithdrawalResponse } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
+import { Utils } from "src/core/utils/Utils";
 
 export class CircleClient {
   private readonly circleApi: Circle;
@@ -71,11 +72,11 @@ export class CircleClient {
 
   async transfer(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
     try {
-      const response = await this.circleApi.transfers.createTransfer({
+      const transferResponse = await this.circleApi.transfers.createTransfer({
         idempotencyKey: request.idempotencyKey,
         source: { id: request.sourceWalletID, type: "wallet" },
         destination: { id: request.destinationWalletID, type: "wallet" },
-        amount: { amount: request.amountToWithdraw.toString(), currency: "USD" },
+        amount: { amount: Utils.roundTo2DecimalString(request.amountToWithdraw), currency: "USD" },
       });
 
       // TODO: figure out best return here

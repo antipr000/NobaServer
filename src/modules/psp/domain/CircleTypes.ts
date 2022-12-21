@@ -1,6 +1,6 @@
 export interface CircleWithdrawalRequest {
   idempotencyKey: string;
-  amountToWithdraw: number;
+  amount: number;
   sourceWalletID: string;
   destinationWalletID: string;
 }
@@ -8,7 +8,7 @@ export interface CircleWithdrawalRequest {
 export interface CircleWithdrawalResponse {
   status: CircleWithdrawalStatus;
   currentBalance: number;
-  balanceAfterWithdrawal: number;
+  updatedBalance: number;
 }
 
 export enum CircleWithdrawalStatus {
