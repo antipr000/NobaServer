@@ -6,8 +6,8 @@ import { ITokenRepo } from "../repo/TokenRepo";
 import { Token } from "../domain/Token";
 import { addDays } from "date-fns";
 import { SQLTokenRepo } from "../repo/SQLTokenRepo";
-import { SERVER_LOG_FILE_PATH } from "src/config/ConfigurationUtils";
-import { PrismaService } from "src/infraproviders/PrismaService";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { PrismaService } from "../../../infraproviders/PrismaService";
 
 function createToken(rawToken: string, userID: string): Token {
   return Token.createTokenObject({

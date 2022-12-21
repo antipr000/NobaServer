@@ -22,7 +22,7 @@ describe("AdminAuthService", () => {
   jest.setTimeout(5000);
 
   let mockAdminService: AdminService;
-  let mockOTPSerivce: OTPService;
+  let mockOTPService: OTPService;
   let mockSmsService: SMSService;
   let mockNotificationService: NotificationService;
   let mockTokenRepo: ITokenRepo;
@@ -36,7 +36,7 @@ describe("AdminAuthService", () => {
 
   beforeEach(async () => {
     mockAdminService = getMockAdminServiceWithDefaults();
-    mockOTPSerivce = getMockOTPServiceWithDefaults();
+    mockOTPService = getMockOTPServiceWithDefaults();
     mockNotificationService = getMockNotificationServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
     mockTokenRepo = getMockTokenRepoWithDefaults();
@@ -62,7 +62,7 @@ describe("AdminAuthService", () => {
         },
         {
           provide: OTPService,
-          useFactory: () => mockOTPSerivce,
+          useFactory: () => instance(mockOTPService),
         },
         {
           provide: NotificationService,
@@ -83,7 +83,7 @@ describe("AdminAuthService", () => {
     it("should throw 'UnauthorizedException' if user with given email doesn't exist or otp is incorrect or expired", async () => {
       const NON_EXISTING_ADMIN_EMAIL = "abcd@noba.com";
 
-      when(mockOTPSerivce.checkIfOTPIsValidAndCleanup(NON_EXISTING_ADMIN_EMAIL, identityType, 123456)).thenResolve(
+      when(mockOTPService.checkIfOTPIsValidAndCleanup(NON_EXISTING_ADMIN_EMAIL, identityType, 123456)).thenResolve(
         false,
       );
 
@@ -97,7 +97,7 @@ describe("AdminAuthService", () => {
       const ADMIN_ID = "1111111111";
       const CORRECT_OTP = 123456;
 
-      when(mockOTPSerivce.checkIfOTPIsValidAndCleanup(EXISTING_ADMIN_EMAIL, identityType, CORRECT_OTP)).thenResolve(
+      when(mockOTPService.checkIfOTPIsValidAndCleanup(EXISTING_ADMIN_EMAIL, identityType, CORRECT_OTP)).thenResolve(
         true,
       );
 
