@@ -5,15 +5,14 @@ import { VerificationService } from "../verification.service";
 import { getMockVerificationServiceWithDefaults } from "../mocks/mock.verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
-import { DocumentVerificationStatus, KYCStatus } from "../../consumer/domain/VerificationStatus";
-import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
+import { Consumer } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { VerificationProviders } from "../../consumer/domain/KYC";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { AuthenticatedUser } from "src/modules/auth/domain/AuthenticatedUser";
 import { IDVerificationURLRequestLocale, IDVerificationURLResponseDTO } from "../dto/IDVerificationRequestURLDTO";
 import { DocumentVerificationState } from "../../../modules/consumer/domain/ExternalStates";
+import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
 
 describe("VerificationController", () => {
   let verificationController: VerificationController;
@@ -75,10 +74,10 @@ describe("VerificationController", () => {
         email: "test@noba.com",
       };
 
-      const consumer: ConsumerProps = {
-        _id: "testuser-1234",
+      const consumer = Consumer.createConsumer({
+        id: "testuser-1234",
         email: "test@noba.com",
-      };
+      });
 
       when(
         verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
@@ -95,9 +94,7 @@ describe("VerificationController", () => {
           phoneNumber: consumerInfo.phoneNumber,
           dateOfBirth: consumerInfo.dateOfBirth,
         },
-        {
-          user: { entity: Consumer.createConsumer(consumer) } as AuthenticatedUser,
-        },
+        consumer,
       );
 
       expect(result.status).toBe("Approved");
@@ -120,10 +117,10 @@ describe("VerificationController", () => {
         email: "fake@noba.com",
       };
 
-      const consumer: ConsumerProps = {
-        _id: "testuser-1234",
+      const consumer = Consumer.createConsumer({
+        id: "testuser-1234",
         email: "fake@noba.com",
-      };
+      });
 
       when(
         verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
@@ -140,9 +137,7 @@ describe("VerificationController", () => {
           phoneNumber: consumerInfo.phoneNumber,
           dateOfBirth: consumerInfo.dateOfBirth,
         },
-        {
-          user: { entity: Consumer.createConsumer(consumer) } as AuthenticatedUser,
-        },
+        consumer,
       );
 
       expect(result.status).toBe("Rejected");
@@ -165,10 +160,10 @@ describe("VerificationController", () => {
         email: "shadyemail@noba.com",
       };
 
-      const consumer: ConsumerProps = {
-        _id: "testuser-1234",
+      const consumer = Consumer.createConsumer({
+        id: "testuser-1234",
         email: "shadyemail@noba.com",
-      };
+      });
 
       when(
         verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
@@ -185,9 +180,7 @@ describe("VerificationController", () => {
           phoneNumber: consumerInfo.phoneNumber,
           dateOfBirth: consumerInfo.dateOfBirth,
         },
-        {
-          user: { entity: Consumer.createConsumer(consumer) } as AuthenticatedUser,
-        },
+        consumer,
       );
 
       expect(result.status).toBe("Pending");
@@ -197,16 +190,19 @@ describe("VerificationController", () => {
   describe("GET /document/result/:id", () => {
     it("should throw NotFoundException if id does not belong to consumer", async () => {
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer",
+        id: "fake-consumer",
         firstName: "Fake",
         lastName: "Consumer",
         email: "fake+consumer@noba.com",
 
         verificationData: {
-          verificationProvider: VerificationProviders.SARDINE,
-          kycVerificationStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
           documentVerificationStatus: DocumentVerificationStatus.PENDING,
-          documentVerificationTransactionID: "fake-transaction-1",
+          documentCheckReference: "fake-transaction-1",
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
       });
 
@@ -227,16 +223,19 @@ describe("VerificationController", () => {
 
     it("should return verification response if id belongs to the consumer", async () => {
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer",
+        id: "fake-consumer",
         firstName: "Fake",
         lastName: "Consumer",
         email: "fake+consumer@noba.com",
 
         verificationData: {
-          verificationProvider: VerificationProviders.SARDINE,
-          kycVerificationStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          kycCheckStatus: KYCStatus.APPROVED,
           documentVerificationStatus: DocumentVerificationStatus.PENDING,
-          documentVerificationTransactionID: "fake-transaction-2",
+          documentCheckReference: "fake-transaction-2",
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
         },
       });
 
@@ -254,7 +253,7 @@ describe("VerificationController", () => {
   describe("GET /document/url", () => {
     it("should get the URL for redirect to identity verification", async () => {
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
@@ -311,7 +310,7 @@ describe("VerificationController", () => {
 
     it("should use default false values for the booleans if not provided", async () => {
       const consumer = Consumer.createConsumer({
-        _id: "fake-consumer-1234",
+        id: "fake-consumer-1234",
         email: "fake+consumer@noba.com",
         firstName: "Fake",
         lastName: "Consumer",
