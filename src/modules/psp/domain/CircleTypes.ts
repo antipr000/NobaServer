@@ -2,6 +2,7 @@ export interface CircleWithdrawalRequest {
   idempotencyKey: string;
   amountToWithdraw: number;
   sourceWalletID: string;
+  destinationWalletID: string;
 }
 
 export interface CircleWithdrawalResponse {

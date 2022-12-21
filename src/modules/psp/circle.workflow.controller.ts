@@ -4,7 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { CircleService } from "./circle.service";
-import { CircleFundsMovementRequestDTO } from "./domain/CircleFundsMovementRequestDTO";
+import { CircleFundsMovementRequestDTO } from "./dto/CircleFundsMovementRequestDTO";
 
 @Controller("wf/circle") // This defines the path prefix
 @ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.

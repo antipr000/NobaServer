@@ -68,9 +68,14 @@ export class CircleClient {
     }
   }
 
-  // TODO: Complete the Withdrawal flow after the Transaction schemas are changed.
-  async withdraw(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
+  async transfer(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
     try {
+      this.circleApi.transfers.createTransfer({
+        idempotencyKey: request.idempotencyKey,
+        source: { id: request.sourceWalletID, type: "wallet" },
+        destination: { id: request.destinationWalletID, type: "wallet" },
+        amount: { amount: request.amountToWithdraw.toString(), currency: "USD" },
+      });
       return null;
     } catch (err) {
       this.logger.error(
