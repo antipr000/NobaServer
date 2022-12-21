@@ -36,13 +36,22 @@ export class LimitsService {
     transactionType: TransactionType,
   ): boolean {
     if (config.props.transactionType !== transactionType) {
-      return config.props.isDefault && config.props.paymentMethodType === paymentMethodType;
+      return (
+        config.props.isDefault &&
+        (!config.props.paymentMethodType || config.props.paymentMethodType === paymentMethodType)
+      );
     }
     if (config.props.minTotalTransactionAmount && config.props.minTotalTransactionAmount > totalTransactionAmount) {
-      return config.props.isDefault && config.props.paymentMethodType === paymentMethodType;
+      return (
+        config.props.isDefault &&
+        (!config.props.paymentMethodType || config.props.paymentMethodType === paymentMethodType)
+      );
     }
     if (config.props.minProfileAge && config.props.minProfileAge > consumer.getAccountAge()) {
-      return config.props.isDefault && config.props.paymentMethodType === paymentMethodType;
+      return (
+        config.props.isDefault &&
+        (!config.props.paymentMethodType || config.props.paymentMethodType === paymentMethodType)
+      );
     }
     // TODO(CRYPTO-416): Add check for Noba Wallet Balance
     return true;

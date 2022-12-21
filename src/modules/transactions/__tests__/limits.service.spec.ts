@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { deepEqual, instance, when } from "ts-mockito";
+import { instance, when } from "ts-mockito";
 
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
@@ -17,10 +17,9 @@ import { ILimitProfileRepo } from "../repo/LimitProfileRepo";
 import { ILimitConfigurationRepo } from "../repo/LimitConfigurationRepo";
 import { getMockLimitProfileRepoWithDefaults } from "../mocks/mock.limit.profile.repo";
 import { getMockLimitConfigRepoWithDefaults } from "../mocks/mock.limit.config.repo";
-import { LimitProfile, Limits } from "../domain/LimitProfile";
+import { LimitProfile } from "../domain/LimitProfile";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
-import { TransactionType } from "../domain/Types";
-import { PaymentMethodType } from "../../../modules/consumer/domain/Types";
+import { TransactionType, PaymentMethodType } from "@prisma/client";
 
 const defaultEnvironmentVariables = {};
 
@@ -75,36 +74,22 @@ describe("LimitsService", () => {
 
   describe("canMakeTransaction", () => {
     beforeAll(() => {
-      const cardLimits: Limits = {
+      const defaultLimitConfiguration = LimitConfiguration.createLimitConfiguration({
+        id: "limit-config-1",
+        isDefault: true,
+        priority: 2,
+        profileID: "fake-limit-profile",
+      });
+
+      const limitProfile = LimitProfile.createLimitProfile({
+        id: "fake-limit-profile",
+        name: "Fake Limit Profile",
+        unsettledExposure: 250,
         daily: 500,
         weekly: 1000,
         monthly: 2000,
         maxTransaction: 500,
         minTransaction: 50,
-      };
-
-      const bankLimits: Limits = {
-        daily: 300,
-        weekly: 500,
-        monthly: 1000,
-        maxTransaction: 200,
-        minTransaction: 20,
-      };
-
-      const defaultLimitConfiguration = LimitConfiguration.createLimitConfiguration({
-        _id: "limit-config-1",
-        isDefault: true,
-        priority: 2,
-        profile: "fake-limit-profile",
-        criteria: {},
-      });
-
-      const limitProfile = LimitProfile.createLimitProfile({
-        _id: "fake-limit-profile",
-        name: "Fake Limit Profile",
-        cardLimits: cardLimits,
-        bankLimits: bankLimits,
-        unsettledExposure: 250,
       });
 
       when(limitConfigRepo.getAllLimitConfigs()).thenResolve([defaultLimitConfiguration]);
@@ -115,52 +100,24 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         49,
-
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
       expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_SMALL);
       expect(result.rangeMin).toBe(50);
       expect(result.rangeMax).toBe(500);
-    });
-
-    it("should not be below minimum for ach", async () => {
-      const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
-        consumer,
-        18,
-
-        TransactionType.ONRAMP,
-        PaymentMethodType.ACH,
-      );
-      expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_SMALL);
-      expect(result.rangeMin).toBe(20);
-      expect(result.rangeMax).toBe(200);
     });
 
     it("Should not be above the maximum for card", async () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         501,
-
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
       expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_LARGE);
       expect(result.rangeMin).toBe(50);
       expect(result.rangeMax).toBe(500);
-    });
-
-    it("should not be above the maximum for ach", async () => {
-      const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
-        consumer,
-        201,
-
-        TransactionType.ONRAMP,
-        PaymentMethodType.ACH,
-      );
-      expect(result.status).toBe(TransactionAllowedStatus.TRANSACTION_TOO_LARGE);
-      expect(result.rangeMin).toBe(20);
-      expect(result.rangeMax).toBe(200);
     });
 
     it("Should not exceed the exact monthly maximum for card", async () => {
@@ -169,27 +126,11 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         50,
-
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
       expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
       expect(result.rangeMin).toBe(50);
-      expect(result.rangeMax).toBe(0);
-    });
-
-    it("should not exceed monthly maximum for ach", async () => {
-      when(transactionRepo.getMonthlyUserTransactionAmount(userId)).thenResolve(1000);
-
-      const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
-        consumer,
-        50,
-
-        TransactionType.ONRAMP,
-        PaymentMethodType.ACH,
-      );
-      expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
-      expect(result.rangeMin).toBe(20);
       expect(result.rangeMax).toBe(0);
     });
 
@@ -199,8 +140,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         50,
-
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
       expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
@@ -215,7 +155,7 @@ describe("LimitsService", () => {
         consumer,
         50,
 
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
       expect(result.status).toBe(TransactionAllowedStatus.MONTHLY_LIMIT_REACHED);
@@ -231,8 +171,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         200,
-
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
 
@@ -247,8 +186,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         200,
-
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
 
@@ -263,8 +201,7 @@ describe("LimitsService", () => {
       const result: CheckTransactionDTO = await limitsService.canMakeTransaction(
         consumer,
         200,
-
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
       expect(result.status).toBe(TransactionAllowedStatus.ALLOWED);
@@ -275,36 +212,22 @@ describe("LimitsService", () => {
 
   describe("getConsumerLimits", () => {
     beforeAll(() => {
-      const cardLimits: Limits = {
+      const defaultLimitConfiguration = LimitConfiguration.createLimitConfiguration({
+        id: "limit-config-1",
+        isDefault: true,
+        priority: 2,
+        profileID: "fake-limit-profile",
+      });
+
+      const limitProfile = LimitProfile.createLimitProfile({
+        id: "fake-limit-profile",
+        name: "Fake Limit Profile",
+        unsettledExposure: 1,
         daily: 500,
         weekly: 1000,
         monthly: 2000,
         maxTransaction: 500,
         minTransaction: 50,
-      };
-
-      const bankLimits: Limits = {
-        daily: 300,
-        weekly: 500,
-        monthly: 1000,
-        maxTransaction: 200,
-        minTransaction: 20,
-      };
-
-      const defaultLimitConfiguration = LimitConfiguration.createLimitConfiguration({
-        _id: "limit-config-1",
-        isDefault: true,
-        priority: 2,
-        profile: "fake-limit-profile",
-        criteria: {},
-      });
-
-      const limitProfile = LimitProfile.createLimitProfile({
-        _id: "fake-limit-profile",
-        name: "Fake Limit Profile",
-        cardLimits: cardLimits,
-        bankLimits: bankLimits,
-        unsettledExposure: 1,
       });
 
       when(limitConfigRepo.getAllLimitConfigs()).thenResolve([defaultLimitConfiguration]);
@@ -317,7 +240,7 @@ describe("LimitsService", () => {
       const result: ConsumerLimitsDTO = await limitsService.getConsumerLimits(
         consumer,
 
-        TransactionType.ONRAMP,
+        TransactionType.NOBA_WALLET,
         PaymentMethodType.CARD,
       );
       expect(result.minTransaction).toBe(50);
@@ -329,144 +252,116 @@ describe("LimitsService", () => {
   });
 
   describe("getLimits", () => {
-    const specificLimitProfile = LimitProfile.createLimitProfile({
-      _id: "partner-limit-profile",
-      name: "Partner Limit Profile",
-      cardLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
-      bankLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
+    const walletTransactionProfileCard = LimitProfile.createLimitProfile({
+      id: "wallet-limit-profile-card",
+      name: "Wallet Limit Profile",
+      daily: 1000,
+      weekly: 2000,
+      monthly: 10000,
+      minTransaction: 10,
+      maxTransaction: 200,
       unsettledExposure: 1,
     });
 
-    const walletTransactionProfile = LimitProfile.createLimitProfile({
-      _id: "wallet-limit-profile",
+    const walletTransactionProfileACH = LimitProfile.createLimitProfile({
+      id: "wallet-limit-profile-ach",
       name: "Wallet Limit Profile",
-      cardLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
-      bankLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
+      daily: 1000,
+      weekly: 2000,
+      monthly: 10000,
+      minTransaction: 10,
+      maxTransaction: 200,
       unsettledExposure: 1,
     });
 
     const minTotalTransactionProfile = LimitProfile.createLimitProfile({
-      _id: "transaction-limit-profile",
+      id: "transaction-limit-profile",
       name: "Min Total Transaction Profile",
-      cardLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
-      bankLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
+      daily: 1000,
+      weekly: 2000,
+      monthly: 10000,
+      minTransaction: 10,
+      maxTransaction: 200,
       unsettledExposure: 1,
     });
 
     const defaultProfile = LimitProfile.createLimitProfile({
-      _id: "default-limit-profile",
+      id: "default-limit-profile",
       name: "Fake Limit Profile",
-      cardLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
-      bankLimits: {
-        daily: 1000,
-        weekly: 2000,
-        monthly: 10000,
-        minTransaction: 10,
-        maxTransaction: 200,
-      },
+      daily: 1000,
+      weekly: 2000,
+      monthly: 10000,
+      minTransaction: 10,
+      maxTransaction: 200,
       unsettledExposure: 1,
     });
 
     const defaultLimitConfiguration = LimitConfiguration.createLimitConfiguration({
-      _id: "limit-config-1",
+      id: "limit-config-1",
       isDefault: true,
       priority: 2,
-      profile: defaultProfile.props._id,
-      criteria: {
-        minTotalTransactionAmount: 500,
-      },
+      profileID: defaultProfile.props.id,
+      minTotalTransactionAmount: 500,
     });
 
-    const walletSpecificConfig = LimitConfiguration.createLimitConfiguration({
-      _id: "wallet-config-1",
+    const walletSpecificConfigForCard = LimitConfiguration.createLimitConfiguration({
+      id: "wallet-config-1",
       isDefault: false,
       priority: 5,
-      profile: walletTransactionProfile.props._id,
-      criteria: {
-        transactionType: [TransactionType.NOBA_WALLET],
-      },
+      profileID: walletTransactionProfileCard.props.id,
+      transactionType: TransactionType.NOBA_WALLET,
+      paymentMethodType: PaymentMethodType.CARD,
+    });
+
+    const walletSpecificConfigForACH = LimitConfiguration.createLimitConfiguration({
+      id: "wallet-config-2",
+      isDefault: false,
+      priority: 5,
+      profileID: walletTransactionProfileCard.props.id,
+      transactionType: TransactionType.NOBA_WALLET,
+      paymentMethodType: PaymentMethodType.ACH,
     });
 
     const minTransactionAmountConfig = LimitConfiguration.createLimitConfiguration({
-      _id: "transaction-config-1",
+      id: "transaction-config-1",
       isDefault: false,
       priority: 3,
-      profile: minTotalTransactionProfile.props._id,
-      criteria: {
-        minTotalTransactionAmount: 1000,
-      },
+      profileID: minTotalTransactionProfile.props.id,
+      minTotalTransactionAmount: 1000,
+      paymentMethodType: PaymentMethodType.CARD,
     });
 
     beforeAll(async () => {
       await setupTestModule(defaultEnvironmentVariables);
       when(limitConfigRepo.getAllLimitConfigs()).thenResolve([
-        walletSpecificConfig,
+        walletSpecificConfigForACH,
+        walletSpecificConfigForCard,
         minTransactionAmountConfig,
         defaultLimitConfiguration,
       ]);
-      when(limitProfileRepo.getProfile(specificLimitProfile.props._id)).thenResolve(specificLimitProfile);
-      when(limitProfileRepo.getProfile(walletTransactionProfile.props._id)).thenResolve(walletTransactionProfile);
-      when(limitProfileRepo.getProfile(minTotalTransactionProfile.props._id)).thenResolve(minTotalTransactionProfile);
-      when(limitProfileRepo.getProfile(defaultProfile.props._id)).thenResolve(defaultProfile);
+      when(limitProfileRepo.getProfile(walletTransactionProfileCard.props.id)).thenResolve(
+        walletTransactionProfileCard,
+      );
+      when(limitProfileRepo.getProfile(walletTransactionProfileACH.props.id)).thenResolve(walletTransactionProfileACH);
+      when(limitProfileRepo.getProfile(minTotalTransactionProfile.props.id)).thenResolve(minTotalTransactionProfile);
+      when(limitProfileRepo.getProfile(defaultProfile.props.id)).thenResolve(defaultProfile);
     });
 
-    it("should return wallet specific profile when transaction type is NOBA_WALLET", async () => {
+    it("should return wallet specific profile for CARD when transaction type is NOBA_WALLET", async () => {
       when(transactionRepo.getTotalUserTransactionAmount(userId)).thenResolve(2000);
-      const profile = await limitsService.getLimits(consumer, TransactionType.NOBA_WALLET);
-      expect(profile).toStrictEqual(walletTransactionProfile);
+      const profile = await limitsService.getLimits(consumer, TransactionType.NOBA_WALLET, PaymentMethodType.CARD);
+      expect(profile).toStrictEqual(walletTransactionProfileCard);
     });
 
     it("should return minimum transaction specific profile when total transaction amount exceeds", async () => {
       when(transactionRepo.getTotalUserTransactionAmount(userId)).thenResolve(2000);
-      const profile = await limitsService.getLimits(consumer, TransactionType.ONRAMP);
+      const profile = await limitsService.getLimits(consumer);
       expect(profile).toStrictEqual(minTotalTransactionProfile);
     });
 
     it("should return default profile when none of the conditions match", async () => {
       when(transactionRepo.getTotalUserTransactionAmount(userId)).thenResolve(200);
-      const profile = await limitsService.getLimits(consumer, TransactionType.ONRAMP);
+      const profile = await limitsService.getLimits(consumer);
       expect(profile).toStrictEqual(defaultProfile);
     });
   });

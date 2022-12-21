@@ -38,7 +38,7 @@ import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Utils } from "../../../core/utils/Utils";
 import { CurrencyService } from "../../../modules/common/currency.service";
 import { getDiscountedAmount } from "./AssetServiceHelper";
-import { TransactionType } from "../domain/Types";
+import { TransactionType } from "@prisma/client";
 
 @Injectable()
 export abstract class DefaultAssetService implements AssetService {

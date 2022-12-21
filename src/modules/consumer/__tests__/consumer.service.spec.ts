@@ -995,10 +995,10 @@ describe("ConsumerService", () => {
     });
 
     it("should throw BadRequestException if 'handle' is greater than 22 characters", async () => {
-      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuv")).rejects.toThrow(
+      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuva")).rejects.toThrow(
         BadRequestException,
       );
-      expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
+      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuva")).rejects.toThrow(
         "'handle' should be between 3 and 22 charcters long.",
       );
     });

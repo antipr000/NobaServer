@@ -1,29 +1,21 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { MongoClient } from "mongodb";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { DBProvider } from "../../../infraproviders/DBProvider";
 import { LimitProfile } from "../domain/LimitProfile";
 import { ILimitProfileRepo } from "../repo/LimitProfileRepo";
-import { MongoDBLimitProfileRepo } from "../repo/MongoDBLimitProfileRepo";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { SQLLimitProfileRepo } from "../repo/SQLLimitProfileRepo";
+import { uuid } from "uuidv4";
 
-describe("MongoDBLimitProfileRepo", () => {
+describe("LimitProfileRepo tests", () => {
   jest.setTimeout(20000);
 
   let limitProfileRepo: ILimitProfileRepo;
-  let mongoServer: MongoMemoryServer;
-  let mongoClient: MongoClient;
+  let prismaService: PrismaService;
+  let app: TestingModule;
 
-  beforeEach(async () => {
-    // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-
-    console.log("MongoMemoryServer running at: ", mongoUri);
-
+  beforeAll(async () => {
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
      *
@@ -36,34 +28,30 @@ describe("MongoDBLimitProfileRepo", () => {
      *
      **/
     const appConfigurations = {
-      [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoUri,
-      },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [DBProvider, MongoDBLimitProfileRepo],
+      providers: [SQLLimitProfileRepo, PrismaService],
     }).compile();
 
-    limitProfileRepo = app.get<MongoDBLimitProfileRepo>(MongoDBLimitProfileRepo);
-
-    mongoClient = new MongoClient(mongoUri);
-
-    await mongoClient.connect();
+    limitProfileRepo = app.get<SQLLimitProfileRepo>(SQLLimitProfileRepo);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
   afterEach(async () => {
-    await mongoClient.close();
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await prismaService.limitProfile.deleteMany();
+  });
+
+  afterAll(async () => {
+    app.close();
   });
 
   describe("addProfile", () => {
     it("should add a limit profile", async () => {
-      const profile = createLimitProfile("fake-profile-1");
+      const profile = createLimitProfile();
       const response = await limitProfileRepo.addProfile(profile);
       expect(response.props).toMatchObject(profile.props);
     });
@@ -71,10 +59,10 @@ describe("MongoDBLimitProfileRepo", () => {
 
   describe("getProfile", () => {
     it("should return limit profile when present", async () => {
-      const profile = createLimitProfile("fake-profile-1");
+      const profile = createLimitProfile();
       await limitProfileRepo.addProfile(profile);
 
-      const response = await limitProfileRepo.getProfile("fake-profile-1");
+      const response = await limitProfileRepo.getProfile(profile.props.id);
       expect(response.props).toMatchObject(profile.props);
     });
 
@@ -85,24 +73,15 @@ describe("MongoDBLimitProfileRepo", () => {
   });
 });
 
-function createLimitProfile(id: string): LimitProfile {
+function createLimitProfile(): LimitProfile {
   return LimitProfile.createLimitProfile({
-    _id: id,
+    id: `${uuid()}_${new Date().valueOf()}`,
     name: "Fake Limit Profile",
-    bankLimits: {
-      daily: 10,
-      weekly: 100,
-      monthly: 1000,
-      maxTransaction: 5,
-      minTransaction: 1,
-    },
-    cardLimits: {
-      daily: 20,
-      weekly: 200,
-      monthly: 2000,
-      maxTransaction: 10,
-      minTransaction: 5,
-    },
+    daily: 10,
+    weekly: 100,
+    monthly: 1000,
+    maxTransaction: 5,
+    minTransaction: 1,
     unsettledExposure: 100,
   });
 }

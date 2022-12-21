@@ -16,7 +16,7 @@ import {
 import { BadRequestException } from "@nestjs/common";
 import { createHmac } from "crypto";
 import * as ConfigurationUtils from "../../../config/ConfigurationUtils";
-import { PaymentProvider } from "../../../modules/consumer/domain/PaymentProvider";
+import { PaymentProvider } from "@prisma/client";
 
 describe("Elliptic Tests", () => {
   jest.setTimeout(10000);

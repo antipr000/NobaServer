@@ -17,9 +17,6 @@ import { Logger } from "winston";
 import { PaginatedResult, SortOrder, EMPTY_PAGE_RESULT } from "../../../core/infra/PaginationTypes";
 import { SortOptions, paginationPipeLine } from "../../../infra/mongodb/paginate/PaginationPipeline";
 import { UpdateFiatTransactionInfoRequest } from "../domain/TransactionRepoTypes";
-import { CurrencyType } from "../../../modules/common/domain/Types";
-import { createObjectCsvStringifier as createCsvStringifier } from "csv-writer";
-import fs from "fs";
 
 type AggregateResultType = {
   _id: number;

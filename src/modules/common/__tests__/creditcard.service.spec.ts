@@ -274,7 +274,6 @@ describe("CreditCardService", () => {
 
       delete expectedResponse._id;
       delete expectedResponse.mask;
-      delete expectedResponse.version;
 
       expect(response).toStrictEqual(expectedResponse);
     });
