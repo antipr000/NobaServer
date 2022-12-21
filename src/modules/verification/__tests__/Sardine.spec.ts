@@ -47,6 +47,7 @@ import {
   KYCProvider,
   PaymentMethodType,
   PaymentProvider,
+  PaymentMethodStatus,
 } from "@prisma/client";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
@@ -377,6 +378,8 @@ describe("SardineTests", () => {
             authReason: "Approved",
             paymentMethodID: "card-1234",
           },
+          consumerID: consumer.props.id,
+          status: PaymentMethodStatus.APPROVED,
         }),
       ]);
 
@@ -385,7 +388,7 @@ describe("SardineTests", () => {
         consumer,
         transactionInformation,
       );
-
+      await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
 
       mockAxios.mockResponse(FAKE_GOOD_TRANSACTION);
@@ -450,6 +453,8 @@ describe("SardineTests", () => {
             mask: "7890",
             accountType: BankAccountType.CHECKING,
           },
+          status: PaymentMethodStatus.APPROVED,
+          consumerID: consumer.props.id,
         }),
       ]);
 
@@ -579,6 +584,8 @@ describe("SardineTests", () => {
             authReason: "Approved",
             paymentMethodID: "card-1234",
           },
+          status: PaymentMethodStatus.APPROVED,
+          consumerID: consumer.props.id,
         }),
       ]);
 
@@ -587,7 +594,7 @@ describe("SardineTests", () => {
         consumer,
         transactionInformation,
       );
-
+      await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
 
       mockAxios.mockResponse(FAKE_HIGH_RISK_TRANSACTION);
@@ -613,6 +620,7 @@ describe("SardineTests", () => {
 
       const consumer = Consumer.createConsumer({
         id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
         verificationData: {
           kycCheckStatus: KYCStatus.APPROVED,
           provider: KYCProvider.SARDINE,
@@ -641,6 +649,8 @@ describe("SardineTests", () => {
             authReason: "Approved",
             paymentMethodID: "card-1234",
           },
+          consumerID: consumer.props.id,
+          status: PaymentMethodStatus.APPROVED,
         }),
       ]);
 
@@ -649,7 +659,7 @@ describe("SardineTests", () => {
         consumer,
         transactionInformation,
       );
-
+      await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
 
       mockAxios.mockResponse(FAKE_FRAUDULENT_TRANSACTION);
@@ -704,6 +714,8 @@ describe("SardineTests", () => {
             authReason: "Approved",
             paymentMethodID: "card-1234",
           },
+          consumerID: consumer.props.id,
+          status: PaymentMethodStatus.APPROVED,
         }),
       ]);
 
@@ -712,7 +724,7 @@ describe("SardineTests", () => {
         consumer,
         transactionInformation,
       );
-
+      await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         message: "Network Error",
