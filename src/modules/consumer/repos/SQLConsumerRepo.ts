@@ -46,6 +46,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
         ).toLocaleLowerCase() + Date.now().valueOf().toString().substring(7);
     }
 
+    if (this.isHandleTaken(consumer.props.handle)) {
+      throw new BadRequestError({ message: "Handle is already taken!" });
+    }
+
     const consumerInput = this.mapper.toCreateConsumerInput(consumer);
     try {
       const consumerProps = await this.prisma.consumer.create({ data: consumerInput });
@@ -110,8 +114,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async isHandleTaken(handle: string): Promise<boolean> {
-    const consumerProps = await this.prisma.consumer.findUnique({ where: { handle: handle } });
-    if (!consumerProps) return false;
+    const consumerProps = await this.prisma.consumer.findMany({
+      where: { handle: { equals: handle, mode: "insensitive" } },
+    });
+    if (consumerProps.length === 0) return false;
     return true;
   }
 
@@ -181,7 +187,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
   private removeAllUnsupportedHandleCharacters(text: string): string {
     if (text === undefined || text === null) return "user-";
 
-    const regex = new RegExp("^[a-zA-Z0-9-]{1,1}$");
+    const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü-]{1,1}$");
     let result = "";
 
     for (let i = 0; i < text.length; i++) {

@@ -94,10 +94,10 @@ export class ConsumerService {
   }
 
   private analyseHandle(handle: string): void {
-    // Only alpha-numeric characters and "_" (underscore) is allowed.
-    const regex = new RegExp("^[a-z0-9][a-z0-9-]{2,14}$");
-    if (handle.length < 3 || handle.length > 15) {
-      throw new BadRequestException("'handle' should be between 3 and 15 charcters long.");
+    // Only alpha-numeric characters and "-"  and 22 characters
+    const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü][a-zA-Z0-9ñáéíóúü-]{2,22}$");
+    if (handle.length < 3 || handle.length > 22) {
+      throw new BadRequestException("'handle' should be between 3 and 22 charcters long.");
     }
     if (!regex.test(handle)) {
       throw new BadRequestException(

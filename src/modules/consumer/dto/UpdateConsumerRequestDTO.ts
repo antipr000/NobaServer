@@ -1,7 +1,26 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { ConsumerProps } from "../domain/Consumer";
 
-export class UpdateConsumerRequestDTO implements Partial<ConsumerProps> {
+export class UpdateAddressDTO {
+  @ApiPropertyOptional()
+  streetLine1?: string;
+
+  @ApiPropertyOptional()
+  streetLine2?: string;
+
+  @ApiPropertyOptional()
+  city?: string;
+
+  @ApiPropertyOptional()
+  countryCode?: string;
+
+  @ApiPropertyOptional()
+  regionCode?: string;
+
+  @ApiPropertyOptional()
+  postalCode?: string;
+}
+
+export class UpdateConsumerRequestDTO {
   @ApiPropertyOptional()
   firstName?: string;
 
@@ -13,4 +32,7 @@ export class UpdateConsumerRequestDTO implements Partial<ConsumerProps> {
 
   @ApiPropertyOptional()
   handle?: string;
+
+  @ApiPropertyOptional()
+  address?: UpdateAddressDTO;
 }

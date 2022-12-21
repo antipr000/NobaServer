@@ -86,13 +86,15 @@ describe("ConsumerController", () => {
         consumerService.updateConsumer(
           deepEqual({
             id: consumer.props.id,
-            ...requestData,
+            firstName: requestData.firstName,
+            dateOfBirth: requestData.dateOfBirth,
           }),
         ),
       ).thenResolve(
         Consumer.createConsumer({
           ...consumer.props,
-          ...requestData,
+          firstName: requestData.firstName,
+          dateOfBirth: requestData.dateOfBirth,
         }),
       );
       when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
@@ -104,7 +106,8 @@ describe("ConsumerController", () => {
         consumerMapper.toDTO(
           Consumer.createConsumer({
             ...consumer.props,
-            ...requestData,
+            firstName: requestData.firstName,
+            dateOfBirth: requestData.dateOfBirth,
           }),
           [],
           [],
