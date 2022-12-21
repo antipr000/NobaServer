@@ -53,7 +53,11 @@ export class CircleWorkflowController {
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
-    const res = await this.circleService.debitWalletBalance(walletID, fundsMovementRequest.amount);
+    const res = await this.circleService.debitWalletBalance(
+      fundsMovementRequest.workflowID,
+      walletID,
+      fundsMovementRequest.amount,
+    );
     return {
       walletID: walletID,
       balance: res,
@@ -67,7 +71,11 @@ export class CircleWorkflowController {
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
-    const res = await this.circleService.creditWalletBalance(walletID, fundsMovementRequest.amount);
+    const res = await this.circleService.creditWalletBalance(
+      fundsMovementRequest.workflowID,
+      walletID,
+      fundsMovementRequest.amount,
+    );
     return {
       walletID: walletID,
       balance: res,
