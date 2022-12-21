@@ -45,7 +45,6 @@ describe("VerificationService", () => {
   let consumerService: ConsumerService;
   let idvProvider: IDVProvider;
   let notificationService: NotificationService;
-
   jest.setTimeout(30000);
   const OLD_ENV = process.env;
 
@@ -748,8 +747,9 @@ describe("VerificationService", () => {
       when(idvProvider.processKycVerificationWebhookResult(deepEqual(caseNotificationRequest))).thenReturn(result);
 
       await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
+      const args = capture(consumerService.updateConsumer);
+      expect(args.last()[0].verificationData.kycCheckStatus).toBe(KYCStatus.APPROVED);
 
-      verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
@@ -793,7 +793,8 @@ describe("VerificationService", () => {
 
       await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
 
-      verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
+      const args = capture(consumerService.updateConsumer);
+      expect(args.last()[0].verificationData.kycCheckStatus).toBe(KYCStatus.APPROVED);
 
       verify(
         notificationService.sendNotification(
@@ -838,7 +839,8 @@ describe("VerificationService", () => {
 
       await verificationService.processKycVerificationWebhookRequest(caseNotificationRequest);
 
-      verify(consumerService.updateConsumer(deepEqual(newConsumerData))).once();
+      const args = capture(consumerService.updateConsumer);
+      expect(args.last()[0].verificationData.kycCheckStatus).toBe(KYCStatus.REJECTED);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_DENIED_EVENT,
