@@ -56,7 +56,7 @@ import { AuthUser } from "../auth/auth.decorator";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
-@Controller("verify")
+@Controller("v1/verify")
 @ApiTags("Verification")
 @ApiHeaders(getCommonHeaders())
 export class VerificationController {
@@ -83,7 +83,7 @@ export class VerificationController {
   @ApiBadRequestResponse({ description: "Invalid request" })
   async createSession(): Promise<string> {
     const verificationData = await this.verificationService.createSession();
-    return verificationData.props._id;
+    return verificationData.props.id;
   }
 
   @Post("/consumerinfo")
@@ -248,7 +248,7 @@ export class VerificationController {
 
 @Roles(Role.User)
 @Public()
-@Controller("verify/webhook")
+@Controller("v1/verify/webhook")
 @ApiTags("VerificationWebhooks")
 export class VerificationWebhookController {
   @Inject(WINSTON_MODULE_PROVIDER)

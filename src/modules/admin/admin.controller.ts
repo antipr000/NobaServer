@@ -46,7 +46,7 @@ import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 import { TransactionService } from "../transactions/transaction.service";
 
-@Controller("admins")
+@Controller("v1/admins")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Admin")
 @ApiHeaders(getCommonHeaders())

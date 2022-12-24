@@ -33,7 +33,7 @@ import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Utils } from "../../core/utils/Utils";
 import { NewAccessTokenRequestDTO } from "./dto/NewAccessTokenRequest";
 
-@Controller("auth")
+@Controller("v1/auth")
 @ApiTags("Authentication")
 @ApiHeaders(getCommonHeaders())
 export class AuthController {
