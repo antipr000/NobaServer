@@ -2,7 +2,7 @@
 
 envType: e2e_test
 
-apiPrefix: "/v1"
+apiPrefix: ""
 logFilePath: "/tmp/noba_server.log"
 
 awsRegion: "us-east-1"

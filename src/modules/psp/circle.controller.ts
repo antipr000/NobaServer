@@ -10,7 +10,7 @@ import { CircleService } from "./circle.service";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
-@Controller("circle") // This defines the path prefix
+@Controller("v1/circle") // This defines the path prefix
 @ApiTags("Consumer") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
 @ApiHeaders(getCommonHeaders()) // Adds the requirement for all the X-Noba-xxx headers.
 export class CircleController {

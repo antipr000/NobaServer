@@ -9,6 +9,7 @@ import { getWinstonModule } from "./core/utils/WinstonModule";
 import { InfraProvidersModule } from "./infraproviders/infra.module";
 import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { TransactionModule } from "./modules/transactions/transaction.module";
+import { TransactionModule as TransactionModuleV2 } from "./modules/transaction/transaction.module";
 import { VerificationModule, VerificationWebhookModule } from "./modules/verification/verification.module";
 import { CommonModule } from "./modules/common/common.module";
 import { AdminModule } from "./modules/admin/admin.module";
@@ -27,6 +28,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
     VerificationModule,
     VerificationWebhookModule,
     TransactionModule,
+    TransactionModuleV2,
     AdminModule,
     ScheduleModule.forRoot(),
   ],

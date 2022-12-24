@@ -13,7 +13,7 @@ import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
 
-@Controller()
+@Controller("v1")
 @ApiHeaders(getCommonHeaders())
 export class AppController {
   constructor(

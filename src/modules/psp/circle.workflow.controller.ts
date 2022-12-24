@@ -6,7 +6,7 @@ import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { CircleService } from "./circle.service";
 import { CircleFundsMovementRequestDTO } from "./domain/CircleFundsMovementRequestDTO";
 
-@Controller("wf/circle") // This defines the path prefix
+@Controller("v1/wf/circle") // This defines the path prefix
 @ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
 @IsNoApiKeyNeeded()
 export class CircleWorkflowController {
@@ -15,7 +15,7 @@ export class CircleWorkflowController {
     private readonly circleService: CircleService,
   ) {}
 
-  @Get(`/wallets/consumers/:consumerID`)
+  @Get("/wallets/consumers/:consumerID")
   @ApiOperation({ summary: "Get consumer's wallet ID" })
   @ApiResponse({ status: HttpStatus.OK })
   async getConsumerWalletID(@Param("consumerID") consumerID: string): Promise<any> {
@@ -25,7 +25,7 @@ export class CircleWorkflowController {
     };
   }
 
-  @Get(`/wallets/master`)
+  @Get("/wallets/master")
   @ApiOperation({ summary: "Get master wallet ID" })
   @ApiResponse({ status: HttpStatus.OK })
   async getMasterWalletID(): Promise<any> {

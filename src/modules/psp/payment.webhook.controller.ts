@@ -13,11 +13,10 @@ import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
-
-const crypto_ts = require("crypto");
+import { createHmac } from "crypto";
 
 @IsNoApiKeyNeeded()
-@Controller()
+@Controller("v1")
 export class PaymentWebhooksController {
   private webhookSignatureKey: string;
 
@@ -123,7 +122,7 @@ export class PaymentWebhooksController {
 
   private IsAuthenticRequest(body, receivedSignature: string): boolean {
     const payload = JSON.stringify(body ? body : {});
-    const expectedSignature = crypto_ts.createHmac("sha256", this.webhookSignatureKey).update(payload).digest("hex");
+    const expectedSignature = createHmac("sha256", this.webhookSignatureKey).update(payload).digest("hex");
 
     this.logger.info(
       `Received signature "${receivedSignature}" and expected signature based on request body is "${expectedSignature}"`,

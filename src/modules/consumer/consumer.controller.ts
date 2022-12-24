@@ -51,7 +51,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
-@Controller("consumers")
+@Controller("v1/consumers")
 @ApiTags("Consumer")
 @ApiHeaders(getCommonHeaders())
 export class ConsumerController {

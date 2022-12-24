@@ -52,7 +52,7 @@ import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
-@Controller()
+@Controller("v1")
 @ApiHeaders(getCommonHeaders())
 export class TransactionController {
   // @Inject(WINSTON_MODULE_PROVIDER)
