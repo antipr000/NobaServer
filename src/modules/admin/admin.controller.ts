@@ -145,7 +145,7 @@ export class AdminController {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update NobaAdmins.`);
     }
 
-    if (authenticatedUser.props._id === adminId) {
+    if (authenticatedUser.props.id === adminId) {
       throw new ForbiddenException("You can't update your own identity.");
     }
 
@@ -176,15 +176,19 @@ export class AdminController {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
     }
 
-    if (authenticatedUser.props._id === adminId) {
+    if (authenticatedUser.props.id === adminId) {
       throw new ForbiddenException("You can't delete your own account.");
     }
 
-    const deletedAdminId: string = await this.adminService.deleteNobaAdmin(adminId);
+    try {
+      const deletedAdminId: string = await this.adminService.deleteNobaAdmin(adminId);
 
-    const result = new DeleteNobaAdminDTO();
-    result._id = deletedAdminId;
-    return result;
+      const result = new DeleteNobaAdminDTO();
+      result.id = deletedAdminId;
+      return result;
+    } catch (e) {
+      throw new NotFoundException();
+    }
   }
 
   @Patch("/consumers/:consumerID")
@@ -206,15 +210,19 @@ export class AdminController {
 
     const consumerData = await this.consumerService.getConsumer(consumerID);
     const updatedConsumerData = await this.consumerService.updateConsumer({
-      ...consumerData.props,
-      ...requestBody,
-      verificationData: {
-        ...consumerData.props.verificationData,
-        ...requestBody.verificationData,
-      },
+      id: consumerData.props.id,
+      ...(requestBody.address && { address: requestBody.address }),
+      ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),
+      ...(requestBody.verificationData && {
+        verificationData: {
+          ...consumerData.props.verificationData,
+          ...requestBody.verificationData,
+        },
+      }),
     });
-
-    return this.consumerMapper.toDTO(updatedConsumerData);
+    const paymentMethods = await this.consumerService.getAllPaymentMethodsForConsumer(consumerID);
+    const cryptoWallets = await this.consumerService.getAllConsumerWallets(consumerID);
+    return this.consumerMapper.toDTO(updatedConsumerData, paymentMethods, cryptoWallets);
   }
 
   private convertToLastMinuteOfDay(date: Date): Date {
