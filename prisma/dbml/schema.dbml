@@ -185,6 +185,20 @@ Table Verification {
   updatedTimestamp DateTime
 }
 
+Table CreditCardBIN {
+  id String [pk]
+  issuer String
+  bin String [unique, not null]
+  type String [not null]
+  network String [not null]
+  mask String
+  supported String [not null]
+  digits Int [not null]
+  cvvDigits Int [not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
 Enum IdentityType {
   CONSUMER
   NOBA_ADMIN
