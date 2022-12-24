@@ -16,7 +16,7 @@ import { getMockNotificationServiceWithDefaults } from "../../../modules/notific
 import { ITokenRepo } from "../repo/TokenRepo";
 import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
 import { OTPService } from "../../../modules/common/otp.service";
-import { getMockOTPServiceWithDefaults } from "../../../modules/common/mocks/mock.otp.service.spec";
+import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";
 
 describe("AdminAuthService", () => {
   jest.setTimeout(5000);

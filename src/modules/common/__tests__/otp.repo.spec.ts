@@ -65,9 +65,13 @@ describe("OtpRepoTests", () => {
       const otp = 123457;
 
       await otpRepo.saveOTP(emailID, otp, IdentityType.CONSUMER);
-      expect(async () => await otpRepo.saveOTP(emailID, 123456, IdentityType.CONSUMER)).rejects.toThrow(
-        BadRequestError,
-      );
+
+      try {
+        await otpRepo.saveOTP(emailID, 123456, IdentityType.CONSUMER);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestError);
+      }
     });
 
     it("should not throw error when otp for email already exists and identity type is different", async () => {
