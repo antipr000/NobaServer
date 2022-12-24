@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { VerificationData, VerificationProviders } from "../../consumer/domain/KYC";
 import { Address } from "../../consumer/domain/Address";
-import { KYCStatus, DocumentVerificationStatus } from "../../consumer/domain/VerificationStatus";
+import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
+import { KYC } from "../../../modules/consumer/domain/KYC";
 class AddressDTO implements Address {
   @ApiProperty()
   streetLine1: string;
@@ -22,9 +22,9 @@ class AddressDTO implements Address {
   postalCode: string;
 }
 
-class VerificationDataDTO implements Partial<VerificationData> {
-  @ApiPropertyOptional({ enum: VerificationProviders })
-  verificationProvider?: VerificationProviders;
+class VerificationDataDTO implements Partial<KYC> {
+  @ApiPropertyOptional({ enum: KYCProvider })
+  verificationProvider?: KYCProvider;
 
   @ApiPropertyOptional({ enum: KYCStatus })
   kycVerificationStatus?: KYCStatus;

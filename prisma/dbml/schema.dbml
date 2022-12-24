@@ -164,6 +164,17 @@ Table Token {
   expiryTime DateTime
   userID String [not null]
   isUsed Boolean [not null, default: false]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
+Table Admin {
+  id String [pk]
+  name String
+  email String [unique, not null]
+  role String [not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
 }
 
 Enum IdentityType {

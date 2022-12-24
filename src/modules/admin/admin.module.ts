@@ -3,23 +3,22 @@ import { ConfigModule } from "@nestjs/config";
 import { CommonModule } from "../common/common.module";
 import { AdminController } from "./admin.controller";
 import { AdminService } from "./admin.service";
-import { MongoDBAdminTransactionRepo } from "./repos/transactions/AdminTransactionRepo";
+import { SQLAdminRepo } from "./repos/transactions/AdminTransactionRepo";
 import { AdminMapper } from "./mappers/AdminMapper";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { TransactionModule } from "../transactions/transaction.module";
+import { InfraProvidersModule } from "../../infraproviders/infra.module";
 
 @Module({
-  imports: [ConfigModule, CommonModule, ConsumerModule, TransactionModule],
+  imports: [ConfigModule, CommonModule, ConsumerModule, TransactionModule, InfraProvidersModule],
   controllers: [AdminController],
   providers: [
     AdminService,
     {
       provide: "AdminTransactionRepo",
-      useClass: MongoDBAdminTransactionRepo,
+      useClass: SQLAdminRepo,
     },
     AdminMapper,
-    DBProvider,
   ],
   exports: [AdminService],
 })

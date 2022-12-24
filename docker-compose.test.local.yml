@@ -9,7 +9,7 @@ services:
       - POSTGRES_PASSWORD=prisma
       - POSTGRES_DB=test
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - db:/var/lib/postgresql/data
     command: postgres -c shared_buffers=500MB -c fsync=off
@@ -18,22 +18,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile.test
-    environment:
-      - DATABASE_URL=postgresql://prisma:prisma@db:5432/test?connect_timeout=300
-    command: yarn test:prisma-migrate
-    depends_on:
-      db:
-        condition: service_healthy
-    links:
-      - db
-    volumes:
-      - ./src:/src
-
 volumes:
   db:
     driver: local

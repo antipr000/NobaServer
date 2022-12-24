@@ -198,6 +198,17 @@ model Token {
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
 }
 
+model Admin {
+  id               String    @id @default(uuid())
+  name             String?
+  email            String    @unique()
+  role             String
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+
+  @@index([email])
+}
+
 enum IdentityType {
   CONSUMER
   NOBA_ADMIN
