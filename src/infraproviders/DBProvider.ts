@@ -2,29 +2,13 @@ import { Injectable, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Model } from "mongoose";
-import { ConsumerProps } from "../modules/consumer/domain/Consumer";
-import { UserModel } from "../infra/mongodb/models/UserModel";
 import Mongoose from "mongoose";
 import { TransactionProps } from "../modules/transactions/domain/Transaction";
 import { TransactionModel } from "../infra/mongodb/models/TransactionModel";
-import { AdminProps } from "../modules/admin/domain/Admin";
-import { AdminModel } from "../infra/mongodb/models/AdminModel";
 import { MongoConfigs } from "../config/configtypes/MongoConfigs";
 import { MONGO_CONFIG_KEY } from "../config/ConfigurationUtils";
 import { CustomConfigService } from "../core/utils/AppConfigModule";
-import { VerificationDataProps } from "../modules/verification/domain/VerificationData";
-import { VerificationDataModel } from "../infra/mongodb/models/VerificationDataModel";
-import { LockModel } from "../infra/mongodb/models/LockModel";
-import { LockProps } from "../modules/common/domain/Lock";
 import path from "path";
-import { CreditCardBinDataProps } from "../modules/common/domain/CreditCardBinData";
-import { CreditCardBinDataModel } from "../infra/mongodb/models/CreditCardBinDataModel";
-import { LimitProfileModel } from "../infra/mongodb/models/LimitProfileModel";
-import { LimitProfileProps } from "../modules/transactions/domain/LimitProfile";
-import { LimitConfigurationProps } from "../modules/transactions/domain/LimitConfiguration";
-import { LimitConfigurationModel } from "../infra/mongodb/models/LimitConfigurationModel";
-import { TokenModel } from "../infra/mongodb/models/TokenModel";
-import { TokenProps } from "../modules/auth/domain/Token";
 
 @Injectable()
 export class DBProvider {
@@ -57,50 +41,9 @@ export class DBProvider {
   //   this.connectToDb();
   // }
 
-  async getTokenModel(): Promise<Model<TokenProps>> {
-    await this.connectToDb();
-    return TokenModel;
-  }
-
-  async getUserModel(): Promise<Model<ConsumerProps>> {
-    await this.connectToDb();
-    return UserModel;
-  }
-
   async getTransactionModel(): Promise<Model<TransactionProps>> {
     await this.connectToDb();
     await TransactionModel.ensureIndexes();
     return TransactionModel;
-  }
-
-  async getAdminModel(): Promise<Model<AdminProps>> {
-    await this.connectToDb();
-    return AdminModel;
-  }
-
-  async getVerificationDataModel(): Promise<Model<VerificationDataProps>> {
-    await this.connectToDb();
-    return VerificationDataModel;
-  }
-
-  async getLockModel(): Promise<Model<LockProps>> {
-    await this.connectToDb();
-    await LockModel.ensureIndexes();
-    return LockModel;
-  }
-
-  async getCreditCardBinDataModel(): Promise<Model<CreditCardBinDataProps>> {
-    await this.connectToDb();
-    return CreditCardBinDataModel;
-  }
-
-  async getLimitProfileModel(): Promise<Model<LimitProfileProps>> {
-    await this.connectToDb();
-    return LimitProfileModel;
-  }
-
-  async getLimitConfigurationModel(): Promise<Model<LimitConfigurationProps>> {
-    await this.connectToDb();
-    return LimitConfigurationModel;
   }
 }
