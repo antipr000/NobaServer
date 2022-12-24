@@ -1,17 +1,14 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { DBProvider } from "../../../infraproviders/DBProvider";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
-import mongoose from "mongoose";
-import { MongoClient, Collection } from "mongodb";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IVerificationDataRepo } from "../repos/IVerificationDataRepo";
-import { MongoDBVerificationDataRepo } from "../repos/MongoDBVerificationDataRepo";
+import { SQLVerificationDataRepo } from "../repos/SQLVerificationDataRepo";
 import { VerificationData, VerificationDataProps } from "../domain/VerificationData";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { uuid } from "uuidv4";
 
 const VERIFICATION_ID_PREFIX = "verification_id_prefix";
-const TEST_NUMBER = 5;
 const DEFAULT_USER_ID = "user_id";
 const DEFAULT_TRANSACTION_ID = "transaction_id";
 
@@ -19,20 +16,15 @@ const mkid = (id: string): string => {
   return VERIFICATION_ID_PREFIX + id;
 };
 
-describe("MongoDBVerificationRepoTests", () => {
+describe("VerificationRepoTests", () => {
   jest.setTimeout(20000);
 
   let verificationRepo: IVerificationDataRepo;
-  let mongoServer: MongoMemoryServer;
-  let mongoClient: MongoClient;
-  let verificationCollection: Collection;
+  let prismaService: PrismaService;
+  let app: TestingModule;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-
-    console.log("MongoMemoryServer running at: ", mongoUri);
 
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
@@ -46,49 +38,44 @@ describe("MongoDBVerificationRepoTests", () => {
      *
      **/
     const appConfigurations = {
-      [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoUri,
-      },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [DBProvider, MongoDBVerificationDataRepo],
+      providers: [PrismaService, SQLVerificationDataRepo],
     }).compile();
 
-    verificationRepo = app.get<MongoDBVerificationDataRepo>(MongoDBVerificationDataRepo);
-
-    // Setup a mongodb client for interacting with "admins" collection.
-    mongoClient = new MongoClient(mongoUri);
-    await mongoClient.connect();
-    verificationCollection = mongoClient.db("").collection("VerificationData");
+    verificationRepo = app.get<SQLVerificationDataRepo>(SQLVerificationDataRepo);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
   afterEach(async () => {
-    await mongoClient.close();
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await prismaService.verification.deleteMany();
+  });
+
+  afterAll(async () => {
+    app.close();
   });
 
   describe("saveVerificationData", () => {
     it("should save verification data", async () => {
       const verificationData = getVerificationData("1");
       const savedVerificationData = await verificationRepo.saveVerificationData(verificationData);
-      expect(savedVerificationData.props._id).toBe(mkid("1"));
+      expect(savedVerificationData.props.id).toBe(mkid("1"));
       expect(savedVerificationData.props.userID).toBe(DEFAULT_USER_ID);
     });
   });
 
   describe("getVerificationData", () => {
     it("should get verification data", async () => {
-      const verificationData = getVerificationData("1");
-      const vfd2 = getVerificationData("2");
+      const verificationData = getVerificationData("2");
+      const vfd2 = getVerificationData("3");
       await verificationRepo.saveVerificationData(verificationData);
       await verificationRepo.saveVerificationData(vfd2);
-      const savedVerificationData = await verificationRepo.getVerificationData(mkid("1"));
-      expect(savedVerificationData.props._id).toBe(mkid("1"));
+      const savedVerificationData = await verificationRepo.getVerificationData(mkid("2"));
+      expect(savedVerificationData.props.id).toBe(mkid("2"));
     });
   });
 
@@ -102,7 +89,7 @@ describe("MongoDBVerificationRepoTests", () => {
       const updatedVerificationData = await verificationRepo.updateVerificationData(
         VerificationData.createVerificationData({ ...savedVerificationData.props, transactionID: mkid("tid") }),
       );
-      expect(updatedVerificationData.props._id).toBe(mkid("1"));
+      expect(updatedVerificationData.props.id).toBe(mkid("1"));
       expect(updatedVerificationData.props.userID).toBe(DEFAULT_USER_ID);
       expect(updatedVerificationData.props.transactionID).toBe(mkid("tid"));
     });
@@ -112,7 +99,7 @@ describe("MongoDBVerificationRepoTests", () => {
     it("should get session key from filters", async () => {
       const verificationData = getVerificationData("1");
       await verificationRepo.saveVerificationData(verificationData);
-      const sessionKey = await verificationRepo.getSessionKeyFromFilters({ _id: mkid("1") });
+      const sessionKey = await verificationRepo.getSessionKeyFromFilters({ id: mkid("1") });
       expect(sessionKey).toBe(mkid("1"));
     });
   });
@@ -123,9 +110,9 @@ const getVerificationData = (
   options: { userId?: string; transactionId?: string } = {},
 ): VerificationData => {
   const props: VerificationDataProps = {
-    _id: mkid(id),
+    id: mkid(id),
     userID: options.userId || DEFAULT_USER_ID,
-    transactionID: options.transactionId || DEFAULT_TRANSACTION_ID,
+    transactionID: options.transactionId || DEFAULT_TRANSACTION_ID + "_" + uuid(),
   };
   const verificationData = VerificationData.createVerificationData(props);
   return verificationData;

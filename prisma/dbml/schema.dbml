@@ -177,6 +177,14 @@ Table Admin {
   updatedTimestamp DateTime
 }
 
+Table Verification {
+  id String [pk]
+  userID String
+  transactionID String [unique]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
 Enum IdentityType {
   CONSUMER
   NOBA_ADMIN
