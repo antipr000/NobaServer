@@ -24,8 +24,6 @@ describe("VerificationRepoTests", () => {
   let app: TestingModule;
 
   beforeAll(async () => {
-    // Spin up an in-memory mongodb server
-
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
      *

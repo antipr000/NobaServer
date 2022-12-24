@@ -1,5 +1,4 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { convertDBResponseToJsObject } from "../../../infra/mongodb/MongoDBUtils";
 import { VerificationData, VerificationDataProps } from "../domain/VerificationData";
 import { IVerificationDataRepo } from "./IVerificationDataRepo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
@@ -42,8 +41,8 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
           transactionID: verificationData.props.transactionID,
         },
       });
-      const verificationDataProps: VerificationDataProps = convertDBResponseToJsObject(result);
-      return VerificationData.createVerificationData(verificationDataProps);
+
+      return VerificationData.createVerificationData(result);
     } catch (e) {
       throw new BadRequestException(e.message);
     }
