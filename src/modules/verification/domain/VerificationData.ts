@@ -1,18 +1,21 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
+import { basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
 import { Entity } from "../../../core/domain/Entity";
+import { Verification as VerificationModel } from "@prisma/client";
 
-export interface VerificationDataProps extends BaseProps {
-  _id: string;
+export class VerificationDataProps implements Partial<VerificationModel> {
+  id: string;
+  transactionID?: string | null;
   userID?: string;
-  transactionID?: string;
+  createdTimestamp?: Date;
+  updatedTimestamp?: Date;
 }
 
 export const verificationDataValidationKeys: KeysRequired<VerificationDataProps> = {
   ...basePropsJoiSchemaKeys,
-  _id: Joi.string().min(10).required(),
+  id: Joi.string().min(10).required(),
   userID: Joi.string().optional(),
   transactionID: Joi.string().optional(),
 };
@@ -29,7 +32,7 @@ export class VerificationData extends AggregateRoot<VerificationDataProps> {
 
   public static createVerificationData(verificationDataProps: Partial<VerificationDataProps>): VerificationData {
     //set email verified to true when user authenticates via third party and not purely via email
-    if (!verificationDataProps._id) verificationDataProps._id = Entity.getNewID();
+    if (!verificationDataProps.id) verificationDataProps.id = Entity.getNewID();
 
     return new VerificationData(Joi.attempt(verificationDataProps, verificationDataJoiSchema));
   }
