@@ -16,8 +16,8 @@ export class VerificationDataProps implements Partial<VerificationModel> {
 export const verificationDataValidationKeys: KeysRequired<VerificationDataProps> = {
   ...basePropsJoiSchemaKeys,
   id: Joi.string().min(10).required(),
-  userID: Joi.string().optional(),
-  transactionID: Joi.string().optional(),
+  userID: Joi.string().optional().allow(null),
+  transactionID: Joi.string().optional().allow(null),
 };
 
 export const verificationDataJoiSchema = Joi.object(verificationDataValidationKeys).options({
