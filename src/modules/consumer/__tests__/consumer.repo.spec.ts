@@ -327,157 +327,157 @@ describe("ConsumerRepoTests", () => {
       expect(consumerAddresses[0].streetLine2).toBe("Second");
       expect(consumerAddresses[0].regionCode).toBe("PA");
     });
+  });
 
-    describe("addCryptoWallet", () => {
-      it("should add crypto wallet for consumer", async () => {
-        const consumer = getRandomUser();
-        await consumerRepo.createConsumer(consumer);
+  describe("addCryptoWallet", () => {
+    it("should add crypto wallet for consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
 
-        let wallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
+      let wallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
 
-        expect(wallets).toHaveLength(0);
+      expect(wallets).toHaveLength(0);
 
-        const wallet = getRandomCryptoWallet(consumer.props.id);
+      const wallet = getRandomCryptoWallet(consumer.props.id);
 
-        const savedResult = await consumerRepo.addCryptoWallet(wallet);
+      const savedResult = await consumerRepo.addCryptoWallet(wallet);
 
-        expect(savedResult.props.id).toBe(wallet.props.id);
-        expect(savedResult.props.address).toBe(wallet.props.address);
+      expect(savedResult.props.id).toBe(wallet.props.id);
+      expect(savedResult.props.address).toBe(wallet.props.address);
 
-        wallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
-        expect(wallets).toHaveLength(1);
-        expect(wallets[0].props).toStrictEqual(savedResult.props);
-      });
-
-      it("should throw error when wallet with duplicate address is added", async () => {
-        const consumer = getRandomUser();
-        await consumerRepo.createConsumer(consumer);
-        const wallet = getRandomCryptoWallet(consumer.props.id);
-        await consumerRepo.addCryptoWallet(wallet);
-
-        const newWallet = getRandomCryptoWallet(consumer.props.id);
-        newWallet.props.address = wallet.props.address;
-
-        expect(async () => await consumerRepo.addCryptoWallet(newWallet)).rejects.toThrow(BadRequestError);
-      });
+      wallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
+      expect(wallets).toHaveLength(1);
+      expect(wallets[0].props).toStrictEqual(savedResult.props);
     });
 
-    describe("getCryptoWalletForConsumer", () => {
-      it("should return null if crypto wallet does not exist for consumer", async () => {
-        const consumer = getRandomUser();
-        await consumerRepo.createConsumer(consumer);
-        const wallet = getRandomCryptoWallet(consumer.props.id);
-        await consumerRepo.addCryptoWallet(wallet);
+    it("should throw error when wallet with duplicate address is added", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+      const wallet = getRandomCryptoWallet(consumer.props.id);
+      await consumerRepo.addCryptoWallet(wallet);
 
-        const walletID = "fake-wallet-id";
+      const newWallet = getRandomCryptoWallet(consumer.props.id);
+      newWallet.props.address = wallet.props.address;
 
-        const requestedWallet = await consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id);
-        expect(requestedWallet).toBeNull();
-      });
+      expect(async () => await consumerRepo.addCryptoWallet(newWallet)).rejects.toThrow(BadRequestError);
+    });
+  });
 
-      it("should return requested crypto wallet", async () => {
-        const consumer = getRandomUser();
-        await consumerRepo.createConsumer(consumer);
-        const wallet = getRandomCryptoWallet(consumer.props.id);
-        await consumerRepo.addCryptoWallet(wallet);
+  describe("getCryptoWalletForConsumer", () => {
+    it("should return null if crypto wallet does not exist for consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+      const wallet = getRandomCryptoWallet(consumer.props.id);
+      await consumerRepo.addCryptoWallet(wallet);
 
-        const requestedWallet = await consumerRepo.getCryptoWalletForConsumer(wallet.props.id, consumer.props.id);
-        expect(requestedWallet).not.toBeNull();
-        expect(requestedWallet.props.address).toBe(wallet.props.address);
-      });
+      const walletID = "fake-wallet-id";
+
+      const requestedWallet = await consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id);
+      expect(requestedWallet).toBeNull();
     });
 
-    describe("getAllCryptoWalletsForConsumer", () => {
-      it("should return empty list if no crypto wallet exists for consumer", async () => {
-        const consumer = getRandomUser();
-        await consumerRepo.createConsumer(consumer);
+    it("should return requested crypto wallet", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+      const wallet = getRandomCryptoWallet(consumer.props.id);
+      await consumerRepo.addCryptoWallet(wallet);
 
-        const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
+      const requestedWallet = await consumerRepo.getCryptoWalletForConsumer(wallet.props.id, consumer.props.id);
+      expect(requestedWallet).not.toBeNull();
+      expect(requestedWallet.props.address).toBe(wallet.props.address);
+    });
+  });
 
-        expect(allWallets).toHaveLength(0);
-      });
+  describe("getAllCryptoWalletsForConsumer", () => {
+    it("should return empty list if no crypto wallet exists for consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
 
-      it("should return empty list if consumer does not exist", async () => {
-        const consumerID = "fake-consumer-id";
-        const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumerID);
+      const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
 
-        expect(allWallets).toHaveLength(0);
-      });
-
-      it("should return all non DELETED crypto wallets for consumer", async () => {
-        const consumer = getRandomUser();
-        await consumerRepo.createConsumer(consumer);
-
-        const wallet1 = getRandomCryptoWallet(consumer.props.id);
-        const wallet2 = getRandomCryptoWallet(consumer.props.id);
-
-        await consumerRepo.addCryptoWallet(wallet1);
-        let allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
-        expect(allWallets).toHaveLength(1);
-
-        await consumerRepo.addCryptoWallet(wallet2);
-        allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
-        expect(allWallets).toHaveLength(2);
-
-        const wallet3 = getRandomCryptoWallet(consumer.props.id);
-        wallet3.props.status = WalletStatus.DELETED;
-        await consumerRepo.addCryptoWallet(wallet3);
-
-        allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
-        expect(allWallets).toHaveLength(2);
-      });
+      expect(allWallets).toHaveLength(0);
     });
 
-    describe("updateCryptoWallet", () => {
-      it("should not throw error if we try to update to a duplicate address as address input is rejected", async () => {
-        const consumer1 = getRandomUser();
-        await consumerRepo.createConsumer(consumer1);
-        const wallet1 = getRandomCryptoWallet(consumer1.props.id);
-        await consumerRepo.addCryptoWallet(wallet1);
+    it("should return empty list if consumer does not exist", async () => {
+      const consumerID = "fake-consumer-id";
+      const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumerID);
 
-        const consumer2 = getRandomUser();
-        const wallet2 = getRandomCryptoWallet(consumer2.props.id);
-        await consumerRepo.createConsumer(consumer2);
-        await consumerRepo.addCryptoWallet(wallet2);
+      expect(allWallets).toHaveLength(0);
+    });
 
-        const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer2.props.id);
-        expect(allWallets).toHaveLength(1);
-        expect(allWallets[0].props.address).toBe(wallet2.props.address);
+    it("should return all non DELETED crypto wallets for consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
 
-        const updateWallet: Partial<CryptoWalletProps> = {
-          id: wallet2.props.id,
-          address: wallet1.props.address,
-          name: "New Fake Wallet",
-        };
+      const wallet1 = getRandomCryptoWallet(consumer.props.id);
+      const wallet2 = getRandomCryptoWallet(consumer.props.id);
 
-        const updatedWallet = await consumerRepo.updateCryptoWallet(wallet2.props.id, updateWallet);
-        expect(updatedWallet.props.address).toBe(wallet2.props.address); // address change request is ignored
-        expect(updatedWallet.props.name).toBe("New Fake Wallet");
-      });
+      await consumerRepo.addCryptoWallet(wallet1);
+      let allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
+      expect(allWallets).toHaveLength(1);
 
-      it("should update status and risk score of crypto wallet", async () => {
-        const consumer = getRandomUser();
-        const wallet = getRandomCryptoWallet(consumer.props.id);
-        await consumerRepo.createConsumer(consumer);
-        await consumerRepo.addCryptoWallet(wallet);
+      await consumerRepo.addCryptoWallet(wallet2);
+      allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
+      expect(allWallets).toHaveLength(2);
 
-        const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
-        expect(allWallets).toHaveLength(1);
-        expect(allWallets[0].props.address).toBe(wallet.props.address);
-        expect(allWallets[0].props.status).toBe(WalletStatus.PENDING);
-        expect(allWallets[0].props.riskScore).toBe(null);
+      const wallet3 = getRandomCryptoWallet(consumer.props.id);
+      wallet3.props.status = WalletStatus.DELETED;
+      await consumerRepo.addCryptoWallet(wallet3);
 
-        const updateWallet: Partial<CryptoWalletProps> = {
-          id: wallet.props.id,
-          status: WalletStatus.APPROVED,
-          riskScore: 2.0,
-        };
+      allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
+      expect(allWallets).toHaveLength(2);
+    });
+  });
 
-        const updatedWallet = await consumerRepo.updateCryptoWallet(wallet.props.id, updateWallet);
+  describe("updateCryptoWallet", () => {
+    it("should not throw error if we try to update to a duplicate address as address input is rejected", async () => {
+      const consumer1 = getRandomUser();
+      await consumerRepo.createConsumer(consumer1);
+      const wallet1 = getRandomCryptoWallet(consumer1.props.id);
+      await consumerRepo.addCryptoWallet(wallet1);
 
-        expect(updatedWallet.props.status).toBe(WalletStatus.APPROVED);
-        expect(updatedWallet.props.riskScore).toBe(2.0);
-      });
+      const consumer2 = getRandomUser();
+      const wallet2 = getRandomCryptoWallet(consumer2.props.id);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.addCryptoWallet(wallet2);
+
+      const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer2.props.id);
+      expect(allWallets).toHaveLength(1);
+      expect(allWallets[0].props.address).toBe(wallet2.props.address);
+
+      const updateWallet: Partial<CryptoWalletProps> = {
+        id: wallet2.props.id,
+        address: wallet1.props.address,
+        name: "New Fake Wallet",
+      };
+
+      const updatedWallet = await consumerRepo.updateCryptoWallet(wallet2.props.id, updateWallet);
+      expect(updatedWallet.props.address).toBe(wallet2.props.address); // address change request is ignored
+      expect(updatedWallet.props.name).toBe("New Fake Wallet");
+    });
+
+    it("should update status and risk score of crypto wallet", async () => {
+      const consumer = getRandomUser();
+      const wallet = getRandomCryptoWallet(consumer.props.id);
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.addCryptoWallet(wallet);
+
+      const allWallets = await consumerRepo.getAllCryptoWalletsForConsumer(consumer.props.id);
+      expect(allWallets).toHaveLength(1);
+      expect(allWallets[0].props.address).toBe(wallet.props.address);
+      expect(allWallets[0].props.status).toBe(WalletStatus.PENDING);
+      expect(allWallets[0].props.riskScore).toBe(null);
+
+      const updateWallet: Partial<CryptoWalletProps> = {
+        id: wallet.props.id,
+        status: WalletStatus.APPROVED,
+        riskScore: 2.0,
+      };
+
+      const updatedWallet = await consumerRepo.updateCryptoWallet(wallet.props.id, updateWallet);
+
+      expect(updatedWallet.props.status).toBe(WalletStatus.APPROVED);
+      expect(updatedWallet.props.riskScore).toBe(2.0);
     });
   });
 
