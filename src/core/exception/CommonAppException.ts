@@ -109,3 +109,14 @@ export class DuplicateItemException extends ApplicationException {
   public readonly severity = 1; //highest severity as this as duplicate item exception is expected in rare cases and needs to be resolved asap
   public readonly exceptionCodeForClient = AppExceptionCode.DUPLICATE_ITEM_EXCEPTION;
 }
+
+export class InvalidDatabaseRecordException extends ApplicationException {
+  public readonly name = "InvalidDatabaseRecordException";
+  public readonly httpStatusCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+  public readonly severity = 1; // highest severity as this means that there is some data corruption in DB.
+}
+
+export class ErrorSavingReportInDatabaseException extends ApplicationException {
+  public readonly name = "ErrorSavingReportInDatabaseException";
+  public readonly httpStatusCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+}

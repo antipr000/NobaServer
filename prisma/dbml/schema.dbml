@@ -21,6 +21,7 @@ Table Consumer {
   cryptoWallets CryptoWallet [not null]
   paymentMethods PaymentMethod [not null]
   circleAccountData Circle
+  Transaction Transaction [not null]
 }
 
 Table Address {
@@ -158,6 +159,20 @@ Table LimitConfiguration {
   updatedTimestamp DateTime
 }
 
+Table Transaction {
+  id String [pk]
+  transactionRef String [unique, not null]
+  workflowName String [not null]
+  consumer Consumer [not null]
+  consumerID String [not null]
+  status String [not null, default: 'PENDING']
+  currency String [not null]
+  amount Float
+  exchangeRate Float
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
 Table Token {
   id String [pk]
   tokenType TokenType [not null]
@@ -276,3 +291,5 @@ Ref: ACH.paymentMethodID - PaymentMethod.id [delete: Cascade]
 Ref: Circle.consumerID - Consumer.id [delete: Cascade]
 
 Ref: LimitConfiguration.profileID > LimitProfile.id [delete: Cascade]
+
+Ref: Transaction.consumerID > Consumer.id [delete: Cascade]
