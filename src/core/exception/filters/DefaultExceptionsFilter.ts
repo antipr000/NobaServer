@@ -20,9 +20,9 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
     const status = httpException.getStatus();
     const message = httpException.message;
 
+    //log error info on service side, don't catch everything else how would we know what is going wrong?
     const log = true;
     if (log) {
-      //log error info on service side, don't catch everything else how would we know what is going wrong?
       let messageToBeLogged;
       if (originalException instanceof HttpException) {
         messageToBeLogged = originalException.message;
