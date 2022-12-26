@@ -22,8 +22,6 @@ export class CircleService {
     const existingWalletResult = await this.circleRepo.getCircleWalletID(consumerID);
     if (existingWalletResult.isSuccess) {
       return existingWalletResult.getValue();
-    } else {
-      // TODO: Handle failure
     }
 
     const circleWalletID: string = await this.circleClient.createWallet(consumerID);
@@ -45,6 +43,10 @@ export class CircleService {
   }
 
   public async getWalletBalance(walletID: string): Promise<number> {
+    if (!walletID) {
+      throw new ServiceException("Wallet ID must not be empty", ServiceErrorCode.SEMANTIC_VALIDATION);
+    }
+
     return this.circleClient.getWalletBalance(walletID);
   }
 

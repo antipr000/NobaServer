@@ -1,8 +1,8 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from "@nestjs/common";
 import { Logger } from "winston";
-import { convertToHTTPException, isApplicationException } from "./AppExceptionToHTTPExceptionMap";
+import { convertToHTTPException, isApplicationException } from "../AppExceptionToHTTPExceptionMap";
 import Joi from "joi";
-import { ApplicationException } from "./CommonAppException";
+import { ApplicationException } from "../CommonAppException";
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {

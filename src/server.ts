@@ -7,7 +7,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { AppModule } from "./app.module";
-import { AllExceptionsFilter } from "./core/exception/ExceptionsFilter";
+import { AllExceptionsFilter } from "./core/exception/filters/ExceptionsFilter";
 import { CustomConfigService } from "./core/utils/AppConfigModule";
 import {
   createClassTypeToPropertiesMapFromSwaggerSchemas,
@@ -45,7 +45,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   app.useLogger(logger);
   app.setGlobalPrefix(apiPrefix ?? "");
   app.use(getMorgan(winstonLogger));
-  app.useGlobalFilters(new AllExceptionsFilter(winstonLogger));
+  app.useGlobalFilters(new AllExceptionsFilter(winstonLogger), new );
   // the next two lines did the trick
   app.use(json({ limit: "50mb" }));
   app.use(urlencoded({ extended: true, limit: "50mb" }));

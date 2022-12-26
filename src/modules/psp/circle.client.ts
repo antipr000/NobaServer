@@ -81,11 +81,10 @@ export class CircleClient {
 
       // TODO: figure out best return here
       // maybe source wallet balance and destination wallet balance?
-      // return response.data.data.;
+      return {status: transferResponse.data.data.};
     } catch (err) {
       this.logger.error(
-        `Error while creating the wallet: ${JSON.stringify(err.response.data)}, ${JSON.stringify(
-          err.response.headers,
+        `Error while transferring funds: ${JSON.stringify(err.response.data)},
         )}`,
       );
       throw new InternalServerErrorException("Service unavailable. Please try again.");
