@@ -10,7 +10,7 @@ import { ConfigurationProviderService } from "./configuration.provider.service";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
-import { MongoDBCreditCardBinDataRepo } from "./repo/MongoDBCreditCardBinDataRepo";
+import { SQLCreditCardBinDataRepo } from "./repo/SQLCreditCardBinDataRepo";
 import { SQLOTPRepo } from "./repo/SQLOTPRepo";
 import { OTPService } from "./otp.service";
 import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
@@ -29,7 +29,7 @@ import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
     EllipticService,
     {
       provide: "CreditCardBinDataRepo",
-      useClass: MongoDBCreditCardBinDataRepo,
+      useClass: SQLCreditCardBinDataRepo,
     },
     {
       provide: "OTPRepo",

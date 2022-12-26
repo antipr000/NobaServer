@@ -1,50 +1,22 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { AdminMapper } from "../mappers/AdminMapper";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { IAdminTransactionRepo, MongoDBAdminTransactionRepo } from "../repos/transactions/AdminTransactionRepo";
-import { Admin } from "../domain/Admin";
+import { IAdminRepo, SQLAdminRepo } from "../repos/transactions/AdminTransactionRepo";
+import { Admin, AdminProps } from "../domain/Admin";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { DBProvider } from "../../../infraproviders/DBProvider";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
-import mongoose from "mongoose";
-import { MongoClient, Collection } from "mongodb";
-import { NotFoundException } from "@nestjs/common";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { uuid } from "uuidv4";
+import { BadRequestError } from "../../../core/exception/CommonAppException";
 
-const getAllRecordsInAdminCollection = async (adminCollection: Collection): Promise<Array<Admin>> => {
-  const adminDocumentsCursor = adminCollection.find({});
-  const allRecords: Admin[] = [];
-
-  while (await adminDocumentsCursor.hasNext()) {
-    const adminDocument = await adminDocumentsCursor.next();
-
-    const currentRecord: Admin = Admin.createAdmin({
-      _id: adminDocument._id.toString(),
-      name: adminDocument.name,
-      email: adminDocument.email,
-      role: adminDocument.role,
-    });
-    allRecords.push(currentRecord);
-  }
-
-  return allRecords;
-};
-
-describe("AdminController", () => {
+describe("AdminRepo Tests", () => {
   jest.setTimeout(20000);
 
-  let adminTransactionRepo: IAdminTransactionRepo;
-  let mongoServer: MongoMemoryServer;
-  let mongoClient: MongoClient;
-  let adminCollection: Collection;
+  let adminRepo: IAdminRepo;
+  let prismaService: PrismaService;
+  let app: TestingModule;
 
-  beforeEach(async () => {
-    // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-
-    console.log("MongoMemoryServer running at: ", mongoUri);
-
+  beforeAll(async () => {
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
      *
@@ -57,72 +29,52 @@ describe("AdminController", () => {
      *
      **/
     const appConfigurations = {
-      [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoUri,
-      },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [AdminMapper, DBProvider, MongoDBAdminTransactionRepo],
+      providers: [AdminMapper, PrismaService, SQLAdminRepo],
     }).compile();
 
-    adminTransactionRepo = app.get<MongoDBAdminTransactionRepo>(MongoDBAdminTransactionRepo);
-
-    // Setup a mongodb client for interacting with "admins" collection.
-    mongoClient = new MongoClient(mongoUri);
-    await mongoClient.connect();
-    adminCollection = mongoClient.db("").collection("admins");
+    adminRepo = app.get<SQLAdminRepo>(SQLAdminRepo);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
   afterEach(async () => {
-    await mongoClient.close();
-    await mongoose.disconnect();
-    await mongoServer.stop();
+    await prismaService.admin.deleteMany();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   describe("addNobaAdmin", () => {
     it("should insert a NobaAdmin record to the DB", async () => {
-      const newAdmin = Admin.createAdmin({
-        email: "admin@noba.com",
-        name: "Admin",
-        role: "BASIC",
-        _id: "AAAAAAAAAA",
-      });
+      const newAdmin = getRandomAdmin("BASIC");
 
-      const addedAdmin: Admin = await adminTransactionRepo.addNobaAdmin(newAdmin);
-      const allDocumentsInAdmin = await getAllRecordsInAdminCollection(adminCollection);
-
+      const addedAdmin: Admin = await adminRepo.addNobaAdmin(newAdmin);
+      const allDocumentsInAdmin = await (
+        await prismaService.admin.findMany()
+      ).filter(adminProps => adminProps.email === newAdmin.props.email);
       expect(allDocumentsInAdmin).toHaveLength(1);
-      expect(addedAdmin).toEqual(allDocumentsInAdmin[0]);
+      expect(addedAdmin.props).toEqual(allDocumentsInAdmin[0]);
     });
   });
 
   describe("getNobaAdminByEmail", () => {
     it("should return 'undefined' if admind with that email doesn't exists", async () => {
-      const retrievedAdmin: Admin = await adminTransactionRepo.getNobaAdminByEmail("admin@noba.com");
+      const retrievedAdmin: Admin = await adminRepo.getNobaAdminByEmail("admin@noba.com");
 
       expect(retrievedAdmin).toBeUndefined();
     });
 
     it("should return 'Admin' with the given email", async () => {
-      const admin: Admin = Admin.createAdmin({
-        email: "admin@noba.com",
-        name: "Admin",
-        role: "BASIC",
-        _id: "AAAAAAAAAAAA",
-      });
+      const admin: Admin = getRandomAdmin("BASIC");
 
-      await adminCollection.insertOne({
-        _id: admin.props._id as any,
-        name: admin.props.name,
-        email: admin.props.email,
-        role: admin.props.role,
-      });
-
-      const retrievedAdmin: Admin = await adminTransactionRepo.getNobaAdminByEmail("admin@noba.com");
+      await adminRepo.addNobaAdmin(admin);
+      const retrievedAdmin: Admin = await adminRepo.getNobaAdminByEmail(admin.props.email);
 
       expect(retrievedAdmin).toEqual(admin);
     });
@@ -130,46 +82,32 @@ describe("AdminController", () => {
 
   describe("updateNobaAdmin", () => {
     it("should update the 'Admin' with the given email", async () => {
-      const admin: Admin = Admin.createAdmin({
-        email: "admin@noba.com",
-        name: "Admin",
-        role: "BASIC",
-        _id: "AAAAAAAAAAAA",
-      });
-      await adminCollection.insertOne({
-        _id: admin.props._id as any,
-        name: admin.props.name,
-        email: admin.props.email,
-        role: admin.props.role,
-      });
+      const admin: Admin = getRandomAdmin("BASIC");
+      await adminRepo.addNobaAdmin(admin);
 
-      const updatedAdmin: Admin = Admin.createAdmin({
-        email: "admin@noba.com",
-        name: "Admin New Name",
+      const updatedAdmin: Partial<AdminProps> = {
         role: "INTERMEDIATE",
-        _id: "AAAAAAAAAAAA",
-      });
-      const retrievedAdmin: Admin = await adminTransactionRepo.updateNobaAdmin(updatedAdmin);
+      };
+      await adminRepo.updateNobaAdmin(admin.props.id, updatedAdmin);
 
-      const allDocumentsInAdmin = await getAllRecordsInAdminCollection(adminCollection);
-      expect(allDocumentsInAdmin).toHaveLength(1);
-      expect(retrievedAdmin).toEqual(allDocumentsInAdmin[0]);
+      const getAdmin = await adminRepo.getNobaAdminById(admin.props.id);
+      expect(getAdmin.props.role).toBe("INTERMEDIATE");
     });
 
-    it("should throw 'NotFoundException' if the 'Admin' with given email not found", async () => {
-      const admin: Admin = Admin.createAdmin({
-        email: "admin@noba.com",
-        name: "Admin",
-        role: "BASIC",
-        _id: "AAAAAAAAAAAA",
-      });
-
-      try {
-        await adminTransactionRepo.updateNobaAdmin(admin);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(NotFoundException);
-      }
+    it("should throw 'BadRequestError' if the 'Admin' with given email not found", async () => {
+      const admin: Admin = getRandomAdmin("BASIC");
+      expect(async () => await adminRepo.updateNobaAdmin(admin.props.id, { role: "INTERMEDIATE" })).rejects.toThrow(
+        BadRequestError,
+      );
     });
   });
 });
+
+function getRandomAdmin(role: string): Admin {
+  return Admin.createAdmin({
+    id: uuid(),
+    name: "Test Admin",
+    role: role,
+    email: `admin${uuid()}@noba.com`,
+  });
+}

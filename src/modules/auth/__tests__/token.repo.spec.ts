@@ -1,69 +1,50 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
-import { MONGO_CONFIG_KEY, MONGO_URI, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
-import mongoose from "mongoose";
-import { MongoClient } from "mongodb";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { ITokenRepo } from "../repo/TokenRepo";
-import { TokenMapper } from "../mapper/TokenMapper";
-import { MongoDBTokenRepo } from "../repo/MongoDBTokenRepo";
 import { Token } from "../domain/Token";
+import { addDays } from "date-fns";
+import { SQLTokenRepo } from "../repo/SQLTokenRepo";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { PrismaService } from "../../../infraproviders/PrismaService";
 
 function createToken(rawToken: string, userID: string): Token {
-  return Token.createTokenObject({ _id: Token.saltifyToken(rawToken, userID), userID: userID });
+  return Token.createTokenObject({
+    id: Token.saltifyToken(rawToken, userID),
+    userID: userID,
+    isUsed: false,
+    expiryTime: addDays(new Date(), 1),
+  });
 }
 
-describe("MongoDBTokenRepoTests", () => {
+describe("TokenRepoTests", () => {
   jest.setTimeout(20000);
 
   let tokenRepo: ITokenRepo;
-  let mongoServer: MongoMemoryServer;
-  let mongoClient: MongoClient;
+  let prismaService: PrismaService;
+  let app: TestingModule;
 
-  beforeEach(async () => {
-    // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    const mongoUri = mongoServer.getUri();
-
-    console.log("MongoMemoryServer running at: ", mongoUri);
-
-    // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-    /**
-     *
-     * This will be used to configure the testing module and will decouple
-     * the testing module from the actual module.
-     *
-     * Never hard-code the environment variables "KEY_NAME" in the testing module.
-     * All the keys used in 'appconfigs' are defined in
-     * `config/ConfigurationUtils` and it should be used for all the testing modules.
-     *
-     **/
+  beforeAll(async () => {
     const appConfigurations = {
-      [MONGO_CONFIG_KEY]: {
-        [MONGO_URI]: mongoUri,
-      },
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
-    // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [TokenMapper, DBProvider, MongoDBTokenRepo],
+      providers: [DBProvider, SQLTokenRepo, PrismaService],
     }).compile();
 
-    tokenRepo = app.get<MongoDBTokenRepo>(MongoDBTokenRepo);
-
-    // Setup a mongodb client for interacting with "admins" collection.
-    mongoClient = new MongoClient(mongoUri);
-    await mongoClient.connect();
+    tokenRepo = app.get<SQLTokenRepo>(SQLTokenRepo);
+    prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  afterEach(async () => {
-    await mongoClient.close();
-    await mongoose.disconnect();
-    await mongoServer.stop();
+  afterAll(async () => {
+    app.close();
+  });
+
+  beforeEach(async () => {
+    await prismaService.token.deleteMany();
   });
 
   describe("getToken", () => {
@@ -72,7 +53,7 @@ describe("MongoDBTokenRepoTests", () => {
       const token = "nobatoken";
       await tokenRepo.saveToken(createToken(token, userID));
       const savedToken = await tokenRepo.getToken(token, userID);
-      expect(savedToken.props._id).toBe(Token.saltifyToken(token, userID));
+      expect(savedToken.props.id).toBe(Token.saltifyToken(token, userID));
       expect(savedToken.props.userID).toBe(userID);
     });
   });
@@ -83,7 +64,7 @@ describe("MongoDBTokenRepoTests", () => {
       const token = "nobatoken";
       await tokenRepo.saveToken(createToken(token, userID));
       const savedToken = await tokenRepo.getToken(token, userID);
-      expect(savedToken.props._id).toBe(Token.saltifyToken(token, userID));
+      expect(savedToken.props.id).toBe(Token.saltifyToken(token, userID));
       expect(savedToken.props.userID).toBe(userID);
     });
   });
@@ -94,7 +75,7 @@ describe("MongoDBTokenRepoTests", () => {
       const token = "nobatoken";
       await tokenRepo.saveToken(createToken(token, userID));
       const savedToken = await tokenRepo.getToken(token, userID);
-      expect(savedToken.props._id).toBe(Token.saltifyToken(token, userID));
+      expect(savedToken.props.id).toBe(Token.saltifyToken(token, userID));
       expect(savedToken.props.userID).toBe(userID);
 
       await tokenRepo.deleteToken(token, userID);

@@ -185,10 +185,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
 
   async transferAssetToConsumerAccount(request: ConsumerAccountTransferRequest): Promise<string> {
     // Gets or creates participant code
-    const consumerParticipantCode: string = await this.zerohashService.getParticipantCode(
-      request.consumer,
-      request.transactionCreationTimestamp,
-    );
+    const consumerParticipantCode = "fake-code";
 
     // TODO(#310) Confirm that the traded values comes out correctly
     const tradeRequest: ZerohashTradeRequest = {
@@ -215,11 +212,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
 
   async transferAssetToNobaAccount(request: ConsumerAccountTransferRequest): Promise<string> {
     // Gets or creates participant code
-    const consumerParticipantCode: string = await this.zerohashService.getParticipantCode(
-      request.consumer,
-      request.transactionCreationTimestamp,
-    );
-
+    const consumerParticipantCode = "fake-code";
     // TODO(#310) Confirm that the traded values comes out correctly
     const tradeRequest: ZerohashTradeRequest = {
       buyerParticipantCode: this.zerohashService.getNobaPlatformCode(),
@@ -269,7 +262,7 @@ export class ZerohashAssetService extends DefaultAssetService implements WalletP
         request.walletAddress,
         request.amount,
         request.assetId,
-        request.consumer.zhParticipantCode,
+        "fake-code",
         this.zerohashService.getNobaPlatformCode(),
         request.smartContractData,
       );

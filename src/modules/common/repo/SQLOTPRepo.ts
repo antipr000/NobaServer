@@ -5,6 +5,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { IdentityType, Prisma } from "@prisma/client";
 import { addMinutes } from "date-fns";
+import { BadRequestError } from "../../../core/exception/CommonAppException";
 
 const EXPIRY_TIME_IN_MINUTES = 15;
 
@@ -17,32 +18,42 @@ export class SQLOTPRepo implements IOTPRepo {
   private readonly logger: Logger;
 
   async getOTP(otpIdentifier: string, identityType: IdentityType): Promise<OTP> {
-    const result = await this.prisma.otp.findUnique({
-      where: {
-        uniqueIdentifier: {
-          otpIdentifier: otpIdentifier,
-          identityType: identityType,
+    try {
+      const result = await this.prisma.otp.findUnique({
+        where: {
+          uniqueIdentifier: {
+            otpIdentifier: otpIdentifier,
+            identityType: identityType,
+          },
         },
-      },
-    });
-    if (result === undefined || result === null) {
+      });
+      if (result === undefined || result === null) {
+        return null;
+      }
+
+      return OTP.createOtp(result);
+    } catch (e) {
       return null;
     }
-
-    return OTP.createOtp(result);
   }
 
   async saveOTP(otpIdentifier: string, otp: number, identityType: IdentityType): Promise<void> {
-    const otpInputObject: Prisma.OtpCreateInput = {
-      otpIdentifier: otpIdentifier,
-      otp: otp,
-      identityType: identityType,
-      createdTimestamp: new Date(),
-      updatedTimestamp: new Date(),
-      otpExpirationTimestamp: addMinutes(new Date(), EXPIRY_TIME_IN_MINUTES),
-    };
+    try {
+      const otpInputObject: Prisma.OtpCreateInput = {
+        otpIdentifier: otpIdentifier,
+        otp: otp,
+        identityType: identityType,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        otpExpirationTimestamp: addMinutes(new Date(), EXPIRY_TIME_IN_MINUTES),
+      };
 
-    await this.prisma.otp.create({ data: otpInputObject });
+      await this.prisma.otp.create({ data: otpInputObject });
+    } catch (e) {
+      throw new BadRequestError({
+        message: `Failed to save otp. Reason: ${e.message}`,
+      });
+    }
   }
 
   async deleteOTP(id: string): Promise<void> {

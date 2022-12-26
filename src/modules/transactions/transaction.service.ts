@@ -14,15 +14,15 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
 import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
 import { CryptoWallet } from "../consumer/domain/CryptoWallet";
-import { PaymentMethod, PaymentMethodType } from "../consumer/domain/PaymentMethod";
+import { PaymentMethod } from "../consumer/domain/PaymentMethod";
 import { PendingTransactionValidationStatus } from "../consumer/domain/Types";
-import { KYCStatus, PaymentMethodStatus, WalletStatus } from "../consumer/domain/VerificationStatus";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
 import { CircleClient } from "../psp/circle.client";
 import { TransactionInformation } from "../verification/domain/TransactionInformation";
 import { VerificationService } from "../verification/verification.service";
 import { AssetService } from "./assets/asset.service";
+import { PaymentMethodType, KYCStatus, PaymentMethodStatus, WalletStatus, TransactionType } from "@prisma/client";
 import { AssetServiceFactory } from "./assets/asset.service.factory";
 import {
   ConsumerAccountBalance,
@@ -32,7 +32,7 @@ import {
 } from "./domain/AssetTypes";
 import { Transaction } from "./domain/Transaction";
 import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
-import { TransactionFilterOptions, TransactionStatus, TransactionType } from "./domain/Types";
+import { TransactionFilterOptions, TransactionStatus } from "./domain/Types";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
@@ -210,7 +210,7 @@ export class TransactionService {
     }
 
     const transactionType = transactionRequest.type;
-    if (transactionType == TransactionType.ONRAMP) {
+    /*if (transactionType == TransactionType.ONRAMP) {
       // Validate that destination wallet address is a valid address for given currency for an ONRAMP transaction
       if (!this.isValidDestinationAddress(transactionRequest.leg2, transactionRequest.destinationWalletAddress)) {
         throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.INVALID_WALLET);
@@ -222,16 +222,16 @@ export class TransactionService {
       );
       if (isSanctionedWallet) {
         const consumer = await this.consumerService.getConsumer(consumerID);
-        const cryptoWallet = this.consumerService.getCryptoWallet(
+        const cryptoWallet = await this.consumerService.getCryptoWallet(
           consumer,
           transactionRequest.destinationWalletAddress,
         );
-        cryptoWallet.status = WalletStatus.FLAGGED;
+        cryptoWallet.props.status = WalletStatus.FLAGGED;
         await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
         this.logger.error("Failed to transact to a sanctioned wallet");
         throw new TransactionSubmissionException(TransactionSubmissionFailureExceptionText.SANCTIONED_WALLET);
       }
-    }
+    }*/
 
     // Validate & round to proper precision
     const cryptoAmount = await this.roundToProperDecimalsForCryptocurrency(
@@ -245,12 +245,14 @@ export class TransactionService {
     );
 
     const consumer = await this.consumerService.getConsumer(consumerID);
-    const paymentMethod = consumer.getPaymentMethodByID(transactionRequest.paymentToken);
+    const paymentMethod = (await this.consumerService.getAllPaymentMethodsForConsumer(consumerID)).filter(
+      paymentMethod => paymentMethod.props.paymentToken === transactionRequest.paymentToken,
+    )[0];
     const transactionLimits = await this.limitService.canMakeTransaction(
       consumer,
       fiatAmount,
       transactionRequest.type,
-      paymentMethod.type,
+      paymentMethod.props.type,
     );
     if (transactionLimits.status !== TransactionAllowedStatus.ALLOWED) {
       this.logger.info(`Transaction limit error: ${JSON.stringify(transactionLimits)}`);
@@ -269,7 +271,7 @@ export class TransactionService {
         isFailed: false,
         details: [],
         paymentID: undefined,
-        paymentProvider: paymentMethod.paymentProviderID,
+        paymentProvider: paymentMethod.props.paymentProvider,
       },
       // We must round the fiat amount to 2 decimals, as that is all Checkout supports
       leg1Amount: fiatAmount,
@@ -371,17 +373,14 @@ export class TransactionService {
     consumer: Consumer,
     transaction: Transaction,
   ): Promise<PendingTransactionValidationStatus> {
-    if (transaction.props.type === TransactionType.ONRAMP) {
-      const paymentMethod = await this.validatePaymentMethod(consumer, transaction);
-      const cryptoWallet = await this.validateCryptoWallet(consumer, transaction);
-      await this.validateForSanctions(consumer, transaction, paymentMethod, cryptoWallet);
-      await this.sendPendingOnrampTransactionNotification(consumer, transaction, paymentMethod);
-    } else if (transaction.props.type === TransactionType.NOBA_WALLET) {
+    if (transaction.props.type === TransactionType.NOBA_WALLET) {
       const paymentMethod = await this.validatePaymentMethod(consumer, transaction);
       await this.sendPendingNobaWalletTransactionNotification(consumer, transaction, paymentMethod);
-    } else if (transaction.props.type === TransactionType.INTERNAL_WITHDRAWAL) {
-      await this.sendPendingInternalTransferNotification(consumer, transaction);
-    } else {
+    }
+    // else if (transaction.props.type === TransactionType.INTERNAL_WITHDRAWAL) {
+    //   await this.sendPendingInternalTransferNotification(consumer, transaction);
+    // }
+    else {
       throw new Error(`validatePendingTransaction() does not handle transaction type ${transaction.props.type}`);
     }
 
@@ -390,11 +389,9 @@ export class TransactionService {
 
   // Returns valid PaymentMethod or throws exception if invalid
   private async validatePaymentMethod(consumer: Consumer, transaction: Transaction): Promise<PaymentMethod> {
-    const paymentMethod: PaymentMethod = consumer.getPaymentMethodByID(
-      transaction.props.fiatPaymentInfo.paymentMethodID,
-    );
+    const paymentMethod: PaymentMethod = undefined;
 
-    if (!paymentMethod || paymentMethod.status != PaymentMethodStatus.APPROVED) {
+    if (!paymentMethod || paymentMethod.props.status != PaymentMethodStatus.APPROVED) {
       this.logger.error(
         `Unknown payment method "${paymentMethod}" for consumer ${consumer.props.id}, Transaction ID: ${transaction.props._id}`,
       );
@@ -410,8 +407,11 @@ export class TransactionService {
 
   // Returns valid CryptoWallet or throws exception if invalid
   private async validateCryptoWallet(consumer: Consumer, transaction: Transaction): Promise<CryptoWallet> {
-    const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
-    if (cryptoWallet == null || cryptoWallet.status != WalletStatus.APPROVED) {
+    const cryptoWallet = await this.consumerService.getCryptoWallet(
+      consumer,
+      transaction.props.destinationWalletAddress,
+    );
+    if (cryptoWallet == null || cryptoWallet.props.status != WalletStatus.APPROVED) {
       this.logger.error(
         `Attempt to initiate transaction with unknown wallet. Transaction ID: ${transaction.props._id}`,
       );
@@ -437,10 +437,10 @@ export class TransactionService {
       transactionID: transaction.props._id,
       amount: transaction.props.leg1Amount,
       currencyCode: transaction.props.leg1,
-      paymentMethodID: paymentMethod.paymentToken,
+      paymentMethodID: paymentMethod.props.paymentToken,
       cryptoCurrencyCode: transaction.props.leg2,
       walletAddress: transaction.props.destinationWalletAddress,
-      walletStatus: cryptoWallet.status,
+      walletStatus: cryptoWallet.props.status,
     };
 
     const result = await this.verificationService.transactionVerification(
@@ -450,12 +450,12 @@ export class TransactionService {
     );
 
     if (result.walletStatus) {
-      cryptoWallet.status = result.walletStatus;
+      cryptoWallet.props.status = result.walletStatus;
       await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
     }
 
     if (result.paymentMethodStatus) {
-      consumer = await this.consumerService.updatePaymentMethod(consumer.props.id, {
+      await this.consumerService.updatePaymentMethod(consumer.props.id, {
         ...paymentMethod,
         status: result.paymentMethodStatus,
       });
@@ -501,13 +501,13 @@ export class TransactionService {
           transactionID: transaction.props.transactionID,
           transactionTimestamp: transaction.props.transactionTimestamp,
           paymentMethod:
-            paymentMethod.type === PaymentMethodType.CARD
-              ? paymentMethod.cardData.cardType
-              : paymentMethod.achData.accountType,
+            paymentMethod.props.type === PaymentMethodType.CARD
+              ? paymentMethod.props.cardData.cardType
+              : paymentMethod.props.achData.accountType,
           last4Digits:
-            paymentMethod.type === PaymentMethodType.CARD
-              ? paymentMethod.cardData.last4Digits
-              : paymentMethod.achData.mask,
+            paymentMethod.props.type === PaymentMethodType.CARD
+              ? paymentMethod.props.cardData.last4Digits
+              : paymentMethod.props.achData.mask,
           fiatCurrency: transaction.props.leg1,
           conversionRate: transaction.props.exchangeRate,
           processingFee: transaction.props.processingFee,
@@ -541,13 +541,13 @@ export class TransactionService {
           transactionID: transaction.props.transactionID,
           transactionTimestamp: transaction.props.transactionTimestamp,
           paymentMethod:
-            paymentMethod.type === PaymentMethodType.CARD
-              ? paymentMethod.cardData.cardType
-              : paymentMethod.achData.accountType,
+            paymentMethod.props.type === PaymentMethodType.CARD
+              ? paymentMethod.props.cardData.cardType
+              : paymentMethod.props.achData.accountType,
           last4Digits:
-            paymentMethod.type === PaymentMethodType.CARD
-              ? paymentMethod.cardData.last4Digits
-              : paymentMethod.achData.mask,
+            paymentMethod.props.type === PaymentMethodType.CARD
+              ? paymentMethod.props.cardData.last4Digits
+              : paymentMethod.props.achData.mask,
           fiatCurrency: transaction.props.leg1,
           conversionRate: transaction.props.exchangeRate,
           processingFee: transaction.props.processingFee,
@@ -628,16 +628,16 @@ export class TransactionService {
     const consumer = await this.consumerService.getConsumer(transaction.props.userId);
     const cryptoWallet = this.consumerService.getCryptoWallet(consumer, transaction.props.destinationWalletAddress);
 
-    cryptoWallet.riskScore = walletExposureResponse.riskScore;
+    (await cryptoWallet).props.riskScore = walletExposureResponse.riskScore;
 
     if (walletExposureResponse.riskScore !== null && walletExposureResponse.riskScore > 0) {
       this.logger.debug(
         `Wallet ${transaction.props.destinationWalletAddress} for consumer ${consumer.props.id} has been flagged with risk score: ${walletExposureResponse.riskScore}`,
       );
-      cryptoWallet.status = WalletStatus.FLAGGED;
+      (await cryptoWallet).props.status = WalletStatus.FLAGGED;
     }
 
-    await this.consumerService.addOrUpdateCryptoWallet(consumer, cryptoWallet);
+    await this.consumerService.addOrUpdateCryptoWallet(consumer, await cryptoWallet);
   }
 
   private isValidDestinationAddress(curr: string, destinationWalletAddress: string): boolean {

@@ -1,115 +1,92 @@
 import { TransactionStatsDTO } from "../../dto/TransactionStats";
-import { TransactionModel } from "../../../../infra/mongodb/models/TransactionModel";
-import { Transaction, TransactionProps } from "../../../../modules/transactions/domain/Transaction";
-import { convertDBResponseToJsObject } from "../../../../../src/infra/mongodb/MongoDBUtils";
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Transaction } from "../../../../modules/transactions/domain/Transaction";
+import { Inject, Injectable } from "@nestjs/common";
 import { Admin, AdminProps } from "../../domain/Admin";
 import { AdminMapper } from "../../mappers/AdminMapper";
-import { DBProvider } from "../../../../infraproviders/DBProvider";
+import { PrismaService } from "../../../../infraproviders/PrismaService";
+import { AdminRepoMapper } from "../../mappers/AdminRepoMapper";
+import { BadRequestError } from "../../../../core/exception/CommonAppException";
 
-export interface IAdminTransactionRepo {
+export interface IAdminRepo {
   getTransactionStats(): Promise<TransactionStatsDTO>;
   getAllTransactions(startDate: string, endDate: string): Promise<Transaction[]>;
   addNobaAdmin(nobaAdmin: Admin): Promise<Admin>;
   getNobaAdminByEmail(email: string): Promise<Admin>;
-  updateNobaAdmin(updatedNobaAdmin: Admin): Promise<Admin>;
-  deleteNobaAdmin(id: string): Promise<number>;
+  updateNobaAdmin(id: string, adminProps: Partial<AdminProps>): Promise<Admin>;
+  deleteNobaAdmin(id: string): Promise<void>;
   getNobaAdminById(id: string): Promise<Admin>;
 }
 
-type AggregateTransactionType = {
-  _id: number;
-  totalSum: number;
-  count: number;
-};
-
 @Injectable()
-export class MongoDBAdminTransactionRepo implements IAdminTransactionRepo {
+export class SQLAdminRepo implements IAdminRepo {
   @Inject()
   private readonly adminMapper: AdminMapper;
 
   @Inject()
-  private readonly dbProvider: DBProvider;
+  private readonly prismaService: PrismaService;
+
+  private readonly adminRepoMapper: AdminRepoMapper;
+
+  constructor() {
+    this.adminRepoMapper = new AdminRepoMapper();
+  }
 
   // TODO: Add unit tests
   async getAllTransactions(startDate: string, endDate: string): Promise<Transaction[]> {
-    const result: any = await TransactionModel.find({
-      transactionTimestamp: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate),
-      },
-    });
-    const transactions: TransactionProps[] = convertDBResponseToJsObject(result);
-    return transactions.map(transaction => Transaction.createTransaction(transaction));
+    throw new Error("Not implemented!");
   }
 
   // TODO: Add unit tests
   async getTransactionStats(): Promise<TransactionStatsDTO> {
-    const result: AggregateTransactionType[] = await TransactionModel.aggregate([
-      {
-        $group: {
-          _id: 1,
-          totalSum: {
-            $sum: "$leg1Amount",
-          },
-          count: {
-            $sum: 1,
-          },
-        },
-      },
-    ]);
-
-    return {
-      numTransactions: result[0].totalSum,
-      totalAmount: result[0].count,
-    };
+    throw new Error("Not implemented!");
   }
 
   async addNobaAdmin(nobaAdmin: Admin): Promise<Admin> {
-    const adminModel = await this.dbProvider.getAdminModel();
-    const result = await adminModel.create(nobaAdmin.props);
-    const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
-    return this.adminMapper.toDomain(nobaAdminProps);
+    try {
+      const adminCreateInput = this.adminRepoMapper.toAdminCreateInput(nobaAdmin);
+      const adminProps = await this.prismaService.admin.create({ data: adminCreateInput });
+      return Admin.createAdmin(adminProps);
+    } catch (e) {
+      throw new BadRequestError({ message: `Failed to create NobaAdmin. Reason: ${e.message}` });
+    }
   }
 
   async getNobaAdminByEmail(email: string): Promise<Admin> {
-    const adminModel = await this.dbProvider.getAdminModel();
-    const result: any = await adminModel.find({
-      email: email,
-    });
-    const nobaAdminProps: AdminProps[] = convertDBResponseToJsObject(result);
-
-    if (nobaAdminProps.length === 0) return undefined;
-    return this.adminMapper.toDomain(nobaAdminProps[0]);
-  }
-
-  async updateNobaAdmin(updatedNobaAdmin: Admin): Promise<Admin> {
-    const adminModel = await this.dbProvider.getAdminModel();
-    const result = await adminModel.findByIdAndUpdate(
-      updatedNobaAdmin.props._id,
-      { $set: updatedNobaAdmin.props },
-      { new: true },
-    );
-    if (result === null) {
-      throw new NotFoundException(`Admin with '${updatedNobaAdmin.props._id}' was not found.`);
+    try {
+      const adminProps = await this.prismaService.admin.findUnique({ where: { email: email } });
+      if (!adminProps) return undefined;
+      return this.adminMapper.toDomain(adminProps);
+    } catch (e) {
+      return undefined;
     }
-
-    const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
-    return this.adminMapper.toDomain(nobaAdminProps);
   }
 
-  async deleteNobaAdmin(id: string): Promise<number> {
-    const adminModel = await this.dbProvider.getAdminModel();
-    const result = await adminModel.deleteOne({ _id: id });
-    if (result.acknowledged === false) throw Error("Internal error!");
+  async updateNobaAdmin(id: string, adminProps: Partial<AdminProps>): Promise<Admin> {
+    try {
+      const updateInput = this.adminRepoMapper.toAdminUpdateInput(adminProps);
+      const updatedAdminProps = await this.prismaService.admin.update({ where: { id: id }, data: updateInput });
+      return this.adminMapper.toDomain(updatedAdminProps);
+    } catch (e) {
+      throw new BadRequestError({ message: `Failed to update noba admin. Reason: ${e.message}` });
+    }
+  }
 
-    return result.deletedCount;
+  async deleteNobaAdmin(id: string): Promise<void> {
+    try {
+      await this.prismaService.admin.delete({ where: { id: id } });
+    } catch (e) {
+      throw new BadRequestError({ message: `Noba admin with id ${id} not found!` });
+    }
   }
 
   async getNobaAdminById(id: string): Promise<Admin> {
-    const adminModel = await this.dbProvider.getAdminModel();
-    const result = await adminModel.findById(id);
-    const nobaAdminProps: AdminProps = convertDBResponseToJsObject(result);
-    return this.adminMapper.toDomain(nobaAdminProps);
+    try {
+      const adminProps = await this.prismaService.admin.findUnique({ where: { id: id } });
+      if (!adminProps) return undefined;
+
+      return Admin.createAdmin(adminProps);
+    } catch (e) {
+      return undefined;
+    }
   }
 }

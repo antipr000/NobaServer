@@ -8,22 +8,21 @@ import { getMockSmsServiceWithDefaults } from "../../../../src/modules/common/mo
 import { SMSService } from "../../../../src/modules/common/sms.service";
 import { instance, when } from "ts-mockito";
 import { AdminAuthService } from "../admin.auth.service";
-import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
-import { IOTPRepo } from "../../../modules/common/repo/OTPRepo";
 import { InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
-import { OTP } from "../../../modules/common/domain/OTP";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { ITokenRepo } from "../repo/TokenRepo";
 import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
+import { OTPService } from "../../../modules/common/otp.service";
+import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";
 
 describe("AdminAuthService", () => {
   jest.setTimeout(5000);
 
   let mockAdminService: AdminService;
-  let mockOtpRepo: IOTPRepo;
+  let mockOTPService: OTPService;
   let mockSmsService: SMSService;
   let mockNotificationService: NotificationService;
   let mockTokenRepo: ITokenRepo;
@@ -37,7 +36,7 @@ describe("AdminAuthService", () => {
 
   beforeEach(async () => {
     mockAdminService = getMockAdminServiceWithDefaults();
-    mockOtpRepo = getMockOtpRepoWithDefaults();
+    mockOTPService = getMockOTPServiceWithDefaults();
     mockNotificationService = getMockNotificationServiceWithDefaults();
     mockSmsService = getMockSmsServiceWithDefaults();
     mockTokenRepo = getMockTokenRepoWithDefaults();
@@ -62,8 +61,8 @@ describe("AdminAuthService", () => {
           useFactory: () => instance(mockTokenRepo),
         },
         {
-          provide: "OTPRepo",
-          useFactory: () => instance(mockOtpRepo),
+          provide: OTPService,
+          useFactory: () => instance(mockOTPService),
         },
         {
           provide: NotificationService,
@@ -81,81 +80,26 @@ describe("AdminAuthService", () => {
   });
 
   describe("validateAndGetUserId", () => {
-    it("should throw 'NotFoundException' if user with given email doesn't exist", async () => {
+    it("should throw 'UnauthorizedException' if user with given email doesn't exist or otp is incorrect or expired", async () => {
       const NON_EXISTING_ADMIN_EMAIL = "abcd@noba.com";
 
-      when(mockOtpRepo.getOTP(NON_EXISTING_ADMIN_EMAIL, identityType)).thenReject(new NotFoundException());
+      when(mockOTPService.checkIfOTPIsValidAndCleanup(NON_EXISTING_ADMIN_EMAIL, identityType, 123456)).thenResolve(
+        false,
+      );
 
-      try {
-        await adminAuthService.validateAndGetUserId(NON_EXISTING_ADMIN_EMAIL, 123456);
-        expect(true).toBe(false);
-      } catch (err) {
-        console.log(err);
-        expect(err).toBeInstanceOf(NotFoundException);
-      }
-    });
-
-    it("should throw 'UnauthorizedException' if otp is incorrect", async () => {
-      const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
-      const CORRECT_OTP = 123456;
-      const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
-
-      const otpDomain: OTP = OTP.createOtp({
-        id: "1",
-        otpIdentifier: EXISTING_ADMIN_EMAIL,
-        otp: CORRECT_OTP,
-        otpExpirationTimestamp: TOMORROW_EXPIRY,
-        identityType: nobaAdminIdentityIdentifier,
-      });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
-
-      try {
-        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, 999999);
-        expect(true).toBe(false);
-      } catch (err) {
-        console.log(err);
-        expect(err).toBeInstanceOf(UnauthorizedException);
-      }
-    });
-
-    it("should throw 'UnauthorizedException' if otp is expired", async () => {
-      const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
-      const CORRECT_OTP = 123456;
-      const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
-
-      const otpDomain: OTP = OTP.createOtp({
-        id: "1",
-        otpIdentifier: EXISTING_ADMIN_EMAIL,
-        otp: CORRECT_OTP,
-        otpExpirationTimestamp: YESTERDAY_EXPIRY,
-        identityType: nobaAdminIdentityIdentifier,
-      });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
-
-      try {
-        await adminAuthService.validateAndGetUserId(EXISTING_ADMIN_EMAIL, CORRECT_OTP);
-        expect(true).toBe(false);
-      } catch (err) {
-        console.log(err);
-        expect(err).toBeInstanceOf(UnauthorizedException);
-      }
+      expect(async () => await adminAuthService.validateAndGetUserId(NON_EXISTING_ADMIN_EMAIL, 123456)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it("Should return Admin email address if OTP is correct and not expired", async () => {
       const EXISTING_ADMIN_EMAIL = "abcd@noba.com";
       const ADMIN_ID = "1111111111";
       const CORRECT_OTP = 123456;
-      const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
-      const otpDomain: OTP = OTP.createOtp({
-        id: "1",
-        otpIdentifier: EXISTING_ADMIN_EMAIL,
-        otp: CORRECT_OTP,
-        otpExpirationTimestamp: TOMORROW_EXPIRY,
-        identityType: nobaAdminIdentityIdentifier,
-      });
-      when(mockOtpRepo.getOTP(EXISTING_ADMIN_EMAIL, identityType)).thenResolve(otpDomain);
-      when(mockOtpRepo.deleteOTP("1")).thenResolve();
+      when(mockOTPService.checkIfOTPIsValidAndCleanup(EXISTING_ADMIN_EMAIL, identityType, CORRECT_OTP)).thenResolve(
+        true,
+      );
 
       when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL)).thenResolve(
         Admin.createAdmin({

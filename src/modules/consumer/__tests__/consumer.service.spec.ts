@@ -12,7 +12,7 @@ import { Result } from "../../../core/logic/Result";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { Utils } from "../../../core/utils/Utils";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { getMockOTPServiceWithDefaults } from "../../../modules/common/mocks/mock.otp.service.spec";
+import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { SanctionedCryptoWalletService } from "../../../modules/common/sanctionedcryptowallet.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
@@ -995,10 +995,10 @@ describe("ConsumerService", () => {
     });
 
     it("should throw BadRequestException if 'handle' is greater than 22 characters", async () => {
-      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuv")).rejects.toThrow(
+      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuva")).rejects.toThrow(
         BadRequestException,
       );
-      expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
+      expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuva")).rejects.toThrow(
         "'handle' should be between 3 and 22 charcters long.",
       );
     });

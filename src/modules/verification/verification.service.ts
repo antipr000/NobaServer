@@ -338,7 +338,7 @@ export class VerificationService {
     await this.consumerService.updateConsumer(newConsumerData);
     await this.verificationDataRepo.updateVerificationData(
       VerificationData.createVerificationData({
-        _id: sessionKey,
+        id: sessionKey,
         transactionID: transactionInformation.transactionID,
       }),
     );
@@ -362,7 +362,7 @@ export class VerificationService {
 
   async createSession(): Promise<VerificationData> {
     const sessionKey = Entity.getNewID();
-    const verificationData = VerificationData.createVerificationData({ _id: sessionKey });
+    const verificationData = VerificationData.createVerificationData({ id: sessionKey });
     return await this.verificationDataRepo.saveVerificationData(verificationData);
   }
 

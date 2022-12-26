@@ -3,8 +3,8 @@ import { Utils } from "../../../core/utils/Utils";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, BaseProps, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { CurrencyType, KeysRequired } from "../../common/domain/Types";
-import { TransactionStatus, TransactionType } from "./Types";
-import { PaymentProvider } from "src/modules/consumer/domain/PaymentProvider";
+import { TransactionStatus } from "./Types";
+import { TransactionType, PaymentProvider } from "@prisma/client";
 
 export class TransactionEvent {
   timestamp: Date;
@@ -112,7 +112,7 @@ export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   fixedSide: Joi.string().valid(...Object.values(CurrencyType)),
   type: Joi.string()
     .valid(...Object.values(TransactionType))
-    .default(TransactionType.ONRAMP),
+    .default(TransactionType.NOBA_WALLET),
   tradeQuoteID: Joi.string().optional(), // Optional as it may get set after initial transaction record is created
   nobaTransferTradeID: Joi.string().optional(),
   nobaTransferSettlementID: Joi.string().optional(),

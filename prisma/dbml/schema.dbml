@@ -158,6 +158,47 @@ Table LimitConfiguration {
   updatedTimestamp DateTime
 }
 
+Table Token {
+  id String [pk]
+  tokenType TokenType [not null]
+  expiryTime DateTime
+  userID String [not null]
+  isUsed Boolean [not null, default: false]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
+Table Admin {
+  id String [pk]
+  name String
+  email String [unique, not null]
+  role String [not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
+Table Verification {
+  id String [pk]
+  userID String
+  transactionID String [unique]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
+Table CreditCardBIN {
+  id String [pk]
+  issuer String
+  bin String [unique, not null]
+  type String [not null]
+  network String [not null]
+  mask String
+  supported String [not null]
+  digits Int [not null]
+  cvvDigits Int [not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+}
+
 Enum IdentityType {
   CONSUMER
   NOBA_ADMIN
@@ -214,6 +255,10 @@ Enum KYCProvider {
 
 Enum TransactionType {
   NOBA_WALLET
+}
+
+Enum TokenType {
+  REFRESH_TOKEN
 }
 
 Ref: Address.consumerID - Consumer.id [delete: Cascade]

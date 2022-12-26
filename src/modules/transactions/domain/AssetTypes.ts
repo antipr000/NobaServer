@@ -1,6 +1,6 @@
 import { CurrencyType } from "../../../modules/common/domain/Types";
 import { ConsumerProps } from "../../../modules/consumer/domain/Consumer";
-import { TransactionType } from "./Types";
+import { TransactionType } from "@prisma/client";
 
 export enum PollStatus {
   SUCCESS = "success",

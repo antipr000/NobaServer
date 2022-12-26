@@ -1,0 +1,23 @@
+version: "3.8"
+services:
+  db:
+    container_name: db
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=prisma
+      - POSTGRES_PASSWORD=prisma
+      - POSTGRES_DB=test
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    command: postgres -c shared_buffers=500MB -c fsync=off
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U prisma -d test'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+volumes:
+  db:
+    driver: local

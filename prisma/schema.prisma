@@ -188,6 +188,55 @@ model LimitConfiguration {
   updatedTimestamp          DateTime?          @updatedAt // Marking optional so we don't need to set in tests
 }
 
+model Token {
+  id               String    @id
+  tokenType        TokenType
+  expiryTime       DateTime?
+  userID           String
+  isUsed           Boolean   @default(false)
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+}
+
+model Admin {
+  id               String    @id @default(uuid())
+  name             String?
+  email            String    @unique()
+  role             String
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+
+  @@index([email])
+}
+
+model Verification {
+  id               String    @id @default(uuid())
+  userID           String?
+  transactionID    String?   @unique()
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+
+  @@index([userID])
+}
+
+model CreditCardBIN {
+  id        String  @id @default(uuid())
+  issuer    String?
+  bin       String  @unique()
+  type      String
+  network   String
+  mask      String?
+  supported String
+  digits    Int
+  cvvDigits Int
+
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+
+  @@index([bin])
+  @@index([supported])
+}
+
 enum IdentityType {
   CONSUMER
   NOBA_ADMIN
@@ -244,4 +293,8 @@ enum KYCProvider {
 
 enum TransactionType {
   NOBA_WALLET
+}
+
+enum TokenType {
+  REFRESH_TOKEN
 }

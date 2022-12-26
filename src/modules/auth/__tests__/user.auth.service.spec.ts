@@ -5,11 +5,8 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
 import { SMSService } from "../../common/sms.service";
 import { anything, instance, when } from "ts-mockito";
-import { getMockOtpRepoWithDefaults } from "../mocks/MockOtpRepo";
-import { IOTPRepo } from "../../../modules/common/repo/OTPRepo";
-import { NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
-import { OTP } from "../../../modules/common/domain/OTP";
 import { STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
 import { NotificationService } from "../../notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../notifications/mocks/mock.notification.service";
@@ -22,13 +19,15 @@ import { Utils } from "../../../core/utils/Utils";
 import { ITokenRepo } from "../repo/TokenRepo";
 import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
 import { Token } from "../domain/Token";
+import { OTPService } from "../../../modules/common/otp.service";
+import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";
 
 describe("UserAuthService", () => {
   jest.setTimeout(5000);
   describe("Test without otp override", () => {
     let mockConsumerService: ConsumerService;
     let userAuthService: UserAuthService;
-    let mockOtpRepo: IOTPRepo;
+    let mockOTPService: OTPService;
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
@@ -39,7 +38,7 @@ describe("UserAuthService", () => {
 
     beforeEach(async () => {
       mockConsumerService = getMockConsumerServiceWithDefaults();
-      mockOtpRepo = getMockOtpRepoWithDefaults();
+      mockOTPService = getMockOTPServiceWithDefaults();
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
@@ -64,8 +63,8 @@ describe("UserAuthService", () => {
             useFactory: () => instance(mockConsumerService),
           },
           {
-            provide: "OTPRepo",
-            useFactory: () => instance(mockOtpRepo),
+            provide: OTPService,
+            useFactory: () => instance(mockOTPService),
           },
           {
             provide: NotificationService,
@@ -86,7 +85,7 @@ describe("UserAuthService", () => {
       it("should validate the token correctly", async () => {
         const rawToken = "nobatoken";
         const userID = "nobauser";
-        const token = Token.createTokenObject({ _id: Token.saltifyToken(rawToken, userID), userID: userID });
+        const token = Token.createTokenObject({ id: Token.saltifyToken(rawToken, userID), userID: userID });
 
         when(mockTokenRepo.getToken(rawToken, userID)).thenResolve(token);
 
@@ -96,7 +95,7 @@ describe("UserAuthService", () => {
       it("token shouldn't be valid", async () => {
         const rawToken = "nobatoken";
         const userID = "nobauser";
-        const token = Token.createTokenObject({ _id: Token.saltifyToken(rawToken, userID), userID: userID });
+        const token = Token.createTokenObject({ id: Token.saltifyToken(rawToken, userID), userID: userID });
 
         when(mockTokenRepo.getToken(rawToken, userID)).thenResolve(token);
 
@@ -135,37 +134,30 @@ describe("UserAuthService", () => {
     });
 
     describe("validateAndGetUserId", () => {
-      it("should throw NotFoundException if no OTP exists for the user", async () => {
+      it("should throw UnauthorizedException if no OTP exists for the user", async () => {
         const NO_OTP_USER = "abcd@noba.com";
 
-        when(mockOtpRepo.getOTP(NO_OTP_USER, identityType)).thenReject(new NotFoundException());
+        when(mockOTPService.checkIfOTPIsValidAndCleanup(NO_OTP_USER, identityType, 123456)).thenResolve(false);
 
         try {
           await userAuthService.validateAndGetUserId(NO_OTP_USER, 123456);
         } catch (err) {
-          expect(err).toBeInstanceOf(NotFoundException);
+          expect(err).toBeInstanceOf(UnauthorizedException);
         }
       });
 
       it("should create user if user with given email doesn't exist", async () => {
         const NON_EXISTING_USER_EMAIL = "abcd@noba.com";
         const CORRECT_OTP = 123456;
-        const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
         const consumerID = "1234567890";
 
-        const otpDomain: OTP = OTP.createOtp({
-          id: "1",
-          otpIdentifier: NON_EXISTING_USER_EMAIL,
-          otp: CORRECT_OTP,
-          otpExpirationTimestamp: TOMORROW_EXPIRY,
-          identityType: consumerIdentityIdentifier,
-        });
-
-        when(mockOtpRepo.getOTP(NON_EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
-        when(mockOtpRepo.deleteOTP("1")).thenResolve();
+        when(
+          mockOTPService.checkIfOTPIsValidAndCleanup(NON_EXISTING_USER_EMAIL, identityType, CORRECT_OTP),
+        ).thenResolve(true);
 
         when(mockConsumerService.getOrCreateConsumerConditionally(NON_EXISTING_USER_EMAIL)).thenResolve(
           Consumer.createConsumer({
+            id: consumerID,
             email: NON_EXISTING_USER_EMAIL,
           }),
         );
@@ -174,19 +166,10 @@ describe("UserAuthService", () => {
         expect(id).toEqual(consumerID);
       });
 
-      it("should throw UnauthorizedException if otp is incorrect", async () => {
+      it("should throw UnauthorizedException if otp is incorrect or expired", async () => {
         const EXISTING_USER_EMAIL = "abcd@noba.com";
-        const CORRECT_OTP = 123456;
-        const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
-        const otpDomain: OTP = OTP.createOtp({
-          id: "1",
-          otpIdentifier: EXISTING_USER_EMAIL,
-          otp: CORRECT_OTP,
-          otpExpirationTimestamp: TOMORROW_EXPIRY,
-          identityType: consumerIdentityIdentifier,
-        });
-        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
+        when(mockOTPService.checkIfOTPIsValidAndCleanup(EXISTING_USER_EMAIL, identityType, 1234567)).thenResolve(false);
 
         try {
           await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, 1234567);
@@ -195,32 +178,9 @@ describe("UserAuthService", () => {
         }
       });
 
-      it("should throw UnauthorizedException if otp is expired", async () => {
-        const EXISTING_USER_EMAIL = "abcd@noba.com";
-        const CORRECT_OTP = 123456;
-        const YESTERDAY_EXPIRY = new Date(new Date().getTime() - 3600 * 24 * 1000);
-
-        const otpDomain: OTP = OTP.createOtp({
-          id: "1",
-          otpIdentifier: EXISTING_USER_EMAIL,
-          otp: CORRECT_OTP,
-          otpExpirationTimestamp: YESTERDAY_EXPIRY,
-          identityType: consumerIdentityIdentifier,
-        });
-        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
-
-        try {
-          await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP);
-          expect(true).toBe(false);
-        } catch (err) {
-          expect(err).toBeInstanceOf(UnauthorizedException);
-        }
-      });
-
-      it("should return Consumer._id for correct Consumer", async () => {
+      it("should return Consumer.id for correct Consumer", async () => {
         const EXISTING_USER_EMAIL = "rosie@noba.com";
         const CORRECT_OTP = 123456;
-        const TOMORROW_EXPIRY = new Date(new Date().getTime() + 3600 * 24 * 1000);
 
         const consumer = Consumer.createConsumer({
           id: "mock-consumer-1",
@@ -229,16 +189,9 @@ describe("UserAuthService", () => {
 
         when(mockConsumerService.getOrCreateConsumerConditionally(EXISTING_USER_EMAIL)).thenResolve(consumer);
 
-        const otpDomain: OTP = OTP.createOtp({
-          id: "1",
-          otpIdentifier: EXISTING_USER_EMAIL,
-          otp: CORRECT_OTP,
-          otpExpirationTimestamp: TOMORROW_EXPIRY,
-          identityType: consumerIdentityIdentifier,
-        });
-        when(mockOtpRepo.getOTP(EXISTING_USER_EMAIL, identityType)).thenResolve(otpDomain);
-
-        when(mockOtpRepo.deleteOTP("1")).thenResolve();
+        when(mockOTPService.checkIfOTPIsValidAndCleanup(EXISTING_USER_EMAIL, identityType, CORRECT_OTP)).thenResolve(
+          true,
+        );
 
         const receivedConsumerID = await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP);
         expect(receivedConsumerID).toEqual(consumer.props.id);
@@ -283,7 +236,7 @@ describe("UserAuthService", () => {
   describe("Test with otp override for lower environments", () => {
     let mockConsumerService: ConsumerService;
     let userAuthService: UserAuthService;
-    let mockOtpRepo: IOTPRepo;
+    let mockOTPService: OTPService;
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockSmsService: SMSService;
@@ -308,7 +261,7 @@ describe("UserAuthService", () => {
 
     beforeEach(async () => {
       mockConsumerService = getMockConsumerServiceWithDefaults();
-      mockOtpRepo = getMockOtpRepoWithDefaults();
+      mockOTPService = getMockOTPServiceWithDefaults();
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockSmsService = getMockSmsServiceWithDefaults();
@@ -333,8 +286,8 @@ describe("UserAuthService", () => {
             useFactory: () => instance(mockTokenRepo),
           },
           {
-            provide: "OTPRepo",
-            useFactory: () => instance(mockOtpRepo),
+            provide: OTPService,
+            useFactory: () => instance(mockOTPService),
           },
           {
             provide: NotificationService,

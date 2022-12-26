@@ -1,7 +1,8 @@
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
-import { BaseProps, basePropsJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
+import { basePropsJoiSchemaKeys, Entity } from "../../../core/domain/Entity";
 import { KeysRequired } from "../../common/domain/Types";
 import Joi from "joi";
+import { Admin as AdminModel } from "@prisma/client";
 
 const Permissions = {
   viewNobaDashboard: "VIEW_NOBA_DASHBOARD",
@@ -43,28 +44,26 @@ export const isValidRole = role => {
   return AllRoles.find(validRole => (role === validRole ? role : undefined)) !== undefined;
 };
 
-export interface AdminProps extends BaseProps {
-  _id: string;
-  name: string;
+export class AdminProps implements Partial<AdminModel> {
+  id: string;
+  name?: string | null;
   email: string;
-  role: string;
+  role?: string | null;
+  createdTimestamp?: Date;
+  updatedTimestamp?: Date;
 }
 
 export const AdminKeys: KeysRequired<AdminProps> = {
   ...basePropsJoiSchemaKeys,
-  _id: Joi.string().min(10).required(),
-  name: Joi.string().min(2).max(100).optional(),
-  email: Joi.string()
-    .email()
-    .allow(null)
-    .optional()
-    .meta({ _mongoose: { index: true } }),
+  id: Joi.string().min(10).required(),
+  name: Joi.string().min(2).max(100).optional().allow(null),
+  email: Joi.string().email().required(),
   role: Joi.string()
     .valid(...Object.keys(AdminRolesWithTheirPrivileges))
     .required(),
 };
 
-export const adminJoiSchema = Joi.object(AdminKeys).options({ allowUnknown: true, stripUnknown: false });
+export const adminJoiSchema = Joi.object(AdminKeys).options({ allowUnknown: false, stripUnknown: true });
 
 export class Admin extends AggregateRoot<AdminProps> {
   private constructor(adminProps: AdminProps) {
@@ -72,7 +71,8 @@ export class Admin extends AggregateRoot<AdminProps> {
   }
 
   public static createAdmin(adminProps: Partial<AdminProps>): Admin {
-    if (!adminProps._id) adminProps._id = Entity.getNewID();
+    if (!adminProps.id) adminProps.id = Entity.getNewID();
+    if (!adminProps.role) adminProps.role = NOBA_ADMIN_ROLE_TYPES.BASIC;
     return new Admin(Joi.attempt(adminProps, adminJoiSchema));
   }
 
