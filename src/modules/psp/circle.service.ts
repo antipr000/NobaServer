@@ -34,17 +34,17 @@ export class CircleService {
     try {
       const masterWalletID = await this.circleClient.getMasterWalletID();
       if (!masterWalletID) {
-        throw new ServiceException("Master Wallet not found", ServiceErrorCode.DOES_NOT_EXIST);
+        throw new ServiceException(ServiceErrorCode.DOES_NOT_EXIST, "Master Wallet not found");
       }
       return masterWalletID;
     } catch (err) {
-      throw new ServiceException("Unknown error has occured", ServiceErrorCode.UNKNOWN, err);
+      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Unknown error has occured", err);
     }
   }
 
   public async getWalletBalance(walletID: string): Promise<number> {
     if (!walletID) {
-      throw new ServiceException("Wallet ID must not be empty", ServiceErrorCode.SEMANTIC_VALIDATION);
+      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Wallet ID must not be empty");
     }
 
     return this.circleClient.getWalletBalance(walletID);
