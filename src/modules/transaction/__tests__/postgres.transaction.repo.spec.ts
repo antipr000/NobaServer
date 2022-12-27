@@ -219,4 +219,43 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransactions).toHaveLength(0);
     });
   });
+
+  describe("updateTransaction", () => {
+    it("should update the transaction with the specified 'transactionRef'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID);
+      const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const transactionToUpdates: Transaction = {
+        status: TransactionStatus.SUCCESS,
+      };
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(inputTransaction.transactionRef, transactionToUpdates);
+
+      const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
+
+      expect(returnedTransaction).toStrictEqual({
+        ...savedTransaction,
+        status: TransactionStatus.SUCCESS,
+        updatedAt: expect.any(Date),
+      });
+      expect(returnedTransaction.updatedAt.valueOf()).toBeGreaterThan(savedTransaction.updatedAt.valueOf());
+      expect(allTransactionRecords).toHaveLength(1);
+      expect({
+        ...returnedTransaction,
+        createdTimestamp: returnedTransaction.createdAt,
+        updatedTimestamp: returnedTransaction.updatedAt,
+      }).toMatchObject(allTransactionRecords[0]);
+    });
+
+    // it("should throw an error if the transaction with the specified 'transactionRef' does not exist", async () => {
+    //   const inputTransaction: Transaction = await getRandomTransaction();
+
+    //   const transactionToUpdates: Transaction = {
+    //     status: TransactionStatus.SUCCESS,
+    //   };
+    //   await expect(
+    //     transactionRepo.updateTransactionByTransactionRef(inputTransaction.transactionRef, inputTransaction),
+    //   ).rejects.toThrowError(TransactionNotFoundException);
+    // });
+  });
 });
