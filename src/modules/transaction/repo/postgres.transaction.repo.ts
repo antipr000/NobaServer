@@ -40,7 +40,6 @@ export class PostgresTransactionRepo implements ITransactionRepo {
         },
         amount: transaction.amount,
         currency: transaction.currency,
-        status: transaction.status,
         exchangeRate: transaction.exchangeRate,
       };
 

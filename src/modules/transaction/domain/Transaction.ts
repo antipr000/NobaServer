@@ -39,7 +39,7 @@ export const validateInputTransaction = (transaction: Transaction) => {
     amount: Joi.number().required(),
     currency: Joi.string().required(),
     status: Joi.string()
-      .required()
+      .optional()
       .valid(...Object.values(TransactionStatus))
       .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().required(),
