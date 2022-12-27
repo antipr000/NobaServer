@@ -4,6 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
+  NotFoundError,
 } from "../../../core/exception/CommonAppException";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { Logger } from "winston";
@@ -21,7 +22,7 @@ export class PostgresTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
     validateInputTransaction(transaction);
@@ -149,9 +150,11 @@ export class PostgresTransactionRepo implements ITransactionRepo {
       });
 
       return convertToDomainTransaction(returnedTransaction);
-    }
-    catch (err) {
+    } catch (err) {
       this.logger.error(JSON.stringify(err));
+      if (err.meta && err.meta.cause === "Record to update not found.") {
+        throw new NotFoundError({});
+      }
       throw new DatabaseInternalErrorException({
         message: `Error updating the transaction with transactionRef: '${transactionRef}'`,
       });
