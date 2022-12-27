@@ -1,4 +1,10 @@
-import { Circle, CircleEnvironments, CreateWalletResponse, GetWalletResponse, TransferErrorCode } from "@circle-fin/circle-sdk";
+import {
+  Circle,
+  CircleEnvironments,
+  CreateWalletResponse,
+  GetWalletResponse,
+  TransferErrorCode,
+} from "@circle-fin/circle-sdk";
 import { Inject, InternalServerErrorException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
@@ -6,7 +12,7 @@ import { CIRCLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { AxiosResponse } from "axios";
-import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatus, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
+import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "src/core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
@@ -40,19 +46,18 @@ export class CircleClient {
           err.response.headers,
         )}`,
       );
-      // TODO: how should we handle generic exceptions from circle?
-      throw new InternalServerErrorException("Service unavailable. Please try again.");
+      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Service unavailable. Please try again.");
     }
   }
 
   // It is assumed that Circle is used to store "only" USD balance.
   async getWalletBalance(walletID: string): Promise<number> {
     try {
-      const response: AxiosResponse<GetWalletResponse> = await this.circleApi.wallets.getWallet(walletID);
-      this.logger.info(`"getWallet" succeeds with request_id: "${response.headers["X-Request-Id"]}"`);
+      const walletData = await this.circleApi.wallets.getWallet(walletID);
+      this.logger.info(`"getWallet" succeeds with request_id: "${walletData.headers["X-Request-Id"]}"`);
 
       let result: number = 0;
-      response.data.data.balances.forEach(balance => {
+      walletData.data.data.balances.forEach(balance => {
         if (balance.currency === "USD") {
           result = Number(balance.amount);
         } else {
@@ -67,7 +72,7 @@ export class CircleClient {
           err.response.headers,
         )}`,
       );
-      throw new InternalServerErrorException("Service unavailable. Please try again.");
+      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Service unavailable. Please try again.");
     }
   }
 
@@ -80,25 +85,25 @@ export class CircleClient {
         amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
       });
 
-      const transferData = transferResponse.data.data
-      if(transferData.status !== 'failed'){
+      const transferData = transferResponse.data.data;
+      if (transferData.status !== "failed") {
         return {
           currentBalance: request.amount,
           updatedBalance: Number(transferData.amount.amount),
           status: CircleWithdrawalStatusMap[transferData.status],
         };
       }
-      
-      switch(transferData.errorCode){
+
+      switch (transferData.errorCode) {
         case TransferErrorCode.TransferFailed:
-          throw new ServiceException(ServiceErrorCode.UNKNOWN)
-          break
+          throw new ServiceException(ServiceErrorCode.UNKNOWN);
         case TransferErrorCode.TransferDenied:
-          throw new ServiceException("")
+          throw new ServiceException(); // Not sure what exception this error represents
+        case TransferErrorCode.BlockchainError:
+          throw new ServiceException();
+        case TransferErrorCode.InsufficientFunds:
+          throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
       }
-      // TODO: figure out best return here
-      // maybe source wallet balance and destination wallet balance?
-      return {status: transferResponse.data.data.};
     } catch (err) {
       this.logger.error(
         `Error while transferring funds: ${JSON.stringify(err.response.data)},
