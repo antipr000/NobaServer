@@ -87,4 +87,27 @@ export class PostgresTransactionRepo implements ITransactionRepo {
       });
     }
   }
+
+  async getTransactionByTransactionRef(transactionRef: string): Promise<Transaction> {
+    try {
+      const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.findUnique({
+        where: {
+          transactionRef: transactionRef,
+        },
+        include: {
+          consumer: false,
+        },
+      });
+
+      if (!returnedTransaction) {
+        return null;
+      }
+      return convertToDomainTransaction(returnedTransaction);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error retrieving the transaction with transactionRef: '${transactionRef}'`,
+      });
+    }
+  }
 }
