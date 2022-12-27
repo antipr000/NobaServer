@@ -44,8 +44,7 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
       });
     }
 
-    //TODO add user reportable exception details here if exception is of type ApplicationException
-
+    response.header("x-noba-retryable", true);
     response.status(status).json({
       statusCode: status,
       details: Joi.isError(originalException) ? httpException.getResponse() : null,

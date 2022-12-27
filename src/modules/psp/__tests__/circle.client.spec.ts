@@ -35,9 +35,9 @@ import {
   CIRCLE_CONFIG_KEY,
   CIRCLE_ENVIRONMENT,
   CIRCLE_MASTER_WALLET_ID,
-} from "src/config/ConfigurationUtils";
-import { TestConfigModule } from "src/core/utils/AppConfigModule";
-import { getTestWinstonModule } from "src/core/utils/WinstonModule";
+} from "../../../config/ConfigurationUtils";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { CircleClient } from "../circle.client";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));

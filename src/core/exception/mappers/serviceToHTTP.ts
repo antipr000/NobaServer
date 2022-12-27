@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   HttpException,
   InternalServerErrorException,
+  NotAcceptableException,
   NotFoundException,
   NotImplementedException,
   UnauthorizedException,
@@ -17,6 +18,8 @@ export function serviceToHTTP(exception: ServiceException) {
       return new NotImplementedException(exception.message);
     case ServiceErrorCode.SEMANTIC_VALIDATION:
       return new BadRequestException(exception.message);
+    case ServiceErrorCode.UNABLE_TO_PROCESS:
+      return new NotAcceptableException(exception.message);
     case ServiceErrorCode.UNAUTHENTICATED:
       return new UnauthorizedException(exception.message); // The semantic meaning of 401 is no credentials
     case ServiceErrorCode.UNAUTHORIZED:

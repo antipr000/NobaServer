@@ -5,7 +5,7 @@ import {
   GetWalletResponse,
   TransferErrorCode,
 } from "@circle-fin/circle-sdk";
-import { Inject, InternalServerErrorException } from "@nestjs/common";
+import { Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
 import { CIRCLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -17,6 +17,7 @@ import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "src/core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
 
+@Injectable()
 export class CircleClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
@@ -96,19 +97,34 @@ export class CircleClient {
 
       switch (transferData.errorCode) {
         case TransferErrorCode.TransferFailed:
-          throw new ServiceException(ServiceErrorCode.UNKNOWN);
+          throw new ServiceException(
+            ServiceErrorCode.UNKNOWN,
+            `Transfer failed for idempotency key: ${request.idempotencyKey}`,
+          );
         case TransferErrorCode.TransferDenied:
-          throw new ServiceException(); // Not sure what exception this error represents
+          throw new ServiceException(
+            ServiceErrorCode.UNKNOWN,
+            `Transfer denied for idempotency key: ${request.idempotencyKey}`,
+          );
         case TransferErrorCode.BlockchainError:
-          throw new ServiceException();
+          throw new ServiceException(
+            ServiceErrorCode.UNKNOWN,
+            `Blockchain error for idempotency key: ${request.idempotencyKey}`,
+          );
         case TransferErrorCode.InsufficientFunds:
-          throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+          throw new ServiceException(
+            ServiceErrorCode.UNABLE_TO_PROCESS,
+            `Insufficient idempotency key: ${request.idempotencyKey}`,
+          );
       }
     } catch (err) {
       this.logger.error(
         `Error while transferring funds: ${JSON.stringify(err.response.data)},
         )}`,
       );
+      if (err instanceof ServiceException) {
+        throw err;
+      }
       throw new ServiceException(ServiceErrorCode.UNKNOWN, "Service unavailable. Please try again.");
     }
   }
