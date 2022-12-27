@@ -22,7 +22,7 @@ export class TransactionService {
     throw new Error("Not implemented!");
   }
 
-  async calculateExchangeRate(baseCurrency: string, targetCurrency: string): Promise<number> {
+  async calculateExchangeRate(baseCurrency: string, targetCurrency: string): Promise<string> {
     throw new Error("Not implemented!");
   }
 }

@@ -31,7 +31,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
 import { TransactionFilterOptions } from "../transactions/domain/Types";
-import { TransactionRateDTO } from "./dto/TransactionRateDTO";
+import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -45,7 +45,7 @@ export class TransactionController {
   private readonly logger: Logger;
 
   @Get("/transactions/:transactionRef")
-  @ApiTags("Transactions V2")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -59,7 +59,7 @@ export class TransactionController {
   }
 
   @Get("/transactions/")
-  @ApiTags("Transactions V2")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -70,27 +70,27 @@ export class TransactionController {
   }
 
   @Get("/transactions/rate/")
-  @ApiTags("Transactions V2")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Get exchange rate of conversion" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: TransactionRateDTO,
+    type: ExchangeRateDTO,
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getExchangeRate(
     @Query("baseCurrency") baseCurrency: string,
     @Query("targetCurrency") targetCurrency: string,
-  ): Promise<TransactionRateDTO> {
+  ): Promise<ExchangeRateDTO> {
     const exchangeRate = await this.transactionService.calculateExchangeRate(baseCurrency, targetCurrency);
     return {
-      baseCurrency: baseCurrency,
-      targetCurrency: targetCurrency,
+      numeratorCurrency: baseCurrency,
+      denominatorCurrency: targetCurrency,
       exchangeRate: exchangeRate,
     };
   }
 
   @Post("/transaction/")
-  @ApiTags("Transactions V2")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Submits a new transaction" })
   @ApiResponse({
     status: HttpStatus.CREATED,
