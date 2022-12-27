@@ -1,4 +1,4 @@
-export interface BaseExceptionConstructor<T> {
+interface BaseExceptionConstructor<T> {
   message: string;
   errorCode?: T;
   severity?: SeverityLevel;
