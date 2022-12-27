@@ -1,3 +1,5 @@
+import { TransferStatusEnum } from "@circle-fin/circle-sdk/dist/generated/models/transfer";
+
 export interface CircleWithdrawalRequest {
   idempotencyKey: string;
   amount: number;
@@ -14,7 +16,11 @@ export interface CircleWithdrawalResponse {
 export enum CircleWithdrawalStatus {
   SUCCESS = "SUCCESS",
   PENDING = "PENDING",
-  INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS",
-  WALLET_NOT_FOUND = "WALLET_NOT_FOUND",
-  INTERNAL_ERROR = "INTERNAL_ERROR", // safe to retry with the same 'idempotencyKey'.
+  FAILURE = "FAILURE",
 }
+
+export const CircleWithdrawalStatusMap = {
+  [TransferStatusEnum.Complete]: CircleWithdrawalStatus.SUCCESS,
+  [TransferStatusEnum.Pending]: CircleWithdrawalStatus.PENDING,
+  [TransferStatusEnum.Failed]: CircleWithdrawalStatus.FAILURE,
+};

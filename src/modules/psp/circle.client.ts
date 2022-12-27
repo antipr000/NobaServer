@@ -1,4 +1,4 @@
-import { Circle, CircleEnvironments, CreateWalletResponse, GetWalletResponse } from "@circle-fin/circle-sdk";
+import { Circle, CircleEnvironments, CreateWalletResponse, GetWalletResponse, TransferErrorCode } from "@circle-fin/circle-sdk";
 import { Inject, InternalServerErrorException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
@@ -6,9 +6,10 @@ import { CIRCLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { AxiosResponse } from "axios";
-import { CircleWithdrawalRequest, CircleWithdrawalResponse } from "./domain/CircleTypes";
+import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatus, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "src/core/utils/Utils";
+import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
 
 export class CircleClient {
   private readonly circleApi: Circle;
@@ -79,6 +80,22 @@ export class CircleClient {
         amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
       });
 
+      const transferData = transferResponse.data.data
+      if(transferData.status !== 'failed'){
+        return {
+          currentBalance: request.amount,
+          updatedBalance: Number(transferData.amount.amount),
+          status: CircleWithdrawalStatusMap[transferData.status],
+        };
+      }
+      
+      switch(transferData.errorCode){
+        case TransferErrorCode.TransferFailed:
+          throw new ServiceException(ServiceErrorCode.UNKNOWN)
+          break
+        case TransferErrorCode.TransferDenied:
+          throw new ServiceException("")
+      }
       // TODO: figure out best return here
       // maybe source wallet balance and destination wallet balance?
       return {status: transferResponse.data.data.};
@@ -87,7 +104,7 @@ export class CircleClient {
         `Error while transferring funds: ${JSON.stringify(err.response.data)},
         )}`,
       );
-      throw new InternalServerErrorException("Service unavailable. Please try again.");
+      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Service unavailable. Please try again.");
     }
   }
 }

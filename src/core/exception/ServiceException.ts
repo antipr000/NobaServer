@@ -6,11 +6,11 @@ export const enum ServiceErrorCode {
   UNAUTHORIZED = "Unauthorized error",
   UNAUTHENTICATED = "Unauthenticated error",
   NOT_IMPLEMENTED = "Not implemented error",
-  UNKNOWN = "Unknown error",
+  UNKNOWN = "Unknown error has occured",
 }
 
 export class ServiceException extends GenericException<ServiceErrorCode> {
-  constructor(message: string, errorCode: ServiceErrorCode, error?: any) {
-    super({ message, errorCode, error });
+  constructor(errorCode: ServiceErrorCode, message?: string, error?: any) {
+    super({ message: message ?? errorCode, errorCode, error });
   }
 }
