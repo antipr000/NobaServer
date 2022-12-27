@@ -1,7 +1,7 @@
 #to find the usage of any variable in this file search globally in vscode with ctrl+shift+f
 
 envType: development
-
+# TODO: Remove this as it is no longer needed
 apiPrefix: ""
 logFilePath: "/tmp/noba_server.log"
 
