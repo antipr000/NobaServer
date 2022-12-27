@@ -9,7 +9,7 @@ import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transact
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { PostgresTransactionRepo } from "../repo/postgres.transaction.repo";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
-import { DatabaseInternalErrorException } from "../../../core/exception/CommonAppException";
+import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
@@ -221,7 +221,7 @@ describe("PostgresTransactionRepoTests", () => {
   });
 
   describe("updateTransaction", () => {
-    it("should update the transaction with the specified 'transactionRef'", async () => {
+    it("should update the transaction 'status' for the specified 'transactionRef'", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const inputTransaction: Transaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
@@ -229,7 +229,10 @@ describe("PostgresTransactionRepoTests", () => {
       const transactionToUpdates: Transaction = {
         status: TransactionStatus.SUCCESS,
       };
-      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(inputTransaction.transactionRef, transactionToUpdates);
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
+        inputTransaction.transactionRef,
+        transactionToUpdates,
+      );
 
       const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
 
@@ -247,15 +250,73 @@ describe("PostgresTransactionRepoTests", () => {
       }).toMatchObject(allTransactionRecords[0]);
     });
 
-    // it("should throw an error if the transaction with the specified 'transactionRef' does not exist", async () => {
-    //   const inputTransaction: Transaction = await getRandomTransaction();
+    it("should update the transaction 'exchangeRate' for the specified 'transactionRef'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID);
+      const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-    //   const transactionToUpdates: Transaction = {
-    //     status: TransactionStatus.SUCCESS,
-    //   };
-    //   await expect(
-    //     transactionRepo.updateTransactionByTransactionRef(inputTransaction.transactionRef, inputTransaction),
-    //   ).rejects.toThrowError(TransactionNotFoundException);
-    // });
+      const transactionToUpdates: Transaction = {
+        exchangeRate: 12.34,
+      };
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
+        inputTransaction.transactionRef,
+        transactionToUpdates,
+      );
+
+      const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
+
+      expect(returnedTransaction).toStrictEqual({
+        ...savedTransaction,
+        exchangeRate: 12.34,
+        updatedAt: expect.any(Date),
+      });
+      expect(returnedTransaction.updatedAt.valueOf()).toBeGreaterThan(savedTransaction.updatedAt.valueOf());
+      expect(allTransactionRecords).toHaveLength(1);
+      expect({
+        ...returnedTransaction,
+        createdTimestamp: returnedTransaction.createdAt,
+        updatedTimestamp: returnedTransaction.updatedAt,
+      }).toMatchObject(allTransactionRecords[0]);
+    });
+
+    it("should update the transaction 'exchangeRate' & 'status' for the specified 'transactionRef'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID);
+      const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const transactionToUpdates: Transaction = {
+        exchangeRate: 12.34,
+        status: TransactionStatus.IN_PROGRESS,
+      };
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
+        inputTransaction.transactionRef,
+        transactionToUpdates,
+      );
+
+      const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
+
+      expect(returnedTransaction).toStrictEqual({
+        ...savedTransaction,
+        exchangeRate: 12.34,
+        status: TransactionStatus.IN_PROGRESS,
+        updatedAt: expect.any(Date),
+      });
+      expect(returnedTransaction.updatedAt.valueOf()).toBeGreaterThan(savedTransaction.updatedAt.valueOf());
+      expect(allTransactionRecords).toHaveLength(1);
+      expect({
+        ...returnedTransaction,
+        createdTimestamp: returnedTransaction.createdAt,
+        updatedTimestamp: returnedTransaction.updatedAt,
+      }).toMatchObject(allTransactionRecords[0]);
+    });
+
+    it("should throw a NotFound error if the transaction with the specified 'transactionRef' does not exist", async () => {
+      const updatedTransaction: Transaction = {
+        status: TransactionStatus.SUCCESS,
+      };
+      await expect(
+        transactionRepo.updateTransactionByTransactionRef("invalid-transaction-ref", updatedTransaction),
+      ).rejects.toThrowError(NotFoundError);
+    });
   });
 });

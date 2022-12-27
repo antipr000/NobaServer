@@ -85,9 +85,18 @@ export const validateSavedTransaction = (transaction: Transaction) => {
 };
 
 export const validateUpdateTransaction = (transaction: Transaction) => {
-  const uneditableFields = ["id", "transactionRef", "workflowName", "consumerID", "amount", "currency", "createdAt", "updatedAt"];
+  const uneditableFields = [
+    "id",
+    "transactionRef",
+    "workflowName",
+    "consumerID",
+    "amount",
+    "currency",
+    "createdAt",
+    "updatedAt",
+  ];
   let containsUneditableFields = false;
-  uneditableFields.forEach((field) => {
+  uneditableFields.forEach(field => {
     if (transaction[field]) containsUneditableFields = true;
   });
   if (containsUneditableFields) throw new Error(`${uneditableFields.join(", ")} cannot be updated.`);
