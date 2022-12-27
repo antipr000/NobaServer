@@ -191,4 +191,32 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toBeNull();
     });
   });
+
+  describe("getTransactionsByConsumerID", () => {
+    it("should return all transactions with the specified consumerID", async () => {
+      const consumerID1 = await createTestConsumer(prismaService);
+      const consumerID2 = await createTestConsumer(prismaService);
+      const inputTransaction1: Transaction = await getRandomTransaction(consumerID1);
+      const inputTransaction2: Transaction = await getRandomTransaction(consumerID1);
+      const inputTransaction3: Transaction = await getRandomTransaction(consumerID2);
+      const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
+      const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
+      const savedTransaction3 = await transactionRepo.createTransaction(inputTransaction3);
+
+      const returnedTransactions = await transactionRepo.getTransactionsByConsumerID(consumerID1);
+
+      expect(returnedTransactions).toHaveLength(2);
+      expect(returnedTransactions).toContainEqual(savedTransaction1);
+      expect(returnedTransactions).toContainEqual(savedTransaction2);
+      expect(returnedTransactions).not.toContainEqual(savedTransaction3);
+    });
+
+    it("should return an empty array if there are no transactions with the specified consumerID", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const returnedTransactions = await transactionRepo.getTransactionsByConsumerID(consumerID);
+
+      expect(returnedTransactions).toHaveLength(0);
+    });
+  });
 });
