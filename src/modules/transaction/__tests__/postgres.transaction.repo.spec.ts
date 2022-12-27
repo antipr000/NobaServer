@@ -163,4 +163,32 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toBeNull();
     });
   });
+
+  describe("getTransactionByTransactionRef", () => {
+    it("should return the transaction with the specified transactionRef", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const inputTransaction1: Transaction = await getRandomTransaction(consumerID);
+      const inputTransaction2: Transaction = await getRandomTransaction(consumerID);
+      const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
+      const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
+
+      const returnedTransaction1 = await transactionRepo.getTransactionByTransactionRef(
+        savedTransaction1.transactionRef,
+      );
+      const returnedTransaction2 = await transactionRepo.getTransactionByTransactionRef(
+        savedTransaction2.transactionRef,
+      );
+
+      expect(returnedTransaction1).not.toBeNull();
+      expect(returnedTransaction1).toStrictEqual(savedTransaction1);
+      expect(returnedTransaction2).not.toBeNull();
+      expect(returnedTransaction2).toStrictEqual(savedTransaction2);
+    });
+
+    it("should return 'null' if the transaction with the specified transactionRef does not exist", async () => {
+      const returnedTransaction = await transactionRepo.getTransactionByTransactionRef("invalid-transaction-ref");
+
+      expect(returnedTransaction).toBeNull();
+    });
+  });
 });
