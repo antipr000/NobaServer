@@ -5,4 +5,5 @@ export interface ITransactionRepo {
   getTransactionByID(transactionID: string): Promise<Transaction>;
   getTransactionByTransactionRef(transactionRef: string): Promise<Transaction>;
   getTransactionsByConsumerID(consumerID: string): Promise<Transaction[]>;
+  updateTransactionByTransactionRef(transactionRef: string, transaction: Transaction): Promise<Transaction>;
 }

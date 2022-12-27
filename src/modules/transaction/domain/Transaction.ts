@@ -2,17 +2,19 @@ import { Transaction as PrismaTransactionModel } from "@prisma/client";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
+// Everything is marked as "optional" to allow for partial updates.
+// The "required" fields are enforced by the Joi schema.
 export class Transaction {
-  id: string;
-  transactionRef: string;
-  workflowName: WorkflowName;
-  consumerID: string;
-  amount: number;
-  currency: string;
-  status: TransactionStatus;
-  exchangeRate: number;
-  createdAt: Date;
-  updatedAt: Date;
+  id?: string;
+  transactionRef?: string;
+  workflowName?: WorkflowName;
+  consumerID?: string;
+  amount?: number;
+  currency?: string;
+  status?: TransactionStatus;
+  exchangeRate?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Format - DEBIT_TO_CREDIT
@@ -30,7 +32,7 @@ export enum TransactionStatus {
 
 export const validateInputTransaction = (transaction: Transaction) => {
   const transactionJoiValidationKeys: KeysRequired<Transaction> = {
-    id: Joi.string().min(10).required().allow(null), // null is allowed as it is not set when the transaction is created
+    id: Joi.string().min(10).optional().allow(null), // null is allowed as it is not set when the transaction is created
     transactionRef: Joi.string().min(10).required(),
     workflowName: Joi.string()
       .required()
@@ -74,6 +76,39 @@ export const validateSavedTransaction = (transaction: Transaction) => {
     updatedAt: Joi.date().required(),
   };
 
+  const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+
+  return Joi.attempt(transaction, transactionJoiSchema);
+};
+
+export const validateUpdateTransaction = (transaction: Transaction) => {
+  const uneditableFields = ["id", "transactionRef", "workflowName", "consumerID", "amount", "currency", "createdAt", "updatedAt"];
+  let containsUneditableFields = false;
+  uneditableFields.forEach((field) => {
+    if (transaction[field]) containsUneditableFields = true;
+  });
+  if (containsUneditableFields) throw new Error(`${uneditableFields.join(", ")} cannot be updated.`);
+
+  const transactionJoiValidationKeys: KeysRequired<Transaction> = {
+    id: Joi.string().min(10).optional(),
+    transactionRef: Joi.string().optional(),
+    workflowName: Joi.string()
+      .optional()
+      .valid(...Object.values(WorkflowName)),
+    consumerID: Joi.string().min(10).optional(),
+    amount: Joi.number().optional(),
+    currency: Joi.string().optional(),
+    status: Joi.string()
+      .optional()
+      .valid(...Object.values(TransactionStatus))
+      .default(TransactionStatus.PENDING),
+    exchangeRate: Joi.number().optional(),
+    createdAt: Joi.date().optional(),
+    updatedAt: Joi.date().optional(),
+  };
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
     allowUnknown: false,
     stripUnknown: true,

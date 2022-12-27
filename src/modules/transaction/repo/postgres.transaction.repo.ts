@@ -12,6 +12,7 @@ import {
   Transaction,
   validateInputTransaction,
   validateSavedTransaction,
+  validateUpdateTransaction,
 } from "../domain/Transaction";
 import { ITransactionRepo } from "./transaction.repo";
 
@@ -20,7 +21,7 @@ export class PostgresTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  ) { }
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
     validateInputTransaction(transaction);
@@ -127,6 +128,32 @@ export class PostgresTransactionRepo implements ITransactionRepo {
       this.logger.error(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving the transactions for consumer with ID: '${consumerID}'`,
+      });
+    }
+  }
+
+  async updateTransactionByTransactionRef(transactionRef: string, transaction: Transaction): Promise<Transaction> {
+    validateUpdateTransaction(transaction);
+
+    try {
+      const transactionUpdate: Prisma.TransactionUpdateInput = {
+        ...(transaction.exchangeRate && { exchangeRate: transaction.exchangeRate }),
+        ...(transaction.status && { status: transaction.status }),
+      };
+
+      const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.update({
+        where: {
+          transactionRef: transactionRef,
+        },
+        data: transactionUpdate,
+      });
+
+      return convertToDomainTransaction(returnedTransaction);
+    }
+    catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error updating the transaction with transactionRef: '${transactionRef}'`,
       });
     }
   }
