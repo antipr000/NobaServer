@@ -110,4 +110,24 @@ export class PostgresTransactionRepo implements ITransactionRepo {
       });
     }
   }
+
+  async getTransactionsByConsumerID(consumerID: string): Promise<Transaction[]> {
+    try {
+      const returnedTransactions: PrismaTransactionModel[] = await this.prismaService.transaction.findMany({
+        where: {
+          consumerID: consumerID,
+        },
+        include: {
+          consumer: false,
+        },
+      });
+
+      return returnedTransactions.map(transaction => convertToDomainTransaction(transaction));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error retrieving the transactions for consumer with ID: '${consumerID}'`,
+      });
+    }
+  }
 }
