@@ -1,9 +1,9 @@
-export type BaseExceptionConstructor<T> = {
+export interface BaseExceptionConstructor<T> {
   message: string;
   errorCode?: T;
   severity?: SeverityLevel;
   error?: any;
-};
+}
 
 export type SeverityLevel = "HIGH" | "MEDIUM" | "LOW";
 

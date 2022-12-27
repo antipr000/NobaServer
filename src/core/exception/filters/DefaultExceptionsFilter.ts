@@ -8,6 +8,7 @@ import { ApplicationException } from "../CommonAppException";
 export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
   constructor(private logger: Logger) {}
 
+  // TODO: this catch method is a bit overloaded. We should probably split out each exception into it's own custom filter
   catch(originalException: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
