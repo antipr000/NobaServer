@@ -116,7 +116,7 @@ export class InvalidDatabaseRecordException extends ApplicationException {
   public readonly severity = 1; // highest severity as this means that there is some data corruption in DB.
 }
 
-export class ErrorSavingReportInDatabaseException extends ApplicationException {
-  public readonly name = "ErrorSavingReportInDatabaseException";
+export class DatabaseInternalErrorException extends ApplicationException {
+  public readonly name = "DatabaseInternalErrorException";
   public readonly httpStatusCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
 }

@@ -9,7 +9,7 @@ import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transact
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { PostgresTransactionRepo } from "../repo/postgres.transaction.repo";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
-import { ErrorSavingReportInDatabaseException } from "../../../core/exception/CommonAppException";
+import { DatabaseInternalErrorException } from "../../../core/exception/CommonAppException";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
@@ -113,7 +113,7 @@ describe("PostgresTransactionRepoTests", () => {
       inputTransaction2.transactionRef = inputTransaction1.transactionRef;
 
       await expect(transactionRepo.createTransaction(inputTransaction2)).rejects.toThrowError(
-        ErrorSavingReportInDatabaseException,
+        DatabaseInternalErrorException,
       );
     });
 
@@ -121,7 +121,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: Transaction = await getRandomTransaction("invalid-consumer-id");
 
       await expect(transactionRepo.createTransaction(inputTransaction)).rejects.toThrowError(
-        ErrorSavingReportInDatabaseException,
+        DatabaseInternalErrorException,
       );
     });
 
@@ -137,6 +137,30 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction.status).toBe(TransactionStatus.PENDING);
       expect(allTransactionRecords).toHaveLength(1);
       expect(allTransactionRecords[0].status).toBe(TransactionStatus.PENDING);
+    });
+  });
+
+  describe("getTransactionByID", () => {
+    it("should return the transaction with the specified ID", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const inputTransaction1: Transaction = await getRandomTransaction(consumerID);
+      const inputTransaction2: Transaction = await getRandomTransaction(consumerID);
+      const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
+      const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
+
+      const returnedTransaction1 = await transactionRepo.getTransactionByID(savedTransaction1.id);
+      const returnedTransaction2 = await transactionRepo.getTransactionByID(savedTransaction2.id);
+
+      expect(returnedTransaction1).not.toBeNull();
+      expect(returnedTransaction1).toStrictEqual(savedTransaction1);
+      expect(returnedTransaction2).not.toBeNull();
+      expect(returnedTransaction2).toStrictEqual(savedTransaction2);
+    });
+
+    it("should return 'null' if the transaction with the specified ID does not exist", async () => {
+      const returnedTransaction = await transactionRepo.getTransactionByID("invalid-id");
+
+      expect(returnedTransaction).toBeNull();
     });
   });
 });

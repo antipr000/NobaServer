@@ -2,7 +2,7 @@ import { Prisma, Transaction as PrismaTransactionModel } from "@prisma/client";
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import {
-  ErrorSavingReportInDatabaseException,
+  DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
 import { PrismaService } from "../../../infraproviders/PrismaService";
@@ -49,7 +49,7 @@ export class PostgresTransactionRepo implements ITransactionRepo {
       savedTransaction = convertToDomainTransaction(returnedTransaction);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new ErrorSavingReportInDatabaseException({
+      throw new DatabaseInternalErrorException({
         message: "Error saving transaction in database",
       });
     }
@@ -61,6 +61,29 @@ export class PostgresTransactionRepo implements ITransactionRepo {
       this.logger.error(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
         message: "Invalid database record",
+      });
+    }
+  }
+
+  async getTransactionByID(transactionID: string): Promise<Transaction> {
+    try {
+      const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.findUnique({
+        where: {
+          id: transactionID,
+        },
+        include: {
+          consumer: false,
+        },
+      });
+
+      if (!returnedTransaction) {
+        return null;
+      }
+      return convertToDomainTransaction(returnedTransaction);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error retrieving the transaction with ID: '${transactionID}'`,
       });
     }
   }
