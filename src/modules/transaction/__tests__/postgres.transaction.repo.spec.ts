@@ -9,14 +9,13 @@ import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transact
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { PostgresTransactionRepo } from "../repo/postgres.transaction.repo";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
+import { ErrorSavingReportInDatabaseException } from "../../../core/exception/CommonAppException";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
 };
 
-const getRandomTransaction = async (prismaService: PrismaService): Promise<Transaction> => {
-  const consumerID = await createTestConsumer(prismaService);
-
+const getRandomTransaction = (consumerID: string): Transaction => {
   return {
     transactionRef: uuid(),
     amount: 100,
@@ -71,7 +70,9 @@ describe("PostgresTransactionRepoTests", () => {
 
   describe("createTransaction", () => {
     it("should create a transaction with the specified parameters & ignores the 'createdAt', 'updatedAt' & 'id' field", async () => {
-      const inputTransaction: Transaction = await getRandomTransaction(prismaService);
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID);
       const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
       const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
 
@@ -101,6 +102,41 @@ describe("PostgresTransactionRepoTests", () => {
         createdTimestamp: returnedTransaction.createdAt,
         updatedTimestamp: returnedTransaction.updatedAt,
       });
+    });
+
+    it("should throw an error if the transactionRef is not unique", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction1: Transaction = await getRandomTransaction(consumerID);
+      await transactionRepo.createTransaction(inputTransaction1);
+      const inputTransaction2: Transaction = await getRandomTransaction(consumerID);
+      inputTransaction2.transactionRef = inputTransaction1.transactionRef;
+
+      await expect(transactionRepo.createTransaction(inputTransaction2)).rejects.toThrowError(
+        ErrorSavingReportInDatabaseException,
+      );
+    });
+
+    it("should throw an error if the consumerID is not valid", async () => {
+      const inputTransaction: Transaction = await getRandomTransaction("invalid-consumer-id");
+
+      await expect(transactionRepo.createTransaction(inputTransaction)).rejects.toThrowError(
+        ErrorSavingReportInDatabaseException,
+      );
+    });
+
+    it("should set the default Transaction 'status' to 'PENDING'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID);
+      delete inputTransaction.status;
+
+      const returnedTransaction = await transactionRepo.createTransaction(inputTransaction);
+      const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
+
+      expect(returnedTransaction.status).toBe(TransactionStatus.PENDING);
+      expect(allTransactionRecords).toHaveLength(1);
+      expect(allTransactionRecords[0].status).toBe(TransactionStatus.PENDING);
     });
   });
 });
