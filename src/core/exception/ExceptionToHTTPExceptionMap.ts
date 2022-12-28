@@ -13,7 +13,8 @@ export function convertToHTTPException(exception: any): HttpException {
     }).toHTTPException();
   }
 
-  if (exception instanceof HttpException) return exception; //TODO can something leak here? I guess when this app calls some other service and if that service throws HTTPException with sensitive information
+  //TODO can something leak here? I guess when this app calls some other service and if that service throws HTTPException with sensitive information
+  if (exception instanceof HttpException) return exception;
 
   if (exception instanceof ServiceException) {
     return serviceToHTTP(exception);
@@ -21,8 +22,4 @@ export function convertToHTTPException(exception: any): HttpException {
 
   //We return 500, if the exception is not known i.e. we don't leak sensitive information to outside world
   return new HttpException("Internal Noba Server Error.", HttpStatus.INTERNAL_SERVER_ERROR);
-}
-
-export function isApplicationException(exception) {
-  return exception instanceof ApplicationException;
 }

@@ -1,8 +1,8 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from "@nestjs/common";
-import { Logger } from "winston";
-import { convertToHTTPException, isApplicationException } from "../AppExceptionToHTTPExceptionMap";
+import { exceptions, Logger } from "winston";
+import { convertToHTTPException } from "../ExceptionToHTTPExceptionMap";
 import Joi from "joi";
-import { ApplicationException } from "../CommonAppException";
+import { BaseException } from "../BaseException";
 
 @Catch()
 export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
@@ -15,6 +15,10 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
     const request = ctx.getRequest();
 
     const timestamp = new Date().toISOString();
+
+    if (originalException instanceof BaseException) {
+      response.header("x-noba-retryable", originalException.retry);
+    }
 
     //Send HTTP Exception, don't send anything sensitive here i.e. service internal info
     const httpException = convertToHTTPException(originalException);
@@ -33,18 +37,11 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
         messageToBeLogged = originalException;
       }
 
-      //TODO should we log the server error details? we may be logging sensitive information like access code from external applications if error is during authz call
-      const serverError = isApplicationException(originalException)
-        ? (originalException as any as ApplicationException).getDetailsForServer()
-        : {};
-
       this.logger.error(messageToBeLogged, {
-        serverError: serverError,
         timestamp,
       });
     }
 
-    response.header("x-noba-retryable", true);
     response.status(status).json({
       statusCode: status,
       details: Joi.isError(originalException) ? httpException.getResponse() : null,
