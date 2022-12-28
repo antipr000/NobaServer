@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { TestConfigModule } from "src/core/utils/AppConfigModule";
-import { getTestWinstonModule } from "src/core/utils/WinstonModule";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { instance } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";

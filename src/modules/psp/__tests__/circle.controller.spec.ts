@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { TestConfigModule } from "src/core/utils/AppConfigModule";
-import { getTestWinstonModule } from "src/core/utils/WinstonModule";
-import { instance } from "ts-mockito";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { anything, instance, when, anyString } from "ts-mockito";
 import { CircleController } from "../circle.controller";
 import { CircleService } from "../circle.service";
 import { getMockCircleServiceWithDefaults } from "../mocks/mock.circle.service";
@@ -25,6 +25,11 @@ describe("CircleController", () => {
     circleController = app.get<CircleController>(CircleController);
   });
 
-  // describe("circle controller tests", () => {
-  //   it("should ")
+  describe("wallet", () => {
+    it("should return a wallet", async () => {
+      when(circleService.getOrCreateWallet(anyString())).thenResolve("wallet");
+      const result = await circleController.addConsumerWallet({}, {});
+      expect(result).toEqual("wallet");
+    });
+  });
 });
