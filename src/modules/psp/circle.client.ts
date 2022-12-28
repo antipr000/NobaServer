@@ -14,8 +14,8 @@ import { Logger } from "winston";
 import { AxiosResponse } from "axios";
 import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
-import { Utils } from "src/core/utils/Utils";
-import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
+import { Utils } from "../../core/utils/Utils";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 
 @Injectable()
 export class CircleClient {

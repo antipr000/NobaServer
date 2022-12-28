@@ -24,4 +24,7 @@ describe("CircleController", () => {
     }).compile();
     circleController = app.get<CircleController>(CircleController);
   });
+
+  // describe("circle controller tests", () => {
+  //   it("should ")
 });
