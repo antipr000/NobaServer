@@ -36,6 +36,11 @@ jobs:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}
 
+      - name: Run db migrations
+        env:
+            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
+        run: yarn prisma-migrate-deploy
+
       - name: Unit tests with coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
