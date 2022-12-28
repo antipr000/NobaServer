@@ -10,7 +10,7 @@ export class TransactionService {
     throw new Error("Not implemented!");
   }
 
-  async getFilteredTransactions(filter: TransactionFilterOptions): Promise<Transaction> {
+  async getFilteredTransactions(filter: TransactionFilterOptions): Promise<Transaction[]> {
     throw new Error("Not implemented!");
   }
 

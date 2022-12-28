@@ -32,6 +32,8 @@ import { Logger } from "winston";
 import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
 import { TransactionFilterOptions } from "../transactions/domain/Types";
 import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
+import { TransactionDTO } from "./dto/TransactionDTO";
+import { TransactionMapper } from "./mapper/transaction.mapper";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -45,27 +47,43 @@ export class TransactionController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
+  private readonly mapper: TransactionMapper;
+
+  constructor() {
+    this.mapper = new TransactionMapper();
+  }
+
   @Get("/transactions/:transactionRef")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
+    type: TransactionDTO,
   })
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
-  async getTransaction(@Param("transactionRef") transactionRef: string, @AuthUser() consumer: Consumer) {
+  async getTransaction(
+    @Param("transactionRef") transactionRef: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<TransactionDTO> {
     const transaction = await this.transactionService.getTransaction(transactionRef, consumer.props.id);
     if (!transaction) {
       throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
     }
+    return this.mapper.toDTO(transaction);
   }
 
   @Get("/transactions/")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
+    type: Array<TransactionDTO>,
   })
-  async getAllTransactions(@Query() filters: TransactionFilterOptions, @AuthUser() consumer: Consumer) {
+  async getAllTransactions(
+    @Query() filters: TransactionFilterOptions,
+    @AuthUser() consumer: Consumer,
+  ): Promise<TransactionDTO[]> {
     filters.consumerID = consumer.props.id;
-    return this.transactionService.getFilteredTransactions(filters);
+    const allTransactions = await this.transactionService.getFilteredTransactions(filters);
+    return allTransactions.map(transaction => this.mapper.toDTO(transaction));
   }
 
   @Get("/transactions/rate/")

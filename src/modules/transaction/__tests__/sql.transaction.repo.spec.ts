@@ -7,7 +7,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
 import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
-import { PostgresTransactionRepo } from "../repo/postgres.transaction.repo";
+import { SQLTransactionRepo } from "../repo/sql.transaction.repo";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
 
@@ -45,10 +45,10 @@ describe("PostgresTransactionRepoTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, PostgresTransactionRepo],
+      providers: [PrismaService, SQLTransactionRepo],
     }).compile();
 
-    transactionRepo = app.get<PostgresTransactionRepo>(PostgresTransactionRepo);
+    transactionRepo = app.get<SQLTransactionRepo>(SQLTransactionRepo);
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
