@@ -76,15 +76,15 @@ describe("VerificationRepoTests", () => {
 
   describe("updateVerificationData", () => {
     it("should update verification data", async () => {
-      const verificationData = getVerificationData("1");
-      const vfd2 = getVerificationData("2");
+      const verificationData = getVerificationData("4");
+      const vfd2 = getVerificationData("5");
       await verificationRepo.saveVerificationData(verificationData);
       await verificationRepo.saveVerificationData(vfd2);
-      const savedVerificationData = await verificationRepo.getVerificationData(mkid("1"));
+      const savedVerificationData = await verificationRepo.getVerificationData(mkid("4"));
       const updatedVerificationData = await verificationRepo.updateVerificationData(
         VerificationData.createVerificationData({ ...savedVerificationData.props, transactionID: mkid("tid") }),
       );
-      expect(updatedVerificationData.props.id).toBe(mkid("1"));
+      expect(updatedVerificationData.props.id).toBe(mkid("4"));
       expect(updatedVerificationData.props.userID).toBe(DEFAULT_USER_ID);
       expect(updatedVerificationData.props.transactionID).toBe(mkid("tid"));
     });
@@ -92,9 +92,9 @@ describe("VerificationRepoTests", () => {
 
   describe("getSessionKeyFromFilters", () => {
     it("should get session key from filters", async () => {
-      const verificationData = getVerificationData("1");
+      const verificationData = getVerificationData("6");
       await verificationRepo.saveVerificationData(verificationData);
-      const sessionKey = await verificationRepo.getSessionKeyFromFilters({ id: mkid("1") });
+      const sessionKey = await verificationRepo.getSessionKeyFromFilters({ id: mkid("5") });
       expect(sessionKey).toBe(mkid("1"));
     });
   });

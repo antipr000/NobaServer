@@ -43,8 +43,11 @@ describe("CreditCardBinDataRepo", () => {
   });
 
   afterAll(async () => {
-    await prismaService.creditCardBIN.deleteMany();
     app.close();
+  });
+
+  afterEach(async () => {
+    await prismaService.creditCardBIN.deleteMany();
   });
 
   function getRandomBIN(): string {
