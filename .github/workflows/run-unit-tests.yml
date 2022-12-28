@@ -39,7 +39,7 @@ jobs:
       - name: Run db migrations
         env:
             DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
-        run: yarn prisma-migrate-deploy
+        run: yarn prisma-update
 
       - name: Unit tests with coverage
         env:
