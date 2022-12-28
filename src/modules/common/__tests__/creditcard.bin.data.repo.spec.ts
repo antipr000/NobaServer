@@ -42,11 +42,8 @@ describe("CreditCardBinDataRepo", () => {
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  afterEach(async () => {
-    await prismaService.creditCardBIN.deleteMany();
-  });
-
   afterAll(async () => {
+    await prismaService.creditCardBIN.deleteMany();
     app.close();
   });
 

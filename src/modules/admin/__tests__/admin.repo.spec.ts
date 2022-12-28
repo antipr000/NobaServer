@@ -42,11 +42,8 @@ describe("AdminRepo Tests", () => {
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  afterEach(async () => {
-    await prismaService.admin.deleteMany();
-  });
-
   afterAll(async () => {
+    await prismaService.admin.deleteMany();
     await app.close();
   });
 

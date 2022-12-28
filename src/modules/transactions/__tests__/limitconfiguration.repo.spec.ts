@@ -42,12 +42,9 @@ describe("LimitConfigurationRepo tests", () => {
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await prismaService.limitConfiguration.deleteMany();
     await prismaService.limitProfile.deleteMany();
-  });
-
-  afterAll(async () => {
     await app.close();
   });
 

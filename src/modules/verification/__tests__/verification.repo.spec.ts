@@ -49,12 +49,9 @@ describe("VerificationRepoTests", () => {
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  afterEach(async () => {
-    await prismaService.verification.deleteMany();
-  });
-
   afterAll(async () => {
-    app.close();
+    await prismaService.verification.deleteMany();
+    await app.close();
   });
 
   describe("saveVerificationData", () => {
