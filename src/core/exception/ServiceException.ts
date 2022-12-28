@@ -11,10 +11,11 @@ export const enum ServiceErrorCode {
 }
 
 export class ServiceException extends BaseException<ServiceErrorCode> {
-  constructor(errorCode: ServiceErrorCode, message?: string, severity?: SeverityLevel, error?: any) {
+  constructor(errorCode: ServiceErrorCode, message?: string, retry?: boolean, severity?: SeverityLevel, error?: any) {
     super({
       message: message ?? errorCode,
       errorCode,
+      retry,
       severity,
       error,
     });
