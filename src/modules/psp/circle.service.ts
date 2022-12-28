@@ -3,7 +3,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
 import { Logger } from "winston";
 import { CircleClient } from "./circle.client";
-import { Circle } from "./domain/Circle";
 import { ICircleRepo } from "./repos/CircleRepo";
 
 @Injectable()
@@ -27,9 +26,10 @@ export class CircleService {
     const circleWalletID: string = await this.circleClient.createWallet(consumerID);
 
     try {
+      // TODO: Should we even handle repo errors here or let them bubble up?
       await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
     } catch (err) {
-      // TODO: What if this fails?
+      // TODO: What if this fails? a wallet was created but not linked to the consumer
       throw new ServiceException(ServiceErrorCode.UNKNOWN, "Could not link Circle wallet to consumer");
     }
     return circleWalletID;
@@ -52,24 +52,40 @@ export class CircleService {
   }
 
   public async debitWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
+    if (!walletID) {
+      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Wallet ID must not be empty");
+    }
+
+    if (amount <= 0) {
+      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Amount must be greater than 0");
+    }
+
     const masterWalletID = await this.getMasterWalletID();
     const response = await this.circleClient.transfer({
-      idempotencyKey,
+      idempotencyKey: idempotencyKey,
       sourceWalletID: walletID,
       destinationWalletID: masterWalletID,
-      amount,
+      amount: amount,
     });
 
     return response.updatedBalance;
   }
 
   public async creditWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
+    if (!walletID) {
+      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Wallet ID must not be empty");
+    }
+
+    if (amount <= 0) {
+      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Amount must be greater than 0");
+    }
+
     const masterWalletID = await this.getMasterWalletID();
     const response = await this.circleClient.transfer({
-      idempotencyKey,
+      idempotencyKey: idempotencyKey,
       sourceWalletID: masterWalletID,
       destinationWalletID: walletID,
-      amount,
+      amount: amount,
     });
 
     return response.updatedBalance;

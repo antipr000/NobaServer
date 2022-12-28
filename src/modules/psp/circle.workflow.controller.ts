@@ -41,7 +41,7 @@ export class CircleWorkflowController {
   async getWalletBalance(@Param("walletID") walletID: string) {
     const res = await this.circleService.getWalletBalance(walletID);
     return {
-      walletID,
+      walletID: walletID,
       balance: res,
     };
   }
@@ -59,7 +59,7 @@ export class CircleWorkflowController {
       fundsMovementRequest.amount,
     );
     return {
-      walletID,
+      walletID: walletID,
       balance: res,
     };
   }
@@ -77,7 +77,7 @@ export class CircleWorkflowController {
       fundsMovementRequest.amount,
     );
     return {
-      walletID,
+      walletID: walletID,
       balance: res,
     };
   }
