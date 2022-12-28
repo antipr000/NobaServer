@@ -92,7 +92,7 @@ describe("Verification", () => {
     it("should return sessionKey when user is logged in", async () => {
       const consumerEmail = getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
-      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+      setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/session", JSON.stringify({}));
       const getSessionKeyResponse = (await VerificationService.createSession({
@@ -121,7 +121,7 @@ describe("Verification", () => {
 
     const consumerEmail = getRandomEmail("test.consumer");
     const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
-    setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+    setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
     const sessionKey = "test-session-key";
 
@@ -234,7 +234,7 @@ describe("Verification", () => {
 
       // Create consumer
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, getRandomEmail("fake+consumer"), "CONSUMER");
-      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+      setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       let getConsumerResponse = (await ConsumerService.getConsumer({
         xNobaApiKey: TEST_API_KEY,
@@ -317,7 +317,7 @@ describe("Verification", () => {
 
       // Create consumer
       const consumerLoginResponse = await loginAndGetResponse(mongoUri, getRandomEmail("fake+consumer"), "CONSUMER");
-      setAccessTokenForTheNextRequests(consumerLoginResponse.access_token);
+      setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
       let signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       let getConsumerResponse = (await ConsumerService.getConsumer({
         xNobaApiKey: TEST_API_KEY,
