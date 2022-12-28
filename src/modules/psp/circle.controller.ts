@@ -1,7 +1,7 @@
 import { Controller, ForbiddenException, Get, Headers, HttpStatus, Inject, Post, Request } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeaders, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { getCommonHeaders } from "src/core/utils/CommonHeaders";
+import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";

@@ -18,7 +18,7 @@ import {
 import { ITransactionRepo } from "./transaction.repo";
 
 @Injectable()
-export class PostgresTransactionRepo implements ITransactionRepo {
+export class SQLTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,

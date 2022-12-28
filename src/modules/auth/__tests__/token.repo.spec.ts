@@ -40,11 +40,8 @@ describe("TokenRepoTests", () => {
   });
 
   afterAll(async () => {
-    app.close();
-  });
-
-  beforeEach(async () => {
     await prismaService.token.deleteMany();
+    await app.close();
   });
 
   describe("getToken", () => {

@@ -46,12 +46,11 @@ describe("ConsumerRepoTests", () => {
   });
 
   afterAll(async () => {
-    app.close();
-  });
-
-  beforeEach(async () => {
     await prismaService.cryptoWallet.deleteMany();
+    await prismaService.address.deleteMany();
+    await prismaService.verification.deleteMany();
     await prismaService.consumer.deleteMany();
+    app.close();
   });
 
   describe("createConsumer", () => {

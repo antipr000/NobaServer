@@ -216,7 +216,7 @@ describe("CheckoutClient", () => {
 
 const createFakeConsumer = (email: string): Consumer => {
   return Consumer.createConsumer({
-    _id: "fake-consumer-id",
+    id: "fake-consumer-id",
     email: email,
     address: {
       streetLine1: "123 main st",

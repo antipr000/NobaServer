@@ -30,7 +30,7 @@ export class CreditCardService {
     if (creditCardBinData === null) {
       throw new BadRequestException("Failed to add bin data");
     }
-    return creditCardBinData.props;
+    return creditCardBinData.toDTO();
   }
 
   async updateBinData(binData: CreditCardDTO): Promise<CreditCardDTO> {
@@ -49,7 +49,7 @@ export class CreditCardService {
     if (updatedBinData === null) {
       throw new BadRequestException("Failed to update bin data");
     }
-    return updatedBinData.props;
+    return updatedBinData.toDTO();
   }
 
   async getBINReport(): Promise<BINReportDetails> {
@@ -59,7 +59,7 @@ export class CreditCardService {
   async getBINDetails(requestedBIN: string): Promise<CreditCardDTO> {
     const binDetails: CreditCardBinData = await this.creditCardBinDataRepo.findCardByExactBIN(requestedBIN);
     if (!binDetails) return null;
-    return binDetails.props;
+    return binDetails.toDTO();
   }
 
   async isBINSupported(checkBIN: string): Promise<BINValidity> {

@@ -61,5 +61,5 @@ export type TransactionDTO = {
   /**
    * Type of the transaction. Can be one of 'onramp', 'offramp', 'wallet', 'swap'
    */
-  type: "onramp" | "offramp" | "swap" | "internal_withdrawal" | "wallet";
+  type: "NOBA_WALLET";
 };

@@ -8,12 +8,11 @@ import { SanctionedCryptoWalletService } from "../sanctionedcryptowallet.service
 
 describe("SanctionedCryptoWalletService", () => {
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
+  let app: TestingModule;
 
   jest.setTimeout(30000);
 
-  beforeEach(async () => {
-    const appConfigsDirectory = join(__dirname, "../../../../appconfigs/secrets.yaml");
-
+  beforeAll(async () => {
     let configs = {
       ASSETS_BUCKET_NAME: "prod-noba-assets",
       SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH: "assets/data/sanctioned_wallets.csv",
@@ -28,6 +27,7 @@ describe("SanctionedCryptoWalletService", () => {
         AWS_SECRET_ACCESS_KEY: process.env["AWS_SECRET_ACCESS_KEY"],
       };
     } else {
+      const appConfigsDirectory = join(__dirname, "../../../../appconfigs/secrets.yaml");
       const fileConfigs = readConfigsFromYamlFiles(appConfigsDirectory);
       configs = {
         ...configs,
@@ -43,7 +43,7 @@ describe("SanctionedCryptoWalletService", () => {
       AWS_SECRET_ACCESS_KEY: configs.AWS_SECRET_ACCESS_KEY,
     };
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
           assetsBucketName: configs.ASSETS_BUCKET_NAME,
@@ -56,6 +56,10 @@ describe("SanctionedCryptoWalletService", () => {
     }).compile();
 
     sanctionedCryptoWalletService = app.get<SanctionedCryptoWalletService>(SanctionedCryptoWalletService);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   describe("isSanctionedWallet", () => {

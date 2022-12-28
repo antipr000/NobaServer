@@ -80,4 +80,11 @@ export class Utils {
         return "CVV";
     }
   }
+
+  static enumFromValue = <T extends Record<string, string>>(val: string, _enum: T) => {
+    if (val === undefined) return undefined;
+    const enumName = (Object.keys(_enum) as Array<keyof T>).find(k => _enum[k] === val);
+    if (!enumName) return undefined;
+    return _enum[enumName];
+  };
 }

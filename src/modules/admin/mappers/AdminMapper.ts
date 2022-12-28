@@ -18,7 +18,7 @@ export class AdminMapper implements Mapper<Admin> {
 
   public toDTO(nobaAdmin: Admin): NobaAdminDTO {
     const dto: NobaAdminDTO = new NobaAdminDTO();
-    dto._id = nobaAdmin.props.id;
+    dto.id = nobaAdmin.props.id;
     dto.email = nobaAdmin.props.email;
     dto.name = nobaAdmin.props.name;
     dto.role = NOBA_ADMIN_ROLE_TYPES[nobaAdmin.props.role];

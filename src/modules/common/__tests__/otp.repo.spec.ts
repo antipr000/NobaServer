@@ -31,11 +31,8 @@ describe("OtpRepoTests", () => {
   });
 
   afterAll(async () => {
-    await app.close();
-  });
-
-  afterEach(async () => {
     await prismaService.otp.deleteMany();
+    await app.close();
   });
 
   describe("getOtp", () => {

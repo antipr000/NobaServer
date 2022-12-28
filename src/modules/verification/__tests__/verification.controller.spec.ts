@@ -48,7 +48,7 @@ describe("VerificationController", () => {
     it("should create session", async () => {
       when(verificationService.createSession()).thenResolve(
         VerificationData.createVerificationData({
-          _id: "session-code",
+          id: "session-code",
         }),
       );
       const result = await verificationController.createSession();

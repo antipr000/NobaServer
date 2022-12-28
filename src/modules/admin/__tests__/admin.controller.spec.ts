@@ -153,7 +153,7 @@ describe("AdminController", () => {
       );
       const addNobaAdminArgument: Admin = capture(mockAdminService.addNobaAdmin).last()[0];
 
-      expect(result._id).toBeDefined();
+      expect(result.id).toBeDefined();
       expect(result.email).toEqual(newNobaAdmin.email);
       expect(result.name).toEqual(newNobaAdmin.name);
       expect(result.role).toEqual(newNobaAdmin.role);
@@ -211,7 +211,7 @@ describe("AdminController", () => {
 
       const queriedNobaAdmin = await adminController.getNobaAdmin({ user: { entity: authenticatedNobaAdmin } });
 
-      expect(queriedNobaAdmin._id).toBe(authenticatedNobaAdmin.props.id);
+      expect(queriedNobaAdmin.id).toBe(authenticatedNobaAdmin.props.id);
       expect(queriedNobaAdmin.email).toBe(authenticatedNobaAdmin.props.email);
       expect(queriedNobaAdmin.name).toBe(authenticatedNobaAdmin.props.name);
       expect(queriedNobaAdmin.role).toBe(authenticatedNobaAdmin.props.role);
@@ -318,7 +318,7 @@ describe("AdminController", () => {
       );
 
       expect(result).toEqual({
-        _id: TARGET_ADMINid,
+        id: TARGET_ADMINid,
         name: "Admin",
         email: TARGET_ADMIN_EMAIL,
         role: UPDATED_ROLE,
@@ -365,7 +365,7 @@ describe("AdminController", () => {
       );
 
       expect(result).toEqual({
-        _id: TARGET_ADMINid,
+        id: TARGET_ADMINid,
         name: UPDATED_NAME,
         email: TARGET_ADMIN_EMAIL,
         role: NOBA_ADMIN_ROLE_TYPES.BASIC,
@@ -416,7 +416,7 @@ describe("AdminController", () => {
       );
 
       expect(result).toEqual({
-        _id: TARGET_ADMINid,
+        id: TARGET_ADMINid,
         name: UPDATED_NAME,
         email: TARGET_ADMIN_EMAIL,
         role: UPDATE_ROLE,

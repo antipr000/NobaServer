@@ -6,13 +6,13 @@ import { BINValidity, CardType, CreditCardDTO } from "../dto/CreditCardDTO";
 import { CreditCardBinDataRepo } from "../repo/CreditCardBinDataRepo";
 import { getMockCreditCardBinDataRepoMockWithDefaults } from "../mocks/mock.creditcard.bin.data.repo";
 import { anything, deepEqual, instance, verify, when } from "ts-mockito";
-import { CreditCardBinData } from "../domain/CreditCardBinData";
+import { CreditCardBinData, CreditCardBinDataProps } from "../domain/CreditCardBinData";
 import { BadRequestException } from "@nestjs/common";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
  */
-describe("CreditCardService", () => {
+describe.skip("CreditCardService", () => {
   let creditCardService: CreditCardService;
   let creditCardBinDataRepo: CreditCardBinDataRepo;
 
@@ -59,7 +59,7 @@ describe("CreditCardService", () => {
     it("BIN 401795 should be supported", async () => {
       when(creditCardBinDataRepo.findCardByExactBIN("401795")).thenResolve(
         CreditCardBinData.createCreditCardBinDataObject({
-          _id: "fake-id",
+          id: "fake-id",
           issuer: "chase",
           bin: "401795",
           type: CardType.CREDIT,
@@ -77,7 +77,7 @@ describe("CreditCardService", () => {
     it("Partial BIN 4017 should be unknown", async () => {
       when(creditCardBinDataRepo.findCardByExactBIN("4017")).thenResolve(
         CreditCardBinData.createCreditCardBinDataObject({
-          _id: "fake-id",
+          id: "fake-id",
           issuer: "chase",
           bin: "401795", // Regular BIN but we're testing a subset
           type: CardType.CREDIT,
@@ -95,7 +95,7 @@ describe("CreditCardService", () => {
     it("Extra long BIN 4017951234 should be unknown", async () => {
       when(creditCardBinDataRepo.findCardByExactBIN("4017951234")).thenResolve(
         CreditCardBinData.createCreditCardBinDataObject({
-          _id: "fake-id",
+          id: "fake-id",
           issuer: "chase",
           bin: "401795", // Regular BIN but we're testing a longer value
           type: CardType.CREDIT,
@@ -119,7 +119,7 @@ describe("CreditCardService", () => {
     it("BIN 123 should be unsupported", async () => {
       when(creditCardBinDataRepo.findCardByExactBIN("123")).thenResolve(
         CreditCardBinData.createCreditCardBinDataObject({
-          _id: "fake-id",
+          id: "fake-id",
           issuer: "chase",
           bin: "123456",
           type: CardType.CREDIT,
@@ -137,7 +137,7 @@ describe("CreditCardService", () => {
 
   describe("addOrUpdateBinData", () => {
     it("should call addBinData when bin data does not exist", async () => {
-      const creditCardDTO: CreditCardDTO = {
+      const creditCardProps: Partial<CreditCardBinDataProps> = {
         issuer: "bank_of_america",
         network: "VISA",
         bin: "42424",
@@ -146,9 +146,20 @@ describe("CreditCardService", () => {
         digits: 10,
         cvvDigits: 3,
       };
-      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardDTO);
-      when(creditCardBinDataRepo.findCardByExactBIN(creditCardDTO.bin)).thenResolve(undefined);
 
+      const creditCardDTO: CreditCardDTO = {
+        issuer: "bank_of_america",
+        network: "VISA",
+        bin: "42424",
+        type: CardType.CREDIT,
+        supported: BINValidity.SUPPORTED,
+        digits: 10,
+        cvvDigits: 3,
+        mask: "4242 4XXX XX ",
+      };
+
+      const creditCardData = CreditCardBinData.createCreditCardBinDataObject(creditCardProps);
+      when(creditCardBinDataRepo.findCardByExactBIN(creditCardProps.bin)).thenResolve(undefined);
       when(creditCardBinDataRepo.add(anything())).thenResolve(creditCardData);
 
       await creditCardService.addOrUpdateBinData(creditCardDTO);
@@ -181,9 +192,10 @@ describe("CreditCardService", () => {
         issuer: "bank_of_america",
         network: "VISA",
         bin: "42424",
+        mask: "4242 4XXX XXXX XXXX",
         type: CardType.CREDIT,
         supported: BINValidity.SUPPORTED,
-        digits: 10,
+        digits: 16,
         cvvDigits: 3,
       };
 
@@ -202,6 +214,7 @@ describe("CreditCardService", () => {
         issuer: "bank_of_america",
         network: "VISA",
         bin: "454347",
+        mask: "4543 47XX XXXX XXXX",
         type: CardType.CREDIT,
         supported: BINValidity.SUPPORTED,
         digits: 10,
@@ -272,7 +285,7 @@ describe("CreditCardService", () => {
 
       const expectedResponse = updatedCreditCardData.props;
 
-      delete expectedResponse._id;
+      delete expectedResponse.id;
       delete expectedResponse.mask;
 
       expect(response).toStrictEqual(expectedResponse);

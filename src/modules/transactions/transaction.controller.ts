@@ -136,10 +136,10 @@ export class TransactionController {
     @Body() orderDetails: CreateTransactionDTO,
     @AuthUser() user: Consumer,
   ): Promise<string> {
-    this.logger.debug(`uid ${user.props._id}, transact input:`, orderDetails);
+    this.logger.debug(`uid ${user.props.id}, transact input:`, orderDetails);
 
     try {
-      return (await this.transactionService.initiateTransaction(user.props._id, sessionKey, orderDetails))._id;
+      return (await this.transactionService.initiateTransaction(user.props.id, sessionKey, orderDetails))._id;
     } catch (e) {
       if (e instanceof TransactionSubmissionException) {
         throw new BadRequestException(e.disposition, e.message);
@@ -165,7 +165,7 @@ export class TransactionController {
     @AuthUser() authUser: Consumer,
   ): Promise<TransactionsQueryResultsDTO> {
     return (await this.transactionService.getUserTransactions(
-      authUser.props._id,
+      authUser.props.id,
       transactionFilters,
     )) as TransactionsQueryResultsDTO;
   }
@@ -231,7 +231,7 @@ export class TransactionController {
   ) {
     let filePath = "";
     const transactions: PaginatedResult<TransactionDTO> = await this.transactionService.getUserTransactions(
-      authUser.props._id,
+      authUser.props.id,
       { ...params, pageLimit: params.pageLimit ?? 10000 },
     );
 

@@ -68,7 +68,7 @@ describe("Authentication", () => {
       const consumerEmail = getRandomEmail("test+consumer");
 
       const loginRequestBody: LoginRequestDTO = {
-        email: consumerEmail,
+        emailOrPhone: consumerEmail,
         identityType: "CONSUMER",
       };
 
@@ -103,8 +103,8 @@ describe("Authentication", () => {
       })) as LoginResponseDTO & ResponseStatus;
       console.log(verifyOtpResponse);
 
-      const accessToken = verifyOtpResponse.access_token;
-      const userId = verifyOtpResponse.user_id;
+      const accessToken = verifyOtpResponse.accessToken;
+      const userId = verifyOtpResponse.userID;
 
       expect(verifyOtpResponse.__status).toBe(201);
       expect(accessToken).toBeDefined();
@@ -120,7 +120,7 @@ describe("Authentication", () => {
       })) as ConsumerDTO & ResponseStatus;
 
       expect(loggedInConsumer.__status).toBe(200);
-      expect(loggedInConsumer._id).toBe(userId);
+      expect(loggedInConsumer.id).toBe(userId);
       expect(loggedInConsumer.email).toBe(consumerEmail);
     });
 
@@ -141,7 +141,7 @@ describe("Authentication", () => {
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
         },
       });
@@ -185,7 +185,7 @@ describe("Authentication", () => {
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
         },
       });
@@ -214,8 +214,8 @@ describe("Authentication", () => {
       })) as LoginResponseDTO & ResponseStatus;
       console.log(verifyOtpResponse);
 
-      const accessToken = verifyOtpResponse.access_token;
-      const userId = verifyOtpResponse.user_id;
+      const accessToken = verifyOtpResponse.accessToken;
+      const userId = verifyOtpResponse.userID;
 
       expect(verifyOtpResponse.__status).toBe(201);
       expect(accessToken).toBeDefined();
@@ -231,7 +231,7 @@ describe("Authentication", () => {
       })) as ConsumerDTO & ResponseStatus;
 
       expect(loggedInConsumer.__status).toBe(200);
-      expect(loggedInConsumer._id).toBe(userId);
+      expect(loggedInConsumer.id).toBe(userId);
       expect(loggedInConsumer.email).toBe(consumerEmail);
     });
 
@@ -251,7 +251,7 @@ describe("Authentication", () => {
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMR" as any,
         },
       });
@@ -276,7 +276,7 @@ describe("Authentication", () => {
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
-          email: nobaAdminEmail,
+          emailOrPhone: nobaAdminEmail,
           identityType: "NOBA_ADMIN",
         },
       })) as any & ResponseStatus;
@@ -300,7 +300,7 @@ describe("Authentication", () => {
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
         },
       });
@@ -311,7 +311,7 @@ describe("Authentication", () => {
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "NOBA_ADMIN",
         },
       });
@@ -338,7 +338,7 @@ describe("Authentication", () => {
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
-          email: nobaAdminEmail,
+          emailOrPhone: nobaAdminEmail,
           identityType: "NOBA_ADMIN",
         },
       })) as any & ResponseStatus;

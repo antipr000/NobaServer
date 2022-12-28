@@ -8,7 +8,6 @@ import morgan from "morgan";
 import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./core/exception/ExceptionsFilter";
-import { CustomConfigService } from "./core/utils/AppConfigModule";
 import {
   createClassTypeToPropertiesMapFromSwaggerSchemas,
   NoUnExpectedKeysValidationPipe,
@@ -33,17 +32,13 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
-  const configService = app.get(CustomConfigService);
 
-  const apiPrefix = configService.get<string>("apiPrefix");
   const appEnvType: AppEnvironment = getEnvironmentName();
-  winstonLogger.info("Setting API prefix to " + apiPrefix + ", app environment is " + appEnvType);
 
   app.enableCors(); //allowing all origins for now but in future we can dynamically set allowed origins based on the environment (localhost:3000, noba.com etc)
   // app.use(csurf()); we don't need csurf as we take auth-token from header and not cookies --> https://security.stackexchange.com/questions/166724/should-i-use-csrf-protection-on-rest-api-endpoints?newreg=98a29ea4aaa8448785ffc3ab53b3c475
   app.use(helmet());
   app.useLogger(logger);
-  app.setGlobalPrefix(apiPrefix ?? "");
   app.use(getMorgan(winstonLogger));
   app.useGlobalFilters(new AllExceptionsFilter(winstonLogger));
   // the next two lines did the trick

@@ -31,11 +31,14 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
 import { TransactionFilterOptions } from "../transactions/domain/Types";
-import { TransactionRateDTO } from "./dto/TransactionRateDTO";
+import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
+import { TransactionDTO } from "./dto/TransactionDTO";
+import { TransactionMapper } from "./mapper/transaction.mapper";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("v2")
+@ApiTags("Transaction")
 @ApiHeaders(getCommonHeaders())
 export class TransactionController {
   @Inject()
@@ -44,53 +47,65 @@ export class TransactionController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
+  private readonly mapper: TransactionMapper;
+
+  constructor() {
+    this.mapper = new TransactionMapper();
+  }
+
   @Get("/transactions/:transactionRef")
-  @ApiTags("Transactions V2")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
+    type: TransactionDTO,
   })
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
-  async getTransaction(@Param("transactionRef") transactionRef: string, @AuthUser() consumer: Consumer) {
+  async getTransaction(
+    @Param("transactionRef") transactionRef: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<TransactionDTO> {
     const transaction = await this.transactionService.getTransaction(transactionRef, consumer.props.id);
     if (!transaction) {
       throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
     }
+    return this.mapper.toDTO(transaction);
   }
 
   @Get("/transactions/")
-  @ApiTags("Transactions V2")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
+    type: Array<TransactionDTO>,
   })
-  async getAllTransactions(@Query() filters: TransactionFilterOptions, @AuthUser() consumer: Consumer) {
+  async getAllTransactions(
+    @Query() filters: TransactionFilterOptions,
+    @AuthUser() consumer: Consumer,
+  ): Promise<TransactionDTO[]> {
     filters.consumerID = consumer.props.id;
-    return this.transactionService.getFilteredTransactions(filters);
+    const allTransactions = await this.transactionService.getFilteredTransactions(filters);
+    return allTransactions.map(transaction => this.mapper.toDTO(transaction));
   }
 
   @Get("/transactions/rate/")
-  @ApiTags("Transactions V2")
   @ApiOperation({ summary: "Get exchange rate of conversion" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: TransactionRateDTO,
+    type: ExchangeRateDTO,
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getExchangeRate(
-    @Query("baseCurrency") baseCurrency: string,
-    @Query("targetCurrency") targetCurrency: string,
-  ): Promise<TransactionRateDTO> {
-    const exchangeRate = await this.transactionService.calculateExchangeRate(baseCurrency, targetCurrency);
+    @Query("numeratorCurrency") numeratorCurrency: string,
+    @Query("denominatorCurrency") denominatorCurrency: string,
+  ): Promise<ExchangeRateDTO> {
+    const exchangeRate = await this.transactionService.calculateExchangeRate(numeratorCurrency, denominatorCurrency);
     return {
-      baseCurrency: baseCurrency,
-      targetCurrency: targetCurrency,
+      numeratorCurrency: numeratorCurrency,
+      denominatorCurrency: denominatorCurrency,
       exchangeRate: exchangeRate,
     };
   }
 
-  @Post("/transaction/")
-  @ApiTags("Transactions V2")
+  @Post("/transactions/")
   @ApiOperation({ summary: "Submits a new transaction" })
   @ApiResponse({
     status: HttpStatus.CREATED,

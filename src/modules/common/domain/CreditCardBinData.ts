@@ -2,9 +2,10 @@ import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { KeysRequired } from "./Types";
 import Joi from "joi";
-import { BINValidity, CardType } from "../dto/CreditCardDTO";
+import { BINValidity, CardType, CreditCardDTO } from "../dto/CreditCardDTO";
 import { creditCardMaskGenerator } from "../../../core/utils/CreditCardMaskGenerator";
 import { CreditCardBIN } from "@prisma/client";
+import { Utils } from "../../../core/utils/Utils";
 
 export class CreditCardBinDataProps implements Partial<CreditCardBIN> {
   id: string;
@@ -51,5 +52,18 @@ export class CreditCardBinData extends AggregateRoot<CreditCardBinDataProps> {
     if (!creditCardBinDataProps.mask)
       creditCardBinDataProps.mask = creditCardMaskGenerator(creditCardBinDataProps.bin, creditCardBinDataProps.digits);
     return new CreditCardBinData(Joi.attempt(creditCardBinDataProps, creditCardBinDataJoiSchema));
+  }
+
+  public toDTO(): CreditCardDTO {
+    return {
+      issuer: this.props.issuer,
+      bin: this.props.bin,
+      type: Utils.enumFromValue(this.props.type, CardType),
+      network: this.props.network,
+      mask: this.props.mask,
+      supported: Utils.enumFromValue(this.props.supported, BINValidity),
+      digits: this.props.digits,
+      cvvDigits: this.props.cvvDigits,
+    };
   }
 }
