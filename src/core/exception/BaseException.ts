@@ -1,5 +1,8 @@
-export interface BaseExceptionConstructor<T> {
+interface BaseExceptionConstructor<T> extends ExceptionConstructor<T> {
   message: string;
+}
+
+export interface ExceptionConstructor<T> {
   errorCode?: T;
   retry?: boolean;
   severity?: SeverityLevel;

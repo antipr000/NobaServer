@@ -1,4 +1,4 @@
-import { BaseException, BaseExceptionConstructor } from "./BaseException";
+import { BaseException, ExceptionConstructor } from "./BaseException";
 
 export const enum ServiceErrorCode {
   SEMANTIC_VALIDATION = "Semantic validation error",
@@ -10,7 +10,9 @@ export const enum ServiceErrorCode {
   UNKNOWN = "Unknown error has occured",
 }
 
-interface ServiceExceptionConstructor extends BaseExceptionConstructor<ServiceErrorCode> {}
+interface ServiceExceptionConstructor extends ExceptionConstructor<ServiceErrorCode> {
+  message?: string;
+}
 
 export class ServiceException extends BaseException<ServiceErrorCode> {
   constructor(params: ServiceExceptionConstructor) {

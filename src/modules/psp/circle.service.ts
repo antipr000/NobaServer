@@ -30,7 +30,10 @@ export class CircleService {
       await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
     } catch (err) {
       // TODO: What if this fails? a wallet was created but not linked to the consumer
-      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Could not link Circle wallet to consumer");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Could not link Circle wallet to consumer",
+      });
     }
     return circleWalletID;
   }
@@ -38,14 +41,17 @@ export class CircleService {
   public async getMasterWalletID(): Promise<string> {
     const masterWalletID = await this.circleClient.getMasterWalletID();
     if (!masterWalletID) {
-      throw new ServiceException(ServiceErrorCode.DOES_NOT_EXIST, "Master Wallet not found");
+      throw new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST, message: "Master Wallet not found" });
     }
     return masterWalletID;
   }
 
   public async getWalletBalance(walletID: string): Promise<number> {
     if (!walletID) {
-      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Wallet ID must not be empty");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Wallet ID must not be empty",
+      });
     }
 
     return this.circleClient.getWalletBalance(walletID);
@@ -53,11 +59,17 @@ export class CircleService {
 
   public async debitWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
     if (!walletID) {
-      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Wallet ID must not be empty");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Wallet ID must not be empty",
+      });
     }
 
     if (amount <= 0) {
-      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Amount must be greater than 0");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Amount must be greater than 0",
+      });
     }
 
     const masterWalletID = await this.getMasterWalletID();
@@ -73,11 +85,17 @@ export class CircleService {
 
   public async creditWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
     if (!walletID) {
-      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Wallet ID must not be empty");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Wallet ID must not be empty",
+      });
     }
 
     if (amount <= 0) {
-      throw new ServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "Amount must be greater than 0");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Amount must be greater than 0",
+      });
     }
 
     const masterWalletID = await this.getMasterWalletID();
