@@ -16,6 +16,7 @@ export class SQLLimitProfileRepo implements ILimitProfileRepo {
 
   async getProfile(id: string): Promise<LimitProfile> {
     const limitProfileProps = await this.prismaService.limitProfile.findUnique({ where: { id: id } });
+    if (limitProfileProps == null) return null;
     return LimitProfile.createLimitProfile(limitProfileProps);
   }
 

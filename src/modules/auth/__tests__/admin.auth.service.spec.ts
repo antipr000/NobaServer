@@ -103,7 +103,7 @@ describe("AdminAuthService", () => {
 
       when(mockAdminService.getAdminByEmail(EXISTING_ADMIN_EMAIL)).thenResolve(
         Admin.createAdmin({
-          _id: ADMIN_ID,
+          id: ADMIN_ID,
           email: EXISTING_ADMIN_EMAIL,
           name: "ADMIN",
           role: "BASIC",
@@ -129,7 +129,7 @@ describe("AdminAuthService", () => {
     it("should return 'true' if service returns true", async () => {
       const EXISTING_ADMIN_EMAIL = "admin@noba.com";
       const admin: Admin = Admin.createAdmin({
-        _id: "1111111111",
+        id: "1111111111",
         email: EXISTING_ADMIN_EMAIL,
         role: "BASIC",
       });

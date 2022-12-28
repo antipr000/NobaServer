@@ -109,12 +109,12 @@ describe("VerificationService", () => {
     it("should return session information", async () => {
       when(verificationRepo.saveVerificationData(anything())).thenResolve(
         VerificationData.createVerificationData({
-          _id: "test-session",
+          id: "test-session",
         }),
       );
 
       const result = await verificationService.createSession();
-      expect(result.props._id).toBe("test-session");
+      expect(result.props.id).toBe("test-session");
     });
   });
 
@@ -679,7 +679,7 @@ describe("VerificationService", () => {
       };
 
       const verificationData = VerificationData.createVerificationData({
-        _id: sessionKey,
+        id: sessionKey,
         transactionID: transactionInformation.transactionID,
       });
 

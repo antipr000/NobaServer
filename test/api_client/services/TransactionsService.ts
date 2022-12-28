@@ -32,7 +32,7 @@ export class TransactionsService {
     cryptoCurrencyCode: string;
     fixedSide: "fiat" | "crypto";
     fixedAmount: number;
-    transactionType: "onramp" | "offramp" | "swap" | "internal_withdrawal" | "wallet";
+    transactionType: "NOBA_WALLET";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()

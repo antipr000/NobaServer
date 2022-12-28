@@ -21,7 +21,7 @@ export class AdminAuthService extends AuthService {
     const isEmail = Utils.isEmail(emailOrPhone);
     if (!isEmail) throw new Error("Admin can only login with email");
     const admin: Admin = await this.adminService.getAdminByEmail(emailOrPhone);
-    return admin.props._id;
+    return admin.props.id;
   }
 
   protected async isUserSignedUp(emailOrPhone: string): Promise<boolean> {

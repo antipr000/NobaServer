@@ -252,7 +252,7 @@ describe("Verification", () => {
         data: {
           case: {
             sessionKey: "test-session-key",
-            customerID: getConsumerResponse._id,
+            customerID: getConsumerResponse.id,
           },
           action: {
             source: "fake-source",
@@ -360,7 +360,7 @@ describe("Verification", () => {
           },
           case: {
             sessionKey: "fake-session",
-            customerID: getConsumerResponse._id,
+            customerID: getConsumerResponse.id,
             status: "resolved",
             checkpoint: "ssn",
             transactionID: "fake-transaction",

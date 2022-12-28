@@ -120,7 +120,7 @@ describe("Authentication", () => {
       })) as ConsumerDTO & ResponseStatus;
 
       expect(loggedInConsumer.__status).toBe(200);
-      expect(loggedInConsumer._id).toBe(userId);
+      expect(loggedInConsumer.id).toBe(userId);
       expect(loggedInConsumer.email).toBe(consumerEmail);
     });
 
@@ -231,7 +231,7 @@ describe("Authentication", () => {
       })) as ConsumerDTO & ResponseStatus;
 
       expect(loggedInConsumer.__status).toBe(200);
-      expect(loggedInConsumer._id).toBe(userId);
+      expect(loggedInConsumer.id).toBe(userId);
       expect(loggedInConsumer.email).toBe(consumerEmail);
     });
 

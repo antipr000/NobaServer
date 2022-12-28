@@ -19,7 +19,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:prisma-migrate": "yarn prisma-migrate-deploy && yarn test:unit",
     "test": "docker-compose -f docker-compose.test.yml up --exit-code-from test",
-    "test:unit": "jest consumer/ auth/ common/ transaction/ verification/ --silent=False --runInBand",
+    "test:unit": "jest consumer/ auth/ common/ transaction/ verification/ --verbose --silent=False --runInBand",
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:cov": "yarn test:unit --coverage --verbose --silent --runInBand",

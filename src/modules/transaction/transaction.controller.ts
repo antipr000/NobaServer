@@ -36,6 +36,7 @@ import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("v2")
+@ApiTags("Transaction")
 @ApiHeaders(getCommonHeaders())
 export class TransactionController {
   @Inject()
@@ -45,7 +46,6 @@ export class TransactionController {
   private readonly logger: Logger;
 
   @Get("/transactions/:transactionRef")
-  @ApiTags("Transaction")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -59,7 +59,6 @@ export class TransactionController {
   }
 
   @Get("/transactions/")
-  @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -70,7 +69,6 @@ export class TransactionController {
   }
 
   @Get("/transactions/rate/")
-  @ApiTags("Transaction")
   @ApiOperation({ summary: "Get exchange rate of conversion" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -78,19 +76,18 @@ export class TransactionController {
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getExchangeRate(
-    @Query("baseCurrency") baseCurrency: string,
-    @Query("targetCurrency") targetCurrency: string,
+    @Query("numeratorCurrency") numeratorCurrency: string,
+    @Query("denominatorCurrency") denominatorCurrency: string,
   ): Promise<ExchangeRateDTO> {
-    const exchangeRate = await this.transactionService.calculateExchangeRate(baseCurrency, targetCurrency);
+    const exchangeRate = await this.transactionService.calculateExchangeRate(numeratorCurrency, denominatorCurrency);
     return {
-      numeratorCurrency: baseCurrency,
-      denominatorCurrency: targetCurrency,
+      numeratorCurrency: numeratorCurrency,
+      denominatorCurrency: denominatorCurrency,
       exchangeRate: exchangeRate,
     };
   }
 
-  @Post("/transaction/")
-  @ApiTags("Transaction")
+  @Post("/transactions/")
   @ApiOperation({ summary: "Submits a new transaction" })
   @ApiResponse({
     status: HttpStatus.CREATED,

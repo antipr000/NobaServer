@@ -3,7 +3,7 @@ import { AdminProps, NOBA_ADMIN_ROLE_TYPES } from "../domain/Admin";
 
 export class NobaAdminDTO implements Partial<AdminProps> {
   @ApiProperty()
-  _id?: string;
+  id?: string;
 
   @ApiProperty()
   email: string;

@@ -3,5 +3,5 @@
 /* eslint-disable */
 
 export type DeleteNobaAdminDTO = {
-  _id: string;
+  id: string;
 };

@@ -3,7 +3,6 @@ envType: "production"
 # ***** SENSITIVE PRODUCTION CONFIGURATIONS SUCH AS PASSWORDS,SECRETS SHOULDN'T BE PUT HERE,
 # ***** INSTEAD SHOULD BE INJECTED FROM SECRETS AT RUNTIME OR SHOULD BE PASSED AS ENVIRONMENT VARIABLE
 
-apiPrefix: ""
 logFilePath: "/home/ubuntu/noba_server.log"
 
 awsRegion: "us-east-1"
