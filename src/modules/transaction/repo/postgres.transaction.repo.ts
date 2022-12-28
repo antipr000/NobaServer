@@ -133,7 +133,10 @@ export class PostgresTransactionRepo implements ITransactionRepo {
     }
   }
 
-  async updateTransactionByTransactionRef(transactionRef: string, transaction: Transaction): Promise<Transaction> {
+  async updateTransactionByTransactionRef(
+    transactionRef: string,
+    transaction: Partial<Transaction>,
+  ): Promise<Transaction> {
     validateUpdateTransaction(transaction);
 
     try {

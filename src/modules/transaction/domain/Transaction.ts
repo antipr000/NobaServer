@@ -2,19 +2,17 @@ import { Transaction as PrismaTransactionModel } from "@prisma/client";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
-// Everything is marked as "optional" to allow for partial updates.
-// The "required" fields are enforced by the Joi schema.
 export class Transaction {
-  id?: string;
-  transactionRef?: string;
-  workflowName?: WorkflowName;
-  consumerID?: string;
-  amount?: number;
-  currency?: string;
-  status?: TransactionStatus;
-  exchangeRate?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  id: string;
+  transactionRef: string;
+  workflowName: WorkflowName;
+  consumerID: string;
+  amount: number;
+  currency: string;
+  status: TransactionStatus;
+  exchangeRate: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Format - DEBIT_TO_CREDIT
@@ -30,7 +28,7 @@ export enum TransactionStatus {
   IN_PROGRESS = "IN_PROGRESS",
 }
 
-export const validateInputTransaction = (transaction: Transaction) => {
+export const validateInputTransaction = (transaction: Partial<Transaction>) => {
   const transactionJoiValidationKeys: KeysRequired<Transaction> = {
     id: Joi.string().min(10).optional().allow(null), // null is allowed as it is not set when the transaction is created
     transactionRef: Joi.string().min(10).required(),
@@ -84,7 +82,7 @@ export const validateSavedTransaction = (transaction: Transaction) => {
   return Joi.attempt(transaction, transactionJoiSchema);
 };
 
-export const validateUpdateTransaction = (transaction: Transaction) => {
+export const validateUpdateTransaction = (transaction: Partial<Transaction>) => {
   const uneditableFields = [
     "id",
     "transactionRef",

@@ -226,7 +226,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: Transaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Transaction = {
+      const transactionToUpdates: Partial<Transaction> = {
         status: TransactionStatus.SUCCESS,
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
@@ -255,7 +255,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: Transaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Transaction = {
+      const transactionToUpdates: Partial<Transaction> = {
         exchangeRate: 12.34,
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
@@ -284,7 +284,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: Transaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Transaction = {
+      const transactionToUpdates: Partial<Transaction> = {
         exchangeRate: 12.34,
         status: TransactionStatus.IN_PROGRESS,
       };
@@ -311,7 +311,7 @@ describe("PostgresTransactionRepoTests", () => {
     });
 
     it("should throw a NotFound error if the transaction with the specified 'transactionRef' does not exist", async () => {
-      const updatedTransaction: Transaction = {
+      const updatedTransaction: Partial<Transaction> = {
         status: TransactionStatus.SUCCESS,
       };
       await expect(
