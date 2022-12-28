@@ -3,6 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
 import { Logger } from "winston";
 import { CircleClient } from "./circle.client";
+import { Circle } from "./domain/Circle";
 import { ICircleRepo } from "./repos/CircleRepo";
 
 @Injectable()
@@ -17,7 +18,6 @@ export class CircleService {
   private readonly circleClient: CircleClient;
 
   public async getOrCreateWallet(consumerID: string): Promise<string> {
-    // may want to return a Result object here as well
     // assume there's only one wallet per consumer ID
     const existingWalletResult = await this.circleRepo.getCircleWalletID(consumerID);
     if (existingWalletResult.isSuccess) {
@@ -26,20 +26,21 @@ export class CircleService {
 
     const circleWalletID: string = await this.circleClient.createWallet(consumerID);
 
-    await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
+    try {
+      await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
+    } catch (err) {
+      // TODO: What if this fails?
+      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Could not link Circle wallet to consumer");
+    }
     return circleWalletID;
   }
 
   public async getMasterWalletID(): Promise<string> {
-    try {
-      const masterWalletID = await this.circleClient.getMasterWalletID();
-      if (!masterWalletID) {
-        throw new ServiceException(ServiceErrorCode.DOES_NOT_EXIST, "Master Wallet not found");
-      }
-      return masterWalletID;
-    } catch (err) {
-      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Unknown error has occured", err);
+    const masterWalletID = await this.circleClient.getMasterWalletID();
+    if (!masterWalletID) {
+      throw new ServiceException(ServiceErrorCode.DOES_NOT_EXIST, "Master Wallet not found");
     }
+    return masterWalletID;
   }
 
   public async getWalletBalance(walletID: string): Promise<number> {
