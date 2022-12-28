@@ -1,4 +1,4 @@
-interface BaseExceptionConstructor<T> {
+export interface BaseExceptionConstructor<T> {
   message: string;
   errorCode?: T;
   retry?: boolean;

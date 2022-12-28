@@ -1,4 +1,4 @@
-import { BaseException, SeverityLevel } from "./BaseException";
+import { BaseException, BaseExceptionConstructor } from "./BaseException";
 
 export const enum ServiceErrorCode {
   SEMANTIC_VALIDATION = "Semantic validation error",
@@ -10,14 +10,16 @@ export const enum ServiceErrorCode {
   UNKNOWN = "Unknown error has occured",
 }
 
+interface ServiceExceptionConstructor extends BaseExceptionConstructor<ServiceErrorCode> {}
+
 export class ServiceException extends BaseException<ServiceErrorCode> {
-  constructor(errorCode: ServiceErrorCode, message?: string, retry?: boolean, severity?: SeverityLevel, error?: any) {
+  constructor(params: ServiceExceptionConstructor) {
     super({
-      message: message ?? errorCode,
-      errorCode,
-      retry,
-      severity,
-      error,
+      message: params.message ?? params.errorCode,
+      errorCode: params.errorCode,
+      retry: params.retry,
+      severity: params.severity,
+      error: params.error,
     });
   }
 }
