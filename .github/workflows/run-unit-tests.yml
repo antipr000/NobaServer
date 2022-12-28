@@ -8,6 +8,23 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub PostgreSQL image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Restore environment from cache
@@ -19,18 +36,13 @@ jobs:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}
 
-      - name: Create .env file
-        run: |
-          touch .env
-          echo AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} >> .env
-          echo AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> .env
-          echo DATABASE_URL=postgresql://prisma:prisma@db:5432/test?connect_timeout=300 >> .env
       - name: Unit tests with coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: docker-compose -f docker-compose.test.yml up --build --exit-code-from test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
+        run: yarn test:unit
 
       - name: Cache test results
         id: cache-test-results
