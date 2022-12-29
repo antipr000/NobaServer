@@ -4,6 +4,7 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/Service
 import { Logger } from "winston";
 import { CircleClient } from "./circle.client";
 import { ICircleRepo } from "./repos/CircleRepo";
+import { UpdateWalletBalanceServiceDTO } from "./domain/UpdateWalletBalanceServiceDTO";
 
 @Injectable()
 export class CircleService {
@@ -17,6 +18,13 @@ export class CircleService {
   private readonly circleClient: CircleClient;
 
   public async getOrCreateWallet(consumerID: string): Promise<string> {
+    if (!consumerID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Consumer ID must not be empty",
+      });
+    }
+
     // assume there's only one wallet per consumer ID
     const existingWalletResult = await this.circleRepo.getCircleWalletID(consumerID);
     if (existingWalletResult.isSuccess) {
@@ -57,7 +65,11 @@ export class CircleService {
     return this.circleClient.getWalletBalance(walletID);
   }
 
-  public async debitWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
+  public async debitWalletBalance(
+    idempotencyKey: string,
+    walletID: string,
+    amount: number,
+  ): Promise<UpdateWalletBalanceServiceDTO> {
     if (!walletID) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -80,10 +92,18 @@ export class CircleService {
       amount: amount,
     });
 
-    return response.updatedBalance;
+    return {
+      id: response.id,
+      status: response.status,
+      createdAt: response.createdAt,
+    };
   }
 
-  public async creditWalletBalance(idempotencyKey: string, walletID: string, amount: number): Promise<number> {
+  public async creditWalletBalance(
+    idempotencyKey: string,
+    walletID: string,
+    amount: number,
+  ): Promise<UpdateWalletBalanceServiceDTO> {
     if (!walletID) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -106,6 +126,10 @@ export class CircleService {
       amount: amount,
     });
 
-    return response.updatedBalance;
+    return {
+      id: response.id,
+      status: response.status,
+      createdAt: response.createdAt,
+    };
   }
 }
