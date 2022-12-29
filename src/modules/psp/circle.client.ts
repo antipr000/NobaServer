@@ -8,6 +8,7 @@ import { Logger } from "winston";
 import { AxiosResponse } from "axios";
 import { CircleWithdrawalRequest, CircleWithdrawalResponse } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
+import { Utils } from "src/core/utils/Utils";
 
 export class CircleClient {
   private readonly circleApi: Circle;
@@ -38,6 +39,7 @@ export class CircleClient {
           err.response.headers,
         )}`,
       );
+      // TODO: how should we handle generic exceptions from circle?
       throw new InternalServerErrorException("Service unavailable. Please try again.");
     }
   }
@@ -68,14 +70,21 @@ export class CircleClient {
     }
   }
 
-  // TODO: Complete the Withdrawal flow after the Transaction schemas are changed.
-  async withdraw(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
+  async transfer(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
     try {
-      return null;
+      const transferResponse = await this.circleApi.transfers.createTransfer({
+        idempotencyKey: request.idempotencyKey,
+        source: { id: request.sourceWalletID, type: "wallet" },
+        destination: { id: request.destinationWalletID, type: "wallet" },
+        amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
+      });
+
+      // TODO: figure out best return here
+      // maybe source wallet balance and destination wallet balance?
+      return {status: transferResponse.data.data.};
     } catch (err) {
       this.logger.error(
-        `Error while creating the wallet: ${JSON.stringify(err.response.data)}, ${JSON.stringify(
-          err.response.headers,
+        `Error while transferring funds: ${JSON.stringify(err.response.data)},
         )}`,
       );
       throw new InternalServerErrorException("Service unavailable. Please try again.");

@@ -4,7 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { CircleService } from "./circle.service";
-import { CircleFundsMovementRequestDTO } from "./domain/CircleFundsMovementRequestDTO";
+import { CircleFundsMovementRequestDTO } from "./dto/CircleFundsMovementRequestDTO";
 
 @Controller("v1/wf/circle") // This defines the path prefix
 @ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
@@ -41,7 +41,7 @@ export class CircleWorkflowController {
   async getWalletBalance(@Param("walletID") walletID: string) {
     const res = await this.circleService.getWalletBalance(walletID);
     return {
-      walletID: walletID,
+      walletID,
       balance: res,
     };
   }
@@ -53,9 +53,13 @@ export class CircleWorkflowController {
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
-    const res = await this.circleService.debitWalletBalance(walletID, fundsMovementRequest.amount);
+    const res = await this.circleService.debitWalletBalance(
+      fundsMovementRequest.workflowID,
+      walletID,
+      fundsMovementRequest.amount,
+    );
     return {
-      walletID: walletID,
+      walletID,
       balance: res,
     };
   }
@@ -67,9 +71,13 @@ export class CircleWorkflowController {
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
-    const res = await this.circleService.creditWalletBalance(walletID, fundsMovementRequest.amount);
+    const res = await this.circleService.creditWalletBalance(
+      fundsMovementRequest.workflowID,
+      walletID,
+      fundsMovementRequest.amount,
+    );
     return {
-      walletID: walletID,
+      walletID,
       balance: res,
     };
   }

@@ -1,14 +1,14 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from "@nestjs/common";
 import { Logger } from "winston";
-import { convertToHTTPException, isApplicationException } from "./AppExceptionToHTTPExceptionMap";
+import { convertToHTTPException, isApplicationException } from "../AppExceptionToHTTPExceptionMap";
 import Joi from "joi";
-import { ApplicationException } from "./CommonAppException";
+import { ApplicationException } from "../CommonAppException";
 
 @Catch()
-export class AllExceptionsFilter implements ExceptionFilter {
+export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
   constructor(private logger: Logger) {}
 
-  catch(originalException: unknown, host: ArgumentsHost) {
+  catch(originalException: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
@@ -21,7 +21,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const message = httpException.message;
 
     //log error info on service side, don't catch everything else how would we know what is going wrong?
-    if (true) {
+    const log = true;
+    if (log) {
       let messageToBeLogged;
       if (originalException instanceof HttpException) {
         messageToBeLogged = originalException.message;
@@ -46,10 +47,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     response.status(status).json({
       statusCode: status,
-      details:
-        isApplicationException(originalException) || Joi.isError(originalException)
-          ? httpException.getResponse()
-          : null,
+      details: Joi.isError(originalException) ? httpException.getResponse() : null,
       message: message,
       timestamp: timestamp,
       path: request.url,

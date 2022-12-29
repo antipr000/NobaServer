@@ -38,13 +38,12 @@ export class CircleController {
   @ApiOperation({ summary: "Get current consumer's circle wallet balance" })
   @ApiResponse({ status: HttpStatus.OK })
   async getConsumerWalletBalance(@Request() request, @Headers() headers) {
-    //TODO: Fix
     const consumer = request.user.entity;
     if (!(consumer instanceof Consumer)) {
       throw new ForbiddenException("Endpoint can only be called by consumers");
     }
 
-    const res = await this.circleService.getOrCreateWallet(consumer.props.id);
-    return res;
+    const walletBalance = await this.circleService.getWalletBalance(consumer.props.id);
+    return walletBalance;
   }
 }
