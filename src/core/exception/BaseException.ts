@@ -9,12 +9,16 @@ export interface ExceptionConstructor<T> {
   error?: any;
 }
 
-export type SeverityLevel = "HIGH" | "MEDIUM" | "LOW";
+export enum SeverityLevel {
+  HIGH = "HIGH",
+  MEDIUM = "MEDIUM",
+  LOW = "LOW",
+}
 
 export class BaseException<T> extends Error {
   accessor errorCode: T;
   accessor retry: boolean = false;
-  accessor severity: SeverityLevel = "LOW";
+  accessor severity: SeverityLevel = SeverityLevel.LOW;
   accessor error: any;
 
   constructor(params: BaseExceptionConstructor<T>) {
