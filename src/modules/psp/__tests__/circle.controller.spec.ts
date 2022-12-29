@@ -27,9 +27,12 @@ describe("CircleController", () => {
 
   describe("wallet", () => {
     it("should return a wallet", async () => {
-      when(circleService.getOrCreateWallet(anyString())).thenResolve("wallet");
-      const result = await circleController.addConsumerWallet({}, {});
-      expect(result).toEqual("wallet");
+      when(circleService.getOrCreateWallet(anyString())).thenResolve("walletID");
+      const result = await circleController.addConsumerWallet(
+        { user: { entity: { props: { id: "consumerID" } } } },
+        {},
+      );
+      expect(result).toEqual("walletID");
     });
   });
 });
