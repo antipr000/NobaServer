@@ -30,18 +30,4 @@ describe("CircleService", () => {
 
     circleService = app.get<CircleService>(CircleService);
   });
-
-  describe("getOrCreateWallet", () => {
-    it("should return wallet ID if wallet already exists", async () => {
-      when(circleClient.createWallet("consumerID")).thenResolve("walletID");
-      const walletID = await circleService.getOrCreateWallet("consumerID");
-      expect(walletID).toEqual("walletID");
-    });
-
-    it("should create wallet if wallet does not exist", async () => {
-      when(circleClient.createWallet("consumerID")).thenResolve("walletID");
-      const walletID = await circleService.getOrCreateWallet("consumerID");
-      expect(walletID).toEqual("walletID");
-    });
-  });
 });
