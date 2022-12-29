@@ -1,10 +1,11 @@
 import { HttpStatus, HttpException } from "@nestjs/common";
 import Joi from "joi";
+import { Logger } from "winston";
 import { AppExceptionCode, ApplicationException, BadRequestError } from "./CommonAppException";
 import { serviceToHTTP } from "./mappers/serviceToHTTP";
 import { ServiceException } from "./ServiceException";
 
-export function convertToHTTPException(exception: any): HttpException {
+export function convertToHTTPException(logger: Logger, exception: any): HttpException {
   if (Joi.isError(exception)) {
     return new BadRequestError({
       message: exception.message,
@@ -17,7 +18,7 @@ export function convertToHTTPException(exception: any): HttpException {
   if (exception instanceof HttpException) return exception;
 
   if (exception instanceof ServiceException) {
-    return serviceToHTTP(exception);
+    return serviceToHTTP(logger, exception);
   }
 
   //We return 500, if the exception is not known i.e. we don't leak sensitive information to outside world

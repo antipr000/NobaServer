@@ -8,9 +8,10 @@ import {
   NotImplementedException,
   UnauthorizedException,
 } from "@nestjs/common";
+import { Logger } from "winston";
 import { ServiceErrorCode, ServiceException } from "../ServiceException";
 
-export function serviceToHTTP(exception: ServiceException) {
+export function serviceToHTTP(logger: Logger, exception: ServiceException) {
   switch (exception.errorCode) {
     case ServiceErrorCode.DOES_NOT_EXIST:
       return new NotFoundException(exception.message);
@@ -27,6 +28,7 @@ export function serviceToHTTP(exception: ServiceException) {
     case ServiceErrorCode.UNKNOWN:
       return new InternalServerErrorException(exception.message);
     default:
+      logger.error("Unmapped Service error code. Exception details:", exception);
       return new HttpException(exception.message, 500);
   }
 }

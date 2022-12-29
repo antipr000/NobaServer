@@ -21,7 +21,7 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
     }
 
     //Send HTTP Exception, don't send anything sensitive here i.e. service internal info
-    const httpException = convertToHTTPException(originalException);
+    const httpException = convertToHTTPException(this.logger, originalException);
     const status = httpException.getStatus();
     const message = httpException.message;
 
