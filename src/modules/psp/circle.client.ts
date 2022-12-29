@@ -47,7 +47,10 @@ export class CircleClient {
           err.response.headers,
         )}`,
       );
-      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Service unavailable. Please try again.");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Service unavailable. Please try again.",
+      });
     }
   }
 
@@ -73,7 +76,10 @@ export class CircleClient {
           err.response.headers,
         )}`,
       );
-      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Service unavailable. Please try again.");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Service unavailable. Please try again.",
+      });
     }
   }
 
@@ -97,25 +103,28 @@ export class CircleClient {
 
       switch (transferData.errorCode) {
         case TransferErrorCode.TransferFailed:
-          throw new ServiceException(
-            ServiceErrorCode.UNKNOWN,
-            `Transfer failed for idempotency key: ${request.idempotencyKey}`,
-          );
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNKNOWN,
+            message: `Transfer failed for idempotency key: ${request.idempotencyKey}`,
+            retry: true,
+          });
         case TransferErrorCode.TransferDenied:
-          throw new ServiceException(
-            ServiceErrorCode.UNKNOWN,
-            `Transfer denied for idempotency key: ${request.idempotencyKey}`,
-          );
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNKNOWN,
+            message: `Transfer denied for idempotency key: ${request.idempotencyKey}`,
+            retry: true,
+          });
         case TransferErrorCode.BlockchainError:
-          throw new ServiceException(
-            ServiceErrorCode.UNKNOWN,
-            `Blockchain error for idempotency key: ${request.idempotencyKey}`,
-          );
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNKNOWN,
+            message: `Blockchain error for idempotency key: ${request.idempotencyKey}`,
+            retry: true,
+          });
         case TransferErrorCode.InsufficientFunds:
-          throw new ServiceException(
-            ServiceErrorCode.UNABLE_TO_PROCESS,
-            `Insufficient idempotency key: ${request.idempotencyKey}`,
-          );
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+            message: `Insufficient idempotency key: ${request.idempotencyKey}`,
+          });
       }
     } catch (err) {
       this.logger.error(
@@ -125,7 +134,10 @@ export class CircleClient {
       if (err instanceof ServiceException) {
         throw err;
       }
-      throw new ServiceException(ServiceErrorCode.UNKNOWN, "Service unavailable. Please try again.");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Service unavailable. Please try again.",
+      });
     }
   }
 }
