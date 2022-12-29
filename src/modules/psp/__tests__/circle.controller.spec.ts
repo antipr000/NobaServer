@@ -36,7 +36,7 @@ describe("CircleController", () => {
         email: "mock@noba.com",
       });
 
-      when(circleService.getOrCreateWallet(anyString())).thenResolve("walletID");
+      when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("walletID");
       const result = await circleController.addConsumerWallet(consumer);
       expect(result).toEqual("walletID");
     });
@@ -52,7 +52,7 @@ describe("CircleController", () => {
         email: "mock@noba.com",
       });
 
-      when(circleService.getWalletBalance(anyString())).thenResolve(100);
+      when(circleService.getWalletBalance(consumer.props.id)).thenResolve(100);
       const result = await circleController.getConsumerWalletBalance(consumer);
       expect(result).toEqual(100);
     });
