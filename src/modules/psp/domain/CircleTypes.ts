@@ -8,9 +8,9 @@ export interface CircleWithdrawalRequest {
 }
 
 export interface CircleWithdrawalResponse {
+  id: string;
   status: CircleWithdrawalStatus;
-  currentBalance: number;
-  updatedBalance: number;
+  createdAt: string;
 }
 
 export enum CircleWithdrawalStatus {

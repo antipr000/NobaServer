@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { instance } from "ts-mockito";
+import { instance, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
@@ -29,5 +29,19 @@ describe("CircleService", () => {
     }).compile();
 
     circleService = app.get<CircleService>(CircleService);
+  });
+
+  describe("getOrCreateWallet", () => {
+    it("should return wallet ID if wallet already exists", async () => {
+      when(circleClient.createWallet("consumerID")).thenResolve("walletID");
+      const walletID = await circleService.getOrCreateWallet("consumerID");
+      expect(walletID).toEqual("walletID");
+    });
+
+    it("should create wallet if wallet does not exist", async () => {
+      when(circleClient.createWallet("consumerID")).thenResolve("walletID");
+      const walletID = await circleService.getOrCreateWallet("consumerID");
+      expect(walletID).toEqual("walletID");
+    });
   });
 });

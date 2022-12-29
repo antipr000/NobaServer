@@ -95,9 +95,9 @@ export class CircleClient {
       const transferData = transferResponse.data.data;
       if (transferData.status !== "failed") {
         return {
-          currentBalance: request.amount,
-          updatedBalance: Number(transferData.amount.amount),
+          id: transferData.id,
           status: CircleWithdrawalStatusMap[transferData.status],
+          createdAt: transferData.createDate,
         };
       }
 
