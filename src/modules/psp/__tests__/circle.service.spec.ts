@@ -6,16 +6,19 @@ import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
 import { getMockCircleServiceWithDefaults } from "../mocks/mock.circle.service";
+import { ICircleRepo } from "../repos/CircleRepo";
+import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
 
 describe("CircleService", () => {
   let circleService: CircleService;
   let circleClient: CircleClient;
+  let circleRepo: ICircleRepo;
 
   jest.setTimeout(10000);
 
   beforeEach(async () => {
     circleClient = getMockCircleClientWithDefaults();
-
+    circleRepo = getMockCircleRepoWithDefaults();
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
@@ -23,6 +26,10 @@ describe("CircleService", () => {
         {
           provide: CircleClient,
           useFactory: () => instance(circleClient),
+        },
+        {
+          provide: "CircleRepo",
+          useFactory: () => instance(circleRepo),
         },
         CircleService,
       ],
