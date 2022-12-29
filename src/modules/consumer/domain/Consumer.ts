@@ -25,6 +25,7 @@ export class ConsumerProps implements ConsumerModel {
   socialSecurityNumber: string | null;
   address?: Address;
   verificationData?: KYC;
+  referredByID: string | null;
 }
 
 export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
@@ -46,6 +47,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   isLocked: Joi.boolean().optional(),
   isDisabled: Joi.boolean().optional(),
   verificationData: Joi.object().keys(kycValidationJoiKeys).optional().allow(null),
+  referredByID: Joi.string().optional().allow(null),
 };
 
 export const consumerJoiSchema = Joi.object(consumerJoiValidationKeys).options({

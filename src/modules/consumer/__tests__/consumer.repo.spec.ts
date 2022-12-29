@@ -236,6 +236,22 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
+  describe("getConsumerIDByHandle", () => {
+    it("get a consumer by handle", async () => {
+      const handle = "consumer-handle-1";
+      const consumer = getRandomUser();
+      consumer.props.handle = handle;
+
+      const missingConsumerID = await consumerRepo.getConsumerIDByHandle(handle);
+      expect(missingConsumerID).toBeNull();
+
+      const savedConsumer = await consumerRepo.createConsumer(consumer);
+
+      const consumerID = await consumerRepo.getConsumerIDByHandle(savedConsumer.props.handle);
+      expect(consumerID).toEqual(consumer.props.id);
+    });
+  });
+
   describe("updateConsumer", () => {
     it("should update a consumer", async () => {
       const consumer = getRandomUser();

@@ -28,6 +28,7 @@ export class ConsumerRepoMapper {
       ...(consumerUpdateProps.socialSecurityNumber && {
         socialSecurityNumber: consumerUpdateProps.socialSecurityNumber,
       }),
+      ...(consumerUpdateProps.referredByID && { referredByID: consumerUpdateProps.referredByID }),
       ...(consumerUpdateProps.address && {
         address: { upsert: { create: { ...consumerUpdateProps.address }, update: { ...consumerUpdateProps.address } } },
       }),

@@ -114,6 +114,51 @@ describe("ConsumerController", () => {
         ),
       );
     });
+
+    it("should update consumer referred by", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+      });
+
+      const requestData: UpdateConsumerRequestDTO = {
+        referredByHandle: "new-referred-by-handle",
+      };
+
+      const referringID = "mock-referring-consumer-1";
+      when(consumerService.findConsumerIDByHandle(requestData.referredByHandle)).thenResolve(referringID);
+      when(
+        consumerService.updateConsumer(
+          deepEqual({
+            id: consumer.props.id,
+            referredByID: referringID,
+          }),
+        ),
+      ).thenResolve(
+        Consumer.createConsumer({
+          ...consumer.props,
+          referredByID: referringID,
+        }),
+      );
+      when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([]);
+
+      const result = await consumerController.updateConsumer(consumer, requestData);
+
+      expect(result).toStrictEqual(
+        consumerMapper.toDTO(
+          Consumer.createConsumer({
+            ...consumer.props,
+            referredByID: referringID,
+          }),
+          [],
+          [],
+        ),
+      );
+    });
   });
 
   describe("phoneUpdateOtpRequest", () => {

@@ -93,6 +93,17 @@ export class ConsumerService {
     throw new Error("Not implemented!");
   }
 
+  // Removes $ if present from handle
+  cleanHandle(handle: string): string {
+    if (!handle) return handle;
+
+    if (handle.startsWith("$")) {
+      handle = handle.slice(1);
+    }
+
+    return handle.toLowerCase().trim();
+  }
+
   private analyseHandle(handle: string): void {
     // Only alpha-numeric characters and "-"  and 22 characters
     const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü][a-zA-Z0-9ñáéíóúü-]{2,22}$");
@@ -261,6 +272,10 @@ export class ConsumerService {
 
   async findConsumerById(consumerId: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerId);
+  }
+
+  async findConsumerIDByHandle(handle: string): Promise<string> {
+    return this.consumerRepo.getConsumerIDByHandle(this.cleanHandle(handle));
   }
 
   async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<PaymentMethod> {

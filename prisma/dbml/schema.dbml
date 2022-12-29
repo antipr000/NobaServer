@@ -16,6 +16,9 @@ Table Consumer {
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
   socialSecurityNumber String
+  referredByID String
+  referredBy Consumer
+  referredConsumers Consumer [not null]
   address Address
   verificationData KYC
   cryptoWallets CryptoWallet [not null]
@@ -275,6 +278,8 @@ Enum TransactionType {
 Enum TokenType {
   REFRESH_TOKEN
 }
+
+Ref: Consumer.referredByID - Consumer.id
 
 Ref: Address.consumerID - Consumer.id [delete: Cascade]
 

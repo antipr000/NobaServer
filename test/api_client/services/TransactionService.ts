@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
 import type { InitiateTransactionDTO } from "../models/InitiateTransactionDTO";
+import type { TransactionDTO } from "../models/TransactionDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -11,7 +12,7 @@ import { request as __request } from "../core/request";
 export class TransactionService {
   /**
    * Gets details of a transaction
-   * @returns any
+   * @returns TransactionDTO
    * @throws ApiError
    */
   public static getTransaction({
@@ -27,7 +28,7 @@ export class TransactionService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v2/transactions/{transactionRef}",
@@ -47,7 +48,7 @@ export class TransactionService {
 
   /**
    * Get all transactions for logged in user
-   * @returns any
+   * @returns any[]
    * @throws ApiError
    */
   public static getAllTransactions({
@@ -128,7 +129,7 @@ export class TransactionService {
       | "INTERNAL_TRANSFER_PENDING"
       | "COMPLETED"
       | "FAILED";
-  }): CancelablePromise<any> {
+  }): CancelablePromise<any[]> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v2/transactions",

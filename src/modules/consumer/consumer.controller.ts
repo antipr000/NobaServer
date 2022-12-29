@@ -111,6 +111,10 @@ export class ConsumerController {
     @Body() requestBody: UpdateConsumerRequestDTO,
   ): Promise<ConsumerDTO> {
     try {
+      let referredByID;
+      if (requestBody.referredByHandle) {
+        referredByID = await this.consumerService.findConsumerIDByHandle(requestBody.referredByHandle);
+      }
       const consumerProps: Partial<ConsumerProps> = {
         id: consumer.props.id,
         ...(requestBody.firstName && { firstName: requestBody.firstName }),
@@ -127,6 +131,7 @@ export class ConsumerController {
         }),
         ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),
         ...(requestBody.handle && { handle: requestBody.handle }),
+        ...(referredByID && { referredByID: referredByID }),
       };
       const res = await this.consumerService.updateConsumer(consumerProps);
       return await this.mapToDTO(res);
@@ -134,6 +139,7 @@ export class ConsumerController {
       if (e instanceof BadRequestError) {
         throw new BadRequestException(e.message);
       } else {
+        this.logger.error(`Error updating consumer record: ${JSON.stringify(e)}`);
         throw new BadRequestException("Failed to update requested details");
       }
     }
