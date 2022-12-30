@@ -27,7 +27,7 @@ export class TransactionService {
   ): Promise<string> {
     switch (orderDetails.workflowName) {
       case WorkflowType.CONSUMER_FUNDS_TRANSFER:
-        return this.workflowExecutor.executeConsumerTransferWorkflow(
+        return this.workflowExecutor.executeConsumerFundsTransferWorkflow(
           orderDetails.debitConsumerIDOrTag,
           orderDetails.creditConsumerIDOrTag,
           orderDetails.debitAmount,
