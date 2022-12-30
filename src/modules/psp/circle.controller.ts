@@ -36,7 +36,8 @@ export class CircleController {
   @ApiResponse({ status: HttpStatus.OK })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async getConsumerWalletBalance(@AuthUser() consumer: Consumer) {
-    const walletBalance = await this.circleService.getWalletBalance(consumer.props.id);
+    const walletID = await this.circleService.getOrCreateWallet(consumer.props.id);
+    const walletBalance = await this.circleService.getWalletBalance(walletID);
     return walletBalance;
   }
 }
