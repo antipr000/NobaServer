@@ -102,17 +102,28 @@ describe("ConsumerController", () => {
 
       const result = await consumerController.updateConsumer(consumer, requestData);
 
-      expect(result).toStrictEqual(
-        consumerMapper.toDTO(
-          Consumer.createConsumer({
-            ...consumer.props,
-            firstName: requestData.firstName,
-            dateOfBirth: requestData.dateOfBirth,
-          }),
-          [],
-          [],
-        ),
-      );
+      expect(result).toEqual({
+        id: consumer.props.id,
+        firstName: requestData.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.email,
+        status: "ActionRequired",
+        kycVerificationData: {
+          kycVerificationStatus: "NotSubmitted",
+          updatedTimestamp: 0,
+        },
+        documentVerificationData: {
+          documentVerificationStatus: "NotRequired",
+          documentVerificationErrorReason: null,
+          updatedTimestamp: 0,
+        },
+        dateOfBirth: requestData.dateOfBirth,
+        address: null,
+        cryptoWallets: [],
+        paymentMethods: [],
+        paymentMethodStatus: "NotSubmitted",
+        walletStatus: "NotSubmitted",
+      });
     });
 
     it("should update consumer referred by", async () => {
@@ -148,16 +159,28 @@ describe("ConsumerController", () => {
 
       const result = await consumerController.updateConsumer(consumer, requestData);
 
-      expect(result).toStrictEqual(
-        consumerMapper.toDTO(
-          Consumer.createConsumer({
-            ...consumer.props,
-            referredByID: referringID,
-          }),
-          [],
-          [],
-        ),
-      );
+      expect(result).toEqual({
+        id: consumer.props.id,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.email,
+        status: "ActionRequired",
+        kycVerificationData: {
+          kycVerificationStatus: "NotSubmitted",
+          updatedTimestamp: 0,
+        },
+        documentVerificationData: {
+          documentVerificationStatus: "NotRequired",
+          documentVerificationErrorReason: null,
+          updatedTimestamp: 0,
+        },
+        dateOfBirth: consumer.props.dateOfBirth,
+        address: null,
+        cryptoWallets: [],
+        paymentMethods: [],
+        paymentMethodStatus: "NotSubmitted",
+        walletStatus: "NotSubmitted",
+      });
     });
   });
 
