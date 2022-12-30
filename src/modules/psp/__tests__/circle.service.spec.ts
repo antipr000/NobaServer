@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anyString, instance, when } from "ts-mockito";
+import { anyString, deepEqual, instance, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
@@ -11,6 +11,7 @@ import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
 import { Result } from "../../../core/logic/Result";
 import { Circle } from "../domain/Circle";
 import { ServiceException } from "../../../core/exception/ServiceException";
+import { CircleWithdrawalStatus } from "../domain/CircleTypes";
 
 describe("CircleService", () => {
   let circleService: CircleService;
@@ -97,5 +98,37 @@ describe("CircleService", () => {
     it("should throw an error when walletID is empty", async () => {
       await expect(circleService.getWalletBalance("")).rejects.toThrow(ServiceException);
     });
+  });
+
+  describe("debitWalletBalance", () => {
+    it("should debit a wallet balance", async () => {
+      const circleResponse = {
+        id: "transferID",
+        status: CircleWithdrawalStatus.SUCCESS,
+        createdAt: "dateNow",
+      };
+
+      when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(
+        circleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "walletID",
+            destinationWalletID: "masterWalletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        id: "transferID",
+        status: CircleWithdrawalStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+      const walletBalanceResponse = await circleService.debitWalletBalance("workflowID", "walletID", 100);
+      expect(walletBalanceResponse).toEqual(circleResponse);
+    });
+
+    // it("should throw an error when walletID is empty", async () => {
+    //   await expect(circleService.debitWalletBalance("", 100)).rejects.toThrow(ServiceException);
+    // });
   });
 });
