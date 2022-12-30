@@ -73,4 +73,17 @@ describe("CircleService", () => {
       await expect(circleService.getOrCreateWallet("consumerID")).rejects.toThrow(ServiceException);
     });
   });
+
+  describe("getMasterWalletID", () => {
+    it("should return a master wallet id", async () => {
+      when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      const masterWalletID = await circleService.getMasterWalletID();
+      expect(masterWalletID).toEqual("masterWalletID");
+    });
+
+    it("should throw an error when consumerID is empty", async () => {
+      when(circleClient.getMasterWalletID()).thenResolve("");
+      await expect(circleService.getMasterWalletID()).rejects.toThrow(ServiceException);
+    });
+  });
 });
