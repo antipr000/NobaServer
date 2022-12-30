@@ -10,7 +10,7 @@ import { ICircleRepo } from "../repos/CircleRepo";
 import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
 import { Result } from "../../../core/logic/Result";
 import { Circle } from "../domain/Circle";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { CircleWithdrawalStatus } from "../domain/CircleTypes";
 
 describe("CircleService", () => {
@@ -127,8 +127,31 @@ describe("CircleService", () => {
       expect(walletBalanceResponse).toEqual(circleResponse);
     });
 
-    // it("should throw an error when walletID is empty", async () => {
-    //   await expect(circleService.debitWalletBalance("", 100)).rejects.toThrow(ServiceException);
-    // });
+    it("should throw an error when walletID is empty", async () => {
+      await expect(circleService.debitWalletBalance("workflowID", "", 100)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when amount is 0", async () => {
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", 0)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when amount is negative", async () => {
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", -100)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when transfer fails", async () => {
+      when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(
+        circleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "walletID",
+            destinationWalletID: "masterWalletID",
+            amount: 100,
+          }),
+        ),
+      ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+    });
   });
 });
