@@ -5,7 +5,9 @@ import { SQLCircleRepo } from "../repos/SQLCircleRepo";
 export function getMockCircleRepoWithDefaults(): ICircleRepo {
   const mockCircleRepo: ICircleRepo = mock(SQLCircleRepo);
 
-  mockCircleRepo.addConsumerCircleWalletID(anyString(), anyString().thenReject(new Error("Method not implemented")));
-  mockCircleRepo.getCircleWalletID(anyString().thenReject(new Error("Method not implemented")));
+  when(mockCircleRepo.addConsumerCircleWalletID(anyString(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockCircleRepo.getCircleWalletID(anyString())).thenReject(new Error("Method not implemented"));
   return mockCircleRepo;
 }
