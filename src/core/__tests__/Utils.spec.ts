@@ -204,14 +204,12 @@ describe("Utils", () => {
   describe("getAlphaNanoID", () => {
     it("should return a 10-character nanoID", () => {
       const id = Utils.getAlphaNanoID(10);
-      console.log(id);
       expect(id).toBeDefined();
       expect(id.length).toEqual(10);
     });
 
     it("should return a 15-character nanoID", () => {
       const id = Utils.getAlphaNanoID(15);
-      console.log(id);
       expect(id).toBeDefined();
       expect(id.length).toEqual(15);
     });
