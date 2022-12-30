@@ -11,6 +11,7 @@ export class ConsumerRepoMapper {
       displayEmail: consumer.props.displayEmail,
       phone: consumer.props.phone,
       handle: consumer.props.handle,
+      referralCode: consumer.props.referralCode,
     };
   }
 
@@ -19,6 +20,7 @@ export class ConsumerRepoMapper {
       ...(consumerUpdateProps.firstName && { firstName: consumerUpdateProps.firstName }),
       ...(consumerUpdateProps.lastName && { lastName: consumerUpdateProps.lastName }),
       ...(consumerUpdateProps.handle && { handle: consumerUpdateProps.handle }),
+      ...(consumerUpdateProps.referralCode && { referralCode: consumerUpdateProps.referralCode }),
       ...(consumerUpdateProps.dateOfBirth && { dateOfBirth: consumerUpdateProps.dateOfBirth }),
       ...(consumerUpdateProps.isDisabled && { isDisabled: consumerUpdateProps.isDisabled }),
       ...(consumerUpdateProps.isLocked && { isLocked: consumerUpdateProps.isLocked }),

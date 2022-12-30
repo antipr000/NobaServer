@@ -11,6 +11,7 @@ export function getMockConsumerRepoWithDefaults(): IConsumerRepo {
   when(mockConsumerRepo.getConsumerByEmail(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.getConsumerByPhone(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.getConsumerIDByHandle(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerRepo.getConsumerIDByReferralCode(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.updateConsumer(anyString(), anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.isHandleTaken(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.addCryptoWallet(anything())).thenReject(new Error("Method not implemented"));

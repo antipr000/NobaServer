@@ -29,6 +29,7 @@ model Consumer {
   email                String?         @unique()
   displayEmail         String
   handle               String?         @unique()
+  referralCode         String          @unique()
   phone                String?         @unique()
   dateOfBirth          String?         @db.VarChar(10)
   isLocked             Boolean         @default(false)
@@ -50,6 +51,7 @@ model Consumer {
   @@index([handle])
   @@index([phone])
   @@index([referredByID])
+  @@index([referralCode])
 }
 
 model Address {

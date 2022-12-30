@@ -9,6 +9,7 @@ Table Consumer {
   email String [unique]
   displayEmail String [not null]
   handle String [unique]
+  referralCode String [unique, not null]
   phone String [unique]
   dateOfBirth String
   isLocked Boolean [not null, default: false]

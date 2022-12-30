@@ -111,9 +111,12 @@ export class ConsumerController {
     @Body() requestBody: UpdateConsumerRequestDTO,
   ): Promise<ConsumerDTO> {
     try {
-      let referredByID;
-      if (requestBody.referredByHandle) {
-        referredByID = await this.consumerService.findConsumerIDByHandle(requestBody.referredByHandle);
+      let referredByID: string;
+      if (requestBody.referredByCode) {
+        referredByID = await this.consumerService.findConsumerIDByReferralCode(requestBody.referredByCode);
+        if (referredByID === null) {
+          this.logger.error("Unable to find user with referral code: " + requestBody.referredByCode);
+        }
       }
       const consumerProps: Partial<ConsumerProps> = {
         id: consumer.props.id,

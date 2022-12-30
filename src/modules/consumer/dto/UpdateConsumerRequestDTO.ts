@@ -37,5 +37,5 @@ export class UpdateConsumerRequestDTO {
   address?: UpdateAddressDTO;
 
   @ApiPropertyOptional()
-  referredByHandle?: string;
+  referredByCode?: string;
 }

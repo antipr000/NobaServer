@@ -12,6 +12,7 @@ import { uuid } from "uuidv4";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { WalletStatus } from "@prisma/client";
 import { Address } from "../domain/Address";
+import { Utils } from "../../../core/utils/Utils";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -73,6 +74,15 @@ describe("ConsumerRepoTests", () => {
       const newConsumer = getRandomUser();
       newConsumer.props.phone = consumer.props.phone;
       expect(async () => await consumerRepo.createConsumer(newConsumer)).rejects.toThrow(BadRequestError);
+    });
+
+    it("should fail to create a duplicate consumer by referral code", async () => {
+      const consumer = getRandomUser();
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      expect(savedResult.props.id).toBe(result.props.id);
+      expect(savedResult.props.referralCode).toBe(consumer.props.referralCode);
+      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(BadRequestError);
     });
 
     it("should fail to create a duplicate consumer by phone even with different spacing", async () => {
@@ -242,12 +252,26 @@ describe("ConsumerRepoTests", () => {
       const consumer = getRandomUser();
       consumer.props.handle = handle;
 
-      const missingConsumerID = await consumerRepo.getConsumerIDByHandle(handle);
+      const missingConsumerID = await consumerRepo.getConsumerIDByHandle("$RosieNoba");
       expect(missingConsumerID).toBeNull();
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
       const consumerID = await consumerRepo.getConsumerIDByHandle(savedConsumer.props.handle);
+      expect(consumerID).toEqual(consumer.props.id);
+    });
+  });
+
+  describe("getConsumerIDByReferralCode", () => {
+    it("get a consumer by referral code", async () => {
+      const consumer = getRandomUser();
+
+      const missingConsumerID = await consumerRepo.getConsumerIDByReferralCode("1234567890");
+      expect(missingConsumerID).toBeNull();
+
+      await consumerRepo.createConsumer(consumer);
+
+      const consumerID = await consumerRepo.getConsumerIDByReferralCode(consumer.props.referralCode);
       expect(consumerID).toEqual(consumer.props.id);
     });
   });
@@ -523,6 +547,7 @@ const getRandomUser = (): Consumer => {
     lastName: "lastName",
     email: email,
     displayEmail: email.toUpperCase(),
+    referralCode: Utils.getAlphaNanoID(15),
     phone: getRandomPhoneNumber(),
   };
   return Consumer.createConsumer(props);

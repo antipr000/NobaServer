@@ -75,6 +75,7 @@ describe("ConsumerController", () => {
         lastName: "Consumer",
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
+        referralCode: "mock-referral-code",
       });
 
       const requestData: UpdateConsumerRequestDTO = {
@@ -107,6 +108,7 @@ describe("ConsumerController", () => {
         firstName: requestData.firstName,
         lastName: consumer.props.lastName,
         email: consumer.props.email,
+        referralCode: consumer.props.referralCode,
         status: "ActionRequired",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",
@@ -133,14 +135,15 @@ describe("ConsumerController", () => {
         lastName: "Consumer",
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
+        referralCode: "mock-referral-code",
       });
 
       const requestData: UpdateConsumerRequestDTO = {
-        referredByHandle: "new-referred-by-handle",
+        referredByCode: "new-referred-by-code",
       };
 
       const referringID = "mock-referring-consumer-1";
-      when(consumerService.findConsumerIDByHandle(requestData.referredByHandle)).thenResolve(referringID);
+      when(consumerService.findConsumerIDByReferralCode(requestData.referredByCode)).thenResolve(referringID);
       when(
         consumerService.updateConsumer(
           deepEqual({
@@ -164,6 +167,7 @@ describe("ConsumerController", () => {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
         email: consumer.props.email,
+        referralCode: consumer.props.referralCode,
         status: "ActionRequired",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",

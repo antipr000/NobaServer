@@ -10,5 +10,5 @@ export type UpdateConsumerRequestDTO = {
   dateOfBirth?: string;
   handle?: string;
   address?: UpdateAddressDTO;
-  referredByHandle?: string;
+  referredByCode?: string;
 };

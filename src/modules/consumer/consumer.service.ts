@@ -278,6 +278,10 @@ export class ConsumerService {
     return this.consumerRepo.getConsumerIDByHandle(this.cleanHandle(handle));
   }
 
+  async findConsumerIDByReferralCode(referralCode: string): Promise<string> {
+    return this.consumerRepo.getConsumerIDByReferralCode(referralCode);
+  }
+
   async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<PaymentMethod> {
     const addPaymentMethodResponse: AddPaymentMethodResponse = await this.paymentService.addPaymentMethod(
       consumer,

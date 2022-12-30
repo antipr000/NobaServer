@@ -113,6 +113,17 @@ export class SQLConsumerRepo implements IConsumerRepo {
     return consumerProps.id;
   }
 
+  async getConsumerIDByReferralCode(referralCode: string): Promise<string> {
+    const consumerProps = await this.prisma.consumer.findFirst({
+      select: { id: true },
+      where: { referralCode: { equals: referralCode } }, // Intentionally case-sensitive
+    });
+
+    if (!consumerProps) return null;
+
+    return consumerProps.id;
+  }
+
   async updateConsumer(consumerID: string, consumer: Partial<ConsumerProps>): Promise<Consumer> {
     try {
       const updateConsumerInput = this.mapper.toUpdateConsumerInput(consumer);
