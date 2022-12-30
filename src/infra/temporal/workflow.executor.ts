@@ -53,4 +53,25 @@ export class WorkflowExecutor {
   ): Promise<string> {
     return await this.executeWorkflow("DebitConsumerWallet", workflowID, [consumerId, amountToTransact]);
   }
+
+  public async executeCreditConsumerWalletWorkflow(
+    consumerId: string,
+    amountToTransact: number,
+    workflowID: string,
+  ): Promise<string> {
+    return await this.executeWorkflow("CreditConsumerWallet", workflowID, [consumerId, amountToTransact]);
+  }
+
+  public async executeConsumerTransferWorkflow(
+    sourceWalletID: string,
+    destinationWalletID: string,
+    amountToTransact: number,
+    workflowID: string,
+  ): Promise<string> {
+    return await this.executeWorkflow("ConsumerTransfer", workflowID, [
+      sourceWalletID,
+      destinationWalletID,
+      amountToTransact,
+    ]);
+  }
 }
