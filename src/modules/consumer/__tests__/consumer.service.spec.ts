@@ -1014,6 +1014,13 @@ describe("ConsumerService", () => {
       const consumerId = await consumerService.findConsumerIDByHandle("$" + handle);
       expect(consumerId).toEqual(consumer.props.id);
     });
+
+    it("should return null if handle doesn't exist", async () => {
+      const handle = "rosie";
+      when(consumerRepo.getConsumerIDByHandle(handle)).thenResolve(null);
+      const consumerId = await consumerService.findConsumerIDByHandle("$" + handle);
+      expect(consumerId).toEqual(null);
+    });
   });
 
   describe("cleanHandle", () => {
