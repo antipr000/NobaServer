@@ -86,4 +86,16 @@ describe("CircleService", () => {
       await expect(circleService.getMasterWalletID()).rejects.toThrow(ServiceException);
     });
   });
+
+  describe("getWalletBalance", () => {
+    it("should return a wallet balance", async () => {
+      when(circleClient.getWalletBalance("walletID")).thenResolve(100);
+      const walletBalance = await circleService.getWalletBalance("walletID");
+      expect(walletBalance).toEqual(100);
+    });
+
+    it("should throw an error when walletID is empty", async () => {
+      await expect(circleService.getWalletBalance("")).rejects.toThrow(ServiceException);
+    });
+  });
 });
