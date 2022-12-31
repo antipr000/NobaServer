@@ -986,6 +986,88 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("getConsumerIDByHandle", () => {
+    it("should return consumer id if handle is valid", async () => {
+      const handle = "rosie";
+      const consumer = Consumer.createConsumer({
+        id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        email: "rosie@noba.com",
+        handle: handle,
+      });
+      when(consumerRepo.getConsumerIDByHandle(handle)).thenResolve(consumer.props.id);
+      const consumerId = await consumerService.findConsumerIDByHandle(handle);
+      expect(consumerId).toEqual(consumer.props.id);
+    });
+
+    it("should return consumer id if handle is valid, stripping $", async () => {
+      const handle = "rosie";
+      const consumer = Consumer.createConsumer({
+        id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        email: "rosie@noba.com",
+        handle: handle,
+      });
+      when(consumerRepo.getConsumerIDByHandle(handle)).thenResolve(consumer.props.id);
+      const consumerId = await consumerService.findConsumerIDByHandle("$" + handle);
+      expect(consumerId).toEqual(consumer.props.id);
+    });
+
+    it("should return null if handle doesn't exist", async () => {
+      const handle = "rosie";
+      when(consumerRepo.getConsumerIDByHandle(handle)).thenResolve(null);
+      const consumerId = await consumerService.findConsumerIDByHandle("$" + handle);
+      expect(consumerId).toEqual(null);
+    });
+  });
+
+  describe("getConsumerIDByReferralCode", () => {
+    it("should return consumer id if referral code is valid", async () => {
+      const referralCode = "1234567890";
+      const consumer = Consumer.createConsumer({
+        id: "1234rwrwrwrwrwrwrwrw",
+        firstName: "Mock",
+        lastName: "Consumer",
+        email: "rosie@noba.com",
+        referralCode: referralCode,
+      });
+      when(consumerRepo.getConsumerIDByReferralCode(referralCode)).thenResolve(consumer.props.id);
+      const consumerId = await consumerService.findConsumerIDByReferralCode(referralCode);
+      expect(consumerId).toEqual(consumer.props.id);
+    });
+
+    it("should return null if referral code doesn't exist", async () => {
+      const referralCode = "1234567890";
+      when(consumerRepo.getConsumerIDByReferralCode(referralCode)).thenResolve(null);
+      const consumerId = await consumerService.findConsumerIDByReferralCode(referralCode);
+      expect(consumerId).toEqual(null);
+    });
+  });
+
+  describe("cleanHandle", () => {
+    it("should strip the $ off the handle", async () => {
+      expect(consumerService.cleanHandle("$rosie")).toEqual("rosie");
+    });
+
+    it("should convert handle to lowercase", async () => {
+      expect(consumerService.cleanHandle("$ROSIE")).toEqual("rosie");
+    });
+
+    it("should clean whitespace from end of handle", async () => {
+      expect(consumerService.cleanHandle("$ROSIE   ")).toEqual("rosie");
+    });
+
+    it("should return null for a null handle", async () => {
+      expect(consumerService.cleanHandle(null)).toBeNull();
+    });
+
+    it("should return undefined for an undefined handle", async () => {
+      expect(consumerService.cleanHandle(undefined)).toBeUndefined();
+    });
+  });
+
   describe("isHandleAvailable", () => {
     it("should throw BadRequestException if 'handle' is less than 3 characters", async () => {
       expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(BadRequestException);

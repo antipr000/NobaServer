@@ -7,7 +7,8 @@
     "aatest": "npx ts-node ./test/testRun.ts",
     "prebuild": "rimraf dist",
     "prisma-generate": "yarn prisma generate",
-    "prisma-update": "yarn prisma generate && yarn prisma migrate dev",
+    "prisma-clean-init": "yarn prisma db push",
+    "prisma-update": "yarn prisma generate && yarn prisma migrate dev --name=init",
     "prisma-migrate-deploy": "yarn prisma generate && yarn prisma migrate deploy",
     "build": "nest build -c nest-cli.json --webpack --webpackPath webpack.config.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -18,7 +19,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:prisma-migrate": "yarn prisma-migrate-deploy && yarn test:unit",
-    "test": "docker-compose -f docker-compose.test.yml up --exit-code-from test",
+    "test": "yarn test:unit && yarn test:e2e",
     "test:unit": "jest consumer/ auth/ common/ transaction/ verification/ --verbose --silent=False --runInBand",
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -121,7 +122,7 @@
     "ts-jest": "26.5.6",
     "ts-loader": "^9.3.1",
     "ts-node": "^9.1.1",
-    "typescript": "^4.3.5",
+    "typescript": "^4.9.4",
     "webpack": "^5.74.0"
   },
   "jest": {

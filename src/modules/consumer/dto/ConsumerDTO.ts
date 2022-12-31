@@ -122,6 +122,9 @@ export class ConsumerDTO {
   @ApiProperty()
   handle?: string;
 
+  @ApiProperty()
+  referralCode: string;
+
   @ApiProperty({ enum: UserState })
   status: UserState;
 

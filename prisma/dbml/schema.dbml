@@ -9,6 +9,7 @@ Table Consumer {
   email String [unique]
   displayEmail String [not null]
   handle String [unique]
+  referralCode String [unique, not null]
   phone String [unique]
   dateOfBirth String
   isLocked Boolean [not null, default: false]
@@ -16,6 +17,9 @@ Table Consumer {
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
   socialSecurityNumber String
+  referredByID String
+  referredBy Consumer
+  referredConsumers Consumer [not null]
   address Address
   verificationData KYC
   cryptoWallets CryptoWallet [not null]
@@ -275,6 +279,8 @@ Enum TransactionType {
 Enum TokenType {
   REFRESH_TOKEN
 }
+
+Ref: Consumer.referredByID - Consumer.id
 
 Ref: Address.consumerID - Consumer.id [delete: Cascade]
 

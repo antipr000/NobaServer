@@ -549,6 +549,9 @@ export class ConsumerService {
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
       },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
     });
   }
 
@@ -576,6 +579,9 @@ export class ConsumerService {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
       },
     });
   }

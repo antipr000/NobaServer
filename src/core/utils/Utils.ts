@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
-
+import { customAlphabet } from "nanoid";
 export class Utils {
   static getUsernameFromNameParts(firstName: string, lastName: string): string {
     // Only add a space if first & last name are both present
@@ -87,4 +87,10 @@ export class Utils {
     if (!enumName) return undefined;
     return _enum[enumName];
   };
+
+  static getAlphaNanoID(length: number): string {
+    // 0-9 and a-z (no vowels to avoid bad words)
+    const nanoid = customAlphabet("1234567890bcdfghjklmnpqrstvwxyz", length);
+    return nanoid();
+  }
 }

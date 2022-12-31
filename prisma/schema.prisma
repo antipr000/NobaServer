@@ -29,6 +29,7 @@ model Consumer {
   email                String?         @unique()
   displayEmail         String
   handle               String?         @unique()
+  referralCode         String          @unique()
   phone                String?         @unique()
   dateOfBirth          String?         @db.VarChar(10)
   isLocked             Boolean         @default(false)
@@ -36,6 +37,9 @@ model Consumer {
   createdTimestamp     DateTime?       @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp     DateTime?       @updatedAt // Marking optional so we don't need to set in tests
   socialSecurityNumber String?
+  referredByID         String?
+  referredBy           Consumer?       @relation("ReferredBy", fields: [referredByID], references: [id])
+  referredConsumers    Consumer[]      @relation("ReferredBy")
   address              Address?
   verificationData     KYC?
   cryptoWallets        CryptoWallet[]
@@ -46,6 +50,8 @@ model Consumer {
   @@index([email])
   @@index([handle])
   @@index([phone])
+  @@index([referredByID])
+  @@index([referralCode])
 }
 
 model Address {

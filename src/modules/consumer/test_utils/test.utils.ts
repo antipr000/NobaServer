@@ -1,5 +1,6 @@
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
+import { Utils } from "../../../core/utils/Utils";
 
 export const createTestConsumer = async (prismaService: PrismaService): Promise<string> => {
   const savedConsumer = await prismaService.consumer.create({
@@ -9,6 +10,7 @@ export const createTestConsumer = async (prismaService: PrismaService): Promise<
       email: `${uuid()}@noba.com`,
       displayEmail: `${uuid()}@noba.com`,
       handle: `${Date.now().valueOf()}`,
+      referralCode: Utils.getAlphaNanoID(15),
     },
   });
 

@@ -4,7 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { CircleService } from "./circle.service";
-import { CircleFundsMovementRequestDTO } from "./domain/CircleFundsMovementRequestDTO";
+import { CircleFundsMovementRequestDTO } from "./dto/CircleFundsMovementRequestDTO";
 
 @Controller("v1/wf/circle") // This defines the path prefix
 @ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
@@ -18,7 +18,7 @@ export class CircleWorkflowController {
   @Get("/wallets/consumers/:consumerID")
   @ApiOperation({ summary: "Get consumer's wallet ID" })
   @ApiResponse({ status: HttpStatus.OK })
-  async getConsumerWalletID(@Param("consumerID") consumerID: string): Promise<any> {
+  async getConsumerWalletID(@Param("consumerID") consumerID: string) {
     const res = await this.circleService.getOrCreateWallet(consumerID);
     return {
       walletID: res,
@@ -53,10 +53,15 @@ export class CircleWorkflowController {
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
-    const res = await this.circleService.debitWalletBalance(walletID, fundsMovementRequest.amount);
+    const res = await this.circleService.debitWalletBalance(
+      fundsMovementRequest.workflowID,
+      walletID,
+      fundsMovementRequest.amount,
+    );
     return {
-      walletID: walletID,
-      balance: res,
+      id: res.id,
+      status: res.status,
+      createdAt: res.createdAt,
     };
   }
 
@@ -67,10 +72,15 @@ export class CircleWorkflowController {
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
   ) {
-    const res = await this.circleService.creditWalletBalance(walletID, fundsMovementRequest.amount);
+    const res = await this.circleService.creditWalletBalance(
+      fundsMovementRequest.workflowID,
+      walletID,
+      fundsMovementRequest.amount,
+    );
     return {
-      walletID: walletID,
-      balance: res,
+      id: res.id,
+      status: res.status,
+      createdAt: res.createdAt,
     };
   }
 }
