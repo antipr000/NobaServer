@@ -25,8 +25,8 @@ const getRandomTransaction = (consumerID: string): Transaction => {
     status: TransactionStatus.PENDING,
     workflowName: WorkflowName.BANK_TO_NOBA_WALLET,
     id: uuid(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
   };
 };
 
@@ -78,8 +78,8 @@ describe("PostgresTransactionRepoTests", () => {
 
       expect(returnedTransaction).toBeDefined();
       expect(returnedTransaction.id).not.toBe(inputTransaction.id);
-      expect(returnedTransaction.createdAt.valueOf()).not.toBe(inputTransaction.createdAt.valueOf());
-      expect(returnedTransaction.updatedAt.valueOf()).not.toBe(inputTransaction.updatedAt.valueOf());
+      expect(returnedTransaction.createdTimestamp.valueOf()).not.toBe(inputTransaction.createdTimestamp.valueOf());
+      expect(returnedTransaction.updatedTimestamp.valueOf()).not.toBe(inputTransaction.updatedTimestamp.valueOf());
 
       expect(returnedTransaction.transactionRef).toBe(inputTransaction.transactionRef);
       expect(returnedTransaction.workflowName).toBe(inputTransaction.workflowName);
@@ -99,8 +99,8 @@ describe("PostgresTransactionRepoTests", () => {
         currency: returnedTransaction.currency,
         status: returnedTransaction.status,
         exchangeRate: returnedTransaction.exchangeRate,
-        createdTimestamp: returnedTransaction.createdAt,
-        updatedTimestamp: returnedTransaction.updatedAt,
+        createdTimestamp: returnedTransaction.createdTimestamp,
+        updatedTimestamp: returnedTransaction.updatedTimestamp,
       });
     });
 
@@ -239,14 +239,16 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toStrictEqual({
         ...savedTransaction,
         status: TransactionStatus.SUCCESS,
-        updatedAt: expect.any(Date),
+        updatedTimestamp: expect.any(Date),
       });
-      expect(returnedTransaction.updatedAt.valueOf()).toBeGreaterThan(savedTransaction.updatedAt.valueOf());
+      expect(returnedTransaction.updatedTimestamp.valueOf()).toBeGreaterThan(
+        savedTransaction.updatedTimestamp.valueOf(),
+      );
       expect(allTransactionRecords).toHaveLength(1);
       expect({
         ...returnedTransaction,
-        createdTimestamp: returnedTransaction.createdAt,
-        updatedTimestamp: returnedTransaction.updatedAt,
+        createdTimestamp: returnedTransaction.createdTimestamp,
+        updatedTimestamp: returnedTransaction.updatedTimestamp,
       }).toMatchObject(allTransactionRecords[0]);
     });
 
@@ -268,15 +270,13 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toStrictEqual({
         ...savedTransaction,
         exchangeRate: 12.34,
-        updatedAt: expect.any(Date),
+        updatedTimestamp: expect.any(Date),
       });
-      expect(returnedTransaction.updatedAt.valueOf()).toBeGreaterThan(savedTransaction.updatedAt.valueOf());
+      expect(returnedTransaction.updatedTimestamp.valueOf()).toBeGreaterThan(
+        savedTransaction.updatedTimestamp.valueOf(),
+      );
       expect(allTransactionRecords).toHaveLength(1);
-      expect({
-        ...returnedTransaction,
-        createdTimestamp: returnedTransaction.createdAt,
-        updatedTimestamp: returnedTransaction.updatedAt,
-      }).toMatchObject(allTransactionRecords[0]);
+      expect(returnedTransaction).toMatchObject(allTransactionRecords[0]);
     });
 
     it("should update the transaction 'exchangeRate' & 'status' for the specified 'transactionRef'", async () => {
@@ -299,14 +299,16 @@ describe("PostgresTransactionRepoTests", () => {
         ...savedTransaction,
         exchangeRate: 12.34,
         status: TransactionStatus.IN_PROGRESS,
-        updatedAt: expect.any(Date),
+        updatedTimestamp: expect.any(Date),
       });
-      expect(returnedTransaction.updatedAt.valueOf()).toBeGreaterThan(savedTransaction.updatedAt.valueOf());
+      expect(returnedTransaction.updatedTimestamp.valueOf()).toBeGreaterThan(
+        savedTransaction.updatedTimestamp.valueOf(),
+      );
       expect(allTransactionRecords).toHaveLength(1);
       expect({
         ...returnedTransaction,
-        createdTimestamp: returnedTransaction.createdAt,
-        updatedTimestamp: returnedTransaction.updatedAt,
+        createdTimestamp: returnedTransaction.createdTimestamp,
+        updatedTimestamp: returnedTransaction.updatedTimestamp,
       }).toMatchObject(allTransactionRecords[0]);
     });
 

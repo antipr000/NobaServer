@@ -11,8 +11,8 @@ export class Transaction {
   currency: string;
   status: TransactionStatus;
   exchangeRate: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdTimestamp: Date;
+  updatedTimestamp: Date;
 }
 
 // Format - DEBIT_TO_CREDIT
@@ -43,8 +43,8 @@ export const validateInputTransaction = (transaction: Partial<Transaction>) => {
       .valid(...Object.values(TransactionStatus))
       .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().required(),
-    createdAt: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
-    updatedAt: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
+    createdTimestamp: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
+    updatedTimestamp: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
@@ -70,8 +70,8 @@ export const validateSavedTransaction = (transaction: Transaction) => {
       .valid(...Object.values(TransactionStatus))
       .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().required(),
-    createdAt: Joi.date().required(),
-    updatedAt: Joi.date().required(),
+    createdTimestamp: Joi.date().required(),
+    updatedTimestamp: Joi.date().required(),
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
@@ -113,8 +113,8 @@ export const validateUpdateTransaction = (transaction: Partial<Transaction>) => 
       .valid(...Object.values(TransactionStatus))
       .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().optional(),
-    createdAt: Joi.date().optional(),
-    updatedAt: Joi.date().optional(),
+    createdTimestamp: Joi.date().optional(),
+    updatedTimestamp: Joi.date().optional(),
   };
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
     allowUnknown: false,
@@ -134,8 +134,8 @@ export const convertToDomainTransaction = (transaction: PrismaTransactionModel):
     currency: transaction.currency,
     status: transaction.status as TransactionStatus,
     exchangeRate: transaction.exchangeRate,
-    createdAt: transaction.createdTimestamp,
-    updatedAt: transaction.updatedTimestamp,
+    createdTimestamp: transaction.createdTimestamp,
+    updatedTimestamp: transaction.updatedTimestamp,
   };
 
   return domainTransaction;
