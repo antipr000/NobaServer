@@ -9,18 +9,20 @@ import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transact
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { SQLTransactionRepo } from "../repo/sql.transaction.repo";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
-import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
+import {
+  BadRequestError,
+  DatabaseInternalErrorException,
+  NotFoundError,
+} from "../../../core/exception/CommonAppException";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
 };
 
-const getRandomTransaction = (consumerID: string): Transaction => {
-  return {
+const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean = false): Transaction => {
+  const transaction: Transaction = {
     transactionRef: uuid(),
-    amount: 100,
     consumerID: consumerID,
-    currency: "USD",
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
     workflowName: WorkflowName.BANK_TO_NOBA_WALLET,
@@ -28,6 +30,15 @@ const getRandomTransaction = (consumerID: string): Transaction => {
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
+
+  if (isCreditTransaction) {
+    transaction.creditAmount = 100;
+    transaction.creditCurrency = "USD";
+  } else {
+    transaction.debitAmount = 100;
+    transaction.debitCurrency = "USD";
+  }
+  return transaction;
 };
 
 describe("PostgresTransactionRepoTests", () => {
@@ -72,7 +83,7 @@ describe("PostgresTransactionRepoTests", () => {
     it("should create a transaction with the specified parameters & ignores the 'createdAt', 'updatedAt' & 'id' field", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const inputTransaction: Transaction = await getRandomTransaction(consumerID);
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID, /* isCreditTransaction */ false);
       const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
       const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
 
@@ -84,8 +95,10 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction.transactionRef).toBe(inputTransaction.transactionRef);
       expect(returnedTransaction.workflowName).toBe(inputTransaction.workflowName);
       expect(returnedTransaction.consumerID).toBe(inputTransaction.consumerID);
-      expect(returnedTransaction.amount).toBe(inputTransaction.amount);
-      expect(returnedTransaction.currency).toBe(inputTransaction.currency);
+      expect(returnedTransaction.debitAmount).toBe(inputTransaction.debitAmount);
+      expect(returnedTransaction.debitCurrency).toBe(inputTransaction.debitCurrency);
+      expect(returnedTransaction.creditAmount).toBeNull();
+      expect(returnedTransaction.creditCurrency).toBeNull();
       expect(returnedTransaction.status).toBe(inputTransaction.status);
       expect(returnedTransaction.exchangeRate).toBe(inputTransaction.exchangeRate);
 
@@ -95,13 +108,47 @@ describe("PostgresTransactionRepoTests", () => {
         transactionRef: returnedTransaction.transactionRef,
         workflowName: returnedTransaction.workflowName,
         consumerID: returnedTransaction.consumerID,
-        amount: returnedTransaction.amount,
-        currency: returnedTransaction.currency,
+        debitAmount: returnedTransaction.debitAmount,
+        debitCurrency: returnedTransaction.debitCurrency,
+        creditAmount: null,
+        creditCurrency: null,
         status: returnedTransaction.status,
         exchangeRate: returnedTransaction.exchangeRate,
         createdTimestamp: returnedTransaction.createdTimestamp,
         updatedTimestamp: returnedTransaction.updatedTimestamp,
       });
+    });
+
+    it("should throw an error if the transaction specifies both credit & debit side", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID, /* isCreditTransaction */ false);
+      inputTransaction.creditAmount = 100;
+      inputTransaction.creditCurrency = "USD";
+
+      try {
+        await transactionRepo.createTransaction(inputTransaction);
+        expect(true).toBe(false);
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestError);
+        expect(error.message).toBe("Transaction cannot have both credit & debit side.");
+      }
+    });
+
+    it("should throw an error if the transaction doesn't specify both credit & debit side", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID, /* isCreditTransaction */ false);
+      delete inputTransaction.debitAmount;
+      delete inputTransaction.debitCurrency;
+
+      try {
+        await transactionRepo.createTransaction(inputTransaction);
+        expect(true).toBe(false);
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestError);
+        expect(error.message).toBe("Transaction must have either a debit or credit side.");
+      }
     });
 
     it("should throw an error if the transactionRef is not unique", async () => {
@@ -279,14 +326,74 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toMatchObject(allTransactionRecords[0]);
     });
 
-    it("should update the transaction 'exchangeRate' & 'status' for the specified 'transactionRef'", async () => {
+    it("should update the transaction 'debitCurrency' & 'debitAmount' for the specified 'transactionRef'", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction: Transaction = await getRandomTransaction(consumerID);
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID, /* isCredit */ true);
+      const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const transactionToUpdates: Partial<Transaction> = {
+        debitAmount: 12.34,
+        debitCurrency: "USD",
+      };
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
+        inputTransaction.transactionRef,
+        transactionToUpdates,
+      );
+
+      const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
+
+      expect(returnedTransaction).toStrictEqual({
+        ...savedTransaction,
+        debitAmount: 12.34,
+        debitCurrency: "USD",
+        updatedTimestamp: expect.any(Date),
+      });
+      expect(returnedTransaction.updatedTimestamp.valueOf()).toBeGreaterThan(
+        savedTransaction.updatedTimestamp.valueOf(),
+      );
+      expect(allTransactionRecords).toHaveLength(1);
+      expect(returnedTransaction).toMatchObject(allTransactionRecords[0]);
+    });
+
+    it("should update the transaction 'creditCurrency' & 'creditAmount' for the specified 'transactionRef'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID, /* isCredit */ false);
+      const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const transactionToUpdates: Partial<Transaction> = {
+        creditAmount: 12.34,
+        creditCurrency: "USD",
+      };
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
+        inputTransaction.transactionRef,
+        transactionToUpdates,
+      );
+
+      const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
+
+      expect(returnedTransaction).toStrictEqual({
+        ...savedTransaction,
+        creditAmount: 12.34,
+        creditCurrency: "USD",
+        updatedTimestamp: expect.any(Date),
+      });
+      expect(returnedTransaction.updatedTimestamp.valueOf()).toBeGreaterThan(
+        savedTransaction.updatedTimestamp.valueOf(),
+      );
+      expect(allTransactionRecords).toHaveLength(1);
+      expect(returnedTransaction).toMatchObject(allTransactionRecords[0]);
+    });
+
+    it("should update all the specified fields of transaction for the specified 'transactionRef'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const inputTransaction: Transaction = await getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
       const transactionToUpdates: Partial<Transaction> = {
         exchangeRate: 12.34,
         status: TransactionStatus.IN_PROGRESS,
+        creditAmount: 67.89,
+        creditCurrency: "USD",
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
         inputTransaction.transactionRef,
@@ -298,6 +405,8 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toStrictEqual({
         ...savedTransaction,
         exchangeRate: 12.34,
+        creditAmount: 67.89,
+        creditCurrency: "USD",
         status: TransactionStatus.IN_PROGRESS,
         updatedTimestamp: expect.any(Date),
       });
