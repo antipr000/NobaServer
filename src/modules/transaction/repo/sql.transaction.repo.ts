@@ -40,8 +40,10 @@ export class SQLTransactionRepo implements ITransactionRepo {
             id: transaction.consumerID,
           },
         },
-        amount: transaction.amount,
-        currency: transaction.currency,
+        ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
+        ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
+        ...(transaction.debitCurrency && { debitCurrency: transaction.debitCurrency }),
+        ...(transaction.creditCurrency && { creditCurrency: transaction.creditCurrency }),
         exchangeRate: transaction.exchangeRate,
       };
 
@@ -143,6 +145,10 @@ export class SQLTransactionRepo implements ITransactionRepo {
       const transactionUpdate: Prisma.TransactionUpdateInput = {
         ...(transaction.exchangeRate && { exchangeRate: transaction.exchangeRate }),
         ...(transaction.status && { status: transaction.status }),
+        ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
+        ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
+        ...(transaction.debitCurrency && { debitCurrency: transaction.debitCurrency }),
+        ...(transaction.creditCurrency && { creditCurrency: transaction.creditCurrency }),
       };
 
       const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.update({

@@ -1,5 +1,6 @@
 import { Transaction as PrismaTransactionModel } from "@prisma/client";
 import Joi from "joi";
+import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export class Transaction {
@@ -7,8 +8,10 @@ export class Transaction {
   transactionRef: string;
   workflowName: WorkflowName;
   consumerID: string;
-  amount: number;
-  currency: string;
+  debitCurrency?: string;
+  creditCurrency?: string;
+  debitAmount?: number;
+  creditAmount?: number;
   status: TransactionStatus;
   exchangeRate: number;
   createdTimestamp: Date;
@@ -36,8 +39,10 @@ export const validateInputTransaction = (transaction: Partial<Transaction>) => {
       .required()
       .valid(...Object.values(WorkflowName)),
     consumerID: Joi.string().min(10).required(),
-    amount: Joi.number().required(),
-    currency: Joi.string().required(),
+    debitAmount: Joi.number().greater(0).optional(),
+    creditAmount: Joi.number().greater(0).optional(),
+    debitCurrency: Joi.string().optional(),
+    creditCurrency: Joi.string().optional(),
     status: Joi.string()
       .optional()
       .valid(...Object.values(TransactionStatus))
@@ -51,8 +56,14 @@ export const validateInputTransaction = (transaction: Partial<Transaction>) => {
     allowUnknown: false,
     stripUnknown: true,
   });
+  Joi.attempt(transaction, transactionJoiSchema);
 
-  return Joi.attempt(transaction, transactionJoiSchema);
+  const hasDebitSide = transaction.debitAmount && transaction.debitCurrency;
+  const hasCreditSide = transaction.creditAmount && transaction.creditCurrency;
+  if (!hasDebitSide && !hasCreditSide)
+    throw new BadRequestError({ message: "Transaction must have either a debit or credit side." });
+  if (hasDebitSide && hasCreditSide)
+    throw new BadRequestError({ message: "Transaction cannot have both credit & debit side." });
 };
 
 export const validateSavedTransaction = (transaction: Transaction) => {
@@ -63,8 +74,10 @@ export const validateSavedTransaction = (transaction: Transaction) => {
       .required()
       .valid(...Object.values(WorkflowName)),
     consumerID: Joi.string().min(10).required(),
-    amount: Joi.number().required(),
-    currency: Joi.string().required(),
+    debitAmount: Joi.number().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
+    creditAmount: Joi.number().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
+    debitCurrency: Joi.string().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
+    creditCurrency: Joi.string().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
     status: Joi.string()
       .required()
       .valid(...Object.values(TransactionStatus))
@@ -83,21 +96,13 @@ export const validateSavedTransaction = (transaction: Transaction) => {
 };
 
 export const validateUpdateTransaction = (transaction: Partial<Transaction>) => {
-  const uneditableFields = [
-    "id",
-    "transactionRef",
-    "workflowName",
-    "consumerID",
-    "amount",
-    "currency",
-    "createdAt",
-    "updatedAt",
-  ];
+  const uneditableFields = ["id", "transactionRef", "workflowName", "consumerID", "createdAt", "updatedAt"];
   let containsUneditableFields = false;
   uneditableFields.forEach(field => {
     if (transaction[field]) containsUneditableFields = true;
   });
-  if (containsUneditableFields) throw new Error(`${uneditableFields.join(", ")} cannot be updated.`);
+  if (containsUneditableFields)
+    throw new BadRequestError({ message: `${uneditableFields.join(", ")} cannot be updated.` });
 
   const transactionJoiValidationKeys: KeysRequired<Transaction> = {
     id: Joi.string().min(10).optional(),
@@ -106,8 +111,10 @@ export const validateUpdateTransaction = (transaction: Partial<Transaction>) => 
       .optional()
       .valid(...Object.values(WorkflowName)),
     consumerID: Joi.string().min(10).optional(),
-    amount: Joi.number().optional(),
-    currency: Joi.string().optional(),
+    debitAmount: Joi.number().optional(),
+    creditAmount: Joi.number().optional(),
+    debitCurrency: Joi.string().optional(),
+    creditCurrency: Joi.string().optional(),
     status: Joi.string()
       .optional()
       .valid(...Object.values(TransactionStatus))
@@ -130,8 +137,10 @@ export const convertToDomainTransaction = (transaction: PrismaTransactionModel):
     transactionRef: transaction.transactionRef,
     workflowName: transaction.workflowName as WorkflowName,
     consumerID: transaction.consumerID,
-    amount: transaction.amount,
-    currency: transaction.currency,
+    debitAmount: transaction.debitAmount,
+    debitCurrency: transaction.debitCurrency,
+    creditAmount: transaction.creditAmount,
+    creditCurrency: transaction.creditCurrency,
     status: transaction.status as TransactionStatus,
     exchangeRate: transaction.exchangeRate,
     createdTimestamp: transaction.createdTimestamp,

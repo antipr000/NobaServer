@@ -198,13 +198,14 @@ model LimitConfiguration {
 model Transaction {
   id               String    @id @default(uuid())
   transactionRef   String    @unique()
-  // Workflow name will inherently describe the type of transaction i.e. "PAYMENT" or "WITHDRAWAL".
   workflowName     String
   consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID       String
   status           String    @default("PENDING")
-  currency         String
-  amount           Float?
+  debitCurrency    String?
+  creditCurrency   String?
+  debitAmount      Float?
+  creditAmount     Float?
   exchangeRate     Float?
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
