@@ -16,8 +16,8 @@ export class SQLTokenRepo implements ITokenRepo {
   }
 
   async getToken(rawTokenId: string, userId: string): Promise<Token> {
-    const saltfiedId = Token.saltifyToken(rawTokenId, userId);
-    const tokenProps = await this.prismaService.token.findUnique({ where: { id: saltfiedId } });
+    const saltifiedToken = Token.saltifyToken(rawTokenId, userId);
+    const tokenProps = await this.prismaService.token.findUnique({ where: { id: saltifiedToken } });
     return Token.createTokenObject(tokenProps);
   }
 
