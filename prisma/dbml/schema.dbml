@@ -7,7 +7,7 @@ Table Consumer {
   firstName String
   lastName String
   email String [unique]
-  displayEmail String [not null]
+  displayEmail String
   handle String [unique]
   referralCode String [unique, not null]
   phone String [unique]

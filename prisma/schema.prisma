@@ -27,7 +27,7 @@ model Consumer {
   firstName            String?
   lastName             String?
   email                String?         @unique()
-  displayEmail         String
+  displayEmail         String?
   handle               String?         @unique()
   referralCode         String          @unique()
   phone                String?         @unique()
