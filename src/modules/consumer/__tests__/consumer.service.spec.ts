@@ -817,8 +817,13 @@ describe("ConsumerService", () => {
       when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
 
       const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
-      verify(consumerRepo.updateConsumer(consumer.props.id, deepEqual({ id: consumer.props.id, phone: phone }))).once();
+
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
+
+      const [consumerID, updatedConsumer] = capture(consumerRepo.updateConsumer).last();
+      expect(consumerID).toBe(consumer.props.id);
+      expect(updatedConsumer.phone).toStrictEqual(expectedUpdatedConsumer.props.phone);
+      expect(updatedConsumer.handle).toBeDefined();
     });
 
     it("doesn't update user if identifier already exists", async () => {
@@ -933,16 +938,11 @@ describe("ConsumerService", () => {
       // update consumer
       const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
 
-      verify(
-        consumerRepo.updateConsumer(
-          consumer.props.id,
-          deepEqual({
-            id: consumer.props.id,
-            email: email.toLowerCase(),
-            displayEmail: email,
-          }),
-        ),
-      ).once();
+      const [consumerID, updatedConsumer] = capture(consumerRepo.updateConsumer).last();
+      expect(consumerID).toBe(consumer.props.id);
+      expect(updatedConsumer.email).toStrictEqual(expectedUpdatedConsumer.props.email);
+      expect(updatedConsumer.displayEmail).toStrictEqual(expectedUpdatedConsumer.props.displayEmail);
+      expect(updatedConsumer.handle).toBeDefined();
 
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
 

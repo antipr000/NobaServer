@@ -148,6 +148,7 @@ export class ConsumerService {
         email: email ? email.toLowerCase() : undefined,
         displayEmail: email ?? undefined,
         phone,
+        referralCode: Utils.getAlphaNanoID(15),
       });
 
       const result = await this.consumerRepo.createConsumer(newConsumer);
@@ -167,7 +168,7 @@ export class ConsumerService {
 
   generateDefaultHandle(seedString: string): string {
     const handle = `${seedString.toLowerCase()}`;
-    return this.removeAllUnsupportedHandleCharacters(handle);
+    return this.removeAllUnsupportedHandleCharacters(handle) + randomBytes(7).toString("hex");
   }
 
   async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
