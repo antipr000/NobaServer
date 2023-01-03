@@ -6,6 +6,7 @@ import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { WorkflowExecutor } from "src/infra/temporal/workflow.executor";
 import { WorkflowType } from "./domain/TransactionTypes";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { uuid } from "uuidv4";
 
 @Injectable()
 export class TransactionService {
@@ -25,27 +26,28 @@ export class TransactionService {
     consumer: Consumer,
     sessionKey: string,
   ): Promise<string> {
-    switch (orderDetails.workflowName) {
-      // TODO: Create a transaction object and save it to the DB
+    // TODO: Create a transaction object and save it to the DB
+    const transactionID = uuid();
 
+    switch (orderDetails.workflowName) {
       case WorkflowType.CONSUMER_WALLET_TRANSFER:
         return this.workflowExecutor.executeConsumerWalletTransferWorkflow(
           orderDetails.debitConsumerIDOrTag,
           orderDetails.creditConsumerIDOrTag,
           orderDetails.debitAmount,
-          Date.now().toString(), // TODO: What should the workflow ID be?
+          transactionID,
         );
       case WorkflowType.DEBIT_CONSUMER_WALLET:
         return this.workflowExecutor.executeDebitConsumerWalletWorkflow(
           orderDetails.debitConsumerIDOrTag,
           orderDetails.debitAmount,
-          Date.now().toString(), // TODO: What should the workflow ID be?
+          transactionID,
         );
       case WorkflowType.CREDIT_CONSUMER_WALLET:
         return this.workflowExecutor.executeCreditConsumerWalletWorkflow(
           orderDetails.creditConsumerIDOrTag,
           orderDetails.creditAmount,
-          Date.now().toString(), // TODO: What should the workflow ID be?
+          transactionID,
         );
       default:
         throw new ServiceException({
