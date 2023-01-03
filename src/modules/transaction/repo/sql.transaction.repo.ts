@@ -188,4 +188,29 @@ export class SQLTransactionRepo implements ITransactionRepo {
       });
     }
   }
+
+  async getTotalUserTransactionAmount(consumerID: string): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
+
+  async getMonthlyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 30);
+  }
+
+  async getWeeklyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 7);
+  }
+
+  async getDailyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 1);
+  }
+
+  private async getPeriodicUserTransactionAmount(consumerID: string, days: number): Promise<number> {
+    throw new Error("Method not implemented.");
+    // TODO: Use Prisma groupBy with a _sum on amount https://www.prisma.io/docs/concepts/components/prisma-client/aggregation-grouping-summarizing
+  }
+
+  async getUserTransactionInAnInterval(consumerID: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
+    throw new Error("Method not implemented.");
+  }
 }
