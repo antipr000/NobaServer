@@ -5,7 +5,7 @@
 export type InitiateTransactionDTO = {
   debitConsumerIDOrTag?: string;
   creditConsumerIDOrTag?: string;
-  workflowName: number;
+  workflowName: "CONSUMER_FUNDS_TRANSFER";
   debitCurrency?: "USD" | "COP";
   debitAmount?: number;
   creditCurrency?: "USD" | "COP";
