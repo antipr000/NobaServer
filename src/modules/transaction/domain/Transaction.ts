@@ -15,8 +15,8 @@ export class Transaction {
   creditAmount?: number;
   status: TransactionStatus;
   exchangeRate: number;
-  createdTimestamp: Date;
-  updatedTimestamp: Date;
+  createdTimestamp?: Date;
+  updatedTimestamp?: Date;
 }
 
 // Format - DEBIT_TO_CREDIT
