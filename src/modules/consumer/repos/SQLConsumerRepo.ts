@@ -39,7 +39,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
       consumer.props.phone = Utils.stripSpaces(consumer.props.phone);
     }
 
-    if (await this.isHandleTaken(consumer.props.handle)) {
+    if (consumer.props.handle && (await this.isHandleTaken(consumer.props.handle))) {
       throw new BadRequestError({ message: "Handle is already taken!" });
     }
 
