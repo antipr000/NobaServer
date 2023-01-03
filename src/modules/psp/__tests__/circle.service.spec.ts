@@ -161,4 +161,66 @@ describe("CircleService", () => {
       await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
     });
   });
+
+  describe("creditWalletBalance", () => {
+    it("should credit a wallet balance", async () => {
+      const circleResponse = {
+        id: "transferID",
+        status: CircleWithdrawalStatus.SUCCESS,
+        createdAt: "dateNow",
+      };
+
+      when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(
+        circleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "masterWalletID",
+            destinationWalletID: "walletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        id: "transferID",
+        status: CircleWithdrawalStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+      const walletBalanceResponse = await circleService.creditWalletBalance("workflowID", "walletID", 100);
+      expect(walletBalanceResponse).toEqual(circleResponse);
+    });
+
+    it("should throw an error when walletID is empty", async () => {
+      await expect(circleService.creditWalletBalance("workflowID", "", 100)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when amount is 0", async () => {
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 0)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when amount is negative", async () => {
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", -100)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when transfer fails", async () => {
+      when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(
+        circleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "masterWalletID",
+            destinationWalletID: "walletID",
+            amount: 100,
+          }),
+        ),
+      ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when master wallet id is empty", async () => {
+      when(circleClient.getMasterWalletID()).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
+      );
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+    });
+  });
 });
