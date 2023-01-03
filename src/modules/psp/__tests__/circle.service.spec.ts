@@ -153,5 +153,12 @@ describe("CircleService", () => {
       ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
       await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
     });
+
+    it("should throw an error when master wallet id is empty", async () => {
+      when(circleClient.getMasterWalletID()).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
+      );
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+    });
   });
 });
