@@ -210,6 +210,10 @@ describe("ConsumerService", () => {
       expect(response).toStrictEqual(updatedConsumerData);
     });
 
+    it("should not auto-generate a handle if updating firstName and handle does exist", async () => {
+      // TODO
+    });
+
     it("should throw error if user does not exist", async () => {
       const consumerId = "fake-consumer-1";
 

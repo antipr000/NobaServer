@@ -9,7 +9,6 @@ import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
-import { randomBytes } from "crypto";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -38,13 +37,6 @@ export class SQLConsumerRepo implements IConsumerRepo {
   async createConsumer(consumer: Consumer): Promise<Consumer> {
     if (consumer.props.phone) {
       consumer.props.phone = Utils.stripSpaces(consumer.props.phone);
-    }
-
-    if (consumer.props.handle === undefined || consumer.props.handle === null) {
-      consumer.props.handle =
-        this.removeAllUnsupportedHandleCharacters(
-          consumer.props.firstName ?? consumer.props.email.split("@")[0],
-        ).toLocaleLowerCase() + randomBytes(7).toString("hex");
     }
 
     if (await this.isHandleTaken(consumer.props.handle)) {
@@ -201,21 +193,5 @@ export class SQLConsumerRepo implements IConsumerRepo {
     } catch (e) {
       throw new BadRequestError({ message: `Failed to update crypto wallet. Reason: ${e.message}` });
     }
-  }
-
-  private removeAllUnsupportedHandleCharacters(text: string): string {
-    if (text === undefined || text === null) return "user-";
-
-    const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü-]{1,1}$");
-    let result = "";
-
-    for (let i = 0; i < text.length; i++) {
-      if (regex.test(text[i])) result += text[i];
-    }
-
-    if (result.length < 1) result += "user-";
-    while (result.length < 3) result += "-";
-
-    return result.substring(0, 7);
   }
 }

@@ -29,6 +29,7 @@ import { IConsumerRepo } from "./repos/ConsumerRepo";
 import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus } from "@prisma/client";
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { CardFailureExceptionText } from "./CardProcessingException";
+import { randomBytes } from "crypto";
 
 @Injectable()
 export class ConsumerService {
@@ -148,6 +149,7 @@ export class ConsumerService {
         displayEmail: email ?? undefined,
         phone,
       });
+
       const result = await this.consumerRepo.createConsumer(newConsumer);
       if (isEmail) {
         await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
@@ -163,9 +165,19 @@ export class ConsumerService {
     return consumerResult.getValue();
   }
 
+  generateDefaultHandle(seedString: string): string {
+    const handle = `${seedString.toLowerCase()}`;
+    return this.removeAllUnsupportedHandleCharacters(handle);
+  }
+
   async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerProps.id);
-    if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
+
+    // If we don't have a handle, but we do have a first name, then we can generate a handle.
+    // Else if the handle is being set NOW, we need to validate it.
+    if (!consumer.props.handle && consumer.props.firstName) {
+      consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName);
+    } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
       this.analyseHandle(consumerProps.handle);
     }
 
@@ -529,5 +541,21 @@ export class ConsumerService {
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {
     // TODO: Write logic for verification status based on current modifications of users verification data
     throw new Error("Method not implemented");
+  }
+
+  private removeAllUnsupportedHandleCharacters(text: string): string {
+    if (text === undefined || text === null) return "user-";
+
+    const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü-]{1,1}$");
+    let result = "";
+
+    for (let i = 0; i < text.length; i++) {
+      if (regex.test(text[i])) result += text[i];
+    }
+
+    if (result.length < 1) result += "user-";
+    while (result.length < 3) result += "-";
+
+    return result.substring(0, 7);
   }
 }
