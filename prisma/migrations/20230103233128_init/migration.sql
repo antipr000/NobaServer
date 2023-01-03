@@ -34,7 +34,7 @@ CREATE TABLE "Consumer" (
     "firstName" TEXT,
     "lastName" TEXT,
     "email" TEXT,
-    "displayEmail" TEXT NOT NULL,
+    "displayEmail" TEXT,
     "handle" TEXT,
     "referralCode" TEXT NOT NULL,
     "phone" TEXT,
@@ -204,13 +204,10 @@ CREATE TABLE "Transaction" (
     "id" TEXT NOT NULL,
     "transactionRef" TEXT NOT NULL,
     "workflowName" TEXT NOT NULL,
-    "debitConsumerID" TEXT,
-    "creditConsumerID" TEXT,
+    "consumerID" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
-    "debitCurrency" TEXT,
-    "creditCurrency" TEXT,
-    "debitAmount" DOUBLE PRECISION,
-    "creditAmount" DOUBLE PRECISION,
+    "currency" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION,
     "exchangeRate" DOUBLE PRECISION,
     "createdTimestamp" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "updatedTimestamp" TIMESTAMP(3),
@@ -392,7 +389,4 @@ ALTER TABLE "Circle" ADD CONSTRAINT "Circle_consumerID_fkey" FOREIGN KEY ("consu
 ALTER TABLE "LimitConfiguration" ADD CONSTRAINT "LimitConfiguration_profileID_fkey" FOREIGN KEY ("profileID") REFERENCES "LimitProfile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_debitConsumerID_fkey" FOREIGN KEY ("debitConsumerID") REFERENCES "Consumer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_creditConsumerID_fkey" FOREIGN KEY ("creditConsumerID") REFERENCES "Consumer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_consumerID_fkey" FOREIGN KEY ("consumerID") REFERENCES "Consumer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
