@@ -75,6 +75,7 @@ describe("ConsumerController", () => {
         lastName: "Consumer",
         dateOfBirth: "1998-01-01",
         email: "mock@noba.com",
+        referralCode: "mock-referral-code",
       });
 
       const requestData: UpdateConsumerRequestDTO = {
@@ -102,17 +103,88 @@ describe("ConsumerController", () => {
 
       const result = await consumerController.updateConsumer(consumer, requestData);
 
-      expect(result).toStrictEqual(
-        consumerMapper.toDTO(
-          Consumer.createConsumer({
-            ...consumer.props,
-            firstName: requestData.firstName,
-            dateOfBirth: requestData.dateOfBirth,
+      expect(result).toEqual({
+        id: consumer.props.id,
+        firstName: requestData.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.email,
+        referralCode: consumer.props.referralCode,
+        status: "ActionRequired",
+        kycVerificationData: {
+          kycVerificationStatus: "NotSubmitted",
+          updatedTimestamp: 0,
+        },
+        documentVerificationData: {
+          documentVerificationStatus: "NotRequired",
+          documentVerificationErrorReason: null,
+          updatedTimestamp: 0,
+        },
+        dateOfBirth: requestData.dateOfBirth,
+        address: null,
+        cryptoWallets: [],
+        paymentMethods: [],
+        paymentMethodStatus: "NotSubmitted",
+        walletStatus: "NotSubmitted",
+      });
+    });
+
+    it("should update consumer referred by", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        referralCode: "mock-referral-code",
+      });
+
+      const requestData: UpdateConsumerRequestDTO = {
+        referredByCode: "new-referred-by-code",
+      };
+
+      const referringID = "mock-referring-consumer-1";
+      when(consumerService.findConsumerIDByReferralCode(requestData.referredByCode)).thenResolve(referringID);
+      when(
+        consumerService.updateConsumer(
+          deepEqual({
+            id: consumer.props.id,
+            referredByID: referringID,
           }),
-          [],
-          [],
         ),
+      ).thenResolve(
+        Consumer.createConsumer({
+          ...consumer.props,
+          referredByID: referringID,
+        }),
       );
+      when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([]);
+
+      const result = await consumerController.updateConsumer(consumer, requestData);
+
+      expect(result).toEqual({
+        id: consumer.props.id,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        email: consumer.props.email,
+        referralCode: consumer.props.referralCode,
+        status: "ActionRequired",
+        kycVerificationData: {
+          kycVerificationStatus: "NotSubmitted",
+          updatedTimestamp: 0,
+        },
+        documentVerificationData: {
+          documentVerificationStatus: "NotRequired",
+          documentVerificationErrorReason: null,
+          updatedTimestamp: 0,
+        },
+        dateOfBirth: consumer.props.dateOfBirth,
+        address: null,
+        cryptoWallets: [],
+        paymentMethods: [],
+        paymentMethodStatus: "NotSubmitted",
+        walletStatus: "NotSubmitted",
+      });
     });
   });
 

@@ -31,6 +31,9 @@ export class WalletService {
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
       },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
     });
   }
 
@@ -58,6 +61,9 @@ export class WalletService {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
       },
     });
   }

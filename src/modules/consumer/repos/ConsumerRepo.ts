@@ -9,6 +9,8 @@ export interface IConsumerRepo {
   exists(emailOrPhone: string): Promise<boolean>;
   getConsumerByEmail(email: string): Promise<Result<Consumer>>;
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
+  getConsumerIDByHandle(handle: string): Promise<string>;
+  getConsumerIDByReferralCode(referralCode: string): Promise<string>;
   updateConsumer(consumerID: string, consumer: Partial<ConsumerProps>): Promise<Consumer>;
   isHandleTaken(handle: string): Promise<boolean>;
   addPaymentMethod(paymentMethod: PaymentMethod): Promise<PaymentMethod>;

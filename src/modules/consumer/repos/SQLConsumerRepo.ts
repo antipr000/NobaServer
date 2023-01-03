@@ -102,6 +102,28 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
+  async getConsumerIDByHandle(handle: string): Promise<string> {
+    const consumerProps = await this.prisma.consumer.findFirst({
+      select: { id: true },
+      where: { handle: { equals: handle, mode: "insensitive" } },
+    });
+
+    if (!consumerProps) return null;
+
+    return consumerProps.id;
+  }
+
+  async getConsumerIDByReferralCode(referralCode: string): Promise<string> {
+    const consumerProps = await this.prisma.consumer.findFirst({
+      select: { id: true },
+      where: { referralCode: { equals: referralCode } }, // Intentionally case-sensitive
+    });
+
+    if (!consumerProps) return null;
+
+    return consumerProps.id;
+  }
+
   async updateConsumer(consumerID: string, consumer: Partial<ConsumerProps>): Promise<Consumer> {
     try {
       const updateConsumerInput = this.mapper.toUpdateConsumerInput(consumer);
@@ -115,11 +137,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async isHandleTaken(handle: string): Promise<boolean> {
-    const consumerProps = await this.prisma.consumer.findMany({
-      where: { handle: { equals: handle, mode: "insensitive" } },
-    });
-    if (consumerProps.length === 0) return false;
-    return true;
+    return (await this.getConsumerIDByHandle(handle)) != null;
   }
 
   async addPaymentMethod(paymentMethod: PaymentMethod): Promise<PaymentMethod> {

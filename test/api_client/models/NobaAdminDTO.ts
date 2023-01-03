@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type NobaAdminDTO = {
-  _id: string;
+  id: string;
   email: string;
   name: string;
   role: "BASIC" | "INTERMEDIATE" | "ADMIN";

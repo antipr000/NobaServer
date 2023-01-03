@@ -7,6 +7,7 @@
     "aatest": "npx ts-node ./test/testRun.ts",
     "prebuild": "rimraf dist",
     "prisma-generate": "yarn prisma generate",
+    "prisma-clean-init": "yarn prisma db push",
     "prisma-update": "yarn prisma generate && yarn prisma migrate dev --name=init",
     "prisma-migrate-deploy": "yarn prisma generate && yarn prisma migrate deploy",
     "build": "nest build -c nest-cli.json --webpack --webpackPath webpack.config.js",

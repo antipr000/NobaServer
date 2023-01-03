@@ -52,7 +52,8 @@ describe("CircleController", () => {
         email: "mock@noba.com",
       });
 
-      when(circleService.getWalletBalance(consumer.props.id)).thenResolve(100);
+      when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("walletID");
+      when(circleService.getWalletBalance("walletID")).thenResolve(100);
       const result = await circleController.getConsumerWalletBalance(consumer);
       expect(result).toEqual(100);
     });
