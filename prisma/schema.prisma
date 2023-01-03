@@ -45,7 +45,8 @@ model Consumer {
   cryptoWallets        CryptoWallet[]
   paymentMethods       PaymentMethod[]
   circleAccountData    Circle?
-  Transaction          Transaction[]
+  debitTransactions    Transaction[]   @relation("debitConsumer")
+  creditTransactions   Transaction[]   @relation("creditConsumer")
 
   @@index([email])
   @@index([handle])
@@ -199,8 +200,10 @@ model Transaction {
   id               String    @id @default(uuid())
   transactionRef   String    @unique()
   workflowName     String
-  consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
-  consumerID       String
+  debitConsumer    Consumer? @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
+  debitConsumerID  String?
+  creditConsumer   Consumer? @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
+  creditConsumerID String?
   status           String    @default("PENDING")
   debitCurrency    String?
   creditCurrency   String?

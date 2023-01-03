@@ -22,7 +22,6 @@ const getAllTransactionRecords = async (prismaService: PrismaService): Promise<P
 const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean = false): Transaction => {
   const transaction: Transaction = {
     transactionRef: uuid(),
-    consumerID: consumerID,
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
     workflowName: WorkflowName.BANK_TO_NOBA_WALLET,
@@ -34,9 +33,11 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean =
   if (isCreditTransaction) {
     transaction.creditAmount = 100;
     transaction.creditCurrency = "USD";
+    transaction.creditConsumerID = consumerID;
   } else {
     transaction.debitAmount = 100;
     transaction.debitCurrency = "USD";
+    transaction.debitConsumerID = consumerID;
   }
   return transaction;
 };
@@ -94,9 +95,10 @@ describe("PostgresTransactionRepoTests", () => {
 
       expect(returnedTransaction.transactionRef).toBe(inputTransaction.transactionRef);
       expect(returnedTransaction.workflowName).toBe(inputTransaction.workflowName);
-      expect(returnedTransaction.consumerID).toBe(inputTransaction.consumerID);
+      expect(returnedTransaction.debitConsumerID).toBe(inputTransaction.debitConsumerID);
       expect(returnedTransaction.debitAmount).toBe(inputTransaction.debitAmount);
       expect(returnedTransaction.debitCurrency).toBe(inputTransaction.debitCurrency);
+      expect(returnedTransaction.creditConsumerID).toBeNull();
       expect(returnedTransaction.creditAmount).toBeNull();
       expect(returnedTransaction.creditCurrency).toBeNull();
       expect(returnedTransaction.status).toBe(inputTransaction.status);
@@ -107,7 +109,7 @@ describe("PostgresTransactionRepoTests", () => {
         id: returnedTransaction.id,
         transactionRef: returnedTransaction.transactionRef,
         workflowName: returnedTransaction.workflowName,
-        consumerID: returnedTransaction.consumerID,
+        debitConsumerID: returnedTransaction.debitConsumerID,
         debitAmount: returnedTransaction.debitAmount,
         debitCurrency: returnedTransaction.debitCurrency,
         creditAmount: null,

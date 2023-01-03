@@ -25,7 +25,8 @@ Table Consumer {
   cryptoWallets CryptoWallet [not null]
   paymentMethods PaymentMethod [not null]
   circleAccountData Circle
-  Transaction Transaction [not null]
+  debitTransactions Transaction [not null]
+  creditTransactions Transaction [not null]
 }
 
 Table Address {
@@ -167,8 +168,10 @@ Table Transaction {
   id String [pk]
   transactionRef String [unique, not null]
   workflowName String [not null]
-  consumer Consumer [not null]
-  consumerID String [not null]
+  debitConsumer Consumer
+  debitConsumerID String
+  creditConsumer Consumer
+  creditConsumerID String
   status String [not null, default: 'PENDING']
   debitCurrency String
   creditCurrency String
@@ -300,4 +303,6 @@ Ref: Circle.consumerID - Consumer.id [delete: Cascade]
 
 Ref: LimitConfiguration.profileID > LimitProfile.id [delete: Cascade]
 
-Ref: Transaction.consumerID > Consumer.id [delete: Cascade]
+Ref: Transaction.debitConsumerID > Consumer.id [delete: Cascade]
+
+Ref: Transaction.creditConsumerID > Consumer.id [delete: Cascade]

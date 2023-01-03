@@ -22,7 +22,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  ) { }
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
     validateInputTransaction(transaction);
@@ -35,11 +35,20 @@ export class SQLTransactionRepo implements ITransactionRepo {
       const transactionInput: Prisma.TransactionCreateInput = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        consumer: {
-          connect: {
-            id: transaction.consumerID,
-          },
-        },
+        ...(transaction.debitConsumerID && {
+          debitConsumer: {
+            connect: {
+              id: transaction.debitConsumerID,
+            },
+          }
+        }),
+        ...(transaction.creditConsumerID && {
+          creditConsumer: {
+            connect: {
+              id: transaction.creditConsumerID,
+            },
+          }
+        }),
         ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
         ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
         ...(transaction.debitCurrency && { debitCurrency: transaction.debitCurrency }),
@@ -76,7 +85,8 @@ export class SQLTransactionRepo implements ITransactionRepo {
           id: transactionID,
         },
         include: {
-          consumer: false,
+          debitConsumer: false,
+          creditConsumer: false,
         },
       });
 
@@ -99,7 +109,8 @@ export class SQLTransactionRepo implements ITransactionRepo {
           transactionRef: transactionRef,
         },
         include: {
-          consumer: false,
+          debitConsumer: false,
+          creditConsumer: false,
         },
       });
 
@@ -119,10 +130,14 @@ export class SQLTransactionRepo implements ITransactionRepo {
     try {
       const returnedTransactions: PrismaTransactionModel[] = await this.prismaService.transaction.findMany({
         where: {
-          consumerID: consumerID,
+          debitConsumerID: consumerID,
+          OR: {
+            creditConsumerID: consumerID,
+          }
         },
         include: {
-          consumer: false,
+          debitConsumer: false,
+          creditConsumer: false,
         },
       });
 

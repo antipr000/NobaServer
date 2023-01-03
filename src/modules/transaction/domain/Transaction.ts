@@ -7,7 +7,8 @@ export class Transaction {
   id: string;
   transactionRef: string;
   workflowName: WorkflowName;
-  consumerID: string;
+  creditConsumerID?: string;
+  debitConsumerID?: string;
   debitCurrency?: string;
   creditCurrency?: string;
   debitAmount?: number;
@@ -38,7 +39,8 @@ export const validateInputTransaction = (transaction: Partial<Transaction>) => {
     workflowName: Joi.string()
       .required()
       .valid(...Object.values(WorkflowName)),
-    consumerID: Joi.string().min(10).required(),
+    debitConsumerID: Joi.string().min(10).optional(),
+    creditConsumerID: Joi.string().min(10).optional(),
     debitAmount: Joi.number().greater(0).optional(),
     creditAmount: Joi.number().greater(0).optional(),
     debitCurrency: Joi.string().optional(),
@@ -73,7 +75,8 @@ export const validateSavedTransaction = (transaction: Transaction) => {
     workflowName: Joi.string()
       .required()
       .valid(...Object.values(WorkflowName)),
-    consumerID: Joi.string().min(10).required(),
+    debitConsumerID: Joi.string().min(10).optional(),
+    creditConsumerID: Joi.string().min(10).optional(),
     debitAmount: Joi.number().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
     creditAmount: Joi.number().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
     debitCurrency: Joi.string().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
@@ -110,7 +113,8 @@ export const validateUpdateTransaction = (transaction: Partial<Transaction>) => 
     workflowName: Joi.string()
       .optional()
       .valid(...Object.values(WorkflowName)),
-    consumerID: Joi.string().min(10).optional(),
+    debitConsumerID: Joi.string().min(10).optional(),
+    creditConsumerID: Joi.string().min(10).optional(),
     debitAmount: Joi.number().optional(),
     creditAmount: Joi.number().optional(),
     debitCurrency: Joi.string().optional(),
@@ -136,7 +140,8 @@ export const convertToDomainTransaction = (transaction: PrismaTransactionModel):
     id: transaction.id,
     transactionRef: transaction.transactionRef,
     workflowName: transaction.workflowName as WorkflowName,
-    consumerID: transaction.consumerID,
+    debitConsumerID: transaction.debitConsumerID,
+    creditConsumerID: transaction.creditConsumerID,
     debitAmount: transaction.debitAmount,
     debitCurrency: transaction.debitCurrency,
     creditAmount: transaction.creditAmount,

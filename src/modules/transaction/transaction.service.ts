@@ -14,11 +14,11 @@ export class TransactionService {
   constructor(
     @Inject(TRANSACTION_REPO_PROVIDER) private readonly transactionRepo: ITransactionRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  ) { }
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
     const transaction: Transaction = await this.transactionRepo.getTransactionByTransactionRef(transactionRef);
-    if (transaction === null || transaction.consumerID !== consumerID) {
+    if (transaction === null || (transaction.debitConsumerID !== consumerID && transaction.creditConsumerID !== consumerID)) {
       throw new NotFoundError({
         message: "Transaction not found",
       });
