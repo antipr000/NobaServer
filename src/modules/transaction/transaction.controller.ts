@@ -65,6 +65,9 @@ export class TransactionController {
     @AuthUser() consumer: Consumer,
   ): Promise<TransactionDTO> {
     const transaction = await this.transactionService.getTransactionByTransactionRef(transactionRef, consumer.props.id);
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
+    }
     return this.mapper.toDTO(transaction);
   }
 

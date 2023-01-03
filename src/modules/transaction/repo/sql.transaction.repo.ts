@@ -96,9 +96,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new DatabaseInternalErrorException({
-        message: `Error retrieving the transaction with ID: '${transactionID}'`,
-      });
+      return null;
     }
   }
 
@@ -120,9 +118,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new DatabaseInternalErrorException({
-        message: `Error retrieving the transaction with transactionRef: '${transactionRef}'`,
-      });
+      return null;
     }
   }
 
@@ -148,9 +144,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       return returnedTransactions.map(transaction => convertToDomainTransaction(transaction));
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new DatabaseInternalErrorException({
-        message: `Error retrieving the transactions for consumer with ID: '${consumerID}'`,
-      });
+      return [];
     }
   }
 
