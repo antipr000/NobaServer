@@ -47,31 +47,31 @@ export class WorkflowExecutor {
   }
 
   public async executeDebitConsumerWalletWorkflow(
-    consumerId: string,
-    amountToTransact: number,
+    consumerID: string,
+    amount: number,
     workflowID: string,
   ): Promise<string> {
-    return await this.executeWorkflow("DebitConsumerWallet", workflowID, [consumerId, amountToTransact]);
+    return await this.executeWorkflow("DebitConsumerWallet", workflowID, [consumerID, amount]);
   }
 
   public async executeCreditConsumerWalletWorkflow(
-    consumerId: string,
-    amountToTransact: number,
+    consumerID: string,
+    amount: number,
     workflowID: string,
   ): Promise<string> {
-    return await this.executeWorkflow("CreditConsumerWallet", workflowID, [consumerId, amountToTransact]);
+    return await this.executeWorkflow("CreditConsumerWallet", workflowID, [consumerID, amount]);
   }
 
   public async executeConsumerFundsTransferWorkflow(
     sourceWalletID: string,
     destinationWalletID: string,
-    amountToTransact: number,
+    amount: number,
     workflowID: string,
   ): Promise<string> {
     return await this.executeWorkflow("ConsumerFundsTransfer", workflowID, [
       sourceWalletID,
       destinationWalletID,
-      amountToTransact,
+      amount,
     ]);
   }
 }

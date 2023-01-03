@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CircleFundsMovementRequestDTO } from "./CircleFundsMovementRequestDTO";
+import { CircleDepositOrWithdrawalRequest } from "./CircleDepositOrWithdrawalRequest";
 
-export class CircleFundsTransferRequestDTO extends CircleFundsMovementRequestDTO {
+export class CircleFundsTransferRequestDTO extends CircleDepositOrWithdrawalRequest {
   @ApiProperty({ description: "ID of the wallet to transfer funds from" })
   sourceWalletID: string;
 

@@ -4,7 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { CircleService } from "./circle.service";
-import { CircleFundsMovementRequestDTO } from "./dto/CircleFundsMovementRequestDTO";
+import { CircleDepositOrWithdrawalRequest } from "./dto/CircleDepositOrWithdrawalRequest";
 import { CircleFundsTransferRequestDTO } from "./dto/CircleFundsTransferRequestDTO";
 
 @Controller("v1/wf/circle") // This defines the path prefix
@@ -52,7 +52,7 @@ export class CircleWorkflowController {
   @ApiResponse({ status: HttpStatus.OK })
   async debitWalletBalance(
     @Param("walletID") walletID: string,
-    @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
+    @Body() fundsMovementRequest: CircleDepositOrWithdrawalRequest,
   ) {
     const res = await this.circleService.debitWalletBalance(
       fundsMovementRequest.workflowID,
@@ -71,7 +71,7 @@ export class CircleWorkflowController {
   @ApiResponse({ status: HttpStatus.OK })
   async creditWalletBalance(
     @Param("walletID") walletID: string,
-    @Body() fundsMovementRequest: CircleFundsMovementRequestDTO,
+    @Body() fundsMovementRequest: CircleDepositOrWithdrawalRequest,
   ) {
     const res = await this.circleService.creditWalletBalance(
       fundsMovementRequest.workflowID,

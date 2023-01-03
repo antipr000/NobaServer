@@ -5,7 +5,7 @@ import { TransactionFilterOptions } from "../transactions/domain/Types";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { WorkflowExecutor } from "src/infra/temporal/workflow.executor";
 import { WorkflowType } from "./domain/TransactionTypes";
-import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 
 @Injectable()
 export class TransactionService {
@@ -37,7 +37,7 @@ export class TransactionService {
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid workflow type!",
+          message: "Invalid workflow type",
         });
     }
   }
