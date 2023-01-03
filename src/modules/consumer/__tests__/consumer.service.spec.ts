@@ -211,7 +211,92 @@ describe("ConsumerService", () => {
     });
 
     it("should not auto-generate a handle if updating firstName and handle does exist", async () => {
-      // TODO
+      const email = "mock-user@noba.com";
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: email,
+      });
+      const firstName = "test.test";
+      const lastName = "Last";
+
+      const updatedConsumerData = Consumer.createConsumer({
+        ...consumer.props,
+        firstName: firstName,
+        lastName: lastName,
+      });
+
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        consumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: firstName,
+            lastName: lastName,
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
+
+      const returnedResult = await consumerService.updateConsumer({
+        id: consumer.props.id,
+        firstName: firstName,
+        lastName: lastName,
+      });
+
+      const [updateCallConsumerID, updateConsumerCall] = capture(consumerRepo.updateConsumer).last();
+      expect(updateCallConsumerID).toBe(consumer.props.id);
+      expect(updateConsumerCall.handle).toBeUndefined();
+
+      expect(returnedResult.props.handle).toBeUndefined();
+    });
+
+    it("should add a 'default' handle which doesn't have 'dots' (.) even if firstname has it", async () => {
+      const email = "mock-user@noba.com";
+      const firstName = "test.test";
+      const lastName = "Last";
+
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: email,
+        firstName: firstName,
+      });
+
+      const updatedConsumerData = Consumer.createConsumer({
+        ...consumer.props,
+        firstName: firstName,
+        lastName: lastName,
+        handle: "<PLACEHOLDER_AS_HANDLE_IS_RANDOM>",
+      });
+
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        consumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: firstName,
+            lastName: lastName,
+            handle: anything(),
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
+
+      const returnedResult = await consumerService.updateConsumer({
+        id: consumer.props.id,
+        firstName: firstName,
+        lastName: lastName,
+      });
+
+      const [updateCallConsumerID, updateConsumerCall] = capture(consumerRepo.updateConsumer).last();
+      expect(updateCallConsumerID).toBe(consumer.props.id);
+      expect(updateConsumerCall.handle).toBeDefined();
+      expect(updateConsumerCall.handle.indexOf(".")).toBe(-1);
+      expect(updateConsumerCall.handle.indexOf("_")).toBe(-1);
+      expect(updateConsumerCall.handle.length).toBeGreaterThanOrEqual(3);
+      expect(updateConsumerCall.handle.length).toBeLessThanOrEqual(22);
+      expect(updateConsumerCall.handle[0] != "-").toBeTruthy();
+
+      expect(returnedResult.props.handle).toBeDefined();
     });
 
     it("should throw error if user does not exist", async () => {
