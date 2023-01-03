@@ -22,7 +22,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
     validateInputTransaction(transaction);
@@ -40,14 +40,14 @@ export class SQLTransactionRepo implements ITransactionRepo {
             connect: {
               id: transaction.debitConsumerID,
             },
-          }
+          },
         }),
         ...(transaction.creditConsumerID && {
           creditConsumer: {
             connect: {
               id: transaction.creditConsumerID,
             },
-          }
+          },
         }),
         ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
         ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
@@ -133,7 +133,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
           debitConsumerID: consumerID,
           OR: {
             creditConsumerID: consumerID,
-          }
+          },
         },
         include: {
           debitConsumer: false,
@@ -183,5 +183,30 @@ export class SQLTransactionRepo implements ITransactionRepo {
         message: `Error updating the transaction with transactionRef: '${transactionRef}'`,
       });
     }
+  }
+
+  async getTotalUserTransactionAmount(consumerID: string): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
+
+  async getMonthlyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 30);
+  }
+
+  async getWeeklyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 7);
+  }
+
+  async getDailyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 1);
+  }
+
+  private async getPeriodicUserTransactionAmount(consumerID: string, days: number): Promise<number> {
+    throw new Error("Method not implemented.");
+    // TODO: Use Prisma groupBy with a _sum on amount https://www.prisma.io/docs/concepts/components/prisma-client/aggregation-grouping-summarizing
+  }
+
+  async getUserTransactionInAnInterval(consumerID: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
+    throw new Error("Method not implemented.");
   }
 }
