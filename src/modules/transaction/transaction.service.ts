@@ -26,14 +26,27 @@ export class TransactionService {
     sessionKey: string,
   ): Promise<string> {
     switch (orderDetails.workflowName) {
+      // TODO: Create a transaction object and save it to the DB
+
       case WorkflowType.CONSUMER_WALLET_TRANSFER:
-        return this.workflowExecutor.executeConsumerFundsTransferWorkflow(
+        return this.workflowExecutor.executeConsumerWalletTransferWorkflow(
           orderDetails.debitConsumerIDOrTag,
           orderDetails.creditConsumerIDOrTag,
           orderDetails.debitAmount,
           Date.now().toString(), // TODO: What should the workflow ID be?
         );
-        break;
+      case WorkflowType.DEBIT_CONSUMER_WALLET:
+        return this.workflowExecutor.executeDebitConsumerWalletWorkflow(
+          orderDetails.debitConsumerIDOrTag,
+          orderDetails.debitAmount,
+          Date.now().toString(), // TODO: What should the workflow ID be?
+        );
+      case WorkflowType.CREDIT_CONSUMER_WALLET:
+        return this.workflowExecutor.executeCreditConsumerWalletWorkflow(
+          orderDetails.creditConsumerIDOrTag,
+          orderDetails.creditAmount,
+          Date.now().toString(), // TODO: What should the workflow ID be?
+        );
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
