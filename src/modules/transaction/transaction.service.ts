@@ -39,13 +39,13 @@ export class TransactionService {
         );
       case WorkflowType.DEBIT_CONSUMER_WALLET:
         return this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-          orderDetails.debitConsumerIDOrTag,
+          consumer.props.id,
           orderDetails.debitAmount,
           transactionID,
         );
       case WorkflowType.CREDIT_CONSUMER_WALLET:
         return this.workflowExecutor.executeCreditConsumerWalletWorkflow(
-          orderDetails.creditConsumerIDOrTag,
+          consumer.props.id,
           orderDetails.creditAmount,
           transactionID,
         );
