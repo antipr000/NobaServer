@@ -9,7 +9,7 @@ import { Consumer } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
-import { AuthenticatedUser } from "src/modules/auth/domain/AuthenticatedUser";
+import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
 import { IDVerificationURLRequestLocale, IDVerificationURLResponseDTO } from "../dto/IDVerificationRequestURLDTO";
 import { DocumentVerificationState } from "../../../modules/consumer/domain/ExternalStates";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
