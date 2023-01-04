@@ -75,8 +75,8 @@ export const validateSavedTransaction = (transaction: Transaction) => {
     workflowName: Joi.string()
       .required()
       .valid(...Object.values(WorkflowName)),
-    debitConsumerID: Joi.string().min(10).optional(),
-    creditConsumerID: Joi.string().min(10).optional(),
+    debitConsumerID: Joi.string().min(10).required().allow(null),
+    creditConsumerID: Joi.string().min(10).required().allow(null),
     debitAmount: Joi.number().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
     creditAmount: Joi.number().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
     debitCurrency: Joi.string().required().allow(null), // null is allowed as either 'debit' or 'credit' side is allowed 'initially'.
