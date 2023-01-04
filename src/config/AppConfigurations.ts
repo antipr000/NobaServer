@@ -654,9 +654,9 @@ async function configureNobaWorkflowCredentials(
   environment: AppEnvironment,
   configs: Record<string, any>,
 ): Promise<Record<string, any>> {
-  const nobaWorkflowCofnigs: NobaWorkflowConfig = configs[NOBA_WORKFLOW_CONFIG_KEY];
+  const nobaWorkflowConfigs: NobaWorkflowConfig = configs[NOBA_WORKFLOW_CONFIG_KEY];
 
-  if (nobaWorkflowCofnigs === undefined) {
+  if (nobaWorkflowConfigs === undefined) {
     const errorMessage =
       "\n'Noba Workflow' configurations are required. Please configure the Noba Workflow credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${NOBA_WORKFLOW_CONFIG_KEY}" and populate ` +
@@ -668,21 +668,22 @@ async function configureNobaWorkflowCredentials(
     throw Error(errorMessage);
   }
 
-  nobaWorkflowCofnigs.taskQueue = await getParameterValue(
-    nobaWorkflowCofnigs.awsSecretNameForTaskQueue,
-    nobaWorkflowCofnigs.taskQueue,
+  nobaWorkflowConfigs.taskQueue = await getParameterValue(
+    nobaWorkflowConfigs.awsSecretNameForTaskQueue,
+    nobaWorkflowConfigs.taskQueue,
   );
-  nobaWorkflowCofnigs.clientUrl = await getParameterValue(
-    nobaWorkflowCofnigs.awsSecretNameForClientUrl,
-    nobaWorkflowCofnigs.clientUrl,
+  console.log(nobaWorkflowConfigs.taskQueue);
+  nobaWorkflowConfigs.clientUrl = await getParameterValue(
+    nobaWorkflowConfigs.awsSecretNameForClientUrl,
+    nobaWorkflowConfigs.clientUrl,
   );
-  nobaWorkflowCofnigs.namespace = await getParameterValue(null, nobaWorkflowCofnigs.namespace);
-  nobaWorkflowCofnigs.connectionTimeoutInMs = (await getParameterValue(
+  nobaWorkflowConfigs.namespace = await getParameterValue(null, nobaWorkflowConfigs.namespace);
+  nobaWorkflowConfigs.connectionTimeoutInMs = (await getParameterValue(
     null,
-    nobaWorkflowCofnigs.connectionTimeoutInMs.toString(),
+    nobaWorkflowConfigs.connectionTimeoutInMs.toString(),
   )) as any;
 
-  configs[NOBA_WORKFLOW_CONFIG_KEY] = nobaWorkflowCofnigs;
+  configs[NOBA_WORKFLOW_CONFIG_KEY] = nobaWorkflowConfigs;
 
   return configs;
 }
