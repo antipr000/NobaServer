@@ -176,7 +176,6 @@ export interface CryptoTransactionRequestResult {
 }
 
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { SortOrder } from "../../../core/infra/PaginationTypes";
 import { TransactionProps } from "./Transaction";
 
 export enum TransactionsQuerySortField {
@@ -185,21 +184,6 @@ export enum TransactionsQuerySortField {
   leg2Amount = "leg2Amount",
   leg1 = "leg1",
   leg2 = "leg2",
-}
-
-export function transactionPropFromQuerySortField(transactionQuerySortField: TransactionsQuerySortField) {
-  if (!transactionQuerySortField) {
-    return undefined;
-  }
-  const mp: Record<TransactionsQuerySortField, keyof TransactionProps> = {
-    transactionTimestamp: "transactionTimestamp",
-    leg1Amount: "leg1Amount",
-    leg2Amount: "leg2Amount",
-    leg1: "leg1",
-    leg2: "leg2",
-  };
-
-  return mp[transactionQuerySortField];
 }
 
 export class TransactionFilterOptions {
@@ -224,21 +208,30 @@ export class TransactionFilterOptions {
   @ApiPropertyOptional({ description: "number of items per page" })
   pageLimit?: number;
 
-  @ApiPropertyOptional({ enum: Object.values(TransactionsQuerySortField), description: "sort by field" })
-  sortField?: TransactionsQuerySortField;
+  @ApiPropertyOptional({ description: "filter for a particular credit currency" })
+  creditCurrency?: string;
 
-  @ApiPropertyOptional({ enum: Object.values(SortOrder), description: "sort order asc or desc" })
-  sortOrder?: SortOrder;
-
-  @ApiPropertyOptional({ description: "filter for a particular fiat currency" })
-  fiatCurrency?: string;
-
-  @ApiPropertyOptional({ description: "filter for a particular Cryptocurrency" })
-  cryptoCurrency?: string;
+  @ApiPropertyOptional({ description: "filter for a particular debit currency" })
+  debitCurrency?: string;
 
   @ApiPropertyOptional({
     enum: Object.values(TransactionStatus),
     description: "filter for a particular transaction status",
   })
   transactionStatus?: TransactionStatus;
+}
+
+export function transactionPropFromQuerySortField(transactionQuerySortField: TransactionsQuerySortField) {
+  if (!transactionQuerySortField) {
+    return undefined;
+  }
+  const mp: Record<TransactionsQuerySortField, keyof TransactionProps> = {
+    transactionTimestamp: "transactionTimestamp",
+    leg1Amount: "leg1Amount",
+    leg2Amount: "leg2Amount",
+    leg1: "leg1",
+    leg2: "leg2",
+  };
+
+  return mp[transactionQuerySortField];
 }
