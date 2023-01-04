@@ -22,7 +22,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
     validateInputTransaction(transaction);

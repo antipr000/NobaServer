@@ -64,8 +64,6 @@ export const validateInputTransaction = (transaction: Partial<Transaction>) => {
   const hasCreditSide = transaction.creditAmount && transaction.creditCurrency;
   if (!hasDebitSide && !hasCreditSide)
     throw new BadRequestError({ message: "Transaction must have either a debit or credit side." });
-  if (hasDebitSide && hasCreditSide)
-    throw new BadRequestError({ message: "Transaction cannot have both credit & debit side." });
 };
 
 export const validateSavedTransaction = (transaction: Transaction) => {
@@ -99,7 +97,15 @@ export const validateSavedTransaction = (transaction: Transaction) => {
 };
 
 export const validateUpdateTransaction = (transaction: Partial<Transaction>) => {
-  const uneditableFields = ["id", "transactionRef", "workflowName", "consumerID", "createdAt", "updatedAt"];
+  const uneditableFields = [
+    "id",
+    "transactionRef",
+    "workflowName",
+    "debitConsumerID",
+    "creditConsumerID",
+    "createdTimestamp",
+    "updatedTimestamp",
+  ];
   let containsUneditableFields = false;
   uneditableFields.forEach(field => {
     if (transaction[field]) containsUneditableFields = true;
