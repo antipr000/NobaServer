@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { NationalIDTypes } from "../domain/NationalIDTypes";
 export class AddressDTO {
-  @ApiProperty()
-  streetLine1: string;
+  @ApiPropertyOptional()
+  streetLine1?: string;
 
   @ApiPropertyOptional()
   streetLine2?: string;
@@ -10,14 +10,14 @@ export class AddressDTO {
   @ApiProperty()
   countryCode: string;
 
-  @ApiProperty()
-  city: string;
+  @ApiPropertyOptional()
+  city?: string;
 
-  @ApiProperty({ description: "state code in ISO 3166-2" })
-  regionCode: string;
+  @ApiPropertyOptional({ description: "state code in ISO 3166-2" })
+  regionCode?: string;
 
-  @ApiProperty()
-  postalCode: string;
+  @ApiPropertyOptional()
+  postalCode?: string;
 }
 
 export class NationalIDDTO {
