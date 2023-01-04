@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Transaction } from "./domain/Transaction";
+import { Transaction, WorkflowName } from "./domain/Transaction";
 import { Consumer } from "../consumer/domain/Consumer";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -10,6 +10,8 @@ import { TRANSACTION_REPO_PROVIDER } from "./repo/transaction.repo.module";
 import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
 import { BadRequestError } from "../../core/exception/CommonAppException";
+import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
+import { Entity } from "../../core/domain/Entity";
 
 @Injectable()
 export class TransactionService {
@@ -17,6 +19,7 @@ export class TransactionService {
     @Inject(TRANSACTION_REPO_PROVIDER) private readonly transactionRepo: ITransactionRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly consumerService: ConsumerService,
+    private readonly workflowExecutor: WorkflowExecutor,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -40,6 +43,7 @@ export class TransactionService {
     sessionKey: string,
   ): Promise<string> {
     let transaction: Transaction;
+    transaction.id = Entity.getNewID();
     transaction.transactionRef = Utils.generateLowercaseUUID(true);
     if (orderDetails.creditConsumerIDOrTag) {
       let consumerID: string;
@@ -81,6 +85,15 @@ export class TransactionService {
     transaction.debitCurrency = orderDetails.debitCurrency ?? null;
 
     transaction.workflowName = orderDetails.workflowName;
+
+    switch (transaction.workflowName) {
+      case WorkflowName.BANK_TO_NOBA_WALLET:
+      // execute workflow here
+      case WorkflowName.NOBA_WALLET_TO_BANK:
+      // execute workflow here
+      default:
+        new BadRequestError({ message: "Workflow is not supported!" });
+    }
 
     const savedTransaction = await this.transactionRepo.createTransaction(transaction);
     return savedTransaction.transactionRef;
