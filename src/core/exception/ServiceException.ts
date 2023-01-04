@@ -6,6 +6,7 @@ export const enum ServiceErrorCode {
   UNABLE_TO_PROCESS = "Unable to process",
   UNAUTHORIZED = "Unauthorized",
   UNAUTHENTICATED = "Unauthenticated",
+  RATE_LIMIT_EXCEEDED = "Rate limit exceeded",
   NOT_IMPLEMENTED = "Not implemented",
   UNKNOWN = "Unknown error has occured",
 }

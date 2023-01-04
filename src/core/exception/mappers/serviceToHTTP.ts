@@ -25,6 +25,8 @@ export function serviceToHTTP(logger: Logger, exception: ServiceException) {
       return new UnauthorizedException(exception.message); // The semantic meaning of 401 is no credentials
     case ServiceErrorCode.UNAUTHORIZED:
       return new ForbiddenException(exception.message); // The semantic meaning of 403 is incorrect rights
+    case ServiceErrorCode.RATE_LIMIT_EXCEEDED:
+      return new HttpException(exception.message, 429);
     case ServiceErrorCode.UNKNOWN:
       return new InternalServerErrorException(exception.message);
     default:

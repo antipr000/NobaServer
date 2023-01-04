@@ -134,9 +134,19 @@ export class CircleClient {
       if (err instanceof ServiceException) {
         throw err;
       }
+
+      if (err.response.status === 429) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.RATE_LIMIT_EXCEEDED,
+          message: "Rate limit exceeded. Please try again later.",
+          retry: true,
+        });
+      }
+
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Service unavailable. Please try again.",
+        retry: true,
       });
     }
   }
