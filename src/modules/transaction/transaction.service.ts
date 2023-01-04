@@ -93,7 +93,7 @@ export class TransactionService {
       case WorkflowName.NOBA_WALLET_TO_BANK:
       // execute workflow here
       default:
-        new BadRequestError({ message: "Workflow is not supported!" });
+        throw new BadRequestError({ message: "Workflow is not supported!" });
     }
     return savedTransaction.transactionRef;
   }
