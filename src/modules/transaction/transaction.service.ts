@@ -85,8 +85,9 @@ export class TransactionService {
     transaction.debitCurrency = orderDetails.debitCurrency ?? null;
 
     transaction.workflowName = orderDetails.workflowName;
+    const savedTransaction = await this.transactionRepo.createTransaction(transaction);
 
-    switch (transaction.workflowName) {
+    switch (savedTransaction.workflowName) {
       case WorkflowName.BANK_TO_NOBA_WALLET:
       // execute workflow here
       case WorkflowName.NOBA_WALLET_TO_BANK:
@@ -94,8 +95,6 @@ export class TransactionService {
       default:
         new BadRequestError({ message: "Workflow is not supported!" });
     }
-
-    const savedTransaction = await this.transactionRepo.createTransaction(transaction);
     return savedTransaction.transactionRef;
   }
 
