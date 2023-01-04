@@ -72,10 +72,19 @@ export class CircleClient {
       return result;
     } catch (err) {
       this.logger.error(
-        `Error while creating the wallet: ${JSON.stringify(err.response.data)}, ${JSON.stringify(
+        `Error while retrieving wallet balance: ${JSON.stringify(err.response.data)}, ${JSON.stringify(
           err.response.headers,
         )}`,
       );
+
+      if (err.response.status === 429) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.RATE_LIMIT_EXCEEDED,
+          message: "Rate limit exceeded. Please try again later.",
+          retry: true,
+        });
+      }
+
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Service unavailable. Please try again.",
