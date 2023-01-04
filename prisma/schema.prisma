@@ -56,12 +56,12 @@ model Consumer {
 
 model Address {
   id          String   @id @default(uuid())
-  streetLine1 String
+  streetLine1 String?
   streetLine2 String?
-  city        String
+  city        String?
   countryCode String   @db.VarChar(3)
-  regionCode  String
-  postalCode  String
+  regionCode  String?
+  postalCode  String?
   consumer    Consumer @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID  String   @unique()
 }

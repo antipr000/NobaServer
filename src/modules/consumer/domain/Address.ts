@@ -4,22 +4,22 @@ import Joi from "joi";
 
 export class Address implements Partial<AddressModel> {
   id?: string; // Marking as optional as it is not required internally
-  streetLine1: string;
+  streetLine1?: string | null;
   streetLine2?: string | null;
-  city: string;
+  city?: string | null;
   countryCode: string;
-  regionCode: string;
-  postalCode: string;
+  regionCode?: string | null;
+  postalCode?: string | null;
   consumerID?: string; // marking as optional as it is not required internally
 }
 
 export const addressValidationJoiKeys: KeysRequired<Address> = {
   id: Joi.string().optional(),
-  streetLine1: Joi.string().optional(),
+  streetLine1: Joi.string().optional().allow(null),
   streetLine2: Joi.string().optional().allow(null),
-  city: Joi.string().optional(),
-  regionCode: Joi.string().optional(),
+  city: Joi.string().optional().allow(null),
+  regionCode: Joi.string().optional().allow(null),
   countryCode: Joi.string().optional(),
-  postalCode: Joi.string().optional(),
-  consumerID: Joi.string().optional(),
+  postalCode: Joi.string().optional().allow(null),
+  consumerID: Joi.string().optional().allow(null),
 };

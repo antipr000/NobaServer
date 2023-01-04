@@ -30,12 +30,12 @@ Table Consumer {
 
 Table Address {
   id String [pk]
-  streetLine1 String [not null]
+  streetLine1 String
   streetLine2 String
-  city String [not null]
+  city String
   countryCode String [not null]
-  regionCode String [not null]
-  postalCode String [not null]
+  regionCode String
+  postalCode String
   consumer Consumer [not null]
   consumerID String [unique, not null]
 }
