@@ -15,7 +15,6 @@ import { Utils } from "../../../core/utils/Utils";
 const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean = false): Transaction => {
   const transaction: Transaction = {
     transactionRef: uuid(),
-    consumerID: consumerID,
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
     workflowName: WorkflowName.BANK_TO_NOBA_WALLET,
@@ -27,9 +26,11 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean =
   if (isCreditTransaction) {
     transaction.creditAmount = 100;
     transaction.creditCurrency = "USD";
+    transaction.creditConsumerID = consumerID;
   } else {
     transaction.debitAmount = 100;
     transaction.debitCurrency = "USD";
+    transaction.debitConsumerID = consumerID;
   }
   return transaction;
 };
