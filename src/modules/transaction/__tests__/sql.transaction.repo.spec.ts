@@ -112,6 +112,7 @@ describe("PostgresTransactionRepoTests", () => {
         debitConsumerID: returnedTransaction.debitConsumerID,
         debitAmount: returnedTransaction.debitAmount,
         debitCurrency: returnedTransaction.debitCurrency,
+        creditConsumerID: null,
         creditAmount: null,
         creditCurrency: null,
         status: returnedTransaction.status,

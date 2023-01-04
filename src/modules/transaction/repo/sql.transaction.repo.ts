@@ -22,7 +22,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   async createTransaction(transaction: Transaction): Promise<Transaction> {
     validateInputTransaction(transaction);
@@ -40,14 +40,14 @@ export class SQLTransactionRepo implements ITransactionRepo {
             connect: {
               id: transaction.debitConsumerID,
             },
-          }
+          },
         }),
         ...(transaction.creditConsumerID && {
           creditConsumer: {
             connect: {
               id: transaction.creditConsumerID,
             },
-          }
+          },
         }),
         ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
         ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
@@ -130,10 +130,14 @@ export class SQLTransactionRepo implements ITransactionRepo {
     try {
       const returnedTransactions: PrismaTransactionModel[] = await this.prismaService.transaction.findMany({
         where: {
-          debitConsumerID: consumerID,
-          OR: {
-            creditConsumerID: consumerID,
-          }
+          OR: [
+            {
+              creditConsumerID: consumerID,
+            },
+            {
+              debitConsumerID: consumerID,
+            },
+          ],
         },
         include: {
           debitConsumer: false,
