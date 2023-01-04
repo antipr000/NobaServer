@@ -6,7 +6,7 @@ import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { WorkflowExecutor } from "src/infra/temporal/workflow.executor";
 import { WorkflowType } from "./domain/TransactionTypes";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 
 @Injectable()
 export class TransactionService {
@@ -27,7 +27,7 @@ export class TransactionService {
     sessionKey: string,
   ): Promise<string> {
     // TODO: Create a transaction object and save it to the DB
-    const transactionID = uuid();
+    const transactionID = v4();
 
     switch (orderDetails.workflowName) {
       case WorkflowType.CONSUMER_WALLET_TRANSFER:
