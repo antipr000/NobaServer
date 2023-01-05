@@ -76,6 +76,15 @@ describe("CircleRepoTests", () => {
       expect(circleResult.getValue()).toEqual(walletID);
     });
 
+    it("should fail to add duplicate consumer circle wallet id", async () => {
+      const consumer = getRandomUser();
+      const createdConsumer = await consumerRepo.createConsumer(consumer);
+      const consumerID = createdConsumer.props.id;
+      const walletID = Math.random().toString(36).substring(7);
+      await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
+      expect(circleRepo.addConsumerCircleWalletID(consumerID, walletID)).rejects.toThrow();
+    });
+
     it("should fail to add a consumer circle wallet id", async () => {
       expect(circleRepo.addConsumerCircleWalletID(null, null)).rejects.toThrow();
     });
