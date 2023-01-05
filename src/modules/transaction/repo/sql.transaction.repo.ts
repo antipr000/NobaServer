@@ -35,13 +35,24 @@ export class SQLTransactionRepo implements ITransactionRepo {
       const transactionInput: Prisma.TransactionCreateInput = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        consumer: {
-          connect: {
-            id: transaction.consumerID,
+        ...(transaction.debitConsumerID && {
+          debitConsumer: {
+            connect: {
+              id: transaction.debitConsumerID,
+            },
           },
-        },
-        amount: transaction.amount,
-        currency: transaction.currency,
+        }),
+        ...(transaction.creditConsumerID && {
+          creditConsumer: {
+            connect: {
+              id: transaction.creditConsumerID,
+            },
+          },
+        }),
+        ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
+        ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
+        ...(transaction.debitCurrency && { debitCurrency: transaction.debitCurrency }),
+        ...(transaction.creditCurrency && { creditCurrency: transaction.creditCurrency }),
         exchangeRate: transaction.exchangeRate,
       };
 
@@ -74,7 +85,8 @@ export class SQLTransactionRepo implements ITransactionRepo {
           id: transactionID,
         },
         include: {
-          consumer: false,
+          debitConsumer: false,
+          creditConsumer: false,
         },
       });
 
@@ -84,9 +96,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new DatabaseInternalErrorException({
-        message: `Error retrieving the transaction with ID: '${transactionID}'`,
-      });
+      return null;
     }
   }
 
@@ -97,7 +107,8 @@ export class SQLTransactionRepo implements ITransactionRepo {
           transactionRef: transactionRef,
         },
         include: {
-          consumer: false,
+          debitConsumer: false,
+          creditConsumer: false,
         },
       });
 
@@ -107,9 +118,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new DatabaseInternalErrorException({
-        message: `Error retrieving the transaction with transactionRef: '${transactionRef}'`,
-      });
+      return null;
     }
   }
 
@@ -117,19 +126,25 @@ export class SQLTransactionRepo implements ITransactionRepo {
     try {
       const returnedTransactions: PrismaTransactionModel[] = await this.prismaService.transaction.findMany({
         where: {
-          consumerID: consumerID,
+          OR: [
+            {
+              creditConsumerID: consumerID,
+            },
+            {
+              debitConsumerID: consumerID,
+            },
+          ],
         },
         include: {
-          consumer: false,
+          debitConsumer: false,
+          creditConsumer: false,
         },
       });
 
       return returnedTransactions.map(transaction => convertToDomainTransaction(transaction));
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new DatabaseInternalErrorException({
-        message: `Error retrieving the transactions for consumer with ID: '${consumerID}'`,
-      });
+      return [];
     }
   }
 
@@ -143,6 +158,10 @@ export class SQLTransactionRepo implements ITransactionRepo {
       const transactionUpdate: Prisma.TransactionUpdateInput = {
         ...(transaction.exchangeRate && { exchangeRate: transaction.exchangeRate }),
         ...(transaction.status && { status: transaction.status }),
+        ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
+        ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
+        ...(transaction.debitCurrency && { debitCurrency: transaction.debitCurrency }),
+        ...(transaction.creditCurrency && { creditCurrency: transaction.creditCurrency }),
       };
 
       const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.update({
@@ -162,5 +181,30 @@ export class SQLTransactionRepo implements ITransactionRepo {
         message: `Error updating the transaction with transactionRef: '${transactionRef}'`,
       });
     }
+  }
+
+  async getTotalUserTransactionAmount(consumerID: string): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
+
+  async getMonthlyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 30);
+  }
+
+  async getWeeklyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 7);
+  }
+
+  async getDailyUserTransactionAmount(consumerID: string): Promise<number> {
+    return this.getPeriodicUserTransactionAmount(consumerID, 1);
+  }
+
+  private async getPeriodicUserTransactionAmount(consumerID: string, days: number): Promise<number> {
+    throw new Error("Method not implemented.");
+    // TODO: Use Prisma groupBy with a _sum on amount https://www.prisma.io/docs/concepts/components/prisma-client/aggregation-grouping-summarizing
+  }
+
+  async getUserTransactionInAnInterval(consumerID: string, fromDate: Date, toDate: Date): Promise<Transaction[]> {
+    throw new Error("Method not implemented.");
   }
 }

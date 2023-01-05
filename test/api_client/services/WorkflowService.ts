@@ -1,8 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CircleDepositOrWithdrawalRequest } from "../models/CircleDepositOrWithdrawalRequest";
-import type { CircleFundsTransferRequestDTO } from "../models/CircleFundsTransferRequestDTO";
+import type { CircleFundsMovementRequestDTO } from "../models/CircleFundsMovementRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -61,7 +60,7 @@ export class WorkflowService {
     requestBody,
   }: {
     walletId: string;
-    requestBody: CircleDepositOrWithdrawalRequest;
+    requestBody: CircleFundsMovementRequestDTO;
   }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
@@ -84,7 +83,7 @@ export class WorkflowService {
     requestBody,
   }: {
     walletId: string;
-    requestBody: CircleDepositOrWithdrawalRequest;
+    requestBody: CircleFundsMovementRequestDTO;
   }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
@@ -92,20 +91,6 @@ export class WorkflowService {
       path: {
         walletID: walletId,
       },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-
-  /**
-   * Transfer funds between circle wallets
-   * @returns any
-   * @throws ApiError
-   */
-  public static transferFunds({ requestBody }: { requestBody: CircleFundsTransferRequestDTO }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/wf/circle/wallets/transfer",
       body: requestBody,
       mediaType: "application/json",
     });

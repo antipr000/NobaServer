@@ -30,7 +30,7 @@ import { Consumer } from "../consumer/domain/Consumer";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
-import { TransactionFilterOptions } from "../transactions/domain/Types";
+import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
@@ -64,7 +64,7 @@ export class TransactionController {
     @Param("transactionRef") transactionRef: string,
     @AuthUser() consumer: Consumer,
   ): Promise<TransactionDTO> {
-    const transaction = await this.transactionService.getTransaction(transactionRef, consumer.props.id);
+    const transaction = await this.transactionService.getTransactionByTransactionRef(transactionRef, consumer.props.id);
     if (!transaction) {
       throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
     }
@@ -78,7 +78,7 @@ export class TransactionController {
     type: Array<TransactionDTO>,
   })
   async getAllTransactions(
-    @Query() filters: TransactionFilterOptions,
+    @Query() filters: TransactionFilterOptionsDTO,
     @AuthUser() consumer: Consumer,
   ): Promise<TransactionDTO[]> {
     filters.consumerID = consumer.props.id;

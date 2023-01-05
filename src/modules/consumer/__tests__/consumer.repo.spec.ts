@@ -97,72 +97,16 @@ describe("ConsumerRepoTests", () => {
       expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(BadRequestError);
     });
 
-    it("should save handle for consumer", async () => {
+    it("should not automatically generate a handle", async () => {
       const consumer = getRandomUser();
-      const handle = uuid();
-      consumer.props.handle = handle;
-      const returnedResult = await consumerRepo.createConsumer(consumer);
-
-      const savedResults: ConsumerProps[] = await getAllConsumerRecords(prismaService);
-      const savedConsumerRecord = savedResults.filter(record => record.id === consumer.props.id);
-      expect(savedConsumerRecord.length).toBe(1);
-      expect(savedConsumerRecord[0].handle).toBe(handle);
-
-      expect(returnedResult.props.handle).toBe(savedConsumerRecord[0].handle);
-    });
-
-    it("should add a 'default' handle (if not specified) before saving the consumer", async () => {
-      const consumer = getRandomUser();
-      const returnedResult = await consumerRepo.createConsumer(consumer);
-
-      const savedResults: ConsumerProps[] = await (
-        await getAllConsumerRecords(prismaService)
-      ).filter(record => record.id === consumer.props.id);
-      expect(savedResults).toHaveLength(1);
-      expect(savedResults[0].handle).toBeDefined();
-      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
-      expect(savedResults[0].handle.length).toBeLessThanOrEqual(22);
-      expect(savedResults[0].handle[0] != "-").toBeTruthy();
-
-      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
-    });
-
-    it("should add a 'default' handle which doesn't have 'dots' (.) even if email has it and firstName is not present", async () => {
-      const consumer = getRandomUser();
-      consumer.props.firstName = null;
-      const returnedResult = await consumerRepo.createConsumer(consumer);
-
-      const savedResults: ConsumerProps[] = (await getAllConsumerRecords(prismaService)).filter(
-        record => record.id === consumer.props.id,
-      );
-      expect(savedResults).toHaveLength(1);
-      expect(savedResults[0].handle).toBeDefined();
-      expect(savedResults[0].handle.indexOf(".")).toBe(-1);
-      expect(savedResults[0].handle.indexOf("_")).toBe(-1);
-      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
-      expect(savedResults[0].handle.length).toBeLessThanOrEqual(22);
-      expect(savedResults[0].handle[0] != "-").toBeTruthy();
-
-      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
-    });
-
-    it("should add a 'default' handle which doesn't have 'dots' (.) even if firstname has it", async () => {
-      const consumer = getRandomUser();
-      consumer.props.firstName = "test.test";
-      const returnedResult = await consumerRepo.createConsumer(consumer);
-
-      const savedResults: ConsumerProps[] = (await getAllConsumerRecords(prismaService)).filter(
-        record => record.id === consumer.props.id,
-      );
-      expect(savedResults).toHaveLength(1);
-      expect(savedResults[0].handle).toBeDefined();
-      expect(savedResults[0].handle.indexOf(".")).toBe(-1);
-      expect(savedResults[0].handle.indexOf("_")).toBe(-1);
-      expect(savedResults[0].handle.length).toBeGreaterThanOrEqual(3);
-      expect(savedResults[0].handle.length).toBeLessThanOrEqual(22);
-      expect(savedResults[0].handle[0] != "-").toBeTruthy();
-
-      expect(returnedResult.props.handle).toBe(savedResults[0].handle);
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      expect(savedResult.props.id).toBe(result.props.id);
+      expect(savedResult.props.phone).toBe(consumer.props.phone);
+      const phone = consumer.props.phone;
+      const newConsumer = getRandomUser();
+      newConsumer.props.phone = phone.split("").join(" ");
+      expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(BadRequestError);
     });
   });
 
@@ -549,6 +493,7 @@ const getRandomUser = (): Consumer => {
     displayEmail: email.toUpperCase(),
     referralCode: Utils.getAlphaNanoID(15),
     phone: getRandomPhoneNumber(),
+    handle: `@${uuid()}`,
   };
   return Consumer.createConsumer(props);
 };

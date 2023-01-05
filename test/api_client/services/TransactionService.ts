@@ -60,10 +60,8 @@ export class TransactionService {
     endDate,
     pageOffset,
     pageLimit,
-    sortField,
-    sortOrder,
-    fiatCurrency,
-    cryptoCurrency,
+    creditCurrency,
+    debitCurrency,
     transactionStatus,
   }: {
     xNobaApiKey: string;
@@ -93,42 +91,17 @@ export class TransactionService {
      */
     pageLimit?: number;
     /**
-     * sort by field
+     * filter for a particular credit currency
      */
-    sortField?: "transactionTimestamp" | "leg1Amount" | "leg2Amount" | "leg1" | "leg2";
+    creditCurrency?: string;
     /**
-     * sort order asc or desc
+     * filter for a particular debit currency
      */
-    sortOrder?: "ASC" | "DESC";
-    /**
-     * filter for a particular fiat currency
-     */
-    fiatCurrency?: string;
-    /**
-     * filter for a particular Cryptocurrency
-     */
-    cryptoCurrency?: string;
+    debitCurrency?: string;
     /**
      * filter for a particular transaction status
      */
-    transactionStatus?:
-      | "PENDING"
-      | "VALIDATION_FAILED"
-      | "VALIDATION_PASSED"
-      | "FIAT_INCOMING_INITIATED"
-      | "FIAT_INCOMING_COMPLETED"
-      | "FIAT_INCOMING_FAILED"
-      | "FIAT_REVERSAL_INITIATING"
-      | "FIAT_INCOMING_REVERSAL_INITIATED"
-      | "FIAT_INCOMING_REVERSAL_FAILED"
-      | "FIAT_INCOMING_REVERSED"
-      | "CRYPTO_OUTGOING_INITIATING"
-      | "CRYPTO_OUTGOING_INITIATED"
-      | "CRYPTO_OUTGOING_COMPLETED"
-      | "CRYPTO_OUTGOING_FAILED"
-      | "INTERNAL_TRANSFER_PENDING"
-      | "COMPLETED"
-      | "FAILED";
+    transactionStatus?: "PENDING" | "SUCCESS" | "FAILED" | "IN_PROGRESS";
   }): CancelablePromise<any[]> {
     return __request(OpenAPI, {
       method: "GET",
@@ -144,10 +117,8 @@ export class TransactionService {
         endDate: endDate,
         pageOffset: pageOffset,
         pageLimit: pageLimit,
-        sortField: sortField,
-        sortOrder: sortOrder,
-        fiatCurrency: fiatCurrency,
-        cryptoCurrency: cryptoCurrency,
+        creditCurrency: creditCurrency,
+        debitCurrency: debitCurrency,
         transactionStatus: transactionStatus,
       },
     });

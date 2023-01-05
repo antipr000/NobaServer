@@ -7,7 +7,7 @@ Table Consumer {
   firstName String
   lastName String
   email String [unique]
-  displayEmail String [not null]
+  displayEmail String
   handle String [unique]
   referralCode String [unique, not null]
   phone String [unique]
@@ -25,17 +25,18 @@ Table Consumer {
   cryptoWallets CryptoWallet [not null]
   paymentMethods PaymentMethod [not null]
   circleAccountData Circle
-  Transaction Transaction [not null]
+  debitTransactions Transaction [not null]
+  creditTransactions Transaction [not null]
 }
 
 Table Address {
   id String [pk]
-  streetLine1 String [not null]
+  streetLine1 String
   streetLine2 String
-  city String [not null]
+  city String
   countryCode String [not null]
-  regionCode String [not null]
-  postalCode String [not null]
+  regionCode String
+  postalCode String
   consumer Consumer [not null]
   consumerID String [unique, not null]
 }
@@ -167,11 +168,15 @@ Table Transaction {
   id String [pk]
   transactionRef String [unique, not null]
   workflowName String [not null]
-  consumer Consumer [not null]
-  consumerID String [not null]
+  debitConsumer Consumer
+  debitConsumerID String
+  creditConsumer Consumer
+  creditConsumerID String
   status String [not null, default: 'PENDING']
-  currency String [not null]
-  amount Float
+  debitCurrency String
+  creditCurrency String
+  debitAmount Float
+  creditAmount Float
   exchangeRate Float
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
@@ -298,4 +303,6 @@ Ref: Circle.consumerID - Consumer.id [delete: Cascade]
 
 Ref: LimitConfiguration.profileID > LimitProfile.id [delete: Cascade]
 
-Ref: Transaction.consumerID > Consumer.id [delete: Cascade]
+Ref: Transaction.debitConsumerID > Consumer.id [delete: Cascade]
+
+Ref: Transaction.creditConsumerID > Consumer.id [delete: Cascade]

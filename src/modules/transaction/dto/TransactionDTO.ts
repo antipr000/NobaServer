@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { WorkflowName } from "../domain/Transaction";
-import { Currency } from "../domain/TransactionTypes";
 
 export class TransactionDTO {
   @ApiProperty()
@@ -10,16 +9,10 @@ export class TransactionDTO {
   workflowName: WorkflowName;
 
   @ApiProperty()
-  debitConsumer: string;
+  debitCurrency: string;
 
   @ApiProperty()
-  creditConsumer: string;
-
-  @ApiProperty({ enum: Currency })
-  debitCurrency: Currency;
-
-  @ApiProperty({ enum: Currency })
-  creditCurrency: Currency;
+  creditCurrency: string;
 
   @ApiProperty()
   debitAmount: number;

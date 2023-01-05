@@ -8,7 +8,7 @@ import {
 } from "@temporalio/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { NOBA_CONFIG_KEY, NOBA_WORKFLOW_CONFIG_KEY } from "src/config/ConfigurationUtils";
+import { NOBA_CONFIG_KEY, NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class WorkflowExecutor {

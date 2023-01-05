@@ -190,10 +190,8 @@ export class TransactionsService {
     endDate,
     pageOffset,
     pageLimit,
-    sortField,
-    sortOrder,
-    fiatCurrency,
-    cryptoCurrency,
+    creditCurrency,
+    debitCurrency,
     transactionStatus,
   }: {
     xNobaApiKey: string;
@@ -223,21 +221,13 @@ export class TransactionsService {
      */
     pageLimit?: number;
     /**
-     * sort by field
+     * filter for a particular credit currency
      */
-    sortField?: "transactionTimestamp" | "leg1Amount" | "leg2Amount" | "leg1" | "leg2";
+    creditCurrency?: string;
     /**
-     * sort order asc or desc
+     * filter for a particular debit currency
      */
-    sortOrder?: "ASC" | "DESC";
-    /**
-     * filter for a particular fiat currency
-     */
-    fiatCurrency?: string;
-    /**
-     * filter for a particular Cryptocurrency
-     */
-    cryptoCurrency?: string;
+    debitCurrency?: string;
     /**
      * filter for a particular transaction status
      */
@@ -274,10 +264,8 @@ export class TransactionsService {
         endDate: endDate,
         pageOffset: pageOffset,
         pageLimit: pageLimit,
-        sortField: sortField,
-        sortOrder: sortOrder,
-        fiatCurrency: fiatCurrency,
-        cryptoCurrency: cryptoCurrency,
+        creditCurrency: creditCurrency,
+        debitCurrency: debitCurrency,
         transactionStatus: transactionStatus,
       },
       errors: {
@@ -301,10 +289,8 @@ export class TransactionsService {
     endDate,
     pageOffset,
     pageLimit,
-    sortField,
-    sortOrder,
-    fiatCurrency,
-    cryptoCurrency,
+    creditCurrency,
+    debitCurrency,
     transactionStatus,
   }: {
     xNobaApiKey: string;
@@ -338,21 +324,13 @@ export class TransactionsService {
      */
     pageLimit?: number;
     /**
-     * sort by field
+     * filter for a particular credit currency
      */
-    sortField?: "transactionTimestamp" | "leg1Amount" | "leg2Amount" | "leg1" | "leg2";
+    creditCurrency?: string;
     /**
-     * sort order asc or desc
+     * filter for a particular debit currency
      */
-    sortOrder?: "ASC" | "DESC";
-    /**
-     * filter for a particular fiat currency
-     */
-    fiatCurrency?: string;
-    /**
-     * filter for a particular Cryptocurrency
-     */
-    cryptoCurrency?: string;
+    debitCurrency?: string;
     /**
      * filter for a particular transaction status
      */
@@ -389,10 +367,8 @@ export class TransactionsService {
         endDate: endDate,
         pageOffset: pageOffset,
         pageLimit: pageLimit,
-        sortField: sortField,
-        sortOrder: sortOrder,
-        fiatCurrency: fiatCurrency,
-        cryptoCurrency: cryptoCurrency,
+        creditCurrency: creditCurrency,
+        debitCurrency: debitCurrency,
         transactionStatus: transactionStatus,
         reportFormat: reportFormat,
       },

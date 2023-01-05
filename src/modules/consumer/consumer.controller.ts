@@ -124,12 +124,12 @@ export class ConsumerController {
         ...(requestBody.lastName && { lastName: requestBody.lastName }),
         ...(requestBody.address && {
           address: {
-            streetLine1: requestBody.address.streetLine1 ?? consumer.props.address.streetLine1,
-            streetLine2: requestBody.address.streetLine2 ?? consumer.props.address.streetLine2,
-            city: requestBody.address.city ?? consumer.props.address.city,
-            countryCode: requestBody.address.countryCode ?? consumer.props.address.countryCode,
-            regionCode: requestBody.address.regionCode ?? consumer.props.address.regionCode,
-            postalCode: requestBody.address.postalCode ?? consumer.props.address.postalCode,
+            ...(requestBody.address.streetLine1 && { streetLine1: requestBody.address.streetLine1 }),
+            ...(requestBody.address.streetLine2 && { streetLine2: requestBody.address.streetLine2 }),
+            ...(requestBody.address.city && { city: requestBody.address.city }),
+            ...(requestBody.address.countryCode && { countryCode: requestBody.address.countryCode }),
+            ...(requestBody.address.regionCode && { regionCode: requestBody.address.regionCode }),
+            ...(requestBody.address.postalCode && { postalCode: requestBody.address.postalCode }),
           },
         }),
         ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),

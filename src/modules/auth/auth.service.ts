@@ -66,21 +66,21 @@ export abstract class AuthService {
     await this.tokenRepo.deleteToken(rawToken, userID);
   }
 
-  async generateAccessToken(id: string, includeRefreshToken?: boolean): Promise<LoginResponseDTO> {
+  async generateAccessToken(consumerID: string, includeRefreshToken?: boolean): Promise<LoginResponseDTO> {
     let refreshToken = "";
     if (includeRefreshToken) {
-      const { rawToken, saltifiedToken } = Token.generateToken(id);
+      const { rawToken, saltifiedToken } = Token.generateToken(consumerID);
       refreshToken = rawToken;
-      const token = Token.createTokenObject({ id: saltifiedToken, userID: id });
+      const token = Token.createTokenObject({ id: saltifiedToken, userID: consumerID });
       await this.tokenRepo.saveToken(token);
     }
     const payload = {
-      id: id,
+      id: consumerID,
       identityType: this.getIdentityType(),
     };
     return {
       accessToken: this.jwtService.sign(payload),
-      userID: id,
+      userID: consumerID,
       refreshToken: refreshToken,
     };
   }

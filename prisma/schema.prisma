@@ -27,7 +27,7 @@ model Consumer {
   firstName            String?
   lastName             String?
   email                String?         @unique()
-  displayEmail         String
+  displayEmail         String?
   handle               String?         @unique()
   referralCode         String          @unique()
   phone                String?         @unique()
@@ -45,7 +45,8 @@ model Consumer {
   cryptoWallets        CryptoWallet[]
   paymentMethods       PaymentMethod[]
   circleAccountData    Circle?
-  Transaction          Transaction[]
+  debitTransactions    Transaction[]   @relation("debitConsumer")
+  creditTransactions   Transaction[]   @relation("creditConsumer")
 
   @@index([email])
   @@index([handle])
@@ -56,12 +57,12 @@ model Consumer {
 
 model Address {
   id          String   @id @default(uuid())
-  streetLine1 String
+  streetLine1 String?
   streetLine2 String?
-  city        String
+  city        String?
   countryCode String   @db.VarChar(3)
-  regionCode  String
-  postalCode  String
+  regionCode  String?
+  postalCode  String?
   consumer    Consumer @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID  String   @unique()
 }
@@ -198,13 +199,16 @@ model LimitConfiguration {
 model Transaction {
   id               String    @id @default(uuid())
   transactionRef   String    @unique()
-  // Workflow name will inherently describe the type of transaction i.e. "PAYMENT" or "WITHDRAWAL".
   workflowName     String
-  consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
-  consumerID       String
+  debitConsumer    Consumer? @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
+  debitConsumerID  String?
+  creditConsumer   Consumer? @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
+  creditConsumerID String?
   status           String    @default("PENDING")
-  currency         String
-  amount           Float?
+  debitCurrency    String?
+  creditCurrency   String?
+  debitAmount      Float?
+  creditAmount     Float?
   exchangeRate     Float?
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests

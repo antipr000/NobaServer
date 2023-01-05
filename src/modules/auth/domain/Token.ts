@@ -23,7 +23,7 @@ export const tokenValidationKeys: KeysRequired<TokenProps> = {
   tokenType: Joi.string()
     .valid(...Object.values(TokenType))
     .default(TokenType.REFRESH_TOKEN),
-  expiryTime: Joi.date().optional(),
+  expiryTime: Joi.date().optional().allow(null),
   isUsed: Joi.boolean().default(false),
 };
 
@@ -42,11 +42,11 @@ export class Token extends AggregateRoot<TokenProps> {
     return crypto.pbkdf2Sync(rawToken, salt, 1000, 64, "sha512").toString("hex");
   }
 
-  public static generateToken(userId: string): { rawToken: string; saltifiedToken: string } {
+  public static generateToken(consumerID: string): { rawToken: string; saltifiedToken: string } {
     const rawToken = crypto.randomBytes(128).toString("hex");
     return {
       rawToken,
-      saltifiedToken: this.saltifyToken(rawToken, userId),
+      saltifiedToken: this.saltifyToken(rawToken, consumerID),
     };
   }
 

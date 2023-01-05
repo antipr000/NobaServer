@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type CircleDepositOrWithdrawalRequest = {
+export type CircleFundsMovementRequestDTO = {
   /**
    * ID of the workflow
    */
