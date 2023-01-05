@@ -44,7 +44,7 @@ export class TransactionService {
     consumer: Consumer,
     sessionKey: string,
   ): Promise<string> {
-    let transaction: Transaction;
+    let transaction: Transaction = new Transaction();
     transaction.id = Entity.getNewID();
     transaction.transactionRef = Utils.generateLowercaseUUID(true);
     if (orderDetails.creditConsumerIDOrTag) {
