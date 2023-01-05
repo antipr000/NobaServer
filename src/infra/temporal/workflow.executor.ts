@@ -63,14 +63,14 @@ export class WorkflowExecutor {
   }
 
   public async executeConsumerWalletTransferWorkflow(
-    sourceWalletID: string,
-    destinationWalletID: string,
+    sourceConsumerID: string,
+    destinationConsumerID: string,
     amount: number,
     workflowID: string,
   ): Promise<string> {
     return await this.executeWorkflow("ConsumerWalletTransfer", workflowID, [
-      sourceWalletID,
-      destinationWalletID,
+      sourceConsumerID,
+      destinationConsumerID,
       amount,
     ]);
   }

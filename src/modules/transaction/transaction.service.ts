@@ -90,7 +90,6 @@ export class TransactionService {
     const savedTransaction = await this.transactionRepo.createTransaction(transaction);
 
     switch (orderDetails.workflowName) {
-      // TODO: Does the result ID of the workflow matter?
       case WorkflowName.CONSUMER_WALLET_TRANSFER:
         this.workflowExecutor.executeConsumerWalletTransferWorkflow(
           orderDetails.debitConsumerIDOrTag,
