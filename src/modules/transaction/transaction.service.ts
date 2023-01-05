@@ -89,34 +89,37 @@ export class TransactionService {
     transaction.workflowName = orderDetails.workflowName;
     const savedTransaction = await this.transactionRepo.createTransaction(transaction);
 
-    const transactionID = v4();
-
     switch (orderDetails.workflowName) {
+      // TODO: Does the result ID of the workflow matter?
       case WorkflowName.CONSUMER_WALLET_TRANSFER:
-        return this.workflowExecutor.executeConsumerWalletTransferWorkflow(
+        this.workflowExecutor.executeConsumerWalletTransferWorkflow(
           orderDetails.debitConsumerIDOrTag,
           orderDetails.creditConsumerIDOrTag,
           orderDetails.debitAmount,
-          transactionID,
+          transaction.id,
         );
+        break;
       case WorkflowName.DEBIT_CONSUMER_WALLET:
-        return this.workflowExecutor.executeDebitConsumerWalletWorkflow(
+        this.workflowExecutor.executeDebitConsumerWalletWorkflow(
           consumer.props.id,
           orderDetails.debitAmount,
-          transactionID,
+          transaction.id,
         );
+        break;
       case WorkflowName.CREDIT_CONSUMER_WALLET:
-        return this.workflowExecutor.executeCreditConsumerWalletWorkflow(
+        this.workflowExecutor.executeCreditConsumerWalletWorkflow(
           consumer.props.id,
           orderDetails.creditAmount,
-          transactionID,
+          transaction.id,
         );
+        break;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
           message: "Invalid workflow type",
         });
     }
+
     return savedTransaction.transactionRef;
   }
 
