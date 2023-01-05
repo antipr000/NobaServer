@@ -120,7 +120,7 @@ circle:
   awsSecretNameForMasterWalletID: "TEST_CIRCLE_MASTER_WALLET_ID"
 
 nobaWorkflow:
-  taskQueue: ""
+  taskQueue: "NOBA_TASK_QUEUE"
   awsSecretNameForTaskQueue: "TEST_NOBA_WORKFLOW_TASK_QUEUE"
   clientUrl: ""
   awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_CLIENT_URL"
