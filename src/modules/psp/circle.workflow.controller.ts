@@ -85,13 +85,16 @@ export class CircleWorkflowController {
     };
   }
 
-  @Post("/wallets/transfer")
+  @Post("/wallets/:walletID/transfer")
   @ApiOperation({ summary: "Transfer funds between circle wallets" })
   @ApiResponse({ status: HttpStatus.OK })
-  async transferFunds(@Body() transferRequest: CircleFundsTransferRequestDTO) {
+  async transferFunds(
+    @Param("walletID") sourceWalletID: string,
+    @Body() transferRequest: CircleFundsTransferRequestDTO,
+  ) {
     const res = await this.circleService.transferFunds(
       transferRequest.workflowID,
-      transferRequest.sourceWalletID,
+      sourceWalletID,
       transferRequest.destinationWalletID,
       transferRequest.amount,
     );
