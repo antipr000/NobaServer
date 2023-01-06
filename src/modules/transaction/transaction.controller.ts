@@ -31,7 +31,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
-import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
 
@@ -84,25 +83,6 @@ export class TransactionController {
     filters.consumerID = consumer.props.id;
     const allTransactions = await this.transactionService.getFilteredTransactions(filters);
     return allTransactions.map(transaction => this.mapper.toDTO(transaction));
-  }
-
-  @Get("/transactions/rate/")
-  @ApiOperation({ summary: "Get exchange rate of conversion" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ExchangeRateDTO,
-  })
-  @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getExchangeRate(
-    @Query("numeratorCurrency") numeratorCurrency: string,
-    @Query("denominatorCurrency") denominatorCurrency: string,
-  ): Promise<ExchangeRateDTO> {
-    const exchangeRate = await this.transactionService.calculateExchangeRate(numeratorCurrency, denominatorCurrency);
-    return {
-      numeratorCurrency: numeratorCurrency,
-      denominatorCurrency: denominatorCurrency,
-      exchangeRate: exchangeRate,
-    };
   }
 
   @Post("/transactions/")

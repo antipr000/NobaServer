@@ -15,7 +15,7 @@ export class SQLLimitConfigurationRepo implements ILimitConfigurationRepo {
     this.repoMapper = new LimitsRepoMapper();
   }
 
-  async getLimitConfig(id: any): Promise<LimitConfiguration> {
+  async getLimitConfig(id: string): Promise<LimitConfiguration> {
     const limitConfigProps = await this.prismaService.limitConfiguration.findUnique({ where: { id: id } });
     return LimitConfiguration.createLimitConfiguration(limitConfigProps);
   }

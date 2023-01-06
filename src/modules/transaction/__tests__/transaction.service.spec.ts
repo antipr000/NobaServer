@@ -72,7 +72,7 @@ describe("TransactionServiceTests", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 
   // TODO: Skippting as they do not run. Need to add WorkflowExecutor dependencies.

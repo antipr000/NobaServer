@@ -66,6 +66,7 @@ export class AdminService {
   }
 
   async getAdminByEmail(email: string): Promise<Admin> {
+    console.log("Getting admin by email");
     const admin: Admin | undefined = await this.adminRepo.getNobaAdminByEmail(email);
     if (admin === undefined) {
       throw new NotFoundException(`Admin with email '${email}' is not found.`);

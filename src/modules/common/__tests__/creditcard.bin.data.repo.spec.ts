@@ -43,7 +43,7 @@ describe("CreditCardBinDataRepo", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 
   afterEach(async () => {

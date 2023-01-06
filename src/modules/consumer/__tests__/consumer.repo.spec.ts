@@ -51,7 +51,7 @@ describe("ConsumerRepoTests", () => {
     await prismaService.address.deleteMany();
     await prismaService.verification.deleteMany();
     await prismaService.consumer.deleteMany();
-    app.close();
+    await app.close();
   });
 
   describe("createConsumer", () => {

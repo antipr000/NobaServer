@@ -14,6 +14,8 @@ import { SQLCreditCardBinDataRepo } from "./repo/SQLCreditCardBinDataRepo";
 import { SQLOTPRepo } from "./repo/SQLOTPRepo";
 import { OTPService } from "./otp.service";
 import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
+import { SQLExchangeRateRepo } from "./repo/sql.exchangerate.repo";
+import { ExchangeRateService } from "./exchangerate.service";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -25,6 +27,7 @@ import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
     CurrencyService,
     CreditCardService,
     LocationService,
+    ExchangeRateService,
     ConfigurationProviderService,
     EllipticService,
     {
@@ -35,6 +38,10 @@ import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
       provide: "OTPRepo",
       useClass: SQLOTPRepo,
     },
+    {
+      provide: "ExchangeRateRepo",
+      useClass: SQLExchangeRateRepo,
+    },
     OTPService,
     DeleteExpiredOTPs,
   ],
@@ -43,6 +50,7 @@ import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
     SMSService,
     KmsService,
     CurrencyService,
+    ExchangeRateService,
     CreditCardService,
     LocationService,
     ConfigurationProviderService,

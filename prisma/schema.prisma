@@ -263,6 +263,19 @@ model CreditCardBIN {
   @@index([supported])
 }
 
+model ExchangeRate {
+  id                  String    @id @default(uuid())
+  createdTimestamp    DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp    DateTime? @updatedAt // Marking optional so we don't need to set in tests
+  numeratorCurrency   String    @db.VarChar(3)
+  denominatorCurrency String    @db.VarChar(3)
+  bankRate            Float
+  nobaRate            Float
+  expirationTimestamp DateTime
+
+  @@index([numeratorCurrency, denominatorCurrency])
+}
+
 enum IdentityType {
   CONSUMER
   NOBA_ADMIN
