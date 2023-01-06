@@ -14,6 +14,7 @@ import { SQLCreditCardBinDataRepo } from "./repo/SQLCreditCardBinDataRepo";
 import { SQLOTPRepo } from "./repo/SQLOTPRepo";
 import { OTPService } from "./otp.service";
 import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
+import { QRService } from "./qrcode.service";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -37,6 +38,7 @@ import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
     },
     OTPService,
     DeleteExpiredOTPs,
+    QRService,
   ],
   exports: [
     CsvService,
@@ -48,6 +50,7 @@ import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
     ConfigurationProviderService,
     EllipticService,
     OTPService,
+    QRService,
   ],
 })
 export class CommonModule {}

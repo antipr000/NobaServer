@@ -48,6 +48,7 @@ import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { WalletStatus } from "@prisma/client";
 import { AddCryptoWalletResponseDTO } from "./dto/AddCryptoWalletResponse";
 import { BadRequestError } from "../../core/exception/CommonAppException";
+import { QRCodeDTO } from "./dto/QRCodeDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -391,6 +392,16 @@ export class ConsumerController {
       notificationMethod,
     );
     return this.mapToDTO(consumer);
+  }
+
+  @Get("/qrcode")
+  @ApiOperation({ summary: "Gets QR code for the logged-in consumer" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Base64 of QR code for the logged-in consumer" })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  async getQRCode(@AuthUser() consumer: Consumer, @Query("url") url: string): Promise<QRCodeDTO> {
+    return {
+      base64OfImage: await this.consumerService.getBase64EncodedQRCode(url),
+    };
   }
 
   private verifyOrReplaceNotificationMethod(

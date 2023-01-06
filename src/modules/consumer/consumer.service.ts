@@ -30,6 +30,7 @@ import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus }
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
+import { QRService } from "../common/qrcode.service";
 
 @Injectable()
 export class ConsumerService {
@@ -58,9 +59,11 @@ export class ConsumerService {
   private readonly smsService: SMSService;
 
   private otpOverride: number;
+  private qrCodePrefix: string;
 
-  constructor(private readonly configService: CustomConfigService) {
+  constructor(private readonly configService: CustomConfigService, private readonly qrService: QRService) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
+    this.qrCodePrefix = this.configService.get("QR_CODE_PREFIX");
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
@@ -324,6 +327,10 @@ export class ConsumerService {
 
       return result;
     }
+  }
+
+  async getBase64EncodedQRCode(url: string): Promise<string> {
+    return this.qrService.generateQRCode(url);
   }
 
   async requestPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
