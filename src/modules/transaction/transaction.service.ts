@@ -41,7 +41,7 @@ export class TransactionService {
 
   async initiateTransaction(
     orderDetails: InitiateTransactionDTO,
-    consumer: Consumer,
+    consumer: Consumer, // How should this consumer actually be used?
     sessionKey: string,
   ): Promise<string> {
     let transaction: InputTransaction = {
@@ -103,7 +103,7 @@ export class TransactionService {
           });
         }
         this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-          consumer.props.id,
+          orderDetails.debitConsumerIDOrTag,
           orderDetails.debitAmount,
           transaction.transactionRef,
         );
@@ -116,7 +116,7 @@ export class TransactionService {
           });
         }
         this.workflowExecutor.executeCreditConsumerWalletWorkflow(
-          consumer.props.id,
+          orderDetails.creditConsumerIDOrTag,
           orderDetails.creditAmount,
           transaction.transactionRef,
         );
