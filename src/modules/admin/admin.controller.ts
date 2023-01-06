@@ -49,6 +49,7 @@ import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 import { TransactionService } from "../transactions/transaction.service";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
+import { ServiceException } from "src/core/exception/ServiceException";
 
 @Controller("v1/admins")
 @ApiBearerAuth("JWT-auth")
@@ -261,7 +262,6 @@ export class AdminController {
         nobaRate: exchangeRate.nobaRate ? 1 / exchangeRate.nobaRate : undefined,
         expirationTimestamp: exchangeRate.expirationTimestamp,
       };
-      console.log(inverseRate);
       const savedInverseExchangeRate = await this.exchangeRateService.createExchangeRate(inverseRate);
 
       if (savedInverseExchangeRate == null) {

@@ -1,8 +1,9 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { IExchangeRateRepo } from "./repo/exchangerate.repo";
 import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
-import { ExchangeRate, InputExchangeRate } from "./domain/ExchangeRate";
+import { InputExchangeRate } from "./domain/ExchangeRate";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 
 @Injectable()
 export class ExchangeRateService {
@@ -20,7 +21,7 @@ export class ExchangeRateService {
 
     // Default the expiration timestamp to 1 day
     if (exchangeRateDTO.expirationTimestamp == null) {
-      exchangeRateDTO.expirationTimestamp = new Date(new Date().getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+      exchangeRateDTO.expirationTimestamp = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
     }
 
     const exchangeRate: InputExchangeRate = {
@@ -43,7 +44,12 @@ export class ExchangeRateService {
       };
     } catch (err) {
       this.logger.error(`Error creating exchangeRate in database: ${err} - ${JSON.stringify(exchangeRate)}`);
-      return null;
+      throw new ServiceException({
+        error: err,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: err.message,
+        retry: false,
+      });
     }
   }
 

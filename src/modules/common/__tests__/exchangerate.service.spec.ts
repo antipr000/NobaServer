@@ -2,11 +2,12 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { deepEqual, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { ExchangeRate } from "../domain/ExchangeRate";
+import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
 import { ExchangeRateDTO } from "../dto/ExchangeRateDTO";
 import { ExchangeRateService } from "../exchangerate.service";
 import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
+import { ServiceException } from "../../../core/exception/ServiceException";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;
@@ -34,6 +35,10 @@ describe("ExchangeRateService", () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   describe("createExchangeRate", () => {
@@ -98,7 +103,7 @@ describe("ExchangeRateService", () => {
       expect(createdDTO).toBeNull();
     });
 
-    it("Should return null if exception is thrown during save", async () => {
+    it("Should throw a ServiceException if unknown exception is thrown during save", async () => {
       const exchangeRateDTO: ExchangeRateDTO = {
         numeratorCurrency: "USD",
         denominatorCurrency: "COP",
@@ -119,8 +124,9 @@ describe("ExchangeRateService", () => {
         ),
       ).thenThrow(new Error("Error creating exchange rate"));
 
-      const returnExchangeRate = await exchangeRateService.createExchangeRate(exchangeRateDTO);
-      expect(returnExchangeRate).toBeNull();
+      expect(async () => await exchangeRateService.createExchangeRate(exchangeRateDTO)).rejects.toThrow(
+        ServiceException,
+      );
     });
 
     it("Should set nobaRate to bankRate if nobaRate not provided", async () => {
@@ -146,6 +152,45 @@ describe("ExchangeRateService", () => {
       await exchangeRateService.createExchangeRate(exchangeRateDTO);
 
       expect(true).toBe(true);
+    });
+
+    it("Should set expirationTimestamp to 24 hours from now if not provided", async () => {
+      const currentTime = Date.now();
+      const tomorrowTime = new Date(currentTime + 24 * 60 * 60 * 1000);
+      const exchangeRateDTO: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+      };
+
+      const inputExchangeRate: InputExchangeRate = {
+        numeratorCurrency: exchangeRateDTO.numeratorCurrency,
+        denominatorCurrency: exchangeRateDTO.denominatorCurrency,
+        bankRate: exchangeRateDTO.bankRate,
+        nobaRate: exchangeRateDTO.nobaRate,
+        expirationTimestamp: tomorrowTime,
+      };
+
+      const createdExchangeRate: ExchangeRate = {
+        ...inputExchangeRate,
+        id: "exchange-rate-1",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      when(exchangeRateRepo.createExchangeRate(deepEqual(inputExchangeRate))).thenResolve(createdExchangeRate);
+
+      jest.spyOn(Date, "now").mockImplementationOnce(() => currentTime);
+      const newExchangeRate = await exchangeRateService.createExchangeRate(exchangeRateDTO);
+
+      expect(newExchangeRate).toEqual({
+        numeratorCurrency: exchangeRateDTO.numeratorCurrency,
+        denominatorCurrency: exchangeRateDTO.denominatorCurrency,
+        bankRate: exchangeRateDTO.bankRate,
+        nobaRate: exchangeRateDTO.nobaRate,
+        expirationTimestamp: tomorrowTime,
+      });
     });
   });
 

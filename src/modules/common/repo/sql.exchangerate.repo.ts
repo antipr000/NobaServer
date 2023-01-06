@@ -46,7 +46,6 @@ export class SQLExchangeRateRepo implements IExchangeRateRepo {
 
     try {
       validateSavedExchangeRate(savedExchangeRate);
-      console.log("Got here");
     } catch (err) {
       this.logger.error(`JSON.stringify(err) - ${JSON.stringify(savedExchangeRate)}`);
       throw new InvalidDatabaseRecordException({

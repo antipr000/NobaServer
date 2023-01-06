@@ -74,7 +74,6 @@ describe("SQLExchangeRateRepo", () => {
       });
     });
 
-    // TODO: Figure out why this test breaks everything
     it("Should throw a InvalidDatabaseRecordException if creation succeeds but the object fails Joi validation", async () => {
       const inputExchangeRate = getInputExchangeRate();
 
@@ -235,6 +234,16 @@ describe("SQLExchangeRateRepo", () => {
     });
 
     it("Should return null if exchange rate is not found", async () => {
+      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY");
+
+      expect(exchangeRateFound).toBeNull();
+    });
+
+    it("Should return null if an exception is thrown", async () => {
+      jest.spyOn(prismaService.exchangeRate, "findFirst").mockImplementation(() => {
+        throw new Error("Error");
+      });
+
       const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY");
 
       expect(exchangeRateFound).toBeNull();
