@@ -4,7 +4,7 @@
 
 export type TransactionDTO = {
   transactionRef: string;
-  workflowName: "BANK_TO_NOBA_WALLET" | "NOBA_WALLET_TO_BANK";
+  workflowName: "CONSUMER_WALLET_TRANSFER" | "DEBIT_CONSUMER_WALLET" | "CREDIT_CONSUMER_WALLET";
   debitCurrency: string;
   creditCurrency: string;
   debitAmount: number;

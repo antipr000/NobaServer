@@ -681,29 +681,6 @@
         "security": [{ "JWT-auth": [] }]
       }
     },
-    "/v1/consumers/qrcode": {
-      "get": {
-        "operationId": "getQRCode",
-        "summary": "Gets QR code for the logged-in consumer",
-        "parameters": [
-          { "name": "x-noba-api-key", "in": "header", "required": true, "schema": { "type": "string" } },
-          { "name": "x-noba-signature", "in": "header", "required": false, "schema": { "type": "string" } },
-          {
-            "name": "x-noba-timestamp",
-            "in": "header",
-            "description": "Timestamp in milliseconds, use: new Date().getTime().toString()",
-            "required": false,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": { "description": "Base64 of QR code for the logged-in consumer" },
-          "403": { "description": "Logged-in user is not a Consumer" }
-        },
-        "tags": ["Consumer"],
-        "security": [{ "JWT-auth": [] }]
-      }
-    },
     "/v1/vendors/checkout/webhooks": {
       "post": {
         "operationId": "consumePaymentWebhooks",
@@ -788,7 +765,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/CircleFundsMovementRequestDTO" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/CircleDepositOrWithdrawalRequest" } }
           }
         },
         "responses": { "200": { "description": "" } },
@@ -803,7 +780,22 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/CircleFundsMovementRequestDTO" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/CircleDepositOrWithdrawalRequest" } }
+          }
+        },
+        "responses": { "200": { "description": "" } },
+        "tags": ["Workflow"]
+      }
+    },
+    "/v1/wf/circle/wallets/{walletID}/transfer": {
+      "post": {
+        "operationId": "transferFunds",
+        "summary": "Transfer funds between circle wallets",
+        "parameters": [{ "name": "walletID", "required": true, "in": "path", "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CircleFundsTransferRequestDTO" } }
           }
         },
         "responses": { "200": { "description": "" } },
@@ -2194,13 +2186,22 @@
         },
         "required": ["walletID", "otp"]
       },
-      "CircleFundsMovementRequestDTO": {
+      "CircleDepositOrWithdrawalRequest": {
         "type": "object",
         "properties": {
           "workflowID": { "type": "string", "description": "ID of the workflow" },
           "amount": { "type": "number", "description": "Amount to debit or credit" }
         },
         "required": ["workflowID", "amount"]
+      },
+      "CircleFundsTransferRequestDTO": {
+        "type": "object",
+        "properties": {
+          "workflowID": { "type": "string", "description": "ID of the workflow" },
+          "amount": { "type": "number", "description": "Amount to debit or credit" },
+          "destinationWalletID": { "type": "string", "description": "ID of the wallet to transfer funds to" }
+        },
+        "required": ["workflowID", "amount", "destinationWalletID"]
       },
       "TransactionStatsDTO": {
         "type": "object",
@@ -2260,7 +2261,10 @@
         "type": "object",
         "properties": {
           "transactionRef": { "type": "string" },
-          "workflowName": { "type": "string", "enum": ["BANK_TO_NOBA_WALLET", "NOBA_WALLET_TO_BANK"] },
+          "workflowName": {
+            "type": "string",
+            "enum": ["CONSUMER_WALLET_TRANSFER", "DEBIT_CONSUMER_WALLET", "CREDIT_CONSUMER_WALLET"]
+          },
           "debitCurrency": { "type": "string" },
           "creditCurrency": { "type": "string" },
           "debitAmount": { "type": "number" },
@@ -2621,11 +2625,15 @@
         "properties": {
           "debitConsumerIDOrTag": { "type": "string" },
           "creditConsumerIDOrTag": { "type": "string" },
-          "workflowName": { "type": "string", "enum": ["BANK_TO_NOBA_WALLET", "NOBA_WALLET_TO_BANK"] },
+          "workflowName": {
+            "type": "string",
+            "enum": ["CONSUMER_WALLET_TRANSFER", "DEBIT_CONSUMER_WALLET", "CREDIT_CONSUMER_WALLET"]
+          },
           "debitCurrency": { "type": "string", "enum": ["USD", "COP"] },
           "debitAmount": { "type": "number" },
           "creditCurrency": { "type": "string", "enum": ["USD", "COP"] },
-          "creditAmount": { "type": "number" }
+          "creditAmount": { "type": "number" },
+          "exchangeRate": { "type": "number" }
         },
         "required": ["workflowName"]
       }

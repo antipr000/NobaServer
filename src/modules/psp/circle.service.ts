@@ -132,4 +132,45 @@ export class CircleService {
       createdAt: response.createdAt,
     };
   }
+
+  public async transferFunds(
+    idempotencyKey: string,
+    sourceWalletID: string,
+    destinationWalletID: string,
+    amount: number,
+  ): Promise<UpdateWalletBalanceServiceDTO> {
+    if (!sourceWalletID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Source Wallet ID must not be empty",
+      });
+    }
+
+    if (!destinationWalletID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Destination Wallet ID must not be empty",
+      });
+    }
+
+    if (amount <= 0) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Amount must be greater than 0",
+      });
+    }
+
+    const response = await this.circleClient.transfer({
+      idempotencyKey: idempotencyKey,
+      sourceWalletID: sourceWalletID,
+      destinationWalletID: destinationWalletID,
+      amount: amount,
+    });
+
+    return {
+      id: response.id,
+      status: response.status,
+      createdAt: response.createdAt,
+    };
+  }
 }

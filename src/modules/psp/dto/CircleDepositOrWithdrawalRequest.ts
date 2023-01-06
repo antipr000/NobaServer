@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class CircleFundsMovementRequestDTO {
+export class CircleDepositOrWithdrawalRequest {
   @ApiProperty({ description: "ID of the workflow" })
   workflowID: string;
 

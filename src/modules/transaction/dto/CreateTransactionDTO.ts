@@ -23,4 +23,7 @@ export class InitiateTransactionDTO {
 
   @ApiPropertyOptional()
   creditAmount?: number;
+
+  @ApiPropertyOptional()
+  exchangeRate?: number;
 }

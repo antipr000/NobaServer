@@ -29,7 +29,7 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean =
   const transaction: InputTransaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
-    workflowName: WorkflowName.BANK_TO_NOBA_WALLET,
+    workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
   };
 
   if (isCreditTransaction) {

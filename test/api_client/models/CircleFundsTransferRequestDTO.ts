@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type CircleFundsMovementRequestDTO = {
+export type CircleFundsTransferRequestDTO = {
   /**
    * ID of the workflow
    */
@@ -11,4 +11,8 @@ export type CircleFundsMovementRequestDTO = {
    * Amount to debit or credit
    */
   amount: number;
+  /**
+   * ID of the wallet to transfer funds to
+   */
+  destinationWalletID: string;
 };
