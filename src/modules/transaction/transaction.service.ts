@@ -94,21 +94,21 @@ export class TransactionService {
           orderDetails.debitConsumerIDOrTag,
           orderDetails.creditConsumerIDOrTag,
           orderDetails.debitAmount,
-          transaction.id,
+          transaction.transactionRef,
         );
         break;
       case WorkflowName.DEBIT_CONSUMER_WALLET:
         this.workflowExecutor.executeDebitConsumerWalletWorkflow(
           consumer.props.id,
           orderDetails.debitAmount,
-          transaction.id,
+          transaction.transactionRef,
         );
         break;
       case WorkflowName.CREDIT_CONSUMER_WALLET:
         this.workflowExecutor.executeCreditConsumerWalletWorkflow(
           consumer.props.id,
           orderDetails.creditAmount,
-          transaction.id,
+          transaction.transactionRef,
         );
         break;
       default:
