@@ -5,7 +5,13 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
-import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
+import {
+  InputTransaction,
+  Transaction,
+  TransactionStatus,
+  UpdateTransaciton,
+  WorkflowName,
+} from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { SQLTransactionRepo } from "../repo/sql.transaction.repo";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
@@ -365,7 +371,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Partial<Transaction> = {
+      const transactionToUpdates: UpdateTransaciton = {
         status: TransactionStatus.SUCCESS,
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
@@ -396,7 +402,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Partial<Transaction> = {
+      const transactionToUpdates: UpdateTransaciton = {
         exchangeRate: 12.34,
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
@@ -423,7 +429,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ true);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Partial<Transaction> = {
+      const transactionToUpdates: UpdateTransaciton = {
         debitAmount: 12.34,
         debitCurrency: "USD",
       };
@@ -452,7 +458,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Partial<Transaction> = {
+      const transactionToUpdates: UpdateTransaciton = {
         creditAmount: 12.34,
         creditCurrency: "USD",
       };
@@ -481,7 +487,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: Partial<Transaction> = {
+      const transactionToUpdates: UpdateTransaciton = {
         exchangeRate: 12.34,
         status: TransactionStatus.IN_PROGRESS,
         creditAmount: 67.89,
@@ -514,38 +520,12 @@ describe("PostgresTransactionRepoTests", () => {
     });
 
     it("should throw a NotFound error if the transaction with the specified 'transactionRef' does not exist", async () => {
-      const updatedTransaction: Partial<Transaction> = {
+      const updatedTransaction: UpdateTransaciton = {
         status: TransactionStatus.SUCCESS,
       };
       await expect(
         transactionRepo.updateTransactionByTransactionRef("invalid-transaction-ref", updatedTransaction),
       ).rejects.toThrowError(NotFoundError);
-    });
-
-    it("should throw error if the an uneditable field is tried to be updated", async () => {
-      const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
-      await transactionRepo.createTransaction(inputTransaction);
-
-      const stringFields = ["id", "transactionRef", "workflowName", "debitConsumerID", "creditConsumerID"];
-      stringFields.forEach(async field => {
-        const transactionToUpdates: Partial<Transaction> = {
-          [field]: "new-value",
-        };
-        await expect(
-          transactionRepo.updateTransactionByTransactionRef(inputTransaction.transactionRef, transactionToUpdates),
-        ).rejects.toThrowError(BadRequestError);
-      });
-
-      const dateFields = ["createdTimestamp", "updatedTimestamp"];
-      dateFields.forEach(async field => {
-        const transactionToUpdates: Partial<Transaction> = {
-          [field]: new Date(),
-        };
-        await expect(
-          transactionRepo.updateTransactionByTransactionRef(inputTransaction.transactionRef, transactionToUpdates),
-        ).rejects.toThrowError(BadRequestError);
-      });
     });
   });
 });

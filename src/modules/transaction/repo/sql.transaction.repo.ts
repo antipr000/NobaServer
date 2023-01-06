@@ -12,6 +12,7 @@ import {
   convertToDomainTransaction,
   InputTransaction,
   Transaction,
+  UpdateTransaciton,
   validateInputTransaction,
   validateSavedTransaction,
   validateUpdateTransaction,
@@ -151,18 +152,18 @@ export class SQLTransactionRepo implements ITransactionRepo {
 
   async updateTransactionByTransactionRef(
     transactionRef: string,
-    transaction: Partial<Transaction>,
+    updateTransaction: UpdateTransaciton,
   ): Promise<Transaction> {
-    validateUpdateTransaction(transaction);
+    validateUpdateTransaction(updateTransaction);
 
     try {
       const transactionUpdate: Prisma.TransactionUpdateInput = {
-        ...(transaction.exchangeRate && { exchangeRate: transaction.exchangeRate }),
-        ...(transaction.status && { status: transaction.status }),
-        ...(transaction.debitAmount && { debitAmount: transaction.debitAmount }),
-        ...(transaction.creditAmount && { creditAmount: transaction.creditAmount }),
-        ...(transaction.debitCurrency && { debitCurrency: transaction.debitCurrency }),
-        ...(transaction.creditCurrency && { creditCurrency: transaction.creditCurrency }),
+        ...(updateTransaction.exchangeRate && { exchangeRate: updateTransaction.exchangeRate }),
+        ...(updateTransaction.status && { status: updateTransaction.status }),
+        ...(updateTransaction.debitAmount && { debitAmount: updateTransaction.debitAmount }),
+        ...(updateTransaction.creditAmount && { creditAmount: updateTransaction.creditAmount }),
+        ...(updateTransaction.debitCurrency && { debitCurrency: updateTransaction.debitCurrency }),
+        ...(updateTransaction.creditCurrency && { creditCurrency: updateTransaction.creditCurrency }),
       };
 
       const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.update({

@@ -44,6 +44,15 @@ export class InputTransaction {
   exchangeRate: number;
 }
 
+export class UpdateTransaciton {
+  status?: TransactionStatus;
+  debitAmount?: number;
+  creditAmount?: number;
+  debitCurrency?: string;
+  creditCurrency?: string;
+  exchangeRate?: number;
+}
+
 export const validateInputTransaction = (transaction: InputTransaction) => {
   const transactionJoiValidationKeys: KeysRequired<InputTransaction> = {
     transactionRef: Joi.string().min(10).required(),
@@ -101,42 +110,16 @@ export const validateSavedTransaction = (transaction: Transaction) => {
   return Joi.attempt(transaction, transactionJoiSchema);
 };
 
-export const validateUpdateTransaction = (transaction: Partial<Transaction>) => {
-  const uneditableFields = [
-    "id",
-    "transactionRef",
-    "workflowName",
-    "debitConsumerID",
-    "creditConsumerID",
-    "createdTimestamp",
-    "updatedTimestamp",
-  ];
-  let containsUneditableFields = false;
-  uneditableFields.forEach(field => {
-    if (transaction[field]) containsUneditableFields = true;
-  });
-  if (containsUneditableFields)
-    throw new BadRequestError({ message: `${uneditableFields.join(", ")} cannot be updated.` });
-
-  const transactionJoiValidationKeys: KeysRequired<Transaction> = {
-    id: Joi.string().min(10).optional(),
-    transactionRef: Joi.string().optional(),
-    workflowName: Joi.string()
-      .optional()
-      .valid(...Object.values(WorkflowName)),
-    debitConsumerID: Joi.string().min(10).optional(),
-    creditConsumerID: Joi.string().min(10).optional(),
+export const validateUpdateTransaction = (transaction: UpdateTransaciton) => {
+  const transactionJoiValidationKeys: KeysRequired<UpdateTransaciton> = {
     debitAmount: Joi.number().optional(),
     creditAmount: Joi.number().optional(),
     debitCurrency: Joi.string().optional(),
     creditCurrency: Joi.string().optional(),
     status: Joi.string()
       .optional()
-      .valid(...Object.values(TransactionStatus))
-      .default(TransactionStatus.PENDING),
+      .valid(...Object.values(TransactionStatus)),
     exchangeRate: Joi.number().optional(),
-    createdTimestamp: Joi.date().optional(),
-    updatedTimestamp: Joi.date().optional(),
   };
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
     allowUnknown: false,
