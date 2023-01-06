@@ -41,7 +41,7 @@ export class TransactionService {
 
   async initiateTransaction(
     transactionDetails: InitiateTransactionDTO,
-    consumer: Consumer,
+    initiatingConsumer: Consumer,
     sessionKey: string,
   ): Promise<string> {
     // Validate and populate defaults
@@ -62,7 +62,7 @@ export class TransactionService {
         }
 
         transactionDetails.debitConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
-        transactionDetails.creditConsumerIDOrTag = consumer.props.id;
+        transactionDetails.creditConsumerIDOrTag = initiatingConsumer.props.id;
         transactionDetails.debitAmount = transactionDetails.creditAmount;
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
@@ -82,7 +82,7 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = consumer.props.id;
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id;
         transactionDetails.creditConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
         transactionDetails.creditAmount = transactionDetails.debitAmount;
         transactionDetails.creditCurrency = transactionDetails.debitCurrency;
@@ -103,7 +103,7 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = consumer.props.id; // Debit consumer must always be the current consumer
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id; // Debit consumer must always be the current consumer
         transactionDetails.debitAmount = transactionDetails.creditAmount;
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
@@ -124,8 +124,22 @@ export class TransactionService {
       let consumerID: string;
       if (transactionDetails.creditConsumerIDOrTag.startsWith("$")) {
         consumerID = await this.consumerService.findConsumerIDByHandle(transactionDetails.creditConsumerIDOrTag);
+        if (!consumerID) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditConsumerIDOrTag is not a valid consumer",
+          });
+        }
       } else {
-        consumerID = transactionDetails.creditConsumerIDOrTag;
+        const consumer = await this.consumerService.findConsumerById(transactionDetails.creditConsumerIDOrTag);
+        if (!consumer) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditConsumerIDOrTag is not a valid consumer",
+          });
+        }
+
+        consumerID = consumer.props.id;
       }
 
       transaction.creditConsumerID = consumerID;
@@ -135,8 +149,21 @@ export class TransactionService {
       let consumerID: string;
       if (transactionDetails.debitConsumerIDOrTag.startsWith("$")) {
         consumerID = await this.consumerService.findConsumerIDByHandle(transactionDetails.debitConsumerIDOrTag);
+        if (!consumerID) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitConsumerIDOrTag is not a valid consumer",
+          });
+        }
       } else {
-        consumerID = transactionDetails.debitConsumerIDOrTag;
+        const consumer = await this.consumerService.findConsumerById(transactionDetails.debitConsumerIDOrTag);
+        if (!consumer) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitConsumerIDOrTag is not a valid consumer",
+          });
+        }
+        consumerID = consumer.props.id;
       }
 
       transaction.debitConsumerID = consumerID;
