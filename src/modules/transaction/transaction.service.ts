@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Transaction, WorkflowName } from "./domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "./domain/Transaction";
 import { Consumer } from "../consumer/domain/Consumer";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -44,8 +44,7 @@ export class TransactionService {
     consumer: Consumer,
     sessionKey: string,
   ): Promise<string> {
-    let transaction: Transaction = new Transaction();
-    transaction.id = Entity.getNewID();
+    let transaction: InputTransaction;
     transaction.transactionRef = Utils.generateLowercaseUUID(true);
     if (orderDetails.creditConsumerIDOrTag) {
       let consumerID: string;
@@ -87,7 +86,7 @@ export class TransactionService {
     transaction.debitCurrency = orderDetails.debitCurrency ?? null;
 
     transaction.workflowName = orderDetails.workflowName;
-    const savedTransaction = await this.transactionRepo.createTransaction(transaction);
+    const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
     switch (orderDetails.workflowName) {
       case WorkflowName.CONSUMER_WALLET_TRANSFER:
