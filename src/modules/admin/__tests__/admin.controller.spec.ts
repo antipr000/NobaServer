@@ -22,6 +22,7 @@ import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
+import { deepStrictEqual } from "assert";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -696,7 +697,7 @@ describe("AdminController", () => {
     });
 
     // TODO: figure out the multiple calls thing
-    it.skip("NobaAdmin with 'Admin' role should be able to create exchange rates including inverse", async () => {
+    it("NobaAdmin with 'Admin' role should be able to create exchange rates including inverse", async () => {
       const adminId = "AAAAAAAAAA";
 
       const requestingNobaAdmin = Admin.createAdmin({
@@ -738,10 +739,10 @@ describe("AdminController", () => {
       };
 
       const createSpy = jest.spyOn(mockExchangeRateService, "createExchangeRate");
-      // TODO: figure out how to do multiple calls to the same method with different arguments
-      when(mockExchangeRateService.createExchangeRate(anything()))
-        .thenResolve(createdExchangeRate)
-        .thenResolve(inverseCreatedExchangeRate);
+
+      console.log(newExchangeRate, inverseNewExchangeRate);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(inverseCreatedExchangeRate);
 
       await adminController.createExchangeRate(
         {
@@ -751,9 +752,15 @@ describe("AdminController", () => {
         "true",
       );
 
-      //expect(createSpy).toHaveBeenCalledWith(newExchangeRate);
-      //expect(createSpy).toHaveBeenCalledWith(inverseNewExchangeRate);
-      expect(createSpy).toHaveBeenCalledTimes(2);
+      // expect(createSpy).toHaveBeenCalledWith(deepEqual(newExchangeRate));
+      // expect(createSpy).toHaveBeenCalledWith(deepEqual(inverseCreatedExchangeRate));
+
+      // OR 
+
+      const [firstExchangeRate] = capture(mockExchangeRateService.createExchangeRate).first();
+      const [secondExchangeRate] = capture(mockExchangeRateService.createExchangeRate).second();
+      expect(firstExchangeRate).toEqual(newExchangeRate);
+      expect(secondExchangeRate).toEqual(inverseCreatedExchangeRate);
     });
   });
 });
