@@ -76,17 +76,6 @@ export class TransactionService {
       transaction.debitConsumerID = consumerID;
     }
 
-    if (
-      orderDetails.workflowName !== WorkflowName.CONSUMER_WALLET_TRANSFER &&
-      transaction.creditConsumerID &&
-      transaction.debitConsumerID
-    ) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "Both credit consumer and debit consumer cannot be set for a transaction",
-      });
-    }
-
     if (!transaction.creditConsumerID && !transaction.debitConsumerID) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -107,6 +96,12 @@ export class TransactionService {
         );
         break;
       case WorkflowName.DEBIT_CONSUMER_WALLET:
+        if (transaction.creditConsumerID && transaction.debitConsumerID) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "Both credit consumer and debit consumer cannot be set for a transaction",
+          });
+        }
         this.workflowExecutor.executeDebitConsumerWalletWorkflow(
           consumer.props.id,
           orderDetails.debitAmount,
@@ -114,6 +109,12 @@ export class TransactionService {
         );
         break;
       case WorkflowName.CREDIT_CONSUMER_WALLET:
+        if (transaction.creditConsumerID && transaction.debitConsumerID) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "Both credit consumer and debit consumer cannot be set for a transaction",
+          });
+        }
         this.workflowExecutor.executeCreditConsumerWalletWorkflow(
           consumer.props.id,
           orderDetails.creditAmount,

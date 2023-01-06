@@ -672,7 +672,6 @@ async function configureNobaWorkflowCredentials(
     nobaWorkflowConfigs.awsSecretNameForTaskQueue,
     nobaWorkflowConfigs.taskQueue,
   );
-  console.log(nobaWorkflowConfigs.taskQueue);
   nobaWorkflowConfigs.clientUrl = await getParameterValue(
     nobaWorkflowConfigs.awsSecretNameForClientUrl,
     nobaWorkflowConfigs.clientUrl,
