@@ -39,6 +39,8 @@ import { getMockCircleClientWithDefaults } from "../../psp/mocks/mock.circle.cli
 import { CircleClient } from "../../psp/circle.client";
 import { OTPService } from "../../../modules/common/otp.service";
 import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus } from "@prisma/client";
+import { QRService } from "../../../modules/common/qrcode.service";
+import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock.qr.service";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -50,6 +52,7 @@ describe("ConsumerService", () => {
   let sanctionedCryptoWalletService: SanctionedCryptoWalletService;
   let plaidClient: PlaidClient;
   let circleClient: CircleClient;
+  let qrService: QRService;
 
   jest.setTimeout(30000);
 
@@ -62,6 +65,7 @@ describe("ConsumerService", () => {
     smsService = getMockSmsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
     circleClient = getMockCircleClientWithDefaults();
+    qrService = getMockQRServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -110,6 +114,10 @@ describe("ConsumerService", () => {
         {
           provide: CircleClient,
           useFactory: () => instance(circleClient),
+        },
+        {
+          provide: QRService,
+          useFactory: () => instance(qrService),
         },
         KmsService,
       ],
@@ -1249,6 +1257,17 @@ describe("ConsumerService", () => {
 
       const isHandleAvaialble = await consumerService.isHandleAvailable("test");
       expect(isHandleAvaialble).toBe(true);
+    });
+  });
+
+  describe("getBase64EncodedQRCode", () => {
+    it("should return base64 encoded QR code", async () => {
+      const textToEncode = "https://noba.com/qr/CCCCCCCCCC";
+      const base64EncodedQRCode = "data:image/png;base64,encodedQRCode";
+      when(qrService.generateQRCode(textToEncode)).thenResolve(base64EncodedQRCode);
+
+      const response = await consumerService.getBase64EncodedQRCode("CCCCCCCCCC");
+      expect(response).toEqual(base64EncodedQRCode);
     });
   });
 });

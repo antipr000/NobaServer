@@ -35,6 +35,7 @@ import {
 } from "@prisma/client";
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod } from "../domain/PaymentMethod";
+import { QRCodeDTO } from "../dto/QRCodeDTO";
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
@@ -838,6 +839,24 @@ describe("ConsumerController", () => {
       expect(response.cryptoWallets).toHaveLength(0);
       expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
       expect(response.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.NOT_REQUIRED);
+    });
+  });
+
+  describe("getQRCode", () => {
+    it("should return a QR code", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        referralCode: "mock-referral-code",
+      });
+
+      when(consumerService.getBase64EncodedQRCode(consumer.props.id)).thenResolve("mock-qr-code");
+      const response: QRCodeDTO = await consumerController.getQRCode(consumer);
+
+      expect(response).toStrictEqual({ base64OfImage: "mock-qr-code" });
     });
   });
 });

@@ -30,6 +30,7 @@ import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus }
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
+import { QRService } from "../common/qrcode.service";
 
 @Injectable()
 export class ConsumerService {
@@ -59,7 +60,7 @@ export class ConsumerService {
 
   private otpOverride: number;
 
-  constructor(private readonly configService: CustomConfigService) {
+  constructor(private readonly configService: CustomConfigService, private readonly qrService: QRService) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
   }
 
@@ -324,6 +325,11 @@ export class ConsumerService {
 
       return result;
     }
+  }
+
+  async getBase64EncodedQRCode(consumerID: string): Promise<string> {
+    const encodedText = `https://noba.com/qr/${consumerID}`;
+    return this.qrService.generateQRCode(encodedText);
   }
 
   async requestPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
