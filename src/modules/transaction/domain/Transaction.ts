@@ -32,9 +32,20 @@ export enum TransactionStatus {
   IN_PROGRESS = "IN_PROGRESS",
 }
 
-export const validateInputTransaction = (transaction: Partial<Transaction>) => {
-  const transactionJoiValidationKeys: KeysRequired<Transaction> = {
-    id: Joi.string().min(10).optional().allow(null), // null is allowed as it is not set when the transaction is created
+export class InputTransaction {
+  transactionRef: string;
+  workflowName: WorkflowName;
+  creditConsumerID?: string;
+  debitConsumerID?: string;
+  debitCurrency?: string;
+  creditCurrency?: string;
+  debitAmount?: number;
+  creditAmount?: number;
+  exchangeRate: number;
+}
+
+export const validateInputTransaction = (transaction: InputTransaction) => {
+  const transactionJoiValidationKeys: KeysRequired<InputTransaction> = {
     transactionRef: Joi.string().min(10).required(),
     workflowName: Joi.string()
       .required()
@@ -45,13 +56,7 @@ export const validateInputTransaction = (transaction: Partial<Transaction>) => {
     creditAmount: Joi.number().greater(0).optional(),
     debitCurrency: Joi.string().optional(),
     creditCurrency: Joi.string().optional(),
-    status: Joi.string()
-      .optional()
-      .valid(...Object.values(TransactionStatus))
-      .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().required(),
-    createdTimestamp: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
-    updatedTimestamp: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({

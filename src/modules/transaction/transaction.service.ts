@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Transaction, WorkflowName } from "./domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "./domain/Transaction";
 import { Consumer } from "../consumer/domain/Consumer";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
@@ -42,8 +42,7 @@ export class TransactionService {
     consumer: Consumer,
     sessionKey: string,
   ): Promise<string> {
-    let transaction: Transaction;
-    transaction.id = Entity.getNewID();
+    let transaction: InputTransaction;
     transaction.transactionRef = Utils.generateLowercaseUUID(true);
     if (orderDetails.creditConsumerIDOrTag) {
       let consumerID: string;
@@ -85,13 +84,15 @@ export class TransactionService {
     transaction.debitCurrency = orderDetails.debitCurrency ?? null;
 
     transaction.workflowName = orderDetails.workflowName;
-    const savedTransaction = await this.transactionRepo.createTransaction(transaction);
+    const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
     switch (savedTransaction.workflowName) {
       case WorkflowName.BANK_TO_NOBA_WALLET:
-      // execute workflow here
+        // execute workflow here
+        break;
       case WorkflowName.NOBA_WALLET_TO_BANK:
-      // execute workflow here
+        // execute workflow here
+        break;
       default:
         throw new BadRequestError({ message: "Workflow is not supported!" });
     }
