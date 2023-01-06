@@ -169,6 +169,15 @@ export class CircleService {
       });
     }
 
+    const balance = await this.circleClient.getWalletBalance(destinationWalletID);
+    if (balance < amount) {
+      throw new ServiceException({
+        message: "Insufficient funds",
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        retry: false,
+      });
+    }
+
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
       sourceWalletID: sourceWalletID,
