@@ -44,8 +44,16 @@ export class TransactionService {
     consumer: Consumer,
     sessionKey: string,
   ): Promise<string> {
-    let transaction: InputTransaction;
-    transaction.transactionRef = Utils.generateLowercaseUUID(true);
+    let transaction: InputTransaction = {
+      creditAmount: orderDetails.creditAmount,
+      creditCurrency: orderDetails.creditCurrency,
+      debitAmount: orderDetails.debitAmount,
+      debitCurrency: orderDetails.debitCurrency,
+      exchangeRate: 1.0, // TODO: Implement exchange rate
+      workflowName: orderDetails.workflowName,
+      transactionRef: Utils.generateLowercaseUUID(true),
+    };
+
     if (orderDetails.creditConsumerIDOrTag) {
       let consumerID: string;
       if (orderDetails.creditConsumerIDOrTag.startsWith("$")) {
@@ -68,22 +76,23 @@ export class TransactionService {
       transaction.debitConsumerID = consumerID;
     }
 
-    if (transaction.creditConsumerID && transaction.debitConsumerID) {
-      throw new BadRequestError({
+    if (
+      orderDetails.workflowName !== WorkflowName.CONSUMER_WALLET_TRANSFER &&
+      transaction.creditConsumerID &&
+      transaction.debitConsumerID
+    ) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Both credit consumer and debit consumer cannot be set for a transaction",
       });
     }
 
     if (!transaction.creditConsumerID && !transaction.debitConsumerID) {
-      throw new BadRequestError({
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "One of credit consumer id or debit consumer id must be set",
       });
     }
-
-    transaction.creditAmount = orderDetails.creditAmount ?? null;
-    transaction.creditCurrency = orderDetails.creditCurrency ?? null;
-    transaction.debitAmount = orderDetails.debitAmount ?? null;
-    transaction.debitCurrency = orderDetails.debitCurrency ?? null;
 
     transaction.workflowName = orderDetails.workflowName;
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
