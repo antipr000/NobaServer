@@ -18,7 +18,7 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean =
     transactionRef: uuid(),
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
-    workflowName: WorkflowName.BANK_TO_NOBA_WALLET,
+    workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
     id: uuid(),
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
