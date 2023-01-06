@@ -59,9 +59,11 @@ export class ConsumerService {
   private readonly smsService: SMSService;
 
   private otpOverride: number;
+  private qrCodePrefix: string;
 
   constructor(private readonly configService: CustomConfigService, private readonly qrService: QRService) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
+    this.qrCodePrefix = this.configService.get("QR_CODE_PREFIX");
   }
 
   async getConsumer(consumerID: string): Promise<Consumer> {
@@ -327,9 +329,8 @@ export class ConsumerService {
     }
   }
 
-  async getBase64EncodedQRCode(consumerID: string): Promise<string> {
-    const encodedText = `https://noba.com/qr/${consumerID}`;
-    return this.qrService.generateQRCode(encodedText);
+  async getBase64EncodedQRCode(url: string): Promise<string> {
+    return this.qrService.generateQRCode(url);
   }
 
   async requestPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {

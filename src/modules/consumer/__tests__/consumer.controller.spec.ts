@@ -852,9 +852,10 @@ describe("ConsumerController", () => {
         email: "mock@noba.com",
         referralCode: "mock-referral-code",
       });
+      const url = "https://noba.com";
 
-      when(consumerService.getBase64EncodedQRCode(consumer.props.id)).thenResolve("mock-qr-code");
-      const response: QRCodeDTO = await consumerController.getQRCode(consumer);
+      when(consumerService.getBase64EncodedQRCode(url)).thenResolve("mock-qr-code");
+      const response: QRCodeDTO = await consumerController.getQRCode(consumer, url);
 
       expect(response).toStrictEqual({ base64OfImage: "mock-qr-code" });
     });

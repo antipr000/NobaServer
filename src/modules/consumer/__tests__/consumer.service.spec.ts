@@ -1266,7 +1266,7 @@ describe("ConsumerService", () => {
       const base64EncodedQRCode = "data:image/png;base64,encodedQRCode";
       when(qrService.generateQRCode(textToEncode)).thenResolve(base64EncodedQRCode);
 
-      const response = await consumerService.getBase64EncodedQRCode("CCCCCCCCCC");
+      const response = await consumerService.getBase64EncodedQRCode(textToEncode);
       expect(response).toEqual(base64EncodedQRCode);
     });
   });

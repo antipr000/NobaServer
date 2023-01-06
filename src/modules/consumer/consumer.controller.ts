@@ -398,9 +398,9 @@ export class ConsumerController {
   @ApiOperation({ summary: "Gets QR code for the logged-in consumer" })
   @ApiResponse({ status: HttpStatus.OK, description: "Base64 of QR code for the logged-in consumer" })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async getQRCode(@AuthUser() consumer: Consumer): Promise<QRCodeDTO> {
+  async getQRCode(@AuthUser() consumer: Consumer, @Query("url") url: string): Promise<QRCodeDTO> {
     return {
-      base64OfImage: await this.consumerService.getBase64EncodedQRCode(consumer.props.id),
+      base64OfImage: await this.consumerService.getBase64EncodedQRCode(url),
     };
   }
 
