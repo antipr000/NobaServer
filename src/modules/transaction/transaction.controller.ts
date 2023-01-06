@@ -34,6 +34,7 @@ import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
+import { ServiceException } from "../../core/exception/ServiceException";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -124,6 +125,8 @@ export class TransactionController {
     } catch (e) {
       if (e instanceof TransactionSubmissionException) {
         throw new BadRequestException(e.disposition, e.message);
+      } else if (e instanceof ServiceException) {
+        throw e; // ServiceExceptions get automatically handled by interceptor
       } else {
         this.logger.error(`Error in initiateTransaction: ${e.message}`);
         throw new BadRequestException("Failed to make the payment");
