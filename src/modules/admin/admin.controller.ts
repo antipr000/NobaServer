@@ -76,7 +76,7 @@ export class AdminController {
   private readonly consumerMapper: ConsumerMapper = new ConsumerMapper();
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() { }
+  constructor() {}
 
   // TODO: Add proper AuthN & AuthZ
   @Public()
@@ -247,7 +247,6 @@ export class AdminController {
       throw new ForbiddenException(`User is forbidden from calling this API.`);
     }
 
-    console.log(exchangeRate);
     const savedExchangeRate: ExchangeRateDTO = await this.exchangeRateService.createExchangeRate(exchangeRate);
     if (savedExchangeRate == null) {
       throw new BadRequestException("Unable to add exchange rate");

@@ -738,11 +738,10 @@ describe("AdminController", () => {
         expirationTimestamp: inverseNewExchangeRate.expirationTimestamp,
       };
 
-      const createSpy = jest.spyOn(mockExchangeRateService, "createExchangeRate");
-
-      console.log(newExchangeRate, inverseNewExchangeRate);
       when(mockExchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
-      when(mockExchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(inverseCreatedExchangeRate);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(
+        inverseCreatedExchangeRate,
+      );
 
       await adminController.createExchangeRate(
         {
@@ -751,11 +750,6 @@ describe("AdminController", () => {
         newExchangeRate,
         "true",
       );
-
-      // expect(createSpy).toHaveBeenCalledWith(deepEqual(newExchangeRate));
-      // expect(createSpy).toHaveBeenCalledWith(deepEqual(inverseCreatedExchangeRate));
-
-      // OR 
 
       const [firstExchangeRate] = capture(mockExchangeRateService.createExchangeRate).first();
       const [secondExchangeRate] = capture(mockExchangeRateService.createExchangeRate).second();
