@@ -78,6 +78,7 @@
     "plaid": "^11.0.0",
     "prisma": "^4.7.1",
     "prisma-dbml-generator": "^0.10.0",
+    "qrcode": "^1.5.1",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
     "rxjs": "^7",

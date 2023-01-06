@@ -40,6 +40,7 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
     new Error("Method not implemented!"),
   );
   when(mockConsumerService.getConsumerCircleWalletID(anyString())).thenReject(new Error("Method not implemented!"));
+  when(mockConsumerService.getBase64EncodedQRCode(anyString())).thenReject(new Error("Method not implemented!"));
 
   return mockConsumerService;
 }

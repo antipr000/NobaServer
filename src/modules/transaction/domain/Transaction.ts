@@ -32,9 +32,29 @@ export enum TransactionStatus {
   IN_PROGRESS = "IN_PROGRESS",
 }
 
-export const validateInputTransaction = (transaction: Partial<Transaction>) => {
-  const transactionJoiValidationKeys: KeysRequired<Transaction> = {
-    id: Joi.string().min(10).optional().allow(null), // null is allowed as it is not set when the transaction is created
+export class InputTransaction {
+  transactionRef: string;
+  workflowName: WorkflowName;
+  creditConsumerID?: string;
+  debitConsumerID?: string;
+  debitCurrency?: string;
+  creditCurrency?: string;
+  debitAmount?: number;
+  creditAmount?: number;
+  exchangeRate: number;
+}
+
+export class UpdateTransaciton {
+  status?: TransactionStatus;
+  debitAmount?: number;
+  creditAmount?: number;
+  debitCurrency?: string;
+  creditCurrency?: string;
+  exchangeRate?: number;
+}
+
+export const validateInputTransaction = (transaction: InputTransaction) => {
+  const transactionJoiValidationKeys: KeysRequired<InputTransaction> = {
     transactionRef: Joi.string().min(10).required(),
     workflowName: Joi.string()
       .required()
@@ -45,13 +65,7 @@ export const validateInputTransaction = (transaction: Partial<Transaction>) => {
     creditAmount: Joi.number().greater(0).optional(),
     debitCurrency: Joi.string().optional(),
     creditCurrency: Joi.string().optional(),
-    status: Joi.string()
-      .optional()
-      .valid(...Object.values(TransactionStatus))
-      .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().required(),
-    createdTimestamp: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
-    updatedTimestamp: Joi.date().required().allow(null), // null is allowed as it is not set when the transaction is created
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
@@ -96,42 +110,16 @@ export const validateSavedTransaction = (transaction: Transaction) => {
   return Joi.attempt(transaction, transactionJoiSchema);
 };
 
-export const validateUpdateTransaction = (transaction: Partial<Transaction>) => {
-  const uneditableFields = [
-    "id",
-    "transactionRef",
-    "workflowName",
-    "debitConsumerID",
-    "creditConsumerID",
-    "createdTimestamp",
-    "updatedTimestamp",
-  ];
-  let containsUneditableFields = false;
-  uneditableFields.forEach(field => {
-    if (transaction[field]) containsUneditableFields = true;
-  });
-  if (containsUneditableFields)
-    throw new BadRequestError({ message: `${uneditableFields.join(", ")} cannot be updated.` });
-
-  const transactionJoiValidationKeys: KeysRequired<Transaction> = {
-    id: Joi.string().min(10).optional(),
-    transactionRef: Joi.string().optional(),
-    workflowName: Joi.string()
-      .optional()
-      .valid(...Object.values(WorkflowName)),
-    debitConsumerID: Joi.string().min(10).optional(),
-    creditConsumerID: Joi.string().min(10).optional(),
+export const validateUpdateTransaction = (transaction: UpdateTransaciton) => {
+  const transactionJoiValidationKeys: KeysRequired<UpdateTransaciton> = {
     debitAmount: Joi.number().optional(),
     creditAmount: Joi.number().optional(),
     debitCurrency: Joi.string().optional(),
     creditCurrency: Joi.string().optional(),
     status: Joi.string()
       .optional()
-      .valid(...Object.values(TransactionStatus))
-      .default(TransactionStatus.PENDING),
+      .valid(...Object.values(TransactionStatus)),
     exchangeRate: Joi.number().optional(),
-    createdTimestamp: Joi.date().optional(),
-    updatedTimestamp: Joi.date().optional(),
   };
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
     allowUnknown: false,

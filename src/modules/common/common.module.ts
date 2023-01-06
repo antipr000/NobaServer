@@ -14,6 +14,7 @@ import { SQLCreditCardBinDataRepo } from "./repo/SQLCreditCardBinDataRepo";
 import { SQLOTPRepo } from "./repo/SQLOTPRepo";
 import { OTPService } from "./otp.service";
 import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
+import { QRService } from "./qrcode.service";
 import { SQLExchangeRateRepo } from "./repo/sql.exchangerate.repo";
 import { ExchangeRateService } from "./exchangerate.service";
 
@@ -44,6 +45,7 @@ import { ExchangeRateService } from "./exchangerate.service";
     },
     OTPService,
     DeleteExpiredOTPs,
+    QRService,
   ],
   exports: [
     CsvService,
@@ -56,6 +58,7 @@ import { ExchangeRateService } from "./exchangerate.service";
     ConfigurationProviderService,
     EllipticService,
     OTPService,
+    QRService,
   ],
 })
 export class CommonModule {}
