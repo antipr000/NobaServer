@@ -49,7 +49,7 @@ export class TransactionService {
       creditCurrency: orderDetails.creditCurrency,
       debitAmount: orderDetails.debitAmount,
       debitCurrency: orderDetails.debitCurrency,
-      exchangeRate: 1.0, // TODO: Implement exchange rate
+      exchangeRate: orderDetails.exchangeRate,
       workflowName: orderDetails.workflowName,
       transactionRef: Utils.generateLowercaseUUID(true),
     };
