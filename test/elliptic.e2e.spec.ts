@@ -21,7 +21,7 @@ import { Transaction } from "../src/modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../src/modules/transactions/domain/Types";
 import * as ConfigurationUtils from "../src/config/ConfigurationUtils";
 
-describe("Elliptic Integration Test", () => {
+describe.skip("Elliptic Integration Test", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;

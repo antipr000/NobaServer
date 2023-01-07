@@ -15,8 +15,9 @@ jobs:
         image: postgres
         # Provide the password for postgres
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: e2e_user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: Noba_E2E
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -24,7 +25,7 @@ jobs:
           --health-retries 5
         ports:
           # Maps tcp port 5432 on service container to the host
-          - 5432:5432
+          - 5456:5432
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -38,7 +39,7 @@ jobs:
           key: ${{ runner.os }}-build-${{ github.run_number }}
       - name: Run db migrations
         env:
-            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
         run: yarn prisma-clean-init
 
       - name: E2E tests

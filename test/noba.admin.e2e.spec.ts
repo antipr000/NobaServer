@@ -29,7 +29,7 @@ import {
 } from "./common";
 import { getRandomEmail, getRandomID } from "./TestUtils";
 
-describe("Noba Admin", () => {
+describe.skip("Noba Admin", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;

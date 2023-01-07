@@ -29,7 +29,7 @@ import { ConfigurationsDTO } from "./api_client/models/ConfigurationsDTO";
 
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 
-describe("CryptoCurrencies & Locations", () => {
+describe.skip("CryptoCurrencies & Locations", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;

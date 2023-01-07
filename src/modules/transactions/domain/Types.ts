@@ -1,3 +1,5 @@
+import { SortOrder } from "../../../core/infra/PaginationTypes";
+
 // *** DO NOT CHANGE VALUE *** //
 export enum TransactionType {
   ONRAMP = "onramp",
@@ -219,6 +221,18 @@ export class TransactionFilterOptions {
     description: "filter for a particular transaction status",
   })
   transactionStatus?: TransactionStatus;
+
+  @ApiPropertyOptional()
+  sortField?: TransactionsQuerySortField;
+
+  @ApiPropertyOptional()
+  sortOrder?: SortOrder;
+
+  @ApiPropertyOptional()
+  fiatCurrency?: string;
+
+  @ApiPropertyOptional()
+  cryptoCurrency?: string;
 }
 
 export function transactionPropFromQuerySortField(transactionQuerySortField: TransactionsQuerySortField) {

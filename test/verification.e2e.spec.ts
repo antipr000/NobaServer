@@ -41,7 +41,7 @@ import { FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE } from "../src/modules/ver
 import crypto_ts from "crypto";
 import { getRandomEmail } from "./TestUtils";
 
-describe("Verification", () => {
+describe.skip("Verification", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;

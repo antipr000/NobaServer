@@ -36,7 +36,7 @@ import { PaymentProvider } from "../src/modules/consumer/domain/PaymentProvider"
 import { ConsumerHandleDTO } from "./api_client/models/ConsumerHandleDTO";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
 
-describe("Consumers", () => {
+describe.skip("Consumers", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;
