@@ -136,7 +136,7 @@ nobaWorkflow:
   clientUrl: "test"
   awsSecretNameForClientUrl: ""
   connectionTimeoutInMs: 1000
-  namespace: "default"
+  namespace: "e2e_test"
 
 dependencies:
   emailClient: "STUB"
