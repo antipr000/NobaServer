@@ -13,8 +13,13 @@ import { TransactionService } from "../transaction.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
+import { Currency } from "../domain/TransactionTypes";
 
-const getRandomTransaction = (consumerID: string, consumerID2?: string, workflowName?: WorkflowName): Transaction => {
+const getRandomTransaction = (
+  consumerID: string,
+  consumerID2?: string,
+  workflowName?: WorkflowName,
+): { transaction: Transaction; transactionDTO: InitiateTransactionDTO } => {
   const transaction: Transaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
@@ -43,7 +48,20 @@ const getRandomTransaction = (consumerID: string, consumerID2?: string, workflow
       transaction.creditConsumerID = consumerID;
       break;
   }
-  return transaction;
+
+  const transactionDTO = {
+    transactionRef: transaction.transactionRef,
+    workflowName: transaction.workflowName,
+    debitAmount: transaction.debitAmount,
+    debitCurrency: Currency.USD,
+    debitConsumerIDOrTag: transaction.debitConsumerID,
+    creditAmount: transaction.creditAmount,
+    creditCurrency: Currency.USD,
+    creditConsumerIDOrTag: transaction.creditConsumerID,
+    exchangeRate: transaction.exchangeRate,
+  };
+
+  return { transaction, transactionDTO };
 };
 
 describe("TransactionServiceTests", () => {
@@ -88,7 +106,7 @@ describe("TransactionServiceTests", () => {
   // TODO: Skippting as they do not run. Need to add WorkflowExecutor dependencies.
   describe.skip("getTransactionByTransactionRef", () => {
     it("should return the transaction if the debitConsumerID matches", async () => {
-      const transaction = getRandomTransaction("consumerID");
+      const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);
 
       const returnedTransaction = await transactionService.getTransactionByTransactionRef(
@@ -99,7 +117,7 @@ describe("TransactionServiceTests", () => {
     });
 
     it("should return the transaction if the creditConsumerID matches", async () => {
-      const transaction = getRandomTransaction("consumerID");
+      const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);
 
       const returnedTransaction = await transactionService.getTransactionByTransactionRef(
@@ -110,7 +128,7 @@ describe("TransactionServiceTests", () => {
     });
 
     it("should throw NotFoundError if transaction is not found", async () => {
-      const transaction = getRandomTransaction("consumerID");
+      const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(null);
 
       await expect(
@@ -119,7 +137,7 @@ describe("TransactionServiceTests", () => {
     });
 
     it("should throw NotFoundError if transaction is found 'but' not belong to specified consumer", async () => {
-      const transaction = getRandomTransaction("consumerID");
+      const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);
 
       await expect(
@@ -128,20 +146,14 @@ describe("TransactionServiceTests", () => {
     });
   });
 
-  // describe("initiateTransaction", () => {
-  //   it("should initiate a transaction", async () => {
-  //     const transaction = getRandomTransaction("consumerID");
-  //     const transactionDTO: InitiateTransactionDTO = {
-  //       debitAmount: transaction.debitAmount,
-  //       debitCurrency: transaction.debitCurrency,
-  //       debitConsumerID: transaction.debitConsumerID,
-  //       exchangeRate: transaction.exchangeRate,
-  //       workflowName: transaction.workflowName,
-  //     };
-  //     when(transactionRepo.createTransaction(transaction)).thenResolve(transaction);
+  describe("initiateTransaction", () => {
+    it("should initiate a transaction", async () => {
+      const { transaction, transactionDTO } = getRandomTransaction("consumerID");
 
-  //     const returnedTransaction = await transactionService.initiateTransaction(transactionDTO, null, null);
-  //     expect(returnedTransaction).toEqual(transaction);
-  //   });
-  // });
+      when(transactionRepo.createTransaction(transaction)).thenResolve(transaction);
+
+      const returnedTransaction = await transactionService.initiateTransaction(transactionDTO, null, null);
+      expect(returnedTransaction).toEqual(transaction);
+    });
+  });
 });
