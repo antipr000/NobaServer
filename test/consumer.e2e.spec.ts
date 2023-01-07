@@ -9,17 +9,12 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUp } from "./setup";
-setUp();
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { INestApplication } from "@nestjs/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
 import { ConsumerService } from "./api_client/services/ConsumerService";
 import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
-import { bootstrap } from "../src/server";
 import {
-  clearAccessTokenForNextRequests,
   computeSignature,
   insertNobaAdmin,
   loginAndGetResponse,
@@ -29,44 +24,27 @@ import {
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 import { PlaidTokenDTO } from "./api_client";
-import { getRandomEmail, getRandomID } from "./TestUtils";
-import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
 //import { PaymentMethodType } from "../src/modules/consumer/domain/PaymentMethod";
-import { PaymentProvider } from "../src/modules/consumer/domain/PaymentProvider";
 import { ConsumerHandleDTO } from "./api_client/models/ConsumerHandleDTO";
-import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
+import { IntegrationTestUtility } from "./TestUtils";
 
 describe.skip("Consumers", () => {
   jest.setTimeout(20000);
 
-  let mongoServer: MongoMemoryServer;
-  let mongoUri: string;
-  let app: INestApplication;
+  let integrationTestUtils: IntegrationTestUtility;
   let TEST_TIMESTAMP;
 
   beforeAll(async () => {
-    const port = process.env.PORT;
-
-    // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    mongoUri = mongoServer.getUri();
-
-    const environmentVaraibles = {
-      MONGO_URI: mongoUri,
-    };
-    app = await bootstrap(environmentVaraibles);
-    await app.listen(port);
+    integrationTestUtils = await IntegrationTestUtility.setUp(port);
     TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
-    await app.close();
-    await mongoServer.stop();
+    await integrationTestUtils.tearDown();
   });
 
   afterEach(async () => {
-    clearAccessTokenForNextRequests();
+    await integrationTestUtils.reset();
   });
 
   describe("GET /consumers/paymentmethods/plaid/token", () => {
@@ -82,12 +60,12 @@ describe.skip("Consumers", () => {
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = getRandomEmail("test.noba.admin");
-      const nobaAdminId = getRandomID("AAAAAAAAA");
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
+      const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -105,9 +83,9 @@ describe.skip("Consumers", () => {
     });
 
     it("should allow Consumer identity to call this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -146,12 +124,12 @@ describe.skip("Consumers", () => {
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = getRandomEmail("test.noba.admin");
-      const nobaAdminId = getRandomID("AAAAAAAAA");
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
+      const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -171,9 +149,9 @@ describe.skip("Consumers", () => {
     });
 
     it("should allow Consumer identity to call this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -195,9 +173,9 @@ describe.skip("Consumers", () => {
     });
 
     it("should return 'false' if the handle is already taken", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const getConsumerSignature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
@@ -240,12 +218,12 @@ describe.skip("Consumers", () => {
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = getRandomEmail("test.noba.admin");
-      const nobaAdminId = getRandomID("AAAAAAAAA");
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
+      const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
@@ -258,9 +236,9 @@ describe.skip("Consumers", () => {
     });
 
     it("should allow Consumer identity to call this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
@@ -284,9 +262,9 @@ describe.skip("Consumers", () => {
     });
 
     it("should allow signature to validate even with extra request params", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers?param1=12345", JSON.stringify({}));
@@ -323,12 +301,12 @@ describe.skip("Consumers", () => {
     });
 
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
-      const nobaAdminEmail = getRandomEmail("test.noba.admin");
-      const nobaAdminId = getRandomID("AAAAAAAAA");
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
+      const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
@@ -342,8 +320,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should updates 'firstName' if Consumer identity calls this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -384,8 +362,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should updates 'lastName' if Consumer identity calls this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -426,8 +404,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should updates 'dateOfBirth' if Consumer identity calls this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -468,8 +446,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should fail with 400 for invalid 'dateOfBirth'", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -492,8 +470,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should updates 'handle' if Consumer identity calls this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -534,8 +512,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should updates multiple-fields at once if Consumer identity calls this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -583,8 +561,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should updates 'address' if Consumer identity calls this API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -657,9 +635,9 @@ describe.skip("Consumers", () => {
     //   const nobaAdminEmail = "test.noba.admin@noba.com";
     //   const nobaAdminId = "AAAAAAAAAA";
     //   const nobaAdminRole = "BASIC";
-    //   expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+    //   expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
 
-    //   const nobaAdminLoginResponse = await loginAndGetResponse(mongoUri, nobaAdminEmail, "NOBA_ADMIN");
+    //   const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
     //   setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
     //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
@@ -676,7 +654,7 @@ describe.skip("Consumers", () => {
     //
     // it("should throw 400 if given card details are invalid when Consumer identity calls the API", async () => {
     //   const consumerEmail = "test.consumer@noba.com";
-    //   const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+    //   const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
     //   setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
     //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
@@ -692,8 +670,8 @@ describe.skip("Consumers", () => {
     // });
 
     it("should successfully add the payment method when Consumer identity calls the API", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -723,7 +701,7 @@ describe.skip("Consumers", () => {
             postalCode: "123456",
           },
         },
-        mongoUri,
+        "",
       );
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
         xNobaApiKey: TEST_API_KEY,
@@ -768,8 +746,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should allow addition of payment method when cardName is not provided", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       await patchConsumer(
@@ -783,7 +761,7 @@ describe.skip("Consumers", () => {
             postalCode: "123456",
           },
         },
-        mongoUri,
+        "",
       );
 
       let signature = computeSignature(
@@ -831,8 +809,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should allow updating payment method to make it default", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       await patchConsumer(
@@ -846,7 +824,7 @@ describe.skip("Consumers", () => {
             postalCode: "123456",
           },
         },
-        mongoUri,
+        "",
       );
 
       let signature = computeSignature(
@@ -919,8 +897,8 @@ describe.skip("Consumers", () => {
     });
 
     /*it("should map verification status properly when all status are approved", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const consumer: Partial<ConsumerProps> = {
@@ -972,7 +950,7 @@ describe.skip("Consumers", () => {
         ],
       };
 
-      await patchConsumer(consumer, mongoUri);
+      await patchConsumer(consumer, "");
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       const getConsumerResponse = (await ConsumerService.getConsumer({
@@ -993,8 +971,8 @@ describe.skip("Consumers", () => {
     });
 
     it("should map verification status properly when payment method is Flagged, wallet is not added and documentVerificationStatus is REJECTED", async () => {
-      const consumerEmail = getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const consumer: Partial<ConsumerProps> = {
@@ -1040,7 +1018,7 @@ describe.skip("Consumers", () => {
         ],
       };
 
-      await patchConsumer(consumer, mongoUri);
+      await patchConsumer(consumer, "");
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       const getConsumerResponse = (await ConsumerService.getConsumer({

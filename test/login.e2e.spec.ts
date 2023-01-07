@@ -9,16 +9,13 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUp } from "./setup";
-setUp();
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { INestApplication } from "@nestjs/common";
 import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, LoginResponseDTO } from "./api_client";
 import { ConsumerService } from "./api_client/services/ConsumerService";
 import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
-import { bootstrap } from "../src/server";
 import {
-  clearAccessTokenForNextRequests,
   computeSignature,
   fetchOtpFromDb,
   insertNobaAdmin,
@@ -26,38 +23,30 @@ import {
   TEST_API_KEY,
 } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
-import { getRandomEmail, getRandomID } from "./TestUtils";
+import { IntegrationTestUtility } from "./TestUtils";
 
 describe("Authentication", () => {
   jest.setTimeout(20000);
 
-  let mongoUri: string;
-  let app: INestApplication;
+  let integrationTestUtils: IntegrationTestUtility;
   let timestamp;
 
   beforeAll(async () => {
-    const port = process.env.PORT;
-
-    const environmentVaraibles = {
-      MONGO_URI: mongoUri,
-      DATABASE_URL: "postgresql://e2e_user:pass@localhost:5456/Noba_E2E?schema=public",
-    };
-    app = await bootstrap(environmentVaraibles);
-    await app.listen(port);
+    integrationTestUtils = await IntegrationTestUtility.setUp(port);
     timestamp = new Date().getTime().toString();
   });
 
   afterAll(async () => {
-    await app.close();
+    await integrationTestUtils.tearDown();
   });
 
   afterEach(async () => {
-    clearAccessTokenForNextRequests();
+    await integrationTestUtils.reset();
   });
 
   describe("Test Login", () => {
     it("should be successful", async () => {
-      const consumerEmail = getRandomEmail("test+consumer");
+      const consumerEmail = integrationTestUtils.getRandomEmail("test+consumer");
       const loginRequestBody: LoginRequestDTO = {
         emailOrPhone: consumerEmail,
         identityType: "CONSUMER",
@@ -72,312 +61,314 @@ describe("Authentication", () => {
     });
   });
 
-  // describe("SignUp or Login as CONSUMER", () => {
-  //   it("should be successful", async () => {
-  //     const consumerEmail = getRandomEmail("test+consumer");
+  describe.skip("SignUp or Login as CONSUMER", () => {
+    it("should be successful", async () => {
+      const consumerEmail = integrationTestUtils.getRandomEmail("test+consumer");
 
-  //     const loginRequestBody: LoginRequestDTO = {
-  //       emailOrPhone: consumerEmail,
-  //       identityType: "CONSUMER",
-  //     };
+      const loginRequestBody: LoginRequestDTO = {
+        emailOrPhone: consumerEmail,
+        identityType: "CONSUMER",
+      };
 
-  //     const loginSignature = computeSignature(timestamp, "POST", "/v1/auth/login", JSON.stringify(loginRequestBody));
+      const loginSignature = computeSignature(timestamp, "POST", "/v1/auth/login", JSON.stringify(loginRequestBody));
 
-  //     const loginResponse = await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: loginSignature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: loginRequestBody,
-  //     });
-  //     expect(loginResponse.__status).toBe(201);
+      const loginResponse = await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: loginSignature,
+        xNobaTimestamp: timestamp,
+        requestBody: loginRequestBody,
+      });
+      expect(loginResponse.__status).toBe(201);
 
-  //     const verifyOtpRequestBody: VerifyOtpRequestDTO = {
-  //       emailOrPhone: consumerEmail,
-  //       otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
-  //       identityType: "CONSUMER",
-  //     };
+      const verifyOtpRequestBody: VerifyOtpRequestDTO = {
+        emailOrPhone: consumerEmail,
+        otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+        identityType: "CONSUMER",
+      };
 
-  //     const verifyOtpSignature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/verifyotp",
-  //       JSON.stringify(verifyOtpRequestBody),
-  //     );
+      const verifyOtpSignature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify(verifyOtpRequestBody),
+      );
 
-  //     const verifyOtpResponse = (await AuthenticationService.verifyOtp({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: verifyOtpSignature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: verifyOtpRequestBody,
-  //     })) as LoginResponseDTO & ResponseStatus;
-  //     console.log(verifyOtpResponse);
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: verifyOtpSignature,
+        xNobaTimestamp: timestamp,
+        requestBody: verifyOtpRequestBody,
+      })) as LoginResponseDTO & ResponseStatus;
+      console.log(verifyOtpResponse);
 
-  //     const accessToken = verifyOtpResponse.accessToken;
-  //     const userId = verifyOtpResponse.userID;
+      const accessToken = verifyOtpResponse.accessToken;
+      const userId = verifyOtpResponse.userID;
 
-  //     expect(verifyOtpResponse.__status).toBe(201);
-  //     expect(accessToken).toBeDefined();
-  //     expect(userId).toBeDefined();
+      expect(verifyOtpResponse.__status).toBe(201);
+      expect(accessToken).toBeDefined();
+      expect(userId).toBeDefined();
 
-  //     setAccessTokenForTheNextRequests(accessToken);
+      setAccessTokenForTheNextRequests(accessToken);
 
-  //     const getConsumerSignature = computeSignature(timestamp, "GET", "/v1/consumers", JSON.stringify({}));
-  //     const loggedInConsumer = (await ConsumerService.getConsumer({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: getConsumerSignature,
-  //       xNobaTimestamp: timestamp,
-  //     })) as ConsumerDTO & ResponseStatus;
+      const getConsumerSignature = computeSignature(timestamp, "GET", "/v1/consumers", JSON.stringify({}));
+      const loggedInConsumer = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: getConsumerSignature,
+        xNobaTimestamp: timestamp,
+      })) as ConsumerDTO & ResponseStatus;
 
-  //     expect(loggedInConsumer.__status).toBe(200);
-  //     expect(loggedInConsumer.id).toBe(userId);
-  //     expect(loggedInConsumer.email).toBe(consumerEmail);
-  //   });
+      expect(loggedInConsumer.__status).toBe(200);
+      expect(loggedInConsumer.id).toBe(userId);
+      expect(loggedInConsumer.email).toBe(consumerEmail);
+    });
 
-  //   it("should be successful with different cases", async () => {
-  //     const consumerEmail = getRandomEmail("TEsT+ConSUMer");
-  //     let signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/login",
-  //       JSON.stringify({
-  //         email: consumerEmail,
-  //         identityType: "CONSUMER",
-  //       }),
-  //     );
+    it("should be successful with different cases", async () => {
+      const consumerEmail = integrationTestUtils.getRandomEmail("TEsT+ConSUMer");
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMER",
+        }),
+      );
 
-  //     await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: consumerEmail,
-  //         identityType: "CONSUMER",
-  //       },
-  //     });
+      await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: consumerEmail,
+          identityType: "CONSUMER",
+        },
+      });
 
-  //     signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/verifyotp",
-  //       JSON.stringify({
-  //         emailOrPhone: consumerEmail,
-  //         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
-  //         identityType: "CONSUMER",
-  //       }),
-  //     );
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: consumerEmail,
+          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          identityType: "CONSUMER",
+        }),
+      );
 
-  //     (await AuthenticationService.verifyOtp({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: consumerEmail,
-  //         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
-  //         identityType: "CONSUMER",
-  //       },
-  //     })) as LoginResponseDTO & ResponseStatus;
+      (await AuthenticationService.verifyOtp({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: consumerEmail,
+          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          identityType: "CONSUMER",
+        },
+      })) as LoginResponseDTO & ResponseStatus;
 
-  //     const newRequestConsumerEmail = consumerEmail.toLowerCase();
+      const newRequestConsumerEmail = consumerEmail.toLowerCase();
 
-  //     signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/login",
-  //       JSON.stringify({
-  //         email: consumerEmail,
-  //         identityType: "CONSUMER",
-  //       }),
-  //     );
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMER",
+        }),
+      );
 
-  //     const loginResponse = await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: consumerEmail,
-  //         identityType: "CONSUMER",
-  //       },
-  //     });
-  //     expect(loginResponse.__status).toBe(201);
+      const loginResponse = await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: consumerEmail,
+          identityType: "CONSUMER",
+        },
+      });
+      expect(loginResponse.__status).toBe(201);
 
-  //     signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/verifyotp",
-  //       JSON.stringify({
-  //         emailOrPhone: consumerEmail,
-  //         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
-  //         identityType: "CONSUMER",
-  //       }),
-  //     );
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: consumerEmail,
+          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          identityType: "CONSUMER",
+        }),
+      );
 
-  //     const verifyOtpResponse = (await AuthenticationService.verifyOtp({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: consumerEmail,
-  //         otp: await fetchOtpFromDb(mongoUri, consumerEmail, "CONSUMER"),
-  //         identityType: "CONSUMER",
-  //       },
-  //     })) as LoginResponseDTO & ResponseStatus;
-  //     console.log(verifyOtpResponse);
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: consumerEmail,
+          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          identityType: "CONSUMER",
+        },
+      })) as LoginResponseDTO & ResponseStatus;
+      console.log(verifyOtpResponse);
 
-  //     const accessToken = verifyOtpResponse.accessToken;
-  //     const userId = verifyOtpResponse.userID;
+      const accessToken = verifyOtpResponse.accessToken;
+      const userId = verifyOtpResponse.userID;
 
-  //     expect(verifyOtpResponse.__status).toBe(201);
-  //     expect(accessToken).toBeDefined();
-  //     expect(userId).toBeDefined();
+      expect(verifyOtpResponse.__status).toBe(201);
+      expect(accessToken).toBeDefined();
+      expect(userId).toBeDefined();
 
-  //     setAccessTokenForTheNextRequests(accessToken);
+      setAccessTokenForTheNextRequests(accessToken);
 
-  //     const getConsumerSignature = computeSignature(timestamp, "GET", "/v1/consumers", JSON.stringify({}));
-  //     const loggedInConsumer = (await ConsumerService.getConsumer({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: getConsumerSignature,
-  //       xNobaTimestamp: timestamp,
-  //     })) as ConsumerDTO & ResponseStatus;
+      const getConsumerSignature = computeSignature(timestamp, "GET", "/v1/consumers", JSON.stringify({}));
+      const loggedInConsumer = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: getConsumerSignature,
+        xNobaTimestamp: timestamp,
+      })) as ConsumerDTO & ResponseStatus;
 
-  //     expect(loggedInConsumer.__status).toBe(200);
-  //     expect(loggedInConsumer.id).toBe(userId);
-  //     expect(loggedInConsumer.email).toBe(consumerEmail);
-  //   });
+      expect(loggedInConsumer.__status).toBe(200);
+      expect(loggedInConsumer.id).toBe(userId);
+      expect(loggedInConsumer.email).toBe(consumerEmail);
+    });
 
-  //   it("signup with invalid 'identityType' throws 400 error", async () => {
-  //     const consumerEmail = getRandomEmail("test+consumer");
-  //     const signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/login",
-  //       JSON.stringify({
-  //         email: consumerEmail,
-  //         identityType: "CONSUMR" as any,
-  //       }),
-  //     );
-  //     const loginResponse = await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: consumerEmail,
-  //         identityType: "CONSUMR" as any,
-  //       },
-  //     });
-  //     expect(loginResponse.__status).toBe(400);
-  //   });
-  // });
+    it("signup with invalid 'identityType' throws 400 error", async () => {
+      const consumerEmail = integrationTestUtils.getRandomEmail("test+consumer");
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMR" as any,
+        }),
+      );
+      const loginResponse = await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: consumerEmail,
+          identityType: "CONSUMR" as any,
+        },
+      });
+      expect(loginResponse.__status).toBe(400);
+    });
+  });
 
-  // describe("NobaAdmin login", () => {
-  //   it("shouldn't be successful for an unregistered NobaAdmin", async () => {
-  //     const nobaAdminEmail = getRandomEmail("test.noba.admin");
-  //     const signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/login",
-  //       JSON.stringify({
-  //         email: nobaAdminEmail,
-  //         identityType: "NOBA_ADMIN",
-  //       }),
-  //     );
-  //     const loginResponse = (await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: nobaAdminEmail,
-  //         identityType: "NOBA_ADMIN",
-  //       },
-  //     })) as any & ResponseStatus;
+  describe.skip("NobaAdmin login", () => {
+    it("shouldn't be successful for an unregistered NobaAdmin", async () => {
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: nobaAdminEmail,
+          identityType: "NOBA_ADMIN",
+        }),
+      );
+      const loginResponse = (await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: nobaAdminEmail,
+          identityType: "NOBA_ADMIN",
+        },
+      })) as any & ResponseStatus;
 
-  //     expect(loginResponse.__status).toBe(403);
-  //   });
+      expect(loginResponse.__status).toBe(403);
+    });
 
-  //   it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
-  //     const consumerEmail = getRandomEmail("consumer");
-  //     const signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/login",
-  //       JSON.stringify({
-  //         email: consumerEmail,
-  //         identityType: "CONSUMER",
-  //       }),
-  //     );
-  //     const consumerLoginResponse = await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: consumerEmail,
-  //         identityType: "CONSUMER",
-  //       },
-  //     });
-  //     expect(consumerLoginResponse.__status).toBe(201);
+    it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
+      const consumerEmail = integrationTestUtils.getRandomEmail("consumer");
+      const signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: consumerEmail,
+          identityType: "CONSUMER",
+        }),
+      );
+      const consumerLoginResponse = await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: consumerEmail,
+          identityType: "CONSUMER",
+        },
+      });
+      expect(consumerLoginResponse.__status).toBe(201);
 
-  //     const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: consumerEmail,
-  //         identityType: "NOBA_ADMIN",
-  //       },
-  //     });
-  //     expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
-  //   });
+      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: consumerEmail,
+          identityType: "NOBA_ADMIN",
+        },
+      });
+      expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
+    });
 
-  //   it("should be successful for registered NobaAdmin", async () => {
-  //     const nobaAdminEmail = getRandomEmail("test.noba.admin");
+    it("should be successful for registered NobaAdmin", async () => {
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
 
-  //     let signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/login",
-  //       JSON.stringify({
-  //         email: nobaAdminEmail,
-  //         identityType: "NOBA_ADMIN",
-  //       }),
-  //     );
+      let signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/login",
+        JSON.stringify({
+          email: nobaAdminEmail,
+          identityType: "NOBA_ADMIN",
+        }),
+      );
 
-  //     expect(await insertNobaAdmin(mongoUri, nobaAdminEmail, getRandomID("AAAAAAAAAA"), "BASIC")).toBe(true);
+      expect(await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC")).toBe(
+        true,
+      );
 
-  //     const loginResponse = (await AuthenticationService.loginUser({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: nobaAdminEmail,
-  //         identityType: "NOBA_ADMIN",
-  //       },
-  //     })) as any & ResponseStatus;
+      const loginResponse = (await AuthenticationService.loginUser({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: nobaAdminEmail,
+          identityType: "NOBA_ADMIN",
+        },
+      })) as any & ResponseStatus;
 
-  //     expect(loginResponse.__status).toBe(201);
+      expect(loginResponse.__status).toBe(201);
 
-  //     signature = computeSignature(
-  //       timestamp,
-  //       "POST",
-  //       "/v1/auth/verifyotp",
-  //       JSON.stringify({
-  //         emailOrPhone: nobaAdminEmail,
-  //         otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
-  //         identityType: "NOBA_ADMIN",
-  //       }),
-  //     );
+      signature = computeSignature(
+        timestamp,
+        "POST",
+        "/v1/auth/verifyotp",
+        JSON.stringify({
+          emailOrPhone: nobaAdminEmail,
+          otp: await fetchOtpFromDb("", nobaAdminEmail, "NOBA_ADMIN"),
+          identityType: "NOBA_ADMIN",
+        }),
+      );
 
-  //     const verifyOtpResponse = (await AuthenticationService.verifyOtp({
-  //       xNobaApiKey: TEST_API_KEY,
-  //       xNobaSignature: signature,
-  //       xNobaTimestamp: timestamp,
-  //       requestBody: {
-  //         emailOrPhone: nobaAdminEmail,
-  //         otp: await fetchOtpFromDb(mongoUri, nobaAdminEmail, "NOBA_ADMIN"),
-  //         identityType: "NOBA_ADMIN",
-  //       },
-  //     })) as LoginResponseDTO & ResponseStatus;
+      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: timestamp,
+        requestBody: {
+          emailOrPhone: nobaAdminEmail,
+          otp: await fetchOtpFromDb("", nobaAdminEmail, "NOBA_ADMIN"),
+          identityType: "NOBA_ADMIN",
+        },
+      })) as LoginResponseDTO & ResponseStatus;
 
-  //     // TODO: Modify 'verifyOtp' to return 200.
-  //     expect(verifyOtpResponse.__status).toBe(201);
-  //   });
-  // });
+      // TODO: Modify 'verifyOtp' to return 200.
+      expect(verifyOtpResponse.__status).toBe(201);
+    });
+  });
 });

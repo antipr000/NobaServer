@@ -9,8 +9,8 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUp } from "./setup";
-setUp();
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+setUpEnvironmentVariablesToLoadTheSourceCode();
 
 import { BadRequestException, INestApplication } from "@nestjs/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
