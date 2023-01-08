@@ -25,7 +25,7 @@ const getAllTransactionRecords = async (prismaService: PrismaService): Promise<P
   return prismaService.transaction.findMany({});
 };
 
-const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean = false): InputTransaction => {
+const getRandomTransaction = (consumerID: string, isCreditTransaction = false): InputTransaction => {
   const transaction: InputTransaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
@@ -526,6 +526,73 @@ describe("PostgresTransactionRepoTests", () => {
       await expect(
         transactionRepo.updateTransactionByTransactionRef("invalid-transaction-ref", updatedTransaction),
       ).rejects.toThrowError(NotFoundError);
+    });
+  });
+
+  describe("getFilteredTransactions", () => {
+    it("should return filtered transactions for consumer", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const consumerID2 = await createTestConsumer(prismaService);
+
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID, true));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID2));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID2));
+      const randomTransaction = await transactionRepo.createTransaction(getRandomTransaction(consumerID, true));
+
+      const result1 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result1.items.length).toBe(3);
+      expect(result1.hasNextPage).toBeTruthy();
+      expect(result1.totalItems).toBe(5);
+
+      const result2 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        pageLimit: 3,
+        pageOffset: 2,
+      });
+
+      expect(result2.items.length).toBe(2);
+      expect(result2.hasNextPage).toBeFalsy();
+
+      await transactionRepo.updateTransactionByTransactionRef(randomTransaction.transactionRef, {
+        status: TransactionStatus.SUCCESS,
+      });
+
+      const result3 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        transactionStatus: TransactionStatus.SUCCESS,
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result3.items.length).toBe(1);
+      expect(result3.totalItems).toBe(1);
+      expect(result3.hasNextPage).toBeFalsy();
+
+      const result4 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        transactionStatus: TransactionStatus.SUCCESS,
+        pageLimit: 3,
+        pageOffset: 2,
+      });
+
+      expect(result4.items.length).toBe(0);
+
+      const result5 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID2,
+        pageLimit: 4,
+        pageOffset: 1,
+      });
+
+      expect(result5.items.length).toBe(2);
+      expect(result5.hasNextPage).toBeFalsy();
     });
   });
 });

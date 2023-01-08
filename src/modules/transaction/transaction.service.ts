@@ -9,11 +9,9 @@ import { Logger } from "winston";
 import { TRANSACTION_REPO_PROVIDER } from "./repo/transaction.repo.module";
 import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
-import { BadRequestError } from "../../core/exception/CommonAppException";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
-import { Entity } from "../../core/domain/Entity";
-import { v4 } from "uuid";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 
 @Injectable()
 export class TransactionService {
@@ -35,8 +33,8 @@ export class TransactionService {
     return transaction;
   }
 
-  async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<Transaction[]> {
-    throw new Error("Not implemented!");
+  async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
+    return await this.transactionRepo.getFilteredTransactions(filter);
   }
 
   async initiateTransaction(
@@ -115,7 +113,7 @@ export class TransactionService {
         });
     }
 
-    let transaction: InputTransaction = {
+    const transaction: InputTransaction = {
       creditAmount: transactionDetails.creditAmount,
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
