@@ -551,6 +551,7 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result1.items.length).toBe(3);
       expect(result1.hasNextPage).toBeTruthy();
       expect(result1.totalItems).toBe(5);
+      expect(result1.totalPages).toBe(2);
 
       const result2 = await transactionRepo.getFilteredTransactions({
         consumerID: consumerID,
@@ -560,6 +561,7 @@ describe("PostgresTransactionRepoTests", () => {
 
       expect(result2.items.length).toBe(2);
       expect(result2.hasNextPage).toBeFalsy();
+      expect(result2.totalPages).toBe(2);
 
       await transactionRepo.updateTransactionByTransactionRef(randomTransaction.transactionRef, {
         status: TransactionStatus.SUCCESS,
@@ -575,6 +577,7 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result3.items.length).toBe(1);
       expect(result3.totalItems).toBe(1);
       expect(result3.hasNextPage).toBeFalsy();
+      expect(result3.totalPages).toBe(1);
 
       const result4 = await transactionRepo.getFilteredTransactions({
         consumerID: consumerID,
@@ -593,6 +596,49 @@ describe("PostgresTransactionRepoTests", () => {
 
       expect(result5.items.length).toBe(2);
       expect(result5.hasNextPage).toBeFalsy();
+
+      const result6 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        creditCurrency: "USD",
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result6.items.length).toBe(2);
+      expect(result6.hasNextPage).toBeFalsy();
+      expect(result6.totalPages).toBe(1);
+
+      const result7 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        debitCurrency: "USD",
+        pageLimit: 2,
+        pageOffset: 1,
+      });
+
+      expect(result7.items).toHaveLength(2);
+      expect(result7.hasNextPage).toBeTruthy();
+      expect(result7.totalItems).toBe(3);
+      expect(result7.totalPages).toBe(2);
+
+      const olderTransaction = getRandomTransaction(consumerID);
+      await prismaService.transaction.create({
+        data: {
+          ...olderTransaction,
+          createdTimestamp: new Date("2020-01-01"),
+          updatedTimestamp: new Date("2020-01-01"),
+        },
+      });
+
+      const result8 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        endDate: new Date("2020-01-02").toUTCString(),
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result8.items).toHaveLength(1);
+      expect(result8.hasNextPage).toBeFalsy();
+      expect(result8.items[0].transactionRef).toBe(olderTransaction.transactionRef);
     });
   });
 });
