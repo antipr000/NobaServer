@@ -128,10 +128,7 @@ describe("TransactionServiceTests", () => {
         return transaction.transactionRef;
       });
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
-      console.log("inputTransaction", inputTransaction);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
-      // when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      // mock Utils.generateLowercaseUUID to return a constant value
 
       const returnedTransactionRef = await transactionService.initiateTransaction(transactionDTO, consumer, null);
       expect(returnedTransactionRef).toEqual(transaction.transactionRef);

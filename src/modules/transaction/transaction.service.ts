@@ -126,8 +126,6 @@ export class TransactionService {
       transactionRef: Utils.generateLowercaseUUID(true),
     };
 
-    console.log("transaction", transaction);
-
     if (transactionDetails.creditConsumerIDOrTag) {
       let consumerID: string;
       if (transactionDetails.creditConsumerIDOrTag.startsWith("$")) {
