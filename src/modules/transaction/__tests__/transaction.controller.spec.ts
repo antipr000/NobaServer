@@ -133,7 +133,13 @@ describe("Transaction Controller tests", () => {
         consumerID: consumerID,
         transactionStatus: TransactionStatus.SUCCESS,
       };
-      when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve([transaction]);
+      when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
+        items: [transaction],
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+      });
 
       const allTransactions = await transactionController.getAllTransactions(
         {
@@ -142,8 +148,8 @@ describe("Transaction Controller tests", () => {
         getRandomConsumer(consumerID),
       );
 
-      expect(allTransactions.length).toBe(1);
-      expect(allTransactions[0].transactionRef).toBe(transactionRef);
+      expect(allTransactions.items.length).toBe(1);
+      expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
     });
   });
 
