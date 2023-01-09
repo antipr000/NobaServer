@@ -1,6 +1,6 @@
 import { HttpStatus, HttpException, BadRequestException } from "@nestjs/common";
 import Joi from "joi";
-import { TransactionSubmissionException } from "src/modules/transactions/exceptions/TransactionSubmissionException";
+import { TransactionSubmissionException } from "../../modules/transactions/exceptions/TransactionSubmissionException";
 import { Logger } from "winston";
 import { AppExceptionCode, ApplicationException, BadRequestError } from "./CommonAppException";
 import { serviceToHTTP } from "./mappers/serviceToHTTP";
