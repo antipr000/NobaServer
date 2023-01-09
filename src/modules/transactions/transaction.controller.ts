@@ -97,7 +97,7 @@ export class TransactionController {
     const checkTransactionResponse: CheckTransactionDTO = await this.limitsService.canMakeTransaction(
       authUser,
       tAmount,
-      checkTransactionQuery.type,
+      checkTransactionQuery.type as any,
     );
 
     return checkTransactionResponse;
@@ -181,8 +181,11 @@ export class TransactionController {
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getConsumerBalance(@AuthUser() authUser: Consumer): Promise<ConsumerBalanceDTO[]> {
     const balances =
-      authUser.props.zhParticipantCode !== undefined
-        ? await this.transactionService.getParticipantBalance(authUser.props.zhParticipantCode, authUser.props._id)
+      (authUser.props as any).zhParticipantCode !== undefined
+        ? await this.transactionService.getParticipantBalance(
+            (authUser.props as any).zhParticipantCode,
+            (authUser.props as any)._id,
+          )
         : [];
 
     const dto: ConsumerBalanceDTO[] = [];
@@ -212,7 +215,7 @@ export class TransactionController {
     @Request() request,
   ): Promise<ConsumerLimitsDTO> {
     if (!consumerLimitsQuery.transactionType) consumerLimitsQuery.transactionType = TransactionType.ONRAMP;
-    return this.limitsService.getConsumerLimits(authUser, consumerLimitsQuery.transactionType);
+    return this.limitsService.getConsumerLimits(authUser, (consumerLimitsQuery as any).transactionType);
   }
 
   @Get("/transactions/download")

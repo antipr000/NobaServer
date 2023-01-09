@@ -15,7 +15,7 @@ import {
 } from "./core/utils/NoUnexpectedKeysValidationPipe";
 import { joiToSwagger } from "./joi2Swagger";
 import { AuthModule } from "./modules/auth/auth.module";
-import { TransactionModule } from "./modules/transactions/transaction.module";
+import { TransactionModule } from "./modules/transaction/transaction.module";
 import { ConsumerModule } from "./modules/consumer/consumer.module";
 import { VerificationModule } from "./modules/verification/verification.module";
 import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
