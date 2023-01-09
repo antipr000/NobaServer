@@ -5,7 +5,6 @@ import { anyString, deepEqual, instance, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
-import { getMockCircleServiceWithDefaults } from "../mocks/mock.circle.service";
 import { ICircleRepo } from "../repos/CircleRepo";
 import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
 import { Result } from "../../../core/logic/Result";
@@ -109,6 +108,7 @@ describe("CircleService", () => {
       };
 
       when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(circleClient.getWalletBalance("walletID")).thenResolve(200);
       when(
         circleClient.transfer(
           deepEqual({
@@ -141,6 +141,7 @@ describe("CircleService", () => {
 
     it("should throw an error when transfer fails", async () => {
       when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(circleClient.getWalletBalance("walletID")).thenResolve(200);
       when(
         circleClient.transfer(
           deepEqual({
@@ -155,6 +156,7 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when master wallet id is empty", async () => {
+      when(circleClient.getWalletBalance("walletID")).thenResolve(200);
       when(circleClient.getMasterWalletID()).thenThrow(
         new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
       );
