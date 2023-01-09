@@ -12,7 +12,7 @@ import {
   convertToDomainTransaction,
   InputTransaction,
   Transaction,
-  UpdateTransaciton,
+  UpdateTransaction,
   validateInputTransaction,
   validateSavedTransaction,
   validateUpdateTransaction,
@@ -152,7 +152,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
 
   async updateTransactionByTransactionRef(
     transactionRef: string,
-    updateTransaction: UpdateTransaciton,
+    updateTransaction: UpdateTransaction,
   ): Promise<Transaction> {
     validateUpdateTransaction(updateTransaction);
 
