@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { CreditCardService } from "../creditcard.service";
 import { BINValidity, CardType, CreditCardDTO } from "../dto/CreditCardDTO";
 import { CreditCardBinDataRepo } from "../repo/creditcardbindata.repo";
-import { getMockCreditCardBinDataRepoMockWithDefaults } from "../mocks/mock.creditcard.bin.data.repo";
+import { getMockCreditCardBinDataRepoMockWithDefaults } from "../mocks/mock.creditcardbindata.repo";
 import { anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { CreditCardBinData, CreditCardBinDataProps } from "../domain/CreditCardBinData";
 import { BadRequestException } from "@nestjs/common";

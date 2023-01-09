@@ -13,8 +13,8 @@ import { LimitsService } from "../limits.service";
 
 import { ILimitProfileRepo } from "../repo/limitprofile.repo";
 import { ILimitConfigurationRepo } from "../repo/limitconfiguration.repo";
-import { getMockLimitProfileRepoWithDefaults } from "../mocks/mock.limit.profile.repo";
-import { getMockLimitConfigRepoWithDefaults } from "../mocks/mock.limit.config.repo";
+import { getMockLimitProfileRepoWithDefaults } from "../mocks/mock.limitprofile.repo";
+import { getMockLimitConfigRepoWithDefaults } from "../mocks/mock.limitconfig.repo";
 import { LimitProfile } from "../domain/LimitProfile";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
 import { TransactionType, PaymentMethodType } from "@prisma/client";
