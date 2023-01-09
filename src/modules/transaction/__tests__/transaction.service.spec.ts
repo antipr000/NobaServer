@@ -5,15 +5,16 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
 import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
-import { NotFoundError } from "../../../core/exception/CommonAppException";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
 import { TRANSACTION_REPO_PROVIDER } from "../repo/transaction.repo.module";
 import { instance, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 
-const getRandomTransaction = (consumerID: string, isCreditTransaction: boolean = false): Transaction => {
+const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
@@ -43,10 +44,12 @@ describe("TransactionServiceTests", () => {
   let app: TestingModule;
   let transactionService: TransactionService;
   let consumerService: ConsumerService;
+  let workflowExecutor: WorkflowExecutor;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -64,6 +67,10 @@ describe("TransactionServiceTests", () => {
           provide: TRANSACTION_REPO_PROVIDER,
           useFactory: () => instance(transactionRepo),
         },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
+        },
         TransactionService,
       ],
     }).compile();
@@ -76,7 +83,7 @@ describe("TransactionServiceTests", () => {
   });
 
   // TODO: Skippting as they do not run. Need to add WorkflowExecutor dependencies.
-  describe.skip("getTransactionByTransactionRef", () => {
+  describe("getTransactionByTransactionRef", () => {
     it("should return the transaction if the debitConsumerID matches", async () => {
       const transaction = getRandomTransaction("consumerID", /* isCreditTransaction */ false);
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);
@@ -99,22 +106,24 @@ describe("TransactionServiceTests", () => {
       expect(returnedTransaction).toEqual(transaction);
     });
 
-    it("should throw NotFoundError if transaction is not found", async () => {
+    it("should return null if transaction is not found", async () => {
       const transaction = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(null);
-
-      await expect(
-        transactionService.getTransactionByTransactionRef(transaction.transactionRef, "consumerID"),
-      ).rejects.toThrowError(NotFoundError);
+      const response = await transactionService.getTransactionByTransactionRef(
+        transaction.transactionRef,
+        "consumerID",
+      );
+      expect(response).toBeNull();
     });
 
-    it("should throw NotFoundError if transaction is found 'but' not belong to specified consumer", async () => {
+    it("should return null if transaction is found 'but' not belong to specified consumer", async () => {
       const transaction = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);
-
-      await expect(
-        transactionService.getTransactionByTransactionRef(transaction.transactionRef, "anotherConsumerID"),
-      ).rejects.toThrowError(NotFoundError);
+      const response = await transactionService.getTransactionByTransactionRef(
+        transaction.transactionRef,
+        "anotherConsumerID",
+      );
+      expect(response).toBeNull();
     });
   });
 });
