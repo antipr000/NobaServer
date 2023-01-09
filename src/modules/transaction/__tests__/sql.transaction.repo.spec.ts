@@ -639,6 +639,27 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result8.items).toHaveLength(1);
       expect(result8.hasNextPage).toBeFalsy();
       expect(result8.items[0].transactionRef).toBe(olderTransaction.transactionRef);
+
+      const result9 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        startDate: new Date("2020-01-02").toUTCString(),
+        endDate: new Date("2020-01-03").toUTCString(),
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result9.items).toHaveLength(0);
+      expect(result9.totalItems).toBe(0);
+
+      const result10 = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        startDate: new Date("2020-01-01").toUTCString(),
+        endDate: new Date("2020-01-02").toUTCString(),
+      });
+
+      expect(result10.items).toHaveLength(1);
+      expect(result10.totalItems).toBe(1);
+      expect(result10.totalPages).toBe(1);
     });
   });
 });
