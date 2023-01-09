@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { AdminService } from "../admin.service";
@@ -7,7 +7,7 @@ import { Admin, NOBA_ADMIN_ROLE_TYPES } from "../domain/Admin";
 import { AdminController } from "../admin.controller";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
-import { ConflictException, ForbiddenException, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, NotFoundException, BadRequestException } from "@nestjs/common";
 import { getMockAdminServiceWithDefaults } from "../mocks/MockAdminService";
 import { UpdateNobaAdminDTO } from "../dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
@@ -19,6 +19,9 @@ import { TransactionService } from "../../../modules/transactions/transaction.se
 import { getMockTransactionServiceWithDefaults } from "../../../modules/transactions/mocks/mock.transactions.repo";
 import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
+import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
+import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -31,6 +34,7 @@ describe("AdminController", () => {
   let mockAdminService: AdminService;
   let mockConsumerService: ConsumerService;
   let mockTransactionService: TransactionService;
+  let mockExchangeRateService: ExchangeRateService;
 
   beforeEach(async () => {
     process.env = {
@@ -42,6 +46,7 @@ describe("AdminController", () => {
     mockAdminService = getMockAdminServiceWithDefaults();
     mockConsumerService = getMockConsumerServiceWithDefaults();
     mockTransactionService = getMockTransactionServiceWithDefaults();
+    mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -59,11 +64,19 @@ describe("AdminController", () => {
           provide: TransactionService,
           useFactory: () => instance(mockTransactionService),
         },
+        {
+          provide: ExchangeRateService,
+          useFactory: () => instance(mockExchangeRateService),
+        },
         AdminMapper,
       ],
     }).compile();
 
     adminController = app.get<AdminController>(AdminController);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe("createNobaAdmin", () => {
@@ -597,6 +610,8 @@ describe("AdminController", () => {
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
         socialSecurityNumber: "123456789",
+        referralCode: "123456789",
+        referredByID: null,
       };
 
       const updatedConsumerProps: Partial<ConsumerProps> = {
@@ -636,6 +651,279 @@ describe("AdminController", () => {
       expect(result.id).toBe(consumerProps.id);
       expect(result.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
       expect(result.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.VERIFIED);
+    });
+  });
+
+  describe("createExchangeRate", () => {
+    it("NobaAdmin with 'Admin' role should be able to create exchange rates", async () => {
+      const adminId = "AAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const createdExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: newExchangeRate.numeratorCurrency,
+        denominatorCurrency: newExchangeRate.denominatorCurrency,
+        bankRate: newExchangeRate.bankRate,
+        nobaRate: newExchangeRate.nobaRate,
+        expirationTimestamp: newExchangeRate.expirationTimestamp,
+      };
+
+      const createSpy = jest.spyOn(mockExchangeRateService, "createExchangeRate");
+      when(mockExchangeRateService.createExchangeRate(newExchangeRate)).thenResolve(createdExchangeRate);
+
+      const returnedExchangeRate = await adminController.createExchangeRate(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        newExchangeRate,
+        "false",
+      );
+
+      expect(createSpy).toHaveBeenCalledWith(newExchangeRate);
+      expect(createSpy).toHaveBeenCalledTimes(1);
+      expect(returnedExchangeRate[0]).toEqual(createdExchangeRate);
+    });
+
+    it("Regular user (non-admin) should not be able to create exchange rates", async () => {
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
+        id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+      });
+
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      expect(
+        async () =>
+          await adminController.createExchangeRate(
+            {
+              user: { entity: authenticatedConsumer },
+            },
+            newExchangeRate,
+            "false",
+          ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("Null exchange rate returns a BadRequestException", async () => {
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      when(mockExchangeRateService.createExchangeRate(newExchangeRate)).thenResolve(null);
+
+      expect(
+        async () =>
+          await adminController.createExchangeRate(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            newExchangeRate,
+            "false",
+          ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("0 bankRate returns a BadRequestException", async () => {
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 0,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      expect(
+        async () =>
+          await adminController.createExchangeRate(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            newExchangeRate,
+            "false",
+          ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("0 nobaRate returns a BadRequestException", async () => {
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 0,
+        expirationTimestamp: new Date(),
+      };
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      expect(
+        async () =>
+          await adminController.createExchangeRate(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            newExchangeRate,
+            "false",
+          ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("NobaAdmin with 'Admin' role should be able to create exchange rates including inverse", async () => {
+      const adminId = "AAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const createdExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: newExchangeRate.numeratorCurrency,
+        denominatorCurrency: newExchangeRate.denominatorCurrency,
+        bankRate: newExchangeRate.bankRate,
+        nobaRate: newExchangeRate.nobaRate,
+        expirationTimestamp: newExchangeRate.expirationTimestamp,
+      };
+
+      const inverseNewExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const inverseCreatedExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: inverseNewExchangeRate.numeratorCurrency,
+        denominatorCurrency: inverseNewExchangeRate.denominatorCurrency,
+        bankRate: 1 / inverseNewExchangeRate.bankRate,
+        nobaRate: 1 / inverseNewExchangeRate.nobaRate,
+        expirationTimestamp: inverseNewExchangeRate.expirationTimestamp,
+      };
+
+      when(mockExchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(
+        inverseCreatedExchangeRate,
+      );
+
+      const returnedExchangeRates = await adminController.createExchangeRate(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        newExchangeRate,
+        "true",
+      );
+
+      const [firstExchangeRate] = capture(mockExchangeRateService.createExchangeRate).first();
+      const [secondExchangeRate] = capture(mockExchangeRateService.createExchangeRate).second();
+      expect(firstExchangeRate).toEqual(newExchangeRate);
+      expect(secondExchangeRate).toEqual(inverseCreatedExchangeRate);
+      expect(returnedExchangeRates[0]).toEqual(newExchangeRate);
+      expect(returnedExchangeRates[1]).toEqual(inverseCreatedExchangeRate);
+    });
+
+    it("Inverse exchange rate creation failure should return BadRequestException", async () => {
+      const adminId = "AAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const createdExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: newExchangeRate.numeratorCurrency,
+        denominatorCurrency: newExchangeRate.denominatorCurrency,
+        bankRate: newExchangeRate.bankRate,
+        nobaRate: newExchangeRate.nobaRate,
+        expirationTimestamp: newExchangeRate.expirationTimestamp,
+      };
+
+      const inverseNewExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const inverseCreatedExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: inverseNewExchangeRate.numeratorCurrency,
+        denominatorCurrency: inverseNewExchangeRate.denominatorCurrency,
+        bankRate: 1 / inverseNewExchangeRate.bankRate,
+        nobaRate: 1 / inverseNewExchangeRate.nobaRate,
+        expirationTimestamp: inverseNewExchangeRate.expirationTimestamp,
+      };
+
+      when(mockExchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(null);
+
+      expect(
+        async () =>
+          await adminController.createExchangeRate(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            newExchangeRate,
+            "true",
+          ),
+      ).rejects.toThrow(BadRequestException);
+
+      const [firstExchangeRate] = capture(mockExchangeRateService.createExchangeRate).first();
+      expect(firstExchangeRate).toEqual(newExchangeRate);
     });
   });
 });

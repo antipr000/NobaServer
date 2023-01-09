@@ -1,14 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { NobaWorkflowConfig } from "../../config/configtypes/NobaWorkflowConfig";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import {
-  WorkflowClient as TemporalWorkflowClient,
-  Connection as TemporalConnection,
-  ConnectionOptions as TemporalConnectionOptions,
-} from "@temporalio/client";
+import { WorkflowClient as TemporalWorkflowClient, Connection as TemporalConnection } from "@temporalio/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { NOBA_CONFIG_KEY, NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class WorkflowExecutor {

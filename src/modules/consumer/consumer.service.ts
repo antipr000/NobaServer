@@ -25,7 +25,7 @@ import { NotificationMethod } from "./dto/AddCryptoWalletDTO";
 import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
-import { IConsumerRepo } from "./repos/ConsumerRepo";
+import { IConsumerRepo } from "./repos/consumer.repo";
 import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus } from "@prisma/client";
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { CardFailureExceptionText } from "./CardProcessingException";

@@ -9,7 +9,7 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { Utils } from "../../core/utils/Utils";
 import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
 import { OTPService } from "../common/otp.service";
-import { ITokenRepo } from "./repo/TokenRepo";
+import { ITokenRepo } from "./repo/token.repo";
 import { Token } from "./domain/Token";
 
 @Injectable()

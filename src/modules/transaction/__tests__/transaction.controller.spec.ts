@@ -14,6 +14,8 @@ import { Utils } from "../../../core/utils/Utils";
 import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
 import { NotFoundException } from "@nestjs/common";
 import { Currency } from "../domain/TransactionTypes";
+import { LimitsService } from "../limits.service";
+import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -58,9 +60,11 @@ describe("Transaction Controller tests", () => {
   let app: TestingModule;
   let transactionService: TransactionService;
   let transactionController: TransactionController;
+  let limitService: LimitsService;
 
   beforeEach(async () => {
     transactionService = getMockTransactionServiceWithDefaults();
+    limitService = getMockLimitsServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -74,6 +78,10 @@ describe("Transaction Controller tests", () => {
           provide: TransactionService,
           useFactory: () => instance(transactionService),
         },
+        {
+          provide: LimitsService,
+          useFactory: () => instance(limitService),
+        },
         TransactionController,
       ],
     }).compile();
@@ -82,7 +90,7 @@ describe("Transaction Controller tests", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 
   describe("getTransaction", () => {
@@ -133,7 +141,13 @@ describe("Transaction Controller tests", () => {
         consumerID: consumerID,
         transactionStatus: TransactionStatus.SUCCESS,
       };
-      when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve([transaction]);
+      when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
+        items: [transaction],
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+      });
 
       const allTransactions = await transactionController.getAllTransactions(
         {
@@ -142,17 +156,8 @@ describe("Transaction Controller tests", () => {
         getRandomConsumer(consumerID),
       );
 
-      expect(allTransactions.length).toBe(1);
-      expect(allTransactions[0].transactionRef).toBe(transactionRef);
-    });
-  });
-
-  describe("getExchangeRate", () => {
-    it("should return the exchange rate", async () => {
-      when(transactionService.calculateExchangeRate("USD", "COP")).thenResolve("4918.19");
-
-      const exchangeRate = await transactionController.getExchangeRate("USD", "COP");
-      expect(exchangeRate.exchangeRate).toBe("4918.19");
+      expect(allTransactions.items.length).toBe(1);
+      expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
     });
   });
 

@@ -5,7 +5,6 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
 import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
-import { NotFoundError } from "../../../core/exception/CommonAppException";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
 import { TRANSACTION_REPO_PROVIDER } from "../repo/transaction.repo.module";
 import { deepEqual, instance, when } from "ts-mockito";
@@ -32,7 +31,7 @@ describe("TransactionServiceTests", () => {
   let consumerRepo: IConsumerRepo;
   let workflowExecutor: WorkflowExecutor;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     consumerRepo = getMockConsumerRepoWithDefaults(); // TODO: may not need this
@@ -70,7 +69,7 @@ describe("TransactionServiceTests", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 
   afterEach(() => {

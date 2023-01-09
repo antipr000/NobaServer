@@ -169,7 +169,7 @@ export class CircleService {
       });
     }
 
-    const balance = await this.circleClient.getWalletBalance(destinationWalletID);
+    const balance = await this.circleClient.getWalletBalance(sourceWalletID);
     if (balance < amount) {
       throw new ServiceException({
         message: "Insufficient funds",

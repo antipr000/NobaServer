@@ -10,11 +10,13 @@ import { ConfigurationProviderService } from "./configuration.provider.service";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
-import { SQLCreditCardBinDataRepo } from "./repo/SQLCreditCardBinDataRepo";
-import { SQLOTPRepo } from "./repo/SQLOTPRepo";
+import { SQLCreditCardBinDataRepo } from "./repo/sql.creditcardbindata.repo";
+import { SQLOTPRepo } from "./repo/sql.otp.repo";
 import { OTPService } from "./otp.service";
 import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
 import { QRService } from "./qrcode.service";
+import { SQLExchangeRateRepo } from "./repo/sql.exchangerate.repo";
+import { ExchangeRateService } from "./exchangerate.service";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -26,6 +28,7 @@ import { QRService } from "./qrcode.service";
     CurrencyService,
     CreditCardService,
     LocationService,
+    ExchangeRateService,
     ConfigurationProviderService,
     EllipticService,
     {
@@ -36,6 +39,10 @@ import { QRService } from "./qrcode.service";
       provide: "OTPRepo",
       useClass: SQLOTPRepo,
     },
+    {
+      provide: "ExchangeRateRepo",
+      useClass: SQLExchangeRateRepo,
+    },
     OTPService,
     DeleteExpiredOTPs,
     QRService,
@@ -45,6 +52,7 @@ import { QRService } from "./qrcode.service";
     SMSService,
     KmsService,
     CurrencyService,
+    ExchangeRateService,
     CreditCardService,
     LocationService,
     ConfigurationProviderService,

@@ -223,6 +223,17 @@ Table CreditCardBIN {
   updatedTimestamp DateTime
 }
 
+Table ExchangeRate {
+  id String [pk]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+  numeratorCurrency String [not null]
+  denominatorCurrency String [not null]
+  bankRate Float [not null]
+  nobaRate Float [not null]
+  expirationTimestamp DateTime [not null]
+}
+
 Enum IdentityType {
   CONSUMER
   NOBA_ADMIN

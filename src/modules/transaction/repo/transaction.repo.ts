@@ -1,4 +1,6 @@
 import { InputTransaction, Transaction, UpdateTransaction } from "../domain/Transaction";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
 
 export interface ITransactionRepo {
   createTransaction(inputTransaction: InputTransaction): Promise<Transaction>;
@@ -6,8 +8,7 @@ export interface ITransactionRepo {
   getTransactionByTransactionRef(transactionRef: string): Promise<Transaction>;
   getTransactionsByConsumerID(consumerID: string): Promise<Transaction[]>;
   updateTransactionByTransactionRef(transactionRef: string, transaction: UpdateTransaction): Promise<Transaction>;
-  //getFilteredTransactions(transactionFilterOptions?: TransactionFilterOptions): Promise<PaginatedResult<Transaction>>;
-
+  getFilteredTransactions(transactionFilterOptions: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>>;
   getUserTransactionInAnInterval(consumerID: string, fromDate: Date, toDate: Date): Promise<Transaction[]>;
   getTotalUserTransactionAmount(consumerID: string): Promise<number>;
   getMonthlyUserTransactionAmount(consumerID: string): Promise<number>;

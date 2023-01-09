@@ -1,6 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
-import { IConsumerRepo } from "../repos/ConsumerRepo";
-import { SQLConsumerRepo } from "../repos/SQLConsumerRepo";
+import { IConsumerRepo } from "../repos/consumer.repo";
+import { SQLConsumerRepo } from "../repos/sql.consumer.repo";
 
 export function getMockConsumerRepoWithDefaults(): IConsumerRepo {
   const mockConsumerRepo: IConsumerRepo = mock(SQLConsumerRepo);

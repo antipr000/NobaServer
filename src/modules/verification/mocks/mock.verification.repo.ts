@@ -1,6 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
-import { IVerificationDataRepo } from "../repos/IVerificationDataRepo";
-import { SQLVerificationDataRepo } from "../repos/SQLVerificationDataRepo";
+import { IVerificationDataRepo } from "../repos/verificationdata.repo";
+import { SQLVerificationDataRepo } from "../repos/sql.verificationdata.repo";
 
 export function getMockVerificationRepoWithDefaults(): IVerificationDataRepo {
   const mockVerificationRepo = mock(SQLVerificationDataRepo);
