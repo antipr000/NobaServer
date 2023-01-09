@@ -25,6 +25,6 @@ export const LIMIT_PROFILE_REPO_PROVIDER = "LIMIT_PROFILE_REPO";
       useClass: SQLLimitProfileRepo,
     },
   ],
-  exports: [TRANSACTION_REPO_PROVIDER],
+  exports: [TRANSACTION_REPO_PROVIDER, LIMIT_PROFILE_REPO_PROVIDER, LIMIT_CONFIGURATION_REPO_PROVIDER],
 })
 export class TransactionRepoModule {}
