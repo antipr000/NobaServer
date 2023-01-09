@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { VerificationData, VerificationDataProps } from "../domain/VerificationData";
-import { IVerificationDataRepo } from "./IVerificationDataRepo";
+import { IVerificationDataRepo } from "./verification.data.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 
 @Injectable()

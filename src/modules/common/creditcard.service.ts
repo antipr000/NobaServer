@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 import { creditCardMaskGenerator } from "../../core/utils/CreditCardMaskGenerator";
 import { CreditCardBinData } from "./domain/CreditCardBinData";
 import { CreditCardDTO, BINValidity, BINReportDetails } from "./dto/CreditCardDTO";
-import { CreditCardBinDataRepo } from "./repo/CreditCardBinDataRepo";
+import { CreditCardBinDataRepo } from "./repo/credit.card.bin.data.repo";
 
 @Injectable()
 export class CreditCardService {

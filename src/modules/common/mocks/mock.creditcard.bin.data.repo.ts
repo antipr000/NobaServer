@@ -1,6 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
-import { CreditCardBinDataRepo } from "../repo/CreditCardBinDataRepo";
-import { SQLCreditCardBinDataRepo } from "../repo/SQLCreditCardBinDataRepo";
+import { CreditCardBinDataRepo } from "../repo/credit.card.bin.data.repo";
+import { SQLCreditCardBinDataRepo } from "../repo/sql.credit.card.bin.data.repo";
 
 export function getMockCreditCardBinDataRepoMockWithDefaults(): CreditCardBinDataRepo {
   const mockCreditCardBinDataRepo = mock(SQLCreditCardBinDataRepo);

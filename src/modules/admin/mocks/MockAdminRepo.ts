@@ -1,5 +1,5 @@
 import { anyString, anything, mock, when } from "ts-mockito";
-import { IAdminRepo, SQLAdminRepo } from "../repos/transactions/AdminTransactionRepo";
+import { IAdminRepo, SQLAdminRepo } from "../repos/transactions/sql.admin.repo";
 
 export const getMockAdminRepoWithDefaults = () => {
   const mockAdminTransactionRepo: IAdminRepo = mock(SQLAdminRepo);

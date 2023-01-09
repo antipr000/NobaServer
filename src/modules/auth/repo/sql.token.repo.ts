@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { ITokenRepo } from "./TokenRepo";
+import { ITokenRepo } from "./token.repo";
 import { Token } from "../domain/Token";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { TokenRepoMapper } from "../mapper/TokenRepoMapper";

@@ -14,7 +14,7 @@ import { AdminAuthService } from "./admin.auth.service";
 import { AdminModule } from "../admin/admin.module";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
-import { SQLTokenRepo } from "./repo/SQLTokenRepo";
+import { SQLTokenRepo } from "./repo/sql.token.repo";
 
 @Module({
   imports: [

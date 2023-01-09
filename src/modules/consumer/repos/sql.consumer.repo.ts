@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Result } from "../../../core/logic/Result";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
-import { IConsumerRepo } from "./ConsumerRepo";
+import { IConsumerRepo } from "./consumer.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { PaymentMethodStatus, WalletStatus } from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";

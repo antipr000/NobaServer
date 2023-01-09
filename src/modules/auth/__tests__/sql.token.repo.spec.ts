@@ -2,10 +2,10 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { DBProvider } from "../../../infraproviders/DBProvider";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { ITokenRepo } from "../repo/TokenRepo";
+import { ITokenRepo } from "../repo/token.repo";
 import { Token } from "../domain/Token";
 import { addDays } from "date-fns";
-import { SQLTokenRepo } from "../repo/SQLTokenRepo";
+import { SQLTokenRepo } from "../repo/sql.token.repo";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 

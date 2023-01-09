@@ -1,6 +1,6 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { AdminMapper } from "../mappers/AdminMapper";
-import { IAdminRepo, SQLAdminRepo } from "../repos/transactions/AdminTransactionRepo";
+import { IAdminRepo, SQLAdminRepo } from "../repos/transactions/sql.admin.repo";
 import { Admin, AdminProps } from "../domain/Admin";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";

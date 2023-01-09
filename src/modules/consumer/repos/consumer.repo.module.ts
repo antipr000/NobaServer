@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { KmsService } from "../../../../src/modules/common/kms.service";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
-import { SQLConsumerRepo } from "./SQLConsumerRepo";
+import { SQLConsumerRepo } from "./sql.consumer.repo";
 
 const ConsumerRepoProvider = {
   provide: "ConsumerRepo",

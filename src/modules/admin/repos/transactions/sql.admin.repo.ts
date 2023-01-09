@@ -1,5 +1,5 @@
 import { TransactionStatsDTO } from "../../dto/TransactionStats";
-import { Transaction } from "../../../../modules/transactions/domain/Transaction";
+import { Transaction } from "../../../transactions/domain/Transaction";
 import { Inject, Injectable } from "@nestjs/common";
 import { Admin, AdminProps } from "../../domain/Admin";
 import { AdminMapper } from "../../mappers/AdminMapper";

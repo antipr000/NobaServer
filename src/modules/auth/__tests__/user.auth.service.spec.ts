@@ -16,7 +16,7 @@ import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mo
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Result } from "../../../core/logic/Result";
 import { Utils } from "../../../core/utils/Utils";
-import { ITokenRepo } from "../repo/TokenRepo";
+import { ITokenRepo } from "../repo/token.repo";
 import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
 import { Token } from "../domain/Token";
 import { OTPService } from "../../../modules/common/otp.service";

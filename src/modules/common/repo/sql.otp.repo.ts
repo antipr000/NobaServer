@@ -1,4 +1,4 @@
-import { IOTPRepo } from "./OTPRepo";
+import { IOTPRepo } from "./otp.repo";
 import { OTP } from "../domain/OTP";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";

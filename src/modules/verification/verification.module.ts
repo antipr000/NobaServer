@@ -4,7 +4,7 @@ import { VerificationService } from "./verification.service";
 import { ConfigModule } from "@nestjs/config";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { Sardine } from "./integrations/Sardine";
-import { SQLVerificationDataRepo } from "./repos/SQLVerificationDataRepo";
+import { SQLVerificationDataRepo } from "./repos/sql.verification.data.repo";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { CommonModule } from "../common/common.module";

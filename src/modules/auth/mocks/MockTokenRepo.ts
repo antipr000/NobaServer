@@ -1,6 +1,6 @@
 import { anyString, mock, when, anything } from "ts-mockito";
-import { ITokenRepo } from "../repo/TokenRepo";
-import { SQLTokenRepo } from "../repo/SQLTokenRepo";
+import { ITokenRepo } from "../repo/token.repo";
+import { SQLTokenRepo } from "../repo/sql.token.repo";
 
 export const getMockTokenRepoWithDefaults = () => {
   const mockTokenRepo: ITokenRepo = mock(SQLTokenRepo);

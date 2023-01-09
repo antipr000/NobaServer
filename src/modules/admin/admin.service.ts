@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { IAdminRepo } from "./repos/transactions/AdminTransactionRepo";
+import { IAdminRepo } from "./repos/transactions/sql.admin.repo";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { TransactionDTO } from "../transactions/dto/TransactionDTO";
 import { Transaction } from "../transactions/domain/Transaction";

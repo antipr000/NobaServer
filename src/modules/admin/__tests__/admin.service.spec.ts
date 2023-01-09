@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { anything, capture, instance, when } from "ts-mockito";
 import { AdminService } from "../admin.service";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { IAdminRepo } from "../repos/transactions/AdminTransactionRepo";
+import { IAdminRepo } from "../repos/transactions/sql.admin.repo";
 import { Admin } from "../domain/Admin";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
