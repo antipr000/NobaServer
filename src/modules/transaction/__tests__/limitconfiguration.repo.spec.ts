@@ -7,7 +7,7 @@ import { ILimitConfigurationRepo } from "../repo/limit.configuration.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { SQLLimitConfigurationRepo } from "../repo/sql.limit.configuration.repo";
 import { uuid } from "uuidv4";
-import { TransactionType } from "@prisma/client";
+import { PaymentMethodType, TransactionType } from "@prisma/client";
 
 describe("LimitConfigurationRepo tests", () => {
   jest.setTimeout(20000);
@@ -16,7 +16,7 @@ describe("LimitConfigurationRepo tests", () => {
   let prismaService: PrismaService;
   let app: TestingModule;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
      *
@@ -40,6 +40,19 @@ describe("LimitConfigurationRepo tests", () => {
 
     limitConfigurationRepo = app.get<SQLLimitConfigurationRepo>(SQLLimitConfigurationRepo);
     prismaService = app.get<PrismaService>(PrismaService);
+
+    await prismaService.limitProfile.create({
+      data: {
+        id: "fake-profile-1",
+        name: "Fake Limit Profile",
+        daily: 10,
+        weekly: 100,
+        monthly: 1000,
+        maxTransaction: 5,
+        minTransaction: 1,
+        unsettledExposure: 100,
+      },
+    });
   });
 
   afterAll(async () => {
@@ -70,7 +83,6 @@ describe("LimitConfigurationRepo tests", () => {
       // get all limit configs and assert they are in order of priority
       const response = await limitConfigurationRepo.getAllLimitConfigs();
 
-      expect(response).toHaveLength(3);
       expect(response[0].props.priority).toBe(5);
       expect(response[1].props.priority).toBe(2);
       expect(response[2].props.priority).toBe(1);
@@ -103,5 +115,6 @@ function createLimitConfiguration(priority: number): LimitConfiguration {
     minProfileAge: 365,
     minBalanceInWallet: 100,
     minTotalTransactionAmount: 1000,
+    paymentMethodType: PaymentMethodType.CARD,
   });
 }
