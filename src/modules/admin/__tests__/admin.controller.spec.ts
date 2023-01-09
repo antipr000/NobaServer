@@ -22,7 +22,6 @@ import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";

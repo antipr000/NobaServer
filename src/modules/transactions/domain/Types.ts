@@ -221,7 +221,6 @@ export class TransactionFilterOptions {
     description: "filter for a particular transaction status",
   })
   transactionStatus?: TransactionStatus;
-<<<<<<< HEAD
 
   @ApiPropertyOptional()
   sortField?: TransactionsQuerySortField;
@@ -233,9 +232,6 @@ export class TransactionFilterOptions {
   fiatCurrency?: string;
 
   @ApiPropertyOptional()
-=======
-  fiatCurrency?: string;
->>>>>>> 6190462d (Moved limits to new transaction folder)
   cryptoCurrency?: string;
 }
 
