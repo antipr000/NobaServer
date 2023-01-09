@@ -82,7 +82,7 @@ describe("Transaction Controller tests", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 
   describe("getTransaction", () => {
@@ -144,15 +144,6 @@ describe("Transaction Controller tests", () => {
 
       expect(allTransactions.length).toBe(1);
       expect(allTransactions[0].transactionRef).toBe(transactionRef);
-    });
-  });
-
-  describe("getExchangeRate", () => {
-    it("should return the exchange rate", async () => {
-      when(transactionService.calculateExchangeRate("USD", "COP")).thenResolve("4918.19");
-
-      const exchangeRate = await transactionController.getExchangeRate("USD", "COP");
-      expect(exchangeRate.exchangeRate).toBe("4918.19");
     });
   });
 

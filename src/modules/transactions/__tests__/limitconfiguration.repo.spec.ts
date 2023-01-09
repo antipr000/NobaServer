@@ -33,7 +33,7 @@ describe("LimitConfigurationRepo tests", () => {
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    const app = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
       providers: [SQLLimitConfigurationRepo, PrismaService],
     }).compile();

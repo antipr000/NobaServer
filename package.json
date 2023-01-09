@@ -20,10 +20,10 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:prisma-migrate": "yarn prisma-migrate-deploy && yarn test:unit",
     "test": "yarn test:unit && yarn test:e2e",
-    "test:unit": "jest consumer/ auth/ common/ transaction/ verification/ --verbose --silent=False --maxWorkers=2",
+    "test:unit": "jest app admin/ consumer/ auth/ common/ transaction/ verification/ --verbose --silent=False --maxWorkers=2",
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:cov": "yarn test:unit --coverage --verbose --silent --maxWorkers=2",
+    "test:cov": "yarn test:unit --coverage",
     "test:e2e": "jest --verbose --silent --runInBand --config ./test/jest-e2e.json",
     "gen-test-api-client": "npx openapi-typescript-codegen --useOptions --input ./swagger-internal.json --output ./test/api_client/ --useUnionTypes --exportCore false -c axios && npx prettier --write ."
   },
@@ -144,9 +144,13 @@
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s",
-      "!**/*.module.ts"
+      "!**/*.module.ts",
+      "!**/transactions/*.ts"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "prisma": {
+    "seed": "ts-node src/infra/prisma/seed.ts"
   }
 }

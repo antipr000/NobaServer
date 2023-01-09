@@ -67,7 +67,7 @@ describe("PostgresTransactionRepoTests", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 
   beforeEach(async () => {

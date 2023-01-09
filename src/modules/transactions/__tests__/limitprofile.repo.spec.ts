@@ -46,7 +46,7 @@ describe("LimitProfileRepo tests", () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 
   describe("addProfile", () => {

@@ -236,47 +236,7 @@ export class MongoDBTransactionRepo implements ITransactionRepo {
   async getFilteredTransactions(
     transactionsFilterOptions: TransactionFilterOptions = {},
   ): Promise<PaginatedResult<Transaction>> {
-    const transactionModel = await this.dbProvider.getTransactionModel();
-    const filterOpts = transactionsFilterOptions;
-    const sortOptions: SortOptions<TransactionProps> = {
-      field: "transactionTimestamp",
-      order: SortOrder.DESC,
-    };
-
-    const sortField = transactionPropFromQuerySortField(transactionsFilterOptions.sortField);
-    sortOptions.field = sortField ?? sortOptions.field;
-    sortOptions.order = transactionsFilterOptions.sortOrder ?? sortOptions.order;
-
-    const filterQuery = {
-      ...(filterOpts.consumerID && { userId: filterOpts.consumerID }),
-      ...(filterOpts.transactionStatus && { transactionStatus: filterOpts.transactionStatus }),
-      ...(filterOpts.fiatCurrency && { leg1: filterOpts.fiatCurrency }),
-      ...(filterOpts.cryptoCurrency && { leg2: filterOpts.cryptoCurrency }),
-      ...(filterOpts.startDate && {
-        transactionTimestamp: { $gte: new Date(new Date(filterOpts.startDate).toISOString()) },
-      }),
-      ...(filterOpts.endDate && {
-        transactionTimestamp: { $lte: new Date(new Date(filterOpts.endDate).toISOString()) },
-      }),
-    };
-
-    const pipeline = paginationPipeLine(
-      filterOpts.pageOffset ?? 0,
-      filterOpts.pageLimit ?? 10,
-      filterQuery,
-      sortOptions,
-    );
-
-    const result = await transactionModel.aggregate(pipeline as any).exec();
-    const pageResult = (result[0] ?? EMPTY_PAGE_RESULT) as unknown as PaginatedResult<TransactionProps>;
-
-    if (!pageResult.items && pageResult.totalItems == 0) {
-      pageResult.items = [];
-    }
-
-    const transactions = pageResult.items.map(transactionProps => this.transactionMapper.toDomain(transactionProps));
-
-    return { ...pageResult, items: transactions, totalPages: Math.ceil(pageResult.totalPages) }; //ceil is not supported in documentDB pipeline so we need to do it here
+    throw new Error("Not implemented");
   }
 
   private async getPeriodicUserTransactionAmount(userId: string, days: number): Promise<number> {
