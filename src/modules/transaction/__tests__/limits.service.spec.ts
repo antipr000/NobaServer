@@ -20,7 +20,11 @@ import { LimitConfiguration } from "../domain/LimitConfiguration";
 import { TransactionType, PaymentMethodType } from "@prisma/client";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
 import { ITransactionRepo } from "../repo/transaction.repo";
-import { TRANSACTION_REPO_PROVIDER } from "../repo/transaction.repo.module";
+import {
+  LIMIT_CONFIGURATION_REPO_PROVIDER,
+  LIMIT_PROFILE_REPO_PROVIDER,
+  TRANSACTION_REPO_PROVIDER,
+} from "../repo/transaction.repo.module";
 
 const defaultEnvironmentVariables = {};
 
@@ -56,11 +60,11 @@ describe("LimitsService", () => {
           useFactory: () => instance(transactionRepo),
         },
         {
-          provide: "LimitProfileRepo",
+          provide: LIMIT_PROFILE_REPO_PROVIDER,
           useFactory: () => instance(limitProfileRepo),
         },
         {
-          provide: "LimitConfigurationRepo",
+          provide: LIMIT_CONFIGURATION_REPO_PROVIDER,
           useFactory: () => instance(limitConfigRepo),
         },
       ],

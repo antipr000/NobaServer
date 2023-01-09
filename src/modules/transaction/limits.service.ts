@@ -11,7 +11,11 @@ import { ILimitConfigurationRepo } from "./repo/limit.configuration.repo";
 import { LimitProfile } from "./domain/LimitProfile";
 import { LimitConfiguration } from "./domain/LimitConfiguration";
 import { PaymentMethodType, TransactionType } from "@prisma/client";
-import { TRANSACTION_REPO_PROVIDER } from "./repo/transaction.repo.module";
+import {
+  LIMIT_CONFIGURATION_REPO_PROVIDER,
+  LIMIT_PROFILE_REPO_PROVIDER,
+  TRANSACTION_REPO_PROVIDER,
+} from "./repo/transaction.repo.module";
 
 @Injectable()
 export class LimitsService {
@@ -21,10 +25,10 @@ export class LimitsService {
   @Inject(TRANSACTION_REPO_PROVIDER)
   private readonly transactionsRepo: ITransactionRepo;
 
-  @Inject("LimitProfileRepo")
+  @Inject(LIMIT_PROFILE_REPO_PROVIDER)
   private readonly limitProfileRepo: ILimitProfileRepo;
 
-  @Inject("LimitConfigurationRepo")
+  @Inject(LIMIT_CONFIGURATION_REPO_PROVIDER)
   private readonly limitConfigRepo: ILimitConfigurationRepo;
 
   private allLimitConfigs: LimitConfiguration[];
