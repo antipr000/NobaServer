@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { NotFoundError } from "../../../core/exception/CommonAppException";
@@ -14,6 +14,8 @@ import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mo
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
+import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../mocks/mock.workflow.executor";
 
 const getRandomTransaction = (
   consumerID: string,
@@ -21,11 +23,11 @@ const getRandomTransaction = (
   workflowName?: WorkflowName,
 ): { transaction: Transaction; transactionDTO: InitiateTransactionDTO } => {
   const transaction: Transaction = {
-    transactionRef: uuid(),
+    transactionRef: v4(),
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
     workflowName: workflowName,
-    id: uuid(),
+    id: v4(),
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -71,10 +73,12 @@ describe("TransactionServiceTests", () => {
   let app: TestingModule;
   let transactionService: TransactionService;
   let consumerService: ConsumerService;
+  let workflowExecutor: WorkflowExecutor;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -92,6 +96,10 @@ describe("TransactionServiceTests", () => {
           provide: TRANSACTION_REPO_PROVIDER,
           useFactory: () => instance(transactionRepo),
         },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
+        },
         TransactionService,
       ],
     }).compile();
@@ -103,8 +111,8 @@ describe("TransactionServiceTests", () => {
     app.close();
   });
 
-  // TODO: Skippting as they do not run. Need to add WorkflowExecutor dependencies.
-  describe.skip("getTransactionByTransactionRef", () => {
+  // TODO: Skipping as they do not run. Need to add WorkflowExecutor dependencies.
+  describe("getTransactionByTransactionRef", () => {
     it("should return the transaction if the debitConsumerID matches", async () => {
       const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);

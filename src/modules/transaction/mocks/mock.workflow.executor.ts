@@ -1,7 +1,5 @@
-import { WorkflowExecutor } from "src/infra/temporal/workflow.executor";
+import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
-import { SQLTransactionRepo } from "../repo/sql.transaction.repo";
-import { ITransactionRepo } from "../repo/transaction.repo";
 
 export function getMockWorkflowExecutorWithDefaults(): WorkflowExecutor {
   const mockWorkflowExecutor: WorkflowExecutor = mock(WorkflowExecutor);
