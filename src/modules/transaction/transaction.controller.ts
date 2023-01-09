@@ -114,7 +114,7 @@ export class TransactionController {
   ) {
     this.logger.debug(`uid ${consumer.props.id}, transact input:`, JSON.stringify(requestBody));
 
-    return await this.transactionService.initiateTransaction(requestBody, consumer, sessionKey);
+    return await this.transactionService.initiateTransaction(requestBody, consumer.props.id, sessionKey);
   }
 
   @Get("/transactions/check")

@@ -130,9 +130,24 @@ describe("TransactionServiceTests", () => {
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
 
-      const returnedTransactionRef = await transactionService.initiateTransaction(transactionDTO, consumer, null);
+      const returnedTransactionRef = await transactionService.initiateTransaction(
+        transactionDTO,
+        consumer.props.id,
+        null,
+      );
       expect(returnedTransactionRef).toEqual(transaction.transactionRef);
     });
+
+    it("should throw ServiceException if consumer is not found", async () => {
+      const { transactionDTO } = getRandomTransaction("consumerID");
+      when(consumerService.findConsumerById("consumerID")).thenResolve(null);
+
+      await expect(transactionService.initiateTransaction(transactionDTO, "", null)).rejects.toThrowError(
+        ServiceException,
+      );
+    });
+
+    it("s");
   });
 });
 

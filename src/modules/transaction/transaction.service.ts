@@ -42,10 +42,17 @@ export class TransactionService {
 
   async initiateTransaction(
     transactionDetails: InitiateTransactionDTO,
-    initiatingConsumer: Consumer,
+    initiatingConsumerID: string,
     sessionKey: string,
   ): Promise<string> {
     // Validate and populate defaults
+    if (!initiatingConsumerID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Must have consumerID to initiate transaction",
+      });
+    }
+
     switch (transactionDetails.workflowName) {
       case WorkflowName.CREDIT_CONSUMER_WALLET:
         if (transactionDetails.debitConsumerIDOrTag) {
@@ -63,7 +70,7 @@ export class TransactionService {
         }
 
         transactionDetails.debitConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
-        transactionDetails.creditConsumerIDOrTag = initiatingConsumer.props.id;
+        transactionDetails.creditConsumerIDOrTag = initiatingConsumerID;
         transactionDetails.debitAmount = transactionDetails.creditAmount;
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
@@ -83,7 +90,7 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id;
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumerID;
         transactionDetails.creditConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
         transactionDetails.creditAmount = transactionDetails.debitAmount;
         transactionDetails.creditCurrency = transactionDetails.debitCurrency;
@@ -104,7 +111,7 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id; // Debit consumer must always be the current consumer
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumerID; // Debit consumer must always be the current consumer
         transactionDetails.debitAmount = transactionDetails.creditAmount;
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
