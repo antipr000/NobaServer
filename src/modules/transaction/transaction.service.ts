@@ -108,6 +108,11 @@ export class TransactionService {
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
         break;
+      default:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Invalid workflow name",
+        });
     }
 
     let transaction: InputTransaction = {
@@ -216,8 +221,9 @@ export class TransactionService {
         break;
       default:
         throw new ServiceException({
+          // Shouldn't get here as validation done above, but good for completness
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid workflow type",
+          message: "Invalid workflow name",
         });
     }
 
