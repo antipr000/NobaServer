@@ -30,7 +30,10 @@ export class TransactionService {
       transaction === null ||
       (transaction.debitConsumerID !== consumerID && transaction.creditConsumerID !== consumerID)
     ) {
-      return null;
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Could not find transaction with transactionRef: ${transactionRef} for consumerID: ${consumerID}`,
+      });
     }
     return transaction;
   }

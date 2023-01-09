@@ -20,6 +20,7 @@ import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consum
 import { Utils } from "../../../core/utils/Utils";
 import { IConsumerRepo } from "../../../modules/consumer/repos/ConsumerRepo";
 import { getMockConsumerRepoWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.repo";
+import { ServiceException } from "../../../core/exception/ServiceException";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -34,7 +35,7 @@ describe("TransactionServiceTests", () => {
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
-    consumerRepo = getMockConsumerRepoWithDefaults();
+    consumerRepo = getMockConsumerRepoWithDefaults(); // TODO: may not need this
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
@@ -100,22 +101,22 @@ describe("TransactionServiceTests", () => {
       expect(returnedTransaction).toEqual(transaction);
     });
 
-    it("should throw NotFoundError if transaction is not found", async () => {
+    it("should throw ServiceException if transaction is not found", async () => {
       const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(null);
 
       await expect(
         transactionService.getTransactionByTransactionRef(transaction.transactionRef, "consumerID"),
-      ).rejects.toThrowError(NotFoundError);
+      ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw NotFoundError if transaction is found 'but' not belong to specified consumer", async () => {
+    it("should throw ServiceException if transaction is found but does not belong to specified consumer", async () => {
       const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);
 
       await expect(
         transactionService.getTransactionByTransactionRef(transaction.transactionRef, "anotherConsumerID"),
-      ).rejects.toThrowError(NotFoundError);
+      ).rejects.toThrowError(ServiceException);
     });
   });
 
@@ -133,8 +134,8 @@ describe("TransactionServiceTests", () => {
       // when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       // mock Utils.generateLowercaseUUID to return a constant value
 
-      const returnedTransaction = await transactionService.initiateTransaction(transactionDTO, consumer, null);
-      expect(returnedTransaction).toEqual(transaction);
+      const returnedTransactionRef = await transactionService.initiateTransaction(transactionDTO, consumer, null);
+      expect(returnedTransactionRef).toEqual(transaction.transactionRef);
     });
   });
 });
