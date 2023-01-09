@@ -99,6 +99,7 @@ const getRandomUser = (): Consumer => {
     firstName: "Noba",
     lastName: "lastName",
     email: email,
+    displayEmail: email,
     referralCode: Utils.getAlphaNanoID(15),
     handle: `@${v4()}`,
   };
