@@ -17,7 +17,7 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../mocks/mock.workflow.executor";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { IConsumerRepo } from "../../../modules/consumer/repos/ConsumerRepo";
+import { IConsumerRepo } from "../../../modules/consumer/repos/consumer.repo";
 import { getMockConsumerRepoWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.repo";
 import { ServiceException } from "../../../core/exception/ServiceException";
 
