@@ -239,6 +239,23 @@ describe("SQLExchangeRateRepo", () => {
       expect(exchangeRateFound).toBeNull();
     });
 
+    it("Should return null if an exchange rate exists but expired", async () => {
+      const inputExchangeRate = getInputExchangeRate();
+      const createdExchangeRate = await exchangeRateRepo.createExchangeRate({
+        ...inputExchangeRate,
+        bankRate: 1,
+        expirationTimestamp: new Date(Date.now() - 1000), // In the past
+      });
+      expect(createdExchangeRate).not.toBeNull();
+
+      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair(
+        inputExchangeRate.numeratorCurrency,
+        inputExchangeRate.denominatorCurrency,
+      );
+
+      expect(exchangeRateFound).toBeNull();
+    });
+
     it("Should return null if an exception is thrown", async () => {
       jest.spyOn(prismaService.exchangeRate, "findFirst").mockImplementation(() => {
         throw new Error("Error");

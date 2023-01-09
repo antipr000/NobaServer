@@ -62,6 +62,9 @@ export class SQLExchangeRateRepo implements IExchangeRateRepo {
         where: {
           numeratorCurrency: numeratorCurrency.toUpperCase(),
           denominatorCurrency: denominatorCurrency.toUpperCase(),
+          expirationTimestamp: {
+            gte: new Date(),
+          },
         },
         orderBy: {
           expirationTimestamp: "desc", // Always grab only the latest
