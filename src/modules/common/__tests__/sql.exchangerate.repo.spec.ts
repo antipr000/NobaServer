@@ -213,7 +213,7 @@ describe("SQLExchangeRateRepo", () => {
         ...inputExchangeRate,
         denominatorCurrency: "TST",
         bankRate: 3,
-        expirationTimestamp: new Date(Date.now() + 3000000), // Middle timeframe to ensure we don't just always retrieve the latest
+        expirationTimestamp: new Date(Date.now() - 30000), // Expires in the past to ensure we don't just always retrieve the latest
       });
       expect(createdExchangeRate3).not.toBeNull();
 
