@@ -1,8 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { ILimitConfigurationRepo } from "./LimitConfigurationRepo";
+import { ILimitConfigurationRepo } from "./limit.configuration.repo";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
-import { LimitsRepoMapper } from "../mapper/LimitsRepoMapper";
+import { LimitsRepoMapper } from "../../transactions/mapper/LimitsRepoMapper";
 
 @Injectable()
 export class SQLLimitConfigurationRepo implements ILimitConfigurationRepo {

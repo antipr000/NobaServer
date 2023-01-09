@@ -41,7 +41,7 @@ import {
   TransactionSubmissionException,
   TransactionSubmissionFailureExceptionText,
 } from "./exceptions/TransactionSubmissionException";
-import { LimitsService } from "./limits.service";
+import { LimitsService } from "../transaction/limits.service";
 import { TransactionMapper } from "./mapper/TransactionMapper";
 import { ITransactionRepo } from "./repo/TransactionRepo";
 

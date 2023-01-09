@@ -1,4 +1,4 @@
-import { KeysRequired } from "../../../modules/common/domain/Types";
+import { KeysRequired } from "../../common/domain/Types";
 import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import Joi from "joi";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";

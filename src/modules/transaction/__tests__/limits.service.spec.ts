@@ -6,20 +6,21 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
-import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
+import { TransactionAllowedStatus } from "../../transactions/domain/TransactionAllowedStatus";
 import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
 import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { LimitsService } from "../limits.service";
-import { getMockTransactionRepoWithDefaults } from "../mocks/mock.transactions.repo";
-import { ITransactionRepo } from "../repo/TransactionRepo";
 
-import { ILimitProfileRepo } from "../repo/LimitProfileRepo";
-import { ILimitConfigurationRepo } from "../repo/LimitConfigurationRepo";
+import { ILimitProfileRepo } from "../repo/limit.profile.repo";
+import { ILimitConfigurationRepo } from "../repo/limit.configuration.repo";
 import { getMockLimitProfileRepoWithDefaults } from "../mocks/mock.limit.profile.repo";
 import { getMockLimitConfigRepoWithDefaults } from "../mocks/mock.limit.config.repo";
 import { LimitProfile } from "../domain/LimitProfile";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
 import { TransactionType, PaymentMethodType } from "@prisma/client";
+import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
+import { ITransactionRepo } from "../repo/transaction.repo";
+import { TRANSACTION_REPO_PROVIDER } from "../repo/transaction.repo.module";
 
 const defaultEnvironmentVariables = {};
 
@@ -51,7 +52,7 @@ describe("LimitsService", () => {
           useFactory: () => instance(consumerService),
         },
         {
-          provide: "TransactionRepo",
+          provide: TRANSACTION_REPO_PROVIDER,
           useFactory: () => instance(transactionRepo),
         },
         {

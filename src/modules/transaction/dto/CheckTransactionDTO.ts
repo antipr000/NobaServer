@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
+import { TransactionAllowedStatus } from "../../transactions/domain/TransactionAllowedStatus";
 
 export class CheckTransactionDTO {
   @ApiProperty({ enum: TransactionAllowedStatus })

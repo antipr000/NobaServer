@@ -3,9 +3,9 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { LimitProfile } from "../domain/LimitProfile";
-import { ILimitProfileRepo } from "../repo/LimitProfileRepo";
+import { ILimitProfileRepo } from "../repo/limit.profile.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { SQLLimitProfileRepo } from "../repo/SQLLimitProfileRepo";
+import { SQLLimitProfileRepo } from "../repo/sql.limit.profile.repo";
 import { uuid } from "uuidv4";
 
 describe("LimitProfileRepo tests", () => {

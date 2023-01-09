@@ -34,6 +34,13 @@ import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
 import { ServiceException } from "../../core/exception/ServiceException";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
+import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
+import { LimitsService } from "./limits.service";
+import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
+import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
+import { TransactionType } from "@prisma/client";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -46,6 +53,9 @@ export class TransactionController {
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly limitsService: LimitsService;
 
   private readonly mapper: TransactionMapper;
 
@@ -80,10 +90,14 @@ export class TransactionController {
   async getAllTransactions(
     @Query() filters: TransactionFilterOptionsDTO,
     @AuthUser() consumer: Consumer,
-  ): Promise<TransactionDTO[]> {
+  ): Promise<PaginatedResult<TransactionDTO>> {
     filters.consumerID = consumer.props.id;
     const allTransactions = await this.transactionService.getFilteredTransactions(filters);
-    return allTransactions.map(transaction => this.mapper.toDTO(transaction));
+    const resultTransactions: PaginatedResult<TransactionDTO> = {
+      ...allTransactions,
+      items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
+    };
+    return resultTransactions;
   }
 
   @Post("/transactions/")
@@ -112,5 +126,42 @@ export class TransactionController {
         throw new BadRequestException("Failed to make the payment");
       }
     }
+  }
+
+  @Get("/transactions/check")
+  @ApiTags("Transactions")
+  @ApiOperation({
+    summary: "Checks if the transaction parameters are valid",
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: CheckTransactionDTO })
+  async checkIfTransactionPossible(
+    @Query() checkTransactionQuery: CheckTransactionQueryDTO,
+    @AuthUser() authUser: Consumer,
+  ): Promise<CheckTransactionDTO> {
+    const tAmount = checkTransactionQuery.transactionAmount;
+    const checkTransactionResponse: CheckTransactionDTO = await this.limitsService.canMakeTransaction(
+      authUser,
+      tAmount,
+      checkTransactionQuery.type,
+    );
+
+    return checkTransactionResponse;
+  }
+
+  @Get("/consumers/limits/")
+  @ApiTags("Consumer")
+  @ApiOperation({ summary: "Gets transaction limit details for logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerLimitsDTO,
+    description: "Consumer limit details",
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getConsumerLimits(
+    @Query() consumerLimitsQuery: ConsumerLimitsQueryDTO,
+    @AuthUser() authUser: Consumer,
+  ): Promise<ConsumerLimitsDTO> {
+    if (!consumerLimitsQuery.transactionType) consumerLimitsQuery.transactionType = TransactionType.NOBA_WALLET;
+    return this.limitsService.getConsumerLimits(authUser, consumerLimitsQuery.transactionType);
   }
 }

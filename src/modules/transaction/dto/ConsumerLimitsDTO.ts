@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ConsumerAccountProvider } from "../domain/AssetTypes";
+import { ConsumerAccountProvider } from "../../transactions/domain/AssetTypes";
 
 export class PeriodLimit {
   @ApiProperty()

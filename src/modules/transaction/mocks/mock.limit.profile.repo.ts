@@ -1,6 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
-import { ILimitProfileRepo } from "../repo/LimitProfileRepo";
-import { SQLLimitProfileRepo } from "../repo/SQLLimitProfileRepo";
+import { ILimitProfileRepo } from "../repo/limit.profile.repo";
+import { SQLLimitProfileRepo } from "../repo/sql.limit.profile.repo";
 
 export function getMockLimitProfileRepoWithDefaults(): ILimitProfileRepo {
   const limitProfileRepo = mock(SQLLimitProfileRepo);

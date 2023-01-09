@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { TransactionType } from "../domain/Types";
+import { TransactionType } from "@prisma/client";
 
 export class CheckTransactionQueryDTO {
   @ApiProperty({ enum: Object.values(TransactionType) })

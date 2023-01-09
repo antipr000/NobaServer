@@ -28,27 +28,24 @@ import { Logger } from "winston";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
-import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CreateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { DownloadFormat, DownloadTransactionsDTO } from "./dto/DownloadTransactionsDTO";
-import { TransactionFilterOptions, TransactionType } from "./domain/Types";
+import { TransactionFilterOptions } from "./domain/Types";
 
 import { AuthUser } from "../auth/auth.decorator";
 import { Public } from "../auth/public.decorator";
 import { CsvService } from "../common/csv.service";
 import { Consumer } from "../consumer/domain/Consumer";
-import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
-import { ConsumerBalanceDTO, ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
+import { ConsumerBalanceDTO } from "../transaction/dto/ConsumerLimitsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionQuoteDTO } from "./dto/TransactionQuoteDTO";
 import { TransactionQuoteQueryDTO } from "./dto/TransactionQuoteQueryDTO";
-import { LimitsService } from "./limits.service";
+import { LimitsService } from "../transaction/limits.service";
 import { TransactionService } from "./transaction.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { TransactionSubmissionException } from "./exceptions/TransactionSubmissionException";
 import { TransactionsQueryResultsDTO } from "./dto/TransactionsQueryResultsDTO";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -82,6 +79,7 @@ export class TransactionController {
     return transactionQuote;
   }
 
+<<<<<<< HEAD
   @Get("/transactions/check")
   @ApiTags("Transactions")
   @ApiOperation({
@@ -103,6 +101,8 @@ export class TransactionController {
     return checkTransactionResponse;
   }
 
+=======
+>>>>>>> 6190462d (Moved limits to new transaction folder)
   @Get("/transactions/:transactionID")
   @ApiTags("Transactions")
   @ApiOperation({ summary: "Gets details of a transaction" })
@@ -200,6 +200,7 @@ export class TransactionController {
     return dto;
   }
 
+<<<<<<< HEAD
   @Get("/consumers/limits/")
   @ApiTags("Consumer")
   @ApiOperation({ summary: "Gets transaction limit details for logged-in consumer" })
@@ -218,6 +219,8 @@ export class TransactionController {
     return this.limitsService.getConsumerLimits(authUser, (consumerLimitsQuery as any).transactionType);
   }
 
+=======
+>>>>>>> 6190462d (Moved limits to new transaction folder)
   @Get("/transactions/download")
   @ApiTags("Transactions")
   @ApiOperation({ summary: "Downloads all the transactions of a particular consumer" })

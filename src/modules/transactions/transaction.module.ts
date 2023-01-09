@@ -3,7 +3,6 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { CommonModule } from "../common/common.module";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { VerificationModule } from "../verification/verification.module";
-import { LimitsService } from "./limits.service";
 import { TransactionController } from "./transaction.controller";
 import { TransactionService } from "./transaction.service";
 import { ZeroHashService } from "./zerohash.service";
@@ -25,7 +24,7 @@ import { TransactionRepoModule } from "./repo/transaction.repo.module";
     TransactionRepoModule,
   ],
   controllers: [TransactionController],
-  providers: [LimitsService, TransactionService, ZeroHashService, SanctionedCryptoWalletService],
+  providers: [TransactionService, ZeroHashService, SanctionedCryptoWalletService],
   exports: [TransactionService], //Need to access in PublicController
 })
 export class TransactionModule {}

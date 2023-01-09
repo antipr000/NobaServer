@@ -2,22 +2,23 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Consumer } from "../consumer/domain/Consumer";
-import { ITransactionRepo } from "./repo/TransactionRepo";
-import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
+import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
+import { TransactionAllowedStatus } from "../transactions/domain/TransactionAllowedStatus";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
-import { ILimitProfileRepo } from "./repo/LimitProfileRepo";
-import { ILimitConfigurationRepo } from "./repo/LimitConfigurationRepo";
+import { ILimitProfileRepo } from "./repo/limit.profile.repo";
+import { ILimitConfigurationRepo } from "./repo/limit.configuration.repo";
 import { LimitProfile } from "./domain/LimitProfile";
 import { LimitConfiguration } from "./domain/LimitConfiguration";
 import { PaymentMethodType, TransactionType } from "@prisma/client";
+import { TRANSACTION_REPO_PROVIDER } from "./repo/transaction.repo.module";
 
 @Injectable()
 export class LimitsService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  @Inject("TransactionRepo")
+  @Inject(TRANSACTION_REPO_PROVIDER)
   private readonly transactionsRepo: ITransactionRepo;
 
   @Inject("LimitProfileRepo")

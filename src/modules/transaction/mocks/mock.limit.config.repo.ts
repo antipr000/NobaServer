@@ -1,6 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
-import { ILimitConfigurationRepo } from "../repo/LimitConfigurationRepo";
-import { SQLLimitConfigurationRepo } from "../repo/SQLLimitConfigurationRepo";
+import { ILimitConfigurationRepo } from "../repo/limit.configuration.repo";
+import { SQLLimitConfigurationRepo } from "../repo/sql.limit.configuration.repo";
 
 export function getMockLimitConfigRepoWithDefaults(): ILimitConfigurationRepo {
   const limitConfigRepo = mock(SQLLimitConfigurationRepo);

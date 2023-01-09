@@ -3,9 +3,9 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { LimitConfiguration } from "../domain/LimitConfiguration";
-import { ILimitConfigurationRepo } from "../repo/LimitConfigurationRepo";
+import { ILimitConfigurationRepo } from "../repo/limit.configuration.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { SQLLimitConfigurationRepo } from "../repo/SQLLimitConfigurationRepo";
+import { SQLLimitConfigurationRepo } from "../repo/sql.limit.configuration.repo";
 import { uuid } from "uuidv4";
 import { TransactionType } from "@prisma/client";
 
