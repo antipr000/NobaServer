@@ -751,6 +751,60 @@ describe("AdminController", () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it("0 bankRate returns a BadRequestException", async () => {
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 0,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      };
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      expect(
+        async () =>
+          await adminController.createExchangeRate(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            newExchangeRate,
+            "false",
+          ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("0 nobaRate returns a BadRequestException", async () => {
+      const newExchangeRate: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 0,
+        expirationTimestamp: new Date(),
+      };
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      expect(
+        async () =>
+          await adminController.createExchangeRate(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            newExchangeRate,
+            "false",
+          ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it("NobaAdmin with 'Admin' role should be able to create exchange rates including inverse", async () => {
       const adminId = "AAAAAAAAAA";
 

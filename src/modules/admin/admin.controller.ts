@@ -248,6 +248,10 @@ export class AdminController {
       throw new ForbiddenException(`User is forbidden from calling this API.`);
     }
 
+    if (exchangeRate.bankRate === 0 || exchangeRate.nobaRate === 0) {
+      throw new BadRequestException("Exchange rate cannot be zero");
+    }
+
     const savedExchangeRate: ExchangeRateDTO = await this.exchangeRateService.createExchangeRate(exchangeRate);
     if (savedExchangeRate == null) {
       throw new BadRequestException("Unable to add exchange rate");
