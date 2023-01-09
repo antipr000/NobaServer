@@ -139,15 +139,19 @@ describe("TransactionServiceTests", () => {
     });
 
     it("should throw ServiceException if consumer is not found", async () => {
-      const { transactionDTO } = getRandomTransaction("consumerID");
-      when(consumerService.findConsumerById("consumerID")).thenResolve(null);
-
+      const { transactionDTO } = getRandomTransaction("");
       await expect(transactionService.initiateTransaction(transactionDTO, "", null)).rejects.toThrowError(
         ServiceException,
       );
     });
 
-    it("s");
+    it("should throw ServiceException if transaction workflow is not correct", async () => {
+      const consumer = getRandomConsumer("consumerID");
+
+      await expect(
+        transactionService.initiateTransaction({ workflowName: null }, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
   });
 });
 

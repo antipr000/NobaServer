@@ -229,7 +229,7 @@ export class TransactionService {
         break;
       default:
         throw new ServiceException({
-          // Shouldn't get here as validation done above, but good for completness
+          // Shouldn't get here as validation done above, but good for completeness
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
           message: "Invalid workflow name",
         });
