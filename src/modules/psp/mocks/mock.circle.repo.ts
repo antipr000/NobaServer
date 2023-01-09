@@ -1,6 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
-import { ICircleRepo } from "../repos/CircleRepo";
-import { SQLCircleRepo } from "../repos/SQLCircleRepo";
+import { SQLCircleRepo } from "../repos/sql.circle.repo";
+import { ICircleRepo } from "../repos/circle.repo";
 
 export function getMockCircleRepoWithDefaults(): ICircleRepo {
   const mockCircleRepo: ICircleRepo = mock(SQLCircleRepo);

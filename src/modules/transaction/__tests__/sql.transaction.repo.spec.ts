@@ -9,7 +9,7 @@ import {
   InputTransaction,
   Transaction,
   TransactionStatus,
-  UpdateTransaciton,
+  UpdateTransaction,
   WorkflowName,
 } from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
@@ -371,7 +371,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: UpdateTransaciton = {
+      const transactionToUpdates: UpdateTransaction = {
         status: TransactionStatus.SUCCESS,
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
@@ -402,7 +402,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: UpdateTransaciton = {
+      const transactionToUpdates: UpdateTransaction = {
         exchangeRate: 12.34,
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
@@ -429,7 +429,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ true);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: UpdateTransaciton = {
+      const transactionToUpdates: UpdateTransaction = {
         debitAmount: 12.34,
         debitCurrency: "USD",
       };
@@ -458,7 +458,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: UpdateTransaciton = {
+      const transactionToUpdates: UpdateTransaction = {
         creditAmount: 12.34,
         creditCurrency: "USD",
       };
@@ -487,7 +487,7 @@ describe("PostgresTransactionRepoTests", () => {
       const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
-      const transactionToUpdates: UpdateTransaciton = {
+      const transactionToUpdates: UpdateTransaction = {
         exchangeRate: 12.34,
         status: TransactionStatus.IN_PROGRESS,
         creditAmount: 67.89,
@@ -520,7 +520,7 @@ describe("PostgresTransactionRepoTests", () => {
     });
 
     it("should throw a NotFound error if the transaction with the specified 'transactionRef' does not exist", async () => {
-      const updatedTransaction: UpdateTransaciton = {
+      const updatedTransaction: UpdateTransaction = {
         status: TransactionStatus.SUCCESS,
       };
       await expect(
