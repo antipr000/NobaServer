@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { MongoDBTransactionRepo } from "./MongoDBTransactionRepo";
-import { SQLLimitConfigurationRepo } from "../../transaction/repo/sql.limit.configuration.repo";
-import { SQLLimitProfileRepo } from "../../transaction/repo/sql.limit.profile.repo";
+import { SQLLimitConfigurationRepo } from "../../transaction/repo/sql.limitconfiguration.repo";
+import { SQLLimitProfileRepo } from "../../transaction/repo/sql.limitprofile.repo";
 
 const TransactionRepoProvider = {
   provide: "TransactionRepo",

@@ -10,7 +10,7 @@ import { ConfigurationProviderService } from "./configuration.provider.service";
 import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
-import { SQLCreditCardBinDataRepo } from "./repo/sql.credit.card.bin.data.repo";
+import { SQLCreditCardBinDataRepo } from "./repo/sql.creditcardbindata.repo";
 import { SQLOTPRepo } from "./repo/sql.otp.repo";
 import { OTPService } from "./otp.service";
 import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";

@@ -11,8 +11,8 @@ import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
 import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { LimitsService } from "../limits.service";
 
-import { ILimitProfileRepo } from "../repo/limit.profile.repo";
-import { ILimitConfigurationRepo } from "../repo/limit.configuration.repo";
+import { ILimitProfileRepo } from "../repo/limitprofile.repo";
+import { ILimitConfigurationRepo } from "../repo/limitconfiguration.repo";
 import { getMockLimitProfileRepoWithDefaults } from "../mocks/mock.limit.profile.repo";
 import { getMockLimitConfigRepoWithDefaults } from "../mocks/mock.limit.config.repo";
 import { LimitProfile } from "../domain/LimitProfile";

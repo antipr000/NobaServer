@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { anything, deepEqual, instance, when, verify, capture } from "ts-mockito";
 import { VerificationService } from "../verification.service";
 import { VerificationData } from "../domain/VerificationData";
-import { IVerificationDataRepo } from "../repos/verification.data.repo";
+import { IVerificationDataRepo } from "../repos/verificationdata.repo";
 import { IDVProvider } from "../integrations/IDVProvider";
 import { getMockVerificationRepoWithDefaults } from "../mocks/mock.verification.repo";
 import { getMockIdvProviderIntegrationWithDefaults } from "../mocks/mock.idvprovider.integration";

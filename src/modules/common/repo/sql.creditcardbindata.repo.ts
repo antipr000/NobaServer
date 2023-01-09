@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CreditCardBinData } from "../domain/CreditCardBinData";
-import { CreditCardBinDataRepo } from "./credit.card.bin.data.repo";
+import { CreditCardBinDataRepo } from "./creditcardbindata.repo";
 import { BINReportDetails, BINValidity } from "../dto/CreditCardDTO";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { CreditCardBinDataRepoMapper } from "../mappers/CreditCardBinDataRepoMapper";
