@@ -235,14 +235,19 @@ export class AdminController {
 
   @Post("/exchangerates")
   @ApiOperation({ summary: "Creates a new exchange rate entry" })
-  @ApiResponse({ status: HttpStatus.OK })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description:
+      "The newly created exchange rate(s). Index [0] is the forward rate that was created, index [1] is the inverse rate if addInverse is true",
+    type: [ExchangeRateDTO],
+  })
   @ApiForbiddenResponse({ description: "User forbidden from adding new exchange rate" })
   @ApiQuery({ name: "addInverse", type: "boolean", description: "Whether to also add the inverse of this rate" })
   async createExchangeRate(
     @Request() request,
     @Body() exchangeRate: ExchangeRateDTO,
     @Query("addInverse") addInverse = "false",
-  ): Promise<void> {
+  ): Promise<ExchangeRateDTO[]> {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException(`User is forbidden from calling this API.`);
@@ -252,10 +257,13 @@ export class AdminController {
       throw new BadRequestException("Exchange rate cannot be zero");
     }
 
+    const insertedExchangeRates = new Array();
+
     const savedExchangeRate: ExchangeRateDTO = await this.exchangeRateService.createExchangeRate(exchangeRate);
     if (savedExchangeRate == null) {
       throw new BadRequestException("Unable to add exchange rate");
     }
+    insertedExchangeRates.push(savedExchangeRate);
 
     // Booleans are not handled well by Swagger, so we need to treat as a string
     if (addInverse == "true") {
@@ -271,6 +279,9 @@ export class AdminController {
       if (savedInverseExchangeRate == null) {
         throw new BadRequestException("Unable to add exchange rate");
       }
+      insertedExchangeRates.push(savedInverseExchangeRate);
     }
+
+    return insertedExchangeRates;
   }
 }

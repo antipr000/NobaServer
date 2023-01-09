@@ -684,7 +684,7 @@ describe("AdminController", () => {
       const createSpy = jest.spyOn(mockExchangeRateService, "createExchangeRate");
       when(mockExchangeRateService.createExchangeRate(newExchangeRate)).thenResolve(createdExchangeRate);
 
-      await adminController.createExchangeRate(
+      const returnedExchangeRate = await adminController.createExchangeRate(
         {
           user: { entity: requestingNobaAdmin },
         },
@@ -694,6 +694,7 @@ describe("AdminController", () => {
 
       expect(createSpy).toHaveBeenCalledWith(newExchangeRate);
       expect(createSpy).toHaveBeenCalledTimes(1);
+      expect(returnedExchangeRate[0]).toEqual(createdExchangeRate);
     });
 
     it("Regular user (non-admin) should not be able to create exchange rates", async () => {
@@ -851,7 +852,7 @@ describe("AdminController", () => {
         inverseCreatedExchangeRate,
       );
 
-      await adminController.createExchangeRate(
+      const returnedExchangeRates = await adminController.createExchangeRate(
         {
           user: { entity: requestingNobaAdmin },
         },
@@ -863,6 +864,8 @@ describe("AdminController", () => {
       const [secondExchangeRate] = capture(mockExchangeRateService.createExchangeRate).second();
       expect(firstExchangeRate).toEqual(newExchangeRate);
       expect(secondExchangeRate).toEqual(inverseCreatedExchangeRate);
+      expect(returnedExchangeRates[0]).toEqual(newExchangeRate);
+      expect(returnedExchangeRates[1]).toEqual(inverseCreatedExchangeRate);
     });
 
     it("Inverse exchange rate creation failure should return BadRequestException", async () => {
