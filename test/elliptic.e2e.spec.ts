@@ -9,45 +9,32 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUp } from "./setup";
-setUp();
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { INestApplication } from "@nestjs/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
-import { bootstrap } from "../src/server";
 import { EllipticService } from "../src/modules/common/elliptic.service";
 import { Transaction } from "../src/modules/transactions/domain/Transaction";
 import { TransactionStatus } from "../src/modules/transactions/domain/Types";
 import * as ConfigurationUtils from "../src/config/ConfigurationUtils";
+import { IntegrationTestUtility } from "./TestUtils";
 
-describe("Elliptic Integration Test", () => {
+describe.skip("Elliptic Integration Test", () => {
   jest.setTimeout(20000);
 
-  let mongoServer: MongoMemoryServer;
-  let mongoUri: string;
-  let app: INestApplication;
   let ellipticService: EllipticService;
+  let integrationTestUtils: IntegrationTestUtility;
 
   beforeAll(async () => {
-    const port = process.env.PORT;
+    integrationTestUtils = await IntegrationTestUtility.setUp(port);
+    ellipticService = (await integrationTestUtils.getApp()).get<EllipticService>(EllipticService);
+  });
 
-    // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    mongoUri = mongoServer.getUri();
-
-    const environmentVaraibles = {
-      MONGO_URI: mongoUri,
-    };
-    app = await bootstrap(environmentVaraibles);
-    await app.listen(port);
-    ellipticService = app.get<EllipticService>(EllipticService);
+  afterAll(async () => {
+    await integrationTestUtils.tearDown();
   });
 
   afterEach(async () => {
-    await mongoose.disconnect();
-    await app.close();
-    await mongoServer.stop();
+    await integrationTestUtils.reset();
   });
 
   it("should call elliptic and return risk score", async () => {

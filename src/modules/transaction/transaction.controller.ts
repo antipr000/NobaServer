@@ -34,6 +34,7 @@ import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
+import { ServiceException } from "../../core/exception/ServiceException";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")

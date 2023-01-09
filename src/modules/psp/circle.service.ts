@@ -84,6 +84,15 @@ export class CircleService {
       });
     }
 
+    const balance = await this.circleClient.getWalletBalance(walletID);
+    if (balance < amount) {
+      throw new ServiceException({
+        message: "Insufficient funds",
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        retry: false,
+      });
+    }
+
     const masterWalletID = await this.getMasterWalletID();
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
@@ -157,6 +166,15 @@ export class CircleService {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Amount must be greater than 0",
+      });
+    }
+
+    const balance = await this.circleClient.getWalletBalance(destinationWalletID);
+    if (balance < amount) {
+      throw new ServiceException({
+        message: "Insufficient funds",
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        retry: false,
       });
     }
 

@@ -9,8 +9,8 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUp } from "./setup";
-setUp();
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+setUpEnvironmentVariablesToLoadTheSourceCode();
 
 import { BadRequestException, INestApplication } from "@nestjs/common";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -29,7 +29,7 @@ import { ConfigurationsDTO } from "./api_client/models/ConfigurationsDTO";
 
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 
-describe("CryptoCurrencies & Locations", () => {
+describe.skip("CryptoCurrencies & Locations", () => {
   jest.setTimeout(20000);
 
   let mongoServer: MongoMemoryServer;

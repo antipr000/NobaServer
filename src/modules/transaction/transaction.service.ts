@@ -40,37 +40,130 @@ export class TransactionService {
   }
 
   async initiateTransaction(
-    orderDetails: InitiateTransactionDTO,
-    consumer: Consumer, // How should this consumer actually be used?
+    transactionDetails: InitiateTransactionDTO,
+    initiatingConsumer: Consumer,
     sessionKey: string,
   ): Promise<string> {
+    // Validate and populate defaults
+    switch (transactionDetails.workflowName) {
+      case WorkflowName.CREDIT_CONSUMER_WALLET:
+        if (transactionDetails.debitConsumerIDOrTag) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitConsumerIDOrTag cannot be set for CREDIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        if (transactionDetails.debitAmount || transactionDetails.debitCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitAmount and debitCurrency cannot be set for CREDIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        transactionDetails.debitConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
+        transactionDetails.creditConsumerIDOrTag = initiatingConsumer.props.id;
+        transactionDetails.debitAmount = transactionDetails.creditAmount;
+        transactionDetails.debitCurrency = transactionDetails.creditCurrency;
+        transactionDetails.exchangeRate = 1;
+        break;
+      case WorkflowName.DEBIT_CONSUMER_WALLET:
+        if (transactionDetails.creditConsumerIDOrTag) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditConsumerIDOrTag cannot be set for DEBIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditAmount and creditCurrency cannot be set for DEBIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id;
+        transactionDetails.creditConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
+        transactionDetails.creditAmount = transactionDetails.debitAmount;
+        transactionDetails.creditCurrency = transactionDetails.debitCurrency;
+        transactionDetails.exchangeRate = 1;
+        break;
+      case WorkflowName.CONSUMER_WALLET_TRANSFER:
+        if (transactionDetails.debitConsumerIDOrTag) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitConsumerIDOrTag cannot be set for CONSUMER_WALLET_TRANSFER workflow",
+          });
+        }
+
+        if (transactionDetails.debitAmount || transactionDetails.debitCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitAmount and debitCurrency cannot be set for CONSUMER_WALLET_TRANSFER workflow",
+          });
+        }
+
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id; // Debit consumer must always be the current consumer
+        transactionDetails.debitAmount = transactionDetails.creditAmount;
+        transactionDetails.debitCurrency = transactionDetails.creditCurrency;
+        transactionDetails.exchangeRate = 1;
+        break;
+    }
+
     let transaction: InputTransaction = {
-      creditAmount: orderDetails.creditAmount,
-      creditCurrency: orderDetails.creditCurrency,
-      debitAmount: orderDetails.debitAmount,
-      debitCurrency: orderDetails.debitCurrency,
-      exchangeRate: orderDetails.exchangeRate,
-      workflowName: orderDetails.workflowName,
+      creditAmount: transactionDetails.creditAmount,
+      creditCurrency: transactionDetails.creditCurrency,
+      debitAmount: transactionDetails.debitAmount,
+      debitCurrency: transactionDetails.debitCurrency,
+      exchangeRate: transactionDetails.exchangeRate,
+      workflowName: transactionDetails.workflowName,
       transactionRef: Utils.generateLowercaseUUID(true),
     };
 
-    if (orderDetails.creditConsumerIDOrTag) {
+    if (transactionDetails.creditConsumerIDOrTag) {
       let consumerID: string;
-      if (orderDetails.creditConsumerIDOrTag.startsWith("$")) {
-        consumerID = await this.consumerService.findConsumerIDByHandle(orderDetails.creditConsumerIDOrTag);
+      if (transactionDetails.creditConsumerIDOrTag.startsWith("$")) {
+        consumerID = await this.consumerService.findConsumerIDByHandle(transactionDetails.creditConsumerIDOrTag);
+        if (!consumerID) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditConsumerIDOrTag is not a valid consumer",
+          });
+        }
       } else {
-        consumerID = orderDetails.creditConsumerIDOrTag;
+        const consumer = await this.consumerService.findConsumerById(transactionDetails.creditConsumerIDOrTag);
+        if (!consumer) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditConsumerIDOrTag is not a valid consumer",
+          });
+        }
+
+        consumerID = consumer.props.id;
       }
 
       transaction.creditConsumerID = consumerID;
     }
 
-    if (orderDetails.debitConsumerIDOrTag) {
+    if (transactionDetails.debitConsumerIDOrTag) {
       let consumerID: string;
-      if (orderDetails.debitConsumerIDOrTag.startsWith("$")) {
-        consumerID = await this.consumerService.findConsumerIDByHandle(orderDetails.debitConsumerIDOrTag);
+      if (transactionDetails.debitConsumerIDOrTag.startsWith("$")) {
+        consumerID = await this.consumerService.findConsumerIDByHandle(transactionDetails.debitConsumerIDOrTag);
+        if (!consumerID) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitConsumerIDOrTag is not a valid consumer",
+          });
+        }
       } else {
-        consumerID = orderDetails.debitConsumerIDOrTag;
+        const consumer = await this.consumerService.findConsumerById(transactionDetails.debitConsumerIDOrTag);
+        if (!consumer) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitConsumerIDOrTag is not a valid consumer",
+          });
+        }
+        consumerID = consumer.props.id;
       }
 
       transaction.debitConsumerID = consumerID;
@@ -83,16 +176,16 @@ export class TransactionService {
       });
     }
 
-    transaction.workflowName = orderDetails.workflowName;
+    transaction.workflowName = transactionDetails.workflowName;
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
-    switch (orderDetails.workflowName) {
+    switch (transactionDetails.workflowName) {
       case WorkflowName.CONSUMER_WALLET_TRANSFER:
         this.workflowExecutor.executeConsumerWalletTransferWorkflow(
-          orderDetails.debitConsumerIDOrTag,
-          orderDetails.creditConsumerIDOrTag,
-          orderDetails.debitAmount,
-          transaction.transactionRef,
+          savedTransaction.debitConsumerID,
+          savedTransaction.creditConsumerID,
+          savedTransaction.debitAmount,
+          savedTransaction.transactionRef,
         );
         break;
       case WorkflowName.DEBIT_CONSUMER_WALLET:
@@ -103,9 +196,9 @@ export class TransactionService {
           });
         }
         this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-          orderDetails.debitConsumerIDOrTag,
-          orderDetails.debitAmount,
-          transaction.transactionRef,
+          savedTransaction.debitConsumerID,
+          savedTransaction.debitAmount,
+          savedTransaction.transactionRef,
         );
         break;
       case WorkflowName.CREDIT_CONSUMER_WALLET:
@@ -116,9 +209,9 @@ export class TransactionService {
           });
         }
         this.workflowExecutor.executeCreditConsumerWalletWorkflow(
-          orderDetails.creditConsumerIDOrTag,
-          orderDetails.creditAmount,
-          transaction.transactionRef,
+          savedTransaction.creditConsumerID,
+          savedTransaction.creditAmount,
+          savedTransaction.transactionRef,
         );
         break;
       default:
