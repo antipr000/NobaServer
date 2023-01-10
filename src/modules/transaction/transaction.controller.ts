@@ -146,20 +146,11 @@ export class TransactionController {
   })
   @ApiNotFoundResponse({ description: "Quote for given currency not found" })
   async getQuote(@Query() quoteQuery: QuoteRequestDTO): Promise<QuoteResponseDTO> {
-    try {
-      return await this.transactionService.calculateExchangeRate(
-        quoteQuery.amount,
-        quoteQuery.currency,
-        quoteQuery.desiredCurrency,
-      );
-    } catch (e) {
-      if (e instanceof ServiceException) {
-        throw e; // ServiceExceptions get automatically handled by interceptor
-      } else {
-        this.logger.error(`Error in getQuote: ${e.message}`);
-        throw new NotFoundException("Quote not found");
-      }
-    }
+    return await this.transactionService.calculateExchangeRate(
+      quoteQuery.amount,
+      quoteQuery.currency,
+      quoteQuery.desiredCurrency,
+    );
   }
 
   @Get("/transactions/check")

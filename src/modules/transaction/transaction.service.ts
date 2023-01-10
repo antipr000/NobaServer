@@ -234,25 +234,25 @@ export class TransactionService {
 
   async calculateExchangeRate(
     amount: number,
-    baseCurrency: Currency,
+    amountCurrency: Currency,
     desiredCurrency: Currency,
   ): Promise<QuoteResponseDTO> {
-    if (Object.values(Currency).indexOf(baseCurrency) === -1) {
+    if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Invalid base currency",
       });
     }
 
     if (Object.values(Currency).indexOf(desiredCurrency) === -1) {
       throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Invalid desired currency",
       });
     }
 
     const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-      baseCurrency,
+      amountCurrency,
       desiredCurrency,
     );
 
