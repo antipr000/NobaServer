@@ -26,6 +26,8 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     status: TransactionStatus.PENDING,
     workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
     id: uuid(),
+    sessionKey: uuid(),
+    memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };

@@ -124,6 +124,8 @@ export class TransactionService {
       debitCurrency: transactionDetails.debitCurrency,
       exchangeRate: transactionDetails.exchangeRate,
       workflowName: transactionDetails.workflowName,
+      memo: transactionDetails.memo,
+      sessionKey: sessionKey,
       transactionRef: Utils.generateLowercaseUUID(true),
     };
 
