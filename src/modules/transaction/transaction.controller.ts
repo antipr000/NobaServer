@@ -85,13 +85,15 @@ export class TransactionController {
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: Array<TransactionDTO>,
+    type: PaginatedResult<TransactionDTO>,
   })
   async getAllTransactions(
     @Query() filters: TransactionFilterOptionsDTO,
     @AuthUser() consumer: Consumer,
   ): Promise<PaginatedResult<TransactionDTO>> {
     filters.consumerID = consumer.props.id;
+    filters.pageLimit = Number(filters.pageLimit) || 10;
+    filters.pageOffset = Number(filters.pageOffset) || 1;
     const allTransactions = await this.transactionService.getFilteredTransactions(filters);
     const resultTransactions: PaginatedResult<TransactionDTO> = {
       ...allTransactions,
