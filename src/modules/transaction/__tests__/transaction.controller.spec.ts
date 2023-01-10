@@ -112,6 +112,9 @@ describe("Transaction Controller tests", () => {
         debitAmount: transaction.debitAmount,
         creditAmount: transaction.creditAmount,
         exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
         memo: "",
       };
 
@@ -140,6 +143,8 @@ describe("Transaction Controller tests", () => {
       const filter: TransactionFilterOptionsDTO = {
         consumerID: consumerID,
         transactionStatus: TransactionStatus.SUCCESS,
+        pageLimit: 5,
+        pageOffset: 1,
       };
       when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
@@ -152,6 +157,8 @@ describe("Transaction Controller tests", () => {
       const allTransactions = await transactionController.getAllTransactions(
         {
           transactionStatus: TransactionStatus.SUCCESS,
+          pageLimit: 5,
+          pageOffset: 1,
         },
         getRandomConsumer(consumerID),
       );
