@@ -276,8 +276,8 @@ export class TransactionService {
     }
 
     return {
-      quoteAmount: desiredAmount.toString(),
-      quoteAmountWithFees: desiredAmountWithFees.toString(),
+      quoteAmount: Utils.roundTo2DecimalString(desiredAmount),
+      quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmountWithFees),
       exchangeRate: exchangeRate.toString(),
     };
   }
