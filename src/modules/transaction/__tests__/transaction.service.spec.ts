@@ -22,8 +22,6 @@ import { getMockConsumerRepoWithDefaults } from "../../../modules/consumer/mocks
 import { ServiceException } from "../../../core/exception/ServiceException";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
-import { Currency } from "../domain/TransactionTypes";
-import { ServiceException } from "../../../core/exception/ServiceException";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -437,6 +435,8 @@ const getRandomTransaction = (
     status: TransactionStatus.PENDING,
     workflowName: workflowName,
     id: v4(),
+    sessionKey: v4(),
+    memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -450,6 +450,8 @@ const getRandomTransaction = (
     transactionRef: transaction.transactionRef,
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
+    memo: transaction.memo,
+    sessionKey: transaction.sessionKey,
   };
 
   switch (workflowName) {
