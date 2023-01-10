@@ -49,7 +49,7 @@ export class TransactionService {
     initiatingConsumer: string,
     sessionKey: string,
   ): Promise<string> {
-    // Validate and populate defaults
+    // TODO: Add more validations around required amounts/currencies
     if (!initiatingConsumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -108,16 +108,16 @@ export class TransactionService {
           });
         }
 
-        if (transactionDetails.debitAmount || transactionDetails.debitCurrency) {
+        if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount and debitCurrency cannot be set for CONSUMER_WALLET_TRANSFER workflow",
+            message: "creditAmount and creditCurrency cannot be set for CONSUMER_WALLET_TRANSFER workflow",
           });
         }
 
         transactionDetails.debitConsumerIDOrTag = initiatingConsumer; // Debit consumer must always be the current consumer
-        transactionDetails.debitAmount = transactionDetails.creditAmount;
-        transactionDetails.debitCurrency = transactionDetails.creditCurrency;
+        transactionDetails.creditAmount = transactionDetails.debitAmount;
+        transactionDetails.creditCurrency = transactionDetails.debitCurrency;
         transactionDetails.exchangeRate = 1;
         break;
       default:
@@ -189,6 +189,8 @@ export class TransactionService {
     }
 
     transaction.workflowName = transactionDetails.workflowName;
+
+    console.log("Creating transaction: ", transaction);
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
     switch (transactionDetails.workflowName) {

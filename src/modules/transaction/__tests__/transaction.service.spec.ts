@@ -17,8 +17,6 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { IConsumerRepo } from "../../../modules/consumer/repos/consumer.repo";
-import { getMockConsumerRepoWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.repo";
 import { ServiceException } from "../../../core/exception/ServiceException";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
@@ -133,7 +131,6 @@ describe("TransactionServiceTests", () => {
       });
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
-      // This does not seem to be called, whether or not the execute is awaited in service
       when(
         workflowExecutor.executeDebitConsumerWalletWorkflow(
           transaction.debitConsumerID,
@@ -145,7 +142,7 @@ describe("TransactionServiceTests", () => {
       const returnedTransactionRef = await transactionService.initiateTransaction(
         transactionDTO,
         consumer.props.id,
-        null,
+        transaction.sessionKey,
       );
 
       expect(returnedTransactionRef).toEqual(transaction.transactionRef);
@@ -163,7 +160,6 @@ describe("TransactionServiceTests", () => {
       });
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
-      // This does not seem to be called, whether or not the execute is awaited in service
       when(
         workflowExecutor.executeCreditConsumerWalletWorkflow(
           transaction.creditConsumerID,
@@ -175,7 +171,7 @@ describe("TransactionServiceTests", () => {
       const returnedTransactionRef = await transactionService.initiateTransaction(
         transactionDTO,
         consumer.props.id,
-        null,
+        transaction.sessionKey,
       );
 
       expect(returnedTransactionRef).toEqual(transaction.transactionRef);
@@ -183,22 +179,24 @@ describe("TransactionServiceTests", () => {
 
     it("should initiate a CONSUMER_WALLET_TRANSFER transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
+      const consumer2 = getRandomConsumer("consumerID2");
       const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
         consumer.props.id,
-        "consumerID2",
+        consumer2.props.id,
         WorkflowName.CONSUMER_WALLET_TRANSFER,
       );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.findConsumerById(consumer2.props.id)).thenResolve(consumer2);
+      console.log(inputTransaction);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
-      // This does not seem to be called, whether or not the execute is awaited in service
       when(
         workflowExecutor.executeConsumerWalletTransferWorkflow(
+          transaction.debitConsumerID,
           transaction.creditConsumerID,
-          "consumerID2",
-          transaction.creditAmount,
+          transaction.debitAmount,
           transaction.transactionRef,
         ),
       ).thenResolve(transaction.transactionRef);
@@ -206,7 +204,7 @@ describe("TransactionServiceTests", () => {
       const returnedTransactionRef = await transactionService.initiateTransaction(
         transactionDTO,
         consumer.props.id,
-        null,
+        transaction.sessionKey,
       );
 
       expect(returnedTransactionRef).toEqual(transaction.transactionRef);
@@ -444,6 +442,7 @@ const getRandomTransaction = (
   const transactionDTO: InitiateTransactionDTO = {
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
+    memo: transaction.memo,
   };
 
   const inputTransaction: InputTransaction = {
@@ -461,9 +460,6 @@ const getRandomTransaction = (
       transaction.debitConsumerID = consumerID;
       transaction.creditConsumerID = consumerID2;
 
-      transactionDTO.debitAmount = transaction.debitAmount;
-      transactionDTO.debitCurrency = Currency.USD;
-      transactionDTO.debitConsumerIDOrTag = transaction.debitConsumerID;
       transactionDTO.creditConsumerIDOrTag = transaction.creditConsumerID;
 
       inputTransaction.debitAmount = transaction.debitAmount;
