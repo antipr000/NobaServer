@@ -14,7 +14,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
-import { getMockWorkflowExecutorWithDefaults } from "../mocks/mock.workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
 import { IConsumerRepo } from "../../../modules/consumer/repos/consumer.repo";
