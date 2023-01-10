@@ -58,6 +58,8 @@ export class SQLTransactionRepo implements ITransactionRepo {
         ...(inputTransaction.creditAmount && { creditAmount: inputTransaction.creditAmount }),
         ...(inputTransaction.debitCurrency && { debitCurrency: inputTransaction.debitCurrency }),
         ...(inputTransaction.creditCurrency && { creditCurrency: inputTransaction.creditCurrency }),
+        ...(inputTransaction.memo && { memo: inputTransaction.memo }),
+        ...(inputTransaction.sessionKey && { sessionKey: inputTransaction.sessionKey }),
         exchangeRate: inputTransaction.exchangeRate,
       };
 

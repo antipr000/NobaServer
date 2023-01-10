@@ -16,6 +16,8 @@ import { NotFoundException } from "@nestjs/common";
 import { Currency } from "../domain/TransactionTypes";
 import { LimitsService } from "../limits.service";
 import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
+import { QuoteRequestDTO } from "../dto/QuoteRequestDTO";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -24,6 +26,8 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     status: TransactionStatus.PENDING,
     workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
     id: uuid(),
+    sessionKey: uuid(),
+    memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -112,6 +116,9 @@ describe("Transaction Controller tests", () => {
         debitAmount: transaction.debitAmount,
         creditAmount: transaction.creditAmount,
         exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
         memo: "",
       };
 
@@ -140,6 +147,8 @@ describe("Transaction Controller tests", () => {
       const filter: TransactionFilterOptionsDTO = {
         consumerID: consumerID,
         transactionStatus: TransactionStatus.SUCCESS,
+        pageLimit: 5,
+        pageOffset: 1,
       };
       when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
@@ -152,6 +161,8 @@ describe("Transaction Controller tests", () => {
       const allTransactions = await transactionController.getAllTransactions(
         {
           transactionStatus: TransactionStatus.SUCCESS,
+          pageLimit: 5,
+          pageOffset: 1,
         },
         getRandomConsumer(consumerID),
       );
@@ -180,6 +191,45 @@ describe("Transaction Controller tests", () => {
       const response = await transactionController.initiateTransaction("fake-session", orderDetails, consumer);
 
       expect(response).toBe("fake-transaction-id");
+    });
+  });
+
+  describe("getQuote", () => {
+    it("should return quote if all parameters are correct", async () => {
+      const quoteDetails: QuoteRequestDTO = {
+        amount: 1,
+        currency: Currency.USD,
+        desiredCurrency: Currency.COP,
+      };
+
+      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenResolve({
+        exchangeRate: "5000",
+        quoteAmount: "5000",
+        quoteAmountWithFees: "3775",
+      });
+      const response = await transactionController.getQuote(quoteDetails);
+      expect(response).toStrictEqual({
+        exchangeRate: "5000",
+        quoteAmount: "5000",
+        quoteAmountWithFees: "3775",
+      });
+    });
+
+    it("should throw ServiceException if exchange rate is not available", async () => {
+      const quoteDetails: QuoteRequestDTO = {
+        amount: 1,
+        currency: Currency.USD,
+        desiredCurrency: Currency.COP,
+      };
+
+      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenReject(
+        new ServiceException({
+          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+          message: "Exchange rate not available",
+        }),
+      );
+
+      await expect(transactionController.getQuote(quoteDetails)).rejects.toThrow(ServiceException);
     });
   });
 });

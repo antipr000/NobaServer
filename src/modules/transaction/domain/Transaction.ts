@@ -15,6 +15,8 @@ export class Transaction {
   creditAmount?: number;
   status: TransactionStatus;
   exchangeRate: number;
+  memo: string;
+  sessionKey: string;
   createdTimestamp?: Date;
   updatedTimestamp?: Date;
 }
@@ -43,6 +45,8 @@ export class InputTransaction {
   debitAmount?: number;
   creditAmount?: number;
   exchangeRate: number;
+  memo: string;
+  sessionKey: string;
 }
 
 export class UpdateTransaction {
@@ -67,6 +71,8 @@ export const validateInputTransaction = (transaction: InputTransaction) => {
     debitCurrency: Joi.string().optional(),
     creditCurrency: Joi.string().optional(),
     exchangeRate: Joi.number().required(),
+    sessionKey: Joi.string().required(),
+    memo: Joi.string().optional(),
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
@@ -99,6 +105,8 @@ export const validateSavedTransaction = (transaction: Transaction) => {
       .valid(...Object.values(TransactionStatus))
       .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().required(),
+    sessionKey: Joi.string().required(),
+    memo: Joi.string().optional(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -143,6 +151,8 @@ export const convertToDomainTransaction = (transaction: PrismaTransactionModel):
     creditCurrency: transaction.creditCurrency,
     status: transaction.status as TransactionStatus,
     exchangeRate: transaction.exchangeRate,
+    sessionKey: transaction.sessionKey,
+    memo: transaction.memo,
     createdTimestamp: transaction.createdTimestamp,
     updatedTimestamp: transaction.updatedTimestamp,
   };

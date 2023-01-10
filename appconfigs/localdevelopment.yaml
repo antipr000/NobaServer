@@ -126,8 +126,16 @@ nobaWorkflow:
   awsSecretNameForTaskQueue: ""
   clientUrl: "localhost:7233"
   awsSecretNameForClientUrl: ""
+  awsSecretForTemporalCloudCertificate: ""
+  awsSecretForTemporalCloudPrivateKey: ""
   connectionTimeoutInMs: 2000
   namespace: "default"
+
+  # To connect to Temporal Cloud, you will need to provide the following (replacing values above):
+  #awsSecretForTemporalCloudCertificate: "TEST_TEMPORAL_CLOUD_CERTIFICATE"
+  #awsSecretForTemporalCloudPrivateKey: "TEST_TEMPORAL_CLOUD_PRIVATE_KEY"
+  #namespace: "namespace.h4n3l" # replace "namespace" with the actual namespace you are using
+  #clientUrl: "namespace.h4nl.tmprl.cloud:7233" # replace "namespace" with the actual namespace you are using
 
 dependencies:
   emailClient: "SENDGRID"

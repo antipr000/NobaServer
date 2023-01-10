@@ -29,6 +29,8 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
   const transaction: InputTransaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
+    memo: "New transaction",
+    sessionKey: uuid(),
     workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
   };
 
@@ -100,6 +102,8 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction.debitAmount).toBeNull();
       expect(returnedTransaction.debitCurrency).toBeNull();
       expect(returnedTransaction.exchangeRate).toBe(inputTransaction.exchangeRate);
+      expect(returnedTransaction.memo).toBe(inputTransaction.memo);
+      expect(returnedTransaction.sessionKey).toBe(inputTransaction.sessionKey);
 
       expect(allTransactionRecords.length).toBe(1);
       expect(allTransactionRecords[0]).toStrictEqual({
@@ -114,6 +118,8 @@ describe("PostgresTransactionRepoTests", () => {
         debitCurrency: null,
         status: returnedTransaction.status,
         exchangeRate: returnedTransaction.exchangeRate,
+        memo: returnedTransaction.memo,
+        sessionKey: returnedTransaction.sessionKey,
         createdTimestamp: returnedTransaction.createdTimestamp,
         updatedTimestamp: returnedTransaction.updatedTimestamp,
       });
@@ -144,6 +150,8 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction.debitAmount).toBe(inputTransaction.debitAmount);
       expect(returnedTransaction.debitCurrency).toBe(inputTransaction.debitCurrency);
       expect(returnedTransaction.exchangeRate).toBe(inputTransaction.exchangeRate);
+      expect(returnedTransaction.memo).toBe(inputTransaction.memo);
+      expect(returnedTransaction.sessionKey).toBe(inputTransaction.sessionKey);
 
       expect(allTransactionRecords.length).toBe(1);
       expect(allTransactionRecords[0]).toStrictEqual({
@@ -158,6 +166,8 @@ describe("PostgresTransactionRepoTests", () => {
         debitCurrency: returnedTransaction.debitCurrency,
         status: returnedTransaction.status,
         exchangeRate: returnedTransaction.exchangeRate,
+        memo: returnedTransaction.memo,
+        sessionKey: returnedTransaction.sessionKey,
         createdTimestamp: returnedTransaction.createdTimestamp,
         updatedTimestamp: returnedTransaction.updatedTimestamp,
       });

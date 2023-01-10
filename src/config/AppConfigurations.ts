@@ -15,6 +15,7 @@ import {
   AWS_SECRET_ACCESS_KEY_ENV_VARIABLE,
   getEnvironmentName,
   getParameterValue,
+  getParameterValueFromAWSSecrets,
   getPropertyFromEnvironment,
   isPropertyPresentInEnvironmentVariables,
   MONGO_AWS_SECRET_KEY_FOR_URI_ATTR,
@@ -681,6 +682,16 @@ async function configureNobaWorkflowCredentials(
     null,
     nobaWorkflowConfigs.connectionTimeoutInMs.toString(),
   )) as any;
+
+  // OK for this to be undefined in environments where temporal cloud is not used
+  nobaWorkflowConfigs.temporalCloudCertificate = await getParameterValueFromAWSSecrets(
+    nobaWorkflowConfigs.awsSecretForTemporalCloudCertificate,
+  );
+
+  // OK for this to be undefined in environments where temporal cloud is not used
+  nobaWorkflowConfigs.temporalCloudPrivateKey = await getParameterValueFromAWSSecrets(
+    nobaWorkflowConfigs.awsSecretForTemporalCloudPrivateKey,
+  );
 
   configs[NOBA_WORKFLOW_CONFIG_KEY] = nobaWorkflowConfigs;
 

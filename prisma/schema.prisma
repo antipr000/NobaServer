@@ -205,6 +205,8 @@ model Transaction {
   creditConsumer   Consumer? @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
   creditConsumerID String?
   status           String    @default("PENDING")
+  memo             String?
+  sessionKey       String
   debitCurrency    String?
   creditCurrency   String?
   debitAmount      Float?

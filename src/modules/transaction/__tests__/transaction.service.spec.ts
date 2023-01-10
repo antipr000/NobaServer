@@ -20,6 +20,10 @@ import { Utils } from "../../../core/utils/Utils";
 import { IConsumerRepo } from "../../../modules/consumer/repos/consumer.repo";
 import { getMockConsumerRepoWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.repo";
 import { ServiceException } from "../../../core/exception/ServiceException";
+import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
+import { Currency } from "../domain/TransactionTypes";
+import { ServiceException } from "../../../core/exception/ServiceException";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -29,11 +33,13 @@ describe("TransactionServiceTests", () => {
   let transactionService: TransactionService;
   let consumerService: ConsumerService;
   let workflowExecutor: WorkflowExecutor;
+  let exchangeRateService: ExchangeRateService;
 
   beforeAll(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
+    exchangeRateService = getMockExchangeRateServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -54,6 +60,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: WorkflowExecutor,
           useFactory: () => instance(workflowExecutor),
+        },
+        {
+          provide: ExchangeRateService,
+          useFactory: () => instance(exchangeRateService),
         },
         TransactionService,
       ],
@@ -296,6 +306,108 @@ describe("TransactionServiceTests", () => {
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
+    });
+  });
+
+  describe("calculateExchangeRate", () => {
+    it("should return proper exchange rate calculations for conversion from USD to COP", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 0.0002,
+        nobaRate: 0.0002,
+      });
+      const quote = await transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP);
+      expect(quote.exchangeRate).toEqual("0.0002");
+      expect(quote.quoteAmount).toEqual("5000.00");
+      // 5000 - 1.19 * (0.0265 * 5000 + 900) = 3771.325
+      expect(quote.quoteAmountWithFees).toBe("3771.33");
+    });
+
+    it("should return proper exchange rate calculations for conversion from COP to USD", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+        bankRate: 5000,
+        nobaRate: 5000,
+      });
+
+      const quote = await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD);
+
+      expect(quote.exchangeRate).toEqual("5000");
+      expect(quote.quoteAmount).toEqual("1.00");
+      // 3771.325 COP = 0.754265 USD
+      expect(quote.quoteAmountWithFees).toBe("0.75");
+    });
+
+    it("should throw ServiceException when base currency is not supported", async () => {
+      expect(
+        async () => await transactionService.calculateExchangeRate(5000, "INR" as any, Currency.USD),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw ServiceException when desired currency is not supported", async () => {
+      expect(
+        async () => await transactionService.calculateExchangeRate(5000, Currency.USD, "INR" as any),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw ServiceException when exchange rate is not found", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(null);
+      expect(
+        async () => await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe("calculateExchangeRate", () => {
+    it("should return proper exchange rate calculations for conversion from USD to COP", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 0.0002,
+        nobaRate: 0.0002,
+      });
+      const quote = await transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP);
+      expect(quote.exchangeRate).toEqual("0.0002");
+      expect(quote.quoteAmount).toEqual("5000.00");
+      // 5000 - 1.19 * (0.0265 * 5000 + 900) = 3771.325
+      expect(quote.quoteAmountWithFees).toBe("3771.33");
+    });
+
+    it("should return proper exchange rate calculations for conversion from COP to USD", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+        bankRate: 5000,
+        nobaRate: 5000,
+      });
+
+      const quote = await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD);
+
+      expect(quote.exchangeRate).toEqual("5000");
+      expect(quote.quoteAmount).toEqual("1.00");
+      // 3771.325 COP = 0.754265 USD
+      expect(quote.quoteAmountWithFees).toBe("0.75");
+    });
+
+    it("should throw ServiceException when base currency is not supported", async () => {
+      expect(
+        async () => await transactionService.calculateExchangeRate(5000, "INR" as any, Currency.USD),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw ServiceException when desired currency is not supported", async () => {
+      expect(
+        async () => await transactionService.calculateExchangeRate(5000, Currency.USD, "INR" as any),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw ServiceException when exchange rate is not found", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(null);
+      expect(
+        async () => await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD),
+      ).rejects.toThrow(ServiceException);
     });
   });
 });
