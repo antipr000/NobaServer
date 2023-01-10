@@ -12,6 +12,9 @@ import { ConsumerService } from "../consumer/consumer.service";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { Currency } from "./domain/TransactionTypes";
+import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
+import { ExchangeRateService } from "../common/exchangerate.service";
 
 @Injectable()
 export class TransactionService {
@@ -20,6 +23,7 @@ export class TransactionService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly consumerService: ConsumerService,
     private readonly workflowExecutor: WorkflowExecutor,
+    private readonly exchangeRateService: ExchangeRateService,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -228,7 +232,53 @@ export class TransactionService {
     return savedTransaction.transactionRef;
   }
 
-  async calculateExchangeRate(baseCurrency: string, targetCurrency: string): Promise<string> {
-    throw new Error("Not implemented!");
+  async calculateExchangeRate(
+    amount: number,
+    amountCurrency: Currency,
+    desiredCurrency: Currency,
+  ): Promise<QuoteResponseDTO> {
+    if (Object.values(Currency).indexOf(amountCurrency) === -1) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Invalid base currency",
+      });
+    }
+
+    if (Object.values(Currency).indexOf(desiredCurrency) === -1) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Invalid desired currency",
+      });
+    }
+
+    const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+      amountCurrency,
+      desiredCurrency,
+    );
+
+    if (!exchangeRateDTO) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "No exchange rate found for currency pair",
+      });
+    }
+
+    const exchangeRate = exchangeRateDTO.nobaRate;
+    let desiredAmount = 0;
+    let desiredAmountWithFees = 0;
+    if (desiredCurrency === Currency.COP) {
+      desiredAmount = amount / exchangeRate;
+      desiredAmountWithFees = desiredAmount - 1.19 * (0.0265 * desiredAmount + 900);
+    } else {
+      desiredAmount = amount / exchangeRate;
+      const baseCurrencyWithFees = amount - 1.19 * (0.0265 * amount + 900);
+      desiredAmountWithFees = baseCurrencyWithFees / exchangeRate;
+    }
+
+    return {
+      quoteAmount: Utils.roundTo2DecimalString(desiredAmount),
+      quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmountWithFees),
+      exchangeRate: exchangeRate.toString(),
+    };
   }
 }
