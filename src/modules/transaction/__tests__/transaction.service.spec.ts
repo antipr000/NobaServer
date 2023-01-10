@@ -192,7 +192,45 @@ describe("TransactionServiceTests", () => {
       },
     );
 
-    // it("should throw ServiceException during DEBIT_CONSUMER_WALLET if credit fields are set", async () => {
+    it("should throw ServiceException if debit consumerID not found", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(null);
+
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if debit consumerTag not found", async () => {
+      const consumer = getRandomConsumer("$consumerTag");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      when(consumerService.findConsumerIDByHandle(consumer.props.id)).thenResolve(null);
+
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if credit consumerID not found", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CREDIT_CONSUMER_WALLET);
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(null);
+
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if credit consumerTag not found", async () => {
+      const consumer = getRandomConsumer("$consumerTag");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CREDIT_CONSUMER_WALLET);
+      when(consumerService.findConsumerIDByHandle(consumer.props.id)).thenResolve(null);
+
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
   });
 });
 

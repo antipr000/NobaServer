@@ -42,14 +42,14 @@ export class TransactionService {
 
   async initiateTransaction(
     transactionDetails: InitiateTransactionDTO,
-    initiatingConsumerID: string,
+    initiatingConsumer: string,
     sessionKey: string,
   ): Promise<string> {
     // Validate and populate defaults
-    if (!initiatingConsumerID) {
+    if (!initiatingConsumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "Must have consumerID to initiate transaction",
+        message: "Must have consumer to initiate transaction",
       });
     }
 
@@ -70,7 +70,7 @@ export class TransactionService {
         }
 
         transactionDetails.debitConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
-        transactionDetails.creditConsumerIDOrTag = initiatingConsumerID;
+        transactionDetails.creditConsumerIDOrTag = initiatingConsumer;
         transactionDetails.debitAmount = transactionDetails.creditAmount;
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
@@ -90,7 +90,7 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumerID;
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
         transactionDetails.creditConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
         transactionDetails.creditAmount = transactionDetails.debitAmount;
         transactionDetails.creditCurrency = transactionDetails.debitCurrency;
@@ -111,7 +111,7 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumerID; // Debit consumer must always be the current consumer
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer; // Debit consumer must always be the current consumer
         transactionDetails.debitAmount = transactionDetails.creditAmount;
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
@@ -180,13 +180,6 @@ export class TransactionService {
       }
 
       transaction.debitConsumerID = consumerID;
-    }
-
-    if (!transaction.creditConsumerID && !transaction.debitConsumerID) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "One of credit consumer id or debit consumer id must be set",
-      });
     }
 
     transaction.workflowName = transactionDetails.workflowName;
