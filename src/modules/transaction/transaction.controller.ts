@@ -41,11 +41,13 @@ import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionType } from "@prisma/client";
 import { TransactionsQueryResultDTO } from "./dto/TransactionQueryResultDTO";
+import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
+import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
+import { Public } from "../auth/public.decorator";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("v2")
-@ApiTags("Transaction")
 @ApiHeaders(getCommonHeaders())
 export class TransactionController {
   @Inject()
@@ -64,6 +66,7 @@ export class TransactionController {
   }
 
   @Get("/transactions/:transactionRef")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -82,6 +85,7 @@ export class TransactionController {
   }
 
   @Get("/transactions/")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -104,6 +108,7 @@ export class TransactionController {
   }
 
   @Post("/transactions/")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Submits a new transaction" })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -131,8 +136,34 @@ export class TransactionController {
     }
   }
 
+  @Get("/transactions/quote")
+  @Public()
+  @ApiTags("Transaction")
+  @ApiOperation({ summary: "Gets a quote in specified currency" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: QuoteResponseDTO,
+  })
+  @ApiNotFoundResponse({ description: "Quote for given currency not found" })
+  async getQuote(@Query() quoteQuery: QuoteRequestDTO): Promise<QuoteResponseDTO> {
+    try {
+      return await this.transactionService.calculateExchangeRate(
+        quoteQuery.amount,
+        quoteQuery.currency,
+        quoteQuery.desiredCurrency,
+      );
+    } catch (e) {
+      if (e instanceof ServiceException) {
+        throw e; // ServiceExceptions get automatically handled by interceptor
+      } else {
+        this.logger.error(`Error in getQuote: ${e.message}`);
+        throw new NotFoundException("Quote not found");
+      }
+    }
+  }
+
   @Get("/transactions/check")
-  @ApiTags("Transactions")
+  @ApiTags("Transaction")
   @ApiOperation({
     summary: "Checks if the transaction parameters are valid",
   })
