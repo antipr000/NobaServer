@@ -187,7 +187,7 @@ export class TransactionService {
 
     switch (transactionDetails.workflowName) {
       case WorkflowName.CONSUMER_WALLET_TRANSFER:
-        await this.workflowExecutor.executeConsumerWalletTransferWorkflow(
+        this.workflowExecutor.executeConsumerWalletTransferWorkflow(
           savedTransaction.debitConsumerID,
           savedTransaction.creditConsumerID,
           savedTransaction.debitAmount,
@@ -201,7 +201,7 @@ export class TransactionService {
             message: "Both credit consumer and debit consumer cannot be set for a transaction",
           });
         }
-        await this.workflowExecutor.executeDebitConsumerWalletWorkflow(
+        this.workflowExecutor.executeDebitConsumerWalletWorkflow(
           savedTransaction.debitConsumerID,
           savedTransaction.debitAmount,
           savedTransaction.transactionRef,
@@ -214,7 +214,7 @@ export class TransactionService {
             message: "Both credit consumer and debit consumer cannot be set for a transaction",
           });
         }
-        const ref = await this.workflowExecutor.executeCreditConsumerWalletWorkflow(
+        this.workflowExecutor.executeCreditConsumerWalletWorkflow(
           savedTransaction.creditConsumerID,
           savedTransaction.creditAmount,
           savedTransaction.transactionRef,
