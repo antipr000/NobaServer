@@ -34,13 +34,13 @@ import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
 import { ServiceException } from "../../core/exception/ServiceException";
-import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { LimitsService } from "./limits.service";
 import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionType } from "@prisma/client";
+import { TransactionsQueryResultDTO } from "./dto/TransactionQueryResultDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -85,15 +85,18 @@ export class TransactionController {
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: Array<TransactionDTO>,
+    type: TransactionsQueryResultDTO,
   })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllTransactions(
     @Query() filters: TransactionFilterOptionsDTO,
     @AuthUser() consumer: Consumer,
-  ): Promise<PaginatedResult<TransactionDTO>> {
+  ): Promise<TransactionsQueryResultDTO> {
     filters.consumerID = consumer.props.id;
+    filters.pageLimit = Number(filters.pageLimit) || 10;
+    filters.pageOffset = Number(filters.pageOffset) || 1;
     const allTransactions = await this.transactionService.getFilteredTransactions(filters);
-    const resultTransactions: PaginatedResult<TransactionDTO> = {
+    const resultTransactions: TransactionsQueryResultDTO = {
       ...allTransactions,
       items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
     };

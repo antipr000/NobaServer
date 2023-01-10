@@ -11,6 +11,9 @@ export class TransactionMapper {
       debitAmount: transaction.debitAmount,
       creditAmount: transaction.creditAmount,
       exchangeRate: transaction.exchangeRate.toString(),
+      status: transaction.status,
+      createdTimestamp: transaction.createdTimestamp,
+      updatedTimestamp: transaction.updatedTimestamp,
       memo: "",
     };
   }
