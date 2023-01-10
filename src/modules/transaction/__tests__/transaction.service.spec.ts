@@ -28,13 +28,11 @@ describe("TransactionServiceTests", () => {
   let app: TestingModule;
   let transactionService: TransactionService;
   let consumerService: ConsumerService;
-  let consumerRepo: IConsumerRepo;
   let workflowExecutor: WorkflowExecutor;
 
   beforeAll(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
-    consumerRepo = getMockConsumerRepoWithDefaults(); // TODO: may not need this
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
@@ -52,10 +50,6 @@ describe("TransactionServiceTests", () => {
         {
           provide: TRANSACTION_REPO_PROVIDER,
           useFactory: () => instance(transactionRepo),
-        },
-        {
-          provide: "ConsumerRepo",
-          useFactory: () => instance(consumerRepo),
         },
         {
           provide: WorkflowExecutor,
@@ -76,7 +70,6 @@ describe("TransactionServiceTests", () => {
     jest.resetAllMocks();
   });
 
-  // TODO: Skipping as they do not run. Need to add WorkflowExecutor dependencies.
   describe("getTransactionByTransactionRef", () => {
     it("should return the transaction if the debitConsumerID matches", async () => {
       const { transaction } = getRandomTransaction("consumerID");
@@ -120,21 +113,94 @@ describe("TransactionServiceTests", () => {
   });
 
   describe("initiateTransaction", () => {
-    it("should initiate a transaction", async () => {
+    it("should initiate a DEBIT_CONSUMER_WALLET transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
-      await consumerRepo.createConsumer(consumer);
-      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(consumer.props.id);
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        null,
+        WorkflowName.DEBIT_CONSUMER_WALLET,
+      );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
+      // This does not seem to be called, whether or not the execute is awaited in service
+      when(
+        workflowExecutor.executeDebitConsumerWalletWorkflow(
+          transaction.debitConsumerID,
+          transaction.debitAmount,
+          transaction.transactionRef,
+        ),
+      ).thenResolve(transaction.transactionRef);
 
       const returnedTransactionRef = await transactionService.initiateTransaction(
         transactionDTO,
         consumer.props.id,
         null,
       );
+
+      expect(returnedTransactionRef).toEqual(transaction.transactionRef);
+    });
+
+    it("should initiate a CREDIT_CONSUMER_WALLET transaction", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        null,
+        WorkflowName.CREDIT_CONSUMER_WALLET,
+      );
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
+      // This does not seem to be called, whether or not the execute is awaited in service
+      when(
+        workflowExecutor.executeCreditConsumerWalletWorkflow(
+          transaction.creditConsumerID,
+          transaction.creditAmount,
+          transaction.transactionRef,
+        ),
+      ).thenResolve(transaction.transactionRef);
+
+      const returnedTransactionRef = await transactionService.initiateTransaction(
+        transactionDTO,
+        consumer.props.id,
+        null,
+      );
+
+      expect(returnedTransactionRef).toEqual(transaction.transactionRef);
+    });
+
+    it("should initiate a CONSUMER_WALLET_TRANSFER transaction", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        "consumerID2",
+        WorkflowName.CONSUMER_WALLET_TRANSFER,
+      );
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
+      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
+      // This does not seem to be called, whether or not the execute is awaited in service
+      when(
+        workflowExecutor.executeConsumerWalletTransferWorkflow(
+          transaction.creditConsumerID,
+          "consumerID2",
+          transaction.creditAmount,
+          transaction.transactionRef,
+        ),
+      ).thenResolve(transaction.transactionRef);
+
+      const returnedTransactionRef = await transactionService.initiateTransaction(
+        transactionDTO,
+        consumer.props.id,
+        null,
+      );
+
       expect(returnedTransactionRef).toEqual(transaction.transactionRef);
     });
 
