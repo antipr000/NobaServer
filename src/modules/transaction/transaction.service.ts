@@ -190,7 +190,6 @@ export class TransactionService {
 
     transaction.workflowName = transactionDetails.workflowName;
 
-    console.log("Creating transaction: ", transaction);
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
     switch (transactionDetails.workflowName) {

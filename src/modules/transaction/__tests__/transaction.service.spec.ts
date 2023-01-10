@@ -190,7 +190,6 @@ describe("TransactionServiceTests", () => {
       });
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(consumerService.findConsumerById(consumer2.props.id)).thenResolve(consumer2);
-      console.log(inputTransaction);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
       when(
         workflowExecutor.executeConsumerWalletTransferWorkflow(
@@ -251,7 +250,7 @@ describe("TransactionServiceTests", () => {
       },
     );
 
-    const transferCases = ["debitConsumerIDOrTag", "debitAmount", "debitCurrency"];
+    const transferCases = ["debitConsumerIDOrTag", "creditAmount", "creditCurrency"];
     test.each(transferCases)(
       "should throw ServiceException if debit field: %s is set for transfer transaction",
       async transferCase => {
@@ -460,6 +459,8 @@ const getRandomTransaction = (
       transaction.debitConsumerID = consumerID;
       transaction.creditConsumerID = consumerID2;
 
+      transactionDTO.debitAmount = transaction.debitAmount;
+      transactionDTO.debitCurrency = Currency.USD;
       transactionDTO.creditConsumerIDOrTag = transaction.creditConsumerID;
 
       inputTransaction.debitAmount = transaction.debitAmount;
