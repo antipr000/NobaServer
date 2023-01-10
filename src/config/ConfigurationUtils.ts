@@ -157,6 +157,10 @@ export const NOBA_WORKFLOW_CONNECTION_TIMEOUT_IN_MILLIS = "connectionTimeoutInMs
 export const NOBA_WORKFLOW_NAMESPACE = "namespace";
 export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TASK_QUEUE = "awsSecretNameForTaskQueue";
 export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_CLIENT_URL = "awsSecretNameForClientUrl";
+export const NOBA_WORKFLOW_TEMPORAL_CLOUD_CERTIFICATE = "temporalCloudCertificate";
+export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TEMPORAL_CLOUD_CERTIFICATE = "awsSecretForTemporalCloudCertificate";
+export const NOBA_WORKFLOW_TEMPORAL_CLOUD_PRIVATE_KEY = "temporalCloudPrivateKey";
+export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TEMPORAL_CLOUD_PRIVATE_KEY = "awsSecretForTemporalCloudPrivateKey";
 
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
@@ -209,6 +213,15 @@ export async function getParameterValue(awsSecretKey: string, customValue: strin
       throw Error(`Neither ${awsSecretKey} nor ${customValue} is set.`);
     }
     return customValue;
+  }
+
+  return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
+}
+
+// Use this if there is no default needed
+export async function getParameterValueFromAWSSecrets(awsSecretKey: string): Promise<string> {
+  if (awsSecretKey === undefined || awsSecretKey == null || awsSecretKey === "") {
+    return null;
   }
 
   return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
