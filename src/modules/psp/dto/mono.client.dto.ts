@@ -5,7 +5,7 @@ export type CollectionLinkRequest = {
   consumerEmail: string;
   consumerPhone: string;
   consumerName: string;
-}
+};
 
 export enum MonoCurrency {
   COP = "COP",

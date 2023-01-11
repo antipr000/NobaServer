@@ -11,13 +11,17 @@ export class QRService {
     const logger = this.logger;
 
     return new Promise((resolve, reject) => {
-      QRCode.toDataURL(encodedText, { type: "image/png" }, function (err, base64OfImage) {
-        if (err) {
-          logger.error(JSON.stringify(err));
-          reject(err);
-        }
-        resolve(base64OfImage);
-      });
+      QRCode.toDataURL(
+        encodedText,
+        { type: "image/png", color: { dark: "004252" }, width: 1000 },
+        (err, base64OfImage) => {
+          if (err) {
+            logger.error(JSON.stringify(err));
+            reject(err);
+          }
+          resolve(base64OfImage);
+        },
+      );
     });
   }
 }

@@ -4,11 +4,11 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import {
   WorkflowClient as TemporalWorkflowClient,
   Connection as TemporalConnection,
-  ConnectionOptions as TemporalConnectionOptions,
+  TLSConfig,
 } from "@temporalio/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { NOBA_CONFIG_KEY, NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class WorkflowExecutor {
@@ -26,7 +26,18 @@ export class WorkflowExecutor {
     workflowID: string,
     workflowParamsInOrder: any[],
   ): Promise<string> {
+    const tlsSettings: TLSConfig =
+      this.workflowConfigs.temporalCloudCertificate && this.workflowConfigs.temporalCloudPrivateKey
+        ? {
+            clientCertPair: {
+              crt: Buffer.from(this.workflowConfigs.temporalCloudCertificate),
+              key: Buffer.from(this.workflowConfigs.temporalCloudPrivateKey),
+            },
+          }
+        : undefined;
+
     const connection = await TemporalConnection.connect({
+      tls: tlsSettings,
       address: this.workflowConfigs.clientUrl,
       connectTimeout: this.workflowConfigs.connectionTimeoutInMs,
     });

@@ -13,7 +13,7 @@ type AppExceptionHTTPResponseType = {
   clientResponseExceptionData: string;
 };
 
-export type ApplicationExcpetionDetails = {
+export type ApplicationExceptionDetails = {
   error?: any;
   message?: string; //this is not visible to client, if not set will default to messageForClient
   statusCode?: HttpStatus;
@@ -34,12 +34,12 @@ export class ApplicationException extends Error {
   public readonly messageForServer?: string;
 
   public constructor(
-    options: ApplicationExcpetionDetails, //internal message for logging, this won't be sent to user
+    options: ApplicationExceptionDetails, //internal message for logging, this won't be sent to user
   ) {
     super(
       options.message ??
-      options.messageForClient ??
-      "AppException without message this shouldn't happen, We should specify excpetion message !!!!",
+        options.messageForClient ??
+        "AppException without message this shouldn't happen, We should specify excpetion message !!!!",
     );
     this.exceptionCodeForClient = options?.clientExceptionCode ?? this.exceptionCodeForClient;
     this.clientResponseExceptionData = options?.clientExceptionData ?? this.clientResponseExceptionData;
@@ -67,7 +67,7 @@ export class ApplicationException extends Error {
     return new HttpException(this.getHttpResponse(), this.getHTTPStatusCode());
   }
 
-  public getDetailsForServer(): ApplicationExcpetionDetails {
+  public getDetailsForServer(): ApplicationExceptionDetails {
     return {
       error: this.error,
       message: this.message,

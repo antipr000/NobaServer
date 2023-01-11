@@ -3,16 +3,29 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { Logger } from "winston";
-import { convertToDomainTransaction, MonoTransaction, MonoTransactionCreateRequest, MonoTransactionState, MonoTransactionUpdateRequest, validateCreateMonoTransactionRequest, validateMonoTransaction, validateUpdateMonoTransactionRequest } from "../../domain/Mono";
+import {
+  convertToDomainTransaction,
+  MonoTransaction,
+  MonoTransactionCreateRequest,
+  MonoTransactionState,
+  MonoTransactionUpdateRequest,
+  validateCreateMonoTransactionRequest,
+  validateMonoTransaction,
+  validateUpdateMonoTransactionRequest,
+} from "../../domain/Mono";
 import { IMonoRepo } from "./mono.repo";
-import { DatabaseInternalErrorException, InvalidDatabaseRecordException, NotFoundError } from "../../../../core/exception/CommonAppException";
+import {
+  DatabaseInternalErrorException,
+  InvalidDatabaseRecordException,
+  NotFoundError,
+} from "../../../../core/exception/CommonAppException";
 
 @Injectable()
 export class SqlMonoRepo implements IMonoRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   async createMonoTransaction(request: MonoTransactionCreateRequest): Promise<MonoTransaction> {
     validateCreateMonoTransactionRequest(request);
@@ -26,7 +39,7 @@ export class SqlMonoRepo implements IMonoRepo {
         transaction: {
           connect: {
             id: request.nobaTransactionID,
-          }
+          },
         },
         collectionLinkID: request.collectionLinkID,
         collectionUrl: request.collectionUrl,
@@ -55,7 +68,10 @@ export class SqlMonoRepo implements IMonoRepo {
     }
   }
 
-  async updateMonoTransaction(nobaTransactionID: string, request: MonoTransactionUpdateRequest): Promise<MonoTransaction> {
+  async updateMonoTransaction(
+    nobaTransactionID: string,
+    request: MonoTransactionUpdateRequest,
+  ): Promise<MonoTransaction> {
     validateUpdateMonoTransactionRequest(request);
 
     try {

@@ -26,4 +26,7 @@ export class InitiateTransactionDTO {
 
   @ApiPropertyOptional()
   exchangeRate?: number;
+
+  @ApiPropertyOptional()
+  memo?: string;
 }

@@ -9,11 +9,12 @@ import { Logger } from "winston";
 import { TRANSACTION_REPO_PROVIDER } from "./repo/transaction.repo.module";
 import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
-import { BadRequestError } from "../../core/exception/CommonAppException";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
-import { Entity } from "../../core/domain/Entity";
-import { v4 } from "uuid";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { Currency } from "./domain/TransactionTypes";
+import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
+import { ExchangeRateService } from "../common/exchangerate.service";
 
 @Injectable()
 export class TransactionService {
@@ -22,6 +23,7 @@ export class TransactionService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly consumerService: ConsumerService,
     private readonly workflowExecutor: WorkflowExecutor,
+    private readonly exchangeRateService: ExchangeRateService,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -35,8 +37,8 @@ export class TransactionService {
     return transaction;
   }
 
-  async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<Transaction[]> {
-    throw new Error("Not implemented!");
+  async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
+    return await this.transactionRepo.getFilteredTransactions(filter);
   }
 
   async initiateTransaction(
@@ -108,15 +110,22 @@ export class TransactionService {
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
         break;
+      default:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Invalid workflow name",
+        });
     }
 
-    let transaction: InputTransaction = {
+    const transaction: InputTransaction = {
       creditAmount: transactionDetails.creditAmount,
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
       debitCurrency: transactionDetails.debitCurrency,
       exchangeRate: transactionDetails.exchangeRate,
       workflowName: transactionDetails.workflowName,
+      memo: transactionDetails.memo,
+      sessionKey: sessionKey,
       transactionRef: Utils.generateLowercaseUUID(true),
     };
 
@@ -216,15 +225,62 @@ export class TransactionService {
         break;
       default:
         throw new ServiceException({
+          // Shouldn't get here as validation done above, but good for completness
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid workflow type",
+          message: "Invalid workflow name",
         });
     }
 
     return savedTransaction.transactionRef;
   }
 
-  async calculateExchangeRate(baseCurrency: string, targetCurrency: string): Promise<string> {
-    throw new Error("Not implemented!");
+  async calculateExchangeRate(
+    amount: number,
+    amountCurrency: Currency,
+    desiredCurrency: Currency,
+  ): Promise<QuoteResponseDTO> {
+    if (Object.values(Currency).indexOf(amountCurrency) === -1) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Invalid base currency",
+      });
+    }
+
+    if (Object.values(Currency).indexOf(desiredCurrency) === -1) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Invalid desired currency",
+      });
+    }
+
+    const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+      amountCurrency,
+      desiredCurrency,
+    );
+
+    if (!exchangeRateDTO) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "No exchange rate found for currency pair",
+      });
+    }
+
+    const exchangeRate = exchangeRateDTO.nobaRate;
+    let desiredAmount = 0;
+    let desiredAmountWithFees = 0;
+    if (desiredCurrency === Currency.COP) {
+      desiredAmount = amount / exchangeRate;
+      desiredAmountWithFees = desiredAmount - 1.19 * (0.0265 * desiredAmount + 900);
+    } else {
+      desiredAmount = amount / exchangeRate;
+      const baseCurrencyWithFees = amount - 1.19 * (0.0265 * amount + 900);
+      desiredAmountWithFees = baseCurrencyWithFees / exchangeRate;
+    }
+
+    return {
+      quoteAmount: Utils.roundTo2DecimalString(desiredAmount),
+      quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmountWithFees),
+      exchangeRate: exchangeRate.toString(),
+    };
   }
 }

@@ -13,7 +13,7 @@ import { nobaAdminIdentityIdentifier } from "../domain/IdentityType";
 import { Admin } from "../../../../src/modules/admin/domain/Admin";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
-import { ITokenRepo } from "../repo/TokenRepo";
+import { ITokenRepo } from "../repo/token.repo";
 import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
 import { OTPService } from "../../../modules/common/otp.service";
 import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";

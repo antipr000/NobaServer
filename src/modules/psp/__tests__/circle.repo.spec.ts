@@ -5,8 +5,8 @@ import { PrismaService } from "../../../infraproviders/PrismaService";
 import { ICircleRepo } from "../repos/CircleRepo";
 import { SQLCircleRepo } from "../repos/SQLCircleRepo";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { IConsumerRepo } from "../../../modules/consumer/repos/ConsumerRepo";
-import { SQLConsumerRepo } from "../../../modules/consumer/repos/SQLConsumerRepo";
+import { IConsumerRepo } from "../../consumer/repos/consumer.repo";
+import { SQLConsumerRepo } from "../../consumer/repos/sql.consumer.repo";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { v4 } from "uuid";
 import { Utils } from "../../../core/utils/Utils";
@@ -99,6 +99,7 @@ const getRandomUser = (): Consumer => {
     firstName: "Noba",
     lastName: "lastName",
     email: email,
+    displayEmail: email,
     referralCode: Utils.getAlphaNanoID(15),
     handle: `@${v4()}`,
   };

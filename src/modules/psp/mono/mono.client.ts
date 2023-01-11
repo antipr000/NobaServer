@@ -5,7 +5,7 @@ import { MONO_CONFIG_KEY } from "src/config/ConfigurationUtils";
 import { CustomConfigService } from "src/core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { CollectionLinkRequest } from "../dto/mono.client.dto";
-import axios from 'axios';
+import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { InternalServiceErrorException } from "src/core/exception/CommonAppException";
 
@@ -33,15 +33,15 @@ export class MonoClient {
 
   private getIdempotentHeader(idempotencyKeySeed: string): Record<string, string> {
     return {
-      'x-idempotency-key': convertToUUIDv4(idempotencyKeySeed),
+      "x-idempotency-key": convertToUUIDv4(idempotencyKeySeed),
     };
   }
 
   async createCollectionLink(request: CollectionLinkRequest): Promise<string> {
     const url = `${this.baseUrl}/${this.apiVersion}/collection_links`;
     const headers = {
-      ... this.getAuthorizationHeader(),
-      ... this.getIdempotentHeader(request.transactionID),
+      ...this.getAuthorizationHeader(),
+      ...this.getIdempotentHeader(request.transactionID),
     };
 
     const requestBody = {
@@ -71,7 +71,7 @@ export class MonoClient {
         required: false,
         value: "",
       },
-      usage_type: "single_use"
+      usage_type: "single_use",
     };
 
     try {
@@ -82,4 +82,4 @@ export class MonoClient {
       throw new InternalServiceErrorException({ message: "Error while creating Mono collection link" });
     }
   }
-};
+}

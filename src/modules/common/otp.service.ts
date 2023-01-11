@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { IdentityType } from "@prisma/client";
-import { IOTPRepo } from "./repo/OTPRepo";
+import { IOTPRepo } from "./repo/otp.repo";
 import { Utils } from "../../core/utils/Utils";
 import { isAfter } from "date-fns";
 

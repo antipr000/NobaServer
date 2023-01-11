@@ -123,9 +123,11 @@ nobaWorkflow:
   taskQueue: "NOBA_TASK_QUEUE"
   awsSecretNameForTaskQueue: "TEST_NOBA_WORKFLOW_TASK_QUEUE"
   clientUrl: ""
-  awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_CLIENT_URL"
+  awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_PARTNER_URL"
+  awsSecretForTemporalCloudCertificate: "TEST_TEMPORAL_CLOUD_CERTIFICATE"
+  awsSecretForTemporalCloudPrivateKey: "TEST_TEMPORAL_CLOUD_PRIVATE_KEY"
   connectionTimeoutInMs: 1000
-  namespace: "partner"
+  namespace: "partner.h4n3l"
 
 mono:
   bearerToken: ""

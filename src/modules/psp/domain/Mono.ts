@@ -23,12 +23,12 @@ export class MonoTransactionCreateRequest {
   nobaTransactionID: string;
   collectionLinkID: string;
   collectionUrl: string;
-};
+}
 
 export class MonoTransactionUpdateRequest {
   monoTransactionID: string;
   state: MonoTransactionState;
-};
+}
 
 export const validateCreateMonoTransactionRequest = (transaction: MonoTransactionCreateRequest) => {
   const transactionJoiValidationKeys: KeysRequired<MonoTransactionCreateRequest> = {
@@ -47,7 +47,9 @@ export const validateCreateMonoTransactionRequest = (transaction: MonoTransactio
 export const validateUpdateMonoTransactionRequest = (transaction: MonoTransactionUpdateRequest) => {
   const transactionJoiValidationKeys: KeysRequired<MonoTransactionUpdateRequest> = {
     monoTransactionID: Joi.string().optional(),
-    state: Joi.string().optional().valid(...Object.values(MonoTransactionState)),
+    state: Joi.string()
+      .optional()
+      .valid(...Object.values(MonoTransactionState)),
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
@@ -64,7 +66,9 @@ export const validateMonoTransaction = (transaction: MonoTransaction) => {
     collectionUrl: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
     monoTransactionID: Joi.string().optional(),
-    state: Joi.string().required().valid(...Object.values(MonoTransactionState)),
+    state: Joi.string()
+      .required()
+      .valid(...Object.values(MonoTransactionState)),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };

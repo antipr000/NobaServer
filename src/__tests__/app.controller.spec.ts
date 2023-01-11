@@ -13,14 +13,17 @@ import { getMockLocationServiceWithDefaults } from "../modules/common/mocks/mock
 import { getMockCurrencyServiceWithDefaults } from "../modules/common/mocks/mock.currency.service";
 import { ConfigurationProviderService } from "../modules/common/configuration.provider.service";
 import { getMockConfigurationProviderServiceWithDefaults } from "../modules/common/mocks/mock.configuration.provider.service";
-import { NotFoundException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { BINValidity, CardType, CreditCardDTO } from "../modules/common/dto/CreditCardDTO";
 import { X_NOBA_API_KEY } from "../modules/auth/domain/HeaderConstants";
+import { getMockExchangeRateServiceWithDefaults } from "../modules/common/mocks/mock.exchangerate.service";
+import { ExchangeRateService } from "../modules/common/exchangerate.service";
 
 describe("AppController", () => {
   let appController: AppController;
   let appService: AppService;
   let mockCurrencyService: CurrencyService;
+  let mockExchangeRateService: ExchangeRateService;
   let mockCreditCardService: CreditCardService;
   let mockLocationService: LocationService;
   let mockConfigurationProviderService: ConfigurationProviderService;
@@ -28,6 +31,7 @@ describe("AppController", () => {
   beforeEach(async () => {
     appService = getMockAppServiceWithDefaults();
     mockCurrencyService = getMockCurrencyServiceWithDefaults();
+    mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
     mockCreditCardService = getMockCreditCardServiceWithDefaults();
     mockLocationService = getMockLocationServiceWithDefaults();
     mockConfigurationProviderService = getMockConfigurationProviderServiceWithDefaults();
@@ -55,6 +59,10 @@ describe("AppController", () => {
         {
           provide: ConfigurationProviderService,
           useFactory: () => instance(mockConfigurationProviderService),
+        },
+        {
+          provide: ExchangeRateService,
+          useFactory: () => instance(mockExchangeRateService),
         },
       ],
     }).compile();
@@ -213,6 +221,61 @@ describe("AppController", () => {
       expect(async () => {
         const result = await appController.getCreditCardBIN("XXX");
       }).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("getExchangeRates()", () => {
+    it("should return the requested exchange rate", async () => {
+      when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      });
+
+      const result = await appController.getExchangeRate("USD", "COP");
+
+      // Just ensuring something's returned. Other unit tests are responsible for exactly what's returned.
+      expect(result).not.toBeNull();
+    });
+
+    it("should throw NotFoundException if the currency pair doesn't exist", async () => {
+      when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(null);
+
+      expect(async () => {
+        await appController.getExchangeRate("USD", "COP");
+      }).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw BadRequestException if the numerator currency is not provided", async () => {
+      expect(async () => {
+        await appController.getExchangeRate(null, "COP");
+      }).rejects.toThrow(BadRequestException);
+
+      expect(async () => {
+        await appController.getExchangeRate(undefined, "COP");
+      }).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException if the denominator currency is not provided", async () => {
+      expect(async () => {
+        await appController.getExchangeRate("USD", null);
+      }).rejects.toThrow(BadRequestException);
+
+      expect(async () => {
+        await appController.getExchangeRate(undefined, null);
+      }).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException if either currency is not 3 characters", async () => {
+      expect(async () => {
+        await appController.getExchangeRate("US", "COP");
+      }).rejects.toThrow(BadRequestException);
+
+      expect(async () => {
+        await appController.getExchangeRate("USD", "CO");
+      }).rejects.toThrow(BadRequestException);
     });
   });
 });

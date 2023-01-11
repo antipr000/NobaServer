@@ -13,6 +13,7 @@ import {
   ForbiddenException,
   Patch,
   NotFoundException,
+  BadRequestException,
 } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -26,6 +27,7 @@ import {
   ApiHeaders,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
@@ -45,6 +47,9 @@ import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 import { TransactionService } from "../transactions/transaction.service";
+import { ExchangeRateService } from "../common/exchangerate.service";
+import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
+import { ServiceException } from "src/core/exception/ServiceException";
 
 @Controller("v1/admins")
 @ApiBearerAuth("JWT-auth")
@@ -65,6 +70,9 @@ export class AdminController {
 
   @Inject()
   private readonly transactionService: TransactionService;
+
+  @Inject()
+  private readonly exchangeRateService: ExchangeRateService;
 
   private readonly consumerMapper: ConsumerMapper = new ConsumerMapper();
 
@@ -225,10 +233,55 @@ export class AdminController {
     return this.consumerMapper.toDTO(updatedConsumerData, paymentMethods, cryptoWallets);
   }
 
-  private convertToLastMinuteOfDay(date: Date): Date {
-    date.setHours(23);
-    date.setMinutes(59);
-    date.setSeconds(59);
-    return date;
+  @Post("/exchangerates")
+  @ApiOperation({ summary: "Creates a new exchange rate entry" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description:
+      "The newly created exchange rate(s). Index [0] is the forward rate that was created, index [1] is the inverse rate if addInverse is true",
+    type: [ExchangeRateDTO],
+  })
+  @ApiForbiddenResponse({ description: "User forbidden from adding new exchange rate" })
+  @ApiQuery({ name: "addInverse", type: "boolean", description: "Whether to also add the inverse of this rate" })
+  async createExchangeRate(
+    @Request() request,
+    @Body() exchangeRate: ExchangeRateDTO,
+    @Query("addInverse") addInverse = "false",
+  ): Promise<ExchangeRateDTO[]> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException(`User is forbidden from calling this API.`);
+    }
+
+    if (exchangeRate.bankRate === 0 || exchangeRate.nobaRate === 0) {
+      throw new BadRequestException("Exchange rate cannot be zero");
+    }
+
+    const insertedExchangeRates = new Array();
+
+    const savedExchangeRate: ExchangeRateDTO = await this.exchangeRateService.createExchangeRate(exchangeRate);
+    if (savedExchangeRate == null) {
+      throw new BadRequestException("Unable to add exchange rate");
+    }
+    insertedExchangeRates.push(savedExchangeRate);
+
+    // Booleans are not handled well by Swagger, so we need to treat as a string
+    if (addInverse == "true") {
+      const inverseRate: ExchangeRateDTO = {
+        numeratorCurrency: exchangeRate.denominatorCurrency,
+        denominatorCurrency: exchangeRate.numeratorCurrency,
+        bankRate: 1 / exchangeRate.bankRate,
+        nobaRate: exchangeRate.nobaRate ? 1 / exchangeRate.nobaRate : undefined,
+        expirationTimestamp: exchangeRate.expirationTimestamp,
+      };
+      const savedInverseExchangeRate = await this.exchangeRateService.createExchangeRate(inverseRate);
+
+      if (savedInverseExchangeRate == null) {
+        throw new BadRequestException("Unable to add exchange rate");
+      }
+      insertedExchangeRates.push(savedInverseExchangeRate);
+    }
+
+    return insertedExchangeRates;
   }
 }

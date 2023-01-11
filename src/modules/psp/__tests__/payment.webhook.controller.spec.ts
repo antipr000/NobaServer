@@ -8,7 +8,7 @@ import { anything, capture, instance, when } from "ts-mockito";
 import { CheckoutWebhooksMapper } from "../mapper/checkout.webhooks";
 import { PaymentWebhooksController } from "../payment.webhook.controller";
 
-const crypto_ts = require("crypto");
+import crypto_ts from "crypto";
 
 describe("PaymentWebhooksController", () => {
   jest.setTimeout(2000);

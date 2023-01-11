@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
-import { LimitProfile } from "../domain/LimitProfile";
-import { LimitConfiguration } from "../domain/LimitConfiguration";
+import { LimitProfile } from "../../transaction/domain/LimitProfile";
+import { LimitConfiguration } from "../../transaction/domain/LimitConfiguration";
 
 export class LimitsRepoMapper {
   toCreateLimitProfileInput(limitProfile: LimitProfile): Prisma.LimitProfileCreateInput {

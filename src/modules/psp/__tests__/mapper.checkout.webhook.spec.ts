@@ -20,8 +20,6 @@ describe("CheckoutWebhooksMapperTests", () => {
     checkoutWebhooksMapper = app.get<CheckoutWebhooksMapper>(CheckoutWebhooksMapper);
   });
 
-  afterEach(() => {});
-
   it("'convertRawPaymentPendingWebhook' should map all the fields correctly", () => {
     const paymentPendingCompleteWebhookResponse = {
       id: "evt_3anivkerwvgetnqszdhepxu2cy",

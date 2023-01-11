@@ -18,6 +18,9 @@ import {
   validateUpdateTransaction,
 } from "../domain/Transaction";
 import { ITransactionRepo } from "./transaction.repo";
+import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
 
 @Injectable()
 export class SQLTransactionRepo implements ITransactionRepo {
@@ -55,6 +58,8 @@ export class SQLTransactionRepo implements ITransactionRepo {
         ...(inputTransaction.creditAmount && { creditAmount: inputTransaction.creditAmount }),
         ...(inputTransaction.debitCurrency && { debitCurrency: inputTransaction.debitCurrency }),
         ...(inputTransaction.creditCurrency && { creditCurrency: inputTransaction.creditCurrency }),
+        ...(inputTransaction.memo && { memo: inputTransaction.memo }),
+        ...(inputTransaction.sessionKey && { sessionKey: inputTransaction.sessionKey }),
         exchangeRate: inputTransaction.exchangeRate,
       };
 
@@ -148,6 +153,39 @@ export class SQLTransactionRepo implements ITransactionRepo {
       this.logger.error(JSON.stringify(err));
       return [];
     }
+  }
+
+  async getFilteredTransactions(
+    transactionFilterOptions: TransactionFilterOptionsDTO,
+  ): Promise<PaginatedResult<Transaction>> {
+    const paginator = createPaginator<Transaction>(
+      transactionFilterOptions.pageOffset,
+      transactionFilterOptions.pageLimit,
+      convertToDomainTransaction,
+    );
+    const filterQuery: Prisma.TransactionFindManyArgs = {
+      where: {
+        OR: [
+          {
+            creditConsumerID: transactionFilterOptions.consumerID,
+          },
+          {
+            debitConsumerID: transactionFilterOptions.consumerID,
+          },
+        ],
+        ...(transactionFilterOptions.debitCurrency && { debitCurrency: transactionFilterOptions.debitCurrency }),
+        ...(transactionFilterOptions.creditCurrency && { creditCurrency: transactionFilterOptions.creditCurrency }),
+        ...(transactionFilterOptions.transactionStatus && { status: transactionFilterOptions.transactionStatus }),
+        ...(transactionFilterOptions.startDate && {
+          createdTimestamp: { gte: new Date(transactionFilterOptions.startDate) },
+        }),
+        ...(transactionFilterOptions.endDate && {
+          updatedTimestamp: { lte: new Date(transactionFilterOptions.endDate) },
+        }),
+      },
+    };
+
+    return await paginator(this.prismaService.transaction, filterQuery);
   }
 
   async updateTransactionByTransactionRef(

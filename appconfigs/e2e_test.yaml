@@ -135,6 +135,8 @@ nobaWorkflow:
   awsSecretNameForTaskQueue: ""
   clientUrl: "test"
   awsSecretNameForClientUrl: ""
+  awsSecretForTemporalCloudCertificate: ""
+  awsSecretForTemporalCloudPrivateKey: ""
   connectionTimeoutInMs: 1000
   namespace: "e2e_test"
 

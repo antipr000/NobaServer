@@ -31,15 +31,23 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
-import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
 import { ServiceException } from "../../core/exception/ServiceException";
+import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
+import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
+import { LimitsService } from "./limits.service";
+import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
+import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
+import { TransactionType } from "@prisma/client";
+import { TransactionsQueryResultDTO } from "./dto/TransactionQueryResultDTO";
+import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
+import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
+import { Public } from "../auth/public.decorator";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
 @Controller("v2")
-@ApiTags("Transaction")
 @ApiHeaders(getCommonHeaders())
 export class TransactionController {
   @Inject()
@@ -48,6 +56,9 @@ export class TransactionController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
+  @Inject()
+  private readonly limitsService: LimitsService;
+
   private readonly mapper: TransactionMapper;
 
   constructor() {
@@ -55,6 +66,7 @@ export class TransactionController {
   }
 
   @Get("/transactions/:transactionRef")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -73,40 +85,30 @@ export class TransactionController {
   }
 
   @Get("/transactions/")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: Array<TransactionDTO>,
+    type: TransactionsQueryResultDTO,
   })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllTransactions(
     @Query() filters: TransactionFilterOptionsDTO,
     @AuthUser() consumer: Consumer,
-  ): Promise<TransactionDTO[]> {
+  ): Promise<TransactionsQueryResultDTO> {
     filters.consumerID = consumer.props.id;
+    filters.pageLimit = Number(filters.pageLimit) || 10;
+    filters.pageOffset = Number(filters.pageOffset) || 1;
     const allTransactions = await this.transactionService.getFilteredTransactions(filters);
-    return allTransactions.map(transaction => this.mapper.toDTO(transaction));
-  }
-
-  @Get("/transactions/rate/")
-  @ApiOperation({ summary: "Get exchange rate of conversion" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ExchangeRateDTO,
-  })
-  @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getExchangeRate(
-    @Query("numeratorCurrency") numeratorCurrency: string,
-    @Query("denominatorCurrency") denominatorCurrency: string,
-  ): Promise<ExchangeRateDTO> {
-    const exchangeRate = await this.transactionService.calculateExchangeRate(numeratorCurrency, denominatorCurrency);
-    return {
-      numeratorCurrency: numeratorCurrency,
-      denominatorCurrency: denominatorCurrency,
-      exchangeRate: exchangeRate,
+    const resultTransactions: TransactionsQueryResultDTO = {
+      ...allTransactions,
+      items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
     };
+    return resultTransactions;
   }
 
   @Post("/transactions/")
+  @ApiTags("Transaction")
   @ApiOperation({ summary: "Submits a new transaction" })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -132,5 +134,59 @@ export class TransactionController {
         throw new BadRequestException("Failed to make the payment");
       }
     }
+  }
+
+  @Get("/transactions/quote")
+  @Public()
+  @ApiTags("Transaction")
+  @ApiOperation({ summary: "Gets a quote in specified currency" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: QuoteResponseDTO,
+  })
+  @ApiNotFoundResponse({ description: "Quote for given currency not found" })
+  async getQuote(@Query() quoteQuery: QuoteRequestDTO): Promise<QuoteResponseDTO> {
+    return await this.transactionService.calculateExchangeRate(
+      quoteQuery.amount,
+      quoteQuery.currency,
+      quoteQuery.desiredCurrency,
+    );
+  }
+
+  @Get("/transactions/check")
+  @ApiTags("Transaction")
+  @ApiOperation({
+    summary: "Checks if the transaction parameters are valid",
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: CheckTransactionDTO })
+  async checkIfTransactionPossible(
+    @Query() checkTransactionQuery: CheckTransactionQueryDTO,
+    @AuthUser() authUser: Consumer,
+  ): Promise<CheckTransactionDTO> {
+    const tAmount = checkTransactionQuery.transactionAmount;
+    const checkTransactionResponse: CheckTransactionDTO = await this.limitsService.canMakeTransaction(
+      authUser,
+      tAmount,
+      checkTransactionQuery.type,
+    );
+
+    return checkTransactionResponse;
+  }
+
+  @Get("/consumers/limits/")
+  @ApiTags("Consumer")
+  @ApiOperation({ summary: "Gets transaction limit details for logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ConsumerLimitsDTO,
+    description: "Consumer limit details",
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getConsumerLimits(
+    @Query() consumerLimitsQuery: ConsumerLimitsQueryDTO,
+    @AuthUser() authUser: Consumer,
+  ): Promise<ConsumerLimitsDTO> {
+    if (!consumerLimitsQuery.transactionType) consumerLimitsQuery.transactionType = TransactionType.NOBA_WALLET;
+    return this.limitsService.getConsumerLimits(authUser, consumerLimitsQuery.transactionType);
   }
 }

@@ -18,10 +18,15 @@ export class SecretProvider {
         } else {
           // Depending on whether the secret is a string or binary, one of these fields will be populated.
           if ("SecretString" in data) {
-            const secretKeyValue = JSON.parse(data.SecretString);
-            resolve(secretKeyValue[secretName] ?? null);
+            try {
+              const secretKeyValue = JSON.parse(data.SecretString);
+              resolve(secretKeyValue[secretName] ?? null);
+            } catch (e) {
+              // Not JSON
+              resolve(data.SecretString);
+            }
           } else {
-            const buff = new Buffer(data.SecretBinary as any, "base64");
+            const buff = Buffer.from(data.SecretBinary as any, "base64");
             const decodedBinarySecret = buff.toString("ascii");
             resolve(decodedBinarySecret);
           }

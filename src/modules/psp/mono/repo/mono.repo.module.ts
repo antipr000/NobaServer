@@ -15,4 +15,4 @@ export const MONO_REPO_PROVIDER = "MONO_REPO";
   ],
   exports: [MONO_REPO_PROVIDER],
 })
-export class MonoRepoModule { }
+export class MonoRepoModule {}

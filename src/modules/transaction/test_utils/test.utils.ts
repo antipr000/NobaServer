@@ -16,7 +16,7 @@ export const createTestNobaTransaction = async (prismaService: PrismaService): P
       creditConsumer: {
         connect: {
           id: consumerID,
-        }
+        },
       },
       status: TransactionStatus.IN_PROGRESS,
     },

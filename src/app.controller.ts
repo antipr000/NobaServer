@@ -1,5 +1,24 @@
-import { Controller, Get, HttpStatus, Inject, NotFoundException, Param, Query, Headers } from "@nestjs/common";
-import { ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  NotFoundException,
+  Param,
+  Query,
+  Headers,
+  BadRequestException,
+} from "@nestjs/common";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiHeaders,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { getCommonHeaders } from "./core/utils/CommonHeaders";
@@ -12,12 +31,15 @@ import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
+import { ExchangeRateService } from "./modules/common/exchangerate.service";
+import { ExchangeRateDTO } from "./modules/common/dto/ExchangeRateDTO";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
 export class AppController {
   constructor(
     private readonly currencyService: CurrencyService,
+    private readonly exchangeRateService: ExchangeRateService,
     private readonly locationService: LocationService,
     private readonly creditCardService: CreditCardService,
     private readonly configurationsProviderService: ConfigurationProviderService,
@@ -57,6 +79,44 @@ export class AppController {
   @ApiTags("Assets")
   async supportedFiatCurrencies(): Promise<CurrencyDTO[]> {
     return this.currencyService.getSupportedFiatCurrencies();
+  }
+
+  @Get("exchangerates")
+  @ApiBearerAuth("JWT-auth")
+  @ApiTags("Assets")
+  @ApiOperation({ summary: "Get exchange rate between a currency pair" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ExchangeRateDTO,
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  @ApiNotFoundResponse({ description: "Exchange rate not found" })
+  async getExchangeRate(
+    @Query("numeratorCurrency") numeratorCurrency: string,
+    @Query("denominatorCurrency") denominatorCurrency: string,
+  ): Promise<ExchangeRateDTO> {
+    if (!numeratorCurrency) {
+      throw new BadRequestException("Numerator currency is required");
+    } else if (!denominatorCurrency) {
+      throw new BadRequestException("Denominator currency is required");
+    }
+
+    if (numeratorCurrency.length !== 3) {
+      throw new BadRequestException("Numerator currency must be a 3 letter ISO code");
+    } else if (denominatorCurrency.length !== 3) {
+      throw new BadRequestException("Denominator currency must be a 3 letter ISO code");
+    }
+
+    const exchangeRate = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+      numeratorCurrency,
+      denominatorCurrency,
+    );
+
+    if (!exchangeRate) {
+      throw new NotFoundException("Exchange rate not found");
+    }
+
+    return exchangeRate;
   }
 
   @Public()
