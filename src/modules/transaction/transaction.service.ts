@@ -73,6 +73,20 @@ export class TransactionService {
           });
         }
 
+        if (transactionDetails.creditAmount <= 0) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditAmount must be greater than 0 for CREDIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        if (!transactionDetails.creditCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditCurrency must be set for CREDIT_CONSUMER_WALLET workflow",
+          });
+        }
+
         transactionDetails.debitConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
         transactionDetails.creditConsumerIDOrTag = initiatingConsumer;
         transactionDetails.debitAmount = transactionDetails.creditAmount;
@@ -94,6 +108,20 @@ export class TransactionService {
           });
         }
 
+        if (transactionDetails.debitAmount <= 0) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitAmount must be greater than 0 for DEBIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        if (!transactionDetails.debitCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitCurrency must be set for DEBIT_CONSUMER_WALLET workflow",
+          });
+        }
+
         transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
         transactionDetails.creditConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
         transactionDetails.creditAmount = transactionDetails.debitAmount;
@@ -112,6 +140,20 @@ export class TransactionService {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
             message: "creditAmount and creditCurrency cannot be set for CONSUMER_WALLET_TRANSFER workflow",
+          });
+        }
+
+        if (transactionDetails.debitAmount <= 0) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitAmount must be greater than 0 for CONSUMER_WALLET_TRANSFER workflow",
+          });
+        }
+
+        if (!transactionDetails.debitCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitCurrency must be set for CONSUMER_WALLET_TRANSFER workflow",
           });
         }
 

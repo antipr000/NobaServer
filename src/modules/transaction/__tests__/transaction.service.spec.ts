@@ -226,7 +226,7 @@ describe("TransactionServiceTests", () => {
 
     const creditCases = ["creditConsumerIDOrTag", "creditAmount", "creditCurrency"];
     test.each(creditCases)(
-      "should throw ServiceException if credit field: %s is set for debit transaction",
+      "should throw ServiceException if credit field: %s is set for DEBIT_CONSUMER_WALLET",
       async creditCase => {
         const consumer = getRandomConsumer("consumerID");
         const { transactionDTO } = getRandomTransaction(consumer.props.id);
@@ -239,7 +239,7 @@ describe("TransactionServiceTests", () => {
 
     const debitCases = ["debitConsumerIDOrTag", "debitAmount", "debitCurrency"];
     test.each(debitCases)(
-      "should throw ServiceException if debit field: %s is set for credit transaction",
+      "should throw ServiceException if debit field: %s is set for CREDIT_CONSUMER_WALLET",
       async debitCase => {
         const consumer = getRandomConsumer("consumerID");
         const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CREDIT_CONSUMER_WALLET);
@@ -252,7 +252,7 @@ describe("TransactionServiceTests", () => {
 
     const transferCases = ["debitConsumerIDOrTag", "creditAmount", "creditCurrency"];
     test.each(transferCases)(
-      "should throw ServiceException if debit field: %s is set for transfer transaction",
+      "should throw ServiceException if debit field: %s is set for CONSUMER_WALLET_TRANSFER",
       async transferCase => {
         const consumer = getRandomConsumer("consumerID");
         const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
@@ -262,6 +262,60 @@ describe("TransactionServiceTests", () => {
         ).rejects.toThrowError(ServiceException);
       },
     );
+
+    it("should throw ServiceException if debitAmount is less than 0 for DEBIT_CONSUMER_WALLET", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      transactionDTO.debitAmount = -1;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if creditAmount is less than 0 for CREDIT_CONSUMER_WALLET", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CREDIT_CONSUMER_WALLET);
+      transactionDTO.creditAmount = -1;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if debitAmount is less than 0 for CONSUMER_WALLET_TRANSFER", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+      transactionDTO.debitAmount = -1;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if debitCurrency is not set for DEBIT_CONSUMER_WALLET", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      transactionDTO.debitCurrency = null;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if creditCurrency is not set for CREDIT_CONSUMER_WALLET", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CREDIT_CONSUMER_WALLET);
+      transactionDTO.creditCurrency = null;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if debitCurrency is not set for CONSUMER_WALLET_TRANSFER", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+      transactionDTO.debitCurrency = null;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
 
     it("should throw ServiceException if debit consumerID not found", async () => {
       const consumer = getRandomConsumer("consumerID");
