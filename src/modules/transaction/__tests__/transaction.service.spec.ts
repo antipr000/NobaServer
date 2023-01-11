@@ -20,8 +20,6 @@ import { Utils } from "../../../core/utils/Utils";
 import { ServiceException } from "../../../core/exception/ServiceException";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
-import { Currency } from "../domain/TransactionTypes";
-import { ServiceException } from "../../../core/exception/ServiceException";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "../domain/TransactionEvent";
 
