@@ -478,10 +478,11 @@ describe("TransactionServiceTests", () => {
         message: transactionEventToAdd.message,
       };
 
+      const timestamp = new Date();
       when(transactionRepo.addTransactionEvent(deepEqual(inputTransactionEvent))).thenResolve({
         ...inputTransactionEvent,
         id: "event-id",
-        timestamp: new Date(),
+        timestamp: timestamp,
       });
 
       const returnedTransactionEvent = await transactionService.addTransactionEvent(
@@ -491,7 +492,7 @@ describe("TransactionServiceTests", () => {
 
       expect(returnedTransactionEvent).toEqual({
         ...transactionEventToAdd,
-        timestamp: anything(),
+        timestamp: timestamp,
       });
     });
 
@@ -520,11 +521,12 @@ describe("TransactionServiceTests", () => {
         param5: transactionEventToAdd.parameters[4],
       };
 
+      const timestamp = new Date();
       // TODO: Figure out why deepEqual(inputTransactionEvent) doesn't work here
       when(transactionRepo.addTransactionEvent(anything())).thenResolve({
         ...inputTransactionEvent,
         id: "event-id",
-        timestamp: new Date(),
+        timestamp: timestamp,
       });
 
       const returnedTransactionEvent = await transactionService.addTransactionEvent(
@@ -534,7 +536,7 @@ describe("TransactionServiceTests", () => {
 
       expect(returnedTransactionEvent).toEqual({
         ...transactionEventToAdd,
-        timestamp: anything(),
+        timestamp: timestamp,
       });
     });
 
