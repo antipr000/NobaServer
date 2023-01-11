@@ -15,7 +15,7 @@ export class Transaction {
   creditAmount?: number;
   status: TransactionStatus;
   exchangeRate: number;
-  memo: string;
+  memo?: string;
   sessionKey: string;
   createdTimestamp?: Date;
   updatedTimestamp?: Date;
@@ -45,7 +45,7 @@ export class InputTransaction {
   debitAmount?: number;
   creditAmount?: number;
   exchangeRate: number;
-  memo: string;
+  memo?: string;
   sessionKey: string;
 }
 
@@ -106,7 +106,7 @@ export const validateSavedTransaction = (transaction: Transaction) => {
       .default(TransactionStatus.PENDING),
     exchangeRate: Joi.number().required(),
     sessionKey: Joi.string().required(),
-    memo: Joi.string().optional(),
+    memo: Joi.string().optional().allow(null),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
