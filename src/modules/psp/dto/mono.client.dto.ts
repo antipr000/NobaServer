@@ -1,4 +1,4 @@
-export type CollectionLinkRequest = {
+export type MonoClientCollectionLinkRequest = {
   transactionID: string;
   amount: number;
   currency: MonoCurrency;
@@ -10,3 +10,8 @@ export type CollectionLinkRequest = {
 export enum MonoCurrency {
   COP = "COP",
 }
+
+export type MonoClientCollectionLinkResponse = {
+  collectionLink: string;
+  collectionLinkID: string;
+};

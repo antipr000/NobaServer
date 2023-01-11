@@ -1,13 +1,13 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { MonoConfigs } from "src/config/configtypes/MonoConfig";
-import { MONO_CONFIG_KEY } from "src/config/ConfigurationUtils";
-import { CustomConfigService } from "src/core/utils/AppConfigModule";
+import { MonoConfigs } from "../../../config/configtypes/MonoConfig";
+import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Logger } from "winston";
-import { CollectionLinkRequest } from "../dto/mono.client.dto";
+import { MonoClientCollectionLinkRequest, MonoClientCollectionLinkResponse } from "../dto/mono.client.dto";
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
-import { InternalServiceErrorException } from "src/core/exception/CommonAppException";
+import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 
 @Injectable()
 export class MonoClient {
@@ -37,7 +37,7 @@ export class MonoClient {
     };
   }
 
-  async createCollectionLink(request: CollectionLinkRequest): Promise<string> {
+  async createCollectionLink(request: MonoClientCollectionLinkRequest): Promise<MonoClientCollectionLinkResponse> {
     const url = `${this.baseUrl}/${this.apiVersion}/collection_links`;
     const headers = {
       ...this.getAuthorizationHeader(),
@@ -76,7 +76,10 @@ export class MonoClient {
 
     try {
       const response = await axios.post(url, requestBody, { headers });
-      return response.data.link;
+      return {
+        collectionLink: response.data.link,
+        collectionLinkID: response.data.id,
+      };
     } catch (err) {
       this.logger.error(`Error while creating collection link: ${JSON.stringify(err)}`);
       throw new InternalServiceErrorException({ message: "Error while creating Mono collection link" });

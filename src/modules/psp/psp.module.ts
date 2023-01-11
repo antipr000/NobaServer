@@ -16,6 +16,7 @@ import { CircleController } from "./circle.controller";
 import { CircleService } from "./circle.service";
 import { CircleRepoModule } from "./repos/circle.repo.module";
 import { CircleWorkflowController } from "./circle.workflow.controller";
+import { MonoModule } from "./mono/mono.module";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
@@ -30,7 +31,7 @@ export const CheckoutClientProvider: Provider = {
 };
 
 @Module({
-  imports: [getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule, CircleRepoModule],
+  imports: [getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule, CircleRepoModule, MonoModule],
   controllers: [PaymentWebhooksController, CircleController, CircleWorkflowController],
   providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper, CircleClient, CircleService],
   exports: [CheckoutClient, PlaidClient, PaymentService, CircleClient],
