@@ -115,6 +115,13 @@ import {
   NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_CLIENT_URL,
   NOBA_WORKFLOW_NAMESPACE,
   NOBA_WORKFLOW_CONNECTION_TIMEOUT_IN_MILLIS,
+  MONO_AWS_SECRET_KEY_FOR_BASE_URL,
+  MONO_AWS_SECRET_KEY_FOR_BEARER_TOKEN,
+  MONO_BEARER_TOKEN,
+  MONO_BASE_URL,
+  MONO_CONFIG_KEY,
+  MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID,
+  MONO_NOBA_ACCOUNT_ID,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -133,6 +140,7 @@ import { PlaidConfigs } from "./configtypes/PlaidConfigs";
 import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs";
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
+import { MonoConfigs } from "./configtypes/MonoConfig";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -299,6 +307,7 @@ async function configureAllVendorCredentials(
     configureDependencies,
     configureCircleConfigurations,
     configureNobaWorkflowCredentials,
+    configureMonoCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -367,6 +376,32 @@ async function configureTwilioCredentials(
   twilioConfigs.authToken = await getParameterValue(twilioConfigs.awsSecretNameForAuthToken, twilioConfigs.authToken);
 
   configs[TWILIO_CONFIG_KEY] = twilioConfigs;
+  return configs;
+}
+
+async function configureMonoCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const monoConfig: MonoConfigs = configs[MONGO_CONFIG_KEY];
+
+  if (monoConfig === undefined) {
+    const errorMessage =
+      "\n'Mono' configurations are required. Please configure the Mono credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${MONO_CONFIG_KEY}" and populate ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID}" or "${MONO_NOBA_ACCOUNT_ID}") ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_BASE_URL}" or "${MONO_BASE_URL}") AND ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_BEARER_TOKEN}" or "${MONO_BEARER_TOKEN}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  monoConfig.baseUrl = await getParameterValue(monoConfig.awsSecretNameForBaseUrl, monoConfig.baseUrl);
+  monoConfig.bearerToken = await getParameterValue(monoConfig.awsSecretNameForBearerToken, monoConfig.bearerToken);
+  monoConfig.nobaAccountId = await getParameterValue(monoConfig.awsSecretNameForNobaAccountId, monoConfig.nobaAccountId);
+
+  configs[MONO_CONFIG_KEY] = monoConfig;
   return configs;
 }
 

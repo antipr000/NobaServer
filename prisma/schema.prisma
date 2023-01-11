@@ -212,6 +212,22 @@ model Transaction {
   exchangeRate     Float?
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+  Mono             Mono?
+}
+
+model Mono {
+  id                String      @id @default(uuid())
+  monoTransactionID String?
+  collectionLinkID  String      @unique()
+  collectionUrl     String
+  state             String
+  nobaTransactionID String      @unique()
+  transaction       Transaction @relation(fields: [nobaTransactionID], references: [id], onDelete: Cascade)
+  createdTimestamp  DateTime?   @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp  DateTime?   @updatedAt // Marking optional so we don't need to set in tests
+
+  @@index([nobaTransactionID])
+  @@index([monoTransactionID])
 }
 
 model Token {

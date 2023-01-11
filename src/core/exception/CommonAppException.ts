@@ -38,8 +38,8 @@ export class ApplicationException extends Error {
   ) {
     super(
       options.message ??
-        options.messageForClient ??
-        "AppException without message this shouldn't happen, We should specify excpetion message !!!!",
+      options.messageForClient ??
+      "AppException without message this shouldn't happen, We should specify excpetion message !!!!",
     );
     this.exceptionCodeForClient = options?.clientExceptionCode ?? this.exceptionCodeForClient;
     this.clientResponseExceptionData = options?.clientExceptionData ?? this.clientResponseExceptionData;
@@ -118,5 +118,10 @@ export class InvalidDatabaseRecordException extends ApplicationException {
 
 export class DatabaseInternalErrorException extends ApplicationException {
   public readonly name = "DatabaseInternalErrorException";
+  public readonly httpStatusCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+}
+
+export class InternalServiceErrorException extends ApplicationException {
+  public readonly name = "InternalServiceErrorException";
   public readonly httpStatusCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
 }

@@ -180,6 +180,19 @@ Table Transaction {
   exchangeRate Float
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
+  Mono Mono
+}
+
+Table Mono {
+  id String [pk]
+  monoTransactionID String
+  collectionLinkID String [unique, not null]
+  collectionUrl String [not null]
+  state String [not null]
+  nobaTransactionID String [unique, not null]
+  transaction Transaction [not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
 }
 
 Table Token {
@@ -306,3 +319,5 @@ Ref: LimitConfiguration.profileID > LimitProfile.id [delete: Cascade]
 Ref: Transaction.debitConsumerID > Consumer.id [delete: Cascade]
 
 Ref: Transaction.creditConsumerID > Consumer.id [delete: Cascade]
+
+Ref: Mono.nobaTransactionID - Transaction.id [delete: Cascade]

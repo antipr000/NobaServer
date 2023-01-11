@@ -158,6 +158,14 @@ export const NOBA_WORKFLOW_NAMESPACE = "namespace";
 export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TASK_QUEUE = "awsSecretNameForTaskQueue";
 export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_CLIENT_URL = "awsSecretNameForClientUrl";
 
+export const MONO_CONFIG_KEY = "mono";
+export const MONO_BEARER_TOKEN = "bearerToken";
+export const MONO_AWS_SECRET_KEY_FOR_BEARER_TOKEN = "awsSecretNameForBearerToken";
+export const MONO_BASE_URL = "baseUrl";
+export const MONO_AWS_SECRET_KEY_FOR_BASE_URL = "awsSecretNameForBaseUrl";
+export const MONO_NOBA_ACCOUNT_ID = "nobaAccountId";
+export const MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID = "awsSecretNameForNobaAccountId";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

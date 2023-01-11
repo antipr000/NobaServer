@@ -138,6 +138,14 @@ nobaWorkflow:
   connectionTimeoutInMs: 1000
   namespace: "e2e_test"
 
+mono:
+  bearerToken: "DUMMY_TOKEN"
+  awsSecretNameForBearerToken: ""
+  baseUrl: "https://noba.com"
+  awsSecretNameForBaseUrl: ""
+  nobaAccountId: "DUMMY_ACCOUNT"
+  awsSecretNameForNobaAccountId: ""
+
 dependencies:
   emailClient: "STUB"
 
