@@ -23,31 +23,6 @@ import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "../domain/TransactionEvent";
 
-const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
-  const transaction: Transaction = {
-    transactionRef: uuid(),
-    exchangeRate: 1,
-    status: TransactionStatus.PENDING,
-    workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
-    id: uuid(),
-    sessionKey: uuid(),
-    memo: "New transaction",
-    createdTimestamp: new Date(),
-    updatedTimestamp: new Date(),
-  };
-
-  if (isCreditTransaction) {
-    transaction.creditAmount = 100;
-    transaction.creditCurrency = "USD";
-    transaction.creditConsumerID = consumerID;
-  } else {
-    transaction.debitAmount = 100;
-    transaction.debitCurrency = "USD";
-    transaction.debitConsumerID = consumerID;
-  }
-  return transaction;
-};
-
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
 
@@ -489,7 +464,7 @@ describe("TransactionServiceTests", () => {
 
   describe("addTransactionEvent", () => {
     it("should add a transaction event for the specified transaction with minimal parameters", async () => {
-      const transaction = getRandomTransaction("consumerID", /* isCreditTransaction */ false);
+      const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
 
       const transactionEventToAdd: TransactionEventDTO = {
@@ -520,7 +495,7 @@ describe("TransactionServiceTests", () => {
     });
 
     it("should add a transaction event for the specified transaction with all parameters", async () => {
-      const transaction = getRandomTransaction("consumerID", /* isCreditTransaction */ false);
+      const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
 
       const transactionEventToAdd: TransactionEventDTO = {
@@ -573,7 +548,7 @@ describe("TransactionServiceTests", () => {
 
   describe("getTransactionEvents", () => {
     it("should retrieve transaction events for the specified transaction", async () => {
-      const transaction = getRandomTransaction("consumerID", /* isCreditTransaction */ false);
+      const { transaction } = getRandomTransaction("consumerID");
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
 
       const transactionEventToAdd: TransactionEventDTO = {
