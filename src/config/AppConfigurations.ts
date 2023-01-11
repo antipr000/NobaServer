@@ -384,7 +384,7 @@ async function configureMonoCredentials(
   environment: AppEnvironment,
   configs: Record<string, any>,
 ): Promise<Record<string, any>> {
-  const monoConfig: MonoConfigs = configs[MONGO_CONFIG_KEY];
+  const monoConfig: MonoConfigs = configs[MONO_CONFIG_KEY];
 
   if (monoConfig === undefined) {
     const errorMessage =
