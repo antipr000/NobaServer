@@ -112,32 +112,14 @@ export class TransactionController {
     filters.consumerID = consumer.props.id;
     filters.pageLimit = Number(filters.pageLimit) || 10;
     filters.pageOffset = Number(filters.pageOffset) || 1;
-    filters.includeEvents = filters.includeEvents || IncludeEventTypes.NONE;
     const allTransactions = await this.transactionService.getFilteredTransactions(filters);
 
     if (allTransactions == null) return null;
 
-    if (filters.includeEvents === IncludeEventTypes.NONE) {
-      return {
-        ...allTransactions,
-        items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
-      };
-    } else {
-      // add in the events if requested
-      return {
-        ...allTransactions,
-        items: await Promise.all(
-          allTransactions.items.map(async (transaction): Promise<TransactionDTO> => {
-            let transactionEvents: TransactionEventDTO[];
-            transactionEvents = await this.transactionService.getTransactionEvents(
-              transaction.id,
-              filters.includeEvents === IncludeEventTypes.ALL,
-            );
-            return this.mapper.toDTO(transaction, transactionEvents);
-          }),
-        ),
-      };
-    }
+    return {
+      ...allTransactions,
+      items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
+    };
   }
 
   @Post("/transactions/")

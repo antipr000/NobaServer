@@ -19,7 +19,6 @@ import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { QuoteRequestDTO } from "../dto/QuoteRequestDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { IncludeEventTypes, TransactionEventDTO } from "../dto/TransactionEventDTO";
-import { TransactionEvent } from "../domain/TransactionEvent";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -238,8 +237,6 @@ describe("Transaction Controller tests", () => {
         transactionStatus: TransactionStatus.SUCCESS,
         pageLimit: 5,
         pageOffset: 1,
-        // Even though we don't pass it in to getAllTransactions(), this tests that we set this as default.
-        includeEvents: IncludeEventTypes.NONE,
       };
       when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
@@ -260,76 +257,6 @@ describe("Transaction Controller tests", () => {
 
       expect(allTransactions.items.length).toBe(1);
       expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
-    });
-
-    it("should get filtered transactions including transaction events", async () => {
-      const consumerID = "testConsumerID";
-      const transactions: Transaction[] = new Array<Transaction>();
-      transactions.push(getRandomTransaction(consumerID));
-      transactions.push(getRandomTransaction(consumerID));
-      transactions.push(getRandomTransaction(consumerID));
-
-      const filter: TransactionFilterOptionsDTO = {
-        consumerID: consumerID,
-        pageLimit: 5,
-        pageOffset: 1,
-        includeEvents: IncludeEventTypes.ALL,
-      };
-      when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
-        items: transactions,
-        page: 1,
-        hasNextPage: false,
-        totalPages: 1,
-        totalItems: 1,
-      });
-
-      // Transaction 1 has 1 event
-      const transaction1Events: TransactionEventDTO[] = [
-        {
-          message: "Test event 2",
-          details: "This is a test event 2",
-          internal: false,
-          key: "EVENT_KEY_2",
-          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
-        },
-      ];
-      when(transactionService.getTransactionEvents(transactions[0].id, true)).thenResolve(transaction1Events);
-
-      // Transaction 2 has 2 events
-      const transaction2Events: TransactionEventDTO[] = [
-        {
-          message: "Test event 1",
-          details: "This is a test event 1",
-          internal: false,
-          key: "EVENT_KEY_1",
-          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
-        },
-        {
-          message: "Test event 2",
-          details: "This is a test event 2",
-          internal: false,
-          key: "EVENT_KEY_2",
-          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
-        },
-      ];
-      when(transactionService.getTransactionEvents(transactions[1].id, true)).thenResolve(transaction2Events);
-
-      // Transaction 3 has 0 events
-      when(transactionService.getTransactionEvents(transactions[2].id, true)).thenResolve([]);
-
-      const allTransactions = await transactionController.getAllTransactions(
-        {
-          pageLimit: 5,
-          pageOffset: 1,
-          includeEvents: IncludeEventTypes.ALL,
-        },
-        getRandomConsumer(consumerID),
-      );
-
-      expect(allTransactions.items.length).toBe(3);
-      expect(allTransactions.items[0].transactionEvents).toBe(transaction1Events);
-      expect(allTransactions.items[1].transactionEvents).toBe(transaction2Events);
-      expect(allTransactions.items[2].transactionEvents).toEqual([]);
     });
   });
 

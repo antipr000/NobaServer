@@ -1,6 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { TransactionStatus } from "../domain/Transaction";
-import { IncludeEventTypes } from "./TransactionEventDTO";
 
 export class TransactionFilterOptionsDTO {
   @ApiPropertyOptional({ description: "Consumer ID whose transactions is needed" })
@@ -35,10 +34,4 @@ export class TransactionFilterOptionsDTO {
     description: "filter for a particular transaction status",
   })
   transactionStatus?: TransactionStatus;
-
-  @ApiPropertyOptional({
-    enum: Object.values(IncludeEventTypes),
-    description: "which types of events to include with the transaction",
-  })
-  includeEvents?: IncludeEventTypes;
 }
