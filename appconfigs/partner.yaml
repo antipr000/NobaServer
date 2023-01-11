@@ -125,7 +125,7 @@ nobaWorkflow:
   clientUrl: ""
   awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_PARTNER_URL"
   connectionTimeoutInMs: 1000
-  namespace: "partner"
+  namespace: "partner.h4n3l"
 
 dependencies:
   emailClient: "SENDGRID"
