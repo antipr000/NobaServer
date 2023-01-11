@@ -10,6 +10,7 @@
     "prisma-clean-init": "yarn prisma db push",
     "prisma-update": "yarn prisma generate && yarn prisma migrate dev --name=init",
     "prisma-migrate-deploy": "yarn prisma generate && yarn prisma migrate deploy",
+    "prisma-seed": "tsc prisma/seed/seed.ts && cat prisma/seed/seed.js | node --input-type=\"commonjs\" && rm prisma/seed/seed.js",
     "build": "nest build -c nest-cli.json --webpack --webpackPath webpack.config.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "yarn start:dev",
@@ -124,7 +125,7 @@
     "prettier": "^2.6.2",
     "ts-jest": "29.0.3",
     "ts-loader": "^9.3.1",
-    "ts-node": "^9.1.1",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.4",
     "webpack": "^5.74.0"
   },

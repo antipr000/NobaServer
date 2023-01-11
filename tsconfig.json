@@ -14,5 +14,10 @@
     "resolveJsonModule": true,
     "types": ["jest", "node"],
     "esModuleInterop": true
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
   }
 }
