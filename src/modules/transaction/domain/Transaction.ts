@@ -49,7 +49,7 @@ export class InputTransaction {
   sessionKey: string;
 }
 
-export class UpdateTransaciton {
+export class UpdateTransaction {
   status?: TransactionStatus;
   debitAmount?: number;
   creditAmount?: number;
@@ -119,8 +119,8 @@ export const validateSavedTransaction = (transaction: Transaction) => {
   return Joi.attempt(transaction, transactionJoiSchema);
 };
 
-export const validateUpdateTransaction = (transaction: UpdateTransaciton) => {
-  const transactionJoiValidationKeys: KeysRequired<UpdateTransaciton> = {
+export const validateUpdateTransaction = (transaction: UpdateTransaction) => {
+  const transactionJoiValidationKeys: KeysRequired<UpdateTransaction> = {
     debitAmount: Joi.number().optional(),
     creditAmount: Joi.number().optional(),
     debitCurrency: Joi.string().optional(),

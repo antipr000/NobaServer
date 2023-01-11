@@ -137,18 +137,7 @@ export class TransactionController {
   ) {
     this.logger.debug(`uid ${consumer.props.id}, transact input:`, JSON.stringify(requestBody));
 
-    try {
-      return await this.transactionService.initiateTransaction(requestBody, consumer, sessionKey);
-    } catch (e) {
-      if (e instanceof TransactionSubmissionException) {
-        throw new BadRequestException(e.disposition, e.message);
-      } else if (e instanceof ServiceException) {
-        throw e; // ServiceExceptions get automatically handled by interceptor
-      } else {
-        this.logger.error(`Error in initiateTransaction: ${e.message}`);
-        throw new BadRequestException("Failed to make the payment");
-      }
-    }
+    return await this.transactionService.initiateTransaction(requestBody, consumer.props.id, sessionKey);
   }
 
   @Get("/transactions/quote")

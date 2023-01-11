@@ -272,9 +272,9 @@ describe("Transaction Controller tests", () => {
       const consumerID = "fakeConsumerID";
       const consumer = getRandomConsumer(consumerID);
 
-      when(
-        transactionService.initiateTransaction(deepEqual(orderDetails), deepEqual(consumer), "fake-session"),
-      ).thenResolve("fake-transaction-id");
+      when(transactionService.initiateTransaction(deepEqual(orderDetails), consumerID, "fake-session")).thenResolve(
+        "fake-transaction-id",
+      );
 
       const response = await transactionController.initiateTransaction("fake-session", orderDetails, consumer);
 
