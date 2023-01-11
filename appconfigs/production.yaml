@@ -142,7 +142,7 @@ mono:
   bearerToken: ""
   awsSecretNameForBearerToken: "PROD_MONO_BEARER_TOKEN"
   baseURL: ""
-  awsSecretNameForBaseUrl: "PROD_MONO_BASE_URL"
+  awsSecretNameForBaseURL: "PROD_MONO_BASE_URL"
   nobaAccountID: ""
   awsSecretNameForNobaAccountID: "PROD_MONO_NOBA_ACCOUNT_ID"
 
