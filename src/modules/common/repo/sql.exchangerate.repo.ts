@@ -67,7 +67,9 @@ export class SQLExchangeRateRepo implements IExchangeRateRepo {
           },
         },
         orderBy: {
-          expirationTimestamp: "desc", // Always grab only the latest
+          // The 'where' clause takes care of only getting exchange rates that have not expired
+          // but we still need to order by createdTimestamp to get the most recent one
+          createdTimestamp: "desc",
         },
       });
 

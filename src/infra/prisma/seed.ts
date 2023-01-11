@@ -1,52 +1,19 @@
 import { PrismaClient } from "@prisma/client";
+import { seedAdmins } from "./seed-admins";
+import { seedExchangeRates } from "./seed-exchangerates";
 const prisma = new PrismaClient();
+
 async function main() {
-  const justin = await prisma.admin.upsert({
-    where: { email: "justin@noba.com" },
-    update: {},
-    create: {
-      email: "justin@noba.com",
-      name: "Justin Ashworth",
-      role: "ADMIN",
-    },
-  });
-  const gal = await prisma.admin.upsert({
-    where: { email: "gal@noba.com" },
-    update: {},
-    create: {
-      email: "gal@noba.com",
-      name: "Gal Ben-Chanoch",
-      role: "ADMIN",
-    },
-  });
-  const subham = await prisma.admin.upsert({
-    where: { email: "subham@noba.com" },
-    update: {},
-    create: {
-      email: "subham@noba.com",
-      name: "Subham Agarwal",
-      role: "ADMIN",
-    },
-  });
-  const soham = await prisma.admin.upsert({
-    where: { email: "soham@noba.com" },
-    update: {},
-    create: {
-      email: "soham@noba.com",
-      name: "Soham Mukherjee",
-      role: "ADMIN",
-    },
-  });
-  const jonathan = await prisma.admin.upsert({
-    where: { email: "jonathan@noba.com" },
-    update: {},
-    create: {
-      email: "jonathan@noba.com",
-      name: "Jonathan Wu",
-      role: "ADMIN",
-    },
-  });
+  // Only seed non-production environments
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Seeding data...");
+    await seedAdmins(prisma);
+    await seedExchangeRates(prisma);
+  } else {
+    console.log("Not seeding in production environment");
+  }
 }
+
 main()
   .then(async () => {
     await prisma.$disconnect();

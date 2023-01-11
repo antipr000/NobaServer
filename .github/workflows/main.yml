@@ -111,6 +111,7 @@ jobs:
           ls -l
           echo [SUCCESS] yarn build succeeded.
           echo "DATABASE_URL=$DATABASE_URL" > .env
+          echo "NODE_ENV=$ebEnvironment" >> .env
           zip -r artifacts.zip ./ "./node_modules/@prisma/client" -x "./.git*" "./test/*" "./src/*" "./node_modules/*"
 
       - name: Deploy to EB
