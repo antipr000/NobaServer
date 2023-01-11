@@ -199,8 +199,8 @@ export class SQLTransactionRepo implements ITransactionRepo {
     return await paginator(this.prismaService.transaction, filterQuery);
   }
 
-  async updateTransactionByTransactionRef(
-    transactionRef: string,
+  async updateTransactionByTransactionID(
+    transactionID: string,
     updateTransaction: UpdateTransaction,
   ): Promise<Transaction> {
     validateUpdateTransaction(updateTransaction);
@@ -209,6 +209,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       const transactionUpdate: Prisma.TransactionUpdateInput = {
         ...(updateTransaction.exchangeRate && { exchangeRate: updateTransaction.exchangeRate }),
         ...(updateTransaction.status && { status: updateTransaction.status }),
+        ...(updateTransaction.memo && { memo: updateTransaction.memo }),
         ...(updateTransaction.debitAmount && { debitAmount: updateTransaction.debitAmount }),
         ...(updateTransaction.creditAmount && { creditAmount: updateTransaction.creditAmount }),
         ...(updateTransaction.debitCurrency && { debitCurrency: updateTransaction.debitCurrency }),
@@ -217,7 +218,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
 
       const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.update({
         where: {
-          transactionRef: transactionRef,
+          id: transactionID,
         },
         data: transactionUpdate,
       });
@@ -229,7 +230,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
         throw new NotFoundError({});
       }
       throw new DatabaseInternalErrorException({
-        message: `Error updating the transaction with transactionRef: '${transactionRef}'`,
+        message: `Error updating the transaction with id: '${transactionID}'`,
       });
     }
   }

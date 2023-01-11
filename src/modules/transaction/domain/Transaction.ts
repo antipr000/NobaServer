@@ -51,6 +51,7 @@ export class InputTransaction {
 
 export class UpdateTransaction {
   status?: TransactionStatus;
+  memo?: string;
   debitAmount?: number;
   creditAmount?: number;
   debitCurrency?: string;
@@ -125,6 +126,7 @@ export const validateUpdateTransaction = (transaction: UpdateTransaction) => {
     creditAmount: Joi.number().optional(),
     debitCurrency: Joi.string().optional(),
     creditCurrency: Joi.string().optional(),
+    memo: Joi.string().optional(),
     status: Joi.string()
       .optional()
       .valid(...Object.values(TransactionStatus)),
