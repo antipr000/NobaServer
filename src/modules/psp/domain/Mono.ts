@@ -65,7 +65,7 @@ export const validateMonoTransaction = (transaction: MonoTransaction) => {
     collectionLinkID: Joi.string().required(),
     collectionUrl: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
-    monoTransactionID: Joi.string().optional(),
+    monoTransactionID: Joi.string().required().allow(null),
     state: Joi.string()
       .required()
       .valid(...Object.values(MonoTransactionState)),

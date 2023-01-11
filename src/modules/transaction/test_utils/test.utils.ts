@@ -19,6 +19,7 @@ export const createTestNobaTransaction = async (prismaService: PrismaService): P
         },
       },
       status: TransactionStatus.IN_PROGRESS,
+      sessionKey: uuid(),
     },
   });
 

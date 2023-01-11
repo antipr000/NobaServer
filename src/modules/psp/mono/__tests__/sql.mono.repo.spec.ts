@@ -8,7 +8,7 @@ import { uuid } from "uuidv4";
 import { IMonoRepo } from "../repo/mono.repo";
 import { SqlMonoRepo } from "../repo/sql.mono.repo";
 import { MonoTransaction, MonoTransactionCreateRequest, MonoTransactionState } from "../../domain/Mono";
-import { createTestNobaTransaction } from "../../../../modules/transaction/test_utils/test.utils";
+import { createTestNobaTransaction } from "../../../transaction/test_utils/test.utils";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaMonoModel[]> => {
   return prismaService.mono.findMany({});
