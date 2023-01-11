@@ -9,7 +9,7 @@ export function getMockTransactionRepoWithDefaults(): ITransactionRepo {
   when(mockTransactionRepo.getTransactionByID(anyString())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.getTransactionByTransactionRef(anyString())).thenReject(new Error("Method not implemented"));
   when(mockTransactionRepo.getTransactionsByConsumerID(anyString())).thenReject(new Error("Method not implemented"));
-  when(mockTransactionRepo.updateTransactionByTransactionRef(anyString(), anything())).thenReject(
+  when(mockTransactionRepo.updateTransactionByTransactionID(anyString(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockTransactionRepo.getFilteredTransactions(anything())).thenReject(new Error("Method not implemented"));

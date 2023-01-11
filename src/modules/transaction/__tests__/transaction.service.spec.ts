@@ -491,6 +491,7 @@ describe("TransactionServiceTests", () => {
 
       expect(returnedTransactionEvent).toEqual({
         ...transactionEventToAdd,
+        timestamp: anything(),
       });
     });
 
@@ -533,6 +534,7 @@ describe("TransactionServiceTests", () => {
 
       expect(returnedTransactionEvent).toEqual({
         ...transactionEventToAdd,
+        timestamp: anything(),
       });
     });
 
