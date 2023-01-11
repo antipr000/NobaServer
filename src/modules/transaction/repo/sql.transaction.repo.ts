@@ -1,4 +1,8 @@
-import { Prisma, Transaction as PrismaTransactionModel } from "@prisma/client";
+import {
+  Prisma,
+  Transaction as PrismaTransactionModel,
+  TransactionEvent as PrismaTransactionEventModel,
+} from "@prisma/client";
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import {
@@ -21,6 +25,13 @@ import { ITransactionRepo } from "./transaction.repo";
 import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
+import {
+  convertToDomainTransactionEvent,
+  InputTransactionEvent,
+  TransactionEvent,
+  validateInputTransactionEvent,
+  validateSavedTransactionEvent,
+} from "../domain/TransactionEvent";
 
 @Injectable()
 export class SQLTransactionRepo implements ITransactionRepo {
@@ -221,6 +232,63 @@ export class SQLTransactionRepo implements ITransactionRepo {
         message: `Error updating the transaction with transactionRef: '${transactionRef}'`,
       });
     }
+  }
+
+  async addTransactionEvent(inputTransactionEvent: InputTransactionEvent): Promise<TransactionEvent> {
+    validateInputTransactionEvent(inputTransactionEvent);
+
+    let savedTransactionEvent: TransactionEvent = null;
+
+    try {
+      const transactionEventInput: Prisma.TransactionEventUncheckedCreateInput = {
+        transactionID: inputTransactionEvent.transactionID,
+        internal: inputTransactionEvent.internal,
+        message: inputTransactionEvent.message,
+        ...(inputTransactionEvent.details && { details: inputTransactionEvent.details }),
+        ...(inputTransactionEvent.key && { key: inputTransactionEvent.key }),
+        ...(inputTransactionEvent.param1 && { param1: inputTransactionEvent.param1 }),
+        ...(inputTransactionEvent.param2 && { param2: inputTransactionEvent.param2 }),
+        ...(inputTransactionEvent.param3 && { param3: inputTransactionEvent.param3 }),
+        ...(inputTransactionEvent.param4 && { param4: inputTransactionEvent.param4 }),
+        ...(inputTransactionEvent.param5 && { param5: inputTransactionEvent.param5 }),
+      };
+
+      const returnedTransactionEvent: PrismaTransactionEventModel = await this.prismaService.transactionEvent.create({
+        data: transactionEventInput,
+      });
+      savedTransactionEvent = convertToDomainTransactionEvent(returnedTransactionEvent);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: "Error saving transaction event in database",
+      });
+    }
+
+    try {
+      validateSavedTransactionEvent(savedTransactionEvent);
+      return savedTransactionEvent;
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new InvalidDatabaseRecordException({
+        message: "Invalid transaction event record",
+      });
+    }
+  }
+
+  async getTransactionEvents(
+    transactionID: string,
+    includeInternalEvents: boolean = false,
+  ): Promise<TransactionEvent[]> {
+    const allTransactionEvents = await this.prismaService.transactionEvent.findMany({
+      where: {
+        transactionID: transactionID,
+        // If includeInternalEvents is true, don't restrict. If false, only return non-internal events
+        ...(!includeInternalEvents && { internal: false }),
+      },
+    });
+    if (!allTransactionEvents) return [];
+
+    return allTransactionEvents.map(transactionEvent => convertToDomainTransactionEvent(transactionEvent));
   }
 
   async getTotalUserTransactionAmount(consumerID: string): Promise<number> {

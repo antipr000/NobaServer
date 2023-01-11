@@ -1,8 +1,9 @@
 import { Transaction } from "../domain/Transaction";
 import { TransactionDTO } from "../dto/TransactionDTO";
+import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 
 export class TransactionMapper {
-  toDTO(transaction: Transaction): TransactionDTO {
+  toDTO(transaction: Transaction, transactionEvents?: TransactionEventDTO[]): TransactionDTO {
     return {
       transactionRef: transaction.transactionRef,
       workflowName: transaction.workflowName,
@@ -14,7 +15,8 @@ export class TransactionMapper {
       status: transaction.status,
       createdTimestamp: transaction.createdTimestamp,
       updatedTimestamp: transaction.updatedTimestamp,
-      memo: "",
+      memo: transaction.memo,
+      transactionEvents: transactionEvents,
     };
   }
 }

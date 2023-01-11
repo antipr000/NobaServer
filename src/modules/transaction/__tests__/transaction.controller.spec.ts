@@ -18,6 +18,7 @@ import { LimitsService } from "../limits.service";
 import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { QuoteRequestDTO } from "../dto/QuoteRequestDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { IncludeEventTypes, TransactionEventDTO } from "../dto/TransactionEventDTO";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -105,6 +106,7 @@ describe("Transaction Controller tests", () => {
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
 
       const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.NONE,
         transactionRef,
         getRandomConsumer(consumerID),
       );
@@ -119,7 +121,88 @@ describe("Transaction Controller tests", () => {
         status: transaction.status,
         createdTimestamp: transaction.createdTimestamp,
         updatedTimestamp: transaction.updatedTimestamp,
-        memo: "",
+        memo: transaction.memo,
+        transactionEvents: undefined,
+      };
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return the transaction with events", async () => {
+      const consumerID = "testConsumerID";
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+      const transactionEventsToReturn: TransactionEventDTO[] = [
+        {
+          message: "Test event",
+          details: "This is a test event",
+          internal: false,
+          key: "EVENT_KEY",
+          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+        },
+        {
+          message: "Test event 2",
+          details: "This is a test event 2",
+          internal: false,
+          key: "EVENT_KEY_2",
+          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+        },
+      ];
+
+      when(transactionService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEventsToReturn);
+
+      const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.ALL,
+        transactionRef,
+        getRandomConsumer(consumerID),
+      );
+
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: transactionEventsToReturn,
+      };
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return empty events array if events requested but none exist", async () => {
+      const consumerID = "testConsumerID";
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+      when(transactionService.getTransactionEvents(transaction.id, true)).thenResolve([]);
+
+      const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.ALL,
+        transactionRef,
+        getRandomConsumer(consumerID),
+      );
+
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: [],
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -131,7 +214,12 @@ describe("Transaction Controller tests", () => {
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(null);
 
       expect(
-        async () => await transactionController.getTransaction(transactionRef, getRandomConsumer(consumerID)),
+        async () =>
+          await transactionController.getTransaction(
+            IncludeEventTypes.NONE,
+            transactionRef,
+            getRandomConsumer(consumerID),
+          ),
       ).rejects.toThrow(NotFoundException);
     });
   });

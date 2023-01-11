@@ -15,6 +15,8 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Currency } from "./domain/TransactionTypes";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { ExchangeRateService } from "../common/exchangerate.service";
+import { TransactionEventDTO } from "./dto/TransactionEventDTO";
+import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
 
 @Injectable()
 export class TransactionService {
@@ -328,5 +330,92 @@ export class TransactionService {
       quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmountWithFees),
       exchangeRate: exchangeRate.toString(),
     };
+  }
+
+  async addTransactionEvent(
+    transactionID: string,
+    transactionEvent: TransactionEventDTO,
+  ): Promise<TransactionEventDTO> {
+    const transaction = await this.transactionRepo.getTransactionByID(transactionID);
+    if (!transaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "Transaction does not exist",
+      });
+    }
+
+    const inputTransactionEvent: InputTransactionEvent = {
+      transactionID: transaction.id,
+      internal: transactionEvent.internal ?? true,
+      message: transactionEvent.message,
+      ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
+      ...(transactionEvent.key !== undefined && { key: transactionEvent.key }),
+      ...(transactionEvent.parameters !== undefined &&
+        transactionEvent.parameters.length > 0 && {
+          param1: transactionEvent.parameters[0],
+        }),
+      ...(transactionEvent.parameters !== undefined &&
+        transactionEvent.parameters.length > 1 && {
+          param2: transactionEvent.parameters[1],
+        }),
+      ...(transactionEvent.parameters !== undefined &&
+        transactionEvent.parameters.length > 2 && {
+          param1: transactionEvent.parameters[2],
+        }),
+      ...(transactionEvent.parameters !== undefined &&
+        transactionEvent.parameters.length > 3 && {
+          param1: transactionEvent.parameters[3],
+        }),
+      ...(transactionEvent.parameters !== undefined &&
+        transactionEvent.parameters.length > 4 && {
+          param1: transactionEvent.parameters[4],
+        }),
+    };
+
+    const savedTransactionEvent: TransactionEvent = await this.transactionRepo.addTransactionEvent(
+      inputTransactionEvent,
+    );
+
+    return {
+      timestamp: transactionEvent.timestamp,
+      internal: savedTransactionEvent.internal,
+      message: savedTransactionEvent.message,
+      ...(savedTransactionEvent.details !== undefined && { details: savedTransactionEvent.details }),
+      ...(savedTransactionEvent.key !== undefined && { key: savedTransactionEvent.key }),
+      ...(savedTransactionEvent.param1 !== undefined && {
+        parameters: Array.of(
+          savedTransactionEvent.param1,
+          savedTransactionEvent.param2,
+          savedTransactionEvent.param3,
+          savedTransactionEvent.param4,
+          savedTransactionEvent.param5,
+        ),
+      }),
+    };
+  }
+
+  async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEventDTO[]> {
+    const transactionEvents: TransactionEvent[] = await this.transactionRepo.getTransactionEvents(
+      transactionID,
+      includeInternalEvents,
+    );
+    return transactionEvents.map(transactionEvent => {
+      return {
+        timestamp: transactionEvent.timestamp,
+        internal: transactionEvent.internal,
+        message: transactionEvent.message,
+        ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
+        ...(transactionEvent.key !== undefined && { key: transactionEvent.key }),
+        ...(transactionEvent.param1 !== undefined && {
+          parameters: Array.of(
+            transactionEvent.param1,
+            transactionEvent.param2,
+            transactionEvent.param3,
+            transactionEvent.param4,
+            transactionEvent.param5,
+          ),
+        }),
+      };
+    });
   }
 }
