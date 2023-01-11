@@ -1,6 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { InputTransaction, Transaction, WorkflowName } from "./domain/Transaction";
-import { Consumer } from "../consumer/domain/Consumer";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { ITransactionRepo } from "./repo/transaction.repo";
