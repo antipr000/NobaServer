@@ -6,7 +6,7 @@ export async function seedAdmins(prisma: PrismaClient) {
     update: {},
     create: {
       email: "justin@noba.com",
-      name: `${JSON.stringify(process.env)}`,
+      name: `Justin Ashworth`,
       role: "ADMIN",
     },
   });
