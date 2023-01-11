@@ -1,4 +1,4 @@
-import { Transaction as PrismaTransactionModel } from "@prisma/client";
+import { Transaction as PrismaTransactionModel, TransactionEvent as PrismaTransactionEventModel } from "@prisma/client";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
@@ -18,11 +18,18 @@ import { createTestConsumer } from "../../../modules/consumer/test_utils/test.ut
 import {
   BadRequestError,
   DatabaseInternalErrorException,
+  InvalidDatabaseRecordException,
   NotFoundError,
 } from "../../../core/exception/CommonAppException";
+import { InputTransactionEvent } from "../domain/TransactionEvent";
+import * as TransactionEventFunctionsForMocking from "../domain/TransactionEvent";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
+};
+
+const getAllTransactionEventRecords = async (prismaService: PrismaService): Promise<PrismaTransactionEventModel[]> => {
+  return prismaService.transactionEvent.findMany({});
 };
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): InputTransaction => {
@@ -74,6 +81,7 @@ describe("PostgresTransactionRepoTests", () => {
 
   beforeEach(async () => {
     await prismaService.transaction.deleteMany();
+    await prismaService.transactionEvent.deleteMany();
 
     // *****************************  WARNING **********************************
     // *                                                                       *
@@ -82,13 +90,15 @@ describe("PostgresTransactionRepoTests", () => {
     // *************************************************************************
 
     await prismaService.consumer.deleteMany(); // clear all the dependencies
+
+    jest.restoreAllMocks();
   });
 
   describe("createTransaction", () => {
     it("should create a transaction (only creditConsumer) with the specified parameters", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
       const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
       const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
 
@@ -129,10 +139,7 @@ describe("PostgresTransactionRepoTests", () => {
       const creditConsumerID = await createTestConsumer(prismaService);
       const debitConsumerID = await createTestConsumer(prismaService);
 
-      const inputTransaction: InputTransaction = await getRandomTransaction(
-        creditConsumerID,
-        /* isCreditTransaction */ true,
-      );
+      const inputTransaction: InputTransaction = getRandomTransaction(creditConsumerID, /* isCreditTransaction */ true);
       inputTransaction.debitConsumerID = debitConsumerID;
       inputTransaction.debitAmount = 200;
       inputTransaction.debitCurrency = "USD";
@@ -176,10 +183,7 @@ describe("PostgresTransactionRepoTests", () => {
     it("should throw an error if the transaction doesn't specify both credit & debit side", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const inputTransaction: InputTransaction = await getRandomTransaction(
-        consumerID,
-        /* isCreditTransaction */ false,
-      );
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ false);
       delete inputTransaction.debitAmount;
       delete inputTransaction.debitCurrency;
 
@@ -195,9 +199,9 @@ describe("PostgresTransactionRepoTests", () => {
     it("should throw an error if the transactionRef is not unique", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const inputTransaction1: InputTransaction = await getRandomTransaction(consumerID);
+      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID);
       await transactionRepo.createTransaction(inputTransaction1);
-      const inputTransaction2: InputTransaction = await getRandomTransaction(consumerID);
+      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID);
       inputTransaction2.transactionRef = inputTransaction1.transactionRef;
 
       await expect(transactionRepo.createTransaction(inputTransaction2)).rejects.toThrowError(
@@ -206,7 +210,7 @@ describe("PostgresTransactionRepoTests", () => {
     });
 
     it("should throw an error if the consumerID is not valid", async () => {
-      const inputTransaction: InputTransaction = await getRandomTransaction("invalid-consumer-id");
+      const inputTransaction: InputTransaction = getRandomTransaction("invalid-consumer-id");
 
       await expect(transactionRepo.createTransaction(inputTransaction)).rejects.toThrowError(
         DatabaseInternalErrorException,
@@ -216,7 +220,7 @@ describe("PostgresTransactionRepoTests", () => {
     it("should set the default Transaction 'status' to 'PENDING'", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID);
       const returnedTransaction = await transactionRepo.createTransaction(inputTransaction);
       const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
 
@@ -229,8 +233,8 @@ describe("PostgresTransactionRepoTests", () => {
   describe("getTransactionByID", () => {
     it("should return the transaction with the specified ID", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = await getRandomTransaction(consumerID);
-      const inputTransaction2: InputTransaction = await getRandomTransaction(consumerID);
+      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID);
+      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID);
       const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
       const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
 
@@ -253,8 +257,8 @@ describe("PostgresTransactionRepoTests", () => {
   describe("getTransactionByTransactionRef", () => {
     it("should return the transaction with the specified transactionRef", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = await getRandomTransaction(consumerID);
-      const inputTransaction2: InputTransaction = await getRandomTransaction(consumerID);
+      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID);
+      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID);
       const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
       const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
 
@@ -282,18 +286,9 @@ describe("PostgresTransactionRepoTests", () => {
     it("should return all transactions (with creditConsumer) with the specified consumerID", async () => {
       const consumerID1 = await createTestConsumer(prismaService);
       const consumerID2 = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = await getRandomTransaction(
-        consumerID1,
-        /* isCreditTransaction */ true,
-      );
-      const inputTransaction2: InputTransaction = await getRandomTransaction(
-        consumerID1,
-        /* isCreditTransaction */ true,
-      );
-      const inputTransaction3: InputTransaction = await getRandomTransaction(
-        consumerID2,
-        /* isCreditTransaction */ true,
-      );
+      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ true);
+      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ true);
+      const inputTransaction3: InputTransaction = getRandomTransaction(consumerID2, /* isCreditTransaction */ true);
       const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
       const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
       const savedTransaction3 = await transactionRepo.createTransaction(inputTransaction3);
@@ -309,18 +304,9 @@ describe("PostgresTransactionRepoTests", () => {
     it("should return all transactions (with debitConsumer) with the specified consumerID", async () => {
       const consumerID1 = await createTestConsumer(prismaService);
       const consumerID2 = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = await getRandomTransaction(
-        consumerID1,
-        /* isCreditTransaction */ false,
-      );
-      const inputTransaction2: InputTransaction = await getRandomTransaction(
-        consumerID1,
-        /* isCreditTransaction */ false,
-      );
-      const inputTransaction3: InputTransaction = await getRandomTransaction(
-        consumerID2,
-        /* isCreditTransaction */ false,
-      );
+      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
+      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
+      const inputTransaction3: InputTransaction = getRandomTransaction(consumerID2, /* isCreditTransaction */ false);
       const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
       const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
       const savedTransaction3 = await transactionRepo.createTransaction(inputTransaction3);
@@ -336,22 +322,10 @@ describe("PostgresTransactionRepoTests", () => {
     it("should return all transactions (with either debit or credit Consumer matching) with the specified consumerID", async () => {
       const consumerID1 = await createTestConsumer(prismaService);
       const consumerID2 = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = await getRandomTransaction(
-        consumerID1,
-        /* isCreditTransaction */ false,
-      );
-      const inputTransaction2: InputTransaction = await getRandomTransaction(
-        consumerID1,
-        /* isCreditTransaction */ false,
-      );
-      const inputTransaction3: InputTransaction = await getRandomTransaction(
-        consumerID1,
-        /* isCreditTransaction */ true,
-      );
-      const inputTransaction4: InputTransaction = await getRandomTransaction(
-        consumerID2,
-        /* isCreditTransaction */ false,
-      );
+      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
+      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
+      const inputTransaction3: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ true);
+      const inputTransaction4: InputTransaction = getRandomTransaction(consumerID2, /* isCreditTransaction */ false);
       const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
       const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
       const savedTransaction3 = await transactionRepo.createTransaction(inputTransaction3);
@@ -378,7 +352,7 @@ describe("PostgresTransactionRepoTests", () => {
   describe("updateTransaction", () => {
     it("should update the transaction 'status' for the specified 'transactionRef'", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
       const transactionToUpdates: UpdateTransaciton = {
@@ -409,7 +383,7 @@ describe("PostgresTransactionRepoTests", () => {
 
     it("should update the transaction 'exchangeRate' for the specified 'transactionRef'", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID);
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
       const transactionToUpdates: UpdateTransaciton = {
@@ -436,7 +410,7 @@ describe("PostgresTransactionRepoTests", () => {
 
     it("should update the transaction 'debitCurrency' & 'debitAmount' for the specified 'transactionRef'", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ true);
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCredit */ true);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
       const transactionToUpdates: UpdateTransaciton = {
@@ -465,7 +439,7 @@ describe("PostgresTransactionRepoTests", () => {
 
     it("should update the transaction 'creditCurrency' & 'creditAmount' for the specified 'transactionRef'", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ false);
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
       const transactionToUpdates: UpdateTransaciton = {
@@ -494,7 +468,7 @@ describe("PostgresTransactionRepoTests", () => {
 
     it("should update all the specified fields of transaction for the specified 'transactionRef'", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const inputTransaction: InputTransaction = await getRandomTransaction(consumerID, /* isCredit */ false);
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
       const transactionToUpdates: UpdateTransaciton = {
@@ -670,6 +644,214 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result10.items).toHaveLength(1);
       expect(result10.totalItems).toBe(1);
       expect(result10.totalPages).toBe(1);
+    });
+  });
+
+  describe("addTransactionEvent", () => {
+    it("should add an event to a transaction with the minimum parameters", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const inputTransactionEvent: InputTransactionEvent = {
+        transactionID: returnedTransaction.id,
+        internal: false,
+        message: "Test event - minimum params",
+      };
+      const returnedTransactionEvent = await transactionRepo.addTransactionEvent(inputTransactionEvent);
+
+      expect(returnedTransactionEvent).toBeDefined();
+      expect(returnedTransactionEvent.id).toBeDefined();
+      expect(returnedTransactionEvent.timestamp).toBeDefined();
+      expect(returnedTransactionEvent.transactionID).toBe(inputTransactionEvent.transactionID);
+      expect(returnedTransactionEvent.internal).toBe(inputTransactionEvent.internal);
+      expect(returnedTransactionEvent.message).toBe(inputTransactionEvent.message);
+      expect(returnedTransactionEvent.details).toBeNull();
+      expect(returnedTransactionEvent.key).toBeNull();
+      expect(returnedTransactionEvent.param1).toBeNull();
+      expect(returnedTransactionEvent.param2).toBeNull();
+      expect(returnedTransactionEvent.param3).toBeNull();
+      expect(returnedTransactionEvent.param4).toBeNull();
+      expect(returnedTransactionEvent.param5).toBeNull();
+
+      const allTransactionEvents: PrismaTransactionEventModel[] = await getAllTransactionEventRecords(prismaService);
+
+      expect(allTransactionEvents.length).toBe(1);
+      expect(allTransactionEvents[0]).toStrictEqual({
+        id: returnedTransactionEvent.id,
+        timestamp: returnedTransactionEvent.timestamp,
+        transactionID: returnedTransactionEvent.transactionID,
+        internal: returnedTransactionEvent.internal,
+        message: returnedTransactionEvent.message,
+        details: returnedTransactionEvent.details,
+        key: returnedTransactionEvent.key,
+        param1: returnedTransactionEvent.param1,
+        param2: returnedTransactionEvent.param2,
+        param3: returnedTransactionEvent.param3,
+        param4: returnedTransactionEvent.param4,
+        param5: returnedTransactionEvent.param5,
+      });
+    });
+
+    it("should add an event to a transaction with all parameters", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const inputTransactionEvent: InputTransactionEvent = {
+        transactionID: returnedTransaction.id,
+        internal: false,
+        message: "Test event - all params",
+        details: "This is a test event",
+        key: "testKey",
+        param1: "param1 value",
+        param2: "param2 value",
+        param3: "param3 value",
+        param4: "param4 value",
+        param5: "param5 value",
+      };
+      const returnedTransactionEvent = await transactionRepo.addTransactionEvent(inputTransactionEvent);
+
+      expect(returnedTransactionEvent).toBeDefined();
+      expect(returnedTransactionEvent.id).toBeDefined();
+      expect(returnedTransactionEvent.timestamp).toBeDefined();
+      expect(returnedTransactionEvent.transactionID).toBe(inputTransactionEvent.transactionID);
+      expect(returnedTransactionEvent.internal).toBe(inputTransactionEvent.internal);
+      expect(returnedTransactionEvent.message).toBe(inputTransactionEvent.message);
+      expect(returnedTransactionEvent.details).toBe(inputTransactionEvent.details);
+      expect(returnedTransactionEvent.key).toBe(inputTransactionEvent.key);
+      expect(returnedTransactionEvent.param1).toBe(inputTransactionEvent.param1);
+      expect(returnedTransactionEvent.param2).toBe(inputTransactionEvent.param2);
+      expect(returnedTransactionEvent.param3).toBe(inputTransactionEvent.param3);
+      expect(returnedTransactionEvent.param4).toBe(inputTransactionEvent.param4);
+      expect(returnedTransactionEvent.param5).toBe(inputTransactionEvent.param5);
+
+      const allTransactionEvents: PrismaTransactionEventModel[] = await getAllTransactionEventRecords(prismaService);
+
+      expect(allTransactionEvents.length).toBe(1);
+      expect(allTransactionEvents[0]).toStrictEqual({
+        id: returnedTransactionEvent.id,
+        timestamp: returnedTransactionEvent.timestamp,
+        transactionID: returnedTransactionEvent.transactionID,
+        internal: returnedTransactionEvent.internal,
+        message: returnedTransactionEvent.message,
+        details: returnedTransactionEvent.details,
+        key: returnedTransactionEvent.key,
+        param1: returnedTransactionEvent.param1,
+        param2: returnedTransactionEvent.param2,
+        param3: returnedTransactionEvent.param3,
+        param4: returnedTransactionEvent.param4,
+        param5: returnedTransactionEvent.param5,
+      });
+    });
+
+    it("should throw a InvalidDatabaseRecordException if creation succeeds but the object fails Joi validation", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const inputTransactionEvent: InputTransactionEvent = {
+        transactionID: returnedTransaction.id,
+        internal: false,
+        message: "Test event - all params",
+        details: "This is a test event",
+        key: "testKey",
+        param1: "param1 value",
+        param2: "param2 value",
+        param3: "param3 value",
+        param4: "param4 value",
+        param5: "param5 value",
+      };
+
+      jest.spyOn(TransactionEventFunctionsForMocking, "validateSavedTransactionEvent").mockImplementation(() => {
+        throw new Error("Error");
+      });
+
+      expect(async () => await transactionRepo.addTransactionEvent(inputTransactionEvent)).rejects.toThrow(
+        InvalidDatabaseRecordException,
+      );
+    });
+
+    it("should throw a DatabaseInternalErrorException if there's an error creating the transactionEvent", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const inputTransactionEvent: InputTransactionEvent = {
+        transactionID: returnedTransaction.id,
+        internal: false,
+        message: "Test event - all params",
+        details: "This is a test event",
+        key: "testKey",
+        param1: "param1 value",
+        param2: "param2 value",
+        param3: "param3 value",
+        param4: "param4 value",
+        param5: "param5 value",
+      };
+
+      jest.spyOn(prismaService.transactionEvent, "create").mockImplementation(() => {
+        throw new Error("Error");
+      });
+
+      expect(async () => await transactionRepo.addTransactionEvent(inputTransactionEvent)).rejects.toThrow(
+        DatabaseInternalErrorException,
+      );
+    });
+  });
+
+  describe("getTransactionEvents", () => {
+    it("should get all transaction events assocated with a transaction with proper filtering", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      const inputTransactionEvent1: InputTransactionEvent = {
+        transactionID: returnedTransaction.id,
+        internal: false,
+        message: "Test event - minimum params",
+      };
+
+      const inputTransactionEvent2: InputTransactionEvent = {
+        transactionID: returnedTransaction.id,
+        internal: true,
+        message: "Test event - all params",
+        details: "This is a test event",
+        key: "testKey",
+        param1: "param1 value",
+        param2: "param2 value",
+        param3: "param3 value",
+        param4: "param4 value",
+        param5: "param5 value",
+      };
+
+      const returnedTransactionEvent1 = await transactionRepo.addTransactionEvent(inputTransactionEvent1);
+      const returnedTransactionEvent2 = await transactionRepo.addTransactionEvent(inputTransactionEvent2);
+
+      // Get all events, including internal
+      const returnedTransactionEvents = await transactionRepo.getTransactionEvents(returnedTransaction.id, true);
+
+      expect(returnedTransactionEvents.length).toBe(2);
+      expect(returnedTransactionEvents[0]).toStrictEqual(returnedTransactionEvent1);
+      expect(returnedTransactionEvents[1]).toStrictEqual(returnedTransactionEvent2);
+
+      // Exclude internal events
+      const returnedTransactionEventsInternalOnly = await transactionRepo.getTransactionEvents(
+        returnedTransaction.id,
+        false,
+      );
+      expect(returnedTransactionEventsInternalOnly.length).toBe(1);
+      expect(returnedTransactionEventsInternalOnly[0]).toStrictEqual(returnedTransactionEvent1);
+    });
+
+    it("should return empty array if no results found", async () => {
+      const returnedTransactionEvents = await transactionRepo.getTransactionEvents("12345", true);
+      expect(returnedTransactionEvents.length).toBe(0);
     });
   });
 });

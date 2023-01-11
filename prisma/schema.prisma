@@ -197,23 +197,40 @@ model LimitConfiguration {
 }
 
 model Transaction {
-  id               String    @id @default(uuid())
-  transactionRef   String    @unique()
-  workflowName     String
-  debitConsumer    Consumer? @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
-  debitConsumerID  String?
-  creditConsumer   Consumer? @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
-  creditConsumerID String?
-  status           String    @default("PENDING")
-  memo             String?
-  sessionKey       String
-  debitCurrency    String?
-  creditCurrency   String?
-  debitAmount      Float?
-  creditAmount     Float?
-  exchangeRate     Float?
-  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+  id                String             @id @default(uuid())
+  transactionRef    String             @unique()
+  workflowName      String
+  debitConsumer     Consumer?          @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
+  debitConsumerID   String?
+  creditConsumer    Consumer?          @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
+  creditConsumerID  String?
+  status            String             @default("PENDING")
+  memo              String?
+  sessionKey        String
+  debitCurrency     String?
+  creditCurrency    String?
+  debitAmount       Float?
+  creditAmount      Float?
+  exchangeRate      Float?
+  createdTimestamp  DateTime?          @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp  DateTime?          @updatedAt // Marking optional so we don't need to set in tests
+  transactionEvents TransactionEvent[]
+}
+
+model TransactionEvent {
+  id            String      @id @default(uuid())
+  timestamp     DateTime?   @default(now()) // Marking optional so we don't need to set in tests
+  transaction   Transaction @relation(fields: [transactionID], references: [id], onDelete: Cascade)
+  transactionID String
+  internal      Boolean     @default(true)
+  message       String
+  details       String?
+  key           String?
+  param1        String?
+  param2        String?
+  param3        String?
+  param4        String?
+  param5        String?
 }
 
 model Token {

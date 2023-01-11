@@ -16,6 +16,7 @@ import {
   ApiHeaders,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
@@ -44,6 +45,7 @@ import { TransactionsQueryResultDTO } from "./dto/TransactionQueryResultDTO";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
 import { Public } from "../auth/public.decorator";
+import { IncludeEventTypes, TransactionEventDTO } from "./dto/TransactionEventDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -68,12 +70,14 @@ export class TransactionController {
   @Get("/transactions/:transactionRef")
   @ApiTags("Transaction")
   @ApiOperation({ summary: "Gets details of a transaction" })
+  @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
   @ApiResponse({
     status: HttpStatus.OK,
     type: TransactionDTO,
   })
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
   async getTransaction(
+    @Query("includeEvents") includeEvents: IncludeEventTypes,
     @Param("transactionRef") transactionRef: string,
     @AuthUser() consumer: Consumer,
   ): Promise<TransactionDTO> {
@@ -81,7 +85,16 @@ export class TransactionController {
     if (!transaction) {
       throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
     }
-    return this.mapper.toDTO(transaction);
+
+    let transactionEvents: TransactionEventDTO[];
+    if (includeEvents && includeEvents !== IncludeEventTypes.NONE) {
+      transactionEvents = await this.transactionService.getTransactionEvents(
+        transaction.id,
+        includeEvents === IncludeEventTypes.ALL,
+      );
+    }
+
+    return this.mapper.toDTO(transaction, transactionEvents);
   }
 
   @Get("/transactions/")
@@ -99,12 +112,32 @@ export class TransactionController {
     filters.consumerID = consumer.props.id;
     filters.pageLimit = Number(filters.pageLimit) || 10;
     filters.pageOffset = Number(filters.pageOffset) || 1;
+    filters.includeEvents = filters.includeEvents || IncludeEventTypes.NONE;
     const allTransactions = await this.transactionService.getFilteredTransactions(filters);
-    const resultTransactions: TransactionsQueryResultDTO = {
-      ...allTransactions,
-      items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
-    };
-    return resultTransactions;
+
+    if (allTransactions == null) return null;
+
+    if (filters.includeEvents === IncludeEventTypes.NONE) {
+      return {
+        ...allTransactions,
+        items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
+      };
+    } else {
+      // add in the events if requested
+      return {
+        ...allTransactions,
+        items: await Promise.all(
+          allTransactions.items.map(async (transaction): Promise<TransactionDTO> => {
+            let transactionEvents: TransactionEventDTO[];
+            transactionEvents = await this.transactionService.getTransactionEvents(
+              transaction.id,
+              filters.includeEvents === IncludeEventTypes.ALL,
+            );
+            return this.mapper.toDTO(transaction, transactionEvents);
+          }),
+        ),
+      };
+    }
   }
 
   @Post("/transactions/")
