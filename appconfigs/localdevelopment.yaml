@@ -140,10 +140,10 @@ nobaWorkflow:
 mono:
   bearerToken: ""
   awsSecretNameForBearerToken: "TEST_MONO_BEARER_TOKEN"
-  baseUrl: ""
+  baseURL: ""
   awsSecretNameForBaseUrl: "TEST_MONO_BASE_URL"
-  nobaAccountId: ""
-  awsSecretNameForNobaAccountId: "TEST_MONO_NOBA_ACCOUNT_ID"
+  nobaAccountID: ""
+  awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
 
 dependencies:
   emailClient: "SENDGRID"

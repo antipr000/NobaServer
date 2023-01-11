@@ -16,13 +16,13 @@ export class MonoClient {
 
   private bearerToken: string;
   private baseUrl: string;
-  private nobaAccountId: string;
+  private nobaAccountID: string;
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const monoConfigs: MonoConfigs = configService.get<MonoConfigs>(MONO_CONFIG_KEY);
     this.bearerToken = monoConfigs.bearerToken;
-    this.baseUrl = monoConfigs.baseUrl;
-    this.nobaAccountId = monoConfigs.nobaAccountId;
+    this.baseUrl = monoConfigs.baseURL;
+    this.nobaAccountID = monoConfigs.nobaAccountID;
   }
 
   private getAuthorizationHeader(): Record<string, string> {
@@ -45,7 +45,7 @@ export class MonoClient {
     };
 
     const requestBody = {
-      account_id: this.nobaAccountId,
+      account_id: this.nobaAccountID,
       amount: {
         amount: request.amount,
         currency: request.currency,

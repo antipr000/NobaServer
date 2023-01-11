@@ -398,11 +398,11 @@ async function configureMonoCredentials(
     throw Error(errorMessage);
   }
 
-  monoConfig.baseUrl = await getParameterValue(monoConfig.awsSecretNameForBaseUrl, monoConfig.baseUrl);
+  monoConfig.baseURL = await getParameterValue(monoConfig.awsSecretNameForBaseURL, monoConfig.baseURL);
   monoConfig.bearerToken = await getParameterValue(monoConfig.awsSecretNameForBearerToken, monoConfig.bearerToken);
-  monoConfig.nobaAccountId = await getParameterValue(
-    monoConfig.awsSecretNameForNobaAccountId,
-    monoConfig.nobaAccountId,
+  monoConfig.nobaAccountID = await getParameterValue(
+    monoConfig.awsSecretNameForNobaAccountID,
+    monoConfig.nobaAccountID,
   );
 
   configs[MONO_CONFIG_KEY] = monoConfig;

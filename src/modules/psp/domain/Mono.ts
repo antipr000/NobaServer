@@ -8,7 +8,7 @@ export class MonoTransaction {
   nobaTransactionID: string;
   state: MonoTransactionState;
   collectionLinkID: string;
-  collectionUrl: string;
+  collectionURL: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
@@ -22,18 +22,18 @@ export enum MonoTransactionState {
 export class MonoTransactionCreateRequest {
   nobaTransactionID: string;
   collectionLinkID: string;
-  collectionUrl: string;
+  collectionURL: string;
 }
 
 export class MonoTransactionUpdateRequest {
-  monoTransactionID: string;
-  state: MonoTransactionState;
+  monoTransactionID?: string;
+  state?: MonoTransactionState;
 }
 
 export const validateCreateMonoTransactionRequest = (transaction: MonoTransactionCreateRequest) => {
   const transactionJoiValidationKeys: KeysRequired<MonoTransactionCreateRequest> = {
     collectionLinkID: Joi.string().required(),
-    collectionUrl: Joi.string().required(),
+    collectionURL: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
   };
 
@@ -63,7 +63,7 @@ export const validateMonoTransaction = (transaction: MonoTransaction) => {
   const transactionJoiValidationKeys: KeysRequired<MonoTransaction> = {
     id: Joi.string().required(),
     collectionLinkID: Joi.string().required(),
-    collectionUrl: Joi.string().required(),
+    collectionURL: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
     monoTransactionID: Joi.string().required().allow(null),
     state: Joi.string()
@@ -84,7 +84,7 @@ export const convertToDomainTransaction = (transaction: PrismaMonoModel): MonoTr
   return {
     id: transaction.id,
     collectionLinkID: transaction.collectionLinkID,
-    collectionUrl: transaction.collectionUrl,
+    collectionURL: transaction.collectionUrl,
     nobaTransactionID: transaction.nobaTransactionID,
     monoTransactionID: transaction.monoTransactionID,
     state: transaction.state as MonoTransactionState,

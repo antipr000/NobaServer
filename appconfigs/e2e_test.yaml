@@ -144,9 +144,9 @@ mono:
   bearerToken: "DUMMY_TOKEN"
   awsSecretNameForBearerToken: ""
   baseUrl: "https://noba.com"
-  awsSecretNameForBaseUrl: ""
-  nobaAccountId: "DUMMY_ACCOUNT"
-  awsSecretNameForNobaAccountId: ""
+  awsSecretNameForBaseURL: ""
+  nobaAccountID: "DUMMY_ACCOUNT"
+  awsSecretNameForNobaAccountID: ""
 
 dependencies:
   emailClient: "STUB"

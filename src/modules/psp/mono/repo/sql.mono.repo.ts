@@ -42,7 +42,7 @@ export class SqlMonoRepo implements IMonoRepo {
           },
         },
         collectionLinkID: request.collectionLinkID,
-        collectionUrl: request.collectionUrl,
+        collectionUrl: request.collectionURL,
         state: MonoTransactionState.PENDING,
       };
 
