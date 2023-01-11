@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { TransactionStatus, WorkflowName } from "../domain/Transaction";
+import { TransactionEventDTO } from "./TransactionEventDTO";
 
 export class TransactionDTO {
   @ApiProperty()
@@ -34,4 +35,7 @@ export class TransactionDTO {
 
   @ApiPropertyOptional()
   memo?: string;
+
+  @ApiPropertyOptional()
+  transactionEvents?: TransactionEventDTO[];
 }

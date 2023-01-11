@@ -182,7 +182,24 @@ Table Transaction {
   exchangeRate Float
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
+  transactionEvents TransactionEvent [not null]
   Mono Mono
+}
+
+Table TransactionEvent {
+  id String [pk]
+  timestamp DateTime [default: `now()`]
+  transaction Transaction [not null]
+  transactionID String [not null]
+  internal Boolean [not null, default: true]
+  message String [not null]
+  details String
+  key String
+  param1 String
+  param2 String
+  param3 String
+  param4 String
+  param5 String
 }
 
 Table Mono {
@@ -332,5 +349,7 @@ Ref: LimitConfiguration.profileID > LimitProfile.id [delete: Cascade]
 Ref: Transaction.debitConsumerID > Consumer.id [delete: Cascade]
 
 Ref: Transaction.creditConsumerID > Consumer.id [delete: Cascade]
+
+Ref: TransactionEvent.transactionID > Transaction.id [delete: Cascade]
 
 Ref: Mono.nobaTransactionID - Transaction.id [delete: Cascade]
