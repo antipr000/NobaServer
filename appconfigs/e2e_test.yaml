@@ -147,6 +147,8 @@ mono:
   awsSecretNameForBaseURL: ""
   nobaAccountID: "DUMMY_ACCOUNT"
   awsSecretNameForNobaAccountID: ""
+  webhookSecret: "DUMMY_WEBHOOK_SECRET"
+  awsSecretNameForWebhookSecret: ""
 
 dependencies:
   emailClient: "STUB"

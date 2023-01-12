@@ -4,14 +4,14 @@ import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
 import { IMonoRepo } from "../repo/mono.repo";
-import { MonoTransaction, MonoTransactionCreateRequest, MonoTransactionState } from "../../domain/Mono";
+import { MonoCurrency, MonoTransaction, MonoTransactionCreateRequest, MonoTransactionState } from "../../domain/Mono";
 import { MonoClient } from "../mono.client";
 import { getMockMonoRepoWithDefaults } from "../mocks/mock.mono.repo";
 import { getMockMonoClientWithDefaults } from "../mocks/mock.mono.client";
 import { MONO_REPO_PROVIDER } from "../repo/mono.repo.module";
 import { deepEqual, instance, when } from "ts-mockito";
 import { MonoService } from "../mono.service";
-import { MonoClientCollectionLinkRequest, MonoCurrency } from "../../dto/mono.client.dto";
+import { MonoClientCollectionLinkRequest } from "../../dto/mono.client.dto";
 import { CreateMonoTransactionRequest } from "../../dto/mono.service.dto";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
 

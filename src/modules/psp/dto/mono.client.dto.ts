@@ -1,3 +1,5 @@
+import { MonoCurrency } from "../domain/Mono";
+
 export type MonoClientCollectionLinkRequest = {
   transactionID: string;
   amount: number;
@@ -6,10 +8,6 @@ export type MonoClientCollectionLinkRequest = {
   consumerPhone: string;
   consumerName: string;
 };
-
-export enum MonoCurrency {
-  COP = "COP",
-}
 
 export type MonoClientCollectionLinkResponse = {
   collectionLink: string;

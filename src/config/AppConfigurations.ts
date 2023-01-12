@@ -123,6 +123,8 @@ import {
   MONO_CONFIG_KEY,
   MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID,
   MONO_NOBA_ACCOUNT_ID,
+  MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET,
+  MONO_WEBHOOK_SECRET,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -391,6 +393,7 @@ async function configureMonoCredentials(
       "\n'Mono' configurations are required. Please configure the Mono credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${MONO_CONFIG_KEY}" and populate ` +
       `("${MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID}" or "${MONO_NOBA_ACCOUNT_ID}") ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET}" or "${MONO_WEBHOOK_SECRET}") ` +
       `("${MONO_AWS_SECRET_KEY_FOR_BASE_URL}" or "${MONO_BASE_URL}") AND ` +
       `("${MONO_AWS_SECRET_KEY_FOR_BEARER_TOKEN}" or "${MONO_BEARER_TOKEN}") ` +
       "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
@@ -400,6 +403,10 @@ async function configureMonoCredentials(
 
   monoConfig.baseURL = await getParameterValue(monoConfig.awsSecretNameForBaseURL, monoConfig.baseURL);
   monoConfig.bearerToken = await getParameterValue(monoConfig.awsSecretNameForBearerToken, monoConfig.bearerToken);
+  monoConfig.webhookSecret = await getParameterValue(
+    monoConfig.awsSecretNameForWebhookSecret,
+    monoConfig.webhookSecret,
+  );
   monoConfig.nobaAccountID = await getParameterValue(
     monoConfig.awsSecretNameForNobaAccountID,
     monoConfig.nobaAccountID,

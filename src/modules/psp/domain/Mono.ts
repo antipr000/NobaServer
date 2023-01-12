@@ -13,6 +13,10 @@ export class MonoTransaction {
   updatedTimestamp: Date;
 }
 
+export enum MonoCurrency {
+  COP = "COP",
+}
+
 export enum MonoTransactionState {
   PENDING = "PENDING",
   SUCCESS = "SUCCESS",

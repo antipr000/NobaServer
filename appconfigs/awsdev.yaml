@@ -139,6 +139,8 @@ mono:
   awsSecretNameForBaseURL: "TEST_MONO_BASE_URL"
   nobaAccountID: ""
   awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
+  webhookSecret: ""
+  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
 
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"
