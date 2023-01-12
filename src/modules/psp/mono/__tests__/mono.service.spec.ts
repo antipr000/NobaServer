@@ -14,6 +14,9 @@ import { MonoService } from "../mono.service";
 import { MonoClientCollectionLinkRequest } from "../../dto/mono.client.dto";
 import { CreateMonoTransactionRequest } from "../../dto/mono.service.dto";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
+import { Consumer } from "../../../../modules/consumer/domain/Consumer";
+import { ConsumerService } from "../../../../modules/consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../../../modules/consumer/mocks/mock.consumer.service";
 
 const getRandomMonoTransaction = (): MonoTransaction => {
   return {
@@ -34,11 +37,13 @@ describe("SqlMonoRepoTests", () => {
   let monoRepo: IMonoRepo;
   let monoClient: MonoClient;
   let monoService: MonoService;
+  let consumerService: ConsumerService;
   let app: TestingModule;
 
   beforeEach(async () => {
     monoRepo = getMockMonoRepoWithDefaults();
     monoClient = getMockMonoClientWithDefaults();
+    consumerService = getMockConsumerServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -55,6 +60,10 @@ describe("SqlMonoRepoTests", () => {
         {
           provide: MonoClient,
           useFactory: () => instance(monoClient),
+        },
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(consumerService),
         },
         MonoService,
       ],
@@ -118,13 +127,23 @@ describe("SqlMonoRepoTests", () => {
   describe("createMonoTransaction", () => {
     it("should create a Mono transaction", async () => {
       const monoTransaction: MonoTransaction = getRandomMonoTransaction();
+
+      const consumer: Consumer = Consumer.createConsumer({
+        email: "test@noba.com",
+        id: "CCCCCCCCCC",
+        displayEmail: "test@noba.com",
+        handle: "test",
+        phone: "+1234567890",
+        firstName: "First",
+        lastName: "Last",
+      });
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
       const createMonoTransactionRequest: CreateMonoTransactionRequest = {
         amount: 100,
-        consumerEmail: "test@noba.com",
-        consumerName: "Test User",
-        consumerPhone: "1234567890",
         currency: MonoCurrency.COP,
         nobaTransactionID: monoTransaction.nobaTransactionID,
+        consumerID: consumer.props.id,
       };
 
       const expectedDBMonoTransactionCreateRequest: MonoTransactionCreateRequest = {
@@ -139,10 +158,10 @@ describe("SqlMonoRepoTests", () => {
       const expectedMonoClientCreateCollectionLink: MonoClientCollectionLinkRequest = {
         amount: createMonoTransactionRequest.amount,
         currency: createMonoTransactionRequest.currency,
-        consumerEmail: createMonoTransactionRequest.consumerEmail,
-        consumerName: createMonoTransactionRequest.consumerName,
-        consumerPhone: createMonoTransactionRequest.consumerPhone,
         transactionID: createMonoTransactionRequest.nobaTransactionID,
+        consumerEmail: consumer.props.email,
+        consumerName: "First Last",
+        consumerPhone: consumer.props.phone,
       };
       when(monoClient.createCollectionLink(deepEqual(expectedMonoClientCreateCollectionLink))).thenResolve({
         collectionLinkID: monoTransaction.collectionLinkID,
@@ -158,22 +177,32 @@ describe("SqlMonoRepoTests", () => {
 
     it("shouldn't save the transaction if Mono client failed to create a Collection Link", async () => {
       const monoTransaction: MonoTransaction = getRandomMonoTransaction();
+
+      const consumer: Consumer = Consumer.createConsumer({
+        email: "test@noba.com",
+        id: "CCCCCCCCCC",
+        displayEmail: "test@noba.com",
+        handle: "test",
+        phone: "+1234567890",
+        firstName: "First",
+        lastName: "Last",
+      });
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
       const createMonoTransactionRequest: CreateMonoTransactionRequest = {
         amount: 100,
-        consumerEmail: "test@noba.com",
-        consumerName: "Test User",
-        consumerPhone: "1234567890",
         currency: MonoCurrency.COP,
         nobaTransactionID: monoTransaction.nobaTransactionID,
+        consumerID: consumer.props.id,
       };
 
       const expectedMonoClientCreateCollectionLink: MonoClientCollectionLinkRequest = {
         amount: createMonoTransactionRequest.amount,
         currency: createMonoTransactionRequest.currency,
-        consumerEmail: createMonoTransactionRequest.consumerEmail,
-        consumerName: createMonoTransactionRequest.consumerName,
-        consumerPhone: createMonoTransactionRequest.consumerPhone,
         transactionID: createMonoTransactionRequest.nobaTransactionID,
+        consumerEmail: consumer.props.email,
+        consumerName: "First Last",
+        consumerPhone: consumer.props.phone,
       };
       when(monoClient.createCollectionLink(deepEqual(expectedMonoClientCreateCollectionLink))).thenThrow(
         new InternalServiceErrorException({}),

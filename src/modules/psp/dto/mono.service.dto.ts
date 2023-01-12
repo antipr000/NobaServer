@@ -1,10 +1,8 @@
-import { MonoCurrency } from "./mono.client.dto";
+import { MonoCurrency } from "../domain/Mono";
 
 export type CreateMonoTransactionRequest = {
   nobaTransactionID: string;
   amount: number;
   currency: MonoCurrency;
-  consumerEmail: string;
-  consumerPhone: string;
-  consumerName: string;
+  consumerID: string;
 };
