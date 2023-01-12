@@ -9,6 +9,12 @@ export class TransactionDTO {
   @ApiProperty({ enum: WorkflowName })
   workflowName: WorkflowName;
 
+  @ApiPropertyOptional()
+  debitConsumerIDOrTag?: string;
+
+  @ApiPropertyOptional()
+  creditConsumerIDOrTag?: string;
+
   @ApiProperty()
   debitCurrency: string;
 

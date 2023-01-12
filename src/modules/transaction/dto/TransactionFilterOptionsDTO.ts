@@ -34,4 +34,7 @@ export class TransactionFilterOptionsDTO {
     description: "filter for a particular transaction status",
   })
   transactionStatus?: TransactionStatus;
+
+  @ApiPropertyOptional({ description: "resolve tag for consumer" })
+  resolveTags?: boolean;
 }

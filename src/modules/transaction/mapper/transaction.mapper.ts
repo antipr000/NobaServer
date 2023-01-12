@@ -3,10 +3,25 @@ import { TransactionDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 
 export class TransactionMapper {
-  toDTO(transaction: Transaction, transactionEvents?: TransactionEventDTO[]): TransactionDTO {
+  toDTO(
+    transaction: Transaction,
+    consumerTag: string,
+    resolveTags = false,
+    transactionEvents?: TransactionEventDTO[],
+  ): TransactionDTO {
     return {
       transactionRef: transaction.transactionRef,
       workflowName: transaction.workflowName,
+      debitConsumerIDOrTag: transaction.debitConsumerID
+        ? resolveTags
+          ? consumerTag
+          : transaction.debitConsumerID
+        : undefined,
+      creditConsumerIDOrTag: transaction.creditConsumerID
+        ? resolveTags
+          ? consumerTag
+          : transaction.creditConsumerID
+        : undefined,
       debitCurrency: transaction.debitCurrency,
       creditCurrency: transaction.creditCurrency,
       debitAmount: transaction.debitAmount,

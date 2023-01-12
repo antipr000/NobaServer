@@ -1,15 +1,4 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Inject,
-  NotFoundException,
-  Param,
-  Post,
-  Query,
-} from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Inject, NotFoundException, Param, Post, Query } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -30,11 +19,9 @@ import { AuthUser } from "../auth/auth.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
-import { ServiceException } from "../../core/exception/ServiceException";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { LimitsService } from "./limits.service";
@@ -71,6 +58,7 @@ export class TransactionController {
   @ApiTags("Transaction")
   @ApiOperation({ summary: "Gets details of a transaction" })
   @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
+  @ApiQuery({ name: "resolveTags", type: Boolean, required: false })
   @ApiResponse({
     status: HttpStatus.OK,
     type: TransactionDTO,
@@ -78,6 +66,7 @@ export class TransactionController {
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
   async getTransaction(
     @Query("includeEvents") includeEvents: IncludeEventTypes,
+    @Query("resolveTags") resolveTags: boolean,
     @Param("transactionRef") transactionRef: string,
     @AuthUser() consumer: Consumer,
   ): Promise<TransactionDTO> {
@@ -94,7 +83,7 @@ export class TransactionController {
       );
     }
 
-    return this.mapper.toDTO(transaction, transactionEvents);
+    return this.mapper.toDTO(transaction, consumer.props.handle, resolveTags, transactionEvents);
   }
 
   @Get("/transactions/")
@@ -118,7 +107,9 @@ export class TransactionController {
 
     return {
       ...allTransactions,
-      items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
+      items: allTransactions.items.map(transaction =>
+        this.mapper.toDTO(transaction, consumer.props.handle, filters.resolveTags),
+      ),
     };
   }
 
