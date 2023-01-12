@@ -179,6 +179,34 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("getConsumerHandle", () => {
+    it("should return handle", async () => {
+      const email = "mock-user@noba.com";
+      const consumerID = "mock-consumer-1";
+      const handle = "mock-handle";
+
+      const consumer = Consumer.createConsumer({
+        email: email,
+        id: consumerID,
+        handle: handle,
+      });
+
+      when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
+
+      const response = await consumerService.getConsumerHandle(consumerID);
+
+      expect(response).toBe(handle);
+    });
+
+    it("should return null if consumer id is not found", async () => {
+      const consumerID = "mock-consumer-1";
+      when(consumerRepo.getConsumer(consumerID)).thenResolve(null);
+
+      const response = await consumerService.getConsumerHandle(consumerID);
+      expect(response).toBeNull();
+    });
+  });
+
   describe("updateConsumer", () => {
     it("should update consumer details", async () => {
       const email = "mock-user@noba.com";

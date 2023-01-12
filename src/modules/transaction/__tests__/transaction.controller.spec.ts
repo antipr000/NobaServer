@@ -19,6 +19,8 @@ import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { QuoteRequestDTO } from "../dto/QuoteRequestDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { IncludeEventTypes, TransactionEventDTO } from "../dto/TransactionEventDTO";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -66,10 +68,12 @@ describe("Transaction Controller tests", () => {
   let transactionService: TransactionService;
   let transactionController: TransactionController;
   let limitService: LimitsService;
+  let consumerService: ConsumerService;
 
   beforeEach(async () => {
     transactionService = getMockTransactionServiceWithDefaults();
     limitService = getMockLimitsServiceWithDefaults();
+    consumerService = getMockConsumerServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -86,6 +90,10 @@ describe("Transaction Controller tests", () => {
         {
           provide: LimitsService,
           useFactory: () => instance(limitService),
+        },
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(consumerService),
         },
         TransactionController,
       ],
@@ -105,6 +113,7 @@ describe("Transaction Controller tests", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
@@ -138,6 +147,7 @@ describe("Transaction Controller tests", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID, true);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
@@ -165,12 +175,51 @@ describe("Transaction Controller tests", () => {
       expect(result).toStrictEqual(expectedResult);
     });
 
+    it("should return a transfer transaction after resolving both credit and debit consumer IDs to tags", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const creditConsumer = getRandomConsumer("creditConsumerID");
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      transaction.creditConsumerID = creditConsumer.props.id;
+
+      when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
+      when(consumerService.getConsumerHandle(creditConsumer.props.id)).thenResolve(creditConsumer.props.handle);
+
+      const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.NONE,
+        true,
+        transactionRef,
+        consumer,
+      );
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        creditConsumerIDOrTag: creditConsumer.props.handle,
+        debitConsumerIDOrTag: consumer.props.handle,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+      };
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
     it("should return transaction without resolving consumer id to tag", async () => {
       const consumerID = "testConsumerID";
       const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
@@ -202,7 +251,9 @@ describe("Transaction Controller tests", () => {
       const consumerID = "testConsumerID";
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
+      const consumer = getRandomConsumer(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const transactionEventsToReturn: TransactionEventDTO[] = [
         {
@@ -227,7 +278,7 @@ describe("Transaction Controller tests", () => {
         IncludeEventTypes.ALL,
         false,
         transactionRef,
-        getRandomConsumer(consumerID),
+        consumer,
       );
 
       const expectedResult: TransactionDTO = {
@@ -316,6 +367,7 @@ describe("Transaction Controller tests", () => {
         pageLimit: 5,
         pageOffset: 1,
       };
+      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
       when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
         page: 1,

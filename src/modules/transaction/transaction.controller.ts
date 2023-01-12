@@ -33,6 +33,7 @@ import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
 import { Public } from "../auth/public.decorator";
 import { IncludeEventTypes, TransactionEventDTO } from "./dto/TransactionEventDTO";
+import { ConsumerService } from "../consumer/consumer.service";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -47,6 +48,9 @@ export class TransactionController {
 
   @Inject()
   private readonly limitsService: LimitsService;
+
+  @Inject()
+  private readonly consumerService: ConsumerService;
 
   private readonly mapper: TransactionMapper;
 
@@ -75,11 +79,22 @@ export class TransactionController {
 
     if (allTransactions == null) return null;
 
+    const transactions = allTransactions.items;
+
+    const transactionDTOPromises: Promise<TransactionDTO>[] = transactions.map(async transaction => {
+      const creditConsumerTag = transaction.creditConsumerID
+        ? await this.consumerService.getConsumerHandle(transaction.creditConsumerID)
+        : null;
+      const debitConsumerTag = transaction.debitConsumerID
+        ? await this.consumerService.getConsumerHandle(transaction.debitConsumerID)
+        : null;
+      return this.mapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags);
+    });
+
+    const transactionDTOs = await Promise.all(transactionDTOPromises);
     return {
       ...allTransactions,
-      items: allTransactions.items.map(transaction =>
-        this.mapper.toDTO(transaction, consumer.props.handle, resolveTags),
-      ),
+      items: transactionDTOs,
     };
   }
 
@@ -167,7 +182,15 @@ export class TransactionController {
       );
     }
 
-    return this.mapper.toDTO(transaction, consumer.props.handle, resolveTags, transactionEvents);
+    const creditConsumerTag = transaction.creditConsumerID
+      ? await this.consumerService.getConsumerHandle(transaction.creditConsumerID)
+      : null;
+
+    const debitConsumerTag = transaction.debitConsumerID
+      ? await this.consumerService.getConsumerHandle(transaction.debitConsumerID)
+      : null;
+
+    return this.mapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags, transactionEvents);
   }
 
   @Get("/consumers/limits/")
