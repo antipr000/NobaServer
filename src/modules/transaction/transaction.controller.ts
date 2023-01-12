@@ -21,7 +21,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
-import { TransactionMappingService } from "./mapper/transaction.mapper.service";
+import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "./mapper/transaction.mapper.service";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { LimitsService } from "./limits.service";
@@ -33,7 +33,6 @@ import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
 import { Public } from "../auth/public.decorator";
 import { IncludeEventTypes } from "./dto/TransactionEventDTO";
-import { TRANSACTION_MAPPING_SERVICE_PROVIDER } from "./transaction.module";
 import { TransactionEvent } from "./domain/TransactionEvent";
 
 @Roles(Role.User)

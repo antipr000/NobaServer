@@ -21,9 +21,8 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/Serv
 import { IncludeEventTypes, TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import { TransactionMappingService } from "../mapper/transaction.mapper.service";
+import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "../mapper/transaction.mapper.service";
 import { TransactionEvent } from "../domain/TransactionEvent";
-import { TRANSACTION_MAPPING_SERVICE_PROVIDER } from "../transaction.module";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {

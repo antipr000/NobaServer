@@ -80,3 +80,5 @@ export class TransactionMappingService {
     };
   }
 }
+
+export const TRANSACTION_MAPPING_SERVICE_PROVIDER = "TRANSACTION_MAPPING_SERVICE";

@@ -9,9 +9,7 @@ import { ConsumerModule } from "../consumer/consumer.module";
 import { TemporalModule } from "../../infra/temporal/temporal.module";
 import { LimitsService } from "./limits.service";
 import { CommonModule } from "../common/common.module";
-import { TransactionMappingService } from "./mapper/transaction.mapper.service";
-
-export const TRANSACTION_MAPPING_SERVICE_PROVIDER = "TRANSACTION_MAPPING_SERVICE";
+import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "./mapper/transaction.mapper.service";
 
 @Module({
   imports: [InfraProvidersModule, TransactionRepoModule, ConsumerModule, TemporalModule, CommonModule],
