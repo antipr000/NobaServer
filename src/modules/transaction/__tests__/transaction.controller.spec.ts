@@ -19,6 +19,8 @@ import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { QuoteRequestDTO } from "../dto/QuoteRequestDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { IncludeEventTypes, TransactionEventDTO } from "../dto/TransactionEventDTO";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -66,10 +68,12 @@ describe("Transaction Controller tests", () => {
   let transactionService: TransactionService;
   let transactionController: TransactionController;
   let limitService: LimitsService;
+  let consumerService: ConsumerService;
 
   beforeEach(async () => {
     transactionService = getMockTransactionServiceWithDefaults();
     limitService = getMockLimitsServiceWithDefaults();
+    consumerService = getMockConsumerServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -87,6 +91,10 @@ describe("Transaction Controller tests", () => {
           provide: LimitsService,
           useFactory: () => instance(limitService),
         },
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(consumerService),
+        },
         TransactionController,
       ],
     }).compile();
@@ -99,20 +107,127 @@ describe("Transaction Controller tests", () => {
   });
 
   describe("getTransaction", () => {
-    it("should return the transaction", async () => {
+    it("should return the transaction after resolving debit consumer id to tag", async () => {
       const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
+        true,
         transactionRef,
-        getRandomConsumer(consumerID),
+        consumer,
       );
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
+        debitConsumerIDOrTag: consumer.props.handle,
+        creditConsumerIDOrTag: undefined,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+      };
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return the transaction after resolving credit consumer id to tag", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID, true);
+      when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+      const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.NONE,
+        true,
+        transactionRef,
+        consumer,
+      );
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        creditConsumerIDOrTag: consumer.props.handle,
+        debitConsumerIDOrTag: undefined,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+      };
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return a transfer transaction after resolving both credit and debit consumer IDs to tags", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const creditConsumer = getRandomConsumer("creditConsumerID");
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      transaction.creditConsumerID = creditConsumer.props.id;
+
+      when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+      when(consumerService.getConsumerHandle(creditConsumer.props.id)).thenResolve(creditConsumer.props.handle);
+
+      const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.NONE,
+        true,
+        transactionRef,
+        consumer,
+      );
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        creditConsumerIDOrTag: creditConsumer.props.handle,
+        debitConsumerIDOrTag: consumer.props.handle,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+      };
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return transaction without resolving consumer id to tag", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+      const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.NONE,
+        false,
+        transactionRef,
+        consumer,
+      );
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumerIDOrTag: transaction.debitConsumerID,
+        creditConsumerIDOrTag: undefined,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -132,6 +247,7 @@ describe("Transaction Controller tests", () => {
       const consumerID = "testConsumerID";
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
+      const consumer = getRandomConsumer(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
 
       const transactionEventsToReturn: TransactionEventDTO[] = [
@@ -155,13 +271,16 @@ describe("Transaction Controller tests", () => {
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.ALL,
+        false,
         transactionRef,
-        getRandomConsumer(consumerID),
+        consumer,
       );
 
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
+        debitConsumerIDOrTag: transaction.debitConsumerID,
+        creditConsumerIDOrTag: undefined,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -186,6 +305,7 @@ describe("Transaction Controller tests", () => {
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.ALL,
+        false,
         transactionRef,
         getRandomConsumer(consumerID),
       );
@@ -193,6 +313,8 @@ describe("Transaction Controller tests", () => {
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
+        debitConsumerIDOrTag: transaction.debitConsumerID,
+        creditConsumerIDOrTag: undefined,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -217,6 +339,7 @@ describe("Transaction Controller tests", () => {
         async () =>
           await transactionController.getTransaction(
             IncludeEventTypes.NONE,
+            false,
             transactionRef,
             getRandomConsumer(consumerID),
           ),
@@ -225,10 +348,11 @@ describe("Transaction Controller tests", () => {
   });
 
   describe("getAllTransactions", () => {
-    it("should get filtered transactions", async () => {
+    it("should get filtered transactions with resolved tags", async () => {
       const consumerID = "testConsumerID";
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
+      const consumer = getRandomConsumer(consumerID);
       transaction.transactionRef = transactionRef;
       transaction.status = TransactionStatus.SUCCESS;
 
@@ -252,11 +376,13 @@ describe("Transaction Controller tests", () => {
           pageLimit: 5,
           pageOffset: 1,
         },
-        getRandomConsumer(consumerID),
+        true,
+        consumer,
       );
 
       expect(allTransactions.items.length).toBe(1);
       expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
+      expect(allTransactions.items[0].debitConsumerIDOrTag).toBe(consumer.props.handle);
     });
   });
 
