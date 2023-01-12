@@ -9,6 +9,7 @@ export type { AddCryptoWalletResponseDTO } from "./models/AddCryptoWalletRespons
 export type { AddNobaAdminDTO } from "./models/AddNobaAdminDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
+export type { AddTransactionEventDTO } from "./models/AddTransactionEventDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
 export type { CardDetailsDTO } from "./models/CardDetailsDTO";
 export type { CaseDTO } from "./models/CaseDTO";
@@ -66,6 +67,7 @@ export type { UpdateAddressDTO } from "./models/UpdateAddressDTO";
 export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO";
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";
 export type { UpdatePaymentMethodDTO } from "./models/UpdatePaymentMethodDTO";
+export type { UpdateTransactionRequestDTO } from "./models/UpdateTransactionRequestDTO";
 export type { UserEmailUpdateRequest } from "./models/UserEmailUpdateRequest";
 export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";
