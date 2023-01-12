@@ -2,6 +2,20 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { AddTransactionEventDTO, TransactionEventDTO } from "./TransactionEventDTO";
 
+export class ConsumerInformationDTO {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  firstName: string;
+
+  @ApiProperty()
+  lastName: string;
+
+  @ApiPropertyOptional()
+  handle: string;
+}
+
 export class TransactionDTO {
   @ApiProperty()
   transactionRef: string;
@@ -10,10 +24,10 @@ export class TransactionDTO {
   workflowName: WorkflowName;
 
   @ApiPropertyOptional()
-  debitConsumerIDOrTag?: string;
+  debitConsumer?: ConsumerInformationDTO;
 
   @ApiPropertyOptional()
-  creditConsumerIDOrTag?: string;
+  creditConsumer?: ConsumerInformationDTO;
 
   @ApiProperty()
   debitCurrency: string;

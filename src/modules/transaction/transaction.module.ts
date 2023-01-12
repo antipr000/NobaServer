@@ -9,9 +9,17 @@ import { ConsumerModule } from "../consumer/consumer.module";
 import { TemporalModule } from "../../infra/temporal/temporal.module";
 import { LimitsService } from "./limits.service";
 import { CommonModule } from "../common/common.module";
+import { TransactionMappingModule } from "./mapper/transaction.mapper.module";
 
 @Module({
-  imports: [InfraProvidersModule, TransactionRepoModule, ConsumerModule, TemporalModule, CommonModule],
+  imports: [
+    InfraProvidersModule,
+    TransactionRepoModule,
+    ConsumerModule,
+    TemporalModule,
+    CommonModule,
+    TransactionMappingModule,
+  ],
   controllers: [TransactionController, TransactionWorkflowController],
   providers: [TransactionService, WorkflowExecutor, LimitsService],
   exports: [TransactionService], //Need to access in PublicController

@@ -411,28 +411,11 @@ export class TransactionService {
     };
   }
 
-  async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEventDTO[]> {
+  async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEvent[]> {
     const transactionEvents: TransactionEvent[] = await this.transactionRepo.getTransactionEvents(
       transactionID,
       includeInternalEvents,
     );
-    return transactionEvents.map(transactionEvent => {
-      return {
-        timestamp: transactionEvent.timestamp,
-        internal: transactionEvent.internal,
-        message: transactionEvent.message,
-        ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
-        ...(transactionEvent.key !== undefined && { key: transactionEvent.key }),
-        ...(transactionEvent.param1 !== undefined && {
-          parameters: Array.of(
-            transactionEvent.param1,
-            transactionEvent.param2,
-            transactionEvent.param3,
-            transactionEvent.param4,
-            transactionEvent.param5,
-          ),
-        }),
-      };
-    });
+    return transactionEvents;
   }
 }

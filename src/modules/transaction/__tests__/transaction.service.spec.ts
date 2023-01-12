@@ -626,44 +626,13 @@ describe("TransactionServiceTests", () => {
       const returnedAllTransactionEvent = await transactionService.getTransactionEvents(transaction.id, true);
       const returnedExternalTransactionEvent = await transactionService.getTransactionEvents(transaction.id, false);
 
-      const expectedInternalTransactionEvent1: TransactionEventDTO = {
-        timestamp: internalTransactionEvent1.timestamp,
-        message: internalTransactionEvent1.message,
-        details: internalTransactionEvent1.details,
-        internal: internalTransactionEvent1.internal,
-        key: internalTransactionEvent1.key,
-        parameters: [internalTransactionEvent1.param1, internalTransactionEvent1.param2],
-      };
-
-      const expectedInternalTransactionEvent2: TransactionEventDTO = {
-        timestamp: internalTransactionEvent2.timestamp,
-        message: internalTransactionEvent2.message,
-        details: internalTransactionEvent2.details,
-        internal: internalTransactionEvent2.internal,
-      };
-
-      const expectedExternalTransactionEvent: TransactionEventDTO = {
-        timestamp: externalTransactionEvent.timestamp,
-        message: externalTransactionEvent.message,
-        details: externalTransactionEvent.details,
-        internal: externalTransactionEvent.internal,
-        key: externalTransactionEvent.key,
-        parameters: [
-          externalTransactionEvent.param1,
-          externalTransactionEvent.param2,
-          externalTransactionEvent.param3,
-          externalTransactionEvent.param4,
-          externalTransactionEvent.param5,
-        ],
-      };
-
       expect(returnedAllTransactionEvent).toHaveLength(3);
-      expect(returnedAllTransactionEvent[0]).toEqual(expectedInternalTransactionEvent1);
-      expect(returnedAllTransactionEvent[1]).toEqual(expectedInternalTransactionEvent2);
-      expect(returnedAllTransactionEvent[2]).toEqual(expectedExternalTransactionEvent);
+      expect(returnedAllTransactionEvent[0]).toEqual(internalTransactionEvent1);
+      expect(returnedAllTransactionEvent[1]).toEqual(internalTransactionEvent2);
+      expect(returnedAllTransactionEvent[2]).toEqual(externalTransactionEvent);
 
       expect(returnedExternalTransactionEvent).toHaveLength(1);
-      expect(returnedExternalTransactionEvent[0]).toEqual(expectedExternalTransactionEvent);
+      expect(returnedExternalTransactionEvent[0]).toEqual(externalTransactionEvent);
     });
   });
 
