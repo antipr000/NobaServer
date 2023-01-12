@@ -49,7 +49,9 @@ export class TransactionDTO {
 export class UpdateTransactionDTO {
   @ApiPropertyOptional({ enum: TransactionStatus })
   status?: TransactionStatus;
+}
 
+export class UpdateTransactionRequestDTO extends UpdateTransactionDTO {
   @ApiPropertyOptional()
   transactionEvent?: AddTransactionEventDTO;
 }

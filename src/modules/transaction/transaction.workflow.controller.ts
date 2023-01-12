@@ -5,7 +5,7 @@ import { TransactionService } from "./transaction.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
-import { UpdateTransactionDTO } from "./dto/TransactionDTO";
+import { UpdateTransactionRequestDTO } from "./dto/TransactionDTO";
 
 @Controller("wf/v1")
 @ApiTags("Workflow")
@@ -27,7 +27,7 @@ export class TransactionWorkflowController {
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
   @ApiBadRequestResponse({ description: "Improper or misformatted request" })
   async patchTransaction(
-    @Body() requestBody: UpdateTransactionDTO,
+    @Body() requestBody: UpdateTransactionRequestDTO,
     @Param("transactionID") transactionID: string,
   ): Promise<void> {
     if (!requestBody.transactionEvent && !requestBody.status) {

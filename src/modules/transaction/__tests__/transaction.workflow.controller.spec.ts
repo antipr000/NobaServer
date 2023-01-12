@@ -7,7 +7,7 @@ import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transact
 import { instance, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { getMockTransactionServiceWithDefaults } from "../mocks/mock.transaction.service";
-import { TransactionDTO, UpdateTransactionDTO } from "../dto/TransactionDTO";
+import { UpdateTransactionRequestDTO, UpdateTransactionDTO } from "../dto/TransactionDTO";
 import { TransactionWorkflowController } from "../transaction.workflow.controller";
 import { BadRequestException } from "@nestjs/common";
 
@@ -90,7 +90,7 @@ describe("Transaction Workflow Controller tests", () => {
       const consumerID = "testConsumerID";
       const transaction: Transaction = getRandomTransaction(consumerID);
 
-      const updateTransactionDTO: UpdateTransactionDTO = {
+      const updateTransactionDTO: UpdateTransactionRequestDTO = {
         transactionEvent: {
           message: "test event message",
         },
@@ -110,7 +110,7 @@ describe("Transaction Workflow Controller tests", () => {
       const consumerID = "testConsumerID";
       const transaction: Transaction = getRandomTransaction(consumerID);
 
-      const updateTransactionDTO: UpdateTransactionDTO = {
+      const updateTransactionDTO: UpdateTransactionRequestDTO = {
         transactionEvent: {
           message: "test event message",
         },
