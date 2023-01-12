@@ -33,7 +33,7 @@ import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
 import { Public } from "../auth/public.decorator";
 import { IncludeEventTypes } from "./dto/TransactionEventDTO";
-import { TRANSACTION_MAPPING_SERVICE_PROVIDER } from "./mapper/transaction.mapper.module";
+import { TRANSACTION_MAPPING_SERVICE_PROVIDER } from "./transaction.module";
 import { TransactionEvent } from "./domain/TransactionEvent";
 
 @Roles(Role.User)
