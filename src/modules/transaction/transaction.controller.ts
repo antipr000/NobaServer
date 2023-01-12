@@ -1,4 +1,15 @@
-import { Body, Controller, Get, HttpStatus, Inject, NotFoundException, Param, Post, Query } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+} from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -33,6 +44,7 @@ import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
 import { Public } from "../auth/public.decorator";
 import { IncludeEventTypes, TransactionEventDTO } from "./dto/TransactionEventDTO";
+import { ConsumerService } from "../consumer/consumer.service";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -48,39 +60,13 @@ export class TransactionController {
   @Inject()
   private readonly limitsService: LimitsService;
 
-  @Get("/transactions/:transactionRef")
-  @ApiTags("Transaction")
-  @ApiOperation({ summary: "Gets details of a transaction" })
-  @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: TransactionDTO,
-  })
-  @ApiNotFoundResponse({ description: "Requested transaction is not found" })
-  async getTransaction(
-    @Query("includeEvents") includeEvents: IncludeEventTypes,
-    @Param("transactionRef") transactionRef: string,
-    @AuthUser() consumer: Consumer,
-  ): Promise<TransactionDTO> {
-    const transaction = await this.transactionService.getTransactionByTransactionRef(transactionRef, consumer.props.id);
-    if (!transaction) {
-      throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
-    }
-
-    let transactionEvents: TransactionEventDTO[];
-    if (includeEvents && includeEvents !== IncludeEventTypes.NONE) {
-      transactionEvents = await this.transactionService.getTransactionEvents(
-        transaction.id,
-        includeEvents === IncludeEventTypes.ALL,
-      );
-    }
-
-    return TransactionMapper.toDTO(transaction, transactionEvents);
-  }
+  @Inject()
+  private readonly consumerService: ConsumerService;
 
   @Get("/transactions/")
   @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
+  @ApiQuery({ name: "resolveTags", type: Boolean, required: false })
   @ApiResponse({
     status: HttpStatus.OK,
     type: TransactionsQueryResultDTO,
@@ -88,6 +74,7 @@ export class TransactionController {
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllTransactions(
     @Query() filters: TransactionFilterOptionsDTO,
+    @Query("resolveTags") resolveTags: boolean,
     @AuthUser() consumer: Consumer,
   ): Promise<TransactionsQueryResultDTO> {
     filters.consumerID = consumer.props.id;
@@ -97,9 +84,35 @@ export class TransactionController {
 
     if (allTransactions == null) return null;
 
+    const transactions = allTransactions.items;
+
+    const transactionDTOPromises: Promise<TransactionDTO>[] = transactions.map(async transaction => {
+      if (resolveTags) {
+        let creditConsumerTag = null,
+          debitConsumerTag = null;
+        if (transaction.creditConsumerID) {
+          creditConsumerTag =
+            transaction.creditConsumerID === consumer.props.id
+              ? consumer.props.handle
+              : await this.consumerService.getConsumerHandle(transaction.creditConsumerID);
+        }
+
+        if (transaction.debitConsumerID) {
+          debitConsumerTag =
+            transaction.debitConsumerID === consumer.props.id
+              ? consumer.props.handle
+              : await this.consumerService.getConsumerHandle(transaction.debitConsumerID);
+        }
+        return TransactionMapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags);
+      } else {
+        return TransactionMapper.toDTO(transaction);
+      }
+    });
+
+    const transactionDTOs = await Promise.all(transactionDTOPromises);
     return {
       ...allTransactions,
-      items: allTransactions.items.map(transaction => TransactionMapper.toDTO(transaction)),
+      items: transactionDTOs,
     };
   }
 
@@ -156,6 +169,56 @@ export class TransactionController {
     );
 
     return checkTransactionResponse;
+  }
+
+  @Get("/transactions/:transactionRef")
+  @ApiTags("Transaction")
+  @ApiOperation({ summary: "Gets details of a transaction" })
+  @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
+  @ApiQuery({ name: "resolveTags", type: Boolean, required: false })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionDTO,
+  })
+  @ApiNotFoundResponse({ description: "Requested transaction is not found" })
+  async getTransaction(
+    @Query("includeEvents") includeEvents: IncludeEventTypes,
+    @Query("resolveTags") resolveTags: boolean,
+    @Param("transactionRef") transactionRef: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<TransactionDTO> {
+    const transaction = await this.transactionService.getTransactionByTransactionRef(transactionRef, consumer.props.id);
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
+    }
+
+    let transactionEvents: TransactionEventDTO[];
+    if (includeEvents && includeEvents !== IncludeEventTypes.NONE) {
+      transactionEvents = await this.transactionService.getTransactionEvents(
+        transaction.id,
+        includeEvents === IncludeEventTypes.ALL,
+      );
+    }
+    let creditConsumerTag = null,
+      debitConsumerTag = null;
+
+    if (resolveTags) {
+      if (transaction.creditConsumerID) {
+        creditConsumerTag =
+          transaction.creditConsumerID === consumer.props.id
+            ? consumer.props.handle
+            : await this.consumerService.getConsumerHandle(transaction.creditConsumerID);
+      }
+
+      if (transaction.debitConsumerID) {
+        debitConsumerTag =
+          transaction.debitConsumerID === consumer.props.id
+            ? consumer.props.handle
+            : await this.consumerService.getConsumerHandle(transaction.debitConsumerID);
+      }
+    }
+
+    return TransactionMapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags, transactionEvents);
   }
 
   @Get("/consumers/limits/")

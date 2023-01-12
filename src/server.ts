@@ -1,4 +1,4 @@
-import { INestApplication, Logger } from "@nestjs/common";
+import { INestApplication, Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, OpenAPIObject, SwaggerDocumentOptions, SwaggerModule } from "@nestjs/swagger";
 import { json, urlencoded } from "express";
@@ -8,7 +8,6 @@ import morgan from "morgan";
 import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { AppModule } from "./app.module";
 import { DefaultExceptionsFilter } from "./core/exception/filters/DefaultExceptionsFilter";
-import { CustomConfigService } from "./core/utils/AppConfigModule";
 import {
   createClassTypeToPropertiesMapFromSwaggerSchemas,
   NoUnExpectedKeysValidationPipe,
@@ -120,6 +119,13 @@ function generateSwaggerDoc(
       createClassTypeToPropertiesMapFromSwaggerSchemas(swaggerDocument.components.schemas),
       false,
     ),
+    new ValidationPipe({
+      forbidUnknownValues: false,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
   );
   return swaggerDocument;
 }
