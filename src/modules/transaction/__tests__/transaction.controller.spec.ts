@@ -315,7 +315,6 @@ describe("Transaction Controller tests", () => {
         transactionStatus: TransactionStatus.SUCCESS,
         pageLimit: 5,
         pageOffset: 1,
-        resolveTags: true,
       };
       when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
@@ -330,8 +329,8 @@ describe("Transaction Controller tests", () => {
           transactionStatus: TransactionStatus.SUCCESS,
           pageLimit: 5,
           pageOffset: 1,
-          resolveTags: true,
         },
+        true,
         consumer,
       );
 
