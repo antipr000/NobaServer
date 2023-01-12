@@ -54,38 +54,6 @@ export class TransactionController {
     this.mapper = new TransactionMapper();
   }
 
-  @Get("/transactions/:transactionRef")
-  @ApiTags("Transaction")
-  @ApiOperation({ summary: "Gets details of a transaction" })
-  @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
-  @ApiQuery({ name: "resolveTags", type: Boolean, required: false })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: TransactionDTO,
-  })
-  @ApiNotFoundResponse({ description: "Requested transaction is not found" })
-  async getTransaction(
-    @Query("includeEvents") includeEvents: IncludeEventTypes,
-    @Query("resolveTags") resolveTags: boolean,
-    @Param("transactionRef") transactionRef: string,
-    @AuthUser() consumer: Consumer,
-  ): Promise<TransactionDTO> {
-    const transaction = await this.transactionService.getTransactionByTransactionRef(transactionRef, consumer.props.id);
-    if (!transaction) {
-      throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
-    }
-
-    let transactionEvents: TransactionEventDTO[];
-    if (includeEvents && includeEvents !== IncludeEventTypes.NONE) {
-      transactionEvents = await this.transactionService.getTransactionEvents(
-        transaction.id,
-        includeEvents === IncludeEventTypes.ALL,
-      );
-    }
-
-    return this.mapper.toDTO(transaction, consumer.props.handle, resolveTags, transactionEvents);
-  }
-
   @Get("/transactions/")
   @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
@@ -166,6 +134,38 @@ export class TransactionController {
     );
 
     return checkTransactionResponse;
+  }
+
+  @Get("/transactions/:transactionRef")
+  @ApiTags("Transaction")
+  @ApiOperation({ summary: "Gets details of a transaction" })
+  @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
+  @ApiQuery({ name: "resolveTags", type: Boolean, required: false })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionDTO,
+  })
+  @ApiNotFoundResponse({ description: "Requested transaction is not found" })
+  async getTransaction(
+    @Query("includeEvents") includeEvents: IncludeEventTypes,
+    @Query("resolveTags") resolveTags: boolean,
+    @Param("transactionRef") transactionRef: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<TransactionDTO> {
+    const transaction = await this.transactionService.getTransactionByTransactionRef(transactionRef, consumer.props.id);
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
+    }
+
+    let transactionEvents: TransactionEventDTO[];
+    if (includeEvents && includeEvents !== IncludeEventTypes.NONE) {
+      transactionEvents = await this.transactionService.getTransactionEvents(
+        transaction.id,
+        includeEvents === IncludeEventTypes.ALL,
+      );
+    }
+
+    return this.mapper.toDTO(transaction, consumer.props.handle, resolveTags, transactionEvents);
   }
 
   @Get("/consumers/limits/")
