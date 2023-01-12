@@ -52,12 +52,6 @@ export class TransactionController {
   @Inject()
   private readonly consumerService: ConsumerService;
 
-  private readonly mapper: TransactionMapper;
-
-  constructor() {
-    this.mapper = new TransactionMapper();
-  }
-
   @Get("/transactions/")
   @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
@@ -98,9 +92,9 @@ export class TransactionController {
               ? consumer.props.handle
               : await this.consumerService.getConsumerHandle(transaction.debitConsumerID);
         }
-        return this.mapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags);
+        return TransactionMapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags);
       } else {
-        return this.mapper.toDTO(transaction);
+        return TransactionMapper.toDTO(transaction);
       }
     });
 
@@ -213,7 +207,7 @@ export class TransactionController {
       }
     }
 
-    return this.mapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags, transactionEvents);
+    return TransactionMapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags, transactionEvents);
   }
 
   @Get("/consumers/limits/")

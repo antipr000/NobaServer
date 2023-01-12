@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { InputTransaction, Transaction, WorkflowName } from "./domain/Transaction";
+import { InputTransaction, Transaction, UpdateTransaction, WorkflowName } from "./domain/Transaction";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { ITransactionRepo } from "./repo/transaction.repo";
@@ -14,8 +14,9 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Currency } from "./domain/TransactionTypes";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { ExchangeRateService } from "../common/exchangerate.service";
-import { TransactionEventDTO } from "./dto/TransactionEventDTO";
+import { AddTransactionEventDTO, TransactionEventDTO } from "./dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
+import { UpdateTransactionDTO } from "./dto/TransactionDTO";
 
 @Injectable()
 export class TransactionService {
@@ -331,9 +332,26 @@ export class TransactionService {
     };
   }
 
+  async updateTransaction(transactionID: string, transactionDetails: UpdateTransactionDTO): Promise<Transaction> {
+    const transaction = await this.transactionRepo.getTransactionByID(transactionID);
+    if (!transaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "Transaction does not exist",
+      });
+    }
+
+    // Only allow these two fields to be updated. Others are more sensitive and get updated by other methods.
+    const transactionUpdate: UpdateTransaction = {
+      ...(transactionDetails.status !== undefined && { status: transactionDetails.status }),
+    };
+
+    return await this.transactionRepo.updateTransactionByTransactionID(transactionID, transactionUpdate);
+  }
+
   async addTransactionEvent(
     transactionID: string,
-    transactionEvent: TransactionEventDTO,
+    transactionEvent: AddTransactionEventDTO,
   ): Promise<TransactionEventDTO> {
     const transaction = await this.transactionRepo.getTransactionByID(transactionID);
     if (!transaction) {
@@ -359,15 +377,15 @@ export class TransactionService {
         }),
       ...(transactionEvent.parameters !== undefined &&
         transactionEvent.parameters.length > 2 && {
-          param1: transactionEvent.parameters[2],
+          param3: transactionEvent.parameters[2],
         }),
       ...(transactionEvent.parameters !== undefined &&
         transactionEvent.parameters.length > 3 && {
-          param1: transactionEvent.parameters[3],
+          param4: transactionEvent.parameters[3],
         }),
       ...(transactionEvent.parameters !== undefined &&
         transactionEvent.parameters.length > 4 && {
-          param1: transactionEvent.parameters[4],
+          param5: transactionEvent.parameters[4],
         }),
     };
 
@@ -376,7 +394,7 @@ export class TransactionService {
     );
 
     return {
-      timestamp: transactionEvent.timestamp,
+      timestamp: savedTransactionEvent.timestamp,
       internal: savedTransactionEvent.internal,
       message: savedTransactionEvent.message,
       ...(savedTransactionEvent.details !== undefined && { details: savedTransactionEvent.details }),

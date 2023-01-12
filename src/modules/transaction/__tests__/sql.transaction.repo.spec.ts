@@ -350,7 +350,7 @@ describe("PostgresTransactionRepoTests", () => {
   });
 
   describe("updateTransaction", () => {
-    it("should update the transaction 'status' for the specified 'transactionRef'", async () => {
+    it("should update the transaction 'status' for the specified 'id'", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const inputTransaction: InputTransaction = getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
@@ -358,8 +358,8 @@ describe("PostgresTransactionRepoTests", () => {
       const transactionToUpdates: UpdateTransaction = {
         status: TransactionStatus.SUCCESS,
       };
-      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
-        inputTransaction.transactionRef,
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionID(
+        savedTransaction.id,
         transactionToUpdates,
       );
 
@@ -381,7 +381,7 @@ describe("PostgresTransactionRepoTests", () => {
       }).toMatchObject(allTransactionRecords[0]);
     });
 
-    it("should update the transaction 'exchangeRate' for the specified 'transactionRef'", async () => {
+    it("should update the transaction 'exchangeRate' for the specified transaction ID", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const inputTransaction: InputTransaction = getRandomTransaction(consumerID);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
@@ -389,8 +389,8 @@ describe("PostgresTransactionRepoTests", () => {
       const transactionToUpdates: UpdateTransaction = {
         exchangeRate: 12.34,
       };
-      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
-        inputTransaction.transactionRef,
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionID(
+        savedTransaction.id,
         transactionToUpdates,
       );
 
@@ -408,7 +408,7 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toMatchObject(allTransactionRecords[0]);
     });
 
-    it("should update the transaction 'debitCurrency' & 'debitAmount' for the specified 'transactionRef'", async () => {
+    it("should update the transaction 'debitCurrency' & 'debitAmount' for the specified transaction ID", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCredit */ true);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
@@ -417,8 +417,8 @@ describe("PostgresTransactionRepoTests", () => {
         debitAmount: 12.34,
         debitCurrency: "USD",
       };
-      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
-        inputTransaction.transactionRef,
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionID(
+        savedTransaction.id,
         transactionToUpdates,
       );
 
@@ -437,7 +437,7 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toMatchObject(allTransactionRecords[0]);
     });
 
-    it("should update the transaction 'creditCurrency' & 'creditAmount' for the specified 'transactionRef'", async () => {
+    it("should update the transaction 'creditCurrency' & 'creditAmount' for the specified transaction ID", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
@@ -446,8 +446,8 @@ describe("PostgresTransactionRepoTests", () => {
         creditAmount: 12.34,
         creditCurrency: "USD",
       };
-      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
-        inputTransaction.transactionRef,
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionID(
+        savedTransaction.id,
         transactionToUpdates,
       );
 
@@ -466,7 +466,7 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction).toMatchObject(allTransactionRecords[0]);
     });
 
-    it("should update all the specified fields of transaction for the specified 'transactionRef'", async () => {
+    it("should update all the specified fields of transaction for the specified transaction ID", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCredit */ false);
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
@@ -477,8 +477,8 @@ describe("PostgresTransactionRepoTests", () => {
         creditAmount: 67.89,
         creditCurrency: "USD",
       };
-      const returnedTransaction = await transactionRepo.updateTransactionByTransactionRef(
-        inputTransaction.transactionRef,
+      const returnedTransaction = await transactionRepo.updateTransactionByTransactionID(
+        savedTransaction.id,
         transactionToUpdates,
       );
 
@@ -503,12 +503,12 @@ describe("PostgresTransactionRepoTests", () => {
       }).toMatchObject(allTransactionRecords[0]);
     });
 
-    it("should throw a NotFound error if the transaction with the specified 'transactionRef' does not exist", async () => {
+    it("should throw a NotFound error if the transaction with the specified transaction ID does not exist", async () => {
       const updatedTransaction: UpdateTransaction = {
         status: TransactionStatus.SUCCESS,
       };
       await expect(
-        transactionRepo.updateTransactionByTransactionRef("invalid-transaction-ref", updatedTransaction),
+        transactionRepo.updateTransactionByTransactionID("invalid-transaction-ref", updatedTransaction),
       ).rejects.toThrowError(NotFoundError);
     });
   });
@@ -547,7 +547,7 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result2.hasNextPage).toBeFalsy();
       expect(result2.totalPages).toBe(2);
 
-      await transactionRepo.updateTransactionByTransactionRef(randomTransaction.transactionRef, {
+      await transactionRepo.updateTransactionByTransactionID(randomTransaction.id, {
         status: TransactionStatus.SUCCESS,
       });
 

@@ -3,7 +3,7 @@ import { TransactionDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 
 export class TransactionMapper {
-  toDTO(
+  static toDTO(
     transaction: Transaction,
     debitConsumerTag?: string,
     creditConsumerTag?: string,
