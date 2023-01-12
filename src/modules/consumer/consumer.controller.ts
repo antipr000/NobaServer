@@ -16,6 +16,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
   ApiForbiddenResponse,
   ApiHeaders,
   ApiNotFoundResponse,
@@ -321,6 +322,10 @@ export class ConsumerController {
 
   @Post("/devicecontacts")
   @ApiOperation({ summary: "Bulk query contact consumers" })
+  @ApiBody({
+    type: [ContactConsumerRequestDTO],
+    description: "List of contact consumer details",
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     type: [ContactConsumerResponseDTO],

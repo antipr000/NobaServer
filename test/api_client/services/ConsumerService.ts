@@ -8,6 +8,8 @@ import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { ConsumerHandleDTO } from "../models/ConsumerHandleDTO";
 import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
+import type { ContactConsumerRequestDTO } from "../models/ContactConsumerRequestDTO";
+import type { ContactConsumerResponseDTO } from "../models/ContactConsumerResponseDTO";
 import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtpRequest";
 import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
 import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
@@ -410,6 +412,45 @@ export class ConsumerService {
       },
       errors: {
         400: `Invalid payment method details`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Bulk query contact consumers
+   * @returns ContactConsumerResponseDTO List of consumers that are contacts
+   * @throws ApiError
+   */
+  public static getContactConsumers({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    /**
+     * List of contact consumer details
+     */
+    requestBody: Array<ContactConsumerRequestDTO>;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<ContactConsumerResponseDTO>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/devicecontacts",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid contact consumer details`,
         403: `Logged-in user is not a Consumer`,
       },
     });
