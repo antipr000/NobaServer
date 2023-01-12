@@ -21,6 +21,8 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/Serv
 import { IncludeEventTypes, TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
+import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "../mapper/transaction.mapper.service";
+import { TransactionEvent } from "../domain/TransactionEvent";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -84,6 +86,10 @@ describe("Transaction Controller tests", () => {
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
       providers: [
         {
+          provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
+          useClass: TransactionMappingService,
+        },
+        {
           provide: TransactionService,
           useFactory: () => instance(transactionService),
         },
@@ -116,15 +122,19 @@ describe("Transaction Controller tests", () => {
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
-        true,
         transactionRef,
         consumer,
       );
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        debitConsumerIDOrTag: consumer.props.handle,
-        creditConsumerIDOrTag: undefined,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -149,15 +159,19 @@ describe("Transaction Controller tests", () => {
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
-        true,
         transactionRef,
         consumer,
       );
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        creditConsumerIDOrTag: consumer.props.handle,
-        debitConsumerIDOrTag: undefined,
+        creditConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        debitConsumer: null,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -182,19 +196,28 @@ describe("Transaction Controller tests", () => {
       transaction.creditConsumerID = creditConsumer.props.id;
 
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
-      when(consumerService.getConsumerHandle(creditConsumer.props.id)).thenResolve(creditConsumer.props.handle);
+      when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
-        true,
         transactionRef,
         consumer,
       );
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        creditConsumerIDOrTag: creditConsumer.props.handle,
-        debitConsumerIDOrTag: consumer.props.handle,
+        creditConsumer: {
+          id: creditConsumer.props.id,
+          firstName: creditConsumer.props.firstName,
+          handle: creditConsumer.props.handle,
+          lastName: creditConsumer.props.lastName,
+        },
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -219,15 +242,19 @@ describe("Transaction Controller tests", () => {
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
-        false,
         transactionRef,
         consumer,
       );
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        debitConsumerIDOrTag: transaction.debitConsumerID,
-        creditConsumerIDOrTag: undefined,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -250,6 +277,37 @@ describe("Transaction Controller tests", () => {
       const consumer = getRandomConsumer(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
 
+      const transactionEvents: TransactionEvent[] = [
+        {
+          id: "testEventID",
+          timestamp: new Date(),
+          transactionID: transaction.id,
+          message: "Test event",
+          details: "This is a test event",
+          internal: false,
+          key: "EVENT_KEY",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+        {
+          id: "testEvent2ID",
+          timestamp: new Date(),
+          transactionID: transaction.id,
+          message: "Test event 2",
+          details: "This is a test event 2",
+          internal: false,
+          key: "EVENT_KEY_2",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+      ];
+
       const transactionEventsToReturn: TransactionEventDTO[] = [
         {
           message: "Test event",
@@ -257,6 +315,7 @@ describe("Transaction Controller tests", () => {
           internal: false,
           key: "EVENT_KEY",
           parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+          timestamp: transactionEvents[0].timestamp,
         },
         {
           message: "Test event 2",
@@ -264,14 +323,14 @@ describe("Transaction Controller tests", () => {
           internal: false,
           key: "EVENT_KEY_2",
           parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+          timestamp: transactionEvents[1].timestamp,
         },
       ];
 
-      when(transactionService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEventsToReturn);
+      when(transactionService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEvents);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.ALL,
-        false,
         transactionRef,
         consumer,
       );
@@ -279,8 +338,13 @@ describe("Transaction Controller tests", () => {
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        debitConsumerIDOrTag: transaction.debitConsumerID,
-        creditConsumerIDOrTag: undefined,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -300,21 +364,26 @@ describe("Transaction Controller tests", () => {
       const consumerID = "testConsumerID";
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
+      const consumer = getRandomConsumer(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
       when(transactionService.getTransactionEvents(transaction.id, true)).thenResolve([]);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.ALL,
-        false,
         transactionRef,
-        getRandomConsumer(consumerID),
+        consumer,
       );
 
       const expectedResult: TransactionDTO = {
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
-        debitConsumerIDOrTag: transaction.debitConsumerID,
-        creditConsumerIDOrTag: undefined,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
         debitCurrency: transaction.debitCurrency,
         creditCurrency: transaction.creditCurrency,
         debitAmount: transaction.debitAmount,
@@ -339,7 +408,6 @@ describe("Transaction Controller tests", () => {
         async () =>
           await transactionController.getTransaction(
             IncludeEventTypes.NONE,
-            false,
             transactionRef,
             getRandomConsumer(consumerID),
           ),
@@ -376,13 +444,13 @@ describe("Transaction Controller tests", () => {
           pageLimit: 5,
           pageOffset: 1,
         },
-        true,
         consumer,
       );
 
       expect(allTransactions.items.length).toBe(1);
       expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
-      expect(allTransactions.items[0].debitConsumerIDOrTag).toBe(consumer.props.handle);
+      expect(allTransactions.items[0].debitConsumer.handle).toBe(consumer.props.handle);
+      expect(allTransactions.items[0].creditConsumer).toBeNull();
     });
   });
 
