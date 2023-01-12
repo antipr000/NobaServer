@@ -3,11 +3,17 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
-import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
+import {
+  InputTransaction,
+  Transaction,
+  TransactionStatus,
+  UpdateTransaction,
+  WorkflowName,
+} from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
 import { TRANSACTION_REPO_PROVIDER } from "../repo/transaction.repo.module";
-import { anyString, anything, deepEqual, instance, when } from "ts-mockito";
+import { anything, deepEqual, instance, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -22,6 +28,7 @@ import { ExchangeRateService } from "../../../modules/common/exchangerate.servic
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "../domain/TransactionEvent";
+import { UpdateTransactionDTO } from "../dto/TransactionDTO";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -469,7 +476,6 @@ describe("TransactionServiceTests", () => {
 
       const transactionEventToAdd: TransactionEventDTO = {
         message: "Test event",
-        internal: true,
       };
 
       const inputTransactionEvent: InputTransactionEvent = {
@@ -492,6 +498,7 @@ describe("TransactionServiceTests", () => {
 
       expect(returnedTransactionEvent).toEqual({
         ...transactionEventToAdd,
+        internal: true,
         timestamp: timestamp,
       });
     });
@@ -658,6 +665,39 @@ describe("TransactionServiceTests", () => {
       expect(returnedExternalTransactionEvent).toHaveLength(1);
       expect(returnedExternalTransactionEvent[0]).toEqual(expectedExternalTransactionEvent);
     });
+  });
+
+  describe("updateTransaction", () => {
+    it("should update the status of an existing transaction", async () => {
+      const { transaction } = getRandomTransaction("consumerID");
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
+
+      const updateTransactionDTO: UpdateTransactionDTO = {
+        status: TransactionStatus.SUCCESS,
+      };
+
+      const updateTransaction: UpdateTransaction = {
+        status: updateTransactionDTO.status,
+      };
+
+      when(transactionRepo.updateTransactionByTransactionID(transaction.id, deepEqual(updateTransaction))).thenResolve({
+        ...transaction,
+        status: updateTransactionDTO.status,
+      });
+
+      const updatedTransaction = await transactionService.updateTransaction(transaction.id, updateTransactionDTO);
+
+      expect(updatedTransaction.status).toEqual(updateTransactionDTO.status);
+    });
+  });
+
+  it("should throwr a ServiceException if the transaction doesn't exist", async () => {
+    const transactionID = "non-existient-transaction-id";
+    when(transactionRepo.getTransactionByID(transactionID)).thenResolve(null);
+
+    expect(async () => await transactionService.updateTransaction(transactionID, {})).rejects.toThrowError(
+      ServiceException,
+    );
   });
 });
 

@@ -3,7 +3,7 @@ import { TransactionDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 
 export class TransactionMapper {
-  toDTO(transaction: Transaction, transactionEvents?: TransactionEventDTO[]): TransactionDTO {
+  static toDTO(transaction: Transaction, transactionEvents?: TransactionEventDTO[]): TransactionDTO {
     return {
       transactionRef: transaction.transactionRef,
       workflowName: transaction.workflowName,

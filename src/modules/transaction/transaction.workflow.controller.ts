@@ -5,7 +5,6 @@ import { TransactionService } from "./transaction.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TransactionMapper } from "./mapper/transaction.mapper";
-import { LimitsService } from "./limits.service";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { TransactionDTO, UpdateTransactionDTO } from "./dto/TransactionDTO";
 
@@ -19,28 +18,19 @@ export class TransactionWorkflowController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  @Inject()
-  private readonly limitsService: LimitsService;
-
-  private readonly mapper: TransactionMapper;
-
-  constructor() {
-    this.mapper = new TransactionMapper();
-  }
-
   @Patch("/transactions/:transactionID")
   @ApiTags("Workflow")
   @ApiOperation({ summary: "Updates the transaction" })
   @ApiResponse({
+    description: "Transaction updated",
     status: HttpStatus.OK,
-    type: TransactionDTO,
   })
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
   @ApiBadRequestResponse({ description: "Improper or misformatted request" })
   async patchTransaction(
     @Body() requestBody: UpdateTransactionDTO,
     @Param("transactionID") transactionID: string,
-  ): Promise<TransactionDTO> {
+  ): Promise<void> {
     if (!requestBody.transactionEvent && !requestBody.status) {
       throw new BadRequestException("Nothing to update");
     }
@@ -49,7 +39,12 @@ export class TransactionWorkflowController {
       await this.transactionService.addTransactionEvent(transactionID, requestBody.transactionEvent);
     }
 
-    const updatedTransaction = await this.transactionService.updateTransaction(transactionID, requestBody);
-    return this.mapper.toDTO(updatedTransaction);
+    if (requestBody.status) {
+      await this.transactionService.updateTransaction(transactionID, requestBody);
+    }
+
+    // No return as this method is intended to be called from a workflow. Also, if we returned
+    // the transaction it would mean we would have to call updatTransaction or at least do a lookup
+    // even if we are not updating any fields directly on the transaction (e.g. only adding events).
   }
 }

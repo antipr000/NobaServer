@@ -1,15 +1,4 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Inject,
-  NotFoundException,
-  Param,
-  Post,
-  Query,
-} from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Inject, NotFoundException, Param, Post, Query } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -30,11 +19,9 @@ import { AuthUser } from "../auth/auth.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { TransactionSubmissionException } from "../transactions/exceptions/TransactionSubmissionException";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { TransactionDTO } from "./dto/TransactionDTO";
 import { TransactionMapper } from "./mapper/transaction.mapper";
-import { ServiceException } from "../../core/exception/ServiceException";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { CheckTransactionQueryDTO } from "./dto/CheckTransactionQueryDTO";
 import { LimitsService } from "./limits.service";
@@ -60,12 +47,6 @@ export class TransactionController {
 
   @Inject()
   private readonly limitsService: LimitsService;
-
-  private readonly mapper: TransactionMapper;
-
-  constructor() {
-    this.mapper = new TransactionMapper();
-  }
 
   @Get("/transactions/:transactionRef")
   @ApiTags("Transaction")
@@ -94,7 +75,7 @@ export class TransactionController {
       );
     }
 
-    return this.mapper.toDTO(transaction, transactionEvents);
+    return TransactionMapper.toDTO(transaction, transactionEvents);
   }
 
   @Get("/transactions/")
@@ -118,7 +99,7 @@ export class TransactionController {
 
     return {
       ...allTransactions,
-      items: allTransactions.items.map(transaction => this.mapper.toDTO(transaction)),
+      items: allTransactions.items.map(transaction => TransactionMapper.toDTO(transaction)),
     };
   }
 
