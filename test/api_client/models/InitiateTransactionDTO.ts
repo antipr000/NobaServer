@@ -11,4 +11,5 @@ export type InitiateTransactionDTO = {
   creditCurrency?: "USD" | "COP";
   creditAmount?: number;
   exchangeRate?: number;
+  memo?: string;
 };

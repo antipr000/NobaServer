@@ -323,7 +323,7 @@ export class ConsumerController {
   @ApiOperation({ summary: "Bulk query contact consumers" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: [ContactConsumerRequestDTO],
+    type: [ContactConsumerResponseDTO],
     description: "List of consumers that are contacts",
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
