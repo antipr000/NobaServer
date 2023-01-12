@@ -4,9 +4,8 @@ import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOperation, ApiResponse, 
 import { TransactionService } from "./transaction.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { TransactionMapper } from "./mapper/transaction.mapper";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
-import { TransactionDTO, UpdateTransactionDTO } from "./dto/TransactionDTO";
+import { UpdateTransactionDTO } from "./dto/TransactionDTO";
 
 @Controller("wf/v1")
 @ApiTags("Workflow")
