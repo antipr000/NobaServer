@@ -21,7 +21,6 @@ export class CircleController {
   ) {}
 
   @Post("/wallet")
-  @ApiTags("Wallet")
   @ApiOperation({ summary: "Add circle wallet to current consumer" })
   @ApiResponse({ status: HttpStatus.CREATED })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
@@ -31,7 +30,6 @@ export class CircleController {
   }
 
   @Get("/wallet/balance")
-  @ApiTags("Wallet")
   @ApiOperation({ summary: "Get current consumer's circle wallet balance" })
   @ApiResponse({ status: HttpStatus.OK })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
