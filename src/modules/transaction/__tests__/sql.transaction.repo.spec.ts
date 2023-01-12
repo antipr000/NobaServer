@@ -79,7 +79,7 @@ describe("PostgresTransactionRepoTests", () => {
     await app.close();
   });
 
-  beforeEach(async () => {
+  afterEach(async () => {
     await prismaService.transaction.deleteMany();
     await prismaService.transactionEvent.deleteMany();
 

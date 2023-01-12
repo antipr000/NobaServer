@@ -57,6 +57,7 @@ export class TransactionController {
   @Get("/transactions/")
   @ApiTags("Transaction")
   @ApiOperation({ summary: "Get all transactions for logged in user" })
+  @ApiQuery({ name: "resolveTags", type: Boolean, required: false })
   @ApiResponse({
     status: HttpStatus.OK,
     type: TransactionsQueryResultDTO,
@@ -64,6 +65,7 @@ export class TransactionController {
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllTransactions(
     @Query() filters: TransactionFilterOptionsDTO,
+    @Query("resolveTags") resolveTags: boolean,
     @AuthUser() consumer: Consumer,
   ): Promise<TransactionsQueryResultDTO> {
     filters.consumerID = consumer.props.id;
@@ -76,7 +78,7 @@ export class TransactionController {
     return {
       ...allTransactions,
       items: allTransactions.items.map(transaction =>
-        this.mapper.toDTO(transaction, consumer.props.handle, filters.resolveTags),
+        this.mapper.toDTO(transaction, consumer.props.handle, resolveTags),
       ),
     };
   }

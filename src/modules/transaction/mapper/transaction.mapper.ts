@@ -6,7 +6,7 @@ export class TransactionMapper {
   toDTO(
     transaction: Transaction,
     consumerTag: string,
-    resolveTags = false,
+    resolveTags?: boolean,
     transactionEvents?: TransactionEventDTO[],
   ): TransactionDTO {
     return {
