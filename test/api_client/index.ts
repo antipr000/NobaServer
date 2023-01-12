@@ -22,6 +22,7 @@ export type { ConfigurationsDTO } from "./models/ConfigurationsDTO";
 export type { ConfirmWalletUpdateDTO } from "./models/ConfirmWalletUpdateDTO";
 export type { ConsumerDTO } from "./models/ConsumerDTO";
 export type { ConsumerHandleDTO } from "./models/ConsumerHandleDTO";
+export type { ConsumerInformationDTO } from "./models/ConsumerInformationDTO";
 export type { ConsumerLimitsDTO } from "./models/ConsumerLimitsDTO";
 export type { ContactConsumerRequestDTO } from "./models/ContactConsumerRequestDTO";
 export type { ContactConsumerResponseDTO } from "./models/ContactConsumerResponseDTO";

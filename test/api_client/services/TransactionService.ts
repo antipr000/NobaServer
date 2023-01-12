@@ -29,7 +29,6 @@ export class TransactionService {
     creditCurrency,
     debitCurrency,
     transactionStatus,
-    resolveTags,
   }: {
     xNobaApiKey: string;
     xNobaSignature?: string;
@@ -69,7 +68,6 @@ export class TransactionService {
      * filter for a particular transaction status
      */
     transactionStatus?: "PENDING" | "SUCCESS" | "FAILED" | "IN_PROGRESS";
-    resolveTags?: boolean;
   }): CancelablePromise<TransactionsQueryResultDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -88,7 +86,6 @@ export class TransactionService {
         creditCurrency: creditCurrency,
         debitCurrency: debitCurrency,
         transactionStatus: transactionStatus,
-        resolveTags: resolveTags,
       },
       errors: {
         400: `Invalid request parameters`,
@@ -227,7 +224,6 @@ export class TransactionService {
     transactionRef,
     xNobaSignature,
     xNobaTimestamp,
-    resolveTags,
     includeEvents,
   }: {
     xNobaApiKey: string;
@@ -237,7 +233,6 @@ export class TransactionService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-    resolveTags?: boolean;
     includeEvents?: "All" | "External Only" | "None";
   }): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
@@ -252,7 +247,6 @@ export class TransactionService {
         "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
-        resolveTags: resolveTags,
         includeEvents: includeEvents,
       },
       errors: {
