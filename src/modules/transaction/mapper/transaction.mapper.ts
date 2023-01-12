@@ -5,8 +5,8 @@ import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 export class TransactionMapper {
   toDTO(
     transaction: Transaction,
-    debitConsumerTag: string,
-    creditConsumerTag: string,
+    debitConsumerTag?: string,
+    creditConsumerTag?: string,
     resolveTags?: boolean,
     transactionEvents?: TransactionEventDTO[],
   ): TransactionDTO {

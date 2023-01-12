@@ -82,13 +82,26 @@ export class TransactionController {
     const transactions = allTransactions.items;
 
     const transactionDTOPromises: Promise<TransactionDTO>[] = transactions.map(async transaction => {
-      const creditConsumerTag = transaction.creditConsumerID
-        ? await this.consumerService.getConsumerHandle(transaction.creditConsumerID)
-        : null;
-      const debitConsumerTag = transaction.debitConsumerID
-        ? await this.consumerService.getConsumerHandle(transaction.debitConsumerID)
-        : null;
-      return this.mapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags);
+      if (resolveTags) {
+        let creditConsumerTag = null,
+          debitConsumerTag = null;
+        if (transaction.creditConsumerID) {
+          creditConsumerTag =
+            transaction.creditConsumerID === consumer.props.id
+              ? consumer.props.handle
+              : await this.consumerService.getConsumerHandle(transaction.creditConsumerID);
+        }
+
+        if (transaction.debitConsumerID) {
+          debitConsumerTag =
+            transaction.debitConsumerID === consumer.props.id
+              ? consumer.props.handle
+              : await this.consumerService.getConsumerHandle(transaction.debitConsumerID);
+        }
+        return this.mapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags);
+      } else {
+        return this.mapper.toDTO(transaction);
+      }
     });
 
     const transactionDTOs = await Promise.all(transactionDTOPromises);
@@ -181,14 +194,24 @@ export class TransactionController {
         includeEvents === IncludeEventTypes.ALL,
       );
     }
+    let creditConsumerTag = null,
+      debitConsumerTag = null;
 
-    const creditConsumerTag = transaction.creditConsumerID
-      ? await this.consumerService.getConsumerHandle(transaction.creditConsumerID)
-      : null;
+    if (resolveTags) {
+      if (transaction.creditConsumerID) {
+        creditConsumerTag =
+          transaction.creditConsumerID === consumer.props.id
+            ? consumer.props.handle
+            : await this.consumerService.getConsumerHandle(transaction.creditConsumerID);
+      }
 
-    const debitConsumerTag = transaction.debitConsumerID
-      ? await this.consumerService.getConsumerHandle(transaction.debitConsumerID)
-      : null;
+      if (transaction.debitConsumerID) {
+        debitConsumerTag =
+          transaction.debitConsumerID === consumer.props.id
+            ? consumer.props.handle
+            : await this.consumerService.getConsumerHandle(transaction.debitConsumerID);
+      }
+    }
 
     return this.mapper.toDTO(transaction, debitConsumerTag, creditConsumerTag, resolveTags, transactionEvents);
   }

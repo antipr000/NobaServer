@@ -113,7 +113,6 @@ describe("Transaction Controller tests", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
-      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
@@ -147,7 +146,6 @@ describe("Transaction Controller tests", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID, true);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
-      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
@@ -184,7 +182,6 @@ describe("Transaction Controller tests", () => {
       transaction.creditConsumerID = creditConsumer.props.id;
 
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
-      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
       when(consumerService.getConsumerHandle(creditConsumer.props.id)).thenResolve(creditConsumer.props.handle);
 
       const result: TransactionDTO = await transactionController.getTransaction(
@@ -219,7 +216,6 @@ describe("Transaction Controller tests", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
-      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const result: TransactionDTO = await transactionController.getTransaction(
         IncludeEventTypes.NONE,
@@ -253,7 +249,6 @@ describe("Transaction Controller tests", () => {
       const transaction: Transaction = getRandomTransaction(consumerID);
       const consumer = getRandomConsumer(consumerID);
       when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
-      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
 
       const transactionEventsToReturn: TransactionEventDTO[] = [
         {
@@ -367,7 +362,6 @@ describe("Transaction Controller tests", () => {
         pageLimit: 5,
         pageOffset: 1,
       };
-      when(consumerService.getConsumerHandle(consumer.props.id)).thenResolve(consumer.props.handle);
       when(transactionService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
         page: 1,
