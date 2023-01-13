@@ -46,10 +46,8 @@ import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
-import { TransactionService } from "../transactions/transaction.service";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
-import { ServiceException } from "src/core/exception/ServiceException";
 
 @Controller("v1/admins")
 @ApiBearerAuth("JWT-auth")
@@ -67,9 +65,6 @@ export class AdminController {
 
   @Inject()
   private readonly consumerService: ConsumerService;
-
-  @Inject()
-  private readonly transactionService: TransactionService;
 
   @Inject()
   private readonly exchangeRateService: ExchangeRateService;

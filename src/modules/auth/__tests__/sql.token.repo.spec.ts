@@ -1,6 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { DBProvider } from "../../../infraproviders/DBProvider";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { ITokenRepo } from "../repo/token.repo";
 import { Token } from "../domain/Token";
@@ -32,7 +31,7 @@ describe("TokenRepoTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [DBProvider, SQLTokenRepo, PrismaService],
+      providers: [SQLTokenRepo, PrismaService],
     }).compile();
 
     tokenRepo = app.get<SQLTokenRepo>(SQLTokenRepo);

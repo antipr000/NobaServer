@@ -6,7 +6,6 @@ import { ConsumerModule } from "../consumer/consumer.module";
 import { Sardine } from "./integrations/Sardine";
 import { SQLVerificationDataRepo } from "./repos/sql.verificationdata.repo";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { CommonModule } from "../common/common.module";
 import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
@@ -34,7 +33,6 @@ export class VerificationModule {}
   controllers: [VerificationWebhookController],
   providers: [
     VerificationService,
-    DBProvider,
     {
       provide: "IDVProvider",
       useClass: Sardine,

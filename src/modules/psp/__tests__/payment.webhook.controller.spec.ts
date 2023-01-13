@@ -2,13 +2,13 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { CHECKOUT_CONFIG_KEY, CHECKOUT_WEBHOOK_SIGNATURE_KEY } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { getMockTransactionRepoWithDefaults } from "../../../modules/transactions/mocks/mock.transactions.repo";
-import { ITransactionRepo } from "../../../modules/transactions/repo/TransactionRepo";
 import { anything, capture, instance, when } from "ts-mockito";
 import { CheckoutWebhooksMapper } from "../mapper/checkout.webhooks";
 import { PaymentWebhooksController } from "../payment.webhook.controller";
-
 import crypto_ts from "crypto";
+import { ITransactionRepo } from "../../../modules/transaction/repo/transaction.repo";
+import { getMockTransactionRepoWithDefaults } from "../../../modules/transaction/mocks/mock.sql.transaction.repo";
+import { TRANSACTION_REPO_PROVIDER } from "../../../modules/transaction/repo/transaction.repo.module";
 
 describe("PaymentWebhooksController", () => {
   jest.setTimeout(2000);
@@ -42,7 +42,7 @@ describe("PaymentWebhooksController", () => {
       controllers: [PaymentWebhooksController],
       providers: [
         {
-          provide: "TransactionRepo",
+          provide: TRANSACTION_REPO_PROVIDER,
           useFactory: () => instance(transactionRepo),
         },
         CheckoutWebhooksMapper,

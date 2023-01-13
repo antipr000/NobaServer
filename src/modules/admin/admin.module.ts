@@ -6,7 +6,7 @@ import { AdminService } from "./admin.service";
 import { SQLAdminRepo } from "./repos/transactions/sql.admin.repo";
 import { AdminMapper } from "./mappers/AdminMapper";
 import { ConsumerModule } from "../consumer/consumer.module";
-import { TransactionModule } from "../transactions/transaction.module";
+import { TransactionModule } from "../transaction/transaction.module";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 
 @Module({

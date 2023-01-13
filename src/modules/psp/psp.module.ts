@@ -7,7 +7,7 @@ import { PlaidClient } from "./plaid.client";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { PaymentWebhooksController } from "./payment.webhook.controller";
 import { CheckoutWebhooksMapper } from "./mapper/checkout.webhooks";
-import { TransactionRepoModule } from "../transactions/repo/transaction.repo.module";
+import { TransactionRepoModule } from "../transaction/repo/transaction.repo.module";
 import { getWinstonModule } from "../../core/utils/WinstonModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";

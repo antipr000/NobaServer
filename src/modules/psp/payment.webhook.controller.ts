@@ -14,6 +14,7 @@ import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { createHmac } from "crypto";
+import { TRANSACTION_REPO_PROVIDER } from "../transaction/repo/transaction.repo.module";
 
 @IsNoApiKeyNeeded()
 @Controller("v1")
@@ -21,7 +22,7 @@ export class PaymentWebhooksController {
   private webhookSignatureKey: string;
 
   constructor(
-    @Inject("TransactionRepo") private readonly transactionsRepo: ITransactionRepo,
+    @Inject(TRANSACTION_REPO_PROVIDER) private readonly transactionsRepo: ITransactionRepo,
     private readonly checkoutWebhooksMapper: CheckoutWebhooksMapper,
     configService: CustomConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
