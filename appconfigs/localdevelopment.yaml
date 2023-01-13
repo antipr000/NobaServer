@@ -137,6 +137,16 @@ nobaWorkflow:
   #namespace: "namespace.h4n3l" # replace "namespace" with the actual namespace you are using
   #clientUrl: "namespace.h4nl.tmprl.cloud:7233" # replace "namespace" with the actual namespace you are using
 
+mono:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "TEST_MONO_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "TEST_MONO_BASE_URL"
+  nobaAccountID: ""
+  awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
+  webhookSecret: ""
+  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
+
 dependencies:
   emailClient: "SENDGRID"
 

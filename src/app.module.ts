@@ -14,6 +14,7 @@ import { CommonModule } from "./modules/common/common.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 import { EventEmitterModule } from "@nestjs/event-emitter";
+import { MonoModule } from "./modules/psp/mono/mono.module";
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
     VerificationWebhookModule,
     TransactionModule,
     AdminModule,
+    // TODO: Remove this once we have a proper way to handle PSP dependencies.
+    MonoModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

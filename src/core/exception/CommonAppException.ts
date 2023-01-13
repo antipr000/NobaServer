@@ -120,3 +120,8 @@ export class DatabaseInternalErrorException extends ApplicationException {
   public readonly name = "DatabaseInternalErrorException";
   public readonly httpStatusCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
 }
+
+export class InternalServiceErrorException extends ApplicationException {
+  public readonly name = "InternalServiceErrorException";
+  public readonly httpStatusCode: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+}

@@ -132,6 +132,16 @@ nobaWorkflow:
 dependencies:
   emailClient: "SENDGRID"
 
+mono:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "TEST_MONO_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "TEST_MONO_BASE_URL"
+  nobaAccountID: ""
+  awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
+  webhookSecret: ""
+  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
+
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"

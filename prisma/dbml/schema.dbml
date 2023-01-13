@@ -183,6 +183,7 @@ Table Transaction {
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
   transactionEvents TransactionEvent [not null]
+  Mono Mono
 }
 
 Table TransactionEvent {
@@ -199,6 +200,18 @@ Table TransactionEvent {
   param3 String
   param4 String
   param5 String
+}
+
+Table Mono {
+  id String [pk]
+  monoTransactionID String
+  collectionLinkID String [unique, not null]
+  collectionURL String [not null]
+  state String [not null]
+  nobaTransactionID String [unique, not null]
+  transaction Transaction [not null]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
 }
 
 Table Token {
@@ -338,3 +351,5 @@ Ref: Transaction.debitConsumerID > Consumer.id [delete: Cascade]
 Ref: Transaction.creditConsumerID > Consumer.id [delete: Cascade]
 
 Ref: TransactionEvent.transactionID > Transaction.id [delete: Cascade]
+
+Ref: Mono.nobaTransactionID - Transaction.id [delete: Cascade]
