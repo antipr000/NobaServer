@@ -5,11 +5,13 @@ import { MonoClient } from "./mono.client";
 import { MonoService } from "./mono.service";
 import { MonoRepoModule } from "./repo/mono.repo.module";
 import { MonoWebhookHandlers } from "./mono.webhook";
+import { MonoWorkflowController } from "./mono.workflow.controller";
+import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 
 @Module({
   imports: [InfraProvidersModule, MonoRepoModule, ConsumerModule],
-  controllers: [],
-  providers: [MonoClient, MonoService, MonoWebhookHandlers],
-  exports: [MonoService], //Need to access in PublicController
+  controllers: [MonoWorkflowController],
+  providers: [MonoClient, MonoService, MonoWebhookHandlers, MonoWorkflowControllerMappers],
+  exports: [MonoService],
 })
 export class MonoModule {}
