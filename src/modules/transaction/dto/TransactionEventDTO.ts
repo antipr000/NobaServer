@@ -25,3 +25,20 @@ export class TransactionEventDTO {
   @ApiPropertyOptional()
   parameters?: string[];
 }
+
+export class AddTransactionEventDTO {
+  @ApiProperty()
+  message: string;
+
+  @ApiPropertyOptional()
+  internal?: boolean;
+
+  @ApiPropertyOptional()
+  details?: string;
+
+  @ApiPropertyOptional()
+  key?: string;
+
+  @ApiPropertyOptional()
+  parameters?: string[];
+}

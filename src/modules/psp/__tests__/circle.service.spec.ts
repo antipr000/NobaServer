@@ -5,7 +5,7 @@ import { anyString, deepEqual, instance, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
-import { ICircleRepo } from "../repos/CircleRepo";
+import { ICircleRepo } from "../repos/circle.repo";
 import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
 import { Result } from "../../../core/logic/Result";
 import { Circle } from "../domain/Circle";

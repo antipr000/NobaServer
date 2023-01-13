@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type { CircleDepositOrWithdrawalRequest } from "../models/CircleDepositOrWithdrawalRequest";
 import type { CircleFundsTransferRequestDTO } from "../models/CircleFundsTransferRequestDTO";
+import type { UpdateTransactionRequestDTO } from "../models/UpdateTransactionRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -117,6 +118,33 @@ export class WorkflowService {
       },
       body: requestBody,
       mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Updates the transaction
+   * @returns any Transaction updated
+   * @throws ApiError
+   */
+  public static patchTransaction({
+    transactionId,
+    requestBody,
+  }: {
+    transactionId: string;
+    requestBody: UpdateTransactionRequestDTO;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/wf/v1/transactions/{transactionID}",
+      path: {
+        transactionID: transactionId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Improper or misformatted request`,
+        404: `Requested transaction is not found`,
+      },
     });
   }
 }

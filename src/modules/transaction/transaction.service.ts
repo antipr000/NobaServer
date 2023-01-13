@@ -1,6 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { InputTransaction, Transaction, WorkflowName } from "./domain/Transaction";
-import { Consumer } from "../consumer/domain/Consumer";
+import { InputTransaction, Transaction, UpdateTransaction, WorkflowName } from "./domain/Transaction";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { ITransactionRepo } from "./repo/transaction.repo";
@@ -15,8 +14,9 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Currency } from "./domain/TransactionTypes";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { ExchangeRateService } from "../common/exchangerate.service";
-import { TransactionEventDTO } from "./dto/TransactionEventDTO";
+import { AddTransactionEventDTO, TransactionEventDTO } from "./dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
+import { UpdateTransactionDTO } from "./dto/TransactionDTO";
 
 @Injectable()
 export class TransactionService {
@@ -34,7 +34,10 @@ export class TransactionService {
       transaction === null ||
       (transaction.debitConsumerID !== consumerID && transaction.creditConsumerID !== consumerID)
     ) {
-      return null;
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Could not find transaction with transactionRef: ${transactionRef} for consumerID: ${consumerID}`,
+      });
     }
     return transaction;
   }
@@ -45,10 +48,17 @@ export class TransactionService {
 
   async initiateTransaction(
     transactionDetails: InitiateTransactionDTO,
-    initiatingConsumer: Consumer,
+    initiatingConsumer: string,
     sessionKey: string,
   ): Promise<string> {
-    // Validate and populate defaults
+    // TODO: Add more validations around required amounts/currencies
+    if (!initiatingConsumer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Must have consumer to initiate transaction",
+      });
+    }
+
     switch (transactionDetails.workflowName) {
       case WorkflowName.CREDIT_CONSUMER_WALLET:
         if (transactionDetails.debitConsumerIDOrTag) {
@@ -65,8 +75,22 @@ export class TransactionService {
           });
         }
 
+        if (transactionDetails.creditAmount <= 0) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditAmount must be greater than 0 for CREDIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        if (!transactionDetails.creditCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "creditCurrency must be set for CREDIT_CONSUMER_WALLET workflow",
+          });
+        }
+
         transactionDetails.debitConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
-        transactionDetails.creditConsumerIDOrTag = initiatingConsumer.props.id;
+        transactionDetails.creditConsumerIDOrTag = initiatingConsumer;
         transactionDetails.debitAmount = transactionDetails.creditAmount;
         transactionDetails.debitCurrency = transactionDetails.creditCurrency;
         transactionDetails.exchangeRate = 1;
@@ -86,7 +110,21 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id;
+        if (transactionDetails.debitAmount <= 0) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitAmount must be greater than 0 for DEBIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        if (!transactionDetails.debitCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitCurrency must be set for DEBIT_CONSUMER_WALLET workflow",
+          });
+        }
+
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
         transactionDetails.creditConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
         transactionDetails.creditAmount = transactionDetails.debitAmount;
         transactionDetails.creditCurrency = transactionDetails.debitCurrency;
@@ -100,16 +138,30 @@ export class TransactionService {
           });
         }
 
-        if (transactionDetails.debitAmount || transactionDetails.debitCurrency) {
+        if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount and debitCurrency cannot be set for CONSUMER_WALLET_TRANSFER workflow",
+            message: "creditAmount and creditCurrency cannot be set for CONSUMER_WALLET_TRANSFER workflow",
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer.props.id; // Debit consumer must always be the current consumer
-        transactionDetails.debitAmount = transactionDetails.creditAmount;
-        transactionDetails.debitCurrency = transactionDetails.creditCurrency;
+        if (transactionDetails.debitAmount <= 0) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitAmount must be greater than 0 for CONSUMER_WALLET_TRANSFER workflow",
+          });
+        }
+
+        if (!transactionDetails.debitCurrency) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitCurrency must be set for CONSUMER_WALLET_TRANSFER workflow",
+          });
+        }
+
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer; // Debit consumer must always be the current consumer
+        transactionDetails.creditAmount = transactionDetails.debitAmount;
+        transactionDetails.creditCurrency = transactionDetails.debitCurrency;
         transactionDetails.exchangeRate = 1;
         break;
       default:
@@ -180,14 +232,8 @@ export class TransactionService {
       transaction.debitConsumerID = consumerID;
     }
 
-    if (!transaction.creditConsumerID && !transaction.debitConsumerID) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "One of credit consumer id or debit consumer id must be set",
-      });
-    }
-
     transaction.workflowName = transactionDetails.workflowName;
+
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
     switch (transactionDetails.workflowName) {
@@ -227,7 +273,7 @@ export class TransactionService {
         break;
       default:
         throw new ServiceException({
-          // Shouldn't get here as validation done above, but good for completness
+          // Shouldn't get here as validation done above, but good for completeness
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
           message: "Invalid workflow name",
         });
@@ -286,9 +332,26 @@ export class TransactionService {
     };
   }
 
+  async updateTransaction(transactionID: string, transactionDetails: UpdateTransactionDTO): Promise<Transaction> {
+    const transaction = await this.transactionRepo.getTransactionByID(transactionID);
+    if (!transaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "Transaction does not exist",
+      });
+    }
+
+    // Only allow these two fields to be updated. Others are more sensitive and get updated by other methods.
+    const transactionUpdate: UpdateTransaction = {
+      ...(transactionDetails.status !== undefined && { status: transactionDetails.status }),
+    };
+
+    return await this.transactionRepo.updateTransactionByTransactionID(transactionID, transactionUpdate);
+  }
+
   async addTransactionEvent(
     transactionID: string,
-    transactionEvent: TransactionEventDTO,
+    transactionEvent: AddTransactionEventDTO,
   ): Promise<TransactionEventDTO> {
     const transaction = await this.transactionRepo.getTransactionByID(transactionID);
     if (!transaction) {
@@ -314,15 +377,15 @@ export class TransactionService {
         }),
       ...(transactionEvent.parameters !== undefined &&
         transactionEvent.parameters.length > 2 && {
-          param1: transactionEvent.parameters[2],
+          param3: transactionEvent.parameters[2],
         }),
       ...(transactionEvent.parameters !== undefined &&
         transactionEvent.parameters.length > 3 && {
-          param1: transactionEvent.parameters[3],
+          param4: transactionEvent.parameters[3],
         }),
       ...(transactionEvent.parameters !== undefined &&
         transactionEvent.parameters.length > 4 && {
-          param1: transactionEvent.parameters[4],
+          param5: transactionEvent.parameters[4],
         }),
     };
 
@@ -331,7 +394,7 @@ export class TransactionService {
     );
 
     return {
-      timestamp: transactionEvent.timestamp,
+      timestamp: savedTransactionEvent.timestamp,
       internal: savedTransactionEvent.internal,
       message: savedTransactionEvent.message,
       ...(savedTransactionEvent.details !== undefined && { details: savedTransactionEvent.details }),
@@ -348,28 +411,11 @@ export class TransactionService {
     };
   }
 
-  async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEventDTO[]> {
+  async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEvent[]> {
     const transactionEvents: TransactionEvent[] = await this.transactionRepo.getTransactionEvents(
       transactionID,
       includeInternalEvents,
     );
-    return transactionEvents.map(transactionEvent => {
-      return {
-        timestamp: transactionEvent.timestamp,
-        internal: transactionEvent.internal,
-        message: transactionEvent.message,
-        ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
-        ...(transactionEvent.key !== undefined && { key: transactionEvent.key }),
-        ...(transactionEvent.param1 !== undefined && {
-          parameters: Array.of(
-            transactionEvent.param1,
-            transactionEvent.param2,
-            transactionEvent.param3,
-            transactionEvent.param4,
-            transactionEvent.param5,
-          ),
-        }),
-      };
-    });
+    return transactionEvents;
   }
 }

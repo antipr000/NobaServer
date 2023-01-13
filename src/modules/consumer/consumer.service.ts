@@ -70,6 +70,12 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
+  async getConsumerHandle(consumerID: string): Promise<string> {
+    const consumer = await this.getConsumer(consumerID);
+    if (!consumer) return null;
+    return consumer.props.handle;
+  }
+
   // One thing to note here is that "idempotencyKey" is "determinstic" rather than
   // a short-lived value. This is an "intended" and an important design because -
   //

@@ -5,6 +5,7 @@ import type { AddNobaAdminDTO } from "../models/AddNobaAdminDTO";
 import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
+import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
 import type { TransactionDTO } from "../models/TransactionDTO";
 import type { TransactionStatsDTO } from "../models/TransactionStatsDTO";
@@ -277,6 +278,49 @@ export class AdminService {
       errors: {
         400: `Invalid parameter(s)`,
         403: `User forbidden from updating consumer record`,
+      },
+    });
+  }
+
+  /**
+   * Creates a new exchange rate entry
+   * @returns ExchangeRateDTO The newly created exchange rate(s). Index [0] is the forward rate that was created, index [1] is the inverse rate if addInverse is true
+   * @throws ApiError
+   */
+  public static createExchangeRate({
+    xNobaApiKey,
+    addInverse,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    /**
+     * Whether to also add the inverse of this rate
+     */
+    addInverse: boolean;
+    requestBody: ExchangeRateDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<ExchangeRateDTO>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/admins/exchangerates",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        addInverse: addInverse,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        403: `User forbidden from adding new exchange rate`,
       },
     });
   }

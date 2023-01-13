@@ -1,16 +1,17 @@
 import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
-async function main() {
-  const justin = await prisma.admin.upsert({
+
+export async function seedAdmins(prisma: PrismaClient) {
+  await prisma.admin.upsert({
     where: { email: "justin@noba.com" },
     update: {},
     create: {
       email: "justin@noba.com",
-      name: "Justin Ashworth",
+      name: `Justin Ashworth`,
       role: "ADMIN",
     },
   });
-  const gal = await prisma.admin.upsert({
+
+  await prisma.admin.upsert({
     where: { email: "gal@noba.com" },
     update: {},
     create: {
@@ -19,7 +20,8 @@ async function main() {
       role: "ADMIN",
     },
   });
-  const subham = await prisma.admin.upsert({
+
+  await prisma.admin.upsert({
     where: { email: "subham@noba.com" },
     update: {},
     create: {
@@ -28,7 +30,8 @@ async function main() {
       role: "ADMIN",
     },
   });
-  const soham = await prisma.admin.upsert({
+
+  await prisma.admin.upsert({
     where: { email: "soham@noba.com" },
     update: {},
     create: {
@@ -37,7 +40,8 @@ async function main() {
       role: "ADMIN",
     },
   });
-  const jonathan = await prisma.admin.upsert({
+
+  await prisma.admin.upsert({
     where: { email: "jonathan@noba.com" },
     update: {},
     create: {
@@ -47,12 +51,3 @@ async function main() {
     },
   });
 }
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async e => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });

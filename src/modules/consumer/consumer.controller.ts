@@ -16,6 +16,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
   ApiForbiddenResponse,
   ApiHeaders,
   ApiNotFoundResponse,
@@ -49,6 +50,8 @@ import { WalletStatus } from "@prisma/client";
 import { AddCryptoWalletResponseDTO } from "./dto/AddCryptoWalletResponse";
 import { BadRequestError } from "../../core/exception/CommonAppException";
 import { QRCodeDTO } from "./dto/QRCodeDTO";
+import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
+import { ContactConsumerResponseDTO } from "./dto/ContactConsumerResponseDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -316,6 +319,35 @@ export class ConsumerController {
     const decrypted = await new KMSUtil("ssn-encryption-key").decryptString(consumer.props.socialSecurityNumber);
     return decrypted;
   }*/
+
+  @Post("/devicecontacts")
+  @ApiOperation({ summary: "Bulk query contact consumers" })
+  @ApiBody({
+    type: [ContactConsumerRequestDTO],
+    description: "List of contact consumer details",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [ContactConsumerResponseDTO],
+    description: "List of consumers that are contacts",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid contact consumer details" })
+  async getContactConsumers(
+    @Body() requestBody: ContactConsumerRequestDTO[],
+    @AuthUser() consumer: Consumer,
+  ): Promise<ContactConsumerResponseDTO[]> {
+    // Stub for now ignore request body
+    const response = requestBody.map(contact => {
+      return {
+        id: contact.id,
+        consumerID: "ic1GQ2jKMypsZY6kR6ruU",
+        handle: "justin-noba",
+      };
+    });
+
+    return response;
+  }
 
   @Post("/wallets")
   @ApiOperation({ summary: "Adds a crypto wallet for the logged-in consumer" })

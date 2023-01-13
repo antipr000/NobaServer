@@ -1,9 +1,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
+import type { CheckTransactionDTO } from "../models/CheckTransactionDTO";
 import type { InitiateTransactionDTO } from "../models/InitiateTransactionDTO";
+import type { QuoteResponseDTO } from "../models/QuoteResponseDTO";
 import type { TransactionDTO } from "../models/TransactionDTO";
+import type { TransactionsQueryResultDTO } from "../models/TransactionsQueryResultDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -11,44 +13,8 @@ import { request as __request } from "../core/request";
 
 export class TransactionService {
   /**
-   * Gets details of a transaction
-   * @returns TransactionDTO
-   * @throws ApiError
-   */
-  public static getTransaction({
-    xNobaApiKey,
-    transactionRef,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    transactionRef: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<TransactionDTO> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v2/transactions/{transactionRef}",
-      path: {
-        transactionRef: transactionRef,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      errors: {
-        404: `Requested transaction is not found`,
-      },
-    });
-  }
-
-  /**
    * Get all transactions for logged in user
-   * @returns any[]
+   * @returns TransactionsQueryResultDTO
    * @throws ApiError
    */
   public static getAllTransactions({
@@ -102,7 +68,7 @@ export class TransactionService {
      * filter for a particular transaction status
      */
     transactionStatus?: "PENDING" | "SUCCESS" | "FAILED" | "IN_PROGRESS";
-  }): CancelablePromise<any[]> {
+  }): CancelablePromise<TransactionsQueryResultDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v2/transactions",
@@ -120,6 +86,9 @@ export class TransactionService {
         creditCurrency: creditCurrency,
         debitCurrency: debitCurrency,
         transactionStatus: transactionStatus,
+      },
+      errors: {
+        400: `Invalid request parameters`,
       },
     });
   }
@@ -165,40 +134,123 @@ export class TransactionService {
   }
 
   /**
-   * Get exchange rate of conversion
-   * @returns ExchangeRateDTO
+   * Gets a quote in specified currency
+   * @returns QuoteResponseDTO
    * @throws ApiError
    */
-  public static getExchangeRate({
+  public static getQuote({
     xNobaApiKey,
-    numeratorCurrency,
-    denominatorCurrency,
+    amount,
+    currency,
+    desiredCurrency,
     xNobaSignature,
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    numeratorCurrency: string;
-    denominatorCurrency: string;
+    amount: number;
+    currency: "USD" | "COP";
+    desiredCurrency: "USD" | "COP";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<ExchangeRateDTO> {
+  }): CancelablePromise<QuoteResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v2/transactions/rate",
+      url: "/v2/transactions/quote",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
       },
       query: {
-        numeratorCurrency: numeratorCurrency,
-        denominatorCurrency: denominatorCurrency,
+        amount: amount,
+        currency: currency,
+        desiredCurrency: desiredCurrency,
       },
       errors: {
-        400: `Invalid request parameters`,
+        404: `Quote for given currency not found`,
+      },
+    });
+  }
+
+  /**
+   * Checks if the transaction parameters are valid
+   * @returns CheckTransactionDTO
+   * @throws ApiError
+   */
+  public static checkIfTransactionPossible({
+    xNobaApiKey,
+    type,
+    transactionAmount,
+    baseCurrency,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    type: "NOBA_WALLET";
+    transactionAmount: number;
+    baseCurrency: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<CheckTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v2/transactions/check",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        type: type,
+        transactionAmount: transactionAmount,
+        baseCurrency: baseCurrency,
+      },
+    });
+  }
+
+  /**
+   * Gets details of a transaction
+   * @returns TransactionDTO
+   * @throws ApiError
+   */
+  public static getTransaction({
+    xNobaApiKey,
+    transactionRef,
+    xNobaSignature,
+    xNobaTimestamp,
+    includeEvents,
+  }: {
+    xNobaApiKey: string;
+    transactionRef: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    includeEvents?: "All" | "External Only" | "None";
+  }): CancelablePromise<TransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v2/transactions/{transactionRef}",
+      path: {
+        transactionRef: transactionRef,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        includeEvents: includeEvents,
+      },
+      errors: {
+        404: `Requested transaction is not found`,
       },
     });
   }

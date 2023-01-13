@@ -4,7 +4,7 @@
 
 import type { TransactionDTO } from "./TransactionDTO";
 
-export type TransactionsQueryResultsDTO = {
+export type TransactionsQueryResultDTO = {
   items: Array<TransactionDTO>;
   page: number;
   hasNextPage: boolean;

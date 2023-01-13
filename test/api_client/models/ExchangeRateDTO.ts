@@ -4,15 +4,23 @@
 
 export type ExchangeRateDTO = {
   /**
-   * currency that the exchange rate is being calculated from
+   * The currency that is being exchanged from
    */
-  numeratorCurrency: "USD" | "COP";
+  numeratorCurrency: string;
   /**
-   * currency that the exchange rate is being calculated to
+   * The currency that is being exchanged to
    */
-  denominatorCurrency: "USD" | "COP";
+  denominatorCurrency: string;
   /**
-   * actual exchange rate between the two currencies
+   * The exchange rate set by the bank, calculated as numerator/denominator
    */
-  exchangeRate: string;
+  bankRate: number;
+  /**
+   * The exchange rate set by Noba, calculated as numerator/denominator. If not set, will default to bankRate.
+   */
+  nobaRate?: number;
+  /**
+   * The timestamp at which this exchange rate expires. If not set, will default to 24 hours from now.
+   */
+  expirationTimestamp?: string;
 };

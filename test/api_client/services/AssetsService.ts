@@ -4,6 +4,7 @@
 import type { ConfigurationsDTO } from "../models/ConfigurationsDTO";
 import type { CreditCardDTO } from "../models/CreditCardDTO";
 import type { CurrencyDTO } from "../models/CurrencyDTO";
+import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
 import type { LocationDTO } from "../models/LocationDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -63,6 +64,46 @@ export class AssetsService {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
+      },
+    });
+  }
+
+  /**
+   * Get exchange rate between a currency pair
+   * @returns ExchangeRateDTO
+   * @throws ApiError
+   */
+  public static getExchangeRate({
+    xNobaApiKey,
+    numeratorCurrency,
+    denominatorCurrency,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    numeratorCurrency: string;
+    denominatorCurrency: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<ExchangeRateDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/exchangerates",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        numeratorCurrency: numeratorCurrency,
+        denominatorCurrency: denominatorCurrency,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+        404: `Exchange rate not found`,
       },
     });
   }

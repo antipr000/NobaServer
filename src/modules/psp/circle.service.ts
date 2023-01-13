@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 import { Logger } from "winston";
 import { CircleClient } from "./circle.client";
-import { ICircleRepo } from "./repos/CircleRepo";
+import { ICircleRepo } from "./repos/circle.repo";
 import { UpdateWalletBalanceServiceDTO } from "./domain/UpdateWalletBalanceServiceDTO";
 
 @Injectable()
