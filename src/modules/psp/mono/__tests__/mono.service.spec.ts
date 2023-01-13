@@ -9,7 +9,7 @@ import { MonoClient } from "../mono.client";
 import { getMockMonoRepoWithDefaults } from "../mocks/mock.mono.repo";
 import { getMockMonoClientWithDefaults } from "../mocks/mock.mono.client";
 import { MONO_REPO_PROVIDER } from "../repo/mono.repo.module";
-import { deepEqual, instance, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { MonoService } from "../mono.service";
 import { MonoClientCollectionLinkRequest } from "../../dto/mono.client.dto";
 import { CreateMonoTransactionRequest } from "../../dto/mono.service.dto";
@@ -17,6 +17,9 @@ import { InternalServiceErrorException } from "../../../../core/exception/Common
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { ConsumerService } from "../../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../../modules/consumer/mocks/mock.consumer.service";
+import { MonoWebhookHandlers } from "../mono.webhook";
+import { getMockMonoWebhookHandlersWithDefaults } from "../mocks/mock.mono.webhook";
+import { CollectionIntentCreditedEvent } from "../../dto/mono.webhook.dto";
 
 const getRandomMonoTransaction = (): MonoTransaction => {
   return {
@@ -37,12 +40,14 @@ describe("SqlMonoRepoTests", () => {
   let monoRepo: IMonoRepo;
   let monoClient: MonoClient;
   let monoService: MonoService;
+  let monoWebhookHandlers: MonoWebhookHandlers;
   let consumerService: ConsumerService;
   let app: TestingModule;
 
   beforeEach(async () => {
     monoRepo = getMockMonoRepoWithDefaults();
     monoClient = getMockMonoClientWithDefaults();
+    monoWebhookHandlers = getMockMonoWebhookHandlersWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
 
     const appConfigurations = {
@@ -64,6 +69,10 @@ describe("SqlMonoRepoTests", () => {
         {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
+        },
+        {
+          provide: MonoWebhookHandlers,
+          useFactory: () => instance(monoWebhookHandlers),
         },
         MonoService,
       ],
@@ -211,6 +220,93 @@ describe("SqlMonoRepoTests", () => {
       await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
         InternalServiceErrorException,
       );
+    });
+  });
+
+  describe("", () => {
+    it("should update the state to 'SUCCESS' if the CollectionIntentCredited is sent in Webhook Event", async () => {
+      const monoTransaction: MonoTransaction = getRandomMonoTransaction();
+      const convertedEvent: CollectionIntentCreditedEvent = {
+        accountID: "accountID",
+        amount: 100,
+        currency: MonoCurrency.COP,
+        collectionLinkID: monoTransaction.collectionLinkID,
+        monoTransactionID: "monoTransactionID",
+      };
+
+      const webhookBody = {
+        event: {
+          data: {},
+          type: "collection_intent_credited",
+        },
+        timestamp: "2022-12-29T15:42:08.325158Z",
+      };
+      const webhookSignature = "signature";
+
+      when(monoWebhookHandlers.convertCollectionLinkCredited(deepEqual(webhookBody), webhookSignature)).thenReturn(
+        convertedEvent,
+      );
+      when(monoRepo.getMonoTransactionByCollectionLinkID(monoTransaction.collectionLinkID)).thenResolve(
+        monoTransaction,
+      );
+      when(monoRepo.updateMonoTransaction(anyString(), anything())).thenResolve();
+
+      await monoService.processWebhookEvent(webhookBody, webhookSignature);
+
+      const [receivedMonoID, receivedMonoTransactionUpdateRequest] = capture(monoRepo.updateMonoTransaction).last();
+      expect(receivedMonoID).toBe(monoTransaction.id);
+      expect(receivedMonoTransactionUpdateRequest).toStrictEqual({
+        monoTransactionID: "monoTransactionID",
+        state: MonoTransactionState.SUCCESS,
+      });
+    });
+
+    it("should throw InternalServiceErrorException if the 'collectionLinkID' is not found", async () => {
+      const monoTransaction: MonoTransaction = getRandomMonoTransaction();
+      const convertedEvent: CollectionIntentCreditedEvent = {
+        accountID: "accountID",
+        amount: 100,
+        currency: MonoCurrency.COP,
+        collectionLinkID: monoTransaction.collectionLinkID,
+        monoTransactionID: "monoTransactionID",
+      };
+
+      const webhookBody = {
+        event: {
+          data: {},
+          type: "collection_intent_credited",
+        },
+        timestamp: "2022-12-29T15:42:08.325158Z",
+      };
+      const webhookSignature = "signature";
+
+      when(monoWebhookHandlers.convertCollectionLinkCredited(deepEqual(webhookBody), webhookSignature)).thenReturn(
+        convertedEvent,
+      );
+      when(monoRepo.getMonoTransactionByCollectionLinkID(monoTransaction.collectionLinkID)).thenResolve(null);
+
+      await expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
+        InternalServiceErrorException,
+      );
+
+      verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
+    });
+
+    it("should throw InternalServiceErrorException if unknown webhook event is sent", async () => {
+      const webhookBody = {
+        event: {
+          data: {},
+          type: "unknown",
+        },
+        timestamp: "2022-12-29T15:42:08.325158Z",
+      };
+      const webhookSignature = "signature";
+
+      await expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
+        InternalServiceErrorException,
+      );
+
+      verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
     });
   });
 });

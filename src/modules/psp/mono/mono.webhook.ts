@@ -36,7 +36,10 @@ export class MonoWebhookHandlers {
     return expectedSignature === receivedSignature;
   }
 
-  convertCollectionLinkCredited(webhookData: any, monoSignature: string): CollectionIntentCreditedEvent {
+  convertCollectionLinkCredited(
+    webhookData: Record<string, any>,
+    monoSignature: string,
+  ): CollectionIntentCreditedEvent {
     if (!this.validateSignature(webhookData, monoSignature)) {
       throw new InternalServiceErrorException({
         message: "Invalid Mono signature",
