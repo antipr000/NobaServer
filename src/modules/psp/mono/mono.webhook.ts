@@ -4,7 +4,6 @@ import { InternalServiceErrorException } from "../../../core/exception/CommonApp
 import { Logger } from "winston";
 import { MonoCurrency } from "../domain/Mono";
 import { CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
-import { MonoService } from "./mono.service";
 import { createHmac } from "crypto";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
@@ -16,7 +15,6 @@ export class MonoWebhookHandlers {
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly monoService: MonoService,
     private readonly configService: CustomConfigService,
   ) {
     this.monoWebhookSecret = this.configService.get<MonoConfigs>(MONO_CONFIG_KEY).webhookSecret;

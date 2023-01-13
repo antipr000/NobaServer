@@ -9,9 +9,6 @@ import {
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
-import { instance, when } from "ts-mockito";
-import { MonoService } from "../mono.service";
-import { getMockMonoServiceWithDefaults } from "../mocks/mock.mono.service";
 import { MonoWebhookHandlers } from "../mono.webhook";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
 import { createHmac } from "crypto";
@@ -59,13 +56,10 @@ const createMonoSignature = (webhookResponse: any, evenntTimestamp: number) => {
 describe("MonoWebhookHandlersTest", () => {
   jest.setTimeout(20000);
 
-  let monoService: MonoService;
   let monoWebhookHandlers: MonoWebhookHandlers;
   let app: TestingModule;
 
   beforeEach(async () => {
-    monoService = getMockMonoServiceWithDefaults();
-
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
       [MONO_CONFIG_KEY]: {
@@ -78,13 +72,7 @@ describe("MonoWebhookHandlersTest", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [
-        {
-          provide: MonoService,
-          useFactory: () => instance(monoService),
-        },
-        MonoWebhookHandlers,
-      ],
+      providers: [MonoWebhookHandlers],
     }).compile();
 
     monoWebhookHandlers = app.get<MonoWebhookHandlers>(MonoWebhookHandlers);
