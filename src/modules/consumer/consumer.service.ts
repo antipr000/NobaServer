@@ -287,6 +287,10 @@ export class ConsumerService {
   }
 
   async findConsumersByContactInfo(contactInfoList: ContactConsumerRequestDTO[]): Promise<Consumer[]> {
+    // Build a list of consumer info
+    // Possible outputs:
+    //  - Map of contactInfoID to Consumer domain object
+    //  - List of domain objects with contactInfoID, handle, and consumerID
     const consumerList: Consumer[] = [];
     for (const contactInfo of contactInfoList) {
       //Possibly make this into some utility function, question is where to put it
