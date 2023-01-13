@@ -32,7 +32,7 @@ import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
-import CountryList from "country-list-with-dial-code-and-flag";
+import { contactPhoneDTOToString } from "./domain/ContactInfo";
 
 @Injectable()
 export class ConsumerService {
@@ -293,15 +293,7 @@ export class ConsumerService {
     //  - List of domain objects with contactInfoID, handle, and consumerID
     const consumerList: Consumer[] = [];
     for (const contactInfo of contactInfoList) {
-      //Possibly make this into some utility function, question is where to put it
-      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => {
-        if (phone.digits[0] === "+") {
-          return phone.digits;
-        }
-
-        const { dial_code } = CountryList.findFlagByDialCode(phone.countryCode);
-        return dial_code + phone.digits;
-      });
+      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => contactPhoneDTOToString(phone));
 
       const consumerResult = await this.consumerRepo.findConsumersByContactInfo({
         id: contactInfo.id,

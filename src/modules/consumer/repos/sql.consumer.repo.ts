@@ -9,6 +9,7 @@ import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
+import { ContactInfo } from "../domain/ContactInfo";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -60,6 +61,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
     } else {
       return (await this.getConsumerByPhone(emailOrPhone)).isSuccess;
     }
+  }
+
+  async findConsumersByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>> {
+    return Result.fail("Not implemented");
   }
 
   async getConsumerByEmail(email: string): Promise<Result<Consumer>> {
