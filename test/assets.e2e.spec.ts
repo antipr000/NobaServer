@@ -13,8 +13,8 @@ import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
 setUpEnvironmentVariablesToLoadTheSourceCode();
 
 import { BadRequestException, INestApplication } from "@nestjs/common";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
+//import { MongoMemoryServer } from "mongodb-memory-server";
+//import mongoose from "mongoose";
 import { bootstrap } from "../src/server";
 import {
   clearAccessTokenForNextRequests,
@@ -32,7 +32,7 @@ const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images
 describe.skip("CryptoCurrencies & Locations", () => {
   jest.setTimeout(20000);
 
-  let mongoServer: MongoMemoryServer;
+  //let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
   let TEST_TIMESTAMP;
@@ -41,21 +41,21 @@ describe.skip("CryptoCurrencies & Locations", () => {
     const port = process.env.PORT;
 
     // Spin up an in-memory mongodb server
-    mongoServer = await MongoMemoryServer.create();
-    mongoUri = mongoServer.getUri();
+    //mongoServer = await MongoMemoryServer.create();
+    //mongoUri = mongoServer.getUri();
 
-    const environmentVaraibles = {
+    /*const environmentVaraibles = {
       MONGO_URI: mongoUri,
-    };
-    app = await bootstrap(environmentVaraibles);
+    };*/
+    app = await bootstrap({});
     await app.listen(port);
     TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterAll(async () => {
-    await mongoose.disconnect();
+    //await mongoose.disconnect();
     await app.close();
-    await mongoServer.stop();
+    //await mongoServer.stop();
   });
 
   afterEach(async () => {

@@ -18,10 +18,6 @@ import {
   getParameterValueFromAWSSecrets,
   getPropertyFromEnvironment,
   isPropertyPresentInEnvironmentVariables,
-  MONGO_AWS_SECRET_KEY_FOR_URI_ATTR,
-  MONGO_CONFIG_KEY,
-  MONGO_URI,
-  MONGO_URI_ENV_KEY,
   resetPropertyFromEnvironment,
   SENDGRID_API_KEY,
   SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
@@ -131,7 +127,6 @@ import os from "os";
 
 import { TwilioConfigs } from "./configtypes/TwilioConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";
-import { MongoConfigs } from "./configtypes/MongoConfigs";
 import { SardineConfigs } from "./configtypes/SardineConfigs";
 import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
@@ -300,7 +295,6 @@ async function configureAllVendorCredentials(
     configureSendgridCredentials,
     configureTwilioCredentials,
     configureCheckoutCredentials,
-    configureMongoCredentials,
     configureSardineCredentials,
     configureZerohashCredentials,
     configureAwsKmsCredentials,
@@ -493,46 +487,6 @@ async function configureDependencies(
   }
 
   configs[DEPENDENCY_CONFIG_KEY] = dependencyConfigs;
-  return configs;
-}
-
-async function configureMongoCredentials(
-  environment: AppEnvironment,
-  configs: Record<string, any>,
-): Promise<Record<string, any>> {
-  let mongoConfigs: MongoConfigs = configs[MONGO_CONFIG_KEY];
-
-  if (environment === AppEnvironment.E2E_TEST) {
-    if (!isPropertyPresentInEnvironmentVariables(MONGO_URI_ENV_KEY)) {
-      const errorMessage = `\n'Mongo' configurations are required. Please configure '${MONGO_URI_ENV_KEY}' in environment varaible. current is ${JSON.stringify(
-        process.env,
-      )}`;
-
-      throw Error(errorMessage);
-    }
-
-    mongoConfigs = {} as MongoConfigs;
-    mongoConfigs.uri = getPropertyFromEnvironment(MONGO_URI_ENV_KEY);
-    mongoConfigs.awsSecretNameForUri = undefined;
-  }
-
-  if (mongoConfigs === undefined) {
-    const errorMessage =
-      "\n'Mongo' configurations are required. Please configure the MongoDB URI in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${MONGO_CONFIG_KEY}" and populate "${MONGO_AWS_SECRET_KEY_FOR_URI_ATTR}" or "${MONGO_URI}" ` +
-      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
-
-    throw Error(errorMessage);
-  }
-
-  mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
-
-  if (environment === AppEnvironment.DEV) {
-    const hostname = os.hostname().replace(".", "_");
-    mongoConfigs.uri += `_${hostname}`;
-  }
-
-  configs[MONGO_CONFIG_KEY] = mongoConfigs;
   return configs;
 }
 

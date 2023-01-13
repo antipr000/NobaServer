@@ -62,11 +62,6 @@ export const SENDGRID_CONFIG_KEY = "sendgrid";
 export const SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
 export const SENDGRID_API_KEY = "apiKey";
 
-export const MONGO_CONFIG_KEY = "mongo";
-export const MONGO_AWS_SECRET_KEY_FOR_URI_ATTR = "awsSecretNameForUri";
-export const MONGO_URI = "uri";
-export const MONGO_URI_ENV_KEY = "MONGO_URI";
-
 export const SARDINE_CONFIG_KEY = "sardine";
 export const SARDINE_AWS_SECRET_KEY_FOR_SARDINE_CLIENT_ID_ATTR = "awsSecretNameForSardineClientID";
 export const SARDINE_AWS_SECRET_KEY_FOR_SARDINE_SECRET_KEY_ATTR = "awsSecretNameForSardineSecretKey";

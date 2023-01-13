@@ -19,8 +19,6 @@ export class IntegrationTestUtility {
     process.env.DATABASE_URL = setup.postgres_connection_string;
 
     const environmentVaraibles = {
-      // temporary and will be removed after the dependency on Mongo is completely removed
-      MONGO_URI: "mongodb://localhost:27017/Noba_E2E",
       DATABASE_URL: setup.postgres_connection_string,
     };
     setup.app = await bootstrap(environmentVaraibles);
