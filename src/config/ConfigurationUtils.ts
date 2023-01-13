@@ -30,6 +30,7 @@ export const STATIC_DEV_OTP = "staticDevOTP";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
 export const AWS_SECRET_ACCESS_KEY_ATTR = "awsSecretAccessKey";
+export const AWS_MASTER_SECRET = "awsMasterSecret";
 export const AWS_DEFAULT_REGION_ATTR = "awsDefaultRegion";
 export const AWS_ACCOUNT_ID_ATTR = "awsAccountID";
 export const AWS_REGION_ATTR = "awsRegion";
@@ -221,14 +222,7 @@ export async function getParameterValue(awsSecretKey: string, customValue: strin
     return customValue;
   }
 
-  console.log(`${new Date().toISOString()} - Fetching secret ${awsSecretKey}`);
-  const startTime = performance.now();
-  const secret = await SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
-  const totalTime = performance.now() - startTime;
-  console.log(`Total fetch time: ${totalTime} ms`);
-  fetchTime += totalTime;
-  console.log(`${new Date().toISOString()} - Fetched secret ${awsSecretKey}`);
-  return secret;
+  return await SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
 }
 
 // Use this if there is no default needed

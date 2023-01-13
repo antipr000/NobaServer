@@ -122,6 +122,7 @@ import {
   MONO_NOBA_ACCOUNT_ID,
   MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET,
   MONO_WEBHOOK_SECRET,
+  AWS_MASTER_SECRET,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -140,6 +141,7 @@ import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs"
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
+import { SecretProvider } from "./SecretProvider";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -197,21 +199,19 @@ export default async function loadAppConfigs() {
     extraSecretsFiles.push(join(configsDir, "secrets.yaml"));
   }
 
-  console.log("Reading configs from YAML files...");
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
 
-  console.log("Configuring AWS credentials...");
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
-  console.log("Configuring vendor credentials...");
+  const secretProvider = new SecretProvider();
+  await secretProvider.loadAWSMasterSecret(configs[AWS_MASTER_SECRET]);
+
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
-  console.log("Ensuring dev-only configs are not set in non-dev envs...");
   const filteredConfigs = ensureDevOnlyConfig(environment, vendorConfigs);
 
   // initializeAWSEnv();
 
   //validate configs
-  console.log("Validating configs...");
   return Joi.attempt(filteredConfigs, appConfigsJoiValidationSchema);
 }
 

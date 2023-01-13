@@ -8,6 +8,7 @@ logFilePath: "/home/ubuntu/noba_server.log"
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
 awsAccountID: "210194402305"
+awsMasterSecret: "PROD_MASTER_SECRET"
 
 kms:
   context:
