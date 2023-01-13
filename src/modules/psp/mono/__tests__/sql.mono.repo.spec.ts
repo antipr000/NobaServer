@@ -86,7 +86,7 @@ describe("SqlMonoRepoTests", () => {
       expect(allTransactions.length).toEqual(1);
       expect(allTransactions[0].nobaTransactionID).toEqual(nobaTransactionID);
       expect(allTransactions[0].collectionLinkID).toEqual(monoTransactionRequest.collectionLinkID);
-      expect(allTransactions[0].collectionUrl).toEqual(monoTransactionRequest.collectionURL);
+      expect(allTransactions[0].collectionURL).toEqual(monoTransactionRequest.collectionURL);
       expect(allTransactions[0].state).toEqual(MonoTransactionState.PENDING);
 
       expect(allTransactions[0].createdTimestamp).toEqual(monoTransaction.createdTimestamp);

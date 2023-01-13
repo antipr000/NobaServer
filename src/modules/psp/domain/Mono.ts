@@ -88,7 +88,7 @@ export const convertToDomainTransaction = (transaction: PrismaMonoModel): MonoTr
   return {
     id: transaction.id,
     collectionLinkID: transaction.collectionLinkID,
-    collectionURL: transaction.collectionUrl,
+    collectionURL: transaction.collectionURL,
     nobaTransactionID: transaction.nobaTransactionID,
     monoTransactionID: transaction.monoTransactionID,
     state: transaction.state as MonoTransactionState,

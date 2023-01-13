@@ -206,7 +206,7 @@ Table Mono {
   id String [pk]
   monoTransactionID String
   collectionLinkID String [unique, not null]
-  collectionUrl String [not null]
+  collectionURL String [not null]
   state String [not null]
   nobaTransactionID String [unique, not null]
   transaction Transaction [not null]

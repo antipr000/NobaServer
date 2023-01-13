@@ -3,7 +3,7 @@ CREATE TABLE "Mono" (
     "id" TEXT NOT NULL,
     "monoTransactionID" TEXT,
     "collectionLinkID" TEXT NOT NULL,
-    "collectionUrl" TEXT NOT NULL,
+    "collectionURL" TEXT NOT NULL,
     "state" TEXT NOT NULL,
     "nobaTransactionID" TEXT NOT NULL,
     "createdTimestamp" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
