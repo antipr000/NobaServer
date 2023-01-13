@@ -32,7 +32,8 @@ import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
-import { contactPhoneDTOToString } from "./domain/ContactInfo";
+import { ContactPhoneDTO } from "./dto/ContactPhoneDTO";
+import CountryList from "country-list-with-dial-code-and-flag";
 
 @Injectable()
 export class ConsumerService {
@@ -287,29 +288,28 @@ export class ConsumerService {
   }
 
   async findConsumersByContactInfo(contactInfoList: ContactConsumerRequestDTO[]): Promise<Consumer[]> {
-    // Build a list of consumer info
-    // Possible outputs:
-    //  - Map of contactInfoID to Consumer domain object
-    //  - List of domain objects with contactInfoID, handle, and consumerID
-    const consumerList: Consumer[] = [];
+    const consumerPromiseList = new Array<Promise<Result<Consumer>>>();
     for (const contactInfo of contactInfoList) {
-      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => contactPhoneDTOToString(phone));
+      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone =>
+        this.normalizePhoneNumber(phone.digits, phone.countryCode),
+      );
       const possibleEmails = contactInfo.emails.map(email => email.toLowerCase());
-      const consumerResult = await this.consumerRepo.findConsumersByContactInfo({
+      const consumerResultPromise = this.consumerRepo.findConsumersByContactInfo({
         id: contactInfo.id,
         phoneNumbers: possiblePhoneNumbers,
         emails: possibleEmails,
       });
-
-      // TODO: if success, add to list, if not, null out handle and id for export
-      // Should this exported object be a DTO or domain object?
-      if (consumerResult.isSuccess) {
-        consumerList.push(consumerResult.getValue());
-      } else {
-        consumerList.push(consumerResult.getValue());
-      }
+      consumerPromiseList.push(consumerResultPromise);
     }
-    return consumerList;
+
+    const consumerResultList = await Promise.all(consumerPromiseList);
+    return consumerResultList.map(consumerResult => {
+      if (!consumerResult.isSuccess) {
+        return null;
+      }
+
+      return consumerResult.getValue();
+    });
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
@@ -585,6 +585,14 @@ export class ConsumerService {
     throw new Error("Method not implemented");
   }
 
+  private normalizePhoneNumber(digits: string, countryCode: string): string {
+    if (digits[0] === "+") {
+      return digits;
+    }
+
+    const { dial_code } = CountryList.findFlagByDialCode(countryCode);
+    return dial_code + digits;
+  }
   private removeAllUnsupportedHandleCharacters(text: string): string {
     if (text === undefined || text === null) return "user-";
 

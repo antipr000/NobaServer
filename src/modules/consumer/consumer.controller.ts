@@ -339,12 +339,21 @@ export class ConsumerController {
   ): Promise<ContactConsumerResponseDTO[]> {
     // Stub for now ignore request body
 
-    this.consumerService.findConsumersByContactInfo(requestBody);
-    const response = requestBody.map(contact => {
+    const consumers = await this.consumerService.findConsumersByContactInfo(requestBody);
+
+    const response = consumers.map((contact, i) => {
+      if (!contact) {
+        return {
+          id: requestBody[i].id,
+          consumerID: null,
+          handle: null,
+        };
+      }
+
       return {
-        id: contact.id,
-        consumerID: "ic1GQ2jKMypsZY6kR6ruU",
-        handle: "justin-noba",
+        id: requestBody[i].id,
+        consumerID: contact.props.id,
+        handle: contact.props.handle,
       };
     });
 

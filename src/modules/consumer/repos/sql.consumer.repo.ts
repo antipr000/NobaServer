@@ -93,7 +93,6 @@ export class SQLConsumerRepo implements IConsumerRepo {
       });
 
       if (!consumerContact) return Result.fail("Couldn't find consumer with given contact info");
-
       return Result.ok(Consumer.createConsumer(consumerContact));
     } catch (e) {
       return Result.fail(`Couldn't find consumer with given contact info for unknown reason:${e}`);
