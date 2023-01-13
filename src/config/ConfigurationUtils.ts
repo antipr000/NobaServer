@@ -213,7 +213,6 @@ export function setEnvironmentProperty(key: string, value: string): void {
   process.env[key] = value;
 }
 
-export let fetchTime = 0;
 export async function getParameterValue(awsSecretKey: string, customValue: string): Promise<string> {
   if (awsSecretKey === undefined || awsSecretKey == null || awsSecretKey === "") {
     if (customValue === undefined || customValue === "") {
