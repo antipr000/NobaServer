@@ -7,7 +7,7 @@ import { CircleService } from "./circle.service";
 import { CircleDepositOrWithdrawalRequest } from "./dto/CircleDepositOrWithdrawalRequest";
 import { CircleFundsTransferRequestDTO } from "./dto/CircleFundsTransferRequestDTO";
 
-@Controller("v1/wf/circle") // This defines the path prefix
+@Controller("/wf/v1/circle") // This defines the path prefix
 @ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
 @IsNoApiKeyNeeded()
 export class CircleWorkflowController {
@@ -15,6 +15,15 @@ export class CircleWorkflowController {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly circleService: CircleService,
   ) {}
+
+  @Get("/health")
+  @ApiOperation({ summary: "Health check" })
+  @ApiResponse({ status: HttpStatus.OK })
+  async healthCheck() {
+    return {
+      status: "OK",
+    };
+  }
 
   @Get("/wallets/consumers/:consumerID")
   @ApiOperation({ summary: "Get consumer's wallet ID" })
