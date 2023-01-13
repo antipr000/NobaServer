@@ -212,8 +212,8 @@ export function setEnvironmentProperty(key: string, value: string): void {
   process.env[key] = value;
 }
 
+export let fetchTime = 0;
 export async function getParameterValue(awsSecretKey: string, customValue: string): Promise<string> {
-  console.log(`${new Date().toISOString()} - Getting parameter value for ${awsSecretKey} and ${customValue}`);
   if (awsSecretKey === undefined || awsSecretKey == null || awsSecretKey === "") {
     if (customValue === undefined || customValue === "") {
       throw Error(`Neither ${awsSecretKey} nor ${customValue} is set.`);
@@ -221,9 +221,13 @@ export async function getParameterValue(awsSecretKey: string, customValue: strin
     return customValue;
   }
 
-  console.log(`${new Date().toISOString()} - Fetching secret`);
-  const secret = SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
-  console.log(`${new Date().toISOString()} - Fetched secret`);
+  console.log(`${new Date().toISOString()} - Fetching secret ${awsSecretKey}`);
+  const startTime = performance.now();
+  const secret = await SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
+  const totalTime = performance.now() - startTime;
+  console.log(`Total fetch time: ${totalTime} ms`);
+  fetchTime += totalTime;
+  console.log(`${new Date().toISOString()} - Fetched secret ${awsSecretKey}`);
   return secret;
 }
 
@@ -233,5 +237,5 @@ export async function getParameterValueFromAWSSecrets(awsSecretKey: string): Pro
     return null;
   }
 
-  return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
+  return await SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
 }

@@ -14,6 +14,7 @@ import {
   AWS_SECRET_ACCESS_KEY_ATTR,
   AWS_SECRET_ACCESS_KEY_ENV_VARIABLE,
   getEnvironmentName,
+  fetchTime,
   getParameterValue,
   getParameterValueFromAWSSecrets,
   getPropertyFromEnvironment,
@@ -314,6 +315,7 @@ async function configureAllVendorCredentials(
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
   }
+  console.log(`Total time taken for AWS secrets lookup: ${fetchTime}`);
   return configs;
 }
 
