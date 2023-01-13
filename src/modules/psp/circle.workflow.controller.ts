@@ -20,9 +20,16 @@ export class CircleWorkflowController {
   @ApiOperation({ summary: "Health check" })
   @ApiResponse({ status: HttpStatus.OK })
   async healthCheck() {
-    return {
-      status: "OK",
-    };
+    const isCircleServiceRunning = await this.circleService.checkCircleHealth();
+    if (isCircleServiceRunning) {
+      return {
+        status: "OK",
+      };
+    } else {
+      return {
+        status: "DOWN",
+      };
+    }
   }
 
   @Get("/wallets/consumers/:consumerID")

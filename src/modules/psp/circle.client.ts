@@ -1,11 +1,5 @@
-import {
-  Circle,
-  CircleEnvironments,
-  CreateWalletResponse,
-  GetWalletResponse,
-  TransferErrorCode,
-} from "@circle-fin/circle-sdk";
-import { Inject, Injectable, InternalServerErrorException } from "@nestjs/common";
+import { Circle, CircleEnvironments, CreateWalletResponse, TransferErrorCode } from "@circle-fin/circle-sdk";
+import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
 import { CIRCLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -30,6 +24,15 @@ export class CircleClient {
 
   async getMasterWalletID(): Promise<string> {
     return this.masterWalletID;
+  }
+
+  async checkCircleHealth(): Promise<boolean> {
+    try {
+      const response = await this.circleApi.health.ping();
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
   }
 
   async createWallet(idempotencyKey: string): Promise<string> {
@@ -60,7 +63,7 @@ export class CircleClient {
       const walletData = await this.circleApi.wallets.getWallet(walletID);
       this.logger.info(`"getWallet" succeeds with request_id: "${walletData.headers["X-Request-Id"]}"`);
 
-      let result: number = 0;
+      let result = 0;
       walletData.data.data.balances.forEach(balance => {
         if (balance.currency === "USD") {
           result = Number(balance.amount);
