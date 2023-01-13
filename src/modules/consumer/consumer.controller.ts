@@ -333,11 +333,13 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid contact consumer details" })
-  async getContactConsumers(
+  async getConsumersByContact(
     @Body() requestBody: ContactConsumerRequestDTO[],
     @AuthUser() consumer: Consumer,
   ): Promise<ContactConsumerResponseDTO[]> {
     // Stub for now ignore request body
+
+    this.consumerService.findConsumersByContactInfo(requestBody);
     const response = requestBody.map(contact => {
       return {
         id: contact.id,

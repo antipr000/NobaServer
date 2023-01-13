@@ -31,6 +31,7 @@ import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
+import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 
 @Injectable()
 export class ConsumerService {
@@ -282,6 +283,26 @@ export class ConsumerService {
     }
 
     return updatedConsumer;
+  }
+
+  async findConsumersByContactInfo(contactInfoList: ContactConsumerRequestDTO[]): Promise<Consumer[]> {
+    const consumerList: Consumer[] = [];
+    for (const contactInfo of contactInfoList) {
+      //convert ContactPhoneDTO to phone number string
+      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => phone.phoneNumber);
+
+      const consumerResult = await this.consumerRepo.findConsumersByContactInfo({
+        id: contactInfo.id,
+        phoneNumbers: contactInfo.phoneNumbers,
+        email: contactInfo.emails,
+      });
+      if (consumerResult.isSuccess) {
+        consumerList.push(consumerResult.getValue());
+      } else {
+        consumerList.push(consumerResult.getValue());
+      }
+    }
+    return consumerList;
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {

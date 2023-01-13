@@ -6,8 +6,8 @@ export class ContactConsumerRequestDTO {
   id: string;
 
   @ApiProperty({ type: [ContactPhoneDTO] })
-  phone: ContactPhoneDTO[];
+  phoneNumbers: ContactPhoneDTO[];
 
   @ApiProperty()
-  email: string[];
+  emails: string[];
 }
