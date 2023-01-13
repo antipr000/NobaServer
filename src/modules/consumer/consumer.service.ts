@@ -294,11 +294,11 @@ export class ConsumerService {
     const consumerList: Consumer[] = [];
     for (const contactInfo of contactInfoList) {
       const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => contactPhoneDTOToString(phone));
-
+      const possibleEmails = contactInfo.emails.map(email => email.toLowerCase());
       const consumerResult = await this.consumerRepo.findConsumersByContactInfo({
         id: contactInfo.id,
         phoneNumbers: possiblePhoneNumbers,
-        emails: contactInfo.emails,
+        emails: possibleEmails,
       });
 
       // TODO: if success, add to list, if not, null out handle and id for export
