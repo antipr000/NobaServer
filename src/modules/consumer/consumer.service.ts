@@ -32,6 +32,7 @@ import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
+import CountryList from "country-list-with-dial-code-and-flag";
 
 @Injectable()
 export class ConsumerService {
@@ -288,14 +289,24 @@ export class ConsumerService {
   async findConsumersByContactInfo(contactInfoList: ContactConsumerRequestDTO[]): Promise<Consumer[]> {
     const consumerList: Consumer[] = [];
     for (const contactInfo of contactInfoList) {
-      //convert ContactPhoneDTO to phone number string
-      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => phone.phoneNumber);
+      //Possibly make this into some utility function, question is where to put it
+      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => {
+        if (phone.digits[0] === "+") {
+          return phone.digits;
+        }
+
+        const { dial_code } = CountryList.findFlagByDialCode(phone.countryCode);
+        return dial_code + phone.digits;
+      });
 
       const consumerResult = await this.consumerRepo.findConsumersByContactInfo({
         id: contactInfo.id,
-        phoneNumbers: contactInfo.phoneNumbers,
-        email: contactInfo.emails,
+        phoneNumbers: possiblePhoneNumbers,
+        emails: contactInfo.emails,
       });
+
+      // TODO: if success, add to list, if not, null out handle and id for export
+      // Should this exported object be a DTO or domain object?
       if (consumerResult.isSuccess) {
         consumerList.push(consumerResult.getValue());
       } else {
