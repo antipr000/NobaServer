@@ -33,7 +33,7 @@ import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { ContactPhoneDTO } from "./dto/ContactPhoneDTO";
-import CountryList from "country-list-with-dial-code-and-flag";
+import { findFlag } from "country-list-with-dial-code-and-flag";
 
 @Injectable()
 export class ConsumerService {
@@ -590,7 +590,7 @@ export class ConsumerService {
       return digits;
     }
 
-    const { dial_code } = CountryList.findFlagByDialCode(countryCode);
+    const { dial_code } = findFlag(countryCode);
     return dial_code + digits;
   }
   private removeAllUnsupportedHandleCharacters(text: string): string {
