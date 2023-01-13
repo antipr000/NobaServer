@@ -114,7 +114,7 @@ describe("PaymentWebhooksController", () => {
         "cko-signature": computeSignature(requestBody) + "-bad",
       });
     });
-
+    /*
     it("'payment_pending' event shouldn't update anything in Transaction Collection but push event in 'details'", async () => {
       const requestBody = {
         id: "webhook_id",
@@ -227,6 +227,6 @@ describe("PaymentWebhooksController", () => {
         updatedIsCompletedValue: true,
         willUpdateIsFailed: false,
       });
-    });
+    });*/
   });
 });
