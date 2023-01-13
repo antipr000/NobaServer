@@ -7,7 +7,7 @@ import { CircleService } from "./circle.service";
 import { CircleDepositOrWithdrawalRequest } from "./dto/CircleDepositOrWithdrawalRequest";
 import { CircleFundsTransferRequestDTO } from "./dto/CircleFundsTransferRequestDTO";
 
-@Controller("/wf/v1/circle") // This defines the path prefix
+@Controller("wf/v1/circle") // This defines the path prefix
 @ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
 @IsNoApiKeyNeeded()
 export class CircleWorkflowController {
