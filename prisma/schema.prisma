@@ -215,6 +215,7 @@ model Transaction {
   createdTimestamp  DateTime?          @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp  DateTime?          @updatedAt // Marking optional so we don't need to set in tests
   transactionEvents TransactionEvent[]
+  Mono              Mono?
 }
 
 model TransactionEvent {
@@ -231,6 +232,21 @@ model TransactionEvent {
   param3        String?
   param4        String?
   param5        String?
+}
+
+model Mono {
+  id                String      @id @default(uuid())
+  monoTransactionID String?
+  collectionLinkID  String      @unique()
+  collectionURL     String
+  state             String
+  nobaTransactionID String      @unique()
+  transaction       Transaction @relation(fields: [nobaTransactionID], references: [id], onDelete: Cascade)
+  createdTimestamp  DateTime?   @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp  DateTime?   @updatedAt // Marking optional so we don't need to set in tests
+
+  @@index([nobaTransactionID])
+  @@index([monoTransactionID])
 }
 
 model Token {

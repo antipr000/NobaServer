@@ -138,6 +138,16 @@ nobaWorkflow:
   connectionTimeoutInMs: 1000
   namespace: "production.h4n3l"
 
+mono:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "PROD_MONO_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "PROD_MONO_BASE_URL"
+  nobaAccountID: ""
+  awsSecretNameForNobaAccountID: "PROD_MONO_NOBA_ACCOUNT_ID"
+  webhookSecret: ""
+  awsSecretNameForWebhookSecret: "PROD_MONO_WEBHOOK_SECRET"
+
 dependencies:
   emailClient: "SENDGRID"
 
