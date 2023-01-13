@@ -196,16 +196,21 @@ export default async function loadAppConfigs() {
     extraSecretsFiles.push(join(configsDir, "secrets.yaml"));
   }
 
+  console.log("Reading configs from YAML files...");
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
 
+  console.log("Configuring AWS credentials...");
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
+  console.log("Configuring vendor credentials...");
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
+  console.log("Ensuring dev-only configs are not set in non-dev envs...");
   const filteredConfigs = ensureDevOnlyConfig(environment, vendorConfigs);
 
   // initializeAWSEnv();
 
   //validate configs
+  console.log("Validating configs...");
   return Joi.attempt(filteredConfigs, appConfigsJoiValidationSchema);
 }
 

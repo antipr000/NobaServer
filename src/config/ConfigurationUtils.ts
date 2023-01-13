@@ -213,6 +213,7 @@ export function setEnvironmentProperty(key: string, value: string): void {
 }
 
 export async function getParameterValue(awsSecretKey: string, customValue: string): Promise<string> {
+  console.log(`${new Date().toISOString()} - Getting parameter value for ${awsSecretKey} and ${customValue}`);
   if (awsSecretKey === undefined || awsSecretKey == null || awsSecretKey === "") {
     if (customValue === undefined || customValue === "") {
       throw Error(`Neither ${awsSecretKey} nor ${customValue} is set.`);
@@ -220,7 +221,10 @@ export async function getParameterValue(awsSecretKey: string, customValue: strin
     return customValue;
   }
 
-  return SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
+  console.log(`${new Date().toISOString()} - Fetching secret`);
+  const secret = SecretProvider.fetchSecretFromAWSSecretManager(awsSecretKey);
+  console.log(`${new Date().toISOString()} - Fetched secret`);
+  return secret;
 }
 
 // Use this if there is no default needed
