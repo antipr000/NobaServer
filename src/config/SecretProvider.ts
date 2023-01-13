@@ -3,7 +3,7 @@ import { SecretsManager } from "aws-sdk";
 export const GLOBAL_SECRETS_CACHE: { [key: string]: string } = {};
 
 export class SecretProvider {
-  async loadAWSMasterSecret(secretName: string) {
+  static async loadAWSMasterSecret(secretName: string) {
     const masterSecret = await SecretProvider.fetchSecretFromAWSSecretManager(secretName, true);
     for (const key in masterSecret) {
       GLOBAL_SECRETS_CACHE[key] = masterSecret[key];

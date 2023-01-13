@@ -202,8 +202,7 @@ export default async function loadAppConfigs() {
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
-  const secretProvider = new SecretProvider();
-  await secretProvider.loadAWSMasterSecret(configs[AWS_MASTER_SECRET]);
+  await SecretProvider.loadAWSMasterSecret(configs[AWS_MASTER_SECRET]);
 
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
   const filteredConfigs = ensureDevOnlyConfig(environment, vendorConfigs);
