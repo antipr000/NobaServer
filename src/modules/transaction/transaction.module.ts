@@ -10,6 +10,7 @@ import { TemporalModule } from "../../infra/temporal/temporal.module";
 import { LimitsService } from "./limits.service";
 import { CommonModule } from "../common/common.module";
 import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "./mapper/transaction.mapper.service";
+import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 
 @Module({
   imports: [InfraProvidersModule, TransactionRepoModule, ConsumerModule, TemporalModule, CommonModule],
@@ -22,6 +23,7 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
       provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
       useClass: TransactionMappingService,
     },
+    TransactionWorkflowMapper,
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
