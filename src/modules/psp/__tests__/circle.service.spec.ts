@@ -44,6 +44,20 @@ describe("CircleService", () => {
     circleService = app.get<CircleService>(CircleService);
   });
 
+  describe("checkCircleHealth", () => {
+    it("should return true when circle client is working", async () => {
+      when(circleClient.checkCircleHealth()).thenResolve(true);
+      const result = await circleService.checkCircleHealth();
+      expect(result).toEqual(true);
+    });
+
+    it("should return false", async () => {
+      when(circleClient.checkCircleHealth()).thenResolve(false);
+      const result = await circleService.checkCircleHealth();
+      expect(result).toEqual(false);
+    });
+  });
+
   describe("getOrCreateWallet", () => {
     it("should return a wallet id", async () => {
       when(circleRepo.getCircleWalletID("consumerID")).thenResolve(Result.ok("walletID"));

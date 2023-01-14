@@ -1,49 +1,22 @@
-import { MongoClient } from "mongodb";
+import { Admin, PrismaClient } from "@prisma/client";
 import { AuthenticationService, LoginResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
 import CryptoJS from "crypto-js";
 import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
+import { ConsumerRepoMapper } from "../src/modules/consumer/mappers/ConsumerRepoMapper";
 
-export const fetchOtpFromDb = async (mongoUri: string, email: string, identityType: string): Promise<number> => {
-  // Setup a mongodb client for interacting with "admins" collection.
-  const mongoClient = new MongoClient(mongoUri);
-  await mongoClient.connect();
+export const TEST_OTP = 222222;
 
-  const otpCollection = mongoClient.db("").collection("otps");
-  const otpDocumentsCursor = await otpCollection.find({});
-  let otp = undefined;
+export const insertNobaAdmin = async (ignore: any, email: string, id: string, role: string): Promise<Admin> => {
+  const prisma = new PrismaClient();
+  await prisma.$connect();
 
-  while (await otpDocumentsCursor.hasNext()) {
-    const otpDocument = await otpDocumentsCursor.next();
-    // console.log(otpDocument);
-
-    if ((otpDocument.emailOrPhone ?? "") === email && (otpDocument.identityType ?? "") === identityType) {
-      otp = otpDocument.otp;
-      break;
-    }
-  }
-
-  await mongoClient.close();
-
-  if (otp === undefined) throw Error(`No login with email '${email}' & identityType '${identityType}'.`);
-  return otp;
-};
-
-export const insertNobaAdmin = async (mongoUri: string, email: string, id: string, role: string): Promise<boolean> => {
-  // Setup a mongodb client for interacting with "admins" collection.
-  const mongoClient = new MongoClient(mongoUri);
-  await mongoClient.connect();
-
-  const adminCollection = mongoClient.db("").collection("admins");
-  await adminCollection.insertOne({
-    _id: id as any,
-    email: email,
-    role: role,
-    name: "Test",
+  const admin = await prisma.admin.create({
+    data: { email: email, name: "Test", role: role },
   });
 
-  await mongoClient.close();
-  return true;
+  await prisma.$disconnect();
+  return admin;
 };
 
 export const setAccessTokenForTheNextRequests = accessToken => {
@@ -58,7 +31,7 @@ export const TEST_API_KEY = "testapikey";
 export const TEST_SECRET_KEY = "testsecretkey";
 
 export const loginAndGetResponse = async (
-  mongoUri: string,
+  ignore: any,
   email: string,
   identityType: string,
 ): Promise<LoginResponseDTO & ResponseStatus> => {
@@ -76,7 +49,7 @@ export const loginAndGetResponse = async (
   });
   const verifyOtpRequestBody = {
     emailOrPhone: email,
-    otp: await fetchOtpFromDb(mongoUri, email, identityType),
+    otp: TEST_OTP,
     identityType: identityType as any,
   };
 
@@ -94,18 +67,16 @@ export const loginAndGetResponse = async (
   })) as LoginResponseDTO & ResponseStatus;
 };
 
-export async function patchConsumer(consumer: Partial<ConsumerProps>, mongoUri: string) {
-  const mongoClient = new MongoClient(mongoUri);
-  await mongoClient.connect();
+export async function patchConsumer(consumer: Partial<ConsumerProps>, ignore: any) {
+  const prisma = new PrismaClient();
+  await prisma.$connect();
 
-  const consumersCollection = mongoClient.db("").collection("consumers");
-  await consumersCollection.findOneAndUpdate(
-    { email: consumer.email },
-    {
-      $set: consumer,
-    },
-  );
-  await mongoClient.close();
+  await prisma.consumer.update({
+    where: { email: consumer.email },
+    data: new ConsumerRepoMapper().toUpdateConsumerInput(consumer),
+  });
+
+  await prisma.$disconnect();
 }
 
 export const computeSignature = (
@@ -120,13 +91,4 @@ export const computeSignature = (
     `${timestamp}${apiKey}${requestMethod}${requestPath.split("?")[0]}${requestBody}`,
   );
   return CryptoJS.enc.Hex.stringify(CryptoJS.HmacSHA256(signatureString, CryptoJS.enc.Utf8.parse(secretKey)));
-};
-
-export const dropAllCollections = async (mongoUri: string) => {
-  const mongoClient = new MongoClient(mongoUri);
-  await mongoClient.connect();
-  const collections = ["admins", "locks", "otps", "transactions", "consumers", "verificationdatas"];
-
-  const promises = collections.map(collection => mongoClient.db("").dropCollection(collection));
-  await Promise.all(promises);
 };

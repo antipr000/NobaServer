@@ -11,6 +11,7 @@ awsAccountID: "210194402305"
 
 awsAccessKeyId: "test"
 awsSecretAccessKey: "test"
+awsMasterSecret: "LOWERS_MASTER_SECRET"
 
 kms:
   context:

@@ -8,6 +8,7 @@ logFilePath: "noba_server.log"
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
 awsAccountID: "210194402305"
+awsMasterSecret: "LOWERS_MASTER_SECRET"
 
 kms:
   context:

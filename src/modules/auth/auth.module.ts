@@ -4,7 +4,6 @@ import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./jwt.strategy";
 import { jwtConstants } from "./constants";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { ConfigModule } from "@nestjs/config";
 import { AuthController } from "./auth.controller";
@@ -33,7 +32,6 @@ import { SQLTokenRepo } from "./repo/sql.token.repo";
   providers: [
     JwtStrategy,
     HeaderValidationService,
-    DBProvider,
     {
       provide: "TokenRepo",
       useClass: SQLTokenRepo,
