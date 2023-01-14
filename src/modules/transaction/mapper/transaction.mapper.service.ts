@@ -5,11 +5,16 @@ import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionEvent } from "../domain/TransactionEvent";
+import { MonoTransaction } from "../../../modules/psp/domain/Mono";
+import { MonoService } from "../../../modules/psp/mono/mono.service";
 
 @Injectable()
 export class TransactionMappingService {
   @Inject()
   private readonly consumerService: ConsumerService;
+
+  @Inject()
+  private readonly monoService: MonoService;
 
   async toTransactionDTO(
     transaction: Transaction,
@@ -33,6 +38,8 @@ export class TransactionMappingService {
           : await this.consumerService.getConsumer(transaction.creditConsumerID);
     }
 
+    const monoTransaction: MonoTransaction = await this.monoService.getTransactionByNobaTransactionID(transaction.id);
+
     return {
       transactionRef: transaction.transactionRef,
       workflowName: transaction.workflowName,
@@ -48,6 +55,7 @@ export class TransactionMappingService {
       updatedTimestamp: transaction.updatedTimestamp,
       memo: transaction.memo,
       transactionEvents: transactionEvents?.map(event => this.toTransactionEventDTO(event)),
+      ...(monoTransaction && { paymentCollectionLink: monoTransaction.collectionURL }),
     };
   }
 

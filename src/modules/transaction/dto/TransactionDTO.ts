@@ -54,6 +54,9 @@ export class TransactionDTO {
   updatedTimestamp: Date;
 
   @ApiPropertyOptional()
+  paymentCollectionLink?: string;
+
+  @ApiPropertyOptional()
   memo?: string;
 
   @ApiPropertyOptional()
