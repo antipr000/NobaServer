@@ -66,7 +66,7 @@ describe("MonoWorkflowControllerTests", () => {
     });
   });
 
-  describe("getMonoTransaction", () => {
+  describe("getMonoTransactionByNobaTransactionID", () => {
     it("should take the MonoTransaction from service and forwards it to mappers", async () => {
       const monoTransaction: MonoTransaction = {
         collectionLinkID: "collectionLinkID",
@@ -88,23 +88,25 @@ describe("MonoWorkflowControllerTests", () => {
         updatedTimestamp: monoTransaction.updatedTimestamp,
       };
 
-      when(monoService.getTransactionByCollectionLinkID(anyString())).thenResolve(monoTransaction);
+      when(monoService.getTransactionByNobaTransactionID(anyString())).thenResolve(monoTransaction);
       when(monoWorkflowControllerMappers.convertToMonoTransactionDTO(anything())).thenReturn(monoTransactionDTO);
 
-      const response: MonoTransactionDTO = await monoWorkflowController.getMonoTransaction("collectionLinkID");
+      const response: MonoTransactionDTO = await monoWorkflowController.getMonoTransactionByNobaTransactionID(
+        "nobaTransactionID",
+      );
 
-      const [propagatedCollectionLinkID] = capture(monoService.getTransactionByCollectionLinkID).last();
+      const [propagatedCollectionLinkID] = capture(monoService.getTransactionByNobaTransactionID).last();
       const [propagatedMonoTransaction] = capture(monoWorkflowControllerMappers.convertToMonoTransactionDTO).last();
-      expect(propagatedCollectionLinkID).toEqual("collectionLinkID");
+      expect(propagatedCollectionLinkID).toEqual("nobaTransactionID");
       expect(propagatedMonoTransaction).toEqual(monoTransaction);
     });
 
-    it("should throw NotFoundException if the Mono Transaction with specified collectionLinkID is not found", async () => {
-      when(monoService.getTransactionByCollectionLinkID(anyString())).thenResolve(null);
+    it("should throw NotFoundException if the Mono Transaction with specified nobaTransactionID is not found", async () => {
+      when(monoService.getTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
-      await expect(monoWorkflowController.getMonoTransaction("collectionLinkID")).rejects.toThrowError(
-        NotFoundException,
-      );
+      await expect(
+        monoWorkflowController.getMonoTransactionByNobaTransactionID("nobaTransactionID"),
+      ).rejects.toThrowError(NotFoundException);
     });
   });
 });

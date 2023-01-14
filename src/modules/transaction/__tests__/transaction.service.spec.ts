@@ -127,6 +127,24 @@ describe("TransactionServiceTests", () => {
     });
   });
 
+  describe("getTransactionByTransactionID", () => {
+    it("should return the transaction if the transactionID matches", async () => {
+      const { transaction } = getRandomTransaction("consumerID");
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
+
+      const returnedTransaction = await transactionService.getTransactionByTransactionID(transaction.id);
+      expect(returnedTransaction).toEqual(transaction);
+    });
+
+    it("should return 'null' if the transaction is not found", async () => {
+      const { transaction } = getRandomTransaction("consumerID");
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(null);
+
+      const returnedTransaction = await transactionService.getTransactionByTransactionID(transaction.id);
+      expect(returnedTransaction).toBeNull();
+    });
+  });
+
   describe("initiateTransaction", () => {
     it("should initiate a DEBIT_CONSUMER_WALLET transaction", async () => {
       const consumer = getRandomConsumer("consumerID");

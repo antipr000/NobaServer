@@ -42,6 +42,10 @@ export class TransactionService {
     return transaction;
   }
 
+  async getTransactionByTransactionID(transactionID: string): Promise<Transaction> {
+    return await this.transactionRepo.getTransactionByID(transactionID);
+  }
+
   async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
     return await this.transactionRepo.getFilteredTransactions(filter);
   }

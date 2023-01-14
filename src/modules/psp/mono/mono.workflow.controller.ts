@@ -39,13 +39,15 @@ export class MonoWorkflowController {
     await this.monoService.processWebhookEvent(requestBody, monoSignature);
   }
 
-  @Get("/:collectionLinkID")
+  @Get("/nobaTransactions/:nobaTransactionID")
   @ApiOperation({ summary: "Fetches the Mono Transaction for the specified 'collectionLinkID'" })
   @ApiResponse({ status: HttpStatus.OK, type: MonoTransactionDTO })
-  async getMonoTransaction(@Param("collectionLinkID") collectionLinkID: string) {
-    const monoTransaction: MonoTransaction = await this.monoService.getTransactionByCollectionLinkID(collectionLinkID);
+  async getMonoTransactionByNobaTransactionID(@Param("nobaTransactionID") nobaTransactionID: string) {
+    const monoTransaction: MonoTransaction = await this.monoService.getTransactionByNobaTransactionID(
+      nobaTransactionID,
+    );
     if (!monoTransaction) {
-      throw new NotFoundException(`Mono Transaction not found for collectionLinkID: ${collectionLinkID}`);
+      throw new NotFoundException(`Mono Transaction not found for nobaTransactionID: ${nobaTransactionID}`);
     }
 
     return this.monoWorkflowControllerMappers.convertToMonoTransactionDTO(monoTransaction);
