@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { CommonModule } from "../common/common.module";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
@@ -13,7 +12,7 @@ import { ConsumerRepoModule } from "./repos/consumer.repo.module";
 @Module({
   imports: [InfraProvidersModule, CommonModule, NotificationsModule, PspModule, ConsumerRepoModule],
   controllers: [ConsumerController],
-  providers: [ConsumerService, DBProvider, SanctionedCryptoWalletService, SMSService],
+  providers: [ConsumerService, SanctionedCryptoWalletService, SMSService],
   exports: [ConsumerService],
 })
 export class ConsumerModule {}

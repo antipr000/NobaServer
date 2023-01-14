@@ -8,6 +8,7 @@ logFilePath: "noba_server.log"
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
 awsAccountID: "210194402305"
+awsMasterSecret: "LOWERS_MASTER_SECRET"
 
 kms:
   context:
@@ -131,6 +132,16 @@ nobaWorkflow:
 
 dependencies:
   emailClient: "SENDGRID"
+
+mono:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "TEST_MONO_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "TEST_MONO_BASE_URL"
+  nobaAccountID: ""
+  awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
+  webhookSecret: ""
+  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
 
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"

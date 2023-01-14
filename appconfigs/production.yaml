@@ -8,6 +8,7 @@ logFilePath: "/home/ubuntu/noba_server.log"
 awsRegion: "us-east-1"
 awsDefaultRegion: "us-east-1"
 awsAccountID: "210194402305"
+awsMasterSecret: "PROD_MASTER_SECRET"
 
 kms:
   context:
@@ -137,6 +138,16 @@ nobaWorkflow:
   awsSecretForTemporalCloudPrivateKey: "PROD_TEMPORAL_CLOUD_PRIVATE_KEY"
   connectionTimeoutInMs: 1000
   namespace: "production.h4n3l"
+
+mono:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "PROD_MONO_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "PROD_MONO_BASE_URL"
+  nobaAccountID: ""
+  awsSecretNameForNobaAccountID: "PROD_MONO_NOBA_ACCOUNT_ID"
+  webhookSecret: ""
+  awsSecretNameForWebhookSecret: "PROD_MONO_WEBHOOK_SECRET"
 
 dependencies:
   emailClient: "SENDGRID"

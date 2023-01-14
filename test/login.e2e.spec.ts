@@ -15,18 +15,14 @@ const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, LoginResponseDTO } from "./api_client";
 import { ConsumerService } from "./api_client/services/ConsumerService";
 import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
-import {
-  computeSignature,
-  fetchOtpFromDb,
-  insertNobaAdmin,
-  setAccessTokenForTheNextRequests,
-  TEST_API_KEY,
-} from "./common";
+import { computeSignature, insertNobaAdmin, setAccessTokenForTheNextRequests, TEST_OTP, TEST_API_KEY } from "./common";
 import { ResponseStatus } from "./api_client/core/request";
 import { IntegrationTestUtility } from "./TestUtils";
 
 describe("Authentication", () => {
   jest.setTimeout(20000);
+
+  const staticOTP = TEST_OTP;
 
   let integrationTestUtils: IntegrationTestUtility;
   let timestamp;
@@ -82,7 +78,7 @@ describe("Authentication", () => {
 
       const verifyOtpRequestBody: VerifyOtpRequestDTO = {
         emailOrPhone: consumerEmail,
-        otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+        otp: staticOTP,
         identityType: "CONSUMER",
       };
 
@@ -150,7 +146,7 @@ describe("Authentication", () => {
         "/v1/auth/verifyotp",
         JSON.stringify({
           emailOrPhone: consumerEmail,
-          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          otp: staticOTP,
           identityType: "CONSUMER",
         }),
       );
@@ -161,7 +157,7 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: {
           emailOrPhone: consumerEmail,
-          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          otp: staticOTP,
           identityType: "CONSUMER",
         },
       })) as LoginResponseDTO & ResponseStatus;
@@ -195,7 +191,7 @@ describe("Authentication", () => {
         "/v1/auth/verifyotp",
         JSON.stringify({
           emailOrPhone: consumerEmail,
-          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          otp: staticOTP,
           identityType: "CONSUMER",
         }),
       );
@@ -206,7 +202,7 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: {
           emailOrPhone: consumerEmail,
-          otp: await fetchOtpFromDb("", consumerEmail, "CONSUMER"),
+          otp: staticOTP,
           identityType: "CONSUMER",
         },
       })) as LoginResponseDTO & ResponseStatus;
@@ -351,7 +347,7 @@ describe("Authentication", () => {
         "/v1/auth/verifyotp",
         JSON.stringify({
           emailOrPhone: nobaAdminEmail,
-          otp: await fetchOtpFromDb("", nobaAdminEmail, "NOBA_ADMIN"),
+          otp: staticOTP,
           identityType: "NOBA_ADMIN",
         }),
       );
@@ -362,7 +358,7 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: {
           emailOrPhone: nobaAdminEmail,
-          otp: await fetchOtpFromDb("", nobaAdminEmail, "NOBA_ADMIN"),
+          otp: staticOTP,
           identityType: "NOBA_ADMIN",
         },
       })) as LoginResponseDTO & ResponseStatus;

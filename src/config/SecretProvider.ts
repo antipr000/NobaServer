@@ -3,12 +3,24 @@ import { SecretsManager } from "aws-sdk";
 export const GLOBAL_SECRETS_CACHE: { [key: string]: string } = {};
 
 export class SecretProvider {
+  static async loadAWSMasterSecret(secretName: string) {
+    const masterSecret = await SecretProvider.fetchSecretFromAWSSecretManager(secretName, true);
+    for (const key in masterSecret) {
+      GLOBAL_SECRETS_CACHE[key] = masterSecret[key];
+    }
+  }
+
   // Fetches the 'value' of the secret named `secretName`.
   // The function assumes that the 'SECRET NAME' is exactly same the 'SECRET_KEY' with which the actual secret-value is stored.
   // Note the 'SECRET NAME' is different than 'SECRET ARN' and this function expects 'SECRET NAME'.
   // Ref - https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SecretsManager.html#getSecretValue-property
-  static async fetchSecretFromAWSSecretManager(secretName: string): Promise<string> {
+  static async fetchSecretFromAWSSecretManager(secretName: string, master: boolean = false): Promise<any> {
     return new Promise((resolve, reject) => {
+      // First check the global cache
+      if (GLOBAL_SECRETS_CACHE[secretName]) {
+        resolve(GLOBAL_SECRETS_CACHE[secretName]);
+      }
+
       new SecretsManager().getSecretValue({ SecretId: secretName }, function (err, data) {
         if (err) {
           console.log(
@@ -20,7 +32,11 @@ export class SecretProvider {
           if ("SecretString" in data) {
             try {
               const secretKeyValue = JSON.parse(data.SecretString);
-              resolve(secretKeyValue[secretName] ?? null);
+              if (master) {
+                resolve(secretKeyValue);
+              } else {
+                resolve(secretKeyValue[secretName] ?? null);
+              }
             } catch (e) {
               // Not JSON
               resolve(data.SecretString);

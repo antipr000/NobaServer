@@ -18,10 +18,6 @@ import {
   getParameterValueFromAWSSecrets,
   getPropertyFromEnvironment,
   isPropertyPresentInEnvironmentVariables,
-  MONGO_AWS_SECRET_KEY_FOR_URI_ATTR,
-  MONGO_CONFIG_KEY,
-  MONGO_URI,
-  MONGO_URI_ENV_KEY,
   resetPropertyFromEnvironment,
   SENDGRID_API_KEY,
   SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
@@ -116,13 +112,22 @@ import {
   NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_CLIENT_URL,
   NOBA_WORKFLOW_NAMESPACE,
   NOBA_WORKFLOW_CONNECTION_TIMEOUT_IN_MILLIS,
+  MONO_AWS_SECRET_KEY_FOR_BASE_URL,
+  MONO_AWS_SECRET_KEY_FOR_BEARER_TOKEN,
+  MONO_BEARER_TOKEN,
+  MONO_BASE_URL,
+  MONO_CONFIG_KEY,
+  MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID,
+  MONO_NOBA_ACCOUNT_ID,
+  MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET,
+  MONO_WEBHOOK_SECRET,
+  AWS_MASTER_SECRET,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
 
 import { TwilioConfigs } from "./configtypes/TwilioConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";
-import { MongoConfigs } from "./configtypes/MongoConfigs";
 import { SardineConfigs } from "./configtypes/SardineConfigs";
 import { NobaConfigs } from "./configtypes/NobaConfigs";
 import { ZerohashConfigs } from "./configtypes/ZerohashConfigs";
@@ -134,6 +139,8 @@ import { PlaidConfigs } from "./configtypes/PlaidConfigs";
 import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs";
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
+import { MonoConfigs } from "./configtypes/MonoConfig";
+import { SecretProvider } from "./SecretProvider";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -195,6 +202,8 @@ export default async function loadAppConfigs() {
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
+  await SecretProvider.loadAWSMasterSecret(configs[AWS_MASTER_SECRET]);
+
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
   const filteredConfigs = ensureDevOnlyConfig(environment, vendorConfigs);
 
@@ -290,7 +299,6 @@ async function configureAllVendorCredentials(
     configureSendgridCredentials,
     configureTwilioCredentials,
     configureCheckoutCredentials,
-    configureMongoCredentials,
     configureSardineCredentials,
     configureZerohashCredentials,
     configureAwsKmsCredentials,
@@ -300,6 +308,7 @@ async function configureAllVendorCredentials(
     configureDependencies,
     configureCircleConfigurations,
     configureNobaWorkflowCredentials,
+    configureMonoCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -368,6 +377,40 @@ async function configureTwilioCredentials(
   twilioConfigs.authToken = await getParameterValue(twilioConfigs.awsSecretNameForAuthToken, twilioConfigs.authToken);
 
   configs[TWILIO_CONFIG_KEY] = twilioConfigs;
+  return configs;
+}
+
+async function configureMonoCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const monoConfig: MonoConfigs = configs[MONO_CONFIG_KEY];
+
+  if (monoConfig === undefined) {
+    const errorMessage =
+      "\n'Mono' configurations are required. Please configure the Mono credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${MONO_CONFIG_KEY}" and populate ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID}" or "${MONO_NOBA_ACCOUNT_ID}") ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET}" or "${MONO_WEBHOOK_SECRET}") ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_BASE_URL}" or "${MONO_BASE_URL}") AND ` +
+      `("${MONO_AWS_SECRET_KEY_FOR_BEARER_TOKEN}" or "${MONO_BEARER_TOKEN}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  monoConfig.baseURL = await getParameterValue(monoConfig.awsSecretNameForBaseURL, monoConfig.baseURL);
+  monoConfig.bearerToken = await getParameterValue(monoConfig.awsSecretNameForBearerToken, monoConfig.bearerToken);
+  monoConfig.webhookSecret = await getParameterValue(
+    monoConfig.awsSecretNameForWebhookSecret,
+    monoConfig.webhookSecret,
+  );
+  monoConfig.nobaAccountID = await getParameterValue(
+    monoConfig.awsSecretNameForNobaAccountID,
+    monoConfig.nobaAccountID,
+  );
+
+  configs[MONO_CONFIG_KEY] = monoConfig;
   return configs;
 }
 
@@ -448,46 +491,6 @@ async function configureDependencies(
   }
 
   configs[DEPENDENCY_CONFIG_KEY] = dependencyConfigs;
-  return configs;
-}
-
-async function configureMongoCredentials(
-  environment: AppEnvironment,
-  configs: Record<string, any>,
-): Promise<Record<string, any>> {
-  let mongoConfigs: MongoConfigs = configs[MONGO_CONFIG_KEY];
-
-  if (environment === AppEnvironment.E2E_TEST) {
-    if (!isPropertyPresentInEnvironmentVariables(MONGO_URI_ENV_KEY)) {
-      const errorMessage = `\n'Mongo' configurations are required. Please configure '${MONGO_URI_ENV_KEY}' in environment varaible. current is ${JSON.stringify(
-        process.env,
-      )}`;
-
-      throw Error(errorMessage);
-    }
-
-    mongoConfigs = {} as MongoConfigs;
-    mongoConfigs.uri = getPropertyFromEnvironment(MONGO_URI_ENV_KEY);
-    mongoConfigs.awsSecretNameForUri = undefined;
-  }
-
-  if (mongoConfigs === undefined) {
-    const errorMessage =
-      "\n'Mongo' configurations are required. Please configure the MongoDB URI in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${MONGO_CONFIG_KEY}" and populate "${MONGO_AWS_SECRET_KEY_FOR_URI_ATTR}" or "${MONGO_URI}" ` +
-      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
-
-    throw Error(errorMessage);
-  }
-
-  mongoConfigs.uri = await getParameterValue(mongoConfigs.awsSecretNameForUri, mongoConfigs.uri);
-
-  if (environment === AppEnvironment.DEV) {
-    const hostname = os.hostname().replace(".", "_");
-    mongoConfigs.uri += `_${hostname}`;
-  }
-
-  configs[MONGO_CONFIG_KEY] = mongoConfigs;
   return configs;
 }
 

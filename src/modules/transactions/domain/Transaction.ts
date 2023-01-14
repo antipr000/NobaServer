@@ -91,12 +91,8 @@ export interface Discounts {
 export const transactionJoiValidationKeys: KeysRequired<TransactionProps> = {
   ...basePropsJoiSchemaKeys,
   _id: Joi.string().min(10).required(),
-  transactionID: Joi.string()
-    .required()
-    .meta({ _mongoose: { index: true } }),
-  userId: Joi.string()
-    .required()
-    .meta({ _mongoose: { index: true } }),
+  transactionID: Joi.string().required(),
+  userId: Joi.string().required(),
   sessionKey: Joi.string().optional(), // TODO(#310) Make it required once we no longer have old txns in the database.
   transactionStatus: Joi.string()
     // .valid(...Object.values(TransactionStatus)) //TODO Change this

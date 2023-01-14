@@ -7,7 +7,6 @@ import { LocationService } from "./location.service";
 import { KmsService } from "./kms.service";
 import { SMSService } from "./sms.service";
 import { ConfigurationProviderService } from "./configuration.provider.service";
-import { DBProvider } from "../../infraproviders/DBProvider";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
 import { SQLCreditCardBinDataRepo } from "./repo/sql.creditcardbindata.repo";
@@ -21,7 +20,6 @@ import { ExchangeRateService } from "./exchangerate.service";
 @Module({
   imports: [InfraProvidersModule],
   providers: [
-    DBProvider,
     CsvService,
     SMSService,
     KmsService,

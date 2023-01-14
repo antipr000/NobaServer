@@ -12,6 +12,7 @@ awsAccountID: "210194402305"
 
 awsAccessKeyId: "test"
 awsSecretAccessKey: "test"
+awsMasterSecret: "LOWERS_MASTER_SECRET"
 
 # TODO(#279): Refactor all the secrets once e2e_test env shifts to ec2.
 kms:
@@ -139,6 +140,16 @@ nobaWorkflow:
   awsSecretForTemporalCloudPrivateKey: ""
   connectionTimeoutInMs: 1000
   namespace: "e2e_test"
+
+mono:
+  bearerToken: "DUMMY_TOKEN"
+  awsSecretNameForBearerToken: ""
+  baseURL: "https://noba.com"
+  awsSecretNameForBaseURL: ""
+  nobaAccountID: "DUMMY_ACCOUNT"
+  awsSecretNameForNobaAccountID: ""
+  webhookSecret: "DUMMY_WEBHOOK_SECRET"
+  awsSecretNameForWebhookSecret: ""
 
 dependencies:
   emailClient: "STUB"
