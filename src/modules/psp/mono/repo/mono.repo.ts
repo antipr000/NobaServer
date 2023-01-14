@@ -2,7 +2,7 @@ import { MonoTransaction, MonoTransactionCreateRequest, MonoTransactionUpdateReq
 
 export interface IMonoRepo {
   createMonoTransaction(request: MonoTransactionCreateRequest): Promise<MonoTransaction>;
-  updateMonoTransaction(nobaTransactionID: string, request: MonoTransactionUpdateRequest): Promise<MonoTransaction>;
+  updateMonoTransaction(id: string, request: MonoTransactionUpdateRequest): Promise<MonoTransaction>;
   // updateMonoTransaction(monoCollectionLinkID: string, request: MonoTransactionUpdateRequest): Promise<MonoTransaction>;
   getMonoTransactionByNobaTransactionID(nobaTransactionID: string): Promise<MonoTransaction>;
   getMonoTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction>;

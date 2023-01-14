@@ -17,6 +17,8 @@ import { ExchangeRateService } from "../common/exchangerate.service";
 import { AddTransactionEventDTO, TransactionEventDTO } from "./dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
 import { UpdateTransactionDTO } from "./dto/TransactionDTO";
+import { MonoService } from "../psp/mono/mono.service";
+import { MonoCurrency, MonoTransaction } from "../psp/domain/Mono";
 
 @Injectable()
 export class TransactionService {
@@ -26,6 +28,7 @@ export class TransactionService {
     private readonly consumerService: ConsumerService,
     private readonly workflowExecutor: WorkflowExecutor,
     private readonly exchangeRateService: ExchangeRateService,
+    private readonly monoService: MonoService,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -269,11 +272,15 @@ export class TransactionService {
             message: "Both credit consumer and debit consumer cannot be set for a transaction",
           });
         }
-        this.workflowExecutor.executeCreditConsumerWalletWorkflow(
-          savedTransaction.creditConsumerID,
-          savedTransaction.creditAmount,
-          savedTransaction.transactionRef,
-        );
+
+        await this.monoService.createMonoTransaction({
+          amount: savedTransaction.creditAmount,
+          currency: savedTransaction.creditCurrency as MonoCurrency,
+          consumerID: savedTransaction.creditConsumerID,
+          nobaTransactionID: savedTransaction.id,
+        });
+
+        this.workflowExecutor.executeCreditConsumerWalletWorkflow(savedTransaction.id, savedTransaction.transactionRef);
         break;
       default:
         throw new ServiceException({

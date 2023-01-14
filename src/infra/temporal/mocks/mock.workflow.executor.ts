@@ -6,7 +6,7 @@ export function getMockWorkflowExecutorWithDefaults(): WorkflowExecutor {
   when(
     workflowExecutor.executeConsumerWalletTransferWorkflow(anyString(), anyString(), anyNumber(), anyString()),
   ).thenReject(new Error("Not implemented!"));
-  when(workflowExecutor.executeCreditConsumerWalletWorkflow(anyString(), anyNumber(), anyString())).thenReject(
+  when(workflowExecutor.executeCreditConsumerWalletWorkflow(anyString(), anyString())).thenReject(
     new Error("Not implemented!"),
   );
   when(workflowExecutor.executeDebitConsumerWalletWorkflow(anyString(), anyNumber(), anyString())).thenReject(

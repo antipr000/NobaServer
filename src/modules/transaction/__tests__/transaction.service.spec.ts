@@ -13,7 +13,7 @@ import {
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
 import { TRANSACTION_REPO_PROVIDER } from "../repo/transaction.repo.module";
-import { anything, deepEqual, instance, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -29,6 +29,9 @@ import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "../domain/TransactionEvent";
 import { UpdateTransactionDTO } from "../dto/TransactionDTO";
+import { MonoService } from "../../../modules/psp/mono/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { MonoCurrency } from "../../../modules/psp/domain/Mono";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -38,6 +41,7 @@ describe("TransactionServiceTests", () => {
   let transactionService: TransactionService;
   let consumerService: ConsumerService;
   let workflowExecutor: WorkflowExecutor;
+  let monoService: MonoService;
   let exchangeRateService: ExchangeRateService;
 
   beforeAll(async () => {
@@ -45,6 +49,7 @@ describe("TransactionServiceTests", () => {
     consumerService = getMockConsumerServiceWithDefaults();
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
+    monoService = getMockMonoServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -69,6 +74,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: ExchangeRateService,
           useFactory: () => instance(exchangeRateService),
+        },
+        {
+          provide: MonoService,
+          useFactory: () => instance(monoService),
         },
         TransactionService,
       ],
@@ -187,12 +196,9 @@ describe("TransactionServiceTests", () => {
       });
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
+      when(monoService.createMonoTransaction(anything())).thenResolve();
       when(
-        workflowExecutor.executeCreditConsumerWalletWorkflow(
-          transaction.creditConsumerID,
-          transaction.creditAmount,
-          transaction.transactionRef,
-        ),
+        workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef),
       ).thenResolve(transaction.transactionRef);
 
       const returnedTransactionRef = await transactionService.initiateTransaction(
@@ -202,6 +208,14 @@ describe("TransactionServiceTests", () => {
       );
 
       expect(returnedTransactionRef).toEqual(transaction.transactionRef);
+
+      const [propagatedMonoCreationRequest] = capture(monoService.createMonoTransaction).last();
+      expect(propagatedMonoCreationRequest).toEqual({
+        amount: transaction.creditAmount,
+        currency: transaction.creditCurrency as MonoCurrency,
+        consumerID: transaction.creditConsumerID,
+        nobaTransactionID: transaction.id,
+      });
     });
 
     it("should initiate a CONSUMER_WALLET_TRANSFER transaction", async () => {

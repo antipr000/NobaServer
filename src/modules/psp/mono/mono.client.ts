@@ -12,7 +12,7 @@ import { InternalServiceErrorException } from "../../../core/exception/CommonApp
 @Injectable()
 export class MonoClient {
   private readonly apiVersion = "v1";
-  private readonly expiryTimeInMillis = 10 * 60 * 1000; // 10 minutes
+  private readonly expiryTimeInMillis = 15 * 60 * 1000; // 15 minutes
 
   private bearerToken: string;
   private baseUrl: string;
@@ -81,6 +81,7 @@ export class MonoClient {
         collectionLinkID: response.data.id,
       };
     } catch (err) {
+      console.log(err.response.data);
       this.logger.error(`Error while creating collection link: ${JSON.stringify(err)}`);
       throw new InternalServiceErrorException({ message: "Error while creating Mono collection link" });
     }

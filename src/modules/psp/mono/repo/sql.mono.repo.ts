@@ -68,10 +68,7 @@ export class SqlMonoRepo implements IMonoRepo {
     }
   }
 
-  async updateMonoTransaction(
-    nobaTransactionID: string,
-    request: MonoTransactionUpdateRequest,
-  ): Promise<MonoTransaction> {
+  async updateMonoTransaction(id: string, request: MonoTransactionUpdateRequest): Promise<MonoTransaction> {
     validateUpdateMonoTransactionRequest(request);
 
     try {
@@ -82,7 +79,7 @@ export class SqlMonoRepo implements IMonoRepo {
 
       const returnedTransaction: PrismaMonoModel = await this.prismaService.mono.update({
         where: {
-          nobaTransactionID: nobaTransactionID,
+          id: id,
         },
         data: transactionUpdate,
       });
@@ -94,7 +91,7 @@ export class SqlMonoRepo implements IMonoRepo {
         throw new NotFoundError({});
       }
       throw new DatabaseInternalErrorException({
-        message: `Error updating the Mono transaction with nobaTransactionID: '${nobaTransactionID}'`,
+        message: `Error updating the Mono transaction with ID: '${id}'`,
       });
     }
   }

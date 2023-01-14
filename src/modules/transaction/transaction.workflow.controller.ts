@@ -54,7 +54,7 @@ export class TransactionWorkflowController {
 
   @Get("/:transactionID")
   @ApiTags("Workflow")
-  @ApiOperation({ summary: "Fetches the transaction for the specified 'transactionRef'" })
+  @ApiOperation({ summary: "Fetches the transaction for the specified 'transactionID'" })
   @ApiResponse({ status: HttpStatus.OK, type: WorkflowTransactionDTO })
   async getTransactionByTransactionID(@Param("transactionID") transactionID: string): Promise<WorkflowTransactionDTO> {
     const transaction: Transaction = await this.transactionService.getTransactionByTransactionID(transactionID);

@@ -223,7 +223,7 @@ describe("SqlMonoRepoTests", () => {
     });
   });
 
-  describe("", () => {
+  describe("updateMonoTransaction", () => {
     it("should update the state to 'SUCCESS' if the CollectionIntentCredited is sent in Webhook Event", async () => {
       const monoTransaction: MonoTransaction = getRandomMonoTransaction();
       const convertedEvent: CollectionIntentCreditedEvent = {

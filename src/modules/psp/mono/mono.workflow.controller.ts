@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { IsNoApiKeyNeeded } from "../../../modules/auth/public.decorator";
 import { Logger } from "winston";
 import { MonoTransaction } from "../domain/Mono";
 import { MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
@@ -20,6 +21,7 @@ import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mapper
 
 @Controller("wf/v1/mono") // This defines the path prefix
 @ApiTags("Mono") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
+@IsNoApiKeyNeeded()
 export class MonoWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
