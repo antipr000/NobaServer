@@ -33,6 +33,8 @@ import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
     AdminModule,
     // TODO: Remove this once we have a proper way to handle PSP dependencies.
     MonoModule,
+    TransactionWorkflowModule,
+    PspWorkflowModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

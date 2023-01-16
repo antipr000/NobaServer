@@ -12,10 +12,12 @@ import { TransactionService } from "./transaction.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { UpdateTransactionRequestDTO } from "./dto/TransactionDTO";
+import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 
 @Controller("wf/v1")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Workflow")
+@IsNoApiKeyNeeded()
 export class TransactionWorkflowController {
   @Inject()
   private readonly transactionService: TransactionService;
