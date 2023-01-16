@@ -3232,6 +3232,11 @@ cosmiconfig@^7.0.1:
     path-type "^4.0.0"
     yaml "^1.10.0"
 
+country-list-with-dial-code-and-flag@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/country-list-with-dial-code-and-flag/-/country-list-with-dial-code-and-flag-3.0.2.tgz#ec3bae4b5fc7b424ee3dacd59f8242aac973a5b9"
+  integrity sha512-9dfosIYjtuPRyFJzt/zDSeYzlRmZ7B6UU7Sm6eG9mldPIhaEscwajQZeZSlrP8c35x+8TlodU/fcF16D+8biiw==
+
 crc-32@^1.2.0:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/crc-32/-/crc-32-1.2.2.tgz#3cad35a934b8bf71f25ca524b6da51fb7eace2ff"

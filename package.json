@@ -55,6 +55,7 @@
     "child_process": "^1.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "country-list-with-dial-code-and-flag": "^3.0.2",
     "credit-card-type": "^9.1.0",
     "crypto-js": "^4.1.1",
     "csv": "^6.2.0",

@@ -1007,6 +1007,92 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("findConsumersByContactInfo", () => {
+    it("should find consumers by contact info", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mockConsumer",
+        phone: "+15559993333",
+        email: "mock@mock.com",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mockConsumer2",
+        phone: "+15559993333",
+        email: "mock2@mock.com",
+      });
+
+      const contactListDTO = [
+        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
+        { id: "linkid2", phoneNumbers: [], emails: [consumer2.props.email] },
+      ];
+
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(Result.ok(consumer));
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[1]))).thenResolve(Result.ok(consumer2));
+
+      const consumers = await consumerService.findConsumersByContactInfo(contactListDTO);
+      expect(consumers).toEqual([consumer, consumer2]);
+    });
+
+    it("should return null array if no consumers found", async () => {
+      const contactListDTO = [
+        { id: "linkid1", phoneNumbers: [], emails: ["mock-unknown@mock.com"] },
+        { id: "linkid2", phoneNumbers: [], emails: ["mock-unknown-2@mock.com"] },
+      ];
+
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(Result.fail("Not found"));
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[1]))).thenResolve(Result.fail("Not found"));
+
+      const consumers = await consumerService.findConsumersByContactInfo(contactListDTO);
+      expect(consumers).toEqual([null, null]);
+    });
+
+    it("should normalize phone numbers", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mockConsumer",
+        phone: "+15559993333",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mockConsumer2",
+        phone: "+15559993333",
+      });
+
+      const contactListDTO = [
+        { id: "linkid1", phoneNumbers: [{ countryCode: "US", digits: "5553339999" }], emails: [] },
+        { id: "linkid2", phoneNumbers: [{ countryCode: "CO", digits: "5553339999" }], emails: [] },
+      ];
+
+      const contactInfo = { id: "linkid1", phoneNumbers: ["+15553339999"], emails: [] };
+      const contactInfo2 = { id: "linkid2", phoneNumbers: ["+575553339999"], emails: [] };
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
+
+      await consumerService.findConsumersByContactInfo(contactListDTO);
+    });
+
+    it("should normalize emails", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mockConsumer",
+        email: "MOCK@MOCK.COM",
+      });
+
+      const consumer2 = Consumer.createConsumer({
+        id: "mockConsumer2",
+        email: "MOCK2@MOCK.COM",
+      });
+
+      const contactListDTO = [
+        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
+        { id: "linkid2", phoneNumbers: [], emails: [consumer2.props.email] },
+      ];
+
+      const contactInfo = { id: "linkid1", phoneNumbers: [], emails: ["mock@mock.com"] };
+      const contactInfo2 = { id: "linkid2", phoneNumbers: [], emails: ["mock2@mock.com"] };
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
+
+      await consumerService.findConsumersByContactInfo(contactListDTO);
+    });
+  });
+
   describe("updateConsumerEmail", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";

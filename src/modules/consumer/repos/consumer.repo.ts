@@ -1,5 +1,6 @@
 import { Result } from "../../../core/logic/Result";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
+import { ContactInfo } from "../domain/ContactInfo";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 
@@ -7,6 +8,7 @@ export interface IConsumerRepo {
   getConsumer(consumerID: string): Promise<Consumer>;
   createConsumer(consumer: Consumer): Promise<Consumer>;
   exists(emailOrPhone: string): Promise<boolean>;
+  findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>>;
   getConsumerByEmail(email: string): Promise<Result<Consumer>>;
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
   getConsumerIDByHandle(handle: string): Promise<string>;

@@ -31,6 +31,8 @@ import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
+import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
+import { findFlag } from "country-list-with-dial-code-and-flag";
 
 @Injectable()
 export class ConsumerService {
@@ -282,6 +284,32 @@ export class ConsumerService {
     }
 
     return updatedConsumer;
+  }
+
+  async findConsumersByContactInfo(contactInfoList: ContactConsumerRequestDTO[]): Promise<Consumer[]> {
+    const consumerPromiseList = new Array<Promise<Result<Consumer>>>();
+    for (const contactInfo of contactInfoList) {
+      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => {
+        return this.normalizePhoneNumber(phone.digits, phone.countryCode);
+      });
+      const possibleEmails = contactInfo.emails.map(email => email.toLowerCase());
+
+      const consumerResultPromise = this.consumerRepo.findConsumerByContactInfo({
+        id: contactInfo.id,
+        phoneNumbers: possiblePhoneNumbers,
+        emails: possibleEmails,
+      });
+      consumerPromiseList.push(consumerResultPromise);
+    }
+
+    const consumerResultList = await Promise.all(consumerPromiseList);
+    return consumerResultList.map(consumerResult => {
+      if (!consumerResult.isSuccess) {
+        return null;
+      }
+
+      return consumerResult.getValue();
+    });
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
@@ -557,6 +585,14 @@ export class ConsumerService {
     throw new Error("Method not implemented");
   }
 
+  private normalizePhoneNumber(digits: string, countryCode: string): string {
+    if (digits[0] === "+") {
+      return digits;
+    }
+
+    const { dial_code } = findFlag(countryCode);
+    return dial_code + digits;
+  }
   private removeAllUnsupportedHandleCharacters(text: string): string {
     if (text === undefined || text === null) return "user-";
 

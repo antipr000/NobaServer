@@ -9,6 +9,7 @@ import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
+import { ContactInfo } from "../domain/ContactInfo";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -62,6 +63,42 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
+  async findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>> {
+    try {
+      const consumerContact = await this.prisma.consumer.findFirst({
+        where: {
+          AND: [
+            {
+              isLocked: false,
+            },
+            {
+              isDisabled: false,
+            },
+            {
+              OR: [
+                {
+                  email: {
+                    in: contactInfo.emails,
+                  },
+                },
+                {
+                  phone: {
+                    in: contactInfo.phoneNumbers,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      if (!consumerContact) return Result.fail("Couldn't find consumer with given contact info");
+      return Result.ok(Consumer.createConsumer(consumerContact));
+    } catch (e) {
+      return Result.fail(`Couldn't find consumer with given contact info for unknown reason: ${e}`);
+    }
+  }
+
   async getConsumerByEmail(email: string): Promise<Result<Consumer>> {
     try {
       const consumerProps = await this.prisma.consumer.findUnique({
@@ -74,7 +111,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
         return Result.fail("Couldn't find consumer with given email in the db");
       }
     } catch (e) {
-      return Result.fail("Couldn't find consumer with given email in the db");
+      return Result.fail(`Couldn't find consumer with given email in the db for unknown reason: ${e}`);
     }
   }
 
@@ -90,7 +127,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
         return Result.fail("Couldn't find consumer with given phone number in the db");
       }
     } catch (e) {
-      return Result.fail("Couldn't find consumer with given phone number in the db");
+      return Result.fail(`Couldn't find consumer with given phone number in the db for unknown reason: ${e}`);
     }
   }
 
