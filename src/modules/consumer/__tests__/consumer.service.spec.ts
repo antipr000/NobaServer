@@ -1070,16 +1070,10 @@ describe("ConsumerService", () => {
         { id: "linkid2", phoneNumbers: [{ countryCode: "CO", digits: "5553339999" }], emails: [] },
       ];
 
-      when(
-        consumerRepo.findConsumerByContactInfo(
-          deepEqual({ id: "linkid1", phoneNumbers: ["+15553339999"], emails: [] }),
-        ),
-      ).thenResolve(Result.ok(consumer));
-      when(
-        consumerRepo.findConsumerByContactInfo(
-          deepEqual({ id: "linkid1", phoneNumbers: ["+575553339999"], emails: [] }),
-        ),
-      ).thenResolve(Result.ok(consumer2));
+      const contactInfo = { id: "linkid1", phoneNumbers: ["+15553339999"], emails: [] };
+      const contactInfo2 = { id: "linkid2", phoneNumbers: ["+575553339999"], emails: [] };
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
+      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
 
       await consumerService.findConsumersByContactInfo(contactListDTO);
     });

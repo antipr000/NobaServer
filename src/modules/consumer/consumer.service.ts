@@ -289,10 +289,11 @@ export class ConsumerService {
   async findConsumersByContactInfo(contactInfoList: ContactConsumerRequestDTO[]): Promise<Consumer[]> {
     const consumerPromiseList = new Array<Promise<Result<Consumer>>>();
     for (const contactInfo of contactInfoList) {
-      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone =>
-        this.normalizePhoneNumber(phone.digits, phone.countryCode),
-      );
+      const possiblePhoneNumbers = contactInfo.phoneNumbers.map(phone => {
+        return this.normalizePhoneNumber(phone.digits, phone.countryCode);
+      });
       const possibleEmails = contactInfo.emails.map(email => email.toLowerCase());
+
       const consumerResultPromise = this.consumerRepo.findConsumerByContactInfo({
         id: contactInfo.id,
         phoneNumbers: possiblePhoneNumbers,
