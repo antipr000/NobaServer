@@ -63,7 +63,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async findConsumersByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>> {
+  async findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>> {
     try {
       const consumerContact = await this.prisma.consumer.findFirst({
         where: {

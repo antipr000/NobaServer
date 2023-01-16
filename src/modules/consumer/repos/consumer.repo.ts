@@ -8,7 +8,7 @@ export interface IConsumerRepo {
   getConsumer(consumerID: string): Promise<Consumer>;
   createConsumer(consumer: Consumer): Promise<Consumer>;
   exists(emailOrPhone: string): Promise<boolean>;
-  findConsumersByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>>;
+  findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>>;
   getConsumerByEmail(email: string): Promise<Result<Consumer>>;
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
   getConsumerIDByHandle(handle: string): Promise<string>;

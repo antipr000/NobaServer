@@ -1007,6 +1007,10 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("findConsumersByContactInfo", () => {
+    it("should find consumers by contact info", async () => {});
+  });
+
   describe("updateConsumerEmail", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";

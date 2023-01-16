@@ -294,7 +294,7 @@ export class ConsumerService {
         this.normalizePhoneNumber(phone.digits, phone.countryCode),
       );
       const possibleEmails = contactInfo.emails.map(email => email.toLowerCase());
-      const consumerResultPromise = this.consumerRepo.findConsumersByContactInfo({
+      const consumerResultPromise = this.consumerRepo.findConsumerByContactInfo({
         id: contactInfo.id,
         phoneNumbers: possiblePhoneNumbers,
         emails: possibleEmails,
