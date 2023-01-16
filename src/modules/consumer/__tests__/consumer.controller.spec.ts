@@ -842,6 +842,67 @@ describe("ConsumerController", () => {
     });
   });
 
+  describe("devicecontacts", () => {
+    it("should return a list of contacts", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "mock@mock.com",
+        handle: "mock1",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mock-consumer-2",
+        email: "mock2@mock.com",
+        handle: "mock2",
+      });
+
+      const contactListDTO = [
+        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
+        { id: "linkid2", phoneNumbers: [], emails: [consumer2.props.email] },
+      ];
+
+      when(consumerService.findConsumersByContactInfo(contactListDTO)).thenResolve([consumer, consumer2]);
+      expect(await consumerController.getConsumersByContact(contactListDTO, consumer)).toStrictEqual([
+        {
+          id: "linkid1",
+          consumerID: consumer.props.id,
+          handle: consumer.props.handle,
+        },
+        {
+          id: "linkid2",
+          consumerID: consumer2.props.id,
+          handle: consumer2.props.handle,
+        },
+      ]);
+    });
+
+    it("should return null contact list if contact not found", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "mock@mock.com",
+        handle: "mock1",
+      });
+
+      const contactListDTO = [
+        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
+        { id: "linkid2", phoneNumbers: [], emails: ["mock2-unknown@mock.com"] },
+      ];
+
+      when(consumerService.findConsumersByContactInfo(contactListDTO)).thenResolve([consumer, null]);
+      expect(await consumerController.getConsumersByContact(contactListDTO, consumer)).toStrictEqual([
+        {
+          id: "linkid1",
+          consumerID: consumer.props.id,
+          handle: consumer.props.handle,
+        },
+        {
+          id: "linkid2",
+          consumerID: null,
+          handle: null,
+        },
+      ]);
+    });
+  });
+
   describe("getQRCode", () => {
     it("should return a QR code", async () => {
       const consumer = Consumer.createConsumer({

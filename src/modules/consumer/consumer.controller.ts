@@ -337,8 +337,6 @@ export class ConsumerController {
     @Body() requestBody: ContactConsumerRequestDTO[],
     @AuthUser() consumer: Consumer,
   ): Promise<ContactConsumerResponseDTO[]> {
-    // Stub for now ignore request body
-
     const consumers = await this.consumerService.findConsumersByContactInfo(requestBody);
 
     const response = consumers.map((contact, i) => {
