@@ -1,11 +1,11 @@
 import { INestApplication } from "@nestjs/common";
 import { bootstrap } from "./server";
-import { bootStrapPrivateEndpoints } from "./server.private";
+import { bootstrapPrivateEndpoints } from "./server.private";
 
 async function main() {
   const app: INestApplication = await bootstrap({});
 
-  const privateApp: INestApplication = await bootStrapPrivateEndpoints({});
+  const privateApp: INestApplication = await bootstrapPrivateEndpoints({});
 
   const port = 8080;
   await app.listen(port);

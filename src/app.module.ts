@@ -16,6 +16,7 @@ import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MonoModule } from "./modules/psp/mono/mono.module";
 import { PspWorkflowModule } from "./modules/psp/psp.module";
+import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
 
 @Module({
   imports: [
@@ -69,7 +70,7 @@ export class AppModule {}
     AppService,
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: PrivateAuthGuard,
     },
   ],
 })
