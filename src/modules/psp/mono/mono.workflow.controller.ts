@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { IsNoApiKeyNeeded } from "../../../modules/auth/public.decorator";
 import { Logger } from "winston";
 import { MonoTransaction } from "../domain/Mono";
 import { MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
@@ -19,7 +20,8 @@ import { MonoService } from "./mono.service";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 
 @Controller("wf/v1/mono") // This defines the path prefix
-@ApiTags("Mono") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
+@ApiTags("Workflow")
+@IsNoApiKeyNeeded()
 export class MonoWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -39,13 +41,15 @@ export class MonoWorkflowController {
     await this.monoService.processWebhookEvent(requestBody, monoSignature);
   }
 
-  @Get("/:collectionLinkID")
-  @ApiOperation({ summary: "Fetches the Mono Transaction for the specified 'collectionLinkID'" })
+  @Get("/nobatransactions/:nobaTransactionID")
+  @ApiOperation({ summary: "Fetches the Mono Transaction for the specified 'nobaTransactionID'" })
   @ApiResponse({ status: HttpStatus.OK, type: MonoTransactionDTO })
-  async getMonoTransaction(@Param("collectionLinkID") collectionLinkID: string) {
-    const monoTransaction: MonoTransaction = await this.monoService.getTransactionByCollectionLinkID(collectionLinkID);
+  async getMonoTransactionByNobaTransactionID(@Param("nobaTransactionID") nobaTransactionID: string) {
+    const monoTransaction: MonoTransaction = await this.monoService.getTransactionByNobaTransactionID(
+      nobaTransactionID,
+    );
     if (!monoTransaction) {
-      throw new NotFoundException(`Mono Transaction not found for collectionLinkID: ${collectionLinkID}`);
+      throw new NotFoundException(`Mono Transaction not found for nobaTransactionID: ${nobaTransactionID}`);
     }
 
     return this.monoWorkflowControllerMappers.convertToMonoTransactionDTO(monoTransaction);

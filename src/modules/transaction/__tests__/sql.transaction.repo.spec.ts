@@ -38,7 +38,7 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     exchangeRate: 1,
     memo: "New transaction",
     sessionKey: uuid(),
-    workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
+    workflowName: WorkflowName.WALLET_DEPOSIT,
   };
 
   if (isCreditTransaction) {

@@ -204,7 +204,7 @@ describe("SqlMonoRepoTests", () => {
         state: MonoTransactionState.SUCCESS,
       };
 
-      const retrievedMonoTransaction = await monoRepo.updateMonoTransaction(nobaTransactionID, updatedMonoTransaction);
+      const retrievedMonoTransaction = await monoRepo.updateMonoTransaction(monoTransaction.id, updatedMonoTransaction);
       expect(retrievedMonoTransaction.state).toEqual(updatedMonoTransaction.state);
       expect(retrievedMonoTransaction.updatedTimestamp).not.toEqual(monoTransaction.updatedTimestamp);
 
@@ -228,7 +228,7 @@ describe("SqlMonoRepoTests", () => {
         monoTransactionID: uuid(),
       };
 
-      const retrievedMonoTransaction = await monoRepo.updateMonoTransaction(nobaTransactionID, updatedMonoTransaction);
+      const retrievedMonoTransaction = await monoRepo.updateMonoTransaction(monoTransaction.id, updatedMonoTransaction);
       expect(retrievedMonoTransaction.monoTransactionID).toEqual(updatedMonoTransaction.monoTransactionID);
       expect(retrievedMonoTransaction.updatedTimestamp).not.toEqual(monoTransaction.updatedTimestamp);
 
@@ -245,11 +245,12 @@ describe("SqlMonoRepoTests", () => {
 
     it("should throw an error if the transaction does not exist", async () => {
       const nobaTransactionID: string = uuid();
+      const monoRecordID: string = uuid();
       const updatedMonoTransaction: MonoTransactionUpdateRequest = {
         state: MonoTransactionState.SUCCESS,
       };
 
-      await expect(monoRepo.updateMonoTransaction(nobaTransactionID, updatedMonoTransaction)).rejects.toThrowError();
+      await expect(monoRepo.updateMonoTransaction(monoRecordID, updatedMonoTransaction)).rejects.toThrowError();
     });
   });
 });

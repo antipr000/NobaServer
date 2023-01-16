@@ -10,10 +10,12 @@ import { TemporalModule } from "../../infra/temporal/temporal.module";
 import { LimitsService } from "./limits.service";
 import { CommonModule } from "../common/common.module";
 import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "./mapper/transaction.mapper.service";
+import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
+import { MonoModule } from "../psp/mono/mono.module";
 
 @Module({
-  imports: [InfraProvidersModule, TransactionRepoModule, ConsumerModule, TemporalModule, CommonModule],
-  controllers: [TransactionController],
+  imports: [InfraProvidersModule, TransactionRepoModule, ConsumerModule, TemporalModule, CommonModule, MonoModule],
+  controllers: [TransactionController, TransactionWorkflowController],
   providers: [
     TransactionService,
     WorkflowExecutor,
@@ -22,6 +24,7 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
       provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
       useClass: TransactionMappingService,
     },
+    TransactionWorkflowMapper,
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
@@ -36,6 +39,7 @@ export class TransactionModule {}
     CommonModule,
     TransactionModule,
   ],
+  providers: [TransactionWorkflowMapper],
   controllers: [TransactionWorkflowController],
 })
 export class TransactionWorkflowModule {}

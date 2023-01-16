@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
 import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
-import { deepEqual, instance, when } from "ts-mockito";
+import { anything, deepEqual, instance, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { TransactionController } from "../transaction.controller";
 import { getMockTransactionServiceWithDefaults } from "../mocks/mock.transaction.service";
@@ -23,13 +23,15 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "../mapper/transaction.mapper.service";
 import { TransactionEvent } from "../domain/TransactionEvent";
+import { MonoService } from "../../../modules/psp/mono/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
-    workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
+    workflowName: WorkflowName.WALLET_DEPOSIT,
     id: uuid(),
     sessionKey: uuid(),
     memo: "New transaction",
@@ -63,6 +65,8 @@ const getRandomConsumer = (consumerID: string): Consumer => {
   return Consumer.createConsumer(props);
 };
 
+// TODO: Add separate test layer for mapper services (maybe)?
+
 describe("Transaction Controller tests", () => {
   jest.setTimeout(20000);
 
@@ -70,12 +74,14 @@ describe("Transaction Controller tests", () => {
   let transactionService: TransactionService;
   let transactionController: TransactionController;
   let limitService: LimitsService;
+  let monoService: MonoService;
   let consumerService: ConsumerService;
 
   beforeEach(async () => {
     transactionService = getMockTransactionServiceWithDefaults();
     limitService = getMockLimitsServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    monoService = getMockMonoServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -101,10 +107,15 @@ describe("Transaction Controller tests", () => {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
         },
+        {
+          provide: MonoService,
+          useFactory: () => instance(monoService),
+        },
         TransactionController,
       ],
     }).compile();
 
+    when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(null);
     transactionController = app.get<TransactionController>(TransactionController);
   });
 
@@ -458,7 +469,7 @@ describe("Transaction Controller tests", () => {
     it("should return transaction id of the initiated transaction if all parameters are correct", async () => {
       const orderDetails = {
         debitConsumerIDOrTag: "$soham",
-        workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
+        workflowName: WorkflowName.WALLET_DEPOSIT,
         debitCurrency: Currency.COP,
         debitAmount: 100,
       };
