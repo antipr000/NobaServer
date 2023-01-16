@@ -26,6 +26,20 @@ describe("CircleWorkflowController", () => {
     circleWorkflowController = app.get<CircleWorkflowController>(CircleWorkflowController);
   });
 
+  describe("/health", () => {
+    it("should return OK", async () => {
+      when(circleService.checkCircleHealth()).thenResolve(true);
+      const result = await circleWorkflowController.healthCheck();
+      expect(result).toEqual({ status: "OK" });
+    });
+
+    it("should return DOWN", async () => {
+      when(circleService.checkCircleHealth()).thenResolve(false);
+      const result = await circleWorkflowController.healthCheck();
+      expect(result).toEqual({ status: "DOWN" });
+    });
+  });
+
   describe("/wallets/:walletID/balance", () => {
     it("should return a wallet balance", async () => {
       when(circleService.getWalletBalance("walletID")).thenResolve(100);

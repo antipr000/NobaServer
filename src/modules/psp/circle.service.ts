@@ -17,6 +17,10 @@ export class CircleService {
   @Inject()
   private readonly circleClient: CircleClient;
 
+  public async checkCircleHealth(): Promise<boolean> {
+    return this.circleClient.checkCircleHealth();
+  }
+
   public async getOrCreateWallet(consumerID: string): Promise<string> {
     if (!consumerID) {
       throw new ServiceException({

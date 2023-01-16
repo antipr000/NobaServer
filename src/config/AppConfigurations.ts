@@ -121,6 +121,7 @@ import {
   MONO_NOBA_ACCOUNT_ID,
   MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET,
   MONO_WEBHOOK_SECRET,
+  AWS_MASTER_SECRET,
 } from "./ConfigurationUtils";
 import fs from "fs";
 import os from "os";
@@ -139,6 +140,7 @@ import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs"
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
+import { SecretProvider } from "./SecretProvider";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -200,6 +202,8 @@ export default async function loadAppConfigs() {
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
+  await SecretProvider.loadAWSMasterSecret(configs[AWS_MASTER_SECRET]);
+
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
   const filteredConfigs = ensureDevOnlyConfig(environment, vendorConfigs);
 

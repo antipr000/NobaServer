@@ -12,6 +12,7 @@ awsAccountID: "210194402305"
 
 awsAccessKeyId: "test"
 awsSecretAccessKey: "test"
+awsMasterSecret: "LOWERS_MASTER_SECRET"
 
 # TODO(#279): Refactor all the secrets once e2e_test env shifts to ec2.
 kms:
