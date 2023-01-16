@@ -32,7 +32,6 @@ import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
-import { ContactPhoneDTO } from "./dto/ContactPhoneDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
 
 @Injectable()
