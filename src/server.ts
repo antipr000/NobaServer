@@ -49,9 +49,6 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
 
   const apiSubDomain = `api-${appEnvType == AppEnvironment.AWSDEV ? "dev" : appEnvType}`; // configured in api-gateway
 
-  const serverEndpoint =
-    appEnvType === AppEnvironment.DEV ? "http://localhost:8080/" : `https://${apiSubDomain}.noba.com/`;
-
   winstonLogger.info("Api subdomain for current environment is " + apiSubDomain);
 
   // Config and doc generation options for PUBLIC-facing APIs
@@ -67,7 +64,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
       },
       "JWT-auth",
     )
-    .addServer(serverEndpoint)
+    .addServer(`https://${apiSubDomain}.noba.com/`)
     .build();
 
   // Any API which we want to expose publicly must be explicitly declared here

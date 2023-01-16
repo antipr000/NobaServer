@@ -47,9 +47,6 @@ export const bootStrapPrivateEndpoints = async (environmentVariables): Promise<I
 
   const apiSubDomain = `api-${appEnvType == AppEnvironment.AWSDEV ? "dev" : appEnvType}`; // configured in api-gateway
 
-  const serverEndpoint =
-    appEnvType === AppEnvironment.DEV ? "http://localhost:9000/" : `https://${apiSubDomain}-private.noba.com/`;
-
   winstonLogger.info("Api subdomain for current environment is " + apiSubDomain);
 
   // Config and doc generation options for PUBLIC-facing APIs
@@ -65,7 +62,7 @@ export const bootStrapPrivateEndpoints = async (environmentVariables): Promise<I
       },
       "JWT-auth",
     )
-    .addServer(serverEndpoint)
+    .addServer("/")
     .build();
 
   const options = {
