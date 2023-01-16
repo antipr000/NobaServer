@@ -1,13 +1,14 @@
 import { Body, Controller, Get, HttpStatus, Inject, Param, Post } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { CircleService } from "./circle.service";
 import { CircleDepositOrWithdrawalRequest } from "./dto/CircleDepositOrWithdrawalRequest";
 import { CircleFundsTransferRequestDTO } from "./dto/CircleFundsTransferRequestDTO";
+import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 
 @Controller("wf/v1/circle") // This defines the path prefix
+@ApiBearerAuth("JWT-auth")
 @ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
 @IsNoApiKeyNeeded()
 export class CircleWorkflowController {

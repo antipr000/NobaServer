@@ -29,3 +29,16 @@ import { MonoModule } from "../psp/mono/mono.module";
   exports: [TransactionService], //Need to access in PublicController
 })
 export class TransactionModule {}
+
+@Module({
+  imports: [
+    InfraProvidersModule,
+    TransactionRepoModule,
+    ConsumerModule,
+    TemporalModule,
+    CommonModule,
+    TransactionModule,
+  ],
+  controllers: [TransactionWorkflowController],
+})
+export class TransactionWorkflowModule {}

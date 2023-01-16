@@ -1,15 +1,23 @@
 import { BadRequestException, Body, Controller, Get, HttpStatus, Inject, Param, Patch } from "@nestjs/common";
-import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { TransactionService } from "./transaction.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { UpdateTransactionRequestDTO } from "./dto/TransactionDTO";
 import { WorkflowTransactionDTO } from "./dto/transaction.workflow.controller.dto";
 import { Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
+import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 
 @Controller("wf/v1/transactions")
+@ApiBearerAuth("JWT-auth")
 @ApiTags("Workflow")
 @IsNoApiKeyNeeded()
 export class TransactionWorkflowController {
