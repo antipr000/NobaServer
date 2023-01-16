@@ -19,7 +19,7 @@ const getRandomTransaction = (consumerID: string): Transaction => {
     transactionRef: uuid(),
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
-    workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
+    workflowName: WorkflowName.WALLET_DEPOSIT,
     id: uuid(),
     sessionKey: uuid(),
     memo: "New transaction",

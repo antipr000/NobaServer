@@ -31,7 +31,7 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     transactionRef: uuid(),
     exchangeRate: 1,
     status: TransactionStatus.PENDING,
-    workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
+    workflowName: WorkflowName.WALLET_DEPOSIT,
     id: uuid(),
     sessionKey: uuid(),
     memo: "New transaction",
@@ -469,7 +469,7 @@ describe("Transaction Controller tests", () => {
     it("should return transaction id of the initiated transaction if all parameters are correct", async () => {
       const orderDetails = {
         debitConsumerIDOrTag: "$soham",
-        workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
+        workflowName: WorkflowName.WALLET_DEPOSIT,
         debitCurrency: Currency.COP,
         debitAmount: 100,
       };

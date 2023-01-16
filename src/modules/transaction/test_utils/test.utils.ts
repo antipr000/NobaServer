@@ -10,7 +10,7 @@ export const createTestNobaTransaction = async (prismaService: PrismaService): P
     data: {
       transactionRef: uuid(),
       exchangeRate: 1,
-      workflowName: WorkflowName.CREDIT_CONSUMER_WALLET,
+      workflowName: WorkflowName.WALLET_DEPOSIT,
       creditAmount: 100,
       creditCurrency: "USD",
       creditConsumer: {

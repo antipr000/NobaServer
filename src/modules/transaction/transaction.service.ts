@@ -19,6 +19,7 @@ import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEve
 import { UpdateTransactionDTO } from "./dto/TransactionDTO";
 import { MonoService } from "../psp/mono/mono.service";
 import { MonoCurrency, MonoTransaction } from "../psp/domain/Mono";
+import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
 
 @Injectable()
 export class TransactionService {
@@ -67,40 +68,46 @@ export class TransactionService {
     }
 
     switch (transactionDetails.workflowName) {
-      case WorkflowName.CREDIT_CONSUMER_WALLET:
-        if (transactionDetails.debitConsumerIDOrTag) {
+      case WorkflowName.WALLET_DEPOSIT:
+        if (transactionDetails.creditConsumerIDOrTag) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitConsumerIDOrTag cannot be set for CREDIT_CONSUMER_WALLET workflow",
+            message: "creditConsumerIDOrTag cannot be set for WALLET_DEPOSIT workflow",
           });
         }
 
-        if (transactionDetails.debitAmount || transactionDetails.debitCurrency) {
+        if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount and debitCurrency cannot be set for CREDIT_CONSUMER_WALLET workflow",
+            message: "creditAmount and creditCurrency cannot be set for WALLET_DEPOSIT workflow",
           });
         }
 
-        if (transactionDetails.creditAmount <= 0) {
+        if (transactionDetails.debitAmount <= 0) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount must be greater than 0 for CREDIT_CONSUMER_WALLET workflow",
+            message: "debitAmount must be greater than 0 for WALLET_DEPOSIT workflow",
           });
         }
 
-        if (!transactionDetails.creditCurrency) {
+        if (!transactionDetails.debitCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditCurrency must be set for CREDIT_CONSUMER_WALLET workflow",
+            message: "debitCurrency must be set for WALLET_DEPOSIT workflow",
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
-        transactionDetails.creditConsumerIDOrTag = initiatingConsumer;
-        transactionDetails.debitAmount = transactionDetails.creditAmount;
-        transactionDetails.debitCurrency = transactionDetails.creditCurrency;
-        transactionDetails.exchangeRate = 1;
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
+        delete transactionDetails.creditConsumerIDOrTag;
+
+        const exchangeRate: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+          transactionDetails.debitCurrency,
+          Currency.USD,
+        );
+
+        transactionDetails.creditAmount = exchangeRate.nobaRate * transactionDetails.debitAmount;
+        transactionDetails.creditCurrency = Currency.USD;
+        transactionDetails.exchangeRate = exchangeRate.nobaRate;
         break;
       case WorkflowName.DEBIT_CONSUMER_WALLET:
         if (transactionDetails.creditConsumerIDOrTag) {
@@ -265,7 +272,7 @@ export class TransactionService {
           savedTransaction.transactionRef,
         );
         break;
-      case WorkflowName.CREDIT_CONSUMER_WALLET:
+      case WorkflowName.WALLET_DEPOSIT:
         if (transaction.creditConsumerID && transaction.debitConsumerID) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -273,9 +280,11 @@ export class TransactionService {
           });
         }
 
+        // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
+
         await this.monoService.createMonoTransaction({
-          amount: savedTransaction.creditAmount,
-          currency: savedTransaction.creditCurrency as MonoCurrency,
+          amount: savedTransaction.debitAmount,
+          currency: savedTransaction.debitCurrency as MonoCurrency,
           consumerID: savedTransaction.creditConsumerID,
           nobaTransactionID: savedTransaction.id,
         });
