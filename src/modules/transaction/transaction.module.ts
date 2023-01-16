@@ -39,6 +39,7 @@ export class TransactionModule {}
     CommonModule,
     TransactionModule,
   ],
+  providers: [TransactionWorkflowMapper],
   controllers: [TransactionWorkflowController],
 })
 export class TransactionWorkflowModule {}
