@@ -19,7 +19,7 @@ import { TransactionWorkflowModule } from "./modules/transaction/transaction.mod
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
-export const bootStrapPrivateEndpoints = async (environmentVariables): Promise<INestApplication> => {
+export const bootstrapPrivateEndpoints = async (environmentVariables): Promise<INestApplication> => {
   const environmentKeys = Object.keys(environmentVariables);
   for (let i = 0; i < environmentKeys.length; i++) {
     const environmentKey = environmentKeys[i];
