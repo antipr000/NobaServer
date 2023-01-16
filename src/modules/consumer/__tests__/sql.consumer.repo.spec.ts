@@ -145,6 +145,44 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
+  describe("findConsumerByContactInfo", () => {
+    it("should find a consumer by email", async () => {
+      const consumer = getRandomUser();
+
+      const savedConsumer = await consumerRepo.createConsumer(consumer);
+      const foundConsumer = await consumerRepo.findConsumerByContactInfo({
+        id: "",
+        phoneNumbers: [],
+        emails: [savedConsumer.props.email],
+      });
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().props.id).toStrictEqual(consumer.props.id);
+    });
+
+    it("should find a consumer by phone", async () => {
+      const consumer = getRandomUser();
+
+      const savedConsumer = await consumerRepo.createConsumer(consumer);
+      const foundConsumer = await consumerRepo.findConsumerByContactInfo({
+        id: "",
+        phoneNumbers: [savedConsumer.props.phone],
+        emails: [],
+      });
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().props.id).toStrictEqual(consumer.props.id);
+    });
+
+    it("should fail to find consumer", async () => {
+      const consumer = getRandomUser();
+      const foundConsumer = await consumerRepo.findConsumerByContactInfo({
+        id: "",
+        phoneNumbers: ["1234567890"],
+        emails: ["fake@mock.com"],
+      });
+      expect(foundConsumer.isFailure).toBe(true);
+    });
+  });
+
   describe("getConsumerByEmail", () => {
     it("get a consumer by email", async () => {
       const consumer = getRandomUser();
