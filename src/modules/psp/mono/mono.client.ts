@@ -81,7 +81,6 @@ export class MonoClient {
         collectionLinkID: response.data.id,
       };
     } catch (err) {
-      console.log(err.response.data);
       this.logger.error(`Error while creating collection link: ${JSON.stringify(err)}`);
       throw new InternalServiceErrorException({ message: "Error while creating Mono collection link" });
     }

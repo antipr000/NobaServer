@@ -12,7 +12,6 @@ export class TransactionWorkflowMapper {
 
     return {
       id: transaction.id,
-      transactionRef: transaction.transactionRef,
       workflowName: transaction.workflowName,
       debitConsumerID: transaction.debitConsumerID,
       creditConsumerID: transaction.creditConsumerID,
@@ -22,9 +21,6 @@ export class TransactionWorkflowMapper {
       creditAmount: transaction.creditAmount,
       exchangeRate: transaction.exchangeRate.toString(),
       status: transaction.status,
-      createdTimestamp: transaction.createdTimestamp,
-      updatedTimestamp: transaction.updatedTimestamp,
-      memo: transaction.memo,
     };
   }
 }

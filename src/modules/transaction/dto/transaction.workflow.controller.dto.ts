@@ -5,9 +5,6 @@ export class WorkflowTransactionDTO {
   @ApiProperty()
   id: string;
 
-  @ApiProperty()
-  transactionRef: string;
-
   @ApiProperty({ enum: WorkflowName })
   workflowName: WorkflowName;
 
@@ -34,13 +31,4 @@ export class WorkflowTransactionDTO {
 
   @ApiProperty({ enum: TransactionStatus })
   status: TransactionStatus;
-
-  @ApiProperty()
-  createdTimestamp: Date;
-
-  @ApiProperty()
-  updatedTimestamp: Date;
-
-  @ApiPropertyOptional()
-  memo?: string;
 }

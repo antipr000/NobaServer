@@ -20,7 +20,8 @@ import { MonoService } from "./mono.service";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 
 @Controller("wf/v1/mono") // This defines the path prefix
-@ApiTags("Mono") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
+@ApiTags("Workflow")
+@ApiTags("Mono")
 @IsNoApiKeyNeeded()
 export class MonoWorkflowController {
   constructor(
@@ -41,8 +42,8 @@ export class MonoWorkflowController {
     await this.monoService.processWebhookEvent(requestBody, monoSignature);
   }
 
-  @Get("/nobaTransactions/:nobaTransactionID")
-  @ApiOperation({ summary: "Fetches the Mono Transaction for the specified 'collectionLinkID'" })
+  @Get("/nobatransactions/:nobaTransactionID")
+  @ApiOperation({ summary: "Fetches the Mono Transaction for the specified 'nobaTransactionID'" })
   @ApiResponse({ status: HttpStatus.OK, type: MonoTransactionDTO })
   async getMonoTransactionByNobaTransactionID(@Param("nobaTransactionID") nobaTransactionID: string) {
     const monoTransaction: MonoTransaction = await this.monoService.getTransactionByNobaTransactionID(

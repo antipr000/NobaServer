@@ -56,7 +56,6 @@ describe("TransactionWorkflowMapperTest", () => {
 
       expect(workflowTransactionDTO).toEqual({
         id: "ID",
-        transactionRef: "transactionRef",
         workflowName: WorkflowName.CONSUMER_WALLET_TRANSFER,
         debitConsumerID: "debitConsumerID",
         creditConsumerID: "creditConsumerID",
@@ -66,9 +65,6 @@ describe("TransactionWorkflowMapperTest", () => {
         creditAmount: 200,
         exchangeRate: "1.2",
         status: "PENDING",
-        createdTimestamp: transaction.createdTimestamp,
-        updatedTimestamp: transaction.updatedTimestamp,
-        memo: "memo",
       });
     });
 
