@@ -31,8 +31,14 @@ export const CheckoutClientProvider: Provider = {
 
 @Module({
   imports: [getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule, CircleRepoModule],
-  controllers: [PaymentWebhooksController, CircleController, CircleWorkflowController],
+  controllers: [PaymentWebhooksController, CircleController],
   providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper, CircleClient, CircleService],
-  exports: [CheckoutClient, PlaidClient, PaymentService, CircleClient],
+  exports: [CheckoutClient, PlaidClient, PaymentService, CircleClient, CircleService],
 })
 export class PspModule {}
+
+@Module({
+  imports: [getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule, PspModule],
+  controllers: [CircleWorkflowController],
+})
+export class PspWorkflowModule {}

@@ -6,29 +6,27 @@ import { writeFileSync } from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
 import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { AppModule } from "./app.module";
+import { PrivateAppModule } from "./app.module";
 import { DefaultExceptionsFilter } from "./core/exception/filters/DefaultExceptionsFilter";
 import {
   createClassTypeToPropertiesMapFromSwaggerSchemas,
   NoUnExpectedKeysValidationPipe,
 } from "./core/utils/NoUnexpectedKeysValidationPipe";
 import { joiToSwagger } from "./joi2Swagger";
-import { AuthModule } from "./modules/auth/auth.module";
-import { TransactionModule } from "./modules/transaction/transaction.module";
-import { ConsumerModule } from "./modules/consumer/consumer.module";
-import { VerificationModule } from "./modules/verification/verification.module";
 import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
+import { PspWorkflowModule } from "./modules/psp/psp.module";
+import { TransactionWorkflowModule } from "./modules/transaction/transaction.module";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
-export const bootstrap = async (environmentVariables): Promise<INestApplication> => {
+export const bootStrapPrivateEndpoints = async (environmentVariables): Promise<INestApplication> => {
   const environmentKeys = Object.keys(environmentVariables);
   for (let i = 0; i < environmentKeys.length; i++) {
     const environmentKey = environmentKeys[i];
     process.env[environmentKey] = environmentVariables[environmentKey];
   }
-  console.log("Going to load 'AppModule' ...");
-  const app = await NestFactory.create(AppModule, {});
+  console.log("Going to load private endpoints");
+  const app = await NestFactory.create(PrivateAppModule, {});
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
@@ -50,14 +48,14 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   const apiSubDomain = `api-${appEnvType == AppEnvironment.AWSDEV ? "dev" : appEnvType}`; // configured in api-gateway
 
   const serverEndpoint =
-    appEnvType === AppEnvironment.DEV ? "http://localhost:8080/" : `https://${apiSubDomain}.noba.com/`;
+    appEnvType === AppEnvironment.DEV ? "http://localhost:9000/" : `https://${apiSubDomain}-private.noba.com/`;
 
   winstonLogger.info("Api subdomain for current environment is " + apiSubDomain);
 
   // Config and doc generation options for PUBLIC-facing APIs
-  const publicConfig = new DocumentBuilder()
-    .setTitle("Noba Server")
-    .setDescription(`Noba Server API (${appEnvType.toUpperCase()})`)
+  const config = new DocumentBuilder()
+    .setTitle("Noba Server Private")
+    .setDescription(`Noba Server API (Private) (${appEnvType.toUpperCase()})`)
     .setVersion("1.0")
     .addBearerAuth(
       {
@@ -70,38 +68,15 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     .addServer(serverEndpoint)
     .build();
 
-  // Any API which we want to expose publicly must be explicitly declared here
-  const publicOptions = {
-    include: [AppModule, AuthModule, ConsumerModule, TransactionModule, VerificationModule],
+  const options = {
+    include: [PspWorkflowModule, TransactionWorkflowModule],
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
 
-  // Config and doc generation options for all APIs, which includes public & private
-  const privateConfig = new DocumentBuilder()
-    .setTitle("Noba Server")
-    .setDescription(`Noba Server API (Internal) (${appEnvType.toUpperCase()})`)
-    .setVersion("1.0")
-    .addBearerAuth(
-      {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-      },
-      "JWT-auth",
-    )
-    .addServer("/")
-    .build();
-
-  const privateOptions = {
-    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
-  };
-
-  const swaggerDocumentPublic = generateSwaggerDoc("swagger.json", app, publicConfig, publicOptions);
-  const swaggerDocumentPrivate = generateSwaggerDoc("swagger-internal.json", app, privateConfig, privateOptions);
+  const swaggerDocument = generateSwaggerDoc("swagger-private.json", app, config, options);
 
   // Expose /noba-api for public APIs and /noba-api-internal for all APIs (public & private)
-  SwaggerModule.setup("noba-api", app, swaggerDocumentPublic);
-  SwaggerModule.setup("noba-api-internal", app, swaggerDocumentPrivate);
+  SwaggerModule.setup("noba-api-private", app, swaggerDocument);
 
   return app;
 };
