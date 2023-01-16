@@ -127,7 +127,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
         return Result.fail("Couldn't find consumer with given phone number in the db");
       }
     } catch (e) {
-      return Result.fail(`Couldn't find consumer with given phone number in the db for unknown reason:${e}`);
+      return Result.fail(`Couldn't find consumer with given phone number in the db for unknown reason: ${e}`);
     }
   }
 
