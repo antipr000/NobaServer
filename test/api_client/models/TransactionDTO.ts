@@ -6,7 +6,7 @@ import type { ConsumerInformationDTO } from "./ConsumerInformationDTO";
 
 export type TransactionDTO = {
   transactionRef: string;
-  workflowName: "CONSUMER_WALLET_TRANSFER" | "DEBIT_CONSUMER_WALLET" | "CREDIT_CONSUMER_WALLET";
+  workflowName: "WALLET_DEPOSIT" | "CONSUMER_WALLET_TRANSFER" | "DEBIT_CONSUMER_WALLET";
   debitConsumer?: ConsumerInformationDTO;
   creditConsumer?: ConsumerInformationDTO;
   debitCurrency: string;
@@ -17,6 +17,7 @@ export type TransactionDTO = {
   status: "PENDING" | "SUCCESS" | "FAILED" | "IN_PROGRESS";
   createdTimestamp: string;
   updatedTimestamp: string;
+  paymentCollectionLink?: string;
   memo?: string;
   transactionEvents?: Array<string>;
 };

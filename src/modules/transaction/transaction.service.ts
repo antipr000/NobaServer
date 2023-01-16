@@ -109,32 +109,32 @@ export class TransactionService {
         transactionDetails.creditCurrency = Currency.USD;
         transactionDetails.exchangeRate = exchangeRate.nobaRate;
         break;
-      case WorkflowName.DEBIT_CONSUMER_WALLET:
+      case WorkflowName.WALLET_WITHDRAWAL:
         if (transactionDetails.creditConsumerIDOrTag) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditConsumerIDOrTag cannot be set for DEBIT_CONSUMER_WALLET workflow",
+            message: "creditConsumerIDOrTag cannot be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
         if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount and creditCurrency cannot be set for DEBIT_CONSUMER_WALLET workflow",
+            message: "creditAmount and creditCurrency cannot be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
         if (transactionDetails.debitAmount <= 0) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount must be greater than 0 for DEBIT_CONSUMER_WALLET workflow",
+            message: "debitAmount must be greater than 0 for WALLET_WITHDRAWAL workflow",
           });
         }
 
         if (!transactionDetails.debitCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitCurrency must be set for DEBIT_CONSUMER_WALLET workflow",
+            message: "debitCurrency must be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
@@ -144,32 +144,32 @@ export class TransactionService {
         transactionDetails.creditCurrency = transactionDetails.debitCurrency;
         transactionDetails.exchangeRate = 1;
         break;
-      case WorkflowName.CONSUMER_WALLET_TRANSFER:
+      case WorkflowName.WALLET_TRANSFER:
         if (transactionDetails.debitConsumerIDOrTag) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitConsumerIDOrTag cannot be set for CONSUMER_WALLET_TRANSFER workflow",
+            message: "debitConsumerIDOrTag cannot be set for WALLET_TRANSFER workflow",
           });
         }
 
         if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount and creditCurrency cannot be set for CONSUMER_WALLET_TRANSFER workflow",
+            message: "creditAmount and creditCurrency cannot be set for WALLET_TRANSFER workflow",
           });
         }
 
         if (transactionDetails.debitAmount <= 0) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount must be greater than 0 for CONSUMER_WALLET_TRANSFER workflow",
+            message: "debitAmount must be greater than 0 for WALLET_TRANSFER workflow",
           });
         }
 
         if (!transactionDetails.debitCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitCurrency must be set for CONSUMER_WALLET_TRANSFER workflow",
+            message: "debitCurrency must be set for WALLET_TRANSFER workflow",
           });
         }
 
@@ -251,7 +251,7 @@ export class TransactionService {
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
     switch (transactionDetails.workflowName) {
-      case WorkflowName.CONSUMER_WALLET_TRANSFER:
+      case WorkflowName.WALLET_TRANSFER:
         this.workflowExecutor.executeConsumerWalletTransferWorkflow(
           savedTransaction.debitConsumerID,
           savedTransaction.creditConsumerID,
@@ -259,7 +259,7 @@ export class TransactionService {
           savedTransaction.transactionRef,
         );
         break;
-      case WorkflowName.DEBIT_CONSUMER_WALLET:
+      case WorkflowName.WALLET_WITHDRAWAL:
         if (transaction.creditConsumerID && transaction.debitConsumerID) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

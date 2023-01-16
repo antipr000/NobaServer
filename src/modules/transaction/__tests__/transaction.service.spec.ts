@@ -155,12 +155,12 @@ describe("TransactionServiceTests", () => {
   });
 
   describe("initiateTransaction", () => {
-    it("should initiate a DEBIT_CONSUMER_WALLET transaction", async () => {
+    it("should initiate a WALLET_WITHDRAWAL transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
         consumer.props.id,
         null,
-        WorkflowName.DEBIT_CONSUMER_WALLET,
+        WorkflowName.WALLET_WITHDRAWAL,
       );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
@@ -236,13 +236,13 @@ describe("TransactionServiceTests", () => {
       expect(propagatedTransactionRepoRequest.creditConsumerID).toBeUndefined();
     });
 
-    it("should initiate a CONSUMER_WALLET_TRANSFER transaction", async () => {
+    it("should initiate a WALLET_TRANSFER transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const consumer2 = getRandomConsumer("consumerID2");
       const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
         consumer.props.id,
         consumer2.props.id,
-        WorkflowName.CONSUMER_WALLET_TRANSFER,
+        WorkflowName.WALLET_TRANSFER,
       );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
@@ -285,7 +285,7 @@ describe("TransactionServiceTests", () => {
 
     const creditCases = ["creditConsumerIDOrTag", "creditAmount", "creditCurrency"];
     test.each(creditCases)(
-      "should throw ServiceException if credit field: %s is set for DEBIT_CONSUMER_WALLET",
+      "should throw ServiceException if credit field: %s is set for WALLET_WITHDRAWAL",
       async creditCase => {
         const consumer = getRandomConsumer("consumerID");
         const { transactionDTO } = getRandomTransaction(consumer.props.id);
@@ -311,10 +311,10 @@ describe("TransactionServiceTests", () => {
 
     const transferCases = ["debitConsumerIDOrTag", "creditAmount", "creditCurrency"];
     test.each(transferCases)(
-      "should throw ServiceException if debit field: %s is set for CONSUMER_WALLET_TRANSFER",
+      "should throw ServiceException if debit field: %s is set for WALLET_TRANSFER",
       async transferCase => {
         const consumer = getRandomConsumer("consumerID");
-        const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+        const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_TRANSFER);
         transactionDTO[transferCase] = "someValue";
         await expect(
           transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -322,9 +322,9 @@ describe("TransactionServiceTests", () => {
       },
     );
 
-    it("should throw ServiceException if debitAmount is less than 0 for DEBIT_CONSUMER_WALLET", async () => {
+    it("should throw ServiceException if debitAmount is less than 0 for WALLET_WITHDRAWAL", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_WITHDRAWAL);
       transactionDTO.debitAmount = -1;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -340,18 +340,18 @@ describe("TransactionServiceTests", () => {
       ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw ServiceException if debitAmount is less than 0 for CONSUMER_WALLET_TRANSFER", async () => {
+    it("should throw ServiceException if debitAmount is less than 0 for WALLET_TRANSFER", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_TRANSFER);
       transactionDTO.debitAmount = -1;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw ServiceException if debitCurrency is not set for DEBIT_CONSUMER_WALLET", async () => {
+    it("should throw ServiceException if debitCurrency is not set for WALLET_WITHDRAWAL", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_WITHDRAWAL);
       transactionDTO.debitCurrency = null;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -367,9 +367,9 @@ describe("TransactionServiceTests", () => {
       ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw ServiceException if debitCurrency is not set for CONSUMER_WALLET_TRANSFER", async () => {
+    it("should throw ServiceException if debitCurrency is not set for WALLET_TRANSFER", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_TRANSFER);
       transactionDTO.debitCurrency = null;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -378,7 +378,7 @@ describe("TransactionServiceTests", () => {
 
     it("should throw ServiceException if debit consumerID not found", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_WITHDRAWAL);
       when(consumerService.findConsumerById(consumer.props.id)).thenResolve(null);
 
       await expect(
@@ -388,7 +388,7 @@ describe("TransactionServiceTests", () => {
 
     it("should throw ServiceException if debit consumerTag not found", async () => {
       const consumer = getRandomConsumer("$consumerTag");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_WITHDRAWAL);
       when(consumerService.findConsumerIDByHandle(consumer.props.id)).thenResolve(null);
 
       await expect(
@@ -737,7 +737,7 @@ const getRandomConsumer = (consumerID: string): Consumer => {
 const getRandomTransaction = (
   consumerID: string,
   consumerID2?: string,
-  workflowName: WorkflowName = WorkflowName.DEBIT_CONSUMER_WALLET,
+  workflowName: WorkflowName = WorkflowName.WALLET_WITHDRAWAL,
 ): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
@@ -766,7 +766,7 @@ const getRandomTransaction = (
   };
 
   switch (workflowName) {
-    case WorkflowName.CONSUMER_WALLET_TRANSFER:
+    case WorkflowName.WALLET_TRANSFER:
       transaction.debitAmount = 100;
       transaction.debitCurrency = "USD";
       transaction.debitConsumerID = consumerID;
@@ -783,7 +783,7 @@ const getRandomTransaction = (
       inputTransaction.creditAmount = transaction.debitAmount;
       inputTransaction.creditCurrency = transaction.debitCurrency;
       break;
-    case WorkflowName.DEBIT_CONSUMER_WALLET:
+    case WorkflowName.WALLET_WITHDRAWAL:
       transaction.debitAmount = 100;
       transaction.debitCurrency = "USD";
       transaction.debitConsumerID = consumerID;

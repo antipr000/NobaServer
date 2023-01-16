@@ -25,5 +25,5 @@ export interface NobaWorkflowConfig {
 }
 
 export enum NobaWorkflowNames {
-  DEBIT_CONSUMER_WALLET = "DebitConsumerWallet",
+  WALLET_WITHDRAWAL = "DebitConsumerWallet",
 }
