@@ -21,7 +21,6 @@ import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mapper
 
 @Controller("wf/v1/mono") // This defines the path prefix
 @ApiTags("Workflow")
-@ApiTags("Mono")
 @IsNoApiKeyNeeded()
 export class MonoWorkflowController {
   constructor(
