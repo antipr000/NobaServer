@@ -16,8 +16,6 @@ import {
   getEnvironmentName,
   getParameterValue,
   getParameterValueFromAWSSecrets,
-  getPropertyFromEnvironment,
-  isPropertyPresentInEnvironmentVariables,
   resetPropertyFromEnvironment,
   SENDGRID_API_KEY,
   SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
@@ -122,9 +120,10 @@ import {
   MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET,
   MONO_WEBHOOK_SECRET,
   AWS_MASTER_SECRET,
+  NOBA_PRIVATE_BEARER_TOKEN,
+  AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN,
 } from "./ConfigurationUtils";
 import fs from "fs";
-import os from "os";
 
 import { TwilioConfigs } from "./configtypes/TwilioConfigs";
 import { SendGridConfigs } from "./configtypes/SendGridConfigs";
@@ -506,6 +505,7 @@ async function configureNobaParameters(
       "in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the keys "${NOBA_CONFIG_KEY}.${NOBA_TRANSACTION_CONFIG_KEY}" AND ` +
       `("${NOBA_APP_SECRET_KEY}" or "${AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY}") AND ` +
+      `("${NOBA_PRIVATE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN}") AND ` +
       "and populate " +
       `("${SPREAD_PERCENTAGE}" or "${AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE}"), ` +
       `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
@@ -516,6 +516,10 @@ async function configureNobaParameters(
   }
 
   nobaConfigs.appSecretKey = await getParameterValue(nobaConfigs.awsSecretKeyForAppSecretKey, nobaConfigs.appSecretKey);
+  nobaConfigs.privateBearerToken = await getParameterValue(
+    nobaConfigs.awsSecretKeyForPrivateBearerToken,
+    nobaConfigs.privateBearerToken,
+  );
 
   nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(
     await getParameterValue(

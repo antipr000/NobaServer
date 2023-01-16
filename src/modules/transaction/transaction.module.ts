@@ -13,7 +13,7 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
 
 @Module({
   imports: [InfraProvidersModule, TransactionRepoModule, ConsumerModule, TemporalModule, CommonModule],
-  controllers: [TransactionController, TransactionWorkflowController],
+  controllers: [TransactionController],
   providers: [
     TransactionService,
     WorkflowExecutor,
@@ -26,3 +26,16 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
   exports: [TransactionService], //Need to access in PublicController
 })
 export class TransactionModule {}
+
+@Module({
+  imports: [
+    InfraProvidersModule,
+    TransactionRepoModule,
+    ConsumerModule,
+    TemporalModule,
+    CommonModule,
+    TransactionModule,
+  ],
+  controllers: [TransactionWorkflowController],
+})
+export class TransactionWorkflowModule {}

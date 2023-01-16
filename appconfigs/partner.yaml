@@ -63,6 +63,8 @@ sardine:
 
 noba:
   appSecretKey: ""
+  privateBearerToken: ""
+  awsSecretKeyForPrivateBearerToken: "TEST_NOBA_PRIVATE_BEARER_TOKEN"
   awsSecretKeyForAppSecretKey: "TEST_NOBA_APP_SECRET"
   transaction:
     spreadPercentage: ""
