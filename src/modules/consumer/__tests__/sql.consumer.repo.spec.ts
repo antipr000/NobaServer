@@ -10,7 +10,7 @@ import { IConsumerRepo } from "../repos/consumer.repo";
 import { SQLConsumerRepo } from "../repos/sql.consumer.repo";
 import { uuid } from "uuidv4";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
-import { WalletStatus } from "@prisma/client";
+import { prisma, WalletStatus } from "@prisma/client";
 import { Address } from "../domain/Address";
 import { Utils } from "../../../core/utils/Utils";
 
@@ -52,6 +52,10 @@ describe("ConsumerRepoTests", () => {
     await prismaService.verification.deleteMany();
     await prismaService.consumer.deleteMany();
     await app.close();
+  });
+
+  afterEach(async () => {
+    jest.restoreAllMocks();
   });
 
   describe("createConsumer", () => {
@@ -120,6 +124,38 @@ describe("ConsumerRepoTests", () => {
       const savedResult = await consumerRepo.getConsumer(result.props.id);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.email).toBe(consumer.props.email);
+    });
+
+    it("should return null if an exception is thrown", async () => {
+      jest.spyOn(prismaService.consumer, "findUnique").mockImplementation(() => {
+        throw new Error("Error");
+      });
+      const savedResult = await consumerRepo.getConsumer("any-id");
+      expect(savedResult).toBeNull();
+    });
+  });
+
+  describe("getConsumerByHandle", () => {
+    it("should get a consumer by handle", async () => {
+      const consumer = getRandomUser();
+      const handle = "consumer-handle";
+      consumer.props.handle = handle;
+      const res = await consumerRepo.getConsumerByHandle(handle);
+      expect(res).toBeNull();
+
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumerByHandle(handle);
+      expect(savedResult.props.id).toBe(result.props.id);
+      expect(savedResult.props.email).toBe(consumer.props.email);
+      expect(savedResult.props.handle).toBe(consumer.props.handle);
+    });
+
+    it("should return null if an exception is thrown", async () => {
+      jest.spyOn(prismaService.consumer, "findFirst").mockImplementation(() => {
+        throw new Error("Error");
+      });
+      const savedResult = await consumerRepo.getConsumerByHandle("any-handle");
+      expect(savedResult).toBeNull();
     });
   });
 

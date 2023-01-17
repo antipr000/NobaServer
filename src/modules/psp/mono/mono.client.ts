@@ -65,7 +65,7 @@ export class MonoClient {
           required: false,
           value: "",
         },
-        phone: "+573000000000", //request.consumerPhone, TODO: Mono
+        phone: "+573000000000", //request.consumerPhone, TODO: Mono has issues with phone numbers and this is the only one that works right now
       },
       redirect_url: "https://www.noba.com/",
       reference: {
@@ -76,7 +76,6 @@ export class MonoClient {
       usage_type: "single_use",
     };
 
-    console.log(`Request body: ${JSON.stringify(requestBody, null, 1)}`);
     try {
       const response = await axios.post(url, requestBody, { headers });
       return {
