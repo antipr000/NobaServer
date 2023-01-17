@@ -1,5 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { InputTransaction, Transaction, UpdateTransaction, WorkflowName } from "./domain/Transaction";
+import {
+  InputTransaction,
+  Transaction,
+  TransactionStatus,
+  UpdateTransaction,
+  WorkflowName,
+} from "./domain/Transaction";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { ITransactionRepo } from "./repo/transaction.repo";
@@ -18,8 +24,11 @@ import { AddTransactionEventDTO, TransactionEventDTO } from "./dto/TransactionEv
 import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
 import { UpdateTransactionDTO } from "./dto/TransactionDTO";
 import { MonoService } from "../psp/mono/mono.service";
-import { MonoCurrency, MonoTransaction } from "../psp/domain/Mono";
+import { MonoCurrency } from "../psp/domain/Mono";
 import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
+import { TransactionVerification } from "../verification/domain/TransactionVerification";
+import { VerificationService } from "../verification/verification.service";
+import { KYCStatus } from "@prisma/client";
 
 @Injectable()
 export class TransactionService {
@@ -29,6 +38,7 @@ export class TransactionService {
     private readonly consumerService: ConsumerService,
     private readonly workflowExecutor: WorkflowExecutor,
     private readonly exchangeRateService: ExchangeRateService,
+    private readonly verificationService: VerificationService,
     private readonly monoService: MonoService,
   ) {}
 
@@ -280,12 +290,24 @@ export class TransactionService {
           });
         }
 
+        try {
+          // If it passes, simple return. If it fails, an exception will be thrown
+          await this.validateForSanctions(savedTransaction.debitConsumerID, savedTransaction);
+        } catch (e) {
+          if (e instanceof ServiceException) {
+            await this.transactionRepo.updateTransactionByTransactionID(savedTransaction.id, {
+              status: TransactionStatus.FAILED,
+            });
+            throw e;
+          }
+        }
+
         // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
 
         await this.monoService.createMonoTransaction({
           amount: savedTransaction.debitAmount,
           currency: savedTransaction.debitCurrency as MonoCurrency,
-          consumerID: savedTransaction.creditConsumerID,
+          consumerID: savedTransaction.debitConsumerID,
           nobaTransactionID: savedTransaction.id,
         });
 
@@ -367,6 +389,41 @@ export class TransactionService {
     };
 
     return await this.transactionRepo.updateTransactionByTransactionID(transactionID, transactionUpdate);
+  }
+
+  private async validateForSanctions(consumerID: string, transaction: Transaction) {
+    // Check Sardine for sanctions
+    const sardineTransactionInformation: TransactionVerification = {
+      transactionID: transaction.id,
+      workflowName: transaction.workflowName,
+      debitAmount: transaction.debitAmount,
+      debitCurrency: transaction.debitCurrency,
+      creditAmount: transaction.creditAmount,
+      creditCurrency: transaction.creditCurrency,
+    };
+
+    const consumer = await this.consumerService.getConsumer(consumerID);
+    const result = await this.verificationService.transactionVerification(
+      transaction.sessionKey,
+      consumer,
+      sardineTransactionInformation,
+    );
+
+    if (result.status !== KYCStatus.APPROVED) {
+      this.logger.debug(
+        `Failed to make transaction. Reason: KYC Provider has tagged the transaction as high risk. ${JSON.stringify(
+          result,
+        )}`,
+      );
+
+      this.addTransactionEvent(transaction.id, {
+        message: "Transaction has been detected to be high risk",
+      });
+
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+      });
+    }
   }
 
   async addTransactionEvent(

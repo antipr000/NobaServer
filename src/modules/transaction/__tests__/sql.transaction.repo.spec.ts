@@ -73,13 +73,21 @@ describe("PostgresTransactionRepoTests", () => {
 
     transactionRepo = app.get<SQLTransactionRepo>(SQLTransactionRepo);
     prismaService = app.get<PrismaService>(PrismaService);
+
+    clearData();
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
+    clearData();
+
+    jest.restoreAllMocks();
+  });
+
+  const clearData = async () => {
     await prismaService.transaction.deleteMany();
     await prismaService.transactionEvent.deleteMany();
 
@@ -90,9 +98,7 @@ describe("PostgresTransactionRepoTests", () => {
     // *************************************************************************
 
     await prismaService.consumer.deleteMany(); // clear all the dependencies
-
-    jest.restoreAllMocks();
-  });
+  };
 
   describe("createTransaction", () => {
     it("should create a transaction (only creditConsumer) with the specified parameters", async () => {

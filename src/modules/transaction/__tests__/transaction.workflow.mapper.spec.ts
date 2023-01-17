@@ -64,7 +64,7 @@ describe("TransactionWorkflowMapperTest", () => {
         debitAmount: 100,
         creditAmount: 200,
         exchangeRate: "1.2",
-        status: "PENDING",
+        status: TransactionStatus.PENDING,
       });
     });
 

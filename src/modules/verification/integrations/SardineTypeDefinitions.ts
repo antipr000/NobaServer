@@ -36,11 +36,26 @@ export type Crypto = {
 export type Bank = {
   accountNumber: string;
   routingNumber: string;
-  accountType: string;
-  balance: number;
-  balanceCurrencyCode: string;
+  accountType?: string;
+  balance?: number;
+  balanceCurrencyCode?: string;
+  id?: string;
+  idSource?: string;
+};
+
+export type Wire = {
+  accountNumber: string;
+  swiftCode?: string;
+  iban?: string;
+  routingCode?: string;
+  transferType?: "international_wire" | "domestic_wire";
+};
+
+export type Other = {
   id: string;
-  idSource: string;
+  type: string;
+  isVerified?: boolean;
+  extraData?: string;
 };
 
 export type PaymentMethod = {
@@ -48,6 +63,8 @@ export type PaymentMethod = {
   card?: Card;
   crypto?: Crypto;
   bank?: Bank;
+  wire?: Wire;
+  other?: Other;
 };
 
 export type Recipient = {
@@ -276,6 +293,7 @@ export enum PaymentMethodTypes {
   BANK = "bank",
   WIRE = "wire",
   CRYPTO = "crypto",
+  OTHER = "other",
 }
 
 export enum CaseStatus {
