@@ -10,7 +10,7 @@ import { IConsumerRepo } from "../repos/consumer.repo";
 import { SQLConsumerRepo } from "../repos/sql.consumer.repo";
 import { uuid } from "uuidv4";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
-import { prisma, WalletStatus } from "@prisma/client";
+import { WalletStatus } from "@prisma/client";
 import { Address } from "../domain/Address";
 import { Utils } from "../../../core/utils/Utils";
 
