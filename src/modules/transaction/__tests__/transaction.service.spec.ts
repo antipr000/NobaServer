@@ -23,7 +23,7 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
@@ -32,6 +32,7 @@ import { UpdateTransactionDTO } from "../dto/TransactionDTO";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 import { MonoCurrency } from "../../../modules/psp/domain/Mono";
+import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
 
@@ -163,18 +164,21 @@ describe("TransactionServiceTests", () => {
   });
 
   describe("initiateTransaction", () => {
-    it("should initiate a DEBIT_CONSUMER_WALLET transaction", async () => {
+    it("should initiate a WALLET_WITHDRAWAL transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
         consumer.props.id,
         null,
-        WorkflowName.DEBIT_CONSUMER_WALLET,
+        WorkflowName.WALLET_WITHDRAWAL,
       );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
-      when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(
+        getUSDCOPExchangeRate(),
+      );
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
+      when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
       when(
         workflowExecutor.executeDebitConsumerWalletWorkflow(
           transaction.debitConsumerID,
@@ -204,7 +208,7 @@ describe("TransactionServiceTests", () => {
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
       when(monoService.createMonoTransaction(anything())).thenResolve();
       when(
@@ -244,19 +248,19 @@ describe("TransactionServiceTests", () => {
       expect(propagatedTransactionRepoRequest.creditConsumerID).toBeUndefined();
     });
 
-    it("should initiate a CONSUMER_WALLET_TRANSFER transaction", async () => {
+    it("should initiate a WALLET_TRANSFER transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const consumer2 = getRandomConsumer("consumerID2");
       const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
-        consumer.props.id,
         consumer2.props.id,
-        WorkflowName.CONSUMER_WALLET_TRANSFER,
+        consumer.props.id,
+        WorkflowName.WALLET_TRANSFER,
       );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
-      when(consumerService.findConsumerById(consumer2.props.id)).thenResolve(consumer2);
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
       when(transactionRepo.createTransaction(deepEqual(inputTransaction))).thenResolve(transaction);
       when(
         workflowExecutor.executeConsumerWalletTransferWorkflow(
@@ -291,26 +295,26 @@ describe("TransactionServiceTests", () => {
       ).rejects.toThrowError(ServiceException);
     });
 
-    const creditCases = ["creditConsumerIDOrTag", "creditAmount", "creditCurrency"];
-    test.each(creditCases)(
-      "should throw ServiceException if credit field: %s is set for DEBIT_CONSUMER_WALLET",
-      async creditCase => {
+    const withdrawalCases = ["creditConsumerIDOrTag", "creditAmount", "debitCurrency"];
+    test.each(withdrawalCases)(
+      "should throw ServiceException if debit field: %s is set for WALLET_WITHDRAWAL",
+      async withdrawalCase => {
         const consumer = getRandomConsumer("consumerID");
         const { transactionDTO } = getRandomTransaction(consumer.props.id);
-        transactionDTO[creditCase] = "someValue";
+        transactionDTO[withdrawalCase] = "someValue";
         await expect(
           transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
         ).rejects.toThrowError(ServiceException);
       },
     );
 
-    const debitCases = ["creditConsumerIDOrTag", "creditAmount", "creditCurrency"];
-    test.each(debitCases)(
-      "should throw ServiceException if debit field: %s is set for WALLET_DEPOSIT",
-      async debitCase => {
+    const depositCases = ["creditConsumerIDOrTag", "creditAmount", "creditCurrency"];
+    test.each(depositCases)(
+      "should throw ServiceException if credit field: %s is set for WALLET_DEPOSIT",
+      async depositCase => {
         const consumer = getRandomConsumer("consumerID");
         const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_DEPOSIT);
-        transactionDTO[debitCase] = "someValue";
+        transactionDTO[depositCase] = "someValue";
         await expect(
           transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
         ).rejects.toThrowError(ServiceException);
@@ -319,10 +323,10 @@ describe("TransactionServiceTests", () => {
 
     const transferCases = ["debitConsumerIDOrTag", "creditAmount", "creditCurrency"];
     test.each(transferCases)(
-      "should throw ServiceException if debit field: %s is set for CONSUMER_WALLET_TRANSFER",
+      "should throw ServiceException if debit field: %s is set for WALLET_TRANSFER",
       async transferCase => {
         const consumer = getRandomConsumer("consumerID");
-        const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+        const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_TRANSFER);
         transactionDTO[transferCase] = "someValue";
         await expect(
           transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -330,37 +334,37 @@ describe("TransactionServiceTests", () => {
       },
     );
 
-    it("should throw ServiceException if debitAmount is less than 0 for DEBIT_CONSUMER_WALLET", async () => {
+    it("should throw ServiceException if creditAmount is less than 0 for WALLET_WITHDRAWAL", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
-      transactionDTO.debitAmount = -1;
-      await expect(
-        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
-      ).rejects.toThrowError(ServiceException);
-    });
-
-    it("should throw ServiceException if creditAmount is less than 0 for WALLET_DEPOSIT", async () => {
-      const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_DEPOSIT);
+      const { transactionDTO } = getRandomTransaction(null, consumer.props.id, WorkflowName.WALLET_WITHDRAWAL);
       transactionDTO.creditAmount = -1;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw ServiceException if debitAmount is less than 0 for CONSUMER_WALLET_TRANSFER", async () => {
+    it("should throw ServiceException if debitAmount is less than 0 for WALLET_DEPOSIT", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_DEPOSIT);
       transactionDTO.debitAmount = -1;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw ServiceException if debitCurrency is not set for DEBIT_CONSUMER_WALLET", async () => {
+    it("should throw ServiceException if debitAmount is less than 0 for WALLET_TRANSFER", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
-      transactionDTO.debitCurrency = null;
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_TRANSFER);
+      transactionDTO.debitAmount = -1;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if creditCurrency is not set for WALLET_WITHDRAWAL", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(null, consumer.props.id, WorkflowName.WALLET_WITHDRAWAL);
+      transactionDTO.creditCurrency = null;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
@@ -375,10 +379,28 @@ describe("TransactionServiceTests", () => {
       ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw ServiceException if debitCurrency is not set for CONSUMER_WALLET_TRANSFER", async () => {
+    it("should throw ServiceException if debitCurrency is not set for WALLET_TRANSFER", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.CONSUMER_WALLET_TRANSFER);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_TRANSFER);
       transactionDTO.debitCurrency = null;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if exchange rate cannot be found WALLET_WITHDRAWAL", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(null, consumer.props.id, WorkflowName.WALLET_WITHDRAWAL);
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(null);
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if exchange rate cannot be found WALLET_DEPOSIT", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(null, consumer.props.id, WorkflowName.WALLET_DEPOSIT);
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(null);
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
@@ -386,8 +408,13 @@ describe("TransactionServiceTests", () => {
 
     it("should throw ServiceException if debit consumerID not found", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(null);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_WITHDRAWAL);
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(
+        getUSDCOPExchangeRate(),
+      );
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
+      );
 
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -396,8 +423,13 @@ describe("TransactionServiceTests", () => {
 
     it("should throw ServiceException if debit consumerTag not found", async () => {
       const consumer = getRandomConsumer("$consumerTag");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.DEBIT_CONSUMER_WALLET);
-      when(consumerService.findConsumerIDByHandle(consumer.props.id)).thenResolve(null);
+      const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_WITHDRAWAL);
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(
+        getUSDCOPExchangeRate(),
+      );
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
+      );
 
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -407,7 +439,9 @@ describe("TransactionServiceTests", () => {
     it("should throw ServiceException if credit consumerID not found", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_DEPOSIT);
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(null);
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
+      );
 
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -417,7 +451,9 @@ describe("TransactionServiceTests", () => {
     it("should throw ServiceException if credit consumerTag not found", async () => {
       const consumer = getRandomConsumer("$consumerTag");
       const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_DEPOSIT);
-      when(consumerService.findConsumerIDByHandle(consumer.props.id)).thenResolve(null);
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
+      );
 
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
@@ -718,7 +754,7 @@ describe("TransactionServiceTests", () => {
     });
   });
 
-  it("should throwr a ServiceException if the transaction doesn't exist", async () => {
+  it("should throw a ServiceException if the transaction doesn't exist", async () => {
     const transactionID = "non-existient-transaction-id";
     when(transactionRepo.getTransactionByID(transactionID)).thenResolve(null);
 
@@ -727,6 +763,25 @@ describe("TransactionServiceTests", () => {
     );
   });
 });
+
+const getUSDCOPExchangeRate = (): ExchangeRateDTO => {
+  return {
+    numeratorCurrency: Currency.USD,
+    denominatorCurrency: Currency.COP,
+    bankRate: 1,
+    nobaRate: 1,
+    expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hours from now
+  };
+};
+
+const getCOPUSDExchangeRate = (): ExchangeRateDTO => {
+  return {
+    numeratorCurrency: Currency.COP,
+    denominatorCurrency: Currency.USD,
+    bankRate: 1,
+    nobaRate: 1,
+  };
+};
 
 const getRandomConsumer = (consumerID: string): Consumer => {
   const email = `${v4()}_${new Date().valueOf()}@noba.com`;
@@ -745,7 +800,7 @@ const getRandomConsumer = (consumerID: string): Consumer => {
 const getRandomTransaction = (
   consumerID: string,
   consumerID2?: string,
-  workflowName: WorkflowName = WorkflowName.DEBIT_CONSUMER_WALLET,
+  workflowName: WorkflowName = WorkflowName.WALLET_WITHDRAWAL,
 ): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
@@ -774,7 +829,7 @@ const getRandomTransaction = (
   };
 
   switch (workflowName) {
-    case WorkflowName.CONSUMER_WALLET_TRANSFER:
+    case WorkflowName.WALLET_TRANSFER:
       transaction.debitAmount = 100;
       transaction.debitCurrency = "USD";
       transaction.debitConsumerID = consumerID;
@@ -791,20 +846,18 @@ const getRandomTransaction = (
       inputTransaction.creditAmount = transaction.debitAmount;
       inputTransaction.creditCurrency = transaction.debitCurrency;
       break;
-    case WorkflowName.DEBIT_CONSUMER_WALLET:
+    case WorkflowName.WALLET_WITHDRAWAL:
       transaction.debitAmount = 100;
-      transaction.debitCurrency = "USD";
       transaction.debitConsumerID = consumerID;
+      transaction.creditCurrency = Currency.COP;
 
       transactionDTO.debitAmount = transaction.debitAmount;
-      transactionDTO.debitCurrency = Currency.USD;
       transactionDTO.debitConsumerIDOrTag = transaction.debitConsumerID;
+      transactionDTO.creditCurrency = transaction.creditCurrency as Currency;
 
       inputTransaction.debitAmount = transaction.debitAmount;
-      inputTransaction.debitCurrency = transaction.debitCurrency;
       inputTransaction.debitConsumerID = transaction.debitConsumerID;
-      inputTransaction.creditAmount = transaction.debitAmount;
-      inputTransaction.creditCurrency = transaction.debitCurrency;
+      inputTransaction.creditCurrency = transaction.creditCurrency;
       break;
     case WorkflowName.WALLET_DEPOSIT:
       transaction.debitAmount = 100;

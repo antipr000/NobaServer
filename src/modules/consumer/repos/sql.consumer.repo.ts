@@ -35,6 +35,20 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
+  async getConsumerByHandle(handle: string): Promise<Consumer> {
+    try {
+      const consumerProps = await this.prisma.consumer.findFirst({
+        where: { handle: { equals: handle, mode: "insensitive" } },
+        include: { address: true, verificationData: true },
+      });
+
+      if (!consumerProps) return null;
+      return Consumer.createConsumer(consumerProps);
+    } catch (e) {
+      return null;
+    }
+  }
+
   async createConsumer(consumer: Consumer): Promise<Consumer> {
     if (consumer.props.phone) {
       consumer.props.phone = Utils.stripSpaces(consumer.props.phone);

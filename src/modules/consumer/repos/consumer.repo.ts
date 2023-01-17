@@ -6,6 +6,7 @@ import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 
 export interface IConsumerRepo {
   getConsumer(consumerID: string): Promise<Consumer>;
+  getConsumerByHandle(handle: string): Promise<Consumer>;
   createConsumer(consumer: Consumer): Promise<Consumer>;
   exists(emailOrPhone: string): Promise<boolean>;
   findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>>;

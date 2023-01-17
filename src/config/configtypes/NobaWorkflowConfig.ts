@@ -23,7 +23,3 @@ export interface NobaWorkflowConfig {
   [NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TEMPORAL_CLOUD_CERTIFICATE]: string;
   [NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TEMPORAL_CLOUD_PRIVATE_KEY]: string;
 }
-
-export enum NobaWorkflowNames {
-  DEBIT_CONSUMER_WALLET = "DebitConsumerWallet",
-}

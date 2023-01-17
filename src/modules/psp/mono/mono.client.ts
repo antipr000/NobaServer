@@ -8,6 +8,7 @@ import { MonoClientCollectionLinkRequest, MonoClientCollectionLinkResponse } fro
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class MonoClient {
@@ -47,7 +48,8 @@ export class MonoClient {
     const requestBody = {
       account_id: this.nobaAccountID,
       amount: {
-        amount: request.amount,
+        // Amount is represented in cents (i.e. multiply by 100). Then use Utils method to be extra sure no decimals are sent.
+        amount: Utils.roundToSpecifiedDecimalNumber(request.amount * 100, 0),
         currency: request.currency,
       },
       amount_validation: "fixed",
@@ -63,7 +65,7 @@ export class MonoClient {
           required: false,
           value: "",
         },
-        phone: request.consumerPhone,
+        phone: "+573000000000", //request.consumerPhone, TODO: Mono has issues with phone numbers and this is the only one that works right now
       },
       redirect_url: "https://www.noba.com/",
       reference: {
