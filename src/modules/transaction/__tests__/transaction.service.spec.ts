@@ -32,6 +32,8 @@ import { UpdateTransactionDTO } from "../dto/TransactionDTO";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 import { MonoCurrency } from "../../../modules/psp/domain/Mono";
+import { VerificationService } from "../../../modules/verification/verification.service";
+import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -42,12 +44,14 @@ describe("TransactionServiceTests", () => {
   let consumerService: ConsumerService;
   let workflowExecutor: WorkflowExecutor;
   let monoService: MonoService;
+  let verificationService: VerificationService;
   let exchangeRateService: ExchangeRateService;
 
   beforeAll(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
+    verificationService = getMockVerificationServiceWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     monoService = getMockMonoServiceWithDefaults();
 
@@ -74,6 +78,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: ExchangeRateService,
           useFactory: () => instance(exchangeRateService),
+        },
+        {
+          provide: VerificationService,
+          useFactory: () => instance(verificationService),
         },
         {
           provide: MonoService,
