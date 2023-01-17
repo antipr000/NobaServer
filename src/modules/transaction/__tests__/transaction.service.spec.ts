@@ -231,7 +231,7 @@ describe("TransactionServiceTests", () => {
       expect(propagatedMonoCreationRequest).toEqual({
         amount: transaction.debitAmount,
         currency: transaction.debitCurrency as MonoCurrency,
-        consumerID: transaction.creditConsumerID,
+        consumerID: transaction.debitConsumerID,
         nobaTransactionID: transaction.id,
       });
 
