@@ -230,9 +230,9 @@ describe("PostgresTransactionRepoTests", () => {
       const returnedTransaction = await transactionRepo.createTransaction(inputTransaction);
       const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
 
-      expect(returnedTransaction.status).toBe(TransactionStatus.PENDING);
+      expect(returnedTransaction.status).toBe(TransactionStatus.INITIATED);
       expect(allTransactionRecords).toHaveLength(1);
-      expect(allTransactionRecords[0].status).toBe(TransactionStatus.PENDING);
+      expect(allTransactionRecords[0].status).toBe(TransactionStatus.INITIATED);
     });
   });
 
@@ -362,7 +362,7 @@ describe("PostgresTransactionRepoTests", () => {
       const savedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
 
       const transactionToUpdates: UpdateTransaction = {
-        status: TransactionStatus.SUCCESS,
+        status: TransactionStatus.COMPLETED,
       };
       const returnedTransaction = await transactionRepo.updateTransactionByTransactionID(
         savedTransaction.id,
@@ -373,7 +373,7 @@ describe("PostgresTransactionRepoTests", () => {
 
       expect(returnedTransaction).toStrictEqual({
         ...savedTransaction,
-        status: TransactionStatus.SUCCESS,
+        status: TransactionStatus.COMPLETED,
         updatedTimestamp: expect.any(Date),
       });
       expect(returnedTransaction.updatedTimestamp.valueOf()).toBeGreaterThan(
@@ -479,7 +479,7 @@ describe("PostgresTransactionRepoTests", () => {
 
       const transactionToUpdates: UpdateTransaction = {
         exchangeRate: 12.34,
-        status: TransactionStatus.IN_PROGRESS,
+        status: TransactionStatus.PROCESSING,
         creditAmount: 67.89,
         creditCurrency: "USD",
       };
@@ -495,7 +495,7 @@ describe("PostgresTransactionRepoTests", () => {
         exchangeRate: 12.34,
         creditAmount: 67.89,
         creditCurrency: "USD",
-        status: TransactionStatus.IN_PROGRESS,
+        status: TransactionStatus.PROCESSING,
         updatedTimestamp: expect.any(Date),
       });
       expect(returnedTransaction.updatedTimestamp.valueOf()).toBeGreaterThan(
@@ -511,7 +511,7 @@ describe("PostgresTransactionRepoTests", () => {
 
     it("should throw a NotFound error if the transaction with the specified transaction ID does not exist", async () => {
       const updatedTransaction: UpdateTransaction = {
-        status: TransactionStatus.SUCCESS,
+        status: TransactionStatus.COMPLETED,
       };
       await expect(
         transactionRepo.updateTransactionByTransactionID("invalid-transaction-ref", updatedTransaction),
@@ -554,12 +554,12 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result2.totalPages).toBe(2);
 
       await transactionRepo.updateTransactionByTransactionID(randomTransaction.id, {
-        status: TransactionStatus.SUCCESS,
+        status: TransactionStatus.COMPLETED,
       });
 
       const result3 = await transactionRepo.getFilteredTransactions({
         consumerID: consumerID,
-        transactionStatus: TransactionStatus.SUCCESS,
+        transactionStatus: TransactionStatus.COMPLETED,
         pageLimit: 3,
         pageOffset: 1,
       });
@@ -571,7 +571,7 @@ describe("PostgresTransactionRepoTests", () => {
 
       const result4 = await transactionRepo.getFilteredTransactions({
         consumerID: consumerID,
-        transactionStatus: TransactionStatus.SUCCESS,
+        transactionStatus: TransactionStatus.COMPLETED,
         pageLimit: 3,
         pageOffset: 2,
       });

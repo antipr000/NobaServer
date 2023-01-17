@@ -736,7 +736,7 @@ describe("TransactionServiceTests", () => {
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
 
       const updateTransactionDTO: UpdateTransactionDTO = {
-        status: TransactionStatus.SUCCESS,
+        status: TransactionStatus.COMPLETED,
       };
 
       const updateTransaction: UpdateTransaction = {
@@ -805,7 +805,7 @@ const getRandomTransaction = (
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
     exchangeRate: 1,
-    status: TransactionStatus.PENDING,
+    status: TransactionStatus.INITIATED,
     workflowName: workflowName,
     id: v4(),
     sessionKey: v4(),
