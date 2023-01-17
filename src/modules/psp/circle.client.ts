@@ -139,10 +139,7 @@ export class CircleClient {
           });
       }
     } catch (err) {
-      this.logger.error(
-        `Error while transferring funds: ${JSON.stringify(err.response.data)},
-        )}`,
-      );
+      this.logger.error(`Error while transferring funds: ${JSON.stringify(err.response.data)}`);
       if (err instanceof ServiceException) {
         throw err;
       }
