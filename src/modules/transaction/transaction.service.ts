@@ -100,49 +100,75 @@ export class TransactionService {
         transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
         delete transactionDetails.creditConsumerIDOrTag;
 
-        const exchangeRate: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+        const exchangeRateToUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
           transactionDetails.debitCurrency,
           Currency.USD,
         );
 
-        transactionDetails.creditAmount = exchangeRate.nobaRate * transactionDetails.debitAmount;
+        if (!exchangeRateToUSD) {
+          this.logger.error(
+            `Database is not seeded properly. Could not find exchange rate for ${transactionDetails.debitCurrency} - ${Currency.USD}`,
+          );
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNKNOWN, // 500 error because even though it's "known", it's not expected
+            message: "Could not find exchange rate",
+          });
+        }
+
+        transactionDetails.creditAmount = exchangeRateToUSD.nobaRate * transactionDetails.debitAmount;
         transactionDetails.creditCurrency = Currency.USD;
-        transactionDetails.exchangeRate = exchangeRate.nobaRate;
+        transactionDetails.exchangeRate = exchangeRateToUSD.nobaRate;
         break;
       case WorkflowName.WALLET_WITHDRAWAL:
-        if (transactionDetails.creditConsumerIDOrTag) {
+        if (transactionDetails.debitConsumerIDOrTag) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditConsumerIDOrTag cannot be set for WALLET_WITHDRAWAL workflow",
+            message: "debitConsumerIDOrTag cannot be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
-        if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
+        if (transactionDetails.debitAmount || transactionDetails.debitCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount and creditCurrency cannot be set for WALLET_WITHDRAWAL workflow",
+            message: "debitAmount and debitCurrency cannot be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
-        if (transactionDetails.debitAmount <= 0) {
+        if (transactionDetails.creditAmount <= 0) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount must be greater than 0 for WALLET_WITHDRAWAL workflow",
+            message: "creditAmount must be greater than 0 for WALLET_WITHDRAWAL workflow",
           });
         }
 
-        if (!transactionDetails.debitCurrency) {
+        if (!transactionDetails.creditCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitCurrency must be set for WALLET_WITHDRAWAL workflow",
+            message: "creditCurrency must be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
-        transactionDetails.creditConsumerIDOrTag = undefined; // Gets populated with Noba master wallet
-        transactionDetails.creditAmount = transactionDetails.debitAmount;
-        transactionDetails.creditCurrency = transactionDetails.debitCurrency;
-        transactionDetails.exchangeRate = 1;
+        transactionDetails.creditConsumerIDOrTag = initiatingConsumer;
+        delete transactionDetails.debitConsumerIDOrTag;
+
+        const exchangeRateFromUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+          Currency.USD,
+          transactionDetails.creditCurrency,
+        );
+
+        if (!exchangeRateFromUSD) {
+          this.logger.error(
+            `Database is not seeded properly. Could not find exchange rate for ${Currency.USD} - ${transactionDetails.debitCurrency}`,
+          );
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNKNOWN, // 500 error because even though it's "known", it's not expected
+            message: "Could not find exchange rate",
+          });
+        }
+
+        transactionDetails.debitAmount = exchangeRateFromUSD.nobaRate * transactionDetails.creditAmount;
+        transactionDetails.debitCurrency = Currency.USD;
+        transactionDetails.exchangeRate = exchangeRateFromUSD.nobaRate;
         break;
       case WorkflowName.WALLET_TRANSFER:
         if (transactionDetails.debitConsumerIDOrTag) {
@@ -197,56 +223,28 @@ export class TransactionService {
       transactionRef: Utils.generateLowercaseUUID(true),
     };
 
-    if (transactionDetails.creditConsumerIDOrTag) {
-      let consumerID: string;
-      if (transactionDetails.creditConsumerIDOrTag.startsWith("$")) {
-        consumerID = await this.consumerService.findConsumerIDByHandle(transactionDetails.creditConsumerIDOrTag);
-        if (!consumerID) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditConsumerIDOrTag is not a valid consumer",
-          });
-        }
-      } else {
-        const consumer = await this.consumerService.findConsumerById(transactionDetails.creditConsumerIDOrTag);
-        if (!consumer) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditConsumerIDOrTag is not a valid consumer",
-          });
-        }
-
-        consumerID = consumer.props.id;
+    try {
+      // Ensure that consumers on both side of the transaction are in good standing
+      if (transactionDetails.creditConsumerIDOrTag) {
+        const consumer = await this.consumerService.getActiveConsumer(transactionDetails.creditConsumerIDOrTag);
+        transaction.creditConsumerID = consumer.props.id;
       }
 
-      transaction.creditConsumerID = consumerID;
-    }
-
-    if (transactionDetails.debitConsumerIDOrTag) {
-      let consumerID: string;
-      if (transactionDetails.debitConsumerIDOrTag.startsWith("$")) {
-        consumerID = await this.consumerService.findConsumerIDByHandle(transactionDetails.debitConsumerIDOrTag);
-        if (!consumerID) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitConsumerIDOrTag is not a valid consumer",
-          });
-        }
-      } else {
-        const consumer = await this.consumerService.findConsumerById(transactionDetails.debitConsumerIDOrTag);
-        if (!consumer) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitConsumerIDOrTag is not a valid consumer",
-          });
-        }
-        consumerID = consumer.props.id;
+      if (transactionDetails.debitConsumerIDOrTag) {
+        const consumer = await this.consumerService.getActiveConsumer(transactionDetails.debitConsumerIDOrTag);
+        transaction.debitConsumerID = consumer.props.id;
       }
-
-      transaction.debitConsumerID = consumerID;
+    } catch (error) {
+      if (error instanceof ServiceException && error.errorCode === ServiceErrorCode.SEMANTIC_VALIDATION) {
+        throw new ServiceException({
+          // Rewrite semantic validations with the service's own terminology, otherwise let it bubble up
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Unable to execute transaction at this time as user is invalid or unable to perform transactions.",
+        });
+      } else {
+        throw error;
+      }
     }
-
-    transaction.workflowName = transactionDetails.workflowName;
 
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
@@ -263,11 +261,11 @@ export class TransactionService {
         if (transaction.creditConsumerID && transaction.debitConsumerID) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "Both credit consumer and debit consumer cannot be set for a transaction",
+            message: "Both credit consumer and debit consumer cannot be set for this type of transaction",
           });
         }
         this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-          savedTransaction.debitConsumerID,
+          savedTransaction.creditConsumerID,
           savedTransaction.debitAmount,
           savedTransaction.transactionRef,
         );
@@ -276,16 +274,15 @@ export class TransactionService {
         if (transaction.creditConsumerID && transaction.debitConsumerID) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "Both credit consumer and debit consumer cannot be set for a transaction",
+            message: "Both credit consumer and debit consumer cannot be set for this type of transaction",
           });
         }
 
         // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
-
         await this.monoService.createMonoTransaction({
           amount: savedTransaction.debitAmount,
           currency: savedTransaction.debitCurrency as MonoCurrency,
-          consumerID: savedTransaction.creditConsumerID,
+          consumerID: savedTransaction.debitConsumerID,
           nobaTransactionID: savedTransaction.id,
         });
 

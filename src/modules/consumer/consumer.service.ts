@@ -26,13 +26,21 @@ import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { IConsumerRepo } from "./repos/consumer.repo";
-import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus } from "@prisma/client";
+import {
+  DocumentVerificationStatus,
+  KYCStatus,
+  PaymentMethodStatus,
+  PaymentMethodType,
+  PaymentProvider,
+  WalletStatus,
+} from "@prisma/client";
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { CardFailureExceptionText } from "./CardProcessingException";
 import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 
 @Injectable()
 export class ConsumerService {
@@ -322,6 +330,49 @@ export class ConsumerService {
 
   async findConsumerById(consumerId: string): Promise<Consumer> {
     return this.consumerRepo.getConsumer(consumerId);
+  }
+
+  /**
+   * Takes a consumer ID or handle and looks up the Consumer, then checks the various flags and KYC status
+   * to ensure they are in good standing before finally returning the Consumer object.
+   */
+  async getActiveConsumer(consumerIDOrHandle: string): Promise<Consumer> {
+    let consumer: Consumer;
+    if (consumerIDOrHandle.startsWith("$")) {
+      consumer = await this.consumerRepo.getConsumerByHandle(consumerIDOrHandle);
+      if (!consumer) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Invalid Noba Tag",
+        });
+      }
+    } else {
+      consumer = await this.consumerRepo.getConsumer(consumerIDOrHandle);
+      if (!consumer) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Invalid Noba Tag",
+        });
+      }
+    }
+
+    // User is only "active" if they are not locked or disabled and have a KYC status of Approved and doc status is in good standing
+    if (
+      consumer.props.isLocked ||
+      consumer.props.isDisabled ||
+      consumer.props.verificationData == null ||
+      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
+      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
+    ) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Unable to transaction with this user at this time",
+      });
+    }
+
+    return consumer;
   }
 
   async findConsumerIDByHandle(handle: string): Promise<string> {
