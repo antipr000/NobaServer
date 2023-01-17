@@ -74,7 +74,7 @@ describe("PostgresTransactionRepoTests", () => {
     transactionRepo = app.get<SQLTransactionRepo>(SQLTransactionRepo);
     prismaService = app.get<PrismaService>(PrismaService);
 
-    clearData();
+    await clearData();
   });
 
   afterAll(async () => {
@@ -82,7 +82,7 @@ describe("PostgresTransactionRepoTests", () => {
   });
 
   beforeEach(async () => {
-    clearData();
+    await clearData();
 
     jest.restoreAllMocks();
   });
