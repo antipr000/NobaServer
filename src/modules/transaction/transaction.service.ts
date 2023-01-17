@@ -273,6 +273,19 @@ export class TransactionService {
 
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
+    // Perform sanctions check
+    try {
+      // If it passes, simple return. If it fails, an exception will be thrown
+      await this.validateForSanctions(initiatingConsumer, savedTransaction);
+    } catch (e) {
+      if (e instanceof ServiceException) {
+        await this.transactionRepo.updateTransactionByTransactionID(savedTransaction.id, {
+          status: TransactionStatus.FAILED,
+        });
+        throw e;
+      }
+    }
+
     switch (transactionDetails.workflowName) {
       case WorkflowName.WALLET_TRANSFER:
         this.workflowExecutor.executeConsumerWalletTransferWorkflow(
@@ -290,7 +303,7 @@ export class TransactionService {
           });
         }
         this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-          savedTransaction.creditConsumerID,
+          savedTransaction.debitConsumerID,
           savedTransaction.debitAmount,
           savedTransaction.transactionRef,
         );
@@ -301,18 +314,6 @@ export class TransactionService {
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
             message: "Both credit consumer and debit consumer cannot be set for this type of transaction",
           });
-        }
-
-        try {
-          // If it passes, simple return. If it fails, an exception will be thrown
-          await this.validateForSanctions(savedTransaction.debitConsumerID, savedTransaction);
-        } catch (e) {
-          if (e instanceof ServiceException) {
-            await this.transactionRepo.updateTransactionByTransactionID(savedTransaction.id, {
-              status: TransactionStatus.FAILED,
-            });
-            throw e;
-          }
         }
 
         // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
@@ -407,6 +408,8 @@ export class TransactionService {
     // Check Sardine for sanctions
     const sardineTransactionInformation: TransactionVerification = {
       transactionID: transaction.id,
+      debitConsumerID: transaction.debitConsumerID,
+      creditConsumerID: transaction.creditConsumerID,
       workflowName: transaction.workflowName,
       debitAmount: transaction.debitAmount,
       debitCurrency: transaction.debitCurrency,

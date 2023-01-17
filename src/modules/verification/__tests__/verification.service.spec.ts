@@ -1007,6 +1007,8 @@ function getDocumentVerificationWebhookRequest(
 function getFakeTransactionVerification(): TransactionVerification {
   return {
     transactionID: "fake-transaction-id",
+    debitConsumerID: "debit-consumer-id",
+    creditConsumerID: "credit-consumer-id",
     debitAmount: 100,
     debitCurrency: "USD",
     creditAmount: 100,

@@ -54,6 +54,8 @@ import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mo
 import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
+import { CircleService } from "../../../modules/psp/circle.service";
+import { getMockCircleServiceWithDefaults } from "../../../modules/psp/mocks/mock.circle.service";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -61,12 +63,14 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 describe("SardineTests", () => {
   let plaidClient: PlaidClient;
   let consumerService: ConsumerService;
+  let circleService: CircleService;
   jest.setTimeout(10000);
   let sardine: Sardine;
 
   beforeEach(async () => {
     plaidClient = getMockPlaidClientWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    circleService = getMockCircleServiceWithDefaults();
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
@@ -88,6 +92,10 @@ describe("SardineTests", () => {
         {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
+        },
+        {
+          provide: CircleService,
+          useFactory: () => instance(circleService),
         },
       ],
     }).compile();
@@ -340,8 +348,12 @@ describe("SardineTests", () => {
 
   describe("transactionVerification", () => {
     it("[OTHER] Should return status APPROVED when transaction is low risk (other)", async () => {
+      const consumerID1 = "consumer-1";
+      const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
         transactionID: "transaction-1",
+        debitConsumerID: consumerID1,
+        creditConsumerID: consumerID2,
         debitAmount: 100,
         debitCurrency: "USD",
         creditAmount: 100,
@@ -350,7 +362,7 @@ describe("SardineTests", () => {
       };
 
       const consumer = Consumer.createConsumer({
-        id: "fake-consumer-1234",
+        id: consumerID1,
         email: "fake+consumer@noba.com",
         verificationData: {
           kycCheckStatus: KYCStatus.APPROVED,
@@ -361,6 +373,8 @@ describe("SardineTests", () => {
           isSuspectedFraud: false,
         },
       });
+
+      when(circleService.getOrCreateWallet("consumer-1")).thenResolve("wallet-1");
 
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
@@ -717,8 +731,12 @@ describe("SardineTests", () => {
     });
 
     it("Should throw BadRequestException when axios call fails", async () => {
+      const consumerID1 = "consumer-1";
+      const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
         transactionID: "transaction-1",
+        debitConsumerID: consumerID1,
+        creditConsumerID: consumerID2,
         debitAmount: 100,
         debitCurrency: "USD",
         creditAmount: 100,
@@ -727,7 +745,7 @@ describe("SardineTests", () => {
       };
 
       const consumer = Consumer.createConsumer({
-        id: "fake-consumer-1234",
+        id: consumerID1,
         email: "fake+consumer@noba.com",
         verificationData: {
           kycCheckStatus: KYCStatus.APPROVED,
@@ -739,6 +757,7 @@ describe("SardineTests", () => {
         },
       });
 
+      when(circleService.getOrCreateWallet(consumerID1)).thenResolve("wallet-1");
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
         consumer,
