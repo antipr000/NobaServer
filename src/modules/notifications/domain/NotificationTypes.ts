@@ -24,3 +24,8 @@ export enum NotificationEventHandler {
   EMAIL = "email",
   WEBHOOK = "webhook",
 }
+
+export enum NotificationWorkflowTypes {
+  TRANSACTION_COMPLETED_EVENT = "transactionCompletedEvent",
+  TRANSACTION_FAILED_EVENT = "transactionFailedEvent",
+}

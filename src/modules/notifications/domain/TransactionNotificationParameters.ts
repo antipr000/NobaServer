@@ -1,4 +1,4 @@
-import { TransactionStatus } from "../../../modules/transactions/domain/Types";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 export type TransactionParameters = {
   transactionID: string;
