@@ -368,7 +368,7 @@ export class ConsumerService {
     ) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "Unable to transaction with this user at this time",
+        message: "Unable to transact with this user at this time",
       });
     }
 

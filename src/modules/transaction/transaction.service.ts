@@ -97,12 +97,13 @@ export class TransactionService {
           });
         }
 
+        transactionDetails.creditCurrency = Currency.USD;
         transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
         delete transactionDetails.creditConsumerIDOrTag;
 
         const exchangeRateToUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
           transactionDetails.debitCurrency,
-          Currency.USD,
+          transactionDetails.creditCurrency,
         );
 
         if (!exchangeRateToUSD) {
@@ -116,28 +117,41 @@ export class TransactionService {
         }
 
         transactionDetails.creditAmount = exchangeRateToUSD.nobaRate * transactionDetails.debitAmount;
-        transactionDetails.creditCurrency = Currency.USD;
         transactionDetails.exchangeRate = exchangeRateToUSD.nobaRate;
         break;
       case WorkflowName.WALLET_WITHDRAWAL:
-        if (transactionDetails.debitConsumerIDOrTag) {
+        /* 
+          For a withdrawal, the following are true:
+           1. We set the debitConsumerIDOrTag to the initiating consumer (the consumer who is withdrawing)
+           2. CreditConsumerIDOrTag will never be set
+           3. Debit-side amount must be provided but currency will always be USD
+           4. Credit-side currency must be provided but credit amount will always be calculated
+        */
+        if (transactionDetails.creditConsumerIDOrTag) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitConsumerIDOrTag cannot be set for WALLET_WITHDRAWAL workflow",
+            message: "creditConsumerIDOrTag cannot be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
-        if (transactionDetails.debitAmount || transactionDetails.debitCurrency) {
+        if (transactionDetails.creditAmount) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount and debitCurrency cannot be set for WALLET_WITHDRAWAL workflow",
+            message: "creditAmount cannot be set for WALLET_WITHDRAWAL workflow",
           });
         }
 
-        if (transactionDetails.creditAmount <= 0) {
+        if (transactionDetails.debitCurrency) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount must be greater than 0 for WALLET_WITHDRAWAL workflow",
+            message: "debitCurrency cannot be set for WALLET_WITHDRAWAL workflow",
+          });
+        }
+
+        if (transactionDetails.debitAmount <= 0) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "debitAmount must be greater than 0 for WALLET_WITHDRAWAL workflow",
           });
         }
 
@@ -148,11 +162,12 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.creditConsumerIDOrTag = initiatingConsumer;
-        delete transactionDetails.debitConsumerIDOrTag;
+        transactionDetails.debitCurrency = Currency.USD;
+        transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
+        delete transactionDetails.creditConsumerIDOrTag;
 
         const exchangeRateFromUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-          Currency.USD,
+          transactionDetails.debitCurrency,
           transactionDetails.creditCurrency,
         );
 
@@ -166,8 +181,7 @@ export class TransactionService {
           });
         }
 
-        transactionDetails.debitAmount = exchangeRateFromUSD.nobaRate * transactionDetails.creditAmount;
-        transactionDetails.debitCurrency = Currency.USD;
+        transactionDetails.creditAmount = exchangeRateFromUSD.nobaRate * transactionDetails.debitAmount;
         transactionDetails.exchangeRate = exchangeRateFromUSD.nobaRate;
         break;
       case WorkflowName.WALLET_TRANSFER:
