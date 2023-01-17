@@ -143,7 +143,7 @@ mono:
   nobaAccountID: ""
   awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
   webhookSecret: ""
-  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
+  awsSecretNameForWebhookSecret: "DEV_MONO_WEBHOOK_SECRET"
 
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"

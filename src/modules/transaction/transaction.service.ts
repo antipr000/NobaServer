@@ -285,7 +285,7 @@ export class TransactionService {
         await this.monoService.createMonoTransaction({
           amount: savedTransaction.debitAmount,
           currency: savedTransaction.debitCurrency as MonoCurrency,
-          consumerID: savedTransaction.creditConsumerID,
+          consumerID: savedTransaction.debitConsumerID,
           nobaTransactionID: savedTransaction.id,
         });
 
