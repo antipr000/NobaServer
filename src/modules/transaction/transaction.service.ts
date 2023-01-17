@@ -100,10 +100,11 @@ export class TransactionService {
           });
         }
 
-        if (!transactionDetails.debitCurrency) {
+        // COP limitation is temporary until we support other currencies
+        if (!transactionDetails.debitCurrency || transactionDetails.debitCurrency !== Currency.COP) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitCurrency must be set for WALLET_DEPOSIT workflow",
+            message: "debitCurrency must be set for WALLET_DEPOSIT workflow and must be COP",
           });
         }
 
