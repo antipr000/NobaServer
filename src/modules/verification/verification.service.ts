@@ -11,7 +11,6 @@ import { KYCStatus, DocumentVerificationStatus } from "@prisma/client";
 import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/verificationdata.repo";
-import { TransactionInformation } from "./domain/TransactionInformation";
 import {
   CaseNotificationWebhookRequest,
   DocumentVerificationWebhookRequest,
@@ -21,6 +20,7 @@ import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
+import { TransactionVerification } from "./domain/TransactionVerification";
 
 @Injectable()
 export class VerificationService {
@@ -323,9 +323,9 @@ export class VerificationService {
   async transactionVerification(
     sessionKey: string,
     consumer: Consumer,
-    transactionInformation: TransactionInformation,
+    transactionVerification: TransactionVerification,
   ): Promise<ConsumerVerificationResult> {
-    const result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionInformation);
+    const result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionVerification);
 
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
@@ -339,7 +339,7 @@ export class VerificationService {
     await this.verificationDataRepo.updateVerificationData(
       VerificationData.createVerificationData({
         id: sessionKey,
-        transactionID: transactionInformation.transactionID,
+        transactionID: transactionVerification.transactionID,
       }),
     );
 

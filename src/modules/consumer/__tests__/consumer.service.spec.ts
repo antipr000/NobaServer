@@ -38,9 +38,18 @@ import { IConsumerRepo } from "../repos/consumer.repo";
 import { getMockCircleClientWithDefaults } from "../../psp/mocks/mock.circle.client";
 import { CircleClient } from "../../psp/circle.client";
 import { OTPService } from "../../../modules/common/otp.service";
-import { PaymentMethodStatus, PaymentMethodType, PaymentProvider, WalletStatus } from "@prisma/client";
+import {
+  DocumentVerificationStatus,
+  KYCProvider,
+  KYCStatus,
+  PaymentMethodStatus,
+  PaymentMethodType,
+  PaymentProvider,
+  WalletStatus,
+} from "@prisma/client";
 import { QRService } from "../../../modules/common/qrcode.service";
 import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock.qr.service";
+import { ServiceException } from "../../../core/exception/ServiceException";
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -176,6 +185,136 @@ describe("ConsumerService", () => {
       expect(async () => {
         await consumerService.findConsumerById("missing-consumer");
       }).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("getActiveConsumer", () => {
+    const getKYCdConsumer = (id: string, email: string, handle: string): Consumer => {
+      return Consumer.createConsumer({
+        id: id,
+        email: email,
+        handle: handle,
+        isLocked: false,
+        isDisabled: false,
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
+          provider: KYCProvider.SARDINE,
+        },
+      });
+    };
+
+    it("should find the consumer by handle", async () => {
+      const email = "mock-user@noba.com";
+      const consumerID = "mock-consumer-1";
+      const handle = "$mock-handle";
+      const consumer = getKYCdConsumer(consumerID, email, handle);
+
+      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      const response = await consumerService.getActiveConsumer(handle);
+      expect(response).toStrictEqual(consumer);
+    });
+
+    it("should not find the consumer by handle if it doesn't exist", async () => {
+      when(consumerRepo.getConsumerByHandle("$missing-handle")).thenResolve(null);
+
+      expect(async () => {
+        await consumerService.getActiveConsumer("$missing-handle");
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should find the consumer by ID", async () => {
+      const email = "mock-user@noba.com";
+      const consumerID = "mock-consumer-1";
+      const consumer = getKYCdConsumer(consumerID, email, null);
+
+      when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
+      const response = await consumerService.getActiveConsumer(consumerID);
+      expect(response).toStrictEqual(consumer);
+    });
+
+    it("should not find the consumer by ID if it doesn't exist", async () => {
+      when(consumerRepo.getConsumer("missing-consumer-id")).thenResolve(null);
+
+      expect(async () => {
+        await consumerService.getActiveConsumer("missing-consumer-id");
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should find the consumer by handle then throw exception based on locked account", async () => {
+      const email = "mock-user@noba.com";
+      const consumerID = "mock-consumer-1";
+      const handle = "$mock-handle";
+      const consumer = getKYCdConsumer(consumerID, email, handle);
+      consumer.props.isLocked = true;
+
+      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      expect(async () => {
+        await consumerService.getActiveConsumer(handle);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should find the consumer by handle then throw exception based on disabled account", async () => {
+      const email = "mock-user@noba.com";
+      const consumerID = "mock-consumer-1";
+      const handle = "$mock-handle";
+      const consumer = getKYCdConsumer(consumerID, email, handle);
+      consumer.props.isDisabled = true;
+
+      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      expect(async () => {
+        await consumerService.getActiveConsumer(handle);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should find the consumer by handle then throw exception based on no verificationData yet", async () => {
+      const email = "mock-user@noba.com";
+      const consumerID = "mock-consumer-1";
+      const handle = "$mock-handle";
+      const consumer = getKYCdConsumer(consumerID, email, handle);
+      delete consumer.props.verificationData;
+
+      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      expect(async () => {
+        await consumerService.getActiveConsumer(handle);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should find the consumer by handle then throw exception based on non-approved KYC status", async () => {
+      const email = "mock-user@noba.com";
+      const consumerID = "mock-consumer-1";
+      const handle = "$mock-handle";
+      const consumer = getKYCdConsumer(consumerID, email, handle);
+      consumer.props.verificationData.kycCheckStatus = KYCStatus.PENDING;
+
+      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      expect(async () => {
+        await consumerService.getActiveConsumer(handle);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should find the consumer by handle then throw exception based on not-allowed documentVerificationStatus", async () => {
+      for (const status of [
+        DocumentVerificationStatus.PENDING,
+        DocumentVerificationStatus.REJECTED,
+        DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
+        DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+        DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE,
+      ]) {
+        const email = "mock-user@noba.com";
+        const consumerID = "mock-consumer-1";
+        const handle = `$mock-handle-${status}`;
+        const consumer = getKYCdConsumer(consumerID, email, handle);
+        consumer.props.verificationData.documentVerificationStatus = status;
+
+        when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+        expect(async () => {
+          await consumerService.getActiveConsumer(handle);
+        }).rejects.toThrow(ServiceException);
+      }
     });
   });
 

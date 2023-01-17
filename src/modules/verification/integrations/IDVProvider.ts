@@ -1,7 +1,7 @@
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { DocumentInformation } from "../domain/DocumentInformation";
-import { TransactionInformation } from "../domain/TransactionInformation";
+import { TransactionVerification } from "../domain/TransactionVerification";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import {
@@ -21,7 +21,7 @@ export interface IDVProvider {
   transactionVerification(
     sessionKey: string,
     consumer: Consumer,
-    transactionInformation: TransactionInformation,
+    transactionVerification: TransactionVerification,
   ): Promise<ConsumerVerificationResult>;
 
   getIdentityDocumentVerificationURL(

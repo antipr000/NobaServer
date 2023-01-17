@@ -38,6 +38,7 @@ import { NotificationService } from "../../../modules/notifications/notification
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
+import { TransactionVerification } from "../domain/TransactionVerification";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -662,7 +663,7 @@ describe("VerificationService", () => {
   describe("transactionVerification", () => {
     it("verify transaction parameters and return ACCEPTED if Sardine doesn't flag the transaction", async () => {
       const consumer = getFakeConsumer();
-      const transactionInformation = getFakeTransactionInformation();
+      const transactionInformation = getFakeTransactionVerification();
       const sessionKey = "fake-session-key";
 
       const transactionVerificationResult: ConsumerVerificationResult = {
@@ -1003,14 +1004,14 @@ function getDocumentVerificationWebhookRequest(
   }
 }
 
-function getFakeTransactionInformation(): TransactionInformation {
+function getFakeTransactionVerification(): TransactionVerification {
   return {
     transactionID: "fake-transaction-id",
-    amount: 100,
-    currencyCode: "USD",
-    paymentMethodID: "fake-card",
-    cryptoCurrencyCode: "ETH",
-    walletAddress: "fake-wallet-address",
+    debitAmount: 100,
+    debitCurrency: "USD",
+    creditAmount: 100,
+    creditCurrency: "USD",
+    workflowName: "fake-workflow",
   };
 }
 

@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import { KYCStatus, DocumentVerificationStatus, WalletStatus, PaymentMethodType } from "@prisma/client";
+import { KYCStatus, DocumentVerificationStatus, WalletStatus } from "@prisma/client";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
@@ -24,6 +24,7 @@ import {
   FeedbackType,
   IdentityDocumentURLRequest,
   IdentityDocumentURLResponse,
+  PaymentMethod,
   PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDeviceInformationResponse,
@@ -34,13 +35,14 @@ import {
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import FormData from "form-data";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
-import { TransactionInformation } from "../domain/TransactionInformation";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PlaidClient } from "../../../modules/psp/plaid.client";
-import { RetrieveAccountDataResponse, BankAccountType } from "../../../modules/psp/domain/PlaidTypes";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
+import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
+import { TransactionVerification } from "../domain/TransactionVerification";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -232,6 +234,90 @@ export class Sardine implements IDVProvider {
   async transactionVerification(
     sessionKey: string,
     consumer: Consumer,
+    transaction: TransactionVerification,
+  ): Promise<ConsumerVerificationResult> {
+    const sardinePaymentMethodData: PaymentMethod = {
+      type: PaymentMethodTypes.OTHER,
+      other: {
+        id: "", // TODO confirm with Sardine
+        type: "pse", // TODO confirm with Sardine
+      },
+    };
+
+    // Take amount from the USD side of the transaction
+    const usdAmount = transaction.creditCurrency == Currency.USD ? transaction.creditAmount : transaction.debitAmount;
+
+    let actionType;
+    switch (transaction.workflowName) {
+      case WorkflowName.WALLET_TRANSFER:
+        actionType = "transfer";
+        break;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        actionType = "withdrawal";
+        break;
+      case WorkflowName.WALLET_DEPOSIT:
+        actionType = "deposit";
+        break;
+      default:
+        // This should never happen
+        this.logger.error(`Unknown workflow name: ${transaction.workflowName}`);
+        throw new Error(`Unknown workflow name: ${transaction.workflowName}`);
+    }
+
+    const sanctionsCheckSardineRequest: SardineCustomerRequest = {
+      flow: transaction.workflowName,
+      sessionKey: sessionKey,
+      customer: {
+        id: consumer.props.id,
+      },
+      transaction: {
+        id: transaction.transactionID,
+        status: "accepted",
+        createdAtMillis: Date.now(),
+        amount: usdAmount,
+        currencyCode: Currency.USD,
+        actionType: actionType,
+        paymentMethod: sardinePaymentMethodData,
+        recipient: {
+          emailAddress: consumer.props.email,
+          isKycVerified: consumer.props.verificationData.kycCheckStatus === KYCStatus.APPROVED,
+          paymentMethod: sardinePaymentMethodData,
+        },
+      },
+      checkpoints: ["aml", "payment"],
+    };
+
+    try {
+      const { data } = await axios.post(
+        this.BASE_URI + "/v1/customers",
+        sanctionsCheckSardineRequest,
+        this.getAxiosConfig(),
+      );
+
+      let verificationStatus: KYCStatus = KYCStatus.REJECTED;
+
+      if (data.level === SardineRiskLevels.VERY_HIGH) {
+        verificationStatus = KYCStatus.REJECTED;
+      } else if (data.level === SardineRiskLevels.HIGH) {
+        verificationStatus = KYCStatus.PENDING;
+      } else {
+        verificationStatus = KYCStatus.APPROVED;
+      }
+
+      return {
+        status: verificationStatus,
+        idvProviderRiskLevel: data.level,
+      };
+    } catch (e) {
+      this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
+      throw new BadRequestException(e.message);
+    }
+  }
+
+  /* Onramp version, for reference
+  async transactionVerification(
+    sessionKey: string,
+    consumer: Consumer,
     transactionInformation: TransactionInformation,
   ): Promise<ConsumerVerificationResult> {
     let sardinePaymentMethodData;
@@ -280,6 +366,7 @@ export class Sardine implements IDVProvider {
         },
       };
     }
+    else (paymentMethod.props.type === PaymentMethodType.)
 
     const sanctionsCheckSardineRequest: SardineCustomerRequest = {
       flow: "payment-submission",
@@ -345,7 +432,7 @@ export class Sardine implements IDVProvider {
       this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
       throw new BadRequestException(e.message);
     }
-  }
+  }*/
 
   async getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse> {
     try {

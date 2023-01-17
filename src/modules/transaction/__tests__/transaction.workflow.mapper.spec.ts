@@ -36,7 +36,7 @@ describe("TransactionWorkflowMapperTest", () => {
       const transaction: Transaction = {
         exchangeRate: 1.2,
         status: TransactionStatus.PENDING,
-        workflowName: WorkflowName.CONSUMER_WALLET_TRANSFER,
+        workflowName: WorkflowName.WALLET_TRANSFER,
         id: "ID",
         sessionKey: "sessionKey",
         memo: "memo",
@@ -56,7 +56,7 @@ describe("TransactionWorkflowMapperTest", () => {
 
       expect(workflowTransactionDTO).toEqual({
         id: "ID",
-        workflowName: WorkflowName.CONSUMER_WALLET_TRANSFER,
+        workflowName: WorkflowName.WALLET_TRANSFER,
         debitConsumerID: "debitConsumerID",
         creditConsumerID: "creditConsumerID",
         debitCurrency: "INR",
@@ -64,7 +64,7 @@ describe("TransactionWorkflowMapperTest", () => {
         debitAmount: 100,
         creditAmount: 200,
         exchangeRate: "1.2",
-        status: "PENDING",
+        status: TransactionStatus.PENDING,
       });
     });
 

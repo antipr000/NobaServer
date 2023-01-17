@@ -17,4 +17,19 @@ export class VendorsService {
       url: "/v1/vendors/checkout/webhooks",
     });
   }
+
+  /**
+   * Handle all the Mono Webhook requests
+   * @returns any
+   * @throws ApiError
+   */
+  public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/wf/v1/mono/webhooks",
+      headers: {
+        "mono-signature": monoSignature,
+      },
+    });
+  }
 }
