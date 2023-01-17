@@ -326,19 +326,19 @@ describe("TransactionServiceTests", () => {
       },
     );
 
-    it("should throw ServiceException if debitAmount is less than 0 for WALLET_WITHDRAWAL", async () => {
+    it("should throw ServiceException if creditAmount is less than 0 for WALLET_WITHDRAWAL", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transactionDTO } = getRandomTransaction(null, consumer.props.id, WorkflowName.WALLET_WITHDRAWAL);
-      transactionDTO.debitAmount = -1;
+      transactionDTO.creditAmount = -1;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
     });
 
-    it("should throw ServiceException if creditAmount is less than 0 for WALLET_DEPOSIT", async () => {
+    it("should throw ServiceException if debitAmount is less than 0 for WALLET_DEPOSIT", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_DEPOSIT);
-      transactionDTO.creditAmount = -1;
+      transactionDTO.debitAmount = -1;
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
@@ -375,6 +375,24 @@ describe("TransactionServiceTests", () => {
       const consumer = getRandomConsumer("consumerID");
       const { transactionDTO } = getRandomTransaction(consumer.props.id, null, WorkflowName.WALLET_TRANSFER);
       transactionDTO.debitCurrency = null;
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if exchange rate cannot be found WALLET_WITHDRAWAL", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(null, consumer.props.id, WorkflowName.WALLET_WITHDRAWAL);
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(null);
+      await expect(
+        transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if exchange rate cannot be found WALLET_DEPOSIT", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(null, consumer.props.id, WorkflowName.WALLET_DEPOSIT);
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(null);
       await expect(
         transactionService.initiateTransaction(transactionDTO, consumer.props.id, null),
       ).rejects.toThrowError(ServiceException);
