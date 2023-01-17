@@ -249,10 +249,10 @@ export class Sardine implements IDVProvider {
 
     let actionType;
     switch (transaction.workflowName) {
-      case WorkflowName.CONSUMER_WALLET_TRANSFER:
+      case WorkflowName.WALLET_TRANSFER:
         actionType = "transfer";
         break;
-      case WorkflowName.DEBIT_CONSUMER_WALLET:
+      case WorkflowName.WALLET_WITHDRAWAL:
         actionType = "withdrawal";
         break;
       case WorkflowName.WALLET_DEPOSIT:

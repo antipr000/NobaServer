@@ -11,7 +11,6 @@ import { KYCStatus, DocumentVerificationStatus } from "@prisma/client";
 import { VerificationData } from "./domain/VerificationData";
 import { Entity } from "../../core/domain/Entity";
 import { IVerificationDataRepo } from "./repos/verificationdata.repo";
-import { TransactionInformation } from "./domain/TransactionInformation";
 import {
   CaseNotificationWebhookRequest,
   DocumentVerificationWebhookRequest,
