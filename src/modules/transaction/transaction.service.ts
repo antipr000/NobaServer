@@ -352,7 +352,7 @@ export class TransactionService {
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    addFee: boolean = false,
+    addNobaFee: boolean = false,
   ): Promise<QuoteResponseDTO> {
     if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({
@@ -385,15 +385,17 @@ export class TransactionService {
     let desiredAmountWithFees = 0;
     if (desiredCurrency === Currency.COP) {
       desiredAmount = amount * exchangeRate;
-      if (addFee) {
-        const fees = Math.min(desiredAmount * this.depositFeePercentage, this.depositFeeAmount);
-        desiredAmountWithFees = desiredAmount - fees;
+      desiredAmountWithFees = desiredAmount - 1.19 * (0.0265 * desiredAmount + 900);
+      if (addNobaFee) {
+        const nobaFee = Math.min(desiredAmount * this.depositFeePercentage, this.depositFeeAmount);
+        desiredAmountWithFees = desiredAmountWithFees - nobaFee;
       }
     } else {
       desiredAmount = amount * exchangeRate;
-      if (addFee) {
-        const fees = Math.min(amount * this.depositFeePercentage, this.depositFeeAmount);
-        const baseCurrencyWithFees = amount - fees;
+      let baseCurrencyWithFees = amount - 1.19 * (0.0265 * amount + 900);
+      if (addNobaFee) {
+        const nobaFee = Math.min(amount * this.depositFeePercentage, this.depositFeeAmount);
+        baseCurrencyWithFees = amount - nobaFee;
         desiredAmountWithFees = baseCurrencyWithFees * exchangeRate;
       }
     }

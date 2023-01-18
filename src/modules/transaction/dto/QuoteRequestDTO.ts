@@ -12,5 +12,5 @@ export class QuoteRequestDTO {
   desiredCurrency: Currency;
 
   @ApiProperty()
-  addFee: boolean;
+  addNobaFee: boolean;
 }
