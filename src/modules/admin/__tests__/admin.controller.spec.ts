@@ -591,6 +591,7 @@ describe("AdminController", () => {
       const consumerProps: ConsumerProps = {
         id: "test-consumer-1234",
         email: "consumer@noba.com",
+        locale: "en",
         verificationData: {
           kycCheckStatus: KYCStatus.PENDING,
           documentVerificationStatus: DocumentVerificationStatus.REQUIRED,
