@@ -493,6 +493,7 @@ describe("Transaction Controller tests", () => {
         amount: 1,
         currency: Currency.USD,
         desiredCurrency: Currency.COP,
+        addNobaFee: false,
       };
 
       when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenResolve({
@@ -513,6 +514,7 @@ describe("Transaction Controller tests", () => {
         amount: 1,
         currency: Currency.USD,
         desiredCurrency: Currency.COP,
+        addNobaFee: true,
       };
 
       when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenReject(
