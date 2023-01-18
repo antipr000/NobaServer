@@ -29,9 +29,9 @@ import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
 import { TransactionVerification } from "../verification/domain/TransactionVerification";
 import { VerificationService } from "../verification/verification.service";
 import { KYCStatus } from "@prisma/client";
-import { CustomConfigService } from "src/core/utils/AppConfigModule";
-import { NobaConfigs } from "src/config/configtypes/NobaConfigs";
-import { DEPOSIT_FEE_AMOUNT, DEPOSIT_FEE_PERCENTAGE } from "src/config/ConfigurationUtils";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
+import { DEPOSIT_FEE_AMOUNT, DEPOSIT_FEE_PERCENTAGE } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class TransactionService {
