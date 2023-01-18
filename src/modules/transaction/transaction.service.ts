@@ -340,6 +340,7 @@ export class TransactionService {
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
+    addFee: boolean = false,
   ): Promise<QuoteResponseDTO> {
     if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({

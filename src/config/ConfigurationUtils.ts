@@ -84,11 +84,15 @@ export const FLAT_FEE_DOLLARS = "flatFeeDollars";
 export const DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE = "dynamicCreditCardFeePercentage";
 export const FIXED_CREDIT_CARD_FEE = "fixedCreditCardFee";
 export const SLIPPAGE_ALLOWED_PERCENTAGE = "slippageAllowedPercentage";
+export const DEPOSIT_FEE_AMOUNT = "depositFeeAmount";
+export const DEPOSIT_FEE_PERCENTAGE = "depositFeePercentage";
 export const AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE = "awsSecretKeyForSpreadPercentage";
 export const AWS_SECRET_KEY_FOR_FLAT_FEE_DOLLARS = "awsSecretKeyForFlatFeeDollars";
 export const AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE = "awsSecretKeyForDynamicCreditCardFeePercentage";
 export const AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE = "awsSecretKeyForFixedCreditCardFee";
 export const AWS_SECRET_KEY_FOR_SLIPPAGE_ALLOWED_PERCENTAGE = "awsSecretKeyForSlippageAllowedPercentage";
+export const AWS_SECRET_KEY_FOR_DEPOSIT_FEE_AMOUNT = "awsSecretKeyForDepositFeeAmount";
+export const AWS_SECRET_KEY_FOR_DEPOSIT_FEE_PERCENTAGE = "awsSecretKeyForDepositFeePercentage";
 
 export const ZEROHASH_CONFIG_KEY = "zerohash";
 export const ZEROHASH_AWS_SECRET_KEY_FOR_API_KEY_ATTR = "awsSecretNameForApiKey";
