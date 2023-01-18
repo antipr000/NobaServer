@@ -384,17 +384,17 @@ export class TransactionService {
     let desiredAmount = 0;
     let desiredAmountWithFees = 0;
     if (desiredCurrency === Currency.COP) {
-      desiredAmount = amount / exchangeRate;
+      desiredAmount = amount * exchangeRate;
       if (addFee) {
         const fees = Math.min(desiredAmount * this.depositFeePercentage, this.depositFeeAmount);
         desiredAmountWithFees = desiredAmount - fees;
       }
     } else {
-      desiredAmount = amount / exchangeRate;
+      desiredAmount = amount * exchangeRate;
       if (addFee) {
         const fees = Math.min(amount * this.depositFeePercentage, this.depositFeeAmount);
         const baseCurrencyWithFees = amount - fees;
-        desiredAmountWithFees = baseCurrencyWithFees / exchangeRate;
+        desiredAmountWithFees = baseCurrencyWithFees * exchangeRate;
       }
     }
 
