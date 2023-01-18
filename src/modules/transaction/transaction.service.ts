@@ -29,18 +29,29 @@ import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
 import { TransactionVerification } from "../verification/domain/TransactionVerification";
 import { VerificationService } from "../verification/verification.service";
 import { KYCStatus } from "@prisma/client";
+import { CustomConfigService } from "src/core/utils/AppConfigModule";
+import { NobaConfigs } from "src/config/configtypes/NobaConfigs";
+import { DEPOSIT_FEE_AMOUNT, DEPOSIT_FEE_PERCENTAGE } from "src/config/ConfigurationUtils";
 
 @Injectable()
 export class TransactionService {
+  private depositFeeAmount: number;
+  private depositFeePercentage: number;
+
   constructor(
     @Inject(TRANSACTION_REPO_PROVIDER) private readonly transactionRepo: ITransactionRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: CustomConfigService,
     private readonly consumerService: ConsumerService,
     private readonly workflowExecutor: WorkflowExecutor,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly verificationService: VerificationService,
     private readonly monoService: MonoService,
-  ) {}
+  ) {
+    this.depositFeeAmount = this.configService.get<NobaConfigs>(DEPOSIT_FEE_AMOUNT).transaction.depositFeeAmount;
+    this.depositFeePercentage =
+      this.configService.get<NobaConfigs>(DEPOSIT_FEE_PERCENTAGE).transaction.depositFeePercentage;
+  }
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
     const transaction: Transaction = await this.transactionRepo.getTransactionByTransactionRef(transactionRef);

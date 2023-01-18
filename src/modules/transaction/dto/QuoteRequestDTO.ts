@@ -10,4 +10,7 @@ export class QuoteRequestDTO {
 
   @ApiProperty({ enum: Currency })
   desiredCurrency: Currency;
+
+  @ApiProperty()
+  addFee: boolean;
 }

@@ -521,6 +521,18 @@ async function configureNobaParameters(
     nobaConfigs.privateBearerToken,
   );
 
+  nobaConfigs.transaction.depositFeeAmount = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForDepositFeeAmount,
+      nobaConfigs.transaction.depositFeeAmount.toString(),
+    ),
+  );
+  nobaConfigs.transaction.depositFeePercentage = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForDepositFeePercentage,
+      nobaConfigs.transaction.depositFeePercentage.toString(),
+    ),
+  );
   nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(
     await getParameterValue(
       nobaConfigs.transaction.awsSecretKeyForDynamicCreditCardFeePercentage,
