@@ -1,4 +1,4 @@
-import { OrderExecutedNotificationParameters } from "../domain/TransactionNotificationParameters";
+import { TransactionExecutedNotificationParameters } from "../domain/TransactionNotificationParameters";
 
 export class SendOrderExecutedEvent {
   public readonly email: string;
@@ -7,7 +7,7 @@ export class SendOrderExecutedEvent {
   public readonly nobaUserID?: string;
   public readonly locale?: string;
 
-  public readonly params: OrderExecutedNotificationParameters;
+  public readonly params: TransactionExecutedNotificationParameters;
 
   constructor({ email, firstName, lastName, nobaUserID, locale, params }) {
     this.email = email;

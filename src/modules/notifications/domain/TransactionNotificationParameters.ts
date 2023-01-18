@@ -23,17 +23,17 @@ export interface CryptoFailedNotificationParameters extends TransactionParameter
 
 export type TransactionInitiatedNotificationParameters = TransactionParameters;
 
-export interface OrderExecutedNotificationParameters extends TransactionParameters {
+export interface TransactionExecutedNotificationParameters extends TransactionParameters {
   transactionHash: string;
   settledTimestamp: Date;
   cryptoAmountExpected: number;
 }
 
-export interface OrderFailedNotificationParameters extends TransactionParameters {
+export interface TransactionFailedNotificationParameters extends TransactionParameters {
   failureReason: string;
 }
 
-export class TransactionNotificationPayloadParamsMapper {
+export class TransactionNotificationPayloadMapper {
   toTransactionInitiatedNotificationParameters(transaction: Transaction): TransactionInitiatedNotificationParameters {
     return {
       transactionID: transaction.id,
@@ -53,7 +53,7 @@ export class TransactionNotificationPayloadParamsMapper {
     };
   }
 
-  toOrderExecutedNotificationParameters(transaction: Transaction): OrderExecutedNotificationParameters {
+  toTransactionExecutedNotificationParameters(transaction: Transaction): TransactionExecutedNotificationParameters {
     const transactionParams = this.toTransactionInitiatedNotificationParameters(transaction);
     return {
       ...transactionParams,
@@ -63,7 +63,7 @@ export class TransactionNotificationPayloadParamsMapper {
     };
   }
 
-  toOrderFailedNotificationParameters(transaction: Transaction): OrderFailedNotificationParameters {
+  toTransactionFailedNotificationParameters(transaction: Transaction): TransactionFailedNotificationParameters {
     const transactionParams = this.toTransactionInitiatedNotificationParameters(transaction);
     return {
       ...transactionParams,

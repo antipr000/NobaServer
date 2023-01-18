@@ -10,10 +10,6 @@ import { DEPENDENCY_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { DependencyConfigs, EmailClient } from "../../config/configtypes/DependencyConfigs";
 import { StubEmailService } from "./emails/stub.email.service";
 import { SendgridEmailService } from "./emails/sendgrid.email.service";
-import { ConsumerModule } from "../consumer/consumer.module";
-import { TransactionModule } from "../transaction/transaction.module";
-import { NotificationWorkflowController } from "./notification.workflow.controller";
-import { NotificationWorkflowService } from "./notification.workflow.service";
 
 // This is made to ensure that the "Sendgrid" quota is not utilised in testing environments.
 export const EmailProvider: Provider = {
@@ -40,10 +36,3 @@ export const EmailProvider: Provider = {
   exports: [NotificationService],
 })
 export class NotificationsModule {}
-
-@Module({
-  imports: [ConfigModule, NotificationsModule, ConsumerModule, TransactionModule],
-  controllers: [NotificationWorkflowController],
-  providers: [NotificationWorkflowService],
-})
-export class NotificationWorkflowModule {}

@@ -239,7 +239,7 @@ export class NotificationService {
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
             locale: payload.locale,
-            params: payload.orderExecutedParams,
+            params: payload.transactionExecutedParams,
           }),
         );
         break;
@@ -252,7 +252,7 @@ export class NotificationService {
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
             locale: payload.locale,
-            params: payload.orderFailedParams,
+            params: payload.transactionFailedParams,
           }),
         );
         break;

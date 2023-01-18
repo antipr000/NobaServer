@@ -21,9 +21,12 @@ export class NotificationWorkflowController {
   @ApiOperation({ summary: "Send notification from workflow" })
   @ApiResponse({ status: HttpStatus.ACCEPTED })
   async sendNotification(
-    @Param("notificationType") notificationType: NotificationWorkflowTypes,
+    @Param("notificationType") notificationType: string,
     @Query("transactionID") transactionID: string,
   ): Promise<void> {
-    await this.notificationWorkflowService.sendNotification(notificationType, transactionID);
+    await this.notificationWorkflowService.sendNotification(
+      notificationType as NotificationWorkflowTypes,
+      transactionID,
+    );
   }
 }

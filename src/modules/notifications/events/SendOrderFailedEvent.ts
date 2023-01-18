@@ -1,4 +1,4 @@
-import { OrderFailedNotificationParameters } from "../domain/TransactionNotificationParameters";
+import { TransactionFailedNotificationParameters } from "../domain/TransactionNotificationParameters";
 
 export class SendOrderFailedEvent {
   public readonly email: string;
@@ -7,7 +7,7 @@ export class SendOrderFailedEvent {
   public readonly nobaUserID?: string;
   public readonly locale?: string;
 
-  public readonly params: OrderFailedNotificationParameters;
+  public readonly params: TransactionFailedNotificationParameters;
 
   constructor({ email, firstName, lastName, nobaUserID, locale, params }) {
     this.email = email;

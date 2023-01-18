@@ -17,6 +17,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MonoModule } from "./modules/psp/mono/mono.module";
 import { PspWorkflowModule } from "./modules/psp/psp.module";
 import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
+import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ export class AppModule {}
     MonoModule,
     PspWorkflowModule,
     TransactionWorkflowModule,
+    NotificationWorkflowModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

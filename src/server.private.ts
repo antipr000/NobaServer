@@ -16,6 +16,7 @@ import { joiToSwagger } from "./joi2Swagger";
 import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
 import { PspWorkflowModule } from "./modules/psp/psp.module";
 import { TransactionWorkflowModule } from "./modules/transaction/transaction.module";
+import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
@@ -66,7 +67,7 @@ export const bootstrapPrivateEndpoints = async (environmentVariables): Promise<I
     .build();
 
   const options = {
-    include: [PspWorkflowModule, TransactionWorkflowModule],
+    include: [PspWorkflowModule, TransactionWorkflowModule, NotificationWorkflowModule],
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
 

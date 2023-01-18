@@ -1,14 +1,14 @@
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import {
   CryptoFailedNotificationParameters,
-  OrderExecutedNotificationParameters,
-  OrderFailedNotificationParameters,
+  TransactionExecutedNotificationParameters,
+  TransactionFailedNotificationParameters,
   TransactionInitiatedNotificationParameters,
 } from "./TransactionNotificationParameters";
 
 export type NotificationPayload = {
   email: string;
-  locale: string;
+  locale?: string;
   otp?: string;
   walletAddress?: string;
   firstName?: string;
@@ -18,8 +18,8 @@ export type NotificationPayload = {
   last4Digits?: string;
   transactionInitiatedParams?: TransactionInitiatedNotificationParameters;
   cryptoFailedParams?: CryptoFailedNotificationParameters;
-  orderExecutedParams?: OrderExecutedNotificationParameters;
-  orderFailedParams?: OrderFailedNotificationParameters;
+  transactionExecutedParams?: TransactionExecutedNotificationParameters;
+  transactionFailedParams?: TransactionFailedNotificationParameters;
   sessionID?: string;
   transactionID?: string;
   paymentToken?: string;

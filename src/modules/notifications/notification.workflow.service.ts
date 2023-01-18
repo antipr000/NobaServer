@@ -7,7 +7,7 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/Service
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationPayload, prepareNotificationPayload } from "./domain/NotificationPayload";
-import { TransactionNotificationPayloadParamsMapper } from "./domain/TransactionNotificationParameters";
+import { TransactionNotificationPayloadMapper } from "./domain/TransactionNotificationParameters";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -23,9 +23,9 @@ export class NotificationWorkflowService {
   @Inject()
   private readonly notificationService: NotificationService;
 
-  private readonly transactionNotificationPayloadMapper: TransactionNotificationPayloadParamsMapper;
+  private readonly transactionNotificationPayloadMapper: TransactionNotificationPayloadMapper;
   constructor() {
-    this.transactionNotificationPayloadMapper = new TransactionNotificationPayloadParamsMapper();
+    this.transactionNotificationPayloadMapper = new TransactionNotificationPayloadMapper();
   }
 
   async sendNotification(notificationWorkflowType: NotificationWorkflowTypes, transactionID: string): Promise<void> {
@@ -43,11 +43,11 @@ export class NotificationWorkflowService {
     switch (notificationWorkflowType) {
       case NotificationWorkflowTypes.TRANSACTION_COMPLETED_EVENT:
         const orderSuccessPayload =
-          this.transactionNotificationPayloadMapper.toOrderExecutedNotificationParameters(transaction);
+          this.transactionNotificationPayloadMapper.toTransactionExecutedNotificationParameters(transaction);
         if (transaction.debitConsumerID) {
           const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
           const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            orderExecutedParams: orderSuccessPayload,
+            transactionExecutedParams: orderSuccessPayload,
           });
           await this.notificationService.sendNotification(
             NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
@@ -58,30 +58,31 @@ export class NotificationWorkflowService {
         if (transaction.creditConsumerID) {
           const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
           const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            orderExecutedParams: orderSuccessPayload,
+            transactionExecutedParams: orderSuccessPayload,
           });
           await this.notificationService.sendNotification(
             NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
             payload,
           );
         }
-
+        break;
       case NotificationWorkflowTypes.TRANSACTION_FAILED_EVENT:
         const orderFailedPayload =
-          this.transactionNotificationPayloadMapper.toOrderFailedNotificationParameters(transaction);
+          this.transactionNotificationPayloadMapper.toTransactionFailedNotificationParameters(transaction);
         if (transaction.debitConsumerID) {
           const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
           const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            orderFailedParams: orderFailedPayload,
+            transactionFailedParams: orderFailedPayload,
           });
           await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_FAILED_EVENT, payload);
         } else {
           const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
           const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            orderFailedParams: orderFailedPayload,
+            transactionFailedParams: orderFailedPayload,
           });
           await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_FAILED_EVENT, payload);
         }
+        break;
       default:
         this.logger.error(
           `Failed to send notification from workflow. Reason: ${notificationWorkflowType} is not supported!`,

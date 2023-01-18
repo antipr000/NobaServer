@@ -171,8 +171,8 @@ describe("NotificationService", () => {
       last4Digits: "1234",
       transactionInitiatedParams: {} as any,
       cryptoFailedParams: {} as any,
-      orderExecutedParams: {} as any,
-      orderFailedParams: {} as any,
+      transactionExecutedParams: {} as any,
+      transactionFailedParams: {} as any,
       sessionID: "fake-session-id",
       transactionID: "fake-transaction-id",
       paymentToken: "fake-payment-token",
@@ -298,7 +298,7 @@ describe("NotificationService", () => {
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
 
-            params: payload.orderExecutedParams,
+            params: payload.transactionExecutedParams,
           });
           break;
         case NotificationEventType.SEND_TRANSACTION_FAILED_EVENT:
@@ -309,7 +309,7 @@ describe("NotificationService", () => {
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
 
-            params: payload.orderFailedParams,
+            params: payload.transactionFailedParams,
           });
           break;
         case NotificationEventType.SEND_HARD_DECLINE_EVENT:
