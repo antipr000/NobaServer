@@ -7,5 +7,5 @@ RUN apk add so:libssl.so.1.1
 RUN yarn prisma-migrate-deploy
 RUN yarn prisma db seed
 COPY . .
-EXPOSE 8080 8090
+EXPOSE 8080
 CMD [ "node", "dist/main.js"]
