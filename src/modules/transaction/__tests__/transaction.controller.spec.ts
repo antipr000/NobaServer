@@ -496,7 +496,7 @@ describe("Transaction Controller tests", () => {
         addNobaFee: false,
       };
 
-      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenResolve({
+      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP, false)).thenResolve({
         exchangeRate: "5000",
         quoteAmount: "5000",
         quoteAmountWithFees: "3775",
@@ -517,7 +517,7 @@ describe("Transaction Controller tests", () => {
         addNobaFee: true,
       };
 
-      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenReject(
+      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP, true)).thenReject(
         new ServiceException({
           errorCode: ServiceErrorCode.DOES_NOT_EXIST,
           message: "Exchange rate not available",
