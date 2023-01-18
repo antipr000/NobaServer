@@ -372,12 +372,12 @@ export class TransactionService {
     let desiredAmount = 0;
     let desiredAmountWithFees = 0;
     if (desiredCurrency === Currency.COP) {
-      desiredAmount = amount / exchangeRate;
+      desiredAmount = amount * exchangeRate;
       desiredAmountWithFees = desiredAmount - 1.19 * (0.0265 * desiredAmount + 900);
     } else {
-      desiredAmount = amount / exchangeRate;
+      desiredAmount = amount * exchangeRate;
       const baseCurrencyWithFees = amount - 1.19 * (0.0265 * amount + 900);
-      desiredAmountWithFees = baseCurrencyWithFees / exchangeRate;
+      desiredAmountWithFees = baseCurrencyWithFees * exchangeRate;
     }
 
     return {

@@ -466,11 +466,11 @@ describe("TransactionServiceTests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
         numeratorCurrency: "USD",
         denominatorCurrency: "COP",
-        bankRate: 0.0002,
-        nobaRate: 0.0002,
+        bankRate: 5000,
+        nobaRate: 5000,
       });
       const quote = await transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP);
-      expect(quote.exchangeRate).toEqual("0.0002");
+      expect(quote.exchangeRate).toEqual("5000");
       expect(quote.quoteAmount).toEqual("5000.00");
       // 5000 - 1.19 * (0.0265 * 5000 + 900) = 3771.325
       expect(quote.quoteAmountWithFees).toBe("3771.33");
@@ -480,13 +480,13 @@ describe("TransactionServiceTests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
         numeratorCurrency: "COP",
         denominatorCurrency: "USD",
-        bankRate: 5000,
-        nobaRate: 5000,
+        bankRate: 0.0002,
+        nobaRate: 0.0002,
       });
 
       const quote = await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD);
 
-      expect(quote.exchangeRate).toEqual("5000");
+      expect(quote.exchangeRate).toEqual("0.0002");
       expect(quote.quoteAmount).toEqual("1.00");
       // 3771.325 COP = 0.754265 USD
       expect(quote.quoteAmountWithFees).toBe("0.75");
@@ -517,11 +517,11 @@ describe("TransactionServiceTests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
         numeratorCurrency: "USD",
         denominatorCurrency: "COP",
-        bankRate: 0.0002,
-        nobaRate: 0.0002,
+        bankRate: 5000,
+        nobaRate: 5000,
       });
       const quote = await transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP);
-      expect(quote.exchangeRate).toEqual("0.0002");
+      expect(quote.exchangeRate).toEqual("5000");
       expect(quote.quoteAmount).toEqual("5000.00");
       // 5000 - 1.19 * (0.0265 * 5000 + 900) = 3771.325
       expect(quote.quoteAmountWithFees).toBe("3771.33");
@@ -531,13 +531,13 @@ describe("TransactionServiceTests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
         numeratorCurrency: "COP",
         denominatorCurrency: "USD",
-        bankRate: 5000,
-        nobaRate: 5000,
+        bankRate: 0.0002,
+        nobaRate: 0.0002,
       });
 
       const quote = await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD);
 
-      expect(quote.exchangeRate).toEqual("5000");
+      expect(quote.exchangeRate).toEqual("0.0002");
       expect(quote.quoteAmount).toEqual("1.00");
       // 3771.325 COP = 0.754265 USD
       expect(quote.quoteAmountWithFees).toBe("0.75");
