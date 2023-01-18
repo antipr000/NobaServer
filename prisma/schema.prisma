@@ -31,6 +31,7 @@ model Consumer {
   handle               String?         @unique()
   referralCode         String          @unique()
   phone                String?         @unique()
+  locale               String?
   dateOfBirth          String?         @db.VarChar(10)
   isLocked             Boolean         @default(false)
   isDisabled           Boolean         @default(false)

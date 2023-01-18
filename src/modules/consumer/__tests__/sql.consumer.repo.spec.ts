@@ -384,6 +384,24 @@ describe("ConsumerRepoTests", () => {
       expect(consumerAddresses[0].streetLine2).toBe("Second");
       expect(consumerAddresses[0].regionCode).toBe("PA");
     });
+
+    it("should update locale for consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const updateRequest: Partial<ConsumerProps> = {
+        locale: "es",
+      };
+
+      const updatedConsumerRecord = await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
+
+      const consumerRecord = (await getAllConsumerRecords(prismaService)).filter(record => {
+        return record.id === consumer.props.id;
+      })[0];
+
+      expect(updatedConsumerRecord.props.locale).toBe("es");
+      expect(consumerRecord.locale).toBe("es");
+    });
   });
 
   describe("addCryptoWallet", () => {
