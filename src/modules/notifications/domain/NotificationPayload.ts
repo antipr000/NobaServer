@@ -8,6 +8,7 @@ import {
 
 export type NotificationPayload = {
   email: string;
+  locale: string;
   otp?: string;
   walletAddress?: string;
   firstName?: string;
@@ -36,6 +37,7 @@ export function prepareNotificationPayload(
     firstName: consumer.props.firstName,
     lastName: consumer.props.lastName,
     nobaUserID: consumer.props.id,
+    locale: consumer.props.locale ?? "en",
     ...additionalPayload,
   };
 }

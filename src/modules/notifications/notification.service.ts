@@ -49,6 +49,7 @@ export class NotificationService {
             email: payload.email,
             otp: payload.otp,
             name: payload.firstName,
+            locale: payload.locale,
           }),
         );
         break;
@@ -60,6 +61,7 @@ export class NotificationService {
             otp: payload.otp,
             name: payload.firstName,
             nobaUserID: payload.nobaUserID,
+            locale: payload.locale,
 
             walletAddress: payload.walletAddress,
           }),
@@ -73,6 +75,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
+            locale: payload.locale,
           }),
         );
         break;
@@ -84,6 +87,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
+            locale: payload.locale,
           }),
         );
         break;
@@ -95,6 +99,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
+            locale: payload.locale,
           }),
         );
         break;
@@ -105,6 +110,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            locale: payload.locale,
             nobaUserID: payload.nobaUserID,
           }),
         );
@@ -116,6 +122,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            locale: payload.locale,
             nobaUserID: payload.nobaUserID,
           }),
         );
@@ -127,6 +134,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            locale: payload.locale,
             nobaUserID: payload.nobaUserID,
           }),
         );
@@ -138,6 +146,7 @@ export class NotificationService {
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
+            locale: payload.locale,
             nobaUserID: payload.nobaUserID,
           }),
         );
@@ -150,6 +159,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
+            locale: payload.locale,
           }),
         );
         break;
@@ -161,7 +171,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             cardNetwork: payload.cardNetwork,
             last4Digits: payload.last4Digits,
           }),
@@ -175,7 +185,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             last4Digits: payload.last4Digits,
           }),
         );
@@ -188,7 +198,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             cardNetwork: payload.cardNetwork,
             last4Digits: payload.last4Digits,
           }),
@@ -202,7 +212,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             params: payload.transactionInitiatedParams,
           }),
         );
@@ -215,7 +225,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             params: payload.cryptoFailedParams,
           }),
         );
@@ -228,7 +238,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             params: payload.orderExecutedParams,
           }),
         );
@@ -241,7 +251,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             params: payload.orderFailedParams,
           }),
         );
@@ -254,7 +264,7 @@ export class NotificationService {
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
+            locale: payload.locale,
             sessionID: payload.sessionID,
             transactionID: payload.transactionID,
             paymentToken: payload.paymentToken,

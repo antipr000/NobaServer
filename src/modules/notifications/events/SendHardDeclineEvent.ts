@@ -9,6 +9,7 @@ export class SendHardDeclineEvent {
   public readonly processor: string;
   public readonly responseCode: string;
   public readonly responseSummary: string;
+  public readonly locale?: string;
 
   constructor({
     email,
@@ -21,6 +22,7 @@ export class SendHardDeclineEvent {
     processor,
     responseCode,
     responseSummary,
+    locale,
   }) {
     this.email = email;
     this.firstName = firstName;
@@ -32,5 +34,6 @@ export class SendHardDeclineEvent {
     this.processor = processor;
     this.responseCode = responseCode;
     this.responseSummary = responseSummary;
+    this.locale = locale;
   }
 }

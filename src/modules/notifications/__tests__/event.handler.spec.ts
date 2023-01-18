@@ -76,11 +76,10 @@ describe("EventHandlerService", () => {
     when(emailService.sendEmail(anything())).thenResolve();
   });
 
-  afterEach(() => {});
-
   it("should call emailService with SendOtp event", async () => {
     const payload = new SendOtpEvent({
       email: "fake+user@noba.com",
+      locale: "en",
       otp: "123456",
       name: "Fake",
     });
@@ -91,7 +90,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.OTP_EMAIL, //this is template id for sending otp without any context, see sendgrid dashboard
+      templateId: EmailTemplates.OTP_EMAIL["en"], //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
         user: payload.name ?? "",
         user_email: payload.email,
@@ -103,6 +102,7 @@ describe("EventHandlerService", () => {
   it("should call eventHandler with SendWalletUpdateVerificationCode event", async () => {
     const payload = new SendWalletUpdateVerificationCodeEvent({
       email: "fake+user@noba.com",
+      locale: "en",
       otp: "123456",
       name: "Fake",
 
@@ -117,7 +117,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WALLET_UPDATE_OTP,
+      templateId: EmailTemplates.WALLET_UPDATE_OTP["en"],
       dynamicTemplateData: {
         user: payload.name ?? "",
         user_email: payload.email,
@@ -132,7 +132,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -142,7 +142,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WELCOME_EMAIL,
+      templateId: EmailTemplates.WELCOME_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -155,7 +155,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -165,7 +165,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL,
+      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -178,7 +178,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -188,7 +188,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL,
+      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -201,7 +201,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendKycDeniedEmail(payload);
@@ -210,7 +210,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.KYC_DENIED_EMAIL,
+      templateId: EmailTemplates.KYC_DENIED_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -224,7 +224,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendKycPendingOrFlaggedEmail(payload);
@@ -238,7 +238,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -248,7 +248,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL,
+      templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -261,7 +261,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -271,7 +271,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL,
+      templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -284,7 +284,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendDocVerificationFailedTechEmail(payload);
@@ -293,7 +293,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL,
+      templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -306,7 +306,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
       last4Digits: "1234",
@@ -317,7 +317,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CARD_ADDED_EMAIL,
+      templateId: EmailTemplates.CARD_ADDED_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -333,7 +333,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       last4Digits: "1234",
     });
@@ -343,7 +343,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL,
+      templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -358,7 +358,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
       last4Digits: "1234",
@@ -369,7 +369,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CARD_DELETED_EMAIL,
+      templateId: EmailTemplates.CARD_DELETED_EMAIL["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -385,7 +385,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -423,7 +423,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL,
+      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL["en"],
       dynamicTemplateData: {
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
         transaction_id: payload.params.transactionID,
@@ -451,7 +451,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -484,7 +484,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL,
+      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL["en"],
       dynamicTemplateData: {
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
         transaction_id: payload.params.transactionID,
@@ -512,7 +512,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -552,7 +552,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CRYPTO_FAILED_EMAIL,
+      templateId: EmailTemplates.CRYPTO_FAILED_EMAIL["en"],
       dynamicTemplateData: {
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
         transaction_id: payload.params.transactionID,
@@ -581,7 +581,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -622,7 +622,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ORDER_EXECUTED_EMAIL,
+      templateId: EmailTemplates.ORDER_EXECUTED_EMAIL["en"],
       dynamicTemplateData: {
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
         transaction_id: payload.params.transactionID,
@@ -653,7 +653,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       params: {
         transactionID: "fake-transaction-id",
@@ -692,7 +692,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ORDER_FAILED_EMAIL,
+      templateId: EmailTemplates.ORDER_FAILED_EMAIL["en"],
       dynamicTemplateData: {
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
         transaction_id: payload.params.transactionID,
@@ -721,7 +721,7 @@ describe("EventHandlerService", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-
+      locale: "en",
       nobaUserID: "fake-noba-user-id",
       sessionID: "fake-session-id",
       transactionID: "fake-transaction-id",
@@ -737,7 +737,7 @@ describe("EventHandlerService", () => {
     expect(emailRequest).toStrictEqual({
       to: NOBA_COMPLIANCE_EMAIL,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.NOBA_INTERNAL_HARD_DECLINE,
+      templateId: EmailTemplates.NOBA_INTERNAL_HARD_DECLINE["en"],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
