@@ -1,3 +1,4 @@
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import {
   CryptoFailedNotificationParameters,
   OrderExecutedNotificationParameters,
@@ -25,3 +26,16 @@ export type NotificationPayload = {
   responseCode?: string;
   responseSummary?: string;
 };
+
+export function prepareNotificationPayload(
+  consumer: Consumer,
+  additionalPayload: Partial<NotificationPayload>,
+): NotificationPayload {
+  return {
+    email: consumer.props.email,
+    firstName: consumer.props.firstName,
+    lastName: consumer.props.lastName,
+    nobaUserID: consumer.props.id,
+    ...additionalPayload,
+  };
+}

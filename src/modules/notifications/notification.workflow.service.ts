@@ -6,6 +6,8 @@ import { NotificationService } from "./notification.service";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { NotificationPayload, prepareNotificationPayload } from "./domain/NotificationPayload";
+import { TransactionNotificationPayloadParamsMapper } from "./domain/TransactionNotificationParameters";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -21,10 +23,12 @@ export class NotificationWorkflowService {
   @Inject()
   private readonly notificationService: NotificationService;
 
-  async initiateNotificationSending(
-    notificationWorkflowType: NotificationWorkflowTypes,
-    transactionID: string,
-  ): Promise<void> {
+  private readonly transactionNotificationPayloadMapper: TransactionNotificationPayloadParamsMapper;
+  constructor() {
+    this.transactionNotificationPayloadMapper = new TransactionNotificationPayloadParamsMapper();
+  }
+
+  async sendNotification(notificationWorkflowType: NotificationWorkflowTypes, transactionID: string): Promise<void> {
     const transaction = await this.transactionService.getTransactionByTransactionID(transactionID);
     if (!transaction) {
       this.logger.error(
@@ -38,66 +42,46 @@ export class NotificationWorkflowService {
 
     switch (notificationWorkflowType) {
       case NotificationWorkflowTypes.TRANSACTION_COMPLETED_EVENT:
+        const orderSuccessPayload =
+          this.transactionNotificationPayloadMapper.toOrderExecutedNotificationParameters(transaction);
         if (transaction.debitConsumerID) {
           const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-          await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT, {
-            email: consumer.props.email,
-            firstName: consumer.props.firstName,
-            lastName: consumer.props.lastName,
-            nobaUserID: consumer.props.id,
-            orderExecutedParams: {
-              transactionID: transaction.id,
-              transactionTimestamp: transaction.updatedTimestamp,
-              paymentMethod: "",
-              destinationWalletAddress: "",
-              last4Digits: "",
-              fiatCurrency: transaction.debitCurrency,
-              conversionRate: transaction.exchangeRate,
-              processingFee: 0,
-              networkFee: 0,
-              nobaFee: 0,
-              totalPrice: transaction.debitAmount,
-              cryptoAmount: 0,
-              cryptocurrency: "",
-              status: transaction.status,
-              transactionHash: transaction.transactionRef,
-              settledTimestamp: transaction.updatedTimestamp,
-              cryptoAmountExpected: 0,
-            },
+          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
+            orderExecutedParams: orderSuccessPayload,
           });
+          await this.notificationService.sendNotification(
+            NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
+            payload,
+          );
         }
 
         if (transaction.creditConsumerID) {
           const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-          await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT, {
-            email: consumer.props.email,
-            firstName: consumer.props.firstName,
-            lastName: consumer.props.lastName,
-            nobaUserID: consumer.props.id,
-            orderExecutedParams: {
-              transactionID: transaction.id,
-              transactionTimestamp: transaction.updatedTimestamp,
-              paymentMethod: "",
-              destinationWalletAddress: "",
-              last4Digits: "",
-              fiatCurrency: transaction.creditCurrency,
-              conversionRate: transaction.exchangeRate,
-              processingFee: 0,
-              networkFee: 0,
-              nobaFee: 0,
-              totalPrice: transaction.creditAmount,
-              cryptoAmount: 0,
-              cryptocurrency: "",
-              status: transaction.status,
-              transactionHash: transaction.transactionRef,
-              settledTimestamp: transaction.updatedTimestamp,
-              cryptoAmountExpected: 0,
-            },
+          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
+            orderExecutedParams: orderSuccessPayload,
           });
+          await this.notificationService.sendNotification(
+            NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
+            payload,
+          );
         }
 
       case NotificationWorkflowTypes.TRANSACTION_FAILED_EVENT:
-
+        const orderFailedPayload =
+          this.transactionNotificationPayloadMapper.toOrderFailedNotificationParameters(transaction);
+        if (transaction.debitConsumerID) {
+          const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
+            orderFailedParams: orderFailedPayload,
+          });
+          await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_FAILED_EVENT, payload);
+        } else {
+          const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
+            orderFailedParams: orderFailedPayload,
+          });
+          await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_FAILED_EVENT, payload);
+        }
       default:
         this.logger.error(
           `Failed to send notification from workflow. Reason: ${notificationWorkflowType} is not supported!`,

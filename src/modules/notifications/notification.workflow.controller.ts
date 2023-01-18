@@ -24,6 +24,6 @@ export class NotificationWorkflowController {
     @Param("notificationType") notificationType: NotificationWorkflowTypes,
     @Query("transactionID") transactionID: string,
   ): Promise<void> {
-    await this.notificationWorkflowService.initiateNotificationSending(notificationType, transactionID);
+    await this.notificationWorkflowService.sendNotification(notificationType, transactionID);
   }
 }
