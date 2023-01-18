@@ -18,7 +18,7 @@ const getRandomTransaction = (consumerID: string): Transaction => {
   const transaction: Transaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
-    status: TransactionStatus.PENDING,
+    status: TransactionStatus.INITIATED,
     workflowName: WorkflowName.WALLET_DEPOSIT,
     id: uuid(),
     sessionKey: uuid(),
@@ -81,7 +81,7 @@ describe("Transaction Workflow Controller tests", () => {
       const transaction: Transaction = getRandomTransaction(consumerID);
 
       const updateTransactionDTO: UpdateTransactionDTO = {
-        status: TransactionStatus.SUCCESS,
+        status: TransactionStatus.COMPLETED,
       };
 
       const updateSpy = jest.spyOn(mockTransactionService, "updateTransaction");

@@ -132,6 +132,17 @@ export class CircleService {
     }
 
     const masterWalletID = await this.getMasterWalletID();
+    const masterWalletBalance = await this.getWalletBalance(masterWalletID);
+    if (masterWalletBalance < amount) {
+      this.logger.error(`Insufficient funds in master wallet (have: ${masterWalletBalance}, need: ${amount})`);
+
+      throw new ServiceException({
+        message: "Insufficient funds in master wallet",
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        retry: false,
+      });
+    }
+
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
       sourceWalletID: masterWalletID,

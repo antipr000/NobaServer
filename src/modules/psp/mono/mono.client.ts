@@ -45,6 +45,10 @@ export class MonoClient {
       ...this.getIdempotentHeader(request.transactionID),
     };
 
+    // Mono can only accept phone numbers in the format +57XXXXXXXXX and it is a required field, so we need to make sure we send a valid one.
+    // This is really only a problem with testing, as in practice our customers should have +57 phone numbers.
+    const phone = request.consumerPhone.startsWith("+57") ? request.consumerPhone : "+573000000000";
+
     const requestBody = {
       account_id: this.nobaAccountID,
       amount: {
@@ -65,7 +69,7 @@ export class MonoClient {
           required: false,
           value: "",
         },
-        phone: "+573000000000", //request.consumerPhone, TODO: Mono has issues with phone numbers and this is the only one that works right now
+        phone: phone,
       },
       redirect_url: "https://www.noba.com/",
       reference: {
@@ -83,7 +87,9 @@ export class MonoClient {
         collectionLinkID: response.data.id,
       };
     } catch (err) {
-      this.logger.error(`Error while creating collection link: ${JSON.stringify(err)}`);
+      this.logger.error(
+        `Error while creating collection link: ${JSON.stringify(err)}. Request body: ${JSON.stringify(requestBody)}`,
+      );
       throw new InternalServiceErrorException({ message: "Error while creating Mono collection link" });
     }
   }

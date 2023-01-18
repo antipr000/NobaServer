@@ -172,7 +172,7 @@ Table Transaction {
   debitConsumerID String
   creditConsumer Consumer
   creditConsumerID String
-  status String [not null, default: 'PENDING']
+  status String [not null, default: 'INITIATED']
   memo String
   sessionKey String [not null]
   debitCurrency String

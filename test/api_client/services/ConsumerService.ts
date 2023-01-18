@@ -422,7 +422,7 @@ export class ConsumerService {
    * @returns ContactConsumerResponseDTO List of consumers that are contacts
    * @throws ApiError
    */
-  public static getContactConsumers({
+  public static getConsumersByContact({
     xNobaApiKey,
     requestBody,
     xNobaSignature,

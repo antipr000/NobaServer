@@ -29,10 +29,11 @@ export enum WorkflowName {
 }
 
 export enum TransactionStatus {
-  PENDING = "PENDING",
-  SUCCESS = "SUCCESS",
+  INITIATED = "INITIATED",
+  COMPLETED = "COMPLETED",
   FAILED = "FAILED",
-  IN_PROGRESS = "IN_PROGRESS",
+  PROCESSING = "PROCESSING",
+  EXPIRED = "EXPIRED",
 }
 
 export class InputTransaction {
@@ -104,7 +105,7 @@ export const validateSavedTransaction = (transaction: Transaction) => {
     status: Joi.string()
       .required()
       .valid(...Object.values(TransactionStatus))
-      .default(TransactionStatus.PENDING),
+      .default(TransactionStatus.INITIATED),
     exchangeRate: Joi.number().required(),
     sessionKey: Joi.string().required(),
     memo: Joi.string().optional().allow(null),

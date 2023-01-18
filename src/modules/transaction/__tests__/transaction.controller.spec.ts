@@ -30,7 +30,7 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
   const transaction: Transaction = {
     transactionRef: uuid(),
     exchangeRate: 1,
-    status: TransactionStatus.PENDING,
+    status: TransactionStatus.INITIATED,
     workflowName: WorkflowName.WALLET_DEPOSIT,
     id: uuid(),
     sessionKey: uuid(),
@@ -433,11 +433,11 @@ describe("Transaction Controller tests", () => {
       const transaction: Transaction = getRandomTransaction(consumerID);
       const consumer = getRandomConsumer(consumerID);
       transaction.transactionRef = transactionRef;
-      transaction.status = TransactionStatus.SUCCESS;
+      transaction.status = TransactionStatus.COMPLETED;
 
       const filter: TransactionFilterOptionsDTO = {
         consumerID: consumerID,
-        transactionStatus: TransactionStatus.SUCCESS,
+        transactionStatus: TransactionStatus.COMPLETED,
         pageLimit: 5,
         pageOffset: 1,
       };
@@ -451,7 +451,7 @@ describe("Transaction Controller tests", () => {
 
       const allTransactions = await transactionController.getAllTransactions(
         {
-          transactionStatus: TransactionStatus.SUCCESS,
+          transactionStatus: TransactionStatus.COMPLETED,
           pageLimit: 5,
           pageOffset: 1,
         },

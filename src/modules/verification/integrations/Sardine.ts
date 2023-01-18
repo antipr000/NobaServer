@@ -43,6 +43,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 import { TransactionVerification } from "../domain/TransactionVerification";
+import { CircleService } from "../../../modules/psp/circle.service";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -53,6 +54,7 @@ export class Sardine implements IDVProvider {
     private readonly configService: CustomConfigService,
     private readonly plaidClient: PlaidClient,
     private readonly consumerService: ConsumerService,
+    private readonly circleService: CircleService,
   ) {
     this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
   }
@@ -236,13 +238,18 @@ export class Sardine implements IDVProvider {
     consumer: Consumer,
     transaction: TransactionVerification,
   ): Promise<ConsumerVerificationResult> {
-    const sardinePaymentMethodData: PaymentMethod = {
+    // Populate "other" section with user's Circle wallet ID
+    const circleWallet = await this.circleService.getOrCreateWallet(consumer.props.id);
+    const consumerPaymentMethod: PaymentMethod = {
       type: PaymentMethodTypes.OTHER,
       other: {
-        id: "", // TODO confirm with Sardine
-        type: "pse", // TODO confirm with Sardine
+        id: circleWallet,
+        type: "Circle",
       },
     };
+
+    let debitSidePaymentMethod: PaymentMethod;
+    let creditSidePaymentMethod: PaymentMethod;
 
     // Take amount from the USD side of the transaction
     const usdAmount = transaction.creditCurrency == Currency.USD ? transaction.creditAmount : transaction.debitAmount;
@@ -251,12 +258,23 @@ export class Sardine implements IDVProvider {
     switch (transaction.workflowName) {
       case WorkflowName.WALLET_TRANSFER:
         actionType = "transfer";
+        debitSidePaymentMethod = consumerPaymentMethod; // For a transfer, set sender to the circle wallet
+        const recipientCircleWallet = await this.circleService.getOrCreateWallet(transaction.creditConsumerID);
+        creditSidePaymentMethod = {
+          type: PaymentMethodTypes.OTHER,
+          other: {
+            id: recipientCircleWallet,
+            type: "Circle",
+          },
+        };
         break;
       case WorkflowName.WALLET_WITHDRAWAL:
         actionType = "withdrawal";
+        debitSidePaymentMethod = consumerPaymentMethod; // For a withdrawal, set sender to the circle wallet
         break;
       case WorkflowName.WALLET_DEPOSIT:
         actionType = "deposit";
+        creditSidePaymentMethod = consumerPaymentMethod; // For a deposit, set recipient to the circle wallet
         break;
       default:
         // This should never happen
@@ -277,11 +295,11 @@ export class Sardine implements IDVProvider {
         amount: usdAmount,
         currencyCode: Currency.USD,
         actionType: actionType,
-        paymentMethod: sardinePaymentMethodData,
+        ...(debitSidePaymentMethod && { paymentMethod: debitSidePaymentMethod }),
         recipient: {
           emailAddress: consumer.props.email,
           isKycVerified: consumer.props.verificationData.kycCheckStatus === KYCStatus.APPROVED,
-          paymentMethod: sardinePaymentMethodData,
+          ...(creditSidePaymentMethod && { paymentMethod: creditSidePaymentMethod }),
         },
       },
       checkpoints: ["aml", "payment"],

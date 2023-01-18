@@ -35,7 +35,7 @@ describe("TransactionWorkflowMapperTest", () => {
     it("should map all the fields correctly", () => {
       const transaction: Transaction = {
         exchangeRate: 1.2,
-        status: TransactionStatus.PENDING,
+        status: TransactionStatus.INITIATED,
         workflowName: WorkflowName.WALLET_TRANSFER,
         id: "ID",
         sessionKey: "sessionKey",
@@ -64,7 +64,7 @@ describe("TransactionWorkflowMapperTest", () => {
         debitAmount: 100,
         creditAmount: 200,
         exchangeRate: "1.2",
-        status: TransactionStatus.PENDING,
+        status: TransactionStatus.INITIATED,
       });
     });
 

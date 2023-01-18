@@ -6,6 +6,6 @@ import type { ContactPhoneDTO } from "./ContactPhoneDTO";
 
 export type ContactConsumerRequestDTO = {
   id: string;
-  phone: Array<ContactPhoneDTO>;
-  email: Array<string>;
+  phoneNumbers: Array<ContactPhoneDTO>;
+  emails: Array<string>;
 };

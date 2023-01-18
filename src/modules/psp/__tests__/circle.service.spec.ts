@@ -187,6 +187,7 @@ describe("CircleService", () => {
       };
 
       when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(circleClient.getWalletBalance("masterWalletID")).thenResolve(200);
       when(
         circleClient.transfer(
           deepEqual({
@@ -219,6 +220,23 @@ describe("CircleService", () => {
 
     it("should throw an error when transfer fails", async () => {
       when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(circleClient.getWalletBalance("masterWalletID")).thenResolve(200);
+      when(
+        circleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "masterWalletID",
+            destinationWalletID: "walletID",
+            amount: 100,
+          }),
+        ),
+      ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw an error when master wallet doesn't have enough funds", async () => {
+      when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(circleClient.getWalletBalance("masterWalletID")).thenResolve(1);
       when(
         circleClient.transfer(
           deepEqual({
