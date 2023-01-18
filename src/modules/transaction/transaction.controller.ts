@@ -34,6 +34,7 @@ import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
 import { Public } from "../auth/public.decorator";
 import { IncludeEventTypes } from "./dto/TransactionEventDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
+import { Transaction } from "./domain/Transaction";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -90,16 +91,22 @@ export class TransactionController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: "Transaction ID",
+    type: TransactionDTO,
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async initiateTransaction(
     @Query("sessionKey") sessionKey: string,
     @Body() requestBody: InitiateTransactionDTO,
     @AuthUser() consumer: Consumer,
-  ) {
+  ): Promise<TransactionDTO> {
     this.logger.debug(`uid ${consumer.props.id}, transact input:`, JSON.stringify(requestBody));
 
-    return await this.transactionService.initiateTransaction(requestBody, consumer.props.id, sessionKey);
+    const transaction: Transaction = await this.transactionService.initiateTransaction(
+      requestBody,
+      consumer.props.id,
+      sessionKey,
+    );
+    return this.transactionMapper.toTransactionDTO(transaction, consumer);
   }
 
   @Get("/transactions/quote")
