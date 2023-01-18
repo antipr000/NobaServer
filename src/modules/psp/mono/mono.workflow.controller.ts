@@ -19,7 +19,7 @@ import { MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
 import { MonoService } from "./mono.service";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 
-@Controller("wf/v1/mono") // This defines the path prefix
+@Controller() // This defines the path prefix
 @ApiTags("Workflow")
 @IsNoApiKeyNeeded()
 export class MonoWorkflowController {
@@ -29,7 +29,7 @@ export class MonoWorkflowController {
     private readonly monoWorkflowControllerMappers: MonoWorkflowControllerMappers,
   ) {}
 
-  @Post("/webhooks")
+  @Post("/webhooks/mono")
   @ApiTags("Vendors")
   @ApiOperation({ summary: "Handle all the Mono Webhook requests" })
   @ApiResponse({ status: HttpStatus.CREATED })
@@ -41,7 +41,7 @@ export class MonoWorkflowController {
     await this.monoService.processWebhookEvent(requestBody, monoSignature);
   }
 
-  @Get("/nobatransactions/:nobaTransactionID")
+  @Get("/wf/v1/mono/nobatransactions/:nobaTransactionID")
   @ApiOperation({ summary: "Fetches the Mono Transaction for the specified 'nobaTransactionID'" })
   @ApiResponse({ status: HttpStatus.OK, type: MonoTransactionDTO })
   async getMonoTransactionByNobaTransactionID(@Param("nobaTransactionID") nobaTransactionID: string) {
