@@ -26,7 +26,7 @@ const getRandomEmployee = (employerID: string, consumerID: string): EmployeeCrea
   return employee;
 };
 
-describe("SqlMonoRepoTests", () => {
+describe("SqlEmployeeRepoTests", () => {
   jest.setTimeout(20000);
 
   let employeeRepo: IEmployeeRepo;

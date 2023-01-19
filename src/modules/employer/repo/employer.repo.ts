@@ -4,6 +4,6 @@ export interface IEmployerRepo {
   createEmployer(request: EmployerCreateRequest): Promise<Employer>;
   updateEmployer(id: string, request: EmployerUpdateRequest): Promise<Employer>;
   getEmployerByID(id: string): Promise<Employer>;
-  getEmployersByReferralID(referralID: string): Promise<Employer>;
-  getEmployersByBubbleID(bubbleID: string): Promise<Employer>;
+  getEmployerByReferralID(referralID: string): Promise<Employer>;
+  getEmployerByBubbleID(bubbleID: string): Promise<Employer>;
 }

@@ -25,7 +25,7 @@ const getRandomEmployer = (): EmployerCreateRequest => {
   return employee;
 };
 
-describe("SqlMonoRepoTests", () => {
+describe("SqlEmployerRepoTests", () => {
   jest.setTimeout(20000);
 
   let employerRepo: IEmployerRepo;
@@ -257,7 +257,7 @@ describe("SqlMonoRepoTests", () => {
       await employerRepo.createEmployer(employer1);
       await employerRepo.createEmployer(employer2);
 
-      const foundEmployer = await employerRepo.getEmployersByReferralID(employer1.referralID);
+      const foundEmployer = await employerRepo.getEmployerByReferralID(employer1.referralID);
 
       expect(foundEmployer).toBeDefined();
       expect(foundEmployer.id).toBeDefined();
@@ -273,7 +273,7 @@ describe("SqlMonoRepoTests", () => {
       const employer = getRandomEmployer();
       await employerRepo.createEmployer(employer);
 
-      const foundEmployer = await employerRepo.getEmployersByReferralID("non-existing-id");
+      const foundEmployer = await employerRepo.getEmployerByReferralID("non-existing-id");
 
       expect(foundEmployer).toBeNull();
     });
@@ -286,7 +286,7 @@ describe("SqlMonoRepoTests", () => {
       await employerRepo.createEmployer(employer1);
       await employerRepo.createEmployer(employer2);
 
-      const foundEmployer = await employerRepo.getEmployersByBubbleID(employer1.bubbleID);
+      const foundEmployer = await employerRepo.getEmployerByBubbleID(employer1.bubbleID);
 
       expect(foundEmployer).toBeDefined();
       expect(foundEmployer.id).toBeDefined();
@@ -302,7 +302,7 @@ describe("SqlMonoRepoTests", () => {
       const employer = getRandomEmployer();
       await employerRepo.createEmployer(employer);
 
-      const foundEmployer = await employerRepo.getEmployersByBubbleID("non-existing-id");
+      const foundEmployer = await employerRepo.getEmployerByBubbleID("non-existing-id");
 
       expect(foundEmployer).toBeNull();
     });

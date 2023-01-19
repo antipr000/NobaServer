@@ -112,7 +112,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
     }
   }
 
-  async getEmployersByReferralID(referralID: string): Promise<Employer> {
+  async getEmployerByReferralID(referralID: string): Promise<Employer> {
     try {
       const employer: EmployerPrismaModel = await this.prismaService.employer.findUnique({
         where: {
@@ -133,7 +133,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
     }
   }
 
-  async getEmployersByBubbleID(bubbleID: string): Promise<Employer> {
+  async getEmployerByBubbleID(bubbleID: string): Promise<Employer> {
     try {
       const employer: EmployerPrismaModel = await this.prismaService.employer.findUnique({
         where: {

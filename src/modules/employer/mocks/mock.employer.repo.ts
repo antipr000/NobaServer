@@ -8,8 +8,8 @@ export function getMockEmployerRepoWithDefaults(): IEmployerRepo {
   when(mockEmployerRepo.updateEmployer(anyString(), anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployerRepo.createEmployer(anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployerRepo.getEmployerByID(anyString())).thenReject(new Error("Method not implemented"));
-  when(mockEmployerRepo.getEmployersByBubbleID(anyString())).thenReject(new Error("Method not implemented"));
-  when(mockEmployerRepo.getEmployersByReferralID(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockEmployerRepo.getEmployerByBubbleID(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockEmployerRepo.getEmployerByReferralID(anyString())).thenReject(new Error("Method not implemented"));
 
   return mockEmployerRepo;
 }
