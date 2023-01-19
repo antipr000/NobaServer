@@ -31,7 +31,7 @@ import { VerificationService } from "../verification/verification.service";
 import { KYCStatus } from "@prisma/client";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
-import { DEPOSIT_FEE_AMOUNT, DEPOSIT_FEE_PERCENTAGE } from "../../config/ConfigurationUtils";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class TransactionService {
@@ -48,9 +48,10 @@ export class TransactionService {
     private readonly verificationService: VerificationService,
     private readonly monoService: MonoService,
   ) {
-    this.depositFeeAmount = this.configService.get<NobaConfigs>(DEPOSIT_FEE_AMOUNT).transaction.depositFeeAmount;
-    this.depositFeePercentage =
-      this.configService.get<NobaConfigs>(DEPOSIT_FEE_PERCENTAGE).transaction.depositFeePercentage;
+    this.depositFeeAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeAmount;
+    this.depositFeePercentage = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeePercentage;
+    console.log("Deposit fee amount: ", this.depositFeeAmount);
+    console.log("Deposit fee percentage: ", this.depositFeePercentage);
   }
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
