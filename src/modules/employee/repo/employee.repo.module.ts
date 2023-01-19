@@ -15,4 +15,4 @@ export const EMPLOYEE_REPO_PROVIDER = "EMPLOYEE_REPO";
   ],
   exports: [EMPLOYEE_REPO_PROVIDER],
 })
-export class MonoRepoModule {}
+export class EmployeeRepoModule {}

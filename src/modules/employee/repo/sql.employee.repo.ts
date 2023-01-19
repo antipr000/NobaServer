@@ -56,7 +56,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
-        message: "Error saving transaction in database",
+        message: "Error saving Employee in database",
       });
     }
 
@@ -66,7 +66,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
-        message: "Error saving transaction in database",
+        message: "Error saving Employee in database",
       });
     }
   }
@@ -93,7 +93,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
         throw new NotFoundError({});
       }
       throw new DatabaseInternalErrorException({
-        message: `Error updating the Mono transaction with ID: '${id}'`,
+        message: `Error updating the Employee with ID: '${id}'`,
       });
     }
   }
@@ -114,7 +114,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
-        message: `Error retrieving the Mono transaction with ID: '${id}'`,
+        message: `Error retrieving the Employee with ID: '${id}'`,
       });
     }
   }
