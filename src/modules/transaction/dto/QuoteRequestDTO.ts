@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { WorkflowName } from "../domain/Transaction";
 import { Currency } from "../domain/TransactionTypes";
 
 export class QuoteRequestDTO {
@@ -11,6 +12,6 @@ export class QuoteRequestDTO {
   @ApiProperty({ enum: Currency })
   desiredCurrency: Currency;
 
-  @ApiProperty()
-  addNobaFee: boolean;
+  @ApiProperty({ enum: WorkflowName })
+  workflowName: WorkflowName;
 }

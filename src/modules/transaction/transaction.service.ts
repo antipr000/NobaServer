@@ -353,7 +353,7 @@ export class TransactionService {
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    addNobaFee: boolean = false,
+    workflowName: WorkflowName,
   ): Promise<QuoteResponseDTO> {
     if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({
@@ -380,6 +380,13 @@ export class TransactionService {
         message: "No exchange rate found for currency pair",
       });
     }
+
+    /* TODO: 
+    - Add global parameters to control processing fees
+    - Add global parameters to control noba fees
+    - Add consumer check for user promos
+    - Add tier based fees
+    */
 
     const exchangeRate = exchangeRateDTO.nobaRate;
     let desiredAmount = 0;

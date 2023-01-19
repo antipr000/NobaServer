@@ -116,7 +116,7 @@ export class TransactionController {
       quoteQuery.amount,
       quoteQuery.currency,
       quoteQuery.desiredCurrency,
-      quoteQuery.addNobaFee,
+      quoteQuery.workflowName,
     );
   }
 
