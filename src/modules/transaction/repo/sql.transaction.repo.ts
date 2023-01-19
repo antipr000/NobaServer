@@ -276,10 +276,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
     }
   }
 
-  async getTransactionEvents(
-    transactionID: string,
-    includeInternalEvents: boolean = false,
-  ): Promise<TransactionEvent[]> {
+  async getTransactionEvents(transactionID: string, includeInternalEvents = false): Promise<TransactionEvent[]> {
     const allTransactionEvents = await this.prismaService.transactionEvent.findMany({
       where: {
         transactionID: transactionID,
