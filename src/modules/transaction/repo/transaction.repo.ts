@@ -7,7 +7,6 @@ export interface ITransactionRepo {
   createTransaction(inputTransaction: InputTransaction): Promise<Transaction>;
   getTransactionByID(transactionID: string): Promise<Transaction>;
   getTransactionByTransactionRef(transactionRef: string): Promise<Transaction>;
-  getTransactionsByConsumerID(consumerID: string): Promise<Transaction[]>;
   updateTransactionByTransactionID(transactionID: string, transaction: UpdateTransaction): Promise<Transaction>;
   getFilteredTransactions(transactionFilterOptions: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>>;
   getUserTransactionInAnInterval(consumerID: string, fromDate: Date, toDate: Date): Promise<Transaction[]>;

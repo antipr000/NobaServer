@@ -302,73 +302,6 @@ describe("PostgresTransactionRepoTests", () => {
     });
   });
 
-  describe("getTransactionsByConsumerID", () => {
-    it("should return all transactions (with creditConsumer) with the specified consumerID", async () => {
-      const consumerID1 = await createTestConsumer(prismaService);
-      const consumerID2 = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ true);
-      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ true);
-      const inputTransaction3: InputTransaction = getRandomTransaction(consumerID2, /* isCreditTransaction */ true);
-      const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
-      const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
-      const savedTransaction3 = await transactionRepo.createTransaction(inputTransaction3);
-
-      const returnedTransactions = await transactionRepo.getTransactionsByConsumerID(consumerID1);
-
-      expect(returnedTransactions).toHaveLength(2);
-      expect(returnedTransactions).toContainEqual(savedTransaction1);
-      expect(returnedTransactions).toContainEqual(savedTransaction2);
-      expect(returnedTransactions).not.toContainEqual(savedTransaction3);
-    });
-
-    it("should return all transactions (with debitConsumer) with the specified consumerID", async () => {
-      const consumerID1 = await createTestConsumer(prismaService);
-      const consumerID2 = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
-      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
-      const inputTransaction3: InputTransaction = getRandomTransaction(consumerID2, /* isCreditTransaction */ false);
-      const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
-      const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
-      const savedTransaction3 = await transactionRepo.createTransaction(inputTransaction3);
-
-      const returnedTransactions = await transactionRepo.getTransactionsByConsumerID(consumerID1);
-
-      expect(returnedTransactions).toHaveLength(2);
-      expect(returnedTransactions).toContainEqual(savedTransaction1);
-      expect(returnedTransactions).toContainEqual(savedTransaction2);
-      expect(returnedTransactions).not.toContainEqual(savedTransaction3);
-    });
-
-    it("should return all transactions (with either debit or credit Consumer matching) with the specified consumerID", async () => {
-      const consumerID1 = await createTestConsumer(prismaService);
-      const consumerID2 = await createTestConsumer(prismaService);
-      const inputTransaction1: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
-      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ false);
-      const inputTransaction3: InputTransaction = getRandomTransaction(consumerID1, /* isCreditTransaction */ true);
-      const inputTransaction4: InputTransaction = getRandomTransaction(consumerID2, /* isCreditTransaction */ false);
-      const savedTransaction1 = await transactionRepo.createTransaction(inputTransaction1);
-      const savedTransaction2 = await transactionRepo.createTransaction(inputTransaction2);
-      const savedTransaction3 = await transactionRepo.createTransaction(inputTransaction3);
-      const savedTransaction4 = await transactionRepo.createTransaction(inputTransaction4);
-
-      const returnedTransactions = await transactionRepo.getTransactionsByConsumerID(consumerID1);
-
-      expect(returnedTransactions).toHaveLength(3);
-      expect(returnedTransactions).toContainEqual(savedTransaction1);
-      expect(returnedTransactions).toContainEqual(savedTransaction2);
-      expect(returnedTransactions).toContainEqual(savedTransaction3);
-      expect(returnedTransactions).not.toContainEqual(savedTransaction4);
-    });
-
-    it("should return an empty array if there are no transactions with the specified consumerID", async () => {
-      const consumerID = await createTestConsumer(prismaService);
-
-      const returnedTransactions = await transactionRepo.getTransactionsByConsumerID(consumerID);
-
-      expect(returnedTransactions).toHaveLength(0);
-    });
-  });
-
   describe("updateTransaction", () => {
     it("should update the transaction 'status' for the specified 'id'", async () => {
       const consumerID = await createTestConsumer(prismaService);
@@ -664,6 +597,46 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result10.items).toHaveLength(1);
       expect(result10.totalItems).toBe(1);
       expect(result10.totalPages).toBe(1);
+    });
+
+    it("should return transactions in descending order of createdTimestamp", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const transaction1 = getRandomTransaction(consumerID);
+      const transaction2 = getRandomTransaction(consumerID);
+      const transaction3 = getRandomTransaction(consumerID);
+
+      await prismaService.transaction.create({
+        data: {
+          ...transaction1,
+          createdTimestamp: new Date("2020-01-01"),
+        },
+      });
+
+      await prismaService.transaction.create({
+        data: {
+          ...transaction2,
+          createdTimestamp: new Date("2020-01-05"),
+        },
+      });
+
+      await prismaService.transaction.create({
+        data: {
+          ...transaction3,
+          createdTimestamp: new Date("2020-01-03"),
+        },
+      });
+
+      const result = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID,
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result.items).toHaveLength(3);
+      expect(result.items[0].transactionRef).toBe(transaction2.transactionRef);
+      expect(result.items[1].transactionRef).toBe(transaction3.transactionRef);
+      expect(result.items[2].transactionRef).toBe(transaction1.transactionRef);
     });
   });
 
