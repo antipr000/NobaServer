@@ -74,7 +74,7 @@ export const validateInputTransaction = (transaction: InputTransaction) => {
     creditCurrency: Joi.string().optional(),
     exchangeRate: Joi.number().required(),
     sessionKey: Joi.string().required(),
-    memo: Joi.string().optional(),
+    memo: Joi.string().optional().allow(null, ""),
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
