@@ -184,6 +184,22 @@ describe("PostgresTransactionRepoTests", () => {
       });
     });
 
+    it("should create a transaction when memo is null or blank", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      inputTransaction.memo = "";
+      const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+
+      expect(returnedTransaction).toBeDefined();
+
+      const inputTransaction2: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      inputTransaction.memo = null;
+      const returnedTransaction2: Transaction = await transactionRepo.createTransaction(inputTransaction2);
+
+      expect(returnedTransaction2).toBeDefined();
+    });
+
     it("should throw an error if the transaction doesn't specify both credit & debit side", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
