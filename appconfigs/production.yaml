@@ -84,6 +84,10 @@ noba:
     awsSecretKeyForFixedCreditCardFee: "PROD_NOBA_FIXED_CREDIT_CARD_FEE_DOLLARS"
     slippageAllowedPercentage: ""
     awsSecretKeyForSlippageAllowedPercentage: "PROD_NOBA_SLIPPAGE_ALLOWED_PERCENTAGE"
+    depositFeeAmount: ""
+    awsSecretKeyForDepositFeeAmount: "PROD_NOBA_DEPOSIT_FEE_AMOUNT"
+    depositFeePercentage: ""
+    awsSecretKeyForDepositFeePercentage: "PROD_NOBA_DEPOSIT_FEE_PERCENTAGE"
 
 zerohash:
   awsSecretNameForApiKey: "PROD_ZEROHASH_API_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

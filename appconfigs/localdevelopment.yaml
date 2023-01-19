@@ -79,9 +79,9 @@ noba:
     awsSecretKeyForFixedCreditCardFee: ""
     slippageAllowedPercentage: ".02"
     awsSecretKeyForSlippageAllowedPercentage: ""
-    depositFeeAmount: "0"
+    depositFeeAmount: "1.99"
     awsSecretKeyForDepositFeeAmount: ""
-    depositFeePercentage: "0"
+    depositFeePercentage: "0.029"
     awsSecretKeyForDepositFeePercentage: ""
 
 zerohash:
