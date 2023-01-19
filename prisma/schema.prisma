@@ -48,6 +48,7 @@ model Consumer {
   circleAccountData    Circle?
   debitTransactions    Transaction[]   @relation("debitConsumer")
   creditTransactions   Transaction[]   @relation("creditConsumer")
+  Employee             Employee[]
 
   @@index([email])
   @@index([handle])
@@ -83,6 +84,33 @@ model KYC {
   riskLevel                     String?
   consumer                      Consumer                   @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID                    String                     @unique()
+}
+
+model Employer {
+  id               String     @id @default(uuid())
+  createdTimestamp DateTime?  @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?  @updatedAt // Marking optional so we don't need to set in tests
+  name             String
+  logoURI          String
+  referralID       String     @unique()
+  bubbleID         String     @unique()
+  Employee         Employee[]
+
+  @@index([referralID])
+}
+
+model Employee {
+  id                 String    @id @default(uuid())
+  createdTimestamp   DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp   DateTime? @updatedAt // Marking optional so we don't need to set in tests
+  allocationAmount   Float
+  allocationCurrency String
+  employer           Employer  @relation(fields: [employerID], references: [id], onDelete: Cascade)
+  employerID         String
+  consumer           Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  consumerID         String
+
+  @@index([consumerID])
 }
 
 model CryptoWallet {
