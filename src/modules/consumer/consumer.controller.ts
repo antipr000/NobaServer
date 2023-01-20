@@ -362,7 +362,7 @@ export class ConsumerController {
   }
 
   @Get("/search")
-  @ApiOperation({ summary: "Search for consumers" })
+  @ApiOperation({ summary: "Search for consumers based on public information." })
   @ApiResponse({
     status: HttpStatus.OK,
     type: [ContactConsumerResponseDTO],
@@ -375,7 +375,23 @@ export class ConsumerController {
     @AuthUser() consumer: Consumer,
   ): Promise<ContactConsumerResponseDTO[]> {
     const consumers = await this.consumerService.findConsumersByPublicInfo(query, limit);
-    return consumers.map(consumer => this.mapToSearchDTO(consumer));
+    return consumers.map(consumer => {
+      if (!consumer) {
+        return {
+          consumerID: null,
+          handle: null,
+          firstName: null,
+          lastName: null,
+        };
+      }
+
+      return {
+        consumerID: consumer.props.id,
+        handle: consumer.props.handle,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+      };
+    });
   }
 
   @Post("/wallets")

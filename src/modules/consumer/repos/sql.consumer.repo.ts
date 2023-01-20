@@ -77,6 +77,40 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
+  async findConsumersByPublicInfo(publicInfoSearch: string, limit: number): Promise<Result<Consumer>[]> {
+    try {
+      const consumers = await this.prisma.consumer.findMany({
+        where: {
+          OR: [
+            {
+              handle: {
+                contains: publicInfoSearch,
+                mode: "insensitive",
+              },
+            },
+            {
+              firstName: {
+                contains: publicInfoSearch,
+                mode: "insensitive",
+              },
+            },
+            {
+              lastName: {
+                contains: publicInfoSearch,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+        take: limit,
+      });
+
+      return consumers.map(consumer => Result.ok(Consumer.createConsumer(consumer)));
+    } catch (e) {
+      return [];
+    }
+  }
+
   async findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>> {
     try {
       const consumerContact = await this.prisma.consumer.findFirst({
