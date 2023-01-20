@@ -12,4 +12,7 @@ export class QuoteResponseDTO {
 
   @ApiProperty()
   nobaRate: string;
+
+  @ApiProperty()
+  bankFee: string;
 }
