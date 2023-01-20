@@ -369,6 +369,7 @@ export class TransactionService {
       });
     }
 
+    /* Ignore for now 
     const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
       amountCurrency,
       desiredCurrency,
@@ -379,7 +380,7 @@ export class TransactionService {
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
         message: "No exchange rate found for currency pair",
       });
-    }
+    }*/
 
     /* TODO: 
     - Add global parameters to control processing fees
@@ -388,30 +389,46 @@ export class TransactionService {
     - Add tier based fees
     */
 
-    const exchangeRate = exchangeRateDTO.nobaRate;
+    // TODO: Discuss with team about nobaRate. Hardcoding for now
+    const nobaRate = 0.005;
+    const bankRate = 5000;
+    const nobaSpread = bankRate * nobaRate;
+
     let desiredAmount = 0;
-    let desiredAmountWithFees = 0;
-    if (desiredCurrency === Currency.COP) {
-      desiredAmount = amount * exchangeRate;
-      desiredAmountWithFees = desiredAmount - 1.19 * (0.0265 * desiredAmount + 900);
-      if (addNobaFee) {
-        const nobaFee = Math.min(desiredAmount * this.depositFeePercentage, this.depositFeeAmount);
-        desiredAmountWithFees = desiredAmountWithFees - nobaFee;
-      }
-    } else {
-      desiredAmount = amount * exchangeRate;
-      let baseCurrencyWithFees = amount - 1.19 * (0.0265 * amount + 900);
-      if (addNobaFee) {
-        const nobaFee = Math.min(amount * this.depositFeePercentage, this.depositFeeAmount);
-        baseCurrencyWithFees = amount - nobaFee;
-        desiredAmountWithFees = baseCurrencyWithFees * exchangeRate;
-      }
+    let desiredAmountWithBankFees = 0;
+
+    switch (workflowName) {
+      case WorkflowName.WALLET_TRANSFER:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Wallet transfer not valid workflow for quote",
+        });
+      case WorkflowName.WALLET_WITHDRAWAL:
+        if (desiredCurrency === Currency.COP) {
+          const postExchangeAmount = amount * (bankRate - nobaSpread);
+          desiredAmount = postExchangeAmount - 2975;
+        } else {
+          const postBankAmount = amount - 2975;
+          desiredAmount = postBankAmount / (bankRate + nobaSpread);
+        }
+
+        break;
+      case WorkflowName.WALLET_DEPOSIT:
+        if (desiredCurrency === Currency.COP) {
+          const postExchangeAmount = amount * (bankRate - nobaSpread);
+          desiredAmount = 95776 * postExchangeAmount - 1071;
+        } else {
+          const postBankAmount = 0.95776 * amount - 1071;
+          desiredAmount = postBankAmount / (bankRate + nobaSpread);
+        }
+        break;
     }
 
     return {
       quoteAmount: Utils.roundTo2DecimalString(desiredAmount),
-      quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmountWithFees),
-      exchangeRate: exchangeRate.toString(),
+      quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmount),
+      exchangeRate: bankRate.toString(),
+      nobaRate: nobaRate.toString(),
     };
   }
 

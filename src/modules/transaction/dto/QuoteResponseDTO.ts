@@ -9,4 +9,7 @@ export class QuoteResponseDTO {
 
   @ApiProperty()
   exchangeRate: string;
+
+  @ApiProperty()
+  nobaRate: string;
 }
