@@ -145,6 +145,12 @@ mono:
   webhookSecret: ""
   awsSecretNameForWebhookSecret: "DEV_MONO_WEBHOOK_SECRET"
 
+bubble:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "TEST_BUBBLE_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "TEST_BUBBLE_BASE_URL"
+
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
