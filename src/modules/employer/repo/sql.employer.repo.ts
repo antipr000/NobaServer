@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Employer } from "@prisma/client";
 import {
   convertToDomainEmployer,
+  Employer,
   EmployerCreateRequest,
   EmployerUpdateRequest,
   validateCreateEmployerRequest,
