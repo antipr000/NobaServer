@@ -303,7 +303,6 @@ export class ConsumerService {
       const possibleEmails = contactInfo.emails.map(email => email.toLowerCase());
 
       const consumerResultPromise = this.consumerRepo.findConsumerByContactInfo({
-        id: contactInfo.id,
         phoneNumbers: possiblePhoneNumbers,
         emails: possibleEmails,
       });
@@ -318,6 +317,21 @@ export class ConsumerService {
 
       return consumerResult.getValue();
     });
+  }
+
+  async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
+    const consumerResultList = await this.consumerRepo.findConsumersByPublicInfo(searchString, limit);
+
+    let consumers = new Array<Consumer>();
+    consumerResultList.forEach(consumerResult => {
+      if (!consumerResult.isSuccess) {
+        return null;
+      }
+
+      consumers.push(consumerResult.getValue());
+    });
+
+    return consumers;
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {

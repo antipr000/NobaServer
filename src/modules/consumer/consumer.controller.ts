@@ -374,7 +374,7 @@ export class ConsumerController {
     @Query("limit") limit: number,
     @AuthUser() consumer: Consumer,
   ): Promise<ContactConsumerResponseDTO[]> {
-    const consumers = await this.consumerService.searchConsumers(query);
+    const consumers = await this.consumerService.findConsumersByPublicInfo(query, limit);
     return consumers.map(consumer => this.mapToSearchDTO(consumer));
   }
 
