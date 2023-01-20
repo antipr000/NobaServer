@@ -847,6 +847,8 @@ describe("ConsumerController", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
         handle: "mock1",
       });
       const consumer2 = Consumer.createConsumer({
@@ -856,21 +858,23 @@ describe("ConsumerController", () => {
       });
 
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
-        { id: "linkid2", phoneNumbers: [], emails: [consumer2.props.email] },
+        { phoneNumbers: [], emails: [consumer.props.email] },
+        { phoneNumbers: [], emails: [consumer2.props.email] },
       ];
 
       when(consumerService.findConsumersByContactInfo(contactListDTO)).thenResolve([consumer, consumer2]);
       expect(await consumerController.getConsumersByContact(contactListDTO, consumer)).toStrictEqual([
         {
-          id: "linkid1",
           consumerID: consumer.props.id,
           handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
         },
         {
-          id: "linkid2",
           consumerID: consumer2.props.id,
           handle: consumer2.props.handle,
+          firstName: consumer2.props.firstName,
+          lastName: consumer2.props.lastName,
         },
       ]);
     });
@@ -879,25 +883,29 @@ describe("ConsumerController", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
         handle: "mock1",
       });
 
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
-        { id: "linkid2", phoneNumbers: [], emails: ["mock2-unknown@mock.com"] },
+        { phoneNumbers: [], emails: [consumer.props.email] },
+        { phoneNumbers: [], emails: ["mock2-unknown@mock.com"] },
       ];
 
       when(consumerService.findConsumersByContactInfo(contactListDTO)).thenResolve([consumer, null]);
       expect(await consumerController.getConsumersByContact(contactListDTO, consumer)).toStrictEqual([
         {
-          id: "linkid1",
           consumerID: consumer.props.id,
           handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
         },
         {
-          id: "linkid2",
           consumerID: null,
           handle: null,
+          firstName: null,
+          lastName: null,
         },
       ]);
     });

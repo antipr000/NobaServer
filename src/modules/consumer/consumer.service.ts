@@ -321,7 +321,7 @@ export class ConsumerService {
 
   async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
     const consumerResultList = await this.consumerRepo.findConsumersByPublicInfo(searchString, limit);
-
+    console.log(consumerResultList);
     let consumers = new Array<Consumer>();
     consumerResultList.forEach(consumerResult => {
       if (!consumerResult.isSuccess) {

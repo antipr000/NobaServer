@@ -187,7 +187,6 @@ describe("ConsumerRepoTests", () => {
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
       const foundConsumer = await consumerRepo.findConsumerByContactInfo({
-        id: "",
         phoneNumbers: [],
         emails: [savedConsumer.props.email],
       });
@@ -200,7 +199,6 @@ describe("ConsumerRepoTests", () => {
 
       const savedConsumer = await consumerRepo.createConsumer(consumer);
       const foundConsumer = await consumerRepo.findConsumerByContactInfo({
-        id: "",
         phoneNumbers: [savedConsumer.props.phone],
         emails: [],
       });
@@ -211,7 +209,6 @@ describe("ConsumerRepoTests", () => {
     it("should fail to find consumer", async () => {
       const consumer = getRandomUser();
       const foundConsumer = await consumerRepo.findConsumerByContactInfo({
-        id: "",
         phoneNumbers: ["1234567890"],
         emails: ["fake@mock.com"],
       });
