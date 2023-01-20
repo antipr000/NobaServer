@@ -467,6 +467,41 @@ describe("Transaction Controller tests", () => {
 
   describe("initiateTransaction", () => {
     it("should return transaction id of the initiated transaction if all parameters are correct", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const creditConsumer = getRandomConsumer("creditConsumerID");
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      transaction.creditConsumerID = creditConsumer.props.id;
+
+      when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
+
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        creditConsumer: {
+          id: creditConsumer.props.id,
+          firstName: creditConsumer.props.firstName,
+          handle: creditConsumer.props.handle,
+          lastName: creditConsumer.props.lastName,
+        },
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+      };
+
       const orderDetails = {
         debitConsumerIDOrTag: "$soham",
         workflowName: WorkflowName.WALLET_DEPOSIT,
@@ -474,16 +509,13 @@ describe("Transaction Controller tests", () => {
         debitAmount: 100,
       };
 
-      const consumerID = "fakeConsumerID";
-      const consumer = getRandomConsumer(consumerID);
-
       when(transactionService.initiateTransaction(deepEqual(orderDetails), consumerID, "fake-session")).thenResolve(
-        "fake-transaction-id",
+        transaction,
       );
 
       const response = await transactionController.initiateTransaction("fake-session", orderDetails, consumer);
 
-      expect(response).toBe("fake-transaction-id");
+      expect(response).toStrictEqual(expectedResult);
     });
   });
 

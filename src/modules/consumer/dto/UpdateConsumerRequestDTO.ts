@@ -31,6 +31,9 @@ export class UpdateConsumerRequestDTO {
   dateOfBirth?: string;
 
   @ApiPropertyOptional()
+  locale?: string;
+
+  @ApiPropertyOptional()
   handle?: string;
 
   @ApiPropertyOptional()

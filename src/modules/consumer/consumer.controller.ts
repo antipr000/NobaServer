@@ -339,23 +339,42 @@ export class ConsumerController {
   ): Promise<ContactConsumerResponseDTO[]> {
     const consumers = await this.consumerService.findConsumersByContactInfo(requestBody);
 
-    const response = consumers.map((contact, i) => {
-      if (!contact) {
+    const response = consumers.map((consumer, i) => {
+      if (!consumer) {
         return {
-          id: requestBody[i].id,
           consumerID: null,
           handle: null,
+          firstName: null,
+          lastName: null,
         };
       }
 
       return {
-        id: requestBody[i].id,
-        consumerID: contact.props.id,
-        handle: contact.props.handle,
+        consumerID: consumer.props.id,
+        handle: consumer.props.handle,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
       };
     });
 
     return response;
+  }
+
+  @Get("/search")
+  @ApiOperation({ summary: "Search for consumers" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [ContactConsumerResponseDTO],
+    description: "List of consumers that match the search criteria",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  async searchConsumers(
+    @Query("query") query: string,
+    @Query("limit") limit: number,
+    @AuthUser() consumer: Consumer,
+  ): Promise<ContactConsumerResponseDTO[]> {
+    const consumers = await this.consumerService.searchConsumers(query);
+    return consumers.map(consumer => this.mapToSearchDTO(consumer));
   }
 
   @Post("/wallets")

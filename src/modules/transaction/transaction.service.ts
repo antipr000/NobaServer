@@ -78,7 +78,7 @@ export class TransactionService {
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
     sessionKey: string,
-  ): Promise<string> {
+  ): Promise<Transaction> {
     // TODO: Add more validations around required amounts/currencies
     if (!initiatingConsumer) {
       throw new ServiceException({
@@ -281,6 +281,13 @@ export class TransactionService {
       }
     }
 
+    if (transaction.creditConsumerID === transaction.debitConsumerID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "debit & credit cannot be same entity",
+      });
+    }
+
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
     // Perform sanctions check
@@ -344,7 +351,7 @@ export class TransactionService {
         });
     }
 
-    return savedTransaction.transactionRef;
+    return savedTransaction;
   }
 
   async calculateExchangeRate(

@@ -11,6 +11,7 @@ Table Consumer {
   handle String [unique]
   referralCode String [unique, not null]
   phone String [unique]
+  locale String
   dateOfBirth String
   isLocked Boolean [not null, default: false]
   isDisabled Boolean [not null, default: false]

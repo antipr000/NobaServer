@@ -3,63 +3,67 @@ import { TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { AddTransactionEventDTO, TransactionEventDTO } from "./TransactionEventDTO";
 
 export class ConsumerInformationDTO {
-  @ApiProperty()
+  @ApiProperty({ description: "The unique identifier of the user" })
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The first name of the user" })
   firstName: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The last name of the user" })
   lastName: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: "The handle or 'tag' of the user, without $ prefix" })
   handle: string;
 }
 
 export class TransactionDTO {
-  @ApiProperty()
+  @ApiProperty({ description: "The reference by which the user identifies this unique transaction" })
   transactionRef: string;
 
-  @ApiProperty({ enum: WorkflowName })
+  @ApiProperty({ enum: WorkflowName, description: "The workflow being used to process this transaction" })
   workflowName: WorkflowName;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: "The user whose account is being debited" })
   debitConsumer?: ConsumerInformationDTO;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: "The user whose account is being credited" })
   creditConsumer?: ConsumerInformationDTO;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The currency of the account being debited" })
   debitCurrency: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The currency of the account being credited" })
   creditCurrency: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The amount debited from the debit user's account in the debitCurrency" })
   debitAmount: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The amount credited to the credit user's account in the creditCurrency" })
   creditAmount: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The exchange rate used to convert the debitAmount to the creditAmount" })
   exchangeRate: string;
 
-  @ApiProperty({ enum: TransactionStatus })
+  @ApiProperty({ enum: TransactionStatus, description: "The current status of the transaction" })
   status: TransactionStatus;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The date and time the transaction was created" })
   createdTimestamp: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: "The date and time the transaction was last updated" })
   updatedTimestamp: Date;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: "The link used to deposit funds for this transaction" })
   paymentCollectionLink?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: "A memo provided by the user when creating the transaction" })
   memo?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: "A list of events that have occurred on this transaction",
+    type: TransactionEventDTO,
+    isArray: true,
+  })
   transactionEvents?: TransactionEventDTO[];
 }
 

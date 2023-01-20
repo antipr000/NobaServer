@@ -18,11 +18,9 @@ import { createTestConsumer } from "../../../modules/consumer/test_utils/test.ut
 import {
   BadRequestError,
   DatabaseInternalErrorException,
-  InvalidDatabaseRecordException,
   NotFoundError,
 } from "../../../core/exception/CommonAppException";
 import { InputTransactionEvent } from "../domain/TransactionEvent";
-import * as TransactionEventFunctionsForMocking from "../domain/TransactionEvent";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});

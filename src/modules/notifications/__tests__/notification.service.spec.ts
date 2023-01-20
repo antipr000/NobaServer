@@ -65,12 +65,14 @@ describe("NotificationService", () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     await notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
       email: "fake+user@noba.com",
+      locale: "en",
       otp: "123456",
       firstName: "Fake",
     });
 
     const sendOtpEvent = new SendOtpEvent({
       email: "fake+user@noba.com",
+      locale: "en",
       otp: "123456",
       name: "Fake",
     });
@@ -82,6 +84,7 @@ describe("NotificationService", () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     await notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
       email: "fake+user@noba.com",
+      locale: "en",
       otp: "123456",
       firstName: "Fake",
       lastName: "Name",
@@ -91,6 +94,7 @@ describe("NotificationService", () => {
 
     const sendKycApprovedUSEvent = new SendKycApprovedUSEvent({
       email: "fake+user@noba.com",
+      locale: "en",
       firstName: "Fake",
       lastName: "Name",
       nobaUserID: "fake-noba-user-id",
@@ -108,6 +112,7 @@ describe("NotificationService", () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     await notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT, {
       email: "fake+user@noba.com",
+      locale: "en",
       otp: "123456",
       firstName: "Fake",
       lastName: "Name",
@@ -117,6 +122,7 @@ describe("NotificationService", () => {
 
     const sendKycApprovedNonUsEvent = new SendKycApprovedNonUSEvent({
       email: "fake+user@noba.com",
+      locale: "en",
       firstName: "Fake",
       lastName: "Name",
       nobaUserID: "fake-noba-user-id",
@@ -156,6 +162,7 @@ describe("NotificationService", () => {
 
     const payload: NotificationPayload = {
       email: "fake+user@noba.com",
+      locale: "en",
       firstName: "Fake",
       lastName: "User",
       nobaUserID: "fake-noba-user-id",
@@ -164,8 +171,8 @@ describe("NotificationService", () => {
       last4Digits: "1234",
       transactionInitiatedParams: {} as any,
       cryptoFailedParams: {} as any,
-      orderExecutedParams: {} as any,
-      orderFailedParams: {} as any,
+      transactionExecutedParams: {} as any,
+      transactionFailedParams: {} as any,
       sessionID: "fake-session-id",
       transactionID: "fake-transaction-id",
       paymentToken: "fake-payment-token",
@@ -183,6 +190,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_KYC_DENIED_EVENT:
           data = new SendKycDeniedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -191,6 +199,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT:
           data = new SendKycPendingOrFlaggedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -199,6 +208,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT:
           data = new SendDocumentVerificationPendingEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -207,6 +217,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT:
           data = new SendDocumentVerificationRejectedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -215,6 +226,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT:
           data = new SendDocumentVerificationTechnicalFailureEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -224,6 +236,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_CARD_ADDED_EVENT:
           data = new SendCardAddedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -235,6 +248,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT:
           data = new SendCardAdditionFailedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -245,6 +259,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_CARD_DELETED_EVENT:
           data = new SendCardDeletedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -256,6 +271,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT:
           data = new SendTransactionInitiatedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -266,6 +282,7 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_CRYPTO_FAILED_EVENT:
           data = new SendCryptoFailedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
@@ -276,26 +293,29 @@ describe("NotificationService", () => {
         case NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT:
           data = new SendOrderExecutedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
 
-            params: payload.orderExecutedParams,
+            params: payload.transactionExecutedParams,
           });
           break;
         case NotificationEventType.SEND_TRANSACTION_FAILED_EVENT:
           data = new SendOrderFailedEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
 
-            params: payload.orderFailedParams,
+            params: payload.transactionFailedParams,
           });
           break;
         case NotificationEventType.SEND_HARD_DECLINE_EVENT:
           data = new SendHardDeclineEvent({
             email: payload.email,
+            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,

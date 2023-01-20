@@ -1,7 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { ContactPhoneDTO } from "./ContactPhoneDTO";
 
-export class ContactConsumerResponseDTO {
+export class ConsumerSearchDTO {
   @ApiProperty()
   consumerID: string;
 
