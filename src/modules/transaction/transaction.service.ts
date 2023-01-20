@@ -50,8 +50,6 @@ export class TransactionService {
   ) {
     this.depositFeeAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeAmount;
     this.depositFeePercentage = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeePercentage;
-    console.log("Deposit fee amount: ", this.depositFeeAmount);
-    console.log("Deposit fee percentage: ", this.depositFeePercentage);
   }
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
