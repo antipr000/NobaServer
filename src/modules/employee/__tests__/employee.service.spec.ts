@@ -9,6 +9,7 @@ import { EMPLOYEE_REPO_PROVIDER } from "../repo/employee.repo.module";
 import { anything, capture, instance, when } from "ts-mockito";
 import { EmployeeService } from "../employee.service";
 import { uuid } from "uuidv4";
+import { ServiceException } from "../../../core/exception/ServiceException";
 
 const getRandomEmployee = (): Employee => {
   const employee: Employee = {
@@ -96,6 +97,36 @@ describe("EmployeeServiceTests", () => {
         allocationAmount: newAllocationAmount,
       });
     });
+
+    it("should throw an error if allocationAmount is undefined", async () => {
+      const employee = getRandomEmployee();
+
+      try {
+        await employeeService.updateEmployee(employee.id, undefined);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("allocationAmount"));
+      }
+    });
+
+    it("should throw ServiceException if the ID is undefined or null", async () => {
+      try {
+        await employeeService.updateEmployee(undefined, 10.0);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("employeeID"));
+      }
+
+      try {
+        await employeeService.updateEmployee(null, 100.0);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("employeeID"));
+      }
+    });
   });
 
   describe("getEmployeeByID", () => {
@@ -109,6 +140,12 @@ describe("EmployeeServiceTests", () => {
 
       const [employeeID] = capture(employeeRepo.getEmployeeByID).last();
       expect(employeeID).toEqual(employee.id);
+    });
+
+    it("should throw ServiceException if the ID is undefined or null", async () => {
+      await expect(employeeService.getEmployeeByID(undefined)).rejects.toThrowError(ServiceException);
+
+      await expect(employeeService.getEmployeeByID(null)).rejects.toThrowError(ServiceException);
     });
   });
 
@@ -126,6 +163,12 @@ describe("EmployeeServiceTests", () => {
 
       const [consumerID] = capture(employeeRepo.getEmployeesForConsumerID).last();
       expect(consumerID).toEqual(employee1.consumerID);
+    });
+
+    it("should throw ServiceException if the ID is undefined or null", async () => {
+      await expect(employeeService.getEmployeesForConsumerID(undefined)).rejects.toThrowError(ServiceException);
+
+      await expect(employeeService.getEmployeesForConsumerID(null)).rejects.toThrowError(ServiceException);
     });
   });
 });

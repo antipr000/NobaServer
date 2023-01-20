@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 import { Logger } from "winston";
 import { Employee, EmployeeAllocationCurrency } from "./domain/Employee";
 import { IEmployeeRepo } from "./repo/employee.repo";
@@ -22,16 +23,44 @@ export class EmployeeService {
   }
 
   async updateEmployee(employeeID: string, allocationAmount: number): Promise<Employee> {
+    if (!employeeID) {
+      throw new ServiceException({
+        message: "employeeID is required",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
+    if (!allocationAmount) {
+      throw new ServiceException({
+        message: "allocationAmount is required",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
     return this.employeeRepo.updateEmployee(employeeID, {
       allocationAmount: allocationAmount,
     });
   }
 
   async getEmployeeByID(employeeID: string): Promise<Employee> {
+    if (!employeeID) {
+      throw new ServiceException({
+        message: "employeeID is required",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
     return this.employeeRepo.getEmployeeByID(employeeID);
   }
 
   async getEmployeesForConsumerID(consumerID: string): Promise<Employee[]> {
+    if (!consumerID) {
+      throw new ServiceException({
+        message: "consumerID is required",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
     return this.employeeRepo.getEmployeesForConsumerID(consumerID);
   }
 }
