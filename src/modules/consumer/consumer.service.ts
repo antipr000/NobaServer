@@ -714,6 +714,8 @@ export class ConsumerService {
 
     const result: Employee = await this.employeeService.updateEmployee(employee.id, allocationAmountInPesos);
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
+    await this.bubbleService.updateEmployeeAllocationInBubble(employee.id, allocationAmountInPesos);
+
     return result;
   }
 

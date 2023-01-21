@@ -168,4 +168,25 @@ describe("BubbleServiceTests", () => {
       expect(employerServiceCreateEmployerArgsReferralID).toEqual(employer.referralID);
     });
   });
+
+  describe("updateEmployeeAllocationInBubble", () => {
+    it("should forwards the request to BubbleClient as is", async () => {
+      const employer = getRandomEmployer();
+      const consumer = getRandomConsumer();
+      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const newAllocationAmount = 12345;
+
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(bubbleClient.updateEmployeeAllocationAmount(employee.id, newAllocationAmount)).thenResolve();
+
+      await bubbleService.updateEmployeeAllocationInBubble(employee.id, newAllocationAmount);
+
+      const [
+        bubbleClientUpdateEmployeeAllocationAmountArgsEmployeeID,
+        bubbleClientUpdateEmployeeAllocationAmountArgsNewAllocationAmount,
+      ] = capture(bubbleClient.updateEmployeeAllocationAmount).last();
+      expect(bubbleClientUpdateEmployeeAllocationAmountArgsEmployeeID).toEqual(employee.id);
+      expect(bubbleClientUpdateEmployeeAllocationAmountArgsNewAllocationAmount).toEqual(newAllocationAmount);
+    });
+  });
 });

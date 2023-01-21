@@ -41,6 +41,10 @@ export class BubbleService {
     });
   }
 
+  async updateEmployeeAllocationInBubble(nobaEmployeeID: string, allocationAmount: number): Promise<void> {
+    return this.bubbleClient.updateEmployeeAllocationAmount(nobaEmployeeID, allocationAmount);
+  }
+
   async registerEmployerInNoba(request: RegisterEmployerRequest): Promise<string> {
     const employer: Employer = await this.employerService.createEmployer(
       request.name,
