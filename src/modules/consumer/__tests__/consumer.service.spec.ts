@@ -57,6 +57,8 @@ import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mo
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
+import { BubbleService } from "../../../modules/bubble/buuble.service";
+import { getMockBubbleServiceWithDefaults } from "../../../modules/bubble/mocks/mock.bubble.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -107,6 +109,7 @@ describe("ConsumerService", () => {
   let qrService: QRService;
   let employeeService: EmployeeService;
   let employerService: EmployerService;
+  let bubbleService: BubbleService;
 
   jest.setTimeout(30000);
 
@@ -122,6 +125,7 @@ describe("ConsumerService", () => {
     qrService = getMockQRServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
+    bubbleService = getMockBubbleServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -182,6 +186,10 @@ describe("ConsumerService", () => {
         {
           provide: EmployerService,
           useFactory: () => instance(employerService),
+        },
+        {
+          provide: BubbleService,
+          useFactory: () => instance(bubbleService),
         },
         KmsService,
       ],
@@ -1593,10 +1601,16 @@ describe("ConsumerService", () => {
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(bubbleService.createEmployeeInBubble(anyString(), anything())).thenResolve();
 
       const response = await consumerService.registerWithAnEmployer(employer.referralID, consumer.props.id, 100);
 
       expect(response).toEqual(employee);
+
+      const [propagatedNobaEmployeeID, propagatedConsumer] = capture(bubbleService.createEmployeeInBubble).last();
+      expect(propagatedNobaEmployeeID).toEqual(employee.id);
+      expect(propagatedConsumer).toEqual(consumer);
     });
   });
 

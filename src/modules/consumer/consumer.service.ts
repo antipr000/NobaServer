@@ -81,6 +81,7 @@ export class ConsumerService {
     private readonly qrService: QRService,
     private readonly employeeService: EmployeeService,
     private readonly employerService: EmployerService,
+    private readonly bubbleService: BubbleService,
   ) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
     this.qrCodePrefix = this.configService.get("QR_CODE_PREFIX");
@@ -659,8 +660,10 @@ export class ConsumerService {
       employer.id,
       consumerID,
     );
+
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    // await this.bubbleService.createEmployeeInBubble(employee.id);
+    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
+    await this.bubbleService.createEmployeeInBubble(employee.id, consumer);
 
     return employee;
   }
