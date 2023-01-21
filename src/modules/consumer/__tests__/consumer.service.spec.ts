@@ -1241,6 +1241,32 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("findConsumersByPublicInfo", () => {
+    it("should find consumers by public info", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mockConsumer",
+        phone: "+15559993333",
+        email: "mock@mock.com",
+        firstName: "jon",
+        lastName: "doe",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mockConsumer2",
+        phone: "+15559993333",
+        email: "mock2@mock.com",
+        firstName: "jon",
+        lastName: "snow",
+      });
+
+      const expectedConsumers = [consumer, consumer2];
+
+      when(consumerRepo.findConsumersByPublicInfo("jon", 3)).thenResolve(Result.ok<Array<Consumer>>(expectedConsumers));
+
+      const consumers = await consumerService.findConsumersByPublicInfo("jon", 3);
+      expect(consumers).toEqual(expectedConsumers);
+    });
+  });
+
   describe("updateConsumerEmail", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";

@@ -77,7 +77,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async findConsumersByPublicInfo(publicInfoSearch: string, limit: number): Promise<Result<Consumer>[]> {
+  async findConsumersByPublicInfo(publicInfoSearch: string, limit: number): Promise<Result<Consumer[]>> {
     try {
       const consumers = await this.prisma.consumer.findMany({
         where: {
@@ -105,9 +105,9 @@ export class SQLConsumerRepo implements IConsumerRepo {
         take: limit,
       });
 
-      return consumers.map(consumer => Result.ok(Consumer.createConsumer(consumer)));
+      return Result.ok(consumers.map(consumer => Consumer.createConsumer(consumer)));
     } catch (e) {
-      return [];
+      return Result.fail(`Couldn't find consumer with given contact info for unknown reason: ${e}`);
     }
   }
 

@@ -321,17 +321,16 @@ export class ConsumerService {
 
   async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
     const consumerResultList = await this.consumerRepo.findConsumersByPublicInfo(searchString, limit);
-    console.log(consumerResultList);
-    let consumers = new Array<Consumer>();
-    consumerResultList.forEach(consumerResult => {
-      if (!consumerResult.isSuccess) {
-        return null;
-      }
 
-      consumers.push(consumerResult.getValue());
-    });
+    if (!consumerResultList.isSuccess) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        error: consumerResultList.error,
+        message: "Error finding consumers by public info",
+      });
+    }
 
-    return consumers;
+    return consumerResultList.getValue();
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {

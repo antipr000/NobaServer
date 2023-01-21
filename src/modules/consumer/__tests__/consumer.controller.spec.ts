@@ -928,6 +928,38 @@ describe("ConsumerController", () => {
         handle: "mock2",
       });
 
+      when(consumerService.findConsumersByPublicInfo("mock", 2)).thenResolve([consumer, consumer2]);
+      expect(await consumerController.searchConsumers("mock", consumer, 2)).toStrictEqual([
+        {
+          consumerID: consumer.props.id,
+          handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+        },
+        {
+          consumerID: consumer2.props.id,
+          handle: consumer2.props.handle,
+          firstName: consumer2.props.firstName,
+          lastName: consumer2.props.lastName,
+        },
+      ]);
+    });
+    it("should set limit default to 10", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock1",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mock-consumer-2",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock2",
+      });
+
       when(consumerService.findConsumersByPublicInfo("mock", 10)).thenResolve([consumer, consumer2]);
       expect(await consumerController.searchConsumers("mock", consumer)).toStrictEqual([
         {

@@ -52,6 +52,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { QRCodeDTO } from "./dto/QRCodeDTO";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { ContactConsumerResponseDTO } from "./dto/ContactConsumerResponseDTO";
+import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -371,10 +372,10 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async searchConsumers(
     @Query("query") query: string,
+    @Query("") limitDTO: OptionalLimitQueryDTO,
     @AuthUser() consumer: Consumer,
-    @Query("limit") limit = 10,
   ): Promise<ContactConsumerResponseDTO[]> {
-    const consumers = await this.consumerService.findConsumersByPublicInfo(query, limit);
+    const consumers = await this.consumerService.findConsumersByPublicInfo(query, limitDTO.limit || 10);
     return consumers.map(consumer => {
       return {
         consumerID: consumer.props.id,
