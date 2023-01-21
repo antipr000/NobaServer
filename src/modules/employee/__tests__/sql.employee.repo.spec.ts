@@ -10,6 +10,7 @@ import { createTestEmployer } from "../../../modules/employer/test_utils/test.ut
 import { Employee, EmployeeAllocationCurrency, EmployeeCreateRequest } from "../domain/Employee";
 import { IEmployeeRepo } from "../repo/employee.repo";
 import { SqlEmployeeRepo } from "../repo/sql.employee.repo";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 
 const getAllEmployeeRecords = async (prismaService: PrismaService): Promise<PrismaEmployeeModel[]> => {
   return prismaService.employee.findMany({});
@@ -95,7 +96,18 @@ describe("SqlEmployeeRepoTests", () => {
       const employee2: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
 
       const createdEmployee: Employee = await employeeRepo.createEmployee(employee1);
-      await expect(employeeRepo.createEmployee(employee2)).rejects.toThrowError(DatabaseInternalErrorException);
+
+      try {
+        await employeeRepo.createEmployee(employee2);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toEqual(ServiceErrorCode.ALREADY_EXISTS);
+
+        // IMPORTANT: shouldn't expose internal IDs at any cost :)
+        expect(err.message).toEqual(expect.not.stringContaining(employee2.consumerID));
+        expect(err.message).toEqual(expect.not.stringContaining(employee2.employerID));
+      }
     });
 
     it("should throw error if the allocationCurrency is not correct", async () => {

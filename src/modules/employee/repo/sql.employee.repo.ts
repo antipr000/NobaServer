@@ -18,6 +18,7 @@ import {
   validateUpdateEmployeeRequest,
 } from "../domain/Employee";
 import { IEmployeeRepo } from "./employee.repo";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 
 @Injectable()
 export class SqlEmployeeRepo implements IEmployeeRepo {
@@ -55,6 +56,21 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       savedEmployee = convertToDomainEmployee(returnedEmployee);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
+
+      if (
+        err.meta &&
+        err.meta.target &&
+        err.meta.target.length === 2 &&
+        // The oder here is the same as defined in "schema.prisma"
+        err.meta.target[0] === "consumerID" &&
+        err.meta.target[1] === "employerID"
+      ) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.ALREADY_EXISTS,
+          message: `Consumer is already registered with the specified Employer`,
+        });
+      }
+
       throw new DatabaseInternalErrorException({
         message: "Error saving Employee in database",
       });

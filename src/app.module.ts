@@ -18,6 +18,7 @@ import { MonoModule } from "./modules/psp/mono/mono.module";
 import { PspWorkflowModule } from "./modules/psp/psp.module";
 import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
 import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
+import { BubbleModule } from "./modules/bubble/bubble.module";
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { NotificationWorkflowModule } from "./modules/notifications/notification
     AdminModule,
     // TODO: Remove this once we have a proper way to handle PSP dependencies.
     MonoModule,
+    BubbleModule,
     TransactionWorkflowModule,
     PspWorkflowModule,
     ScheduleModule.forRoot(),
@@ -64,6 +66,7 @@ export class AppModule {}
     AdminModule,
     // TODO: Remove this once we have a proper way to handle PSP dependencies.
     MonoModule,
+    BubbleModule,
     PspWorkflowModule,
     TransactionWorkflowModule,
     NotificationWorkflowModule,

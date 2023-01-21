@@ -6,7 +6,7 @@ import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { BubbleService } from "./buuble.service";
 import { RegisterEmployerRequestDTO } from "./dto/bubble.workflow.controller.dto";
 
-@Controller("/webhoos/bubble")
+@Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
 @IsNoApiKeyNeeded()
 export class BubbleWorkflowController {
