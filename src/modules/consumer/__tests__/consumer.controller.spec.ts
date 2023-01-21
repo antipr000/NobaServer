@@ -911,6 +911,41 @@ describe("ConsumerController", () => {
     });
   });
 
+  describe("search", () => {
+    it("should return a list of contacts", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock1",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mock-consumer-2",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock2",
+      });
+
+      when(consumerService.findConsumersByPublicInfo("mock", 10)).thenResolve([consumer, consumer2]);
+      expect(await consumerController.searchConsumers("mock", consumer)).toStrictEqual([
+        {
+          consumerID: consumer.props.id,
+          handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+        },
+        {
+          consumerID: consumer2.props.id,
+          handle: consumer2.props.handle,
+          firstName: consumer2.props.firstName,
+          lastName: consumer2.props.lastName,
+        },
+      ]);
+    });
+  });
+
   describe("getQRCode", () => {
     it("should return a QR code", async () => {
       const consumer = Consumer.createConsumer({

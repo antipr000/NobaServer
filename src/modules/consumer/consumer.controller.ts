@@ -371,20 +371,11 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async searchConsumers(
     @Query("query") query: string,
-    @Query("limit") limit: number,
     @AuthUser() consumer: Consumer,
+    @Query("limit") limit = 10,
   ): Promise<ContactConsumerResponseDTO[]> {
     const consumers = await this.consumerService.findConsumersByPublicInfo(query, limit);
     return consumers.map(consumer => {
-      if (!consumer) {
-        return {
-          consumerID: null,
-          handle: null,
-          firstName: null,
-          lastName: null,
-        };
-      }
-
       return {
         consumerID: consumer.props.id,
         handle: consumer.props.handle,
