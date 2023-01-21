@@ -712,7 +712,9 @@ export class ConsumerService {
       });
     }
 
-    return this.employeeService.updateEmployee(employee.id, allocationAmountInPesos);
+    const result: Employee = await this.employeeService.updateEmployee(employee.id, allocationAmountInPesos);
+    // TODO: Design a way to post to Bubble efficiently without blocking end users.
+    return result;
   }
 
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {

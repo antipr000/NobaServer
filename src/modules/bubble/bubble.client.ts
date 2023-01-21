@@ -36,7 +36,6 @@ export class BubbleClient {
       firstName: request.firstName,
       lastName: request.lastName,
       email: request.email,
-      phone: request.phone,
       companyID: request.employerID,
       nobaAllocation: request.allocationAmountInPesos,
       nobaEmployeeID: request.nobaEmployeeID,
@@ -48,7 +47,7 @@ export class BubbleClient {
     } catch (err) {
       this.logger.error(`Failed to register new employee: ${JSON.stringify(request)} to Bubble. Error: ${err}`);
       throw new ServiceException({
-        message: "Error while creating Mono collection link",
+        message: "Failed to register new employee with Bubble",
         errorCode: ServiceErrorCode.UNKNOWN,
       });
     }

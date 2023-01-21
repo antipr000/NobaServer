@@ -11,6 +11,7 @@ import { ConsumerRepoModule } from "./repos/consumer.repo.module";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { EmployeeModule } from "../employee/employee.module";
 import { EmployerModule } from "../employer/employer.module";
+import { BubbleModule } from "../bubble/bubble.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EmployerModule } from "../employer/employer.module";
     ConsumerRepoModule,
     EmployeeModule,
     EmployerModule,
+    BubbleModule,
   ],
   controllers: [ConsumerController],
   providers: [ConsumerService, SanctionedCryptoWalletService, SMSService, ConsumerMapper],
