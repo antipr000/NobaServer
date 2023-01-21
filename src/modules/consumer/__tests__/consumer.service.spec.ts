@@ -273,11 +273,12 @@ describe("ConsumerService", () => {
     it("should find the consumer by handle", async () => {
       const email = "mock-user@noba.com";
       const consumerID = "mock-consumer-1";
-      const handle = "$mock-handle";
+      const handle = "mock-handle";
+      const requestHandle = "$mock-handle";
       const consumer = getKYCdConsumer(consumerID, email, handle);
 
       when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
-      const response = await consumerService.getActiveConsumer(handle);
+      const response = await consumerService.getActiveConsumer(requestHandle);
       expect(response).toStrictEqual(consumer);
     });
 

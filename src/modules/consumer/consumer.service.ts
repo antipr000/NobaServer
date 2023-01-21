@@ -350,7 +350,7 @@ export class ConsumerService {
   async getActiveConsumer(consumerIDOrHandle: string): Promise<Consumer> {
     let consumer: Consumer;
     if (consumerIDOrHandle.startsWith("$")) {
-      consumer = await this.consumerRepo.getConsumerByHandle(consumerIDOrHandle);
+      consumer = await this.consumerRepo.getConsumerByHandle(consumerIDOrHandle.replace("$", ""));
       if (!consumer) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

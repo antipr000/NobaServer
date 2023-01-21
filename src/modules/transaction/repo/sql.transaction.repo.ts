@@ -140,32 +140,6 @@ export class SQLTransactionRepo implements ITransactionRepo {
     }
   }
 
-  async getTransactionsByConsumerID(consumerID: string): Promise<Transaction[]> {
-    try {
-      const returnedTransactions: PrismaTransactionModel[] = await this.prismaService.transaction.findMany({
-        where: {
-          OR: [
-            {
-              creditConsumerID: consumerID,
-            },
-            {
-              debitConsumerID: consumerID,
-            },
-          ],
-        },
-        include: {
-          debitConsumer: false,
-          creditConsumer: false,
-        },
-      });
-
-      return returnedTransactions.map(transaction => convertToDomainTransaction(transaction));
-    } catch (err) {
-      this.logger.error(JSON.stringify(err));
-      return [];
-    }
-  }
-
   async getFilteredTransactions(
     transactionFilterOptions: TransactionFilterOptionsDTO,
   ): Promise<PaginatedResult<Transaction>> {
@@ -193,6 +167,9 @@ export class SQLTransactionRepo implements ITransactionRepo {
         ...(transactionFilterOptions.endDate && {
           updatedTimestamp: { lte: new Date(transactionFilterOptions.endDate) },
         }),
+      },
+      orderBy: {
+        createdTimestamp: "desc",
       },
     };
 
@@ -276,10 +253,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
     }
   }
 
-  async getTransactionEvents(
-    transactionID: string,
-    includeInternalEvents: boolean = false,
-  ): Promise<TransactionEvent[]> {
+  async getTransactionEvents(transactionID: string, includeInternalEvents = false): Promise<TransactionEvent[]> {
     const allTransactionEvents = await this.prismaService.transactionEvent.findMany({
       where: {
         transactionID: transactionID,
