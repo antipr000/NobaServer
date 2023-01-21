@@ -28,6 +28,7 @@ Table Consumer {
   circleAccountData Circle
   debitTransactions Transaction [not null]
   creditTransactions Transaction [not null]
+  Employee Employee [not null]
 }
 
 Table Address {
@@ -57,6 +58,33 @@ Table KYC {
   riskLevel String
   consumer Consumer [not null]
   consumerID String [unique, not null]
+}
+
+Table Employer {
+  id String [pk]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+  name String [not null]
+  logoURI String [not null]
+  referralID String [unique, not null]
+  bubbleID String [unique, not null]
+  Employee Employee [not null]
+}
+
+Table Employee {
+  id String [pk]
+  createdTimestamp DateTime [default: `now()`]
+  updatedTimestamp DateTime
+  allocationAmount Float [not null]
+  allocationCurrency String [not null]
+  employer Employer [not null]
+  employerID String [not null]
+  consumer Consumer [not null]
+  consumerID String [not null]
+
+  indexes {
+    (consumerID, employerID) [unique]
+  }
 }
 
 Table CryptoWallet {
@@ -334,6 +362,10 @@ Ref: Consumer.referredByID - Consumer.id
 Ref: Address.consumerID - Consumer.id [delete: Cascade]
 
 Ref: KYC.consumerID - Consumer.id [delete: Cascade]
+
+Ref: Employee.employerID > Employer.id [delete: Cascade]
+
+Ref: Employee.consumerID > Consumer.id [delete: Cascade]
 
 Ref: CryptoWallet.consumerID > Consumer.id [delete: Cascade]
 

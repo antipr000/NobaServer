@@ -15,6 +15,8 @@ export function serviceToHTTP(logger: Logger, exception: ServiceException) {
   switch (exception.errorCode) {
     case ServiceErrorCode.DOES_NOT_EXIST:
       return new NotFoundException(exception.message);
+    case ServiceErrorCode.ALREADY_EXISTS:
+      return new HttpException(exception.message, 403);
     case ServiceErrorCode.NOT_IMPLEMENTED:
       return new NotImplementedException(exception.message);
     case ServiceErrorCode.SEMANTIC_VALIDATION:

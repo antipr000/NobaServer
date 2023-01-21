@@ -52,6 +52,10 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { QRCodeDTO } from "./dto/QRCodeDTO";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { ContactConsumerResponseDTO } from "./dto/ContactConsumerResponseDTO";
+import { RegisterWithEmployerDTO } from "./dto/RegisterWithEmployerDTO";
+import { LinkedEmployerDTO } from "./dto/LinkedEmployerDTO";
+import { Employee } from "../employee/domain/Employee";
+import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -62,11 +66,11 @@ export class ConsumerController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  private readonly consumerMapper: ConsumerMapper;
-
-  constructor(private readonly consumerService: ConsumerService, private readonly plaidClient: PlaidClient) {
-    this.consumerMapper = new ConsumerMapper();
-  }
+  constructor(
+    private readonly consumerService: ConsumerService,
+    private readonly plaidClient: PlaidClient,
+    private readonly consumerMapper: ConsumerMapper,
+  ) {}
 
   @Get("/")
   @ApiOperation({ summary: "Gets details of logged-in consumer" })
@@ -434,6 +438,42 @@ export class ConsumerController {
       notificationMethod,
     );
     return this.mapToDTO(consumer);
+  }
+
+  @Post("/employers")
+  @ApiOperation({ summary: "Links the consumer with an Employer" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Registered Employee record" })
+  async registerWithAnEmployer(
+    @Body() requestBody: RegisterWithEmployerDTO,
+    @AuthUser() consumer: Consumer,
+  ): Promise<void> {
+    await this.consumerService.registerWithAnEmployer(
+      requestBody.employerReferralID,
+      consumer.props.id,
+      requestBody.allocationAmountInPesos,
+    );
+  }
+
+  @Get("/employers")
+  @ApiOperation({ summary: "Lists all the Employers the current Consumer is associated with" })
+  @ApiResponse({ status: HttpStatus.OK, type: [LinkedEmployerDTO] })
+  async listLinkedEmployers(@AuthUser() consumer: Consumer): Promise<LinkedEmployerDTO[]> {
+    const employees: Employee[] = await this.consumerService.listLinkedEmployers(consumer.props.id);
+    return this.consumerMapper.toLinkedEmployerDTO(employees);
+  }
+
+  @Patch("/employers")
+  @ApiOperation({ summary: "Updates the allocation amount for a specific employer" })
+  @ApiResponse({ status: HttpStatus.OK })
+  async updateAllocationAmountForAnEmployer(
+    @AuthUser() consumer: Consumer,
+    @Body() requestBody: UpdateEmployerAllocationDTO,
+  ): Promise<void> {
+    await this.consumerService.updateEmployerAllocationAmount(
+      requestBody.employerReferralID,
+      consumer.props.id,
+      requestBody.allocationAmountInPesos,
+    );
   }
 
   @Get("/qrcode")

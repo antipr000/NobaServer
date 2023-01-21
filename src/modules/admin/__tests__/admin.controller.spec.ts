@@ -22,6 +22,9 @@ import { ExchangeRateService } from "../../../modules/common/exchangerate.servic
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { getMockTransactionServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.service";
+import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -35,6 +38,8 @@ describe("AdminController", () => {
   let mockConsumerService: ConsumerService;
   let mockTransactionService: TransactionService;
   let mockExchangeRateService: ExchangeRateService;
+  let consumerMapper: ConsumerMapper;
+  let employerService: EmployerService;
 
   beforeEach(async () => {
     process.env = {
@@ -47,6 +52,7 @@ describe("AdminController", () => {
     mockConsumerService = getMockConsumerServiceWithDefaults();
     mockTransactionService = getMockTransactionServiceWithDefaults();
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
+    employerService = getMockEmployerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -68,11 +74,17 @@ describe("AdminController", () => {
           provide: ExchangeRateService,
           useFactory: () => instance(mockExchangeRateService),
         },
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
+        },
         AdminMapper,
+        ConsumerMapper,
       ],
     }).compile();
 
     adminController = app.get<AdminController>(AdminController);
+    consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
   });
 
   afterEach(() => {

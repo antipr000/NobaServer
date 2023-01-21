@@ -41,6 +41,11 @@ import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { EmployeeService } from "../employee/employee.service";
+import { EmployerService } from "../employer/employer.service";
+import { Employer } from "../employer/domain/Employer";
+import { Employee } from "../employee/domain/Employee";
+import { BubbleService } from "../bubble/buuble.service";
 
 @Injectable()
 export class ConsumerService {
@@ -71,7 +76,13 @@ export class ConsumerService {
   private otpOverride: number;
   private qrCodePrefix: string;
 
-  constructor(private readonly configService: CustomConfigService, private readonly qrService: QRService) {
+  constructor(
+    private readonly configService: CustomConfigService,
+    private readonly qrService: QRService,
+    private readonly employeeService: EmployeeService,
+    private readonly employerService: EmployerService,
+    private readonly bubbleService: BubbleService,
+  ) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
     this.qrCodePrefix = this.configService.get("QR_CODE_PREFIX");
   }
@@ -629,6 +640,83 @@ export class ConsumerService {
     //   zhParticipantCode: zeroHashParticipantCode,
     // });
     throw new Error("Not implemented");
+  }
+
+  async registerWithAnEmployer(
+    employerReferralID: string,
+    consumerID: string,
+    allocationAmountInPesos: number,
+  ): Promise<Employee> {
+    const employer: Employer = await this.employerService.getEmployerByReferralID(employerReferralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `Employer with referral ID ${employerReferralID} does not exist`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const employee: Employee = await this.employeeService.createEmployee(
+      allocationAmountInPesos,
+      employer.id,
+      consumerID,
+    );
+
+    // TODO: Design a way to post to Bubble efficiently without blocking end users.
+    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
+    await this.bubbleService.createEmployeeInBubble(employee.id, consumer);
+
+    return employee;
+  }
+
+  async listLinkedEmployers(consumerID: string): Promise<Employee[]> {
+    return this.employeeService.getEmployeesForConsumerID(consumerID);
+  }
+
+  async updateEmployerAllocationAmount(
+    employerReferralID: string,
+    consumerID: string,
+    allocationAmountInPesos: number,
+  ): Promise<Employee> {
+    if (allocationAmountInPesos < 0) {
+      throw new ServiceException({
+        message: `'allocationAmountInPesos' should be greater than 0`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+    if (!consumerID) {
+      throw new ServiceException({
+        message: `'consumerID' should be provided`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+    if (!employerReferralID) {
+      throw new ServiceException({
+        message: `'employerReferralID' should be provided`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const employer: Employer = await this.employerService.getEmployerByReferralID(employerReferralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `Employer with 'referralID' ${employerReferralID} does not exist`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const employee: Employee = await this.employeeService.getEmployeeByConsumerAndEmployerID(consumerID, employer.id);
+    if (!employee) {
+      throw new ServiceException({
+        message: `Employee with 'consumerID' ${consumerID} and 'employerID' ${employer.id} does not exist`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const result: Employee = await this.employeeService.updateEmployee(employee.id, allocationAmountInPesos);
+    // TODO: Design a way to post to Bubble efficiently without blocking end users.
+    await this.bubbleService.updateEmployeeAllocationInBubble(employee.id, allocationAmountInPesos);
+
+    return result;
   }
 
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {
