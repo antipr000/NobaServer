@@ -9,6 +9,9 @@ export function getMockEmployeeRepoWithDefaults(): IEmployeeRepo {
   when(mockEmployeeRepo.createEmployee(anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployeeRepo.getEmployeeByID(anyString())).thenReject(new Error("Method not implemented"));
   when(mockEmployeeRepo.getEmployeesForConsumerID(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockEmployeeRepo.getEmployeeByConsumerAndEmployerID(anyString(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
 
   return mockEmployeeRepo;
 }

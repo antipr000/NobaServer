@@ -171,4 +171,56 @@ describe("EmployeeServiceTests", () => {
       await expect(employeeService.getEmployeesForConsumerID(null)).rejects.toThrowError(ServiceException);
     });
   });
+
+  describe("getEmployeeByConsumerAndEmployerID", () => {
+    it("should get an employee by consumerID & employerID", async () => {
+      const employee1 = getRandomEmployee();
+      when(employeeRepo.getEmployeeByConsumerAndEmployerID(employee1.consumerID, employee1.employerID)).thenResolve(
+        employee1,
+      );
+
+      const retrievedEmployee = await employeeService.getEmployeeByConsumerAndEmployerID(
+        employee1.consumerID,
+        employee1.employerID,
+      );
+
+      expect(retrievedEmployee).toEqual(employee1);
+    });
+
+    it("should throw ServiceException if the consumerID is undefined or null", async () => {
+      try {
+        await employeeService.getEmployeeByConsumerAndEmployerID(undefined, "employerID");
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'consumerID'"));
+      }
+
+      try {
+        await employeeService.getEmployeeByConsumerAndEmployerID(null, "employerID");
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'consumerID'"));
+      }
+    });
+
+    it("should throw ServiceException if the employerID is undefined or null", async () => {
+      try {
+        await employeeService.getEmployeeByConsumerAndEmployerID("consumerID", undefined);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'employerID'"));
+      }
+
+      try {
+        await employeeService.getEmployeeByConsumerAndEmployerID("consumerID", null);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'employerID'"));
+      }
+    });
+  });
 });

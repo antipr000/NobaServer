@@ -10,6 +10,9 @@ export function getMockEmployeeServiceWithDefaults(): EmployeeService {
   when(mockEmployeeService.updateEmployee(anyString(), anyNumber())).thenReject(new Error("Method not implemented"));
   when(mockEmployeeService.getEmployeeByID(anyString())).thenReject(new Error("Method not implemented"));
   when(mockEmployeeService.getEmployeesForConsumerID(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockEmployeeService.getEmployeeByConsumerAndEmployerID(anyString(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
 
   return mockEmployeeService;
 }

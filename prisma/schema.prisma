@@ -110,6 +110,7 @@ model Employee {
   consumer           Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID         String
 
+  @@unique([consumerID, employerID])
   @@index([consumerID])
 }
 

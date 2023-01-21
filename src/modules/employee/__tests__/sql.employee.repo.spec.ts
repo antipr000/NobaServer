@@ -88,6 +88,16 @@ describe("SqlEmployeeRepoTests", () => {
       expect(savedEmployees[0]).toEqual(createdEmployee);
     });
 
+    it("should throw error if trying to create an Employee with same 'consumerID & employerID'", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+      const employerID: string = await createTestEmployer(prismaService);
+      const employee1: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+      const employee2: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+
+      const createdEmployee: Employee = await employeeRepo.createEmployee(employee1);
+      await expect(employeeRepo.createEmployee(employee2)).rejects.toThrowError(DatabaseInternalErrorException);
+    });
+
     it("should throw error if the allocationCurrency is not correct", async () => {
       const consumerID: string = await createTestConsumer(prismaService);
       const employerID: string = await createTestEmployer(prismaService);
@@ -195,13 +205,14 @@ describe("SqlEmployeeRepoTests", () => {
     it("should return all employees for the specified consumerID 'only'", async () => {
       const consumerID1: string = await createTestConsumer(prismaService);
       const consumerID2: string = await createTestConsumer(prismaService);
-      const employerID: string = await createTestEmployer(prismaService);
+      const employerID1: string = await createTestEmployer(prismaService);
+      const employerID2: string = await createTestEmployer(prismaService);
 
-      const employee1: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID1);
+      const employee1: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID1);
       const createdEmployee1: Employee = await employeeRepo.createEmployee(employee1);
-      const employee2: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID1);
+      const employee2: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID1);
       const createdEmployee2: Employee = await employeeRepo.createEmployee(employee2);
-      const employee3: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID2);
+      const employee3: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID2);
       const createdEmployee3: Employee = await employeeRepo.createEmployee(employee3);
 
       const fetchedEmployeesForConsumerID1: Employee[] = await employeeRepo.getEmployeesForConsumerID(consumerID1);
@@ -218,6 +229,36 @@ describe("SqlEmployeeRepoTests", () => {
     it("should return empty array if there is no Employee with the specified consumerID", async () => {
       const consumerID: string = await createTestConsumer(prismaService);
       expect(await employeeRepo.getEmployeesForConsumerID(consumerID)).toEqual([]);
+    });
+  });
+
+  describe("getEmployeeByConsumerAndEmployerID", () => {
+    it("should return the employee with the given consumerID and employerID", async () => {
+      const consumerID1: string = await createTestConsumer(prismaService);
+      const consumerID2: string = await createTestConsumer(prismaService);
+      const employerID1: string = await createTestEmployer(prismaService);
+      const employerID2: string = await createTestEmployer(prismaService);
+
+      const employee1: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID1);
+      const createdEmployee1: Employee = await employeeRepo.createEmployee(employee1);
+      const employee2: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID1);
+      const createdEmployee2: Employee = await employeeRepo.createEmployee(employee2);
+      const employee3: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID2);
+      const createdEmployee3: Employee = await employeeRepo.createEmployee(employee3);
+
+      const fetchedEmployee: PrismaEmployeeModel = await employeeRepo.getEmployeeByConsumerAndEmployerID(
+        consumerID1,
+        employerID2,
+      );
+
+      expect(fetchedEmployee).toEqual(createdEmployee2);
+    });
+
+    it("should throw 'null' if the employee doesn't really exist", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+      const employerID: string = await createTestEmployer(prismaService);
+
+      expect(await employeeRepo.getEmployeeByConsumerAndEmployerID(consumerID, employerID)).toBeNull();
     });
   });
 });

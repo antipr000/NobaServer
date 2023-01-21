@@ -81,6 +81,10 @@ Table Employee {
   employerID String [not null]
   consumer Consumer [not null]
   consumerID String [not null]
+
+  indexes {
+    (consumerID, employerID) [unique]
+  }
 }
 
 Table CryptoWallet {

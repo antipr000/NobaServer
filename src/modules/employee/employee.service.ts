@@ -53,6 +53,24 @@ export class EmployeeService {
     return this.employeeRepo.getEmployeeByID(employeeID);
   }
 
+  async getEmployeeByConsumerAndEmployerID(consumerID: string, employerID: string): Promise<Employee> {
+    if (!consumerID) {
+      throw new ServiceException({
+        message: "'consumerID' is required",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
+    if (!employerID) {
+      throw new ServiceException({
+        message: "'employerID' is required",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
+    return this.employeeRepo.getEmployeeByConsumerAndEmployerID(consumerID, employerID);
+  }
+
   async getEmployeesForConsumerID(consumerID: string): Promise<Employee[]> {
     if (!consumerID) {
       throw new ServiceException({

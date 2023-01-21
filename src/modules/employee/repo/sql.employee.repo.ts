@@ -119,6 +119,30 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     }
   }
 
+  async getEmployeeByConsumerAndEmployerID(consumerID: string, employerID: string): Promise<Employee> {
+    try {
+      const employee: EmployeePrismaModel = await this.prismaService.employee.findUnique({
+        where: {
+          consumerID_employerID: {
+            consumerID: consumerID,
+            employerID: employerID,
+          },
+        },
+      });
+
+      if (!employee) {
+        return null;
+      }
+
+      return convertToDomainEmployee(employee);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error retrieving the Employee with consumer ID: '${consumerID}' and employer ID: '${employerID}'`,
+      });
+    }
+  }
+
   async getEmployeesForConsumerID(consumerID: string): Promise<Employee[]> {
     try {
       const employees: EmployeePrismaModel[] = await this.prismaService.employee.findMany({
