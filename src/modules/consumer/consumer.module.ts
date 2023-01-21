@@ -24,6 +24,6 @@ import { EmployerModule } from "../employer/employer.module";
   ],
   controllers: [ConsumerController],
   providers: [ConsumerService, SanctionedCryptoWalletService, SMSService, ConsumerMapper],
-  exports: [ConsumerService],
+  exports: [ConsumerService, ConsumerMapper],
 })
 export class ConsumerModule {}
