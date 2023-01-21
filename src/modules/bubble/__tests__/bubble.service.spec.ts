@@ -60,14 +60,12 @@ describe("BubbleServiceTests", () => {
   let app: TestingModule;
   let employerService: EmployerService;
   let employeeService: EmployeeService;
-  let consumerService: ConsumerService;
   let bubbleService: BubbleService;
   let bubbleClient: BubbleClient;
 
   beforeEach(async () => {
     employerService = getMockEmployerServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
-    consumerService = getMockConsumerServiceWithDefaults();
     bubbleClient = getMockBubbleClientWithDefaults();
 
     const appConfigurations = {
@@ -85,10 +83,6 @@ describe("BubbleServiceTests", () => {
         {
           provide: EmployeeService,
           useFactory: () => instance(employeeService),
-        },
-        {
-          provide: ConsumerService,
-          useFactory: () => instance(consumerService),
         },
         {
           provide: BubbleClient,
@@ -112,10 +106,9 @@ describe("BubbleServiceTests", () => {
       const employee = getRandomEmployee(consumer.props.id, employer.id);
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(bubbleClient.registerNewEmployee(anything())).thenResolve();
 
-      await bubbleService.createEmployeeInBubble(employee.id);
+      await bubbleService.createEmployeeInBubble(employee.id, consumer);
 
       const [bubbleClientCreateEmployeeArgs] = capture(bubbleClient.registerNewEmployee).last();
       expect(bubbleClientCreateEmployeeArgs).toEqual({
@@ -136,10 +129,9 @@ describe("BubbleServiceTests", () => {
       employee.allocationCurrency = "USD" as EmployeeAllocationCurrency;
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       try {
-        await bubbleService.createEmployeeInBubble(employee.id);
+        await bubbleService.createEmployeeInBubble(employee.id, consumer);
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);

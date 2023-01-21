@@ -8,7 +8,7 @@ import { BubbleWorkflowController } from "./bubble.workflow.controller";
 import { BubbleService } from "./buuble.service";
 
 @Module({
-  imports: [InfraProvidersModule, EmployeeModule, ConsumerModule, EmployerModule],
+  imports: [InfraProvidersModule, EmployeeModule, EmployerModule],
   controllers: [BubbleWorkflowController],
   providers: [BubbleClient, BubbleService],
   exports: [BubbleService],

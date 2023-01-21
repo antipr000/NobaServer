@@ -33,13 +33,13 @@ export class BubbleClient {
       ...this.getAuthorizationHeader(),
     };
     const requestBody = {
-      first_name: request.firstName,
-      last_name: request.lastName,
+      firstName: request.firstName,
+      lastName: request.lastName,
       email: request.email,
       phone: request.phone,
-      employer_id: request.employerID,
-      allocation_amount_in_pesos: request.allocationAmountInPesos,
-      noba_employee_id: request.nobaEmployeeID,
+      companyID: request.employerID,
+      nobaAllocation: request.allocationAmountInPesos,
+      nobaEmployeeID: request.nobaEmployeeID,
     };
 
     try {
@@ -62,7 +62,8 @@ export class BubbleClient {
       ...this.getAuthorizationHeader(),
     };
     const requestBody = {
-      allocation_amount_in_pesos: allocationAmountInPesos,
+      nobaEmployeeID: nobaEmployeeID,
+      nobaAllocation: allocationAmountInPesos,
     };
 
     try {

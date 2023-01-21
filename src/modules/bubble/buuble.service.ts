@@ -17,13 +17,11 @@ export class BubbleService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly bubbleClient: BubbleClient,
     private readonly employeeService: EmployeeService,
-    private readonly consumerService: ConsumerService,
     private readonly employerService: EmployerService,
   ) {}
 
-  async createEmployeeInBubble(nobaEmployeeID: string): Promise<void> {
+  async createEmployeeInBubble(nobaEmployeeID: string, consumer: Consumer): Promise<void> {
     const nobaEmployee: Employee = await this.employeeService.getEmployeeByID(nobaEmployeeID);
-    const consumer: Consumer = await this.consumerService.getConsumer(nobaEmployee.consumerID);
 
     if (nobaEmployee.allocationCurrency !== EmployeeAllocationCurrency.COP) {
       throw new ServiceException({
