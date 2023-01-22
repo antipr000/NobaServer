@@ -181,6 +181,52 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
+  describe("findConsumersByPublicInfo", () => {
+    it("should find consumers by firstName", async () => {
+      const consumer = getRandomUser();
+      const savedConsumer = await consumerRepo.createConsumer(consumer);
+      console.log(savedConsumer);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(
+        savedConsumer.props.firstName.substring(0, 2),
+        4,
+      );
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(1);
+    });
+
+    it("should find consumers by lastName", async () => {
+      const consumer = getRandomUser();
+      const consumer2 = getRandomUser();
+      const consumer3 = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(consumer.props.lastName.substring(2, 6), 2);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(2);
+    });
+
+    it("should find consumers by handle", async () => {
+      const consumer = getRandomUser();
+      const consumer2 = getRandomUser();
+      const consumer3 = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(consumer.props.handle.substring(0, 1), 2);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(2);
+    });
+
+    it("should fail if an exception is thrown", async () => {
+      jest.spyOn(prismaService.consumer, "findMany").mockImplementation(() => {
+        throw new Error("Error");
+      });
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("any-search", 5);
+      expect(foundConsumer.isFailure).toBe(true);
+    });
+  });
+
   describe("findConsumerByContactInfo", () => {
     it("should find a consumer by email", async () => {
       const consumer = getRandomUser();
