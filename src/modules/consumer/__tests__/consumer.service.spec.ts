@@ -1265,6 +1265,19 @@ describe("ConsumerService", () => {
       const consumers = await consumerService.findConsumersByPublicInfo("jon", 3);
       expect(consumers).toEqual(expectedConsumers);
     });
+
+    it("should return empty array if no consumers found", async () => {
+      when(consumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.ok([]));
+
+      const consumers = await consumerService.findConsumersByPublicInfo("unknown", 2);
+      expect(consumers).toEqual([]);
+    });
+
+    it("should throw ServiceException if findConsumers fails", async () => {
+      when(consumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.fail("Prisma failed!"));
+
+      expect(consumerService.findConsumersByPublicInfo("unknown", 2)).rejects.toThrow(ServiceException);
+    });
   });
 
   describe("updateConsumerEmail", () => {
