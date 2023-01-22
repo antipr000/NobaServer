@@ -13,6 +13,9 @@ import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { WalletStatus } from "@prisma/client";
 import { Address } from "../domain/Address";
 import { Utils } from "../../../core/utils/Utils";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { instance } from "ts-mockito";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -30,8 +33,12 @@ describe("ConsumerRepoTests", () => {
   let consumerRepo: IConsumerRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let consumerMapper: ConsumerMapper;
+  let employerService: EmployerService;
 
   beforeAll(async () => {
+    employerService = getMockEmployerServiceWithDefaults();
+
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
@@ -39,11 +46,20 @@ describe("ConsumerRepoTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [ConsumerMapper, PrismaService, SQLConsumerRepo],
+      providers: [
+        ConsumerMapper,
+        PrismaService,
+        SQLConsumerRepo,
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
+        },
+      ],
     }).compile();
 
     consumerRepo = app.get<SQLConsumerRepo>(SQLConsumerRepo);
     prismaService = app.get<PrismaService>(PrismaService);
+    consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
   });
 
   afterAll(async () => {

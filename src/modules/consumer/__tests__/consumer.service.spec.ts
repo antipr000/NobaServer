@@ -49,7 +49,52 @@ import {
 } from "@prisma/client";
 import { QRService } from "../../../modules/common/qrcode.service";
 import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock.qr.service";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { EmployeeService } from "../../../modules/employee/employee.service";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { Employer } from "../../../modules/employer/domain/Employer";
+import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
+import { uuid } from "uuidv4";
+import { BubbleService } from "../../../modules/bubble/buuble.service";
+import { getMockBubbleServiceWithDefaults } from "../../../modules/bubble/mocks/mock.bubble.service";
+
+const getRandomEmployer = (): Employer => {
+  const employer: Employer = {
+    id: uuid(),
+    name: "Test Employer",
+    bubbleID: uuid(),
+    logoURI: "https://www.google.com",
+    referralID: uuid(),
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+  };
+
+  return employer;
+};
+
+const getRandomEmployee = (consumerID: string, employerID: string): Employee => {
+  const employee: Employee = {
+    id: uuid(),
+    employerID: employerID,
+    consumerID: consumerID,
+    allocationAmount: Math.floor(Math.random() * 1000000),
+    allocationCurrency: EmployeeAllocationCurrency.COP,
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+  };
+
+  return employee;
+};
+
+const getRandomConsumer = (): Consumer => {
+  const consumer = Consumer.createConsumer({
+    id: uuid(),
+    email: `${uuid()}@noba.com`,
+  });
+  return consumer;
+};
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
@@ -62,6 +107,9 @@ describe("ConsumerService", () => {
   let plaidClient: PlaidClient;
   let circleClient: CircleClient;
   let qrService: QRService;
+  let employeeService: EmployeeService;
+  let employerService: EmployerService;
+  let bubbleService: BubbleService;
 
   jest.setTimeout(30000);
 
@@ -75,6 +123,9 @@ describe("ConsumerService", () => {
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
     circleClient = getMockCircleClientWithDefaults();
     qrService = getMockQRServiceWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
+    employerService = getMockEmployerServiceWithDefaults();
+    bubbleService = getMockBubbleServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -127,6 +178,18 @@ describe("ConsumerService", () => {
         {
           provide: QRService,
           useFactory: () => instance(qrService),
+        },
+        {
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
+        },
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
+        },
+        {
+          provide: BubbleService,
+          useFactory: () => instance(bubbleService),
         },
         KmsService,
       ],
@@ -1569,6 +1632,142 @@ describe("ConsumerService", () => {
 
       const response = await consumerService.getBase64EncodedQRCode(textToEncode);
       expect(response).toEqual(base64EncodedQRCode);
+    });
+  });
+
+  describe("registerWithAnEmployer", () => {
+    it("should throw ServiceException if Employer with specified employerReferralID is not found", async () => {
+      when(employerService.getEmployerByReferralID("123456789")).thenResolve(null);
+
+      await expect(consumerService.registerWithAnEmployer("123456789", "test", 10)).rejects.toThrow(ServiceException);
+    });
+
+    it("should register an Employee successfully", async () => {
+      const consumer = getRandomConsumer();
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(consumer.props.id, employer.id);
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(bubbleService.createEmployeeInBubble(anyString(), anything())).thenResolve();
+
+      const response = await consumerService.registerWithAnEmployer(employer.referralID, consumer.props.id, 100);
+
+      expect(response).toEqual(employee);
+
+      const [propagatedNobaEmployeeID, propagatedConsumer] = capture(bubbleService.createEmployeeInBubble).last();
+      expect(propagatedNobaEmployeeID).toEqual(employee.id);
+      expect(propagatedConsumer).toEqual(consumer);
+    });
+  });
+
+  describe("listLinkedEmployers", () => {
+    it("should return a list of linked Employers", async () => {
+      const consumer = getRandomConsumer();
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(consumer.props.id, employer.id);
+
+      when(employeeService.getEmployeesForConsumerID(consumer.props.id)).thenResolve([employee]);
+
+      const response = await consumerService.listLinkedEmployers(consumer.props.id);
+
+      expect(response).toEqual([employee]);
+    });
+  });
+
+  describe("updateEmployerAllocationAmount", () => {
+    it("should throw ServiceException if allocationAmountInPesos is less than zero", async () => {
+      try {
+        await consumerService.updateEmployerAllocationAmount("referralID", "consumerID", -10);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'allocationAmountInPesos'"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+    });
+
+    it("should throw ServiceException if Employer with specified employerReferralID is undefined or null", async () => {
+      try {
+        await consumerService.updateEmployerAllocationAmount(undefined, "consumerID", 10);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'employerReferralID'"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+
+      try {
+        await consumerService.updateEmployerAllocationAmount(null, "consumerID", 10);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'employerReferralID'"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+    });
+
+    it("should throw ServiceException if Employer with specified consumerID is undefined or null", async () => {
+      try {
+        await consumerService.updateEmployerAllocationAmount("referralID", undefined, 10);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'consumerID'"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+
+      try {
+        await consumerService.updateEmployerAllocationAmount("referralID", null, 10);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'consumerID'"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+    });
+
+    it("should throw ServiceException if Employer with specified employerReferralID is not found", async () => {
+      when(employerService.getEmployerByReferralID("referralID")).thenResolve(null);
+
+      try {
+        await consumerService.updateEmployerAllocationAmount("referralID", "consumerID", 10);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'referralID'"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
+      }
+    });
+
+    it("should throw ServiceException if the cosnumer is not linked already with the Employer", async () => {
+      const employer = getRandomEmployer();
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(null);
+
+      try {
+        await consumerService.updateEmployerAllocationAmount(employer.referralID, "consumerID", 10);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'consumerID'"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
+      }
+    });
+
+    it("should update the allocation amount for an Employer", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee("consumerID", employer.id);
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(employee);
+      when(employeeService.updateEmployee(employee.id, 1256)).thenResolve(employee);
+      when(bubbleService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
+
+      const response = await consumerService.updateEmployerAllocationAmount(employer.referralID, "consumerID", 1256);
+
+      expect(response).toEqual(employee);
     });
   });
 });

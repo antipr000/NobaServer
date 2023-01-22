@@ -69,7 +69,8 @@ export class AdminController {
   @Inject()
   private readonly exchangeRateService: ExchangeRateService;
 
-  private readonly consumerMapper: ConsumerMapper = new ConsumerMapper();
+  @Inject()
+  private readonly consumerMapper: ConsumerMapper;
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}

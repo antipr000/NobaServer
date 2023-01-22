@@ -8,11 +8,24 @@ import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
 import { SMSService } from "../common/sms.service";
 import { ConsumerRepoModule } from "./repos/consumer.repo.module";
+import { ConsumerMapper } from "./mappers/ConsumerMapper";
+import { EmployeeModule } from "../employee/employee.module";
+import { EmployerModule } from "../employer/employer.module";
+import { BubbleModule } from "../bubble/bubble.module";
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule, NotificationsModule, PspModule, ConsumerRepoModule],
+  imports: [
+    InfraProvidersModule,
+    CommonModule,
+    NotificationsModule,
+    PspModule,
+    ConsumerRepoModule,
+    EmployeeModule,
+    EmployerModule,
+    BubbleModule,
+  ],
   controllers: [ConsumerController],
-  providers: [ConsumerService, SanctionedCryptoWalletService, SMSService],
-  exports: [ConsumerService],
+  providers: [ConsumerService, SanctionedCryptoWalletService, SMSService, ConsumerMapper],
+  exports: [ConsumerService, ConsumerMapper],
 })
 export class ConsumerModule {}
