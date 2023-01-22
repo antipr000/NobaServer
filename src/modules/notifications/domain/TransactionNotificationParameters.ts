@@ -1,73 +1,134 @@
-import { Transaction, TransactionStatus } from "../../../modules/transaction/domain/Transaction";
+import { Transaction } from "../../../modules/transaction/domain/Transaction";
 
 export type TransactionParameters = {
-  transactionID: string;
-  transactionTimestamp: Date;
-  paymentMethod: string;
-  destinationWalletAddress: string;
-  last4Digits: string;
-  fiatCurrency: string;
-  conversionRate: number;
-  processingFee: number;
-  networkFee: number;
-  nobaFee: number;
+  transactionRef: string;
+  createdTimestamp: string;
+  processingFees: number;
+  nobaFees: number;
   totalPrice: number;
-  cryptoAmount: number;
-  cryptocurrency: string;
-  status: TransactionStatus;
+  fiatCurrencyCode: string;
 };
 
-export interface CryptoFailedNotificationParameters extends TransactionParameters {
-  failureReason: string;
+export interface DepositCompletedNotificationParameters extends TransactionParameters {
+  debitAmount: number;
+  creditAmount: number;
+  debitCurrency: string;
+  exchangeRate: number;
 }
 
-export type TransactionInitiatedNotificationParameters = TransactionParameters;
-
-export interface TransactionExecutedNotificationParameters extends TransactionParameters {
-  transactionHash: string;
-  settledTimestamp: Date;
-  cryptoAmountExpected: number;
+export interface DepositFailedNotificationParameters extends DepositCompletedNotificationParameters {
+  reasonDeclined: string;
 }
 
-export interface TransactionFailedNotificationParameters extends TransactionParameters {
-  failureReason: string;
+export type DepositInitiatedNotificationParameters = DepositCompletedNotificationParameters;
+
+export interface WithdrawalCompletedNotificationParameters extends TransactionParameters {
+  creditAmount: number;
+  creditCurrency: string;
+  exchangeRate: number;
+}
+
+export interface WithdrawalIntiatedNotificationParameters extends TransactionParameters {
+  withdrawalAmount: number;
+  creditCurrency: string;
+  exchangeRate: number;
+  debitCurrency: string;
+}
+
+export interface WithdrawalFailedNotificationParameters extends TransactionParameters {
+  reasonDeclined: string;
+  exchangeRate: number;
+  debitCurrency: string;
+}
+
+export interface TransferCompletedNotificationParameters extends TransactionParameters {
+  debitAmount: number;
 }
 
 export class TransactionNotificationPayloadMapper {
-  toTransactionInitiatedNotificationParameters(transaction: Transaction): TransactionInitiatedNotificationParameters {
+  toTransactionParams(transaction: Transaction): TransactionParameters {
     return {
-      transactionID: transaction.id,
-      transactionTimestamp: transaction.updatedTimestamp,
-      paymentMethod: "",
-      destinationWalletAddress: "",
-      last4Digits: "",
-      fiatCurrency: transaction.creditCurrency,
-      conversionRate: transaction.exchangeRate,
-      processingFee: 0,
-      networkFee: 0,
-      nobaFee: 0,
+      transactionRef: transaction.transactionRef,
+      createdTimestamp: transaction.createdTimestamp.toUTCString(),
+      processingFees: 0,
+      nobaFees: 0,
+      fiatCurrencyCode: transaction.debitCurrency,
+      totalPrice: transaction.debitAmount,
+    };
+  }
+
+  toDepositInitiatedNotificationParameters(transaction: Transaction): DepositInitiatedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
+    return {
+      ...transactionParams,
+      debitAmount: transaction.debitAmount,
+      creditAmount: transaction.creditAmount,
+      debitCurrency: transaction.debitCurrency,
+      exchangeRate: transaction.exchangeRate,
       totalPrice: transaction.creditAmount,
-      cryptoAmount: 0,
-      cryptocurrency: "",
-      status: transaction.status,
     };
   }
 
-  toTransactionExecutedNotificationParameters(transaction: Transaction): TransactionExecutedNotificationParameters {
-    const transactionParams = this.toTransactionInitiatedNotificationParameters(transaction);
+  toDepositCompletedNotificationParameters(transaction: Transaction): DepositCompletedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
-      transactionHash: transaction.transactionRef,
-      settledTimestamp: transaction.updatedTimestamp,
-      cryptoAmountExpected: 0,
+      debitAmount: transaction.debitAmount,
+      creditAmount: transaction.creditAmount,
+      debitCurrency: transaction.debitCurrency,
+      exchangeRate: transaction.exchangeRate,
+      totalPrice: transaction.creditAmount,
     };
   }
 
-  toTransactionFailedNotificationParameters(transaction: Transaction): TransactionFailedNotificationParameters {
-    const transactionParams = this.toTransactionInitiatedNotificationParameters(transaction);
+  toDepositFailedNotificationParameters(transaction: Transaction): DepositFailedNotificationParameters {
+    const depositParams = this.toDepositCompletedNotificationParameters(transaction);
+    return {
+      ...depositParams,
+      reasonDeclined: "",
+    };
+  }
+
+  toWithdrawalInitiatedNotificationParameters(transaction: Transaction): WithdrawalIntiatedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
-      failureReason: "",
+      withdrawalAmount: transaction.debitAmount,
+      creditCurrency: transaction.creditCurrency,
+      exchangeRate: transaction.exchangeRate,
+      debitCurrency: transaction.debitCurrency,
+      totalPrice: transaction.creditAmount,
+    };
+  }
+
+  toWithdrawalCompletedNotificationParameters(transaction: Transaction): WithdrawalCompletedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
+    return {
+      ...transactionParams,
+      creditAmount: transaction.creditAmount,
+      creditCurrency: transaction.creditCurrency,
+      exchangeRate: transaction.exchangeRate,
+      totalPrice: transaction.creditAmount,
+    };
+  }
+
+  toWithdrawalFailedNotificationParameters(transaction: Transaction): WithdrawalFailedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
+    return {
+      ...transactionParams,
+      reasonDeclined: "",
+      exchangeRate: transaction.exchangeRate,
+      debitCurrency: transaction.debitCurrency,
+      totalPrice: transaction.debitAmount,
+    };
+  }
+
+  toTransferCompletedNotificationParameters(transaction: Transaction): TransferCompletedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
+    return {
+      ...transactionParams,
+      debitAmount: transaction.debitAmount,
+      totalPrice: transaction.creditAmount,
     };
   }
 }

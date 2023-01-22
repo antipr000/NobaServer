@@ -35,22 +35,35 @@ export const EmailTemplates = {
   CARD_DELETED_EMAIL: {
     en: "d-b0e06a32f6674552979243a2542409b4",
   },
-  TRANSACTION_INITIATED_EMAIL: {
-    en: "d-7e413692c9f8497c80d5b5e2a5218171",
-  },
-  CRYPTO_FAILED_EMAIL: {
-    en: "d-493e844394ca4e12bc3c586f4eb646ee",
-  },
-  ORDER_EXECUTED_EMAIL: {
-    en: "d-f085402c06584fe2a843c8e9dff2ed4b",
-  },
-  ORDER_FAILED_EMAIL: {
-    en: "d-910099ff234c432f9c2246c71961353e",
-  },
   NOBA_INTERNAL_HARD_DECLINE: {
     en: "d-ce84b831db6842e5a3eb47730e837618",
   },
   WALLET_UPDATE_OTP: {
     en: "d-ac14193dfd58407fb2fc5594ad6e2108",
+  },
+  DEPOSIT_SUCCESSFUL_EMAIL: {
+    en: "d-f085402c06584fe2a843c8e9dff2ed4b",
+  },
+  DEPOSIT_FAILED_EMAIL: {
+    en: "d-910099ff234c432f9c2246c71961353e",
+  },
+  DEPOSIT_INITIATED_EMAIL: {
+    en: "d-7e413692c9f8497c80d5b5e2a5218171",
+  },
+  WITHDRAWAL_SUCCESSFUL_EMAIL: {
+    en: "d-3fb3c83cdfd346ffa2d4c4021bc4ef2b",
+  },
+  WITHDRAWAL_FAILED_EMAIL: {
+    en: "d-13a9459f11bb458aac117ad66dd1ccff",
+  },
+  WITHDRAWAL_INITIATED_EMAIL: {
+    en: "d-910099ff234c432f9c2246c71961353e",
+  },
+  TRANSFER_SUCCESSFUL_EMAIL: {
+    en: "d-1c758bcf9eae40ed83c3cd9152ed17c4",
+  },
+  COLLECTION_LINK_EMAIL: {},
+  COLLECTION_COMPLETED_EMAIL: {
+    en: "d-0c8d633f6de545c6a562ac8e6d53917d", // TODO: Added a placeholder. Update with proper template id
   },
 };
