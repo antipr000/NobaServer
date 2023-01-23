@@ -314,7 +314,6 @@ export class ConsumerService {
       const possibleEmails = contactInfo.emails.map(email => email.toLowerCase());
 
       const consumerResultPromise = this.consumerRepo.findConsumerByContactInfo({
-        id: contactInfo.id,
         phoneNumbers: possiblePhoneNumbers,
         emails: possibleEmails,
       });
@@ -329,6 +328,20 @@ export class ConsumerService {
 
       return consumerResult.getValue();
     });
+  }
+
+  async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
+    const consumerResultList = await this.consumerRepo.findConsumersByPublicInfo(searchString, limit);
+
+    if (!consumerResultList.isSuccess) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        error: consumerResultList.error,
+        message: "Error finding consumers by public info",
+      });
+    }
+
+    return consumerResultList.getValue();
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
