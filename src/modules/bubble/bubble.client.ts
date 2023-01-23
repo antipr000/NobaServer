@@ -36,7 +36,7 @@ export class BubbleClient {
       firstName: request.firstName,
       lastName: request.lastName,
       email: request.email,
-      companyID: request.employerID,
+      companyReferralID: request.employerReferralID,
       nobaAllocation: request.allocationAmountInPesos,
       nobaEmployeeID: request.nobaEmployeeID,
     };
@@ -56,7 +56,7 @@ export class BubbleClient {
   async updateEmployeeAllocationAmount(nobaEmployeeID: string, allocationAmountInPesos: number): Promise<void> {
     this.logger.info(`Updating employee allocation amount: ${nobaEmployeeID} to Bubble`);
 
-    const url = `${this.baseUrl}/employees/${nobaEmployeeID}`;
+    const url = `${this.baseUrl}/employees_allocation`;
     const headers = {
       ...this.getAuthorizationHeader(),
     };
@@ -66,12 +66,12 @@ export class BubbleClient {
     };
 
     try {
-      await axios.patch(url, requestBody, { headers });
+      await axios.post(url, requestBody, { headers });
       this.logger.info(`Successfully updated employee allocation amount: ${nobaEmployeeID} to Bubble`);
     } catch (err) {
       this.logger.error(`Failed to update employee allocation amount: ${nobaEmployeeID} to Bubble. Error: ${err}`);
       throw new ServiceException({
-        message: "Error while creating Mono collection link",
+        message: "Failed to update the employee data in Bubble",
         errorCode: ServiceErrorCode.UNKNOWN,
       });
     }
