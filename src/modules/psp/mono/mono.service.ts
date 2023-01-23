@@ -12,6 +12,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { MonoWebhookHandlers } from "./mono.webhook";
 import { CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
+import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 
 @Injectable()
 export class MonoService {
@@ -25,6 +26,16 @@ export class MonoService {
 
   async getTransactionByNobaTransactionID(nobaTransactionID: string): Promise<MonoTransaction | null> {
     return await this.monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID);
+  }
+
+  async getSupportedBanks(): Promise<Array<SupportedBanksDTO>> {
+    const supportedBanks = await this.monoClient.getSupportedBanks();
+    supportedBanks.forEach(bank => {
+      bank.name = bank.name.replace(/\w\S*/g, function (txt) {
+        return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
+      });
+    });
+    return supportedBanks;
   }
 
   async getTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction | null> {

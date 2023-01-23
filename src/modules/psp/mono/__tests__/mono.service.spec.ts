@@ -34,7 +34,7 @@ const getRandomMonoTransaction = (): MonoTransaction => {
   };
 };
 
-describe("SqlMonoRepoTests", () => {
+describe("MonoServiceTests", () => {
   jest.setTimeout(20000);
 
   let monoRepo: IMonoRepo;
@@ -83,6 +83,30 @@ describe("SqlMonoRepoTests", () => {
 
   afterEach(async () => {
     app.close();
+  });
+
+  describe("getSupportedBanks", () => {
+    it("should return supported banks", async () => {
+      when(monoClient.getSupportedBanks()).thenResolve([
+        {
+          code: "007",
+          id: "bank_705urpPYaZjD0DYLIZqRee",
+          name: "BANCOLOMBIA",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+        {
+          code: "051",
+          id: "bank_7BcCOfq1cz3JnJhe5Icsf0",
+          name: "DAVIVIENDA BANK",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+      ]);
+
+      const banks = await monoService.getSupportedBanks();
+      expect(banks.length).toBe(2);
+      expect(banks[0].name).toBe("Bancolombia");
+      expect(banks[1].name).toBe("Davivienda Bank");
+    });
   });
 
   describe("getTransactionByNobaTransactionID", () => {
