@@ -4,11 +4,17 @@ import { MonoConfigs } from "../../../config/configtypes/MonoConfig";
 import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Logger } from "winston";
-import { MonoClientCollectionLinkRequest, MonoClientCollectionLinkResponse } from "../dto/mono.client.dto";
+import {
+  MonoClientCollectionLinkRequest,
+  MonoClientCollectionLinkResponse,
+  MonoWithdrawalRequest,
+  MonoWithdrawalResponse,
+} from "../dto/mono.client.dto";
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
+import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
 
 @Injectable()
 export class MonoClient {
@@ -90,7 +96,73 @@ export class MonoClient {
       this.logger.error(
         `Error while creating collection link: ${JSON.stringify(err)}. Request body: ${JSON.stringify(requestBody)}`,
       );
-      throw new InternalServiceErrorException({ message: "Error while creating Mono collection link" });
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Error while creating Mono collection link",
+      });
+    }
+  }
+
+  // Only allow single transfer for now
+  async transfer(request: MonoWithdrawalRequest): Promise<MonoWithdrawalResponse> {
+    const url = `${this.baseUrl}/${this.apiVersion}/transfers`;
+    const headers = {
+      ...this.getAuthorizationHeader(),
+      ...this.getIdempotentHeader(request.transactionID),
+    };
+
+    const requestBody = {
+      account_id: this.nobaAccountID,
+      transfers: [
+        {
+          amount: {
+            // Amount is represented in cents (i.e. multiply by 100). Then use Utils method to be extra sure no decimals are sent.
+            amount: Utils.roundToSpecifiedDecimalNumber(request.amount * 100, 0),
+            currency: request.currency,
+          },
+          entity_id: request.transactionID, // Same as idempotency key
+          payee: {
+            bank_account: {
+              bank_code: request.bankAccountCode,
+              number: request.bankAccountNumber,
+              type: request.bankAccountType,
+            },
+            name: request.consumerName,
+            email: request.consumerEmail,
+            document_number: request.documentNumber,
+            document_type: request.documentType,
+          },
+        },
+      ],
+    };
+
+    try {
+      const response = await axios.post(url, requestBody, { headers });
+      if (response.status === 200) {
+        this.logger.warn(
+          `Mono transfer was successful but found duplicate transaction ID:${
+            request.transactionID
+          }. Request body: ${JSON.stringify(requestBody)}`,
+        );
+      }
+
+      const transferResponse = response.data.transfers[0]; // Should only be one transfer
+
+      return {
+        withdrawalID: transferResponse.batch.id,
+        state: transferResponse.batch.state,
+        declinationReason: transferResponse.declination_reason,
+      };
+    } catch (err) {
+      this.logger.error(
+        `Error while transferring funds from Mono: ${JSON.stringify(err)}. Request body: ${JSON.stringify(
+          requestBody,
+        )}`,
+      );
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Error while transferring funds from Mono",
+      });
     }
   }
 }

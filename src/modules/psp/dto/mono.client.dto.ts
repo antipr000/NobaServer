@@ -13,3 +13,22 @@ export type MonoClientCollectionLinkResponse = {
   collectionLink: string;
   collectionLinkID: string;
 };
+
+export type MonoWithdrawalRequest = {
+  transactionID: string;
+  amount: number;
+  currency: MonoCurrency;
+  consumerEmail: string;
+  consumerName: string;
+  documentNumber: string;
+  documentType: string;
+  bankAccountCode: string;
+  bankAccountNumber: string;
+  bankAccountType: string;
+};
+
+export type MonoWithdrawalResponse = {
+  withdrawalID: string;
+  state: string;
+  declinationReason?: string;
+};
