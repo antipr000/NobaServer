@@ -32,6 +32,10 @@ export class MonoService {
     const supportedBanks = await this.monoClient.getSupportedBanks();
     supportedBanks.forEach(bank => {
       bank.name = bank.name.replace(/\w\S*/g, function (txt) {
+        if (txt === "DE") return txt.toLowerCase();
+        else if (txt.length <= 3 || txt.includes(".") || txt === "BBVA") {
+          return txt;
+        }
         return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
       });
     });
