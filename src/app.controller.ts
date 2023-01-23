@@ -33,6 +33,8 @@ import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
 import { ExchangeRateService } from "./modules/common/exchangerate.service";
 import { ExchangeRateDTO } from "./modules/common/dto/ExchangeRateDTO";
+import { SupportedBanksDTO } from "./modules/psp/dto/SupportedBanksDTO";
+import { MonoService } from "./modules/psp/mono/mono.service";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -43,6 +45,7 @@ export class AppController {
     private readonly locationService: LocationService,
     private readonly creditCardService: CreditCardService,
     private readonly configurationsProviderService: ConfigurationProviderService,
+    private readonly monoService: MonoService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -117,6 +120,19 @@ export class AppController {
     }
 
     return exchangeRate;
+  }
+
+  @Public()
+  @Get("banks")
+  @ApiOperation({ summary: "Get list of supported banks" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Returns list of supported banks",
+    type: [SupportedBanksDTO],
+  })
+  @ApiTags("Assets")
+  async getSupportedBanks(): Promise<SupportedBanksDTO[]> {
+    return await this.monoService.getSupportedBanks();
   }
 
   @Public()

@@ -15,9 +15,10 @@ import { ConfigurationProviderService } from "../modules/common/configuration.pr
 import { getMockConfigurationProviderServiceWithDefaults } from "../modules/common/mocks/mock.configuration.provider.service";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { BINValidity, CardType, CreditCardDTO } from "../modules/common/dto/CreditCardDTO";
-import { X_NOBA_API_KEY } from "../modules/auth/domain/HeaderConstants";
 import { getMockExchangeRateServiceWithDefaults } from "../modules/common/mocks/mock.exchangerate.service";
 import { ExchangeRateService } from "../modules/common/exchangerate.service";
+import { MonoService } from "../modules/psp/mono/mono.service";
+import { getMockMonoServiceWithDefaults } from "../modules/psp/mono/mocks/mock.mono.service";
 
 describe("AppController", () => {
   let appController: AppController;
@@ -27,6 +28,7 @@ describe("AppController", () => {
   let mockCreditCardService: CreditCardService;
   let mockLocationService: LocationService;
   let mockConfigurationProviderService: ConfigurationProviderService;
+  let mockMonoService: MonoService;
 
   beforeEach(async () => {
     appService = getMockAppServiceWithDefaults();
@@ -35,6 +37,7 @@ describe("AppController", () => {
     mockCreditCardService = getMockCreditCardServiceWithDefaults();
     mockLocationService = getMockLocationServiceWithDefaults();
     mockConfigurationProviderService = getMockConfigurationProviderServiceWithDefaults();
+    mockMonoService = getMockMonoServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -63,6 +66,10 @@ describe("AppController", () => {
         {
           provide: ExchangeRateService,
           useFactory: () => instance(mockExchangeRateService),
+        },
+        {
+          provide: MonoService,
+          useFactory: () => instance(mockMonoService),
         },
       ],
     }).compile();
@@ -123,6 +130,29 @@ describe("AppController", () => {
       const result = await appController.supportedFiatCurrencies();
       // Just ensuring something's returned. Other unit tests are responsible for exactly what's returned.
       expect(result.length).toEqual(1);
+    });
+  });
+
+  describe("getSupportedBanks", () => {
+    it("should return list of supported banks", async () => {
+      when(mockMonoService.getSupportedBanks()).thenResolve([
+        {
+          code: "007",
+          id: "bank_705urpPYaZjD0DYLIZqRee",
+          name: "Bancolombia",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+        {
+          code: "051",
+          id: "bank_7BcCOfq1cz3JnJhe5Icsf0",
+          name: "Davivienda Bank",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+      ]);
+
+      const response = await appController.getSupportedBanks();
+      expect(response).toHaveLength(2);
+      expect(response[0].name).toBe("Bancolombia");
     });
   });
 
