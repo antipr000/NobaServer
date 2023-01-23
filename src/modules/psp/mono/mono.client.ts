@@ -48,7 +48,7 @@ export class MonoClient {
 
     try {
       const { data } = await axios.get(url, { headers });
-      return data;
+      return data["banks"];
     } catch (e) {
       this.logger.error(`Failed to fetch bank list from mono. ${JSON.stringify(e)}`);
       throw new ServiceException({
