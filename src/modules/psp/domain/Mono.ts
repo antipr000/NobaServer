@@ -13,6 +13,12 @@ export class MonoTransaction {
   updatedTimestamp: Date;
 }
 
+export class MonoWithdrawal {
+  withdrawalID: string;
+  state: string;
+  declinationReason?: string;
+}
+
 export enum MonoCurrency {
   COP = "COP",
 }

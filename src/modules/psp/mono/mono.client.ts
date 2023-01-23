@@ -150,7 +150,7 @@ export class MonoClient {
 
       return {
         withdrawalID: transferResponse.batch.id,
-        state: transferResponse.batch.state,
+        state: transferResponse.batch.state, // There are many states, should we check against them?
         declinationReason: transferResponse.declination_reason,
       };
     } catch (err) {

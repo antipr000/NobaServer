@@ -2,9 +2,9 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Logger } from "winston";
-import { MonoTransaction, MonoTransactionState } from "../domain/Mono";
+import { MonoTransaction, MonoTransactionState, MonoWithdrawal } from "../domain/Mono";
 import { MonoClientCollectionLinkResponse } from "../dto/mono.client.dto";
-import { CreateMonoTransactionRequest } from "../dto/mono.service.dto";
+import { CreateMonoTransactionRequest, WithdrawMonoRequest } from "../dto/mono.service.dto";
 import { MonoClient } from "./mono.client";
 import { IMonoRepo } from "./repo/mono.repo";
 import { MONO_REPO_PROVIDER } from "./repo/mono.repo.module";
@@ -29,6 +29,23 @@ export class MonoService {
 
   async getTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction | null> {
     return await this.monoRepo.getMonoTransactionByCollectionLinkID(collectionLinkID);
+  }
+
+  async withdrawFromNoba(request: WithdrawMonoRequest): Promise<MonoWithdrawal> {
+    const consumer: Consumer = await this.consumerService.getConsumer(request.consumerID);
+
+    return await this.monoClient.transfer({
+      transactionID: request.nobaTransactionID,
+      amount: request.amount,
+      currency: request.currency,
+      bankAccountCode: request.bankAccountCode,
+      bankAccountNumber: request.bankAccountNumber,
+      bankAccountType: request.bankAccountType,
+      documentNumber: request.documentNumber,
+      documentType: request.documentType,
+      consumerEmail: consumer.props.email,
+      consumerName: `${consumer.props.firstName} ${consumer.props.lastName}`,
+    });
   }
 
   async createMonoTransaction(request: CreateMonoTransactionRequest): Promise<MonoTransaction> {
