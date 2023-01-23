@@ -92,6 +92,7 @@ export class NotificationWorkflowService {
         consumer = await this.consumerService.findConsumerById(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {});
         await this.notificationService.sendNotification(NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT, payload);
+        break;
       default:
         this.logger.error(
           `Failed to send notification from workflow. Reason: ${notificationWorkflowType} is not supported!`,

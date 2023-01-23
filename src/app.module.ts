@@ -38,6 +38,7 @@ import { BubbleModule } from "./modules/bubble/bubble.module";
     BubbleModule,
     TransactionWorkflowModule,
     PspWorkflowModule,
+    NotificationWorkflowModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

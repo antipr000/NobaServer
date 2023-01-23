@@ -77,7 +77,7 @@ export class TransactionNotificationPayloadMapper {
       creditAmount: transaction.creditAmount,
       debitCurrency: transaction.debitCurrency,
       exchangeRate: transaction.exchangeRate,
-      totalPrice: transaction.creditAmount,
+      totalPrice: transaction.debitAmount,
     };
   }
 
