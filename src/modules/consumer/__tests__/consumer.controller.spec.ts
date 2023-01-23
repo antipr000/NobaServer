@@ -1010,7 +1010,7 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.findConsumersByPublicInfo("mock", 10)).thenResolve([consumer, consumer2]);
-      expect(await consumerController.searchConsumers("mock", undefined, consumer)).toStrictEqual([
+      expect(await consumerController.searchConsumers("mock", { limit: undefined }, consumer)).toStrictEqual([
         {
           consumerID: consumer.props.id,
           handle: consumer.props.handle,

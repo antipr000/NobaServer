@@ -199,25 +199,25 @@ describe("ConsumerRepoTests", () => {
 
   describe("findConsumersByPublicInfo", () => {
     it("should find consumers by firstName", async () => {
-      const consumer = getRandomUser();
+      const consumer = getRandomUser("firstNameTest");
       const savedConsumer = await consumerRepo.createConsumer(consumer);
-      console.log(savedConsumer);
-      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(
-        savedConsumer.props.firstName.substring(0, 2),
-        4,
-      );
+
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(savedConsumer.props.firstName, 4);
+
+      console.log(foundConsumer.getValue());
+      console.log(foundConsumer.getValue().length);
       expect(foundConsumer.isSuccess).toBe(true);
       expect(foundConsumer.getValue().length).toBe(1);
     });
 
     it("should find consumers by lastName", async () => {
-      const consumer = getRandomUser();
-      const consumer2 = getRandomUser();
-      const consumer3 = getRandomUser();
+      const consumer = getRandomUser(undefined, "lastNameTest");
+      const consumer2 = getRandomUser(undefined, "lastNameTest2");
+      const consumer3 = getRandomUser(undefined, "lastNameTest3");
       await consumerRepo.createConsumer(consumer);
       await consumerRepo.createConsumer(consumer2);
       await consumerRepo.createConsumer(consumer3);
-      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(consumer.props.lastName.substring(2, 6), 2);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("lastNameTest", 2);
       expect(foundConsumer.isSuccess).toBe(true);
       expect(foundConsumer.getValue().length).toBe(2);
     });
@@ -634,12 +634,12 @@ describe("ConsumerRepoTests", () => {
   });
 });
 
-const getRandomUser = (): Consumer => {
+const getRandomUser = (firstName?: string, lastName?: string): Consumer => {
   const email = `${uuid()}_${new Date().valueOf()}@noba.com`;
   const props: Partial<ConsumerProps> = {
     id: `${uuid()}_${new Date().valueOf()}`,
-    firstName: "Noba",
-    lastName: "lastName",
+    firstName: firstName || "Noba",
+    lastName: lastName || "lastName",
     email: email,
     displayEmail: email.toUpperCase(),
     referralCode: Utils.getAlphaNanoID(15),
