@@ -3,7 +3,7 @@ export type NewEmployeeRegisterRequest = {
   lastName: string;
   email: string;
   phone: string;
-  employerID: string;
+  employerReferralID: string;
   allocationAmountInPesos: number;
   nobaEmployeeID: string;
 };
