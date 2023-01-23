@@ -35,6 +35,10 @@ import { MonoCurrency } from "../../../modules/psp/domain/Mono";
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
+import { WorkflowFactory } from "../factory/WorkflowFactory";
+import { WalletDepositImpl } from "../factory/WalletDepositImpl";
+import { WalletWithdrawalImpl } from "../factory/WalletWithdrawalImpl";
+import { WalletTransferImpl } from "../factory/WalletTransferImpl";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -88,6 +92,10 @@ describe("TransactionServiceTests", () => {
           provide: MonoService,
           useFactory: () => instance(monoService),
         },
+        WorkflowFactory,
+        WalletDepositImpl,
+        WalletWithdrawalImpl,
+        WalletTransferImpl,
         TransactionService,
       ],
     }).compile();
