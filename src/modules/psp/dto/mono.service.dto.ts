@@ -8,9 +8,9 @@ export type CreateMonoTransactionRequest = {
 };
 
 export type WithdrawMonoRequest = {
-  nobaTransactionID: string;
+  transactionID: string;
   amount: number;
-  currency: MonoCurrency;
+  currency: string;
 
   // Eventually save bank account info in consumer
   bankAccountCode: string;

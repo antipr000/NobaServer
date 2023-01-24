@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Logger } from "winston";
-import { MonoTransaction, MonoTransactionState, MonoWithdrawal } from "../domain/Mono";
+import { MonoCurrency, MonoTransaction, MonoTransactionState, MonoWithdrawal } from "../domain/Mono";
 import { MonoClientCollectionLinkResponse } from "../dto/mono.client.dto";
 import { CreateMonoTransactionRequest, WithdrawMonoRequest } from "../dto/mono.service.dto";
 import { MonoClient } from "./mono.client";
@@ -12,6 +12,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { MonoWebhookHandlers } from "./mono.webhook";
 import { CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
+import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
 
 @Injectable()
 export class MonoService {
@@ -33,9 +34,15 @@ export class MonoService {
 
   async withdrawFromNoba(request: WithdrawMonoRequest): Promise<MonoWithdrawal> {
     const consumer: Consumer = await this.consumerService.getConsumer(request.consumerID);
+    if (request.currency !== MonoCurrency.COP) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Invalid currency: ${request.currency}. Only COP is supported.`,
+      });
+    }
 
     return await this.monoClient.transfer({
-      transactionID: request.nobaTransactionID,
+      transactionID: request.transactionID,
       amount: request.amount,
       currency: request.currency,
       bankAccountCode: request.bankAccountCode,

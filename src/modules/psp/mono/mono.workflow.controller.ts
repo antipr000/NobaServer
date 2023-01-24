@@ -15,7 +15,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { IsNoApiKeyNeeded } from "../../../modules/auth/public.decorator";
 import { Logger } from "winston";
 import { MonoTransaction } from "../domain/Mono";
-import { MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
+import { MonoCreditRequestDTO, MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
 import { MonoService } from "./mono.service";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 
@@ -53,5 +53,24 @@ export class MonoWorkflowController {
     }
 
     return this.monoWorkflowControllerMappers.convertToMonoTransactionDTO(monoTransaction);
+  }
+
+  @Post("/wf/v1/mono/credit/:consumerID")
+  @ApiOperation({ summary: "Credits consumer's account using Noba Mono account" })
+  @ApiResponse({ status: HttpStatus.OK }) // What should be returned?
+  async withdrawFromNoba(@Param("consumerID") consumerID, @Body() request: MonoCreditRequestDTO) {
+    const res = await this.monoService.withdrawFromNoba({
+      transactionID: request.transactionID,
+      amount: request.amount,
+      currency: request.currency,
+      bankAccountCode: request.bankAccountCode,
+      bankAccountNumber: request.bankAccountNumber,
+      bankAccountType: request.bankAccountType,
+      documentNumber: request.documentNumber,
+      documentType: request.documentType,
+      consumerID: consumerID,
+    });
+
+    return res;
   }
 }
