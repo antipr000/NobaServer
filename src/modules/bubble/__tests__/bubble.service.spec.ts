@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { uuid } from "uuidv4";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { EmployerService } from "../../../modules/employer/employer.service";
@@ -316,6 +316,18 @@ describe("BubbleServiceTests", () => {
       expect(propagatedLeadDaysToEmployerService).toEqual({ logoURI: updatedLogoURI });
     });
 
-    it("should throw error if 'referralID' is not linked with an existing Employer", async () => {});
+    it("should throw error if 'referralID' is not linked with an existing Employer", async () => {
+      const invalidReferralID = "invalid-referral-id";
+      when(employerService.getEmployerByReferralID(invalidReferralID)).thenResolve(null);
+
+      try {
+        await bubbleService.updateEmployerInNoba(invalidReferralID, { logoURI: "updatedLogoURI" });
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
+        expect(err.message).toEqual(expect.stringContaining("No employer found"));
+      }
+    });
   });
 });

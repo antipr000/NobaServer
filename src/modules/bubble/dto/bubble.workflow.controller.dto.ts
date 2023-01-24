@@ -19,3 +19,14 @@ export class RegisterEmployerRequestDTO {
   @ApiPropertyOptional()
   payrollDays?: number[];
 }
+
+export class UpdateEmployerRequestDTO {
+  @ApiPropertyOptional()
+  logoURI?: string;
+
+  @ApiPropertyOptional()
+  leadDays?: number;
+
+  @ApiPropertyOptional()
+  payrollDays?: number[];
+}

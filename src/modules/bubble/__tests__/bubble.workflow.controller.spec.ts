@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { BubbleWorkflowController } from "../bubble.workflow.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
@@ -108,6 +108,29 @@ describe("BubbleWorkflowControllerTests", () => {
         name: "name",
         referralID: "referralID",
         payrollDays: [5],
+      });
+    });
+  });
+
+  describe("updateEmployer", () => {
+    it("should forwards the request to the BubbleService", async () => {
+      const referralID = "referralID";
+      const requestBody = {
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+      };
+      when(bubbleService.updateEmployerInNoba(anyString(), anything())).thenResolve();
+
+      await bubbleWorkflowController.updateEmployer(requestBody, referralID);
+
+      const [bubbleServiceUpdateEmployerInNobaReferralIDArgs, bubbleServiceUpdateEmployerInNobaRequestBodyArgs] =
+        capture(bubbleService.updateEmployerInNoba).last();
+      expect(bubbleServiceUpdateEmployerInNobaReferralIDArgs).toEqual("referralID");
+      expect(bubbleServiceUpdateEmployerInNobaRequestBodyArgs).toEqual({
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
       });
     });
   });

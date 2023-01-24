@@ -1,10 +1,10 @@
-import { Body, Controller, HttpStatus, Inject, Post } from "@nestjs/common";
+import { Body, Controller, HttpStatus, Inject, Param, Patch, Post } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { BubbleService } from "./bubble.service";
-import { RegisterEmployerRequestDTO } from "./dto/bubble.workflow.controller.dto";
+import { RegisterEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/bubble.workflow.controller.dto";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -29,5 +29,12 @@ export class BubbleWorkflowController {
       payrollDays: requestBody.payrollDays,
     });
     return nobaEmployerID;
+  }
+
+  @Patch("/employers/:referralID")
+  @ApiOperation({ summary: "Update the Employer in Noba" })
+  @ApiResponse({ status: HttpStatus.OK })
+  async updateEmployer(@Body() requestBody: UpdateEmployerRequestDTO, @Param("referralID") referralID: string) {
+    await this.bubbleService.updateEmployerInNoba(referralID, requestBody);
   }
 }
