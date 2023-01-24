@@ -25,7 +25,7 @@ export class EmployerService {
     }
   }
 
-  private validatepayrollDays(payrollDays: number[]): void {
+  private validatePayrollDays(payrollDays: number[]): void {
     const badSchedules = payrollDays.filter(schedule => schedule < 1 || schedule > 31);
     const duplicateSchedules = payrollDays.filter((schedule, index) => payrollDays.indexOf(schedule) !== index);
 
@@ -54,7 +54,7 @@ export class EmployerService {
     if (!request.payrollDays || request.payrollDays.length === 0) {
       request.payrollDays = [31];
     }
-    this.validatepayrollDays(request.payrollDays);
+    this.validatePayrollDays(request.payrollDays);
 
     return this.employerRepo.createEmployer({
       name: request.name,
@@ -83,7 +83,7 @@ export class EmployerService {
       this.validateLeadDays(request.leadDays);
     }
     if (request.payrollDays) {
-      this.validatepayrollDays(request.payrollDays);
+      this.validatePayrollDays(request.payrollDays);
     }
 
     return this.employerRepo.updateEmployer(id, {

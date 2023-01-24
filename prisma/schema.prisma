@@ -94,7 +94,7 @@ model Employer {
   logoURI          String
   referralID       String     @unique()
   bubbleID         String     @unique()
-  leadDays         Int
+  leadDays         Int?
   payrollDays      Int[]
   Employee         Employee[]
 
