@@ -17,5 +17,5 @@ export class RegisterEmployerRequestDTO {
   leadDays?: number;
 
   @ApiPropertyOptional()
-  paymentSchedules?: number[];
+  payrollDays?: number[];
 }

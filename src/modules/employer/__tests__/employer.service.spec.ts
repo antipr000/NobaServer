@@ -19,7 +19,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
-    paymentSchedules: [1, 15],
+    payrollDays: [1, 15],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -71,7 +71,7 @@ describe("EmployerServiceTests", () => {
         bubbleID: employer.bubbleID,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
 
       expect(createdEmployer).toEqual(employer);
@@ -83,7 +83,7 @@ describe("EmployerServiceTests", () => {
         referralID: employer.referralID,
         bubbleID: employer.bubbleID,
         leadDays: employer.leadDays,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
     });
 
@@ -96,7 +96,7 @@ describe("EmployerServiceTests", () => {
         logoURI: employer.logoURI,
         bubbleID: employer.bubbleID,
         referralID: employer.referralID,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
 
       employer.leadDays = 1;
@@ -109,7 +109,7 @@ describe("EmployerServiceTests", () => {
         referralID: employer.referralID,
         bubbleID: employer.bubbleID,
         leadDays: 1,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
     });
 
@@ -125,7 +125,7 @@ describe("EmployerServiceTests", () => {
         leadDays: employer.leadDays,
       });
 
-      employer.paymentSchedules = [31];
+      employer.payrollDays = [31];
       expect(createdEmployer).toEqual(employer);
 
       const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
@@ -135,7 +135,7 @@ describe("EmployerServiceTests", () => {
         referralID: employer.referralID,
         bubbleID: employer.bubbleID,
         leadDays: employer.leadDays,
-        paymentSchedules: [31],
+        payrollDays: [31],
       });
     });
 
@@ -151,7 +151,7 @@ describe("EmployerServiceTests", () => {
           bubbleID: employer.bubbleID,
           referralID: employer.referralID,
           leadDays: employer.leadDays,
-          paymentSchedules: employer.paymentSchedules,
+          payrollDays: employer.payrollDays,
         });
         expect(true).toBeFalsy();
       } catch (err) {
@@ -162,11 +162,11 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw error if the PaymentSchedule is invalid", async () => {
-      const invalidPaymentSchedules: number[][] = [[0], [1, 15, 32], [15, 15], [15, 0]];
+      const invalidpayrollDays: number[][] = [[0], [1, 15, 32], [15, 15], [15, 0]];
 
-      for (const invalidPaymentSchedule of invalidPaymentSchedules) {
+      for (const invalidPaymentSchedule of invalidpayrollDays) {
         const employer = getRandomEmployer();
-        employer.paymentSchedules = invalidPaymentSchedule as any;
+        employer.payrollDays = invalidPaymentSchedule as any;
 
         try {
           await employerService.createEmployer({
@@ -175,7 +175,7 @@ describe("EmployerServiceTests", () => {
             bubbleID: employer.bubbleID,
             referralID: employer.referralID,
             leadDays: employer.leadDays,
-            paymentSchedules: employer.paymentSchedules,
+            payrollDays: employer.payrollDays,
           });
           expect(true).toBeFalsy();
         } catch (err) {

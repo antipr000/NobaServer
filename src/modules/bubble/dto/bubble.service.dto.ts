@@ -4,5 +4,5 @@ export type RegisterEmployerRequest = {
   referralID: string;
   bubbleID: string;
   leadDays?: number;
-  paymentSchedules?: number[];
+  payrollDays?: number[];
 };

@@ -21,7 +21,7 @@ const getRandomEmployer = (): EmployerCreateRequest => {
     referralID: uuid(),
     logoURI: "https://www.google.com",
     leadDays: 5,
-    paymentSchedules: [1, 15],
+    payrollDays: [1, 15],
   };
 
   return employee;
@@ -79,7 +79,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(createdEmployer.referralID).toEqual(employer.referralID);
       expect(createdEmployer.logoURI).toEqual(employer.logoURI);
       expect(createdEmployer.leadDays).toEqual(employer.leadDays);
-      expect(createdEmployer.paymentSchedules).toEqual(employer.paymentSchedules);
+      expect(createdEmployer.payrollDays).toEqual(employer.payrollDays);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -232,7 +232,7 @@ describe("SqlEmployerRepoTests", () => {
 
       const employer2 = getRandomEmployer();
       employer2.leadDays = 13;
-      employer2.paymentSchedules = [12, 28];
+      employer2.payrollDays = [12, 28];
       const createdEmployer2 = await employerRepo.createEmployer(employer2);
 
       const foundEmployer = await employerRepo.getEmployerByID(createdEmployer1.id);
@@ -246,7 +246,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
-      expect(foundEmployer.paymentSchedules).toEqual(employer1.paymentSchedules);
+      expect(foundEmployer.payrollDays).toEqual(employer1.payrollDays);
     });
 
     it("should throw 'null' if the employerID doesn't really exist", async () => {
@@ -277,7 +277,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
-      expect(foundEmployer.paymentSchedules).toEqual(employer1.paymentSchedules);
+      expect(foundEmployer.payrollDays).toEqual(employer1.payrollDays);
     });
 
     it("should throw 'null' if no Employer with referralID doesn't really exist", async () => {
@@ -308,7 +308,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
-      expect(foundEmployer.paymentSchedules).toEqual(employer1.paymentSchedules);
+      expect(foundEmployer.payrollDays).toEqual(employer1.payrollDays);
     });
 
     it("should throw 'null' if no Employer with bubbleID doesn't really exist", async () => {

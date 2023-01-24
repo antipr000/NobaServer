@@ -13,7 +13,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import { BubbleService } from "../buuble.service";
+import { BubbleService } from "../bubble.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { BubbleClient } from "../bubble.client";
 import { getMockBubbleClientWithDefaults } from "../mocks/mock.bubble.client";
@@ -26,7 +26,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
-    paymentSchedules: [30],
+    payrollDays: [30],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -156,7 +156,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
 
       expect(result).toEqual(employer.id);
@@ -168,7 +168,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
     });
 
@@ -182,7 +182,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
 
       expect(result).toEqual(employer.id);
@@ -193,11 +193,11 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
-        paymentSchedules: employer.paymentSchedules,
+        payrollDays: employer.payrollDays,
       });
     });
 
-    it("shouldn't forward 'paymentSchedules' if not set in the request to register an employer in Noba", async () => {
+    it("shouldn't forward 'payrollDays' if not set in the request to register an employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
 
       when(employerService.createEmployer(anything())).thenResolve(employer);
@@ -222,7 +222,7 @@ describe("BubbleServiceTests", () => {
       });
     });
 
-    it("shouldn't forward both 'leadDays' & 'paymentSchedules' if they are not set in the request to register an employer in Noba", async () => {
+    it("shouldn't forward both 'leadDays' & 'payrollDays' if they are not set in the request to register an employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
 
       when(employerService.createEmployer(anything())).thenResolve(employer);

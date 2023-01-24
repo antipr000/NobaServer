@@ -69,7 +69,7 @@ Table Employer {
   referralID String [unique, not null]
   bubbleID String [unique, not null]
   leadDays Int [not null]
-  paymentSchedules Int[] [not null]
+  payrollDays Int[] [not null]
   Employee Employee [not null]
 }
 

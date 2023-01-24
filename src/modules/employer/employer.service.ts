@@ -25,11 +25,9 @@ export class EmployerService {
     }
   }
 
-  private validatePaymentSchedules(paymentSchedules: number[]): void {
-    const badSchedules = paymentSchedules.filter(schedule => schedule < 1 || schedule > 31);
-    const duplicateSchedules = paymentSchedules.filter(
-      (schedule, index) => paymentSchedules.indexOf(schedule) !== index,
-    );
+  private validatepayrollDays(payrollDays: number[]): void {
+    const badSchedules = payrollDays.filter(schedule => schedule < 1 || schedule > 31);
+    const duplicateSchedules = payrollDays.filter((schedule, index) => payrollDays.indexOf(schedule) !== index);
 
     if (badSchedules.length > 0) {
       throw new ServiceException({
@@ -53,10 +51,10 @@ export class EmployerService {
     }
     this.validateLeadDays(request.leadDays);
 
-    if (!request.paymentSchedules || request.paymentSchedules.length === 0) {
-      request.paymentSchedules = [31];
+    if (!request.payrollDays || request.payrollDays.length === 0) {
+      request.payrollDays = [31];
     }
-    this.validatePaymentSchedules(request.paymentSchedules);
+    this.validatepayrollDays(request.payrollDays);
 
     return this.employerRepo.createEmployer({
       name: request.name,
@@ -64,7 +62,7 @@ export class EmployerService {
       referralID: request.referralID,
       bubbleID: request.bubbleID,
       leadDays: request.leadDays,
-      paymentSchedules: request.paymentSchedules,
+      payrollDays: request.payrollDays,
     });
   }
 

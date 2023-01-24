@@ -9,7 +9,7 @@ export class Employer {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  paymentSchedules: number[];
+  payrollDays: number[];
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
@@ -20,7 +20,7 @@ export class EmployerCreateRequest {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  paymentSchedules: number[];
+  payrollDays: number[];
 }
 
 export class EmployerUpdateRequest {
@@ -35,7 +35,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
-    paymentSchedules: Joi.array().items(Joi.number()).required(),
+    payrollDays: Joi.array().items(Joi.number()).required(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -66,7 +66,7 @@ export const validateEmployer = (employer: Employer) => {
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
-    paymentSchedules: Joi.array().items(Joi.number()).required(),
+    payrollDays: Joi.array().items(Joi.number()).required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -86,7 +86,7 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
     referralID: employer.referralID,
     bubbleID: employer.bubbleID,
     leadDays: employer.leadDays,
-    paymentSchedules: employer.paymentSchedules,
+    payrollDays: employer.payrollDays,
     createdTimestamp: employer.createdTimestamp,
     updatedTimestamp: employer.updatedTimestamp,
   };

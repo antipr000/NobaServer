@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anything, capture, instance, when } from "ts-mockito";
 import { BubbleWorkflowController } from "../bubble.workflow.controller";
-import { BubbleService } from "../buuble.service";
+import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
 
 describe("BubbleWorkflowControllerTests", () => {
@@ -87,13 +87,13 @@ describe("BubbleWorkflowControllerTests", () => {
       });
     });
 
-    it("should forwards the 'paymentSchedules' in request to the BubbleService", async () => {
+    it("should forwards the 'payrollDays' in request to the BubbleService", async () => {
       const requestBody = {
         bubbleID: "bubbleID",
         logoURI: "logoURI",
         name: "name",
         referralID: "referralID",
-        paymentSchedules: [5],
+        payrollDays: [5],
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
@@ -107,7 +107,7 @@ describe("BubbleWorkflowControllerTests", () => {
         logoURI: "logoURI",
         name: "name",
         referralID: "referralID",
-        paymentSchedules: [5],
+        payrollDays: [5],
       });
     });
   });

@@ -4,5 +4,5 @@ export type CreateEmployerRequestDTO = {
   referralID: string;
   bubbleID: string;
   leadDays?: number;
-  paymentSchedules?: number[];
+  payrollDays?: number[];
 };

@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
-import { BubbleService } from "./buuble.service";
+import { BubbleService } from "./bubble.service";
 import { RegisterEmployerRequestDTO } from "./dto/bubble.workflow.controller.dto";
 
 @Controller("/webhooks/bubble")
@@ -26,7 +26,7 @@ export class BubbleWorkflowController {
       name: requestBody.name,
       referralID: requestBody.referralID,
       leadDays: requestBody.leadDays,
-      paymentSchedules: requestBody.paymentSchedules,
+      payrollDays: requestBody.payrollDays,
     });
     return nobaEmployerID;
   }
