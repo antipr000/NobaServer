@@ -72,6 +72,8 @@ export class SqlEmployerRepo implements IEmployerRepo {
       const employerInput: Prisma.EmployerUpdateInput = {
         ...(request.logoURI && { logoURI: request.logoURI }),
         ...(request.referralID && { referralID: request.referralID }),
+        ...(request.leadDays && { leadDays: request.leadDays }),
+        ...(request.payrollDays && { payrollDays: request.payrollDays }),
       };
 
       const returnedEmployer: EmployerPrismaModel = await this.prismaService.employer.update({

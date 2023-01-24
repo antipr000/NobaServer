@@ -146,6 +146,8 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.name).toEqual(employer.name);
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual("https://www.non-google.com");
+      expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollDays).toEqual(employer.payrollDays);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -168,6 +170,56 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.name).toEqual(employer.name);
       expect(updatedEmployer.referralID).toEqual("new-referral-id");
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
+      expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollDays).toEqual(employer.payrollDays);
+
+      const allEmployers = await getAllEmployerRecords(prismaService);
+      expect(allEmployers.length).toEqual(1);
+      expect(allEmployers[0]).toEqual(updatedEmployer);
+    });
+
+    it("should update 'leadDays' of an existing employer", async () => {
+      const employer = getRandomEmployer();
+      const createdEmployer = await employerRepo.createEmployer(employer);
+
+      const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
+        leadDays: 3,
+      });
+
+      expect(updatedEmployer).toBeDefined();
+      expect(updatedEmployer.id).toBeDefined();
+      expect(updatedEmployer.createdTimestamp).toBeDefined();
+      expect(updatedEmployer.updatedTimestamp).toBeDefined();
+      expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
+      expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.referralID).toEqual(employer.referralID);
+      expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
+      expect(updatedEmployer.leadDays).toEqual(3);
+      expect(updatedEmployer.payrollDays).toEqual(employer.payrollDays);
+
+      const allEmployers = await getAllEmployerRecords(prismaService);
+      expect(allEmployers.length).toEqual(1);
+      expect(allEmployers[0]).toEqual(updatedEmployer);
+    });
+
+    it("should update 'payrollDays' of an existing employer", async () => {
+      const employer = getRandomEmployer();
+      const createdEmployer = await employerRepo.createEmployer(employer);
+
+      const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
+        payrollDays: [3, 17],
+      });
+
+      expect(updatedEmployer).toBeDefined();
+      expect(updatedEmployer.id).toBeDefined();
+      expect(updatedEmployer.createdTimestamp).toBeDefined();
+      expect(updatedEmployer.updatedTimestamp).toBeDefined();
+      expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
+      expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.referralID).toEqual(employer.referralID);
+      expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
+      expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollDays).toEqual([3, 17]);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -193,6 +245,8 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.name).toEqual(createdEmployer1.name);
       expect(updatedEmployer.referralID).toEqual("new-referral-id");
       expect(updatedEmployer.logoURI).toEqual("https://www.non-google.com");
+      expect(updatedEmployer.leadDays).toEqual(createdEmployer1.leadDays);
+      expect(updatedEmployer.payrollDays).toEqual(createdEmployer1.payrollDays);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(2);

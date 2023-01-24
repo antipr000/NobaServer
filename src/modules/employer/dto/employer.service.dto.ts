@@ -6,3 +6,10 @@ export type CreateEmployerRequestDTO = {
   leadDays?: number;
   payrollDays?: number[];
 };
+
+export type UpdateEmployerRequestDTO = {
+  logoURI?: string;
+  referralID?: string;
+  leadDays?: number;
+  payrollDays?: number[];
+};

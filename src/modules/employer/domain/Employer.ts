@@ -26,6 +26,8 @@ export class EmployerCreateRequest {
 export class EmployerUpdateRequest {
   logoURI?: string;
   referralID?: string;
+  leadDays?: number;
+  payrollDays?: number[];
 }
 
 export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) => {
@@ -49,6 +51,8 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
   const employerJoiValidationKeys: KeysRequired<EmployerUpdateRequest> = {
     logoURI: Joi.string().optional(),
     referralID: Joi.string().optional(),
+    leadDays: Joi.number().optional(),
+    payrollDays: Joi.array().items(Joi.number()).optional(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({

@@ -113,7 +113,7 @@ describe("EmployerServiceTests", () => {
       });
     });
 
-    it("should set default 'paymentSchedule' as '[31]' if not specified", async () => {
+    it("should set default 'payrollDays' as '[31]' if not specified", async () => {
       const employer = getRandomEmployer();
       when(employerRepo.createEmployer(anything())).thenResolve(employer);
 
@@ -161,12 +161,12 @@ describe("EmployerServiceTests", () => {
       }
     });
 
-    it("should throw error if the PaymentSchedule is invalid", async () => {
-      const invalidpayrollDays: number[][] = [[0], [1, 15, 32], [15, 15], [15, 0]];
+    it("should throw error if the payrollDays is invalid", async () => {
+      const variousInvalidpayrollDays: number[][] = [[0], [1, 15, 32], [15, 15], [15, 0]];
 
-      for (const invalidPaymentSchedule of invalidpayrollDays) {
+      for (const invalidpayrollDays of variousInvalidpayrollDays) {
         const employer = getRandomEmployer();
-        employer.payrollDays = invalidPaymentSchedule as any;
+        employer.payrollDays = invalidpayrollDays as any;
 
         try {
           await employerService.createEmployer({
@@ -192,14 +192,16 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
-      const updatedEmployer = await employerService.updateEmployer(employer.id, employer.logoURI, undefined);
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        logoURI: "https://new-logo-uri.com",
+      });
 
       expect(updatedEmployer).toEqual(employer);
 
       const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
-        logoURI: employer.logoURI,
+        logoURI: "https://new-logo-uri.com",
       });
     });
 
@@ -207,50 +209,130 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
-      const updatedEmployer = await employerService.updateEmployer(employer.id, undefined, employer.referralID);
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        referralID: "new-referral-id",
+      });
 
       expect(updatedEmployer).toEqual(employer);
 
       const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
-        referralID: employer.referralID,
+        referralID: "new-referral-id",
       });
     });
 
-    it("should update 'both' the referralID & logoURI of the employer", async () => {
+    it("should update 'only' the leadDays of the employer", async () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
-      const updatedEmployer = await employerService.updateEmployer(employer.id, employer.logoURI, employer.referralID);
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        leadDays: 4,
+      });
 
       expect(updatedEmployer).toEqual(employer);
 
       const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
-        referralID: employer.referralID,
-        logoURI: employer.logoURI,
+        leadDays: 4,
       });
     });
 
-    it("should throw an error if both the referralID & logoURI are undefined", async () => {
+    const invalidLeadDays = [0, -1, 6, 10];
+    test.each(invalidLeadDays)("should throw ServiceException if leadDays is set to: %s", async invalidLeadDay => {
       const employer = getRandomEmployer();
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      employer.leadDays = invalidLeadDay;
 
       try {
-        await employerService.updateEmployer(employer.id, undefined, undefined);
+        const updatedEmployer = await employerService.updateEmployer(employer.id, {
+          leadDays: invalidLeadDay,
+        });
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
-        expect(err.message).toEqual(expect.stringContaining("logoURI"));
-        expect(err.message).toEqual(expect.stringContaining("referralID"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+        expect(err.message).toEqual(expect.stringContaining("Lead days"));
       }
+    });
+
+    it("should update 'only' the payrollDays of the employer", async () => {
+      const employer = getRandomEmployer();
+      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        payrollDays: [16, 29],
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+
+      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        payrollDays: [16, 29],
+      });
+    });
+
+    const invalidPayrollDaysUpdateRequests = [
+      {
+        payrollDays: [0],
+      },
+      {
+        payrollDays: [1, 15, 32],
+      },
+      {
+        payrollDays: [15, 15],
+      },
+      {
+        payrollDays: [15, 0],
+      },
+    ];
+    test.each(invalidPayrollDaysUpdateRequests)(
+      "should throw ServiceException if payrollDays is set to: %s",
+      async invalidPayrollDaysUpdateRequest => {
+        const employer = getRandomEmployer();
+        employer.payrollDays = invalidPayrollDaysUpdateRequest.payrollDays;
+
+        try {
+          const updatedEmployer = await employerService.updateEmployer(employer.id, invalidPayrollDaysUpdateRequest);
+          expect(true).toBeFalsy();
+        } catch (err) {
+          expect(err).toBeInstanceOf(ServiceException);
+          expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+          expect(err.message).toEqual(expect.stringContaining("payment schedules"));
+        }
+      },
+    );
+
+    it("should update all the fields", async () => {
+      const employer = getRandomEmployer();
+      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        logoURI: "https://new-logo-uri.com",
+        referralID: "new-referral-id",
+        leadDays: 4,
+        payrollDays: [16, 29],
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+
+      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        logoURI: "https://new-logo-uri.com",
+        referralID: "new-referral-id",
+        leadDays: 4,
+        payrollDays: [16, 29],
+      });
     });
 
     it("should throw ServiceException if the ID is undefined or null", async () => {
       try {
-        await employerService.updateEmployer(undefined, "dymmy", "dummy");
+        await employerService.updateEmployer(undefined, {
+          logoURI: "https://new-logo-uri.com",
+          referralID: "new-referral-id",
+        });
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -258,7 +340,10 @@ describe("EmployerServiceTests", () => {
       }
 
       try {
-        await employerService.updateEmployer(null, "dummy", "dummy");
+        await employerService.updateEmployer(null, {
+          logoURI: "https://new-logo-uri.com",
+          referralID: "new-referral-id",
+        });
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);

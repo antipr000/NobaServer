@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import { Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
-import { CreateEmployerRequestDTO } from "./dto/employer.service.dto";
+import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
 
 @Injectable()
 export class EmployerService {
@@ -66,24 +66,31 @@ export class EmployerService {
     });
   }
 
-  async updateEmployer(id: string, logoURI: string, referralID: string): Promise<Employer> {
+  async updateEmployer(id: string, request: UpdateEmployerRequestDTO): Promise<Employer> {
     if (!id) {
       throw new ServiceException({
         message: "ID is required",
         errorCode: ServiceErrorCode.UNKNOWN,
       });
     }
-
-    if (!logoURI && !referralID) {
+    if (Object.keys(request).length === 0) {
       throw new ServiceException({
-        message: "logoURI or referralID is required",
+        message: "No fields to update",
         errorCode: ServiceErrorCode.UNKNOWN,
       });
     }
+    if (request.leadDays !== undefined && request.leadDays !== null) {
+      this.validateLeadDays(request.leadDays);
+    }
+    if (request.payrollDays) {
+      this.validatepayrollDays(request.payrollDays);
+    }
 
     return this.employerRepo.updateEmployer(id, {
-      ...(logoURI && { logoURI: logoURI }),
-      ...(referralID && { referralID: referralID }),
+      ...(request.logoURI && { logoURI: request.logoURI }),
+      ...(request.referralID && { referralID: request.referralID }),
+      ...(request.leadDays && { leadDays: request.leadDays }),
+      ...(request.payrollDays && { payrollDays: request.payrollDays }),
     });
   }
 
