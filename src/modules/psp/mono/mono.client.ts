@@ -159,7 +159,7 @@ export class MonoClient {
     try {
       const response = await axios.post(url, requestBody, { headers });
       if (response.status === 200) {
-        this.logger.warn(
+        this.logger.error(
           `Mono transfer was successful but found duplicate transaction ID:${
             request.transactionID
           }. Request body: ${JSON.stringify(requestBody)}`,
