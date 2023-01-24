@@ -11,6 +11,7 @@ export function getMockBubbleServiceWithDefaults(): BubbleService {
   when(mockBubbleService.updateEmployeeAllocationInBubble(anyString(), anyNumber())).thenReject(
     new Error("Method not implemented"),
   );
+  when(mockBubbleService.updateEmployerInNoba(anyString(), anything())).thenReject(new Error("Method not implemented"));
 
   return mockBubbleService;
 }

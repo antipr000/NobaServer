@@ -6,7 +6,7 @@ import { Consumer } from "../consumer/domain/Consumer";
 import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { EmployeeService } from "../employee/employee.service";
 import { BubbleClient } from "./bubble.client";
-import { RegisterEmployerRequest } from "./dto/bubble.service.dto";
+import { RegisterEmployerRequest, UpdateNobaEmployerRequest } from "./dto/bubble.service.dto";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
 
@@ -57,5 +57,21 @@ export class BubbleService {
     });
 
     return employer.id;
+  }
+
+  async updateEmployerInNoba(referralID: string, request: UpdateNobaEmployerRequest): Promise<void> {
+    const employer: Employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    await this.employerService.updateEmployer(employer.id, {
+      leadDays: request.leadDays,
+      logoURI: request.logoURI,
+      payrollDays: request.payrollDays,
+    });
   }
 }
