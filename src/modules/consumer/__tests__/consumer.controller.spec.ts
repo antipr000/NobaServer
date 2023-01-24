@@ -36,19 +36,61 @@ import {
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { QRCodeDTO } from "../dto/QRCodeDTO";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { Employer } from "../../../modules/employer/domain/Employer";
+import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
+import { uuid } from "uuidv4";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+
+const getRandomEmployer = (): Employer => {
+  const employer: Employer = {
+    id: uuid(),
+    name: "Test Employer",
+    bubbleID: uuid(),
+    logoURI: "https://www.google.com",
+    referralID: uuid(),
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+  };
+
+  return employer;
+};
+
+const getRandomEmployee = (consumerID: string, employerID: string): Employee => {
+  const employee: Employee = {
+    id: uuid(),
+    employerID: employerID,
+    consumerID: consumerID,
+    allocationAmount: Math.floor(Math.random() * 1000000),
+    allocationCurrency: EmployeeAllocationCurrency.COP,
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+  };
+
+  return employee;
+};
+
+const getRandomConsumer = (): Consumer => {
+  const consumer = Consumer.createConsumer({
+    id: uuid(),
+    email: `${uuid()}@noba.com`,
+  });
+  return consumer;
+};
 
 describe("ConsumerController", () => {
   let consumerController: ConsumerController;
   let consumerService: ConsumerService;
   let plaidClient: PlaidClient;
-
-  const consumerMapper = new ConsumerMapper();
+  let employerService: EmployerService;
+  let consumerMapper: ConsumerMapper;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
+    employerService = getMockEmployerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -62,10 +104,16 @@ describe("ConsumerController", () => {
           provide: PlaidClient,
           useFactory: () => instance(plaidClient),
         },
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
+        },
+        ConsumerMapper,
       ],
     }).compile();
 
     consumerController = app.get<ConsumerController>(ConsumerController);
+    consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
   });
 
   describe("consumer controller tests", () => {
@@ -847,6 +895,8 @@ describe("ConsumerController", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
         handle: "mock1",
       });
       const consumer2 = Consumer.createConsumer({
@@ -856,21 +906,23 @@ describe("ConsumerController", () => {
       });
 
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
-        { id: "linkid2", phoneNumbers: [], emails: [consumer2.props.email] },
+        { phoneNumbers: [], emails: [consumer.props.email] },
+        { phoneNumbers: [], emails: [consumer2.props.email] },
       ];
 
       when(consumerService.findConsumersByContactInfo(contactListDTO)).thenResolve([consumer, consumer2]);
       expect(await consumerController.getConsumersByContact(contactListDTO, consumer)).toStrictEqual([
         {
-          id: "linkid1",
           consumerID: consumer.props.id,
           handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
         },
         {
-          id: "linkid2",
           consumerID: consumer2.props.id,
           handle: consumer2.props.handle,
+          firstName: consumer2.props.firstName,
+          lastName: consumer2.props.lastName,
         },
       ]);
     });
@@ -879,25 +931,97 @@ describe("ConsumerController", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
         handle: "mock1",
       });
 
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
-        { id: "linkid2", phoneNumbers: [], emails: ["mock2-unknown@mock.com"] },
+        { phoneNumbers: [], emails: [consumer.props.email] },
+        { phoneNumbers: [], emails: ["mock2-unknown@mock.com"] },
       ];
 
       when(consumerService.findConsumersByContactInfo(contactListDTO)).thenResolve([consumer, null]);
       expect(await consumerController.getConsumersByContact(contactListDTO, consumer)).toStrictEqual([
         {
-          id: "linkid1",
           consumerID: consumer.props.id,
           handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
         },
         {
-          id: "linkid2",
           consumerID: null,
           handle: null,
+          firstName: null,
+          lastName: null,
+        },
+      ]);
+    });
+  });
+
+  describe("search", () => {
+    it("should return a list of contacts", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock1",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mock-consumer-2",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock2",
+      });
+
+      when(consumerService.findConsumersByPublicInfo("mock", 2)).thenResolve([consumer, consumer2]);
+      expect(await consumerController.searchConsumers("mock", { limit: 2 }, consumer)).toStrictEqual([
+        {
+          consumerID: consumer.props.id,
+          handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+        },
+        {
+          consumerID: consumer2.props.id,
+          handle: consumer2.props.handle,
+          firstName: consumer2.props.firstName,
+          lastName: consumer2.props.lastName,
+        },
+      ]);
+    });
+
+    it("should set limit default to 10", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock1",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mock-consumer-2",
+        email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
+        handle: "mock2",
+      });
+
+      when(consumerService.findConsumersByPublicInfo("mock", 10)).thenResolve([consumer, consumer2]);
+      expect(await consumerController.searchConsumers("mock", { limit: undefined }, consumer)).toStrictEqual([
+        {
+          consumerID: consumer.props.id,
+          handle: consumer.props.handle,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+        },
+        {
+          consumerID: consumer2.props.id,
+          handle: consumer2.props.handle,
+          firstName: consumer2.props.firstName,
+          lastName: consumer2.props.lastName,
         },
       ]);
     });
@@ -919,6 +1043,77 @@ describe("ConsumerController", () => {
       const response: QRCodeDTO = await consumerController.getQRCode(consumer, url);
 
       expect(response).toStrictEqual({ base64OfImage: "mock-qr-code" });
+    });
+  });
+
+  describe("registerWithAnEmployer", () => {
+    it("should forwards the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      when(consumerService.registerWithAnEmployer("employerReferralID", consumer.props.id, 1478)).thenResolve();
+
+      await consumerController.registerWithAnEmployer(
+        {
+          employerReferralID: "employerReferralID",
+          allocationAmountInPesos: 1478,
+        },
+        consumer,
+      );
+    });
+  });
+
+  describe("listLinkedEmployers", () => {
+    it("should return a list of linked employers", async () => {
+      const consumer = getRandomConsumer();
+
+      const employer1 = getRandomEmployer();
+      const employer2 = getRandomEmployer();
+      const employer3 = getRandomEmployer();
+
+      const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
+      const employee2 = getRandomEmployee(consumer.props.id, employer2.id);
+      const employee3 = getRandomEmployee(consumer.props.id, employer3.id);
+
+      when(consumerService.listLinkedEmployers(consumer.props.id)).thenResolve([employee1, employee2, employee3]);
+      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
+      when(employerService.getEmployerByID(employer2.id)).thenResolve(employer2);
+      when(employerService.getEmployerByID(employer3.id)).thenResolve(employer3);
+
+      const response = await consumerController.listLinkedEmployers(consumer);
+      expect(response).toHaveLength(3);
+      expect(response).toEqual(
+        expect.arrayContaining([
+          {
+            employerName: employer1.name,
+            employerLogoURI: employer1.logoURI,
+            allocationAmountInPesos: employee1.allocationAmount,
+            employerReferralID: employer1.referralID,
+          },
+          {
+            employerName: employer2.name,
+            employerLogoURI: employer2.logoURI,
+            allocationAmountInPesos: employee2.allocationAmount,
+            employerReferralID: employer2.referralID,
+          },
+          {
+            employerName: employer3.name,
+            employerLogoURI: employer3.logoURI,
+            allocationAmountInPesos: employee3.allocationAmount,
+            employerReferralID: employer3.referralID,
+          },
+        ]),
+      );
+    });
+  });
+
+  describe("updateAllocationAmountForAnEmployer", () => {
+    it("should forwards the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      when(consumerService.updateEmployerAllocationAmount("employerReferralID", consumer.props.id, 1478)).thenResolve();
+
+      await consumerController.updateAllocationAmountForAnEmployer(consumer, {
+        employerReferralID: "employerReferralID",
+        allocationAmountInPesos: 1478,
+      });
     });
   });
 });

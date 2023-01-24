@@ -27,7 +27,6 @@ import {
   FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
   FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
 } from "../integrations/fakes/FakeSardineResponses";
-import { TransactionInformation } from "../domain/TransactionInformation";
 import { Express } from "express";
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Multer } from "multer";
@@ -232,7 +231,7 @@ describe("VerificationService", () => {
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
@@ -285,7 +284,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
@@ -340,7 +339,7 @@ describe("VerificationService", () => {
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
@@ -395,7 +394,7 @@ describe("VerificationService", () => {
         socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
@@ -439,7 +438,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.getDocumentVerificationResult(verificationId)).thenResolve(documentVerificationResult);
       when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
         Consumer.createConsumer(newConsumerProps),
@@ -477,7 +476,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.getDocumentVerificationResult(verificationId)).thenResolve(documentVerificationResult);
       when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
         Consumer.createConsumer(newConsumerProps),
@@ -570,7 +569,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         idvProvider.processDocumentVerificationResult(
           deepEqual(documentVerificationWebhookRequest.documentVerificationResult),
@@ -625,7 +624,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         idvProvider.processDocumentVerificationResult(
           deepEqual(documentVerificationWebhookRequest.documentVerificationResult),
@@ -874,7 +873,7 @@ describe("VerificationService", () => {
         },
       };
 
-      when(consumerService.findConsumerById(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(idvProvider.verifyDocument(sessionKey, deepEqual(documentInformation), deepEqual(consumer))).thenResolve(
         verificationId,
       );

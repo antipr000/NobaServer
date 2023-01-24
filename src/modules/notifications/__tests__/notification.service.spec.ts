@@ -19,11 +19,15 @@ import { SendDocumentVerificationTechnicalFailureEvent } from "../events/SendDoc
 import { SendCardAddedEvent } from "../events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "../events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "../events/SendCardDeletedEvent";
-import { SendTransactionInitiatedEvent } from "../events/SendTransactionInitiatedEvent";
-import { SendCryptoFailedEvent } from "../events/SendCryptoFailedEvent";
-import { SendOrderExecutedEvent } from "../events/SendOrderExecutedEvent";
-import { SendOrderFailedEvent } from "../events/SendOrderFailedEvent";
 import { SendHardDeclineEvent } from "../events/SendHardDeclineEvent";
+import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
+import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
+import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
+import { SendDepositInitiatedEvent } from "../events/SendDepositInitiatedEvent";
+import { SendWalletTransferEvent } from "../events/SendWalletTransferEvent";
+import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
+import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
+import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -68,6 +72,7 @@ describe("NotificationService", () => {
       locale: "en",
       otp: "123456",
       firstName: "Fake",
+      handle: "fake-handle",
     });
 
     const sendOtpEvent = new SendOtpEvent({
@@ -75,6 +80,7 @@ describe("NotificationService", () => {
       locale: "en",
       otp: "123456",
       name: "Fake",
+      handle: "fake-handle",
     });
 
     verify(eventEmitter.emitAsync(`email.${NotificationEventType.SEND_OTP_EVENT}`, deepEqual(sendOtpEvent))).once();
@@ -153,10 +159,13 @@ describe("NotificationService", () => {
       NotificationEventType.SEND_CARD_ADDED_EVENT,
       NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT,
       NotificationEventType.SEND_CARD_DELETED_EVENT,
-      NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT,
-      NotificationEventType.SEND_CRYPTO_FAILED_EVENT,
-      NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
-      NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
+      NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
+      NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
+      NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT,
+      NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
+      NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
+      NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT,
+      NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
       NotificationEventType.SEND_HARD_DECLINE_EVENT,
     ];
 
@@ -169,10 +178,13 @@ describe("NotificationService", () => {
 
       cardNetwork: "fake-card-network",
       last4Digits: "1234",
-      transactionInitiatedParams: {} as any,
-      cryptoFailedParams: {} as any,
-      transactionExecutedParams: {} as any,
-      transactionFailedParams: {} as any,
+      depositCompletedParams: {} as any,
+      depositFailedParams: {} as any,
+      depositInitiatedParams: {} as any,
+      withdrawalCompletedParams: {} as any,
+      withdrawalFailedParams: {} as any,
+      withdrawalInitiatedParams: {} as any,
+      transferCompletedParams: {} as any,
       sessionID: "fake-session-id",
       transactionID: "fake-transaction-id",
       paymentToken: "fake-payment-token",
@@ -268,48 +280,80 @@ describe("NotificationService", () => {
             last4Digits: payload.last4Digits,
           });
           break;
-        case NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT:
-          data = new SendTransactionInitiatedEvent({
+        case NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT:
+          data = new SendCollectionCompletedEvent({
             email: payload.email,
-            locale: "en",
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
-
-            params: payload.transactionInitiatedParams,
+            locale: payload.locale,
           });
           break;
-        case NotificationEventType.SEND_CRYPTO_FAILED_EVENT:
-          data = new SendCryptoFailedEvent({
+        case NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT:
+          data = new SendDepositCompletedEvent({
             email: payload.email,
-            locale: "en",
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-
-            params: payload.cryptoFailedParams,
+            name: payload.firstName,
+            handle: payload.handle,
+            params: payload.depositCompletedParams,
+            locale: payload.locale,
           });
           break;
-        case NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT:
-          data = new SendOrderExecutedEvent({
+        case NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT:
+          data = new SendDepositInitiatedEvent({
             email: payload.email,
-            locale: "en",
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-
-            params: payload.transactionExecutedParams,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.depositInitiatedParams,
           });
           break;
-        case NotificationEventType.SEND_TRANSACTION_FAILED_EVENT:
-          data = new SendOrderFailedEvent({
+        case NotificationEventType.SEND_DEPOSIT_FAILED_EVENT:
+          data = new SendDepositFailedEvent({
             email: payload.email,
-            locale: "en",
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.depositFailedParams,
+          });
+          break;
 
-            params: payload.transactionFailedParams,
+        case NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT:
+          data = new SendWithdrawalCompletedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.withdrawalCompletedParams,
+          });
+          break;
+
+        case NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT:
+          data = new SendWithdrawalInitiatedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.withdrawalInitiatedParams,
+          });
+          break;
+
+        case NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT:
+          data = new SendWithdrawalFailedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.withdrawalFailedParams,
+          });
+          break;
+
+        case NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT:
+          data = new SendWalletTransferEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.transferCompletedParams,
           });
           break;
         case NotificationEventType.SEND_HARD_DECLINE_EVENT:

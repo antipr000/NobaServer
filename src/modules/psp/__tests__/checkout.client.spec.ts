@@ -23,9 +23,9 @@ describe("CheckoutClient", () => {
   let checkoutClient: CheckoutClient;
   let checkoutApi: Checkout;
 
-  jest.setTimeout(10000);
+  jest.setTimeout(20000);
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     checkoutClient = getMockCheckoutClientWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({

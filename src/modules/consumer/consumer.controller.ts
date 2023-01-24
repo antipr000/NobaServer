@@ -52,6 +52,11 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { QRCodeDTO } from "./dto/QRCodeDTO";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { ContactConsumerResponseDTO } from "./dto/ContactConsumerResponseDTO";
+import { RegisterWithEmployerDTO } from "./dto/RegisterWithEmployerDTO";
+import { LinkedEmployerDTO } from "./dto/LinkedEmployerDTO";
+import { Employee } from "../employee/domain/Employee";
+import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
+import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -62,11 +67,11 @@ export class ConsumerController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  private readonly consumerMapper: ConsumerMapper;
-
-  constructor(private readonly consumerService: ConsumerService, private readonly plaidClient: PlaidClient) {
-    this.consumerMapper = new ConsumerMapper();
-  }
+  constructor(
+    private readonly consumerService: ConsumerService,
+    private readonly plaidClient: PlaidClient,
+    private readonly consumerMapper: ConsumerMapper,
+  ) {}
 
   @Get("/")
   @ApiOperation({ summary: "Gets details of logged-in consumer" })
@@ -126,6 +131,7 @@ export class ConsumerController {
         id: consumer.props.id,
         ...(requestBody.firstName && { firstName: requestBody.firstName }),
         ...(requestBody.lastName && { lastName: requestBody.lastName }),
+        ...(requestBody.locale && { locale: requestBody.locale }),
         ...(requestBody.address && {
           address: {
             ...(requestBody.address.streetLine1 && { streetLine1: requestBody.address.streetLine1 }),
@@ -361,7 +367,7 @@ export class ConsumerController {
   }
 
   @Get("/search")
-  @ApiOperation({ summary: "Search for consumers" })
+  @ApiOperation({ summary: "Search for consumers based on public information." })
   @ApiResponse({
     status: HttpStatus.OK,
     type: [ContactConsumerResponseDTO],
@@ -370,11 +376,18 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async searchConsumers(
     @Query("query") query: string,
-    @Query("limit") limit: number,
+    @Query("") limitDTO: OptionalLimitQueryDTO,
     @AuthUser() consumer: Consumer,
   ): Promise<ContactConsumerResponseDTO[]> {
-    const consumers = await this.consumerService.searchConsumers(query);
-    return consumers.map(consumer => this.mapToSearchDTO(consumer));
+    const consumers = await this.consumerService.findConsumersByPublicInfo(query, limitDTO.limit || 10);
+    return consumers.map(consumer => {
+      return {
+        consumerID: consumer.props.id,
+        handle: consumer.props.handle,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+      };
+    });
   }
 
   @Post("/wallets")
@@ -452,6 +465,42 @@ export class ConsumerController {
       notificationMethod,
     );
     return this.mapToDTO(consumer);
+  }
+
+  @Post("/employers")
+  @ApiOperation({ summary: "Links the consumer with an Employer" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Registered Employee record" })
+  async registerWithAnEmployer(
+    @Body() requestBody: RegisterWithEmployerDTO,
+    @AuthUser() consumer: Consumer,
+  ): Promise<void> {
+    await this.consumerService.registerWithAnEmployer(
+      requestBody.employerReferralID,
+      consumer.props.id,
+      requestBody.allocationAmountInPesos,
+    );
+  }
+
+  @Get("/employers")
+  @ApiOperation({ summary: "Lists all the Employers the current Consumer is associated with" })
+  @ApiResponse({ status: HttpStatus.OK, type: [LinkedEmployerDTO] })
+  async listLinkedEmployers(@AuthUser() consumer: Consumer): Promise<LinkedEmployerDTO[]> {
+    const employees: Employee[] = await this.consumerService.listLinkedEmployers(consumer.props.id);
+    return this.consumerMapper.toLinkedEmployerDTO(employees);
+  }
+
+  @Patch("/employers")
+  @ApiOperation({ summary: "Updates the allocation amount for a specific employer" })
+  @ApiResponse({ status: HttpStatus.OK })
+  async updateAllocationAmountForAnEmployer(
+    @AuthUser() consumer: Consumer,
+    @Body() requestBody: UpdateEmployerAllocationDTO,
+  ): Promise<void> {
+    await this.consumerService.updateEmployerAllocationAmount(
+      requestBody.employerReferralID,
+      consumer.props.id,
+      requestBody.allocationAmountInPesos,
+    );
   }
 
   @Get("/qrcode")

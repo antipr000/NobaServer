@@ -122,6 +122,11 @@ import {
   AWS_MASTER_SECRET,
   NOBA_PRIVATE_BEARER_TOKEN,
   AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN,
+  BUBBLE_CONFIG_KEY,
+  BUBBLE_AWS_SECRET_KEY_FOR_BASE_URL,
+  BUBBLE_BASE_URL,
+  BUBBLE_AWS_SECRET_KEY_FOR_BEARER_TOKEN,
+  BUBBLE_BEARER_TOKEN,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -140,6 +145,7 @@ import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleCon
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
 import { SecretProvider } from "./SecretProvider";
+import { BubbleConfigs } from "./configtypes/BubbleConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -308,6 +314,7 @@ async function configureAllVendorCredentials(
     configureCircleConfigurations,
     configureNobaWorkflowCredentials,
     configureMonoCredentials,
+    configureBubbleCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -410,6 +417,33 @@ async function configureMonoCredentials(
   );
 
   configs[MONO_CONFIG_KEY] = monoConfig;
+  return configs;
+}
+
+async function configureBubbleCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const bubbleConfigs: BubbleConfigs = configs[BUBBLE_CONFIG_KEY];
+
+  if (bubbleConfigs === undefined) {
+    const errorMessage =
+      "\n'Bubble' configurations are required. Please configure the Bubble credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${BUBBLE_CONFIG_KEY}" and populate ` +
+      `("${BUBBLE_AWS_SECRET_KEY_FOR_BASE_URL}" or "${BUBBLE_BASE_URL}") AND ` +
+      `("${BUBBLE_AWS_SECRET_KEY_FOR_BEARER_TOKEN}" or "${BUBBLE_BEARER_TOKEN}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  bubbleConfigs.baseURL = await getParameterValue(bubbleConfigs.awsSecretNameForBaseURL, bubbleConfigs.baseURL);
+  bubbleConfigs.bearerToken = await getParameterValue(
+    bubbleConfigs.awsSecretNameForBearerToken,
+    bubbleConfigs.bearerToken,
+  );
+
+  configs[BUBBLE_CONFIG_KEY] = bubbleConfigs;
   return configs;
 }
 

@@ -8,6 +8,8 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationPayload, prepareNotificationPayload } from "./domain/NotificationPayload";
 import { TransactionNotificationPayloadMapper } from "./domain/TransactionNotificationParameters";
+import { Transaction } from "../transaction/domain/Transaction";
+import { Consumer } from "../consumer/domain/Consumer";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -40,48 +42,56 @@ export class NotificationWorkflowService {
       });
     }
 
-    switch (notificationWorkflowType) {
-      case NotificationWorkflowTypes.TRANSACTION_COMPLETED_EVENT:
-        const orderSuccessPayload =
-          this.transactionNotificationPayloadMapper.toTransactionExecutedNotificationParameters(transaction);
-        if (transaction.debitConsumerID) {
-          const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            transactionExecutedParams: orderSuccessPayload,
-          });
-          await this.notificationService.sendNotification(
-            NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
-            payload,
-          );
-        }
+    let consumer: Consumer;
+    let payload: NotificationPayload;
 
-        if (transaction.creditConsumerID) {
-          const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            transactionExecutedParams: orderSuccessPayload,
-          });
-          await this.notificationService.sendNotification(
-            NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
-            payload,
-          );
-        }
+    const transactionPayload = this.generateTransactionPayload(transaction, notificationWorkflowType);
+    switch (notificationWorkflowType) {
+      case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          depositCompletedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
         break;
-      case NotificationWorkflowTypes.TRANSACTION_FAILED_EVENT:
-        const orderFailedPayload =
-          this.transactionNotificationPayloadMapper.toTransactionFailedNotificationParameters(transaction);
-        if (transaction.debitConsumerID) {
-          const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            transactionFailedParams: orderFailedPayload,
-          });
-          await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_FAILED_EVENT, payload);
-        } else {
-          const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-          const payload: NotificationPayload = prepareNotificationPayload(consumer, {
-            transactionFailedParams: orderFailedPayload,
-          });
-          await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSACTION_FAILED_EVENT, payload);
-        }
+      case NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          depositFailedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT, payload);
+        break;
+      case NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          withdrawalCompletedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT, payload);
+        break;
+      case NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          withdrawalFailedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT, payload);
+        break;
+      case NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          transferCompletedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
+
+        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          transferCompletedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
+        break;
+      case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {});
+        await this.notificationService.sendNotification(NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT, payload);
         break;
       default:
         this.logger.error(
@@ -91,6 +101,23 @@ export class NotificationWorkflowService {
           message: "Invalid workflow type",
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         });
+    }
+  }
+
+  private generateTransactionPayload(transaction: Transaction, notificationType: NotificationWorkflowTypes): any {
+    switch (notificationType) {
+      case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
+        return this.transactionNotificationPayloadMapper.toDepositCompletedNotificationParameters(transaction);
+      case NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT:
+        return this.transactionNotificationPayloadMapper.toDepositFailedNotificationParameters(transaction);
+      case NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT:
+        return this.transactionNotificationPayloadMapper.toWithdrawalCompletedNotificationParameters(transaction);
+      case NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT:
+        return this.transactionNotificationPayloadMapper.toWithdrawalFailedNotificationParameters(transaction);
+      case NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT:
+        return this.transactionNotificationPayloadMapper.toTransferCompletedNotificationParameters(transaction);
+      default:
+        return null;
     }
   }
 }

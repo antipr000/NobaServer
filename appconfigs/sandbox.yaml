@@ -146,6 +146,12 @@ mono:
   webhookSecret: ""
   awsSecretNameForWebhookSecret: "SANDBOX_MONO_WEBHOOK_SECRET"
 
+bubble:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "TEST_BUBBLE_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "TEST_BUBBLE_BASE_URL"
+
 dependencies:
   emailClient: "SENDGRID"
 

@@ -7,6 +7,8 @@ export class ConsumerRepoMapper {
   toCreateConsumerInput(consumer: Consumer): Prisma.ConsumerCreateInput {
     return {
       id: consumer.props.id,
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
       email: consumer.props.email,
       displayEmail: consumer.props.displayEmail,
       phone: consumer.props.phone,

@@ -11,11 +11,17 @@ import {
 } from "@prisma/client";
 import { ConsumerDTO, ConsumerSimpleDTO, CryptoWalletsDTO, PaymentMethodsDTO } from "../dto/ConsumerDTO";
 import { StatesMapper } from "./StatesMapper";
+import { Employee } from "../../../modules/employee/domain/Employee";
+import { LinkedEmployerDTO } from "../dto/LinkedEmployerDTO";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { Employer } from "src/modules/employer/domain/Employer";
+import { Injectable } from "@nestjs/common";
 
+@Injectable()
 export class ConsumerMapper implements Mapper<Consumer> {
   private readonly statesMapper: StatesMapper;
 
-  constructor() {
+  constructor(private readonly employerService: EmployerService) {
     this.statesMapper = new StatesMapper();
   }
 
@@ -136,5 +142,20 @@ export class ConsumerMapper implements Mapper<Consumer> {
       email: p.displayEmail ? p.displayEmail : p.email,
       phone: p.phone,
     };
+  }
+
+  public async toLinkedEmployerDTO(employees: Employee[]): Promise<LinkedEmployerDTO[]> {
+    const linkedEmployers: LinkedEmployerDTO[] = [];
+
+    for (const employee of employees) {
+      const employer: Employer = await this.employerService.getEmployerByID(employee.employerID);
+      linkedEmployers.push({
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
+        employerReferralID: employer.referralID,
+        allocationAmountInPesos: employee.allocationAmount,
+      });
+    }
+    return linkedEmployers;
   }
 }

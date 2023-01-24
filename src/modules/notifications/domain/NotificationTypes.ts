@@ -13,11 +13,16 @@ export enum NotificationEventType {
   SEND_CARD_ADDED_EVENT = "card.added",
   SEND_CARD_ADDITION_FAILED_EVENT = "card.addition.failed",
   SEND_CARD_DELETED_EVENT = "card.deleted",
-  SEND_TRANSACTION_INITIATED_EVENT = "transaction.initiated",
-  SEND_CRYPTO_FAILED_EVENT = "crypto.failed",
-  SEND_TRANSACTION_COMPLETED_EVENT = "transaction.completed",
-  SEND_TRANSACTION_FAILED_EVENT = "transaction.failed",
   SEND_HARD_DECLINE_EVENT = "hard.decline",
+  SEND_DEPOSIT_INITIATED_EVENT = "deposit.initiated",
+  SEND_DEPOSIT_COMPLETED_EVENT = "deposit.completed",
+  SEND_DEPOSIT_FAILED_EVENT = "deposit.failed",
+  SEND_WITHDRAWAL_INITIATED_EVENT = "withdrawal.initiated",
+  SEND_WITHDRAWAL_COMPLETED_EVENT = "withdrawal.completed",
+  SEND_WITHDRAWAL_FAILED_EVENT = "withdrawal.failed",
+  SEND_TRANSFER_COMPLETED_EVENT = "transfer.completed",
+  SEND_COLLECTION_LINK_EVENT = "collection.link",
+  SEND_COLLECTION_COMPLETED_EVENT = "collection.completed",
 }
 
 export enum NotificationEventHandler {
@@ -26,6 +31,11 @@ export enum NotificationEventHandler {
 }
 
 export enum NotificationWorkflowTypes {
-  TRANSACTION_COMPLETED_EVENT = "transactionCompletedEvent",
-  TRANSACTION_FAILED_EVENT = "transactionFailedEvent",
+  COLLECTION_LINK_EVENT = "collectionLinkEvent",
+  COLLECTION_COMPLETED_EVENT = "collectionCompletedEvent",
+  DEPOSIT_COMPLETED_EVENT = "depositCompletedEvent",
+  DEPOSIT_FAILED_EVENT = "depositFailedEvent",
+  WITHDRAWAL_COMPLETED_EVENT = "withdrawalCompletedEvent",
+  WITHDRAWAL_FAILED_EVENT = "withdrawalFailedEvent",
+  TRANSFER_COMPLETED_EVENT = "transferCompletedEvent",
 }

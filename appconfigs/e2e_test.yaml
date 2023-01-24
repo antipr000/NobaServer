@@ -157,6 +157,12 @@ mono:
   webhookSecret: "DUMMY_WEBHOOK_SECRET"
   awsSecretNameForWebhookSecret: ""
 
+bubble:
+  bearerToken: "DUMMY_TOKEN"
+  awsSecretNameForBearerToken: ""
+  baseURL: "https://bubble.noba.com"
+  awsSecretNameForBaseURL: ""
+
 dependencies:
   emailClient: "STUB"
 

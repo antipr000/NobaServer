@@ -174,6 +174,12 @@ export const MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID = "awsSecretNameForNobaAcco
 export const MONO_WEBHOOK_SECRET = "webhookSecret";
 export const MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET = "awsSecretNameForWebhookSecret";
 
+export const BUBBLE_CONFIG_KEY = "bubble";
+export const BUBBLE_BEARER_TOKEN = "bearerToken";
+export const BUBBLE_AWS_SECRET_KEY_FOR_BEARER_TOKEN = "awsSecretNameForBearerToken";
+export const BUBBLE_BASE_URL = "baseURL";
+export const BUBBLE_AWS_SECRET_KEY_FOR_BASE_URL = "awsSecretNameForBaseURL";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

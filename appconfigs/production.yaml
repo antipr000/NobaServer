@@ -155,6 +155,12 @@ mono:
   webhookSecret: ""
   awsSecretNameForWebhookSecret: "PROD_MONO_WEBHOOK_SECRET"
 
+bubble:
+  bearerToken: ""
+  awsSecretNameForBearerToken: "PROD_BUBBLE_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "PROD_BUBBLE_BASE_URL"
+
 dependencies:
   emailClient: "SENDGRID"
 

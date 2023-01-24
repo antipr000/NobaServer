@@ -1,12 +1,14 @@
-import { anyString, anything, mock, when } from "ts-mockito";
+import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
 import { ConsumerService } from "../consumer.service";
 
 export function getMockConsumerServiceWithDefaults(): ConsumerService {
   const mockConsumerService: ConsumerService = mock(ConsumerService);
 
   when(mockConsumerService.getConsumer(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerService.findConsumersByPublicInfo(anyString(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
   when(mockConsumerService.findConsumersByContactInfo(anything())).thenReject(new Error("Method not implemented"));
-  when(mockConsumerService.findConsumerById(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerIDByHandle(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerIDByReferralCode(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerByEmailOrPhone(anyString())).thenReject(new Error("Method not implemented"));
@@ -43,6 +45,13 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
   );
   when(mockConsumerService.getConsumerCircleWalletID(anyString())).thenReject(new Error("Method not implemented!"));
   when(mockConsumerService.getBase64EncodedQRCode(anyString())).thenReject(new Error("Method not implemented!"));
+  when(mockConsumerService.registerWithAnEmployer(anyString(), anyString(), anyNumber())).thenReject(
+    new Error("Method not implemented!"),
+  );
+  when(mockConsumerService.listLinkedEmployers(anyString())).thenReject(new Error("Method not implemented!"));
+  when(mockConsumerService.updateEmployerAllocationAmount(anyString(), anyString(), anyNumber())).thenReject(
+    new Error("Method not implemented!"),
+  );
 
   return mockConsumerService;
 }
