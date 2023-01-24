@@ -1,5 +1,5 @@
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
-import { IWorkflowImpl } from "./IWorkflowImpl";
+import { IWorkflowImpl } from "./iworkflow.impl";
 import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -9,8 +9,8 @@ import { ExchangeRateDTO } from "../../common/dto/ExchangeRateDTO";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
-import { MonoService } from "../../../modules/psp/mono/mono.service";
-import { MonoCurrency } from "../../../modules/psp/domain/Mono";
+import { MonoService } from "../../psp/mono/mono.service";
+import { MonoCurrency } from "../../psp/domain/Mono";
 
 export class WalletDepositImpl implements IWorkflowImpl {
   @Inject(WINSTON_MODULE_PROVIDER)

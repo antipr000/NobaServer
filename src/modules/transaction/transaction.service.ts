@@ -19,7 +19,7 @@ import { UpdateTransactionDTO } from "./dto/TransactionDTO";
 import { TransactionVerification } from "../verification/domain/TransactionVerification";
 import { VerificationService } from "../verification/verification.service";
 import { KYCStatus } from "@prisma/client";
-import { WorkflowFactory } from "./factory/WorkflowFactory";
+import { WorkflowFactory } from "./factory/workflow.factory";
 
 @Injectable()
 export class TransactionService {

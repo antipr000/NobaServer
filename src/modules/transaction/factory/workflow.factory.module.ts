@@ -2,10 +2,10 @@ import { Module } from "@nestjs/common";
 import { TemporalModule } from "../../../infra/temporal/temporal.module";
 import { MonoModule } from "../../../modules/psp/mono/mono.module";
 import { PspModule } from "../../../modules/psp/psp.module";
-import { WorkflowFactory } from "./WorkflowFactory";
-import { WalletDepositImpl } from "./WalletDepositImpl";
-import { WalletWithdrawalImpl } from "./WalletWithdrawalImpl";
-import { WalletTransferImpl } from "./WalletTransferImpl";
+import { WorkflowFactory } from "./workflow.factory";
+import { WalletDepositImpl } from "./wallet.deposit.impl";
+import { WalletWithdrawalImpl } from "./wallet.withdrawal.impl";
+import { WalletTransferImpl } from "./wallet.transfer.impl";
 import { CommonModule } from "../../../modules/common/common.module";
 
 @Module({

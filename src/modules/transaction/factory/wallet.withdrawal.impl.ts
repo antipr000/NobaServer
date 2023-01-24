@@ -1,5 +1,5 @@
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
-import { IWorkflowImpl } from "./IWorkflowImpl";
+import { IWorkflowImpl } from "./iworkflow.impl";
 import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";

@@ -1,9 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WorkflowName } from "../domain/Transaction";
-import { WalletDepositImpl } from "./WalletDepositImpl";
-import { WalletWithdrawalImpl } from "./WalletWithdrawalImpl";
-import { WalletTransferImpl } from "./WalletTransferImpl";
-import { IWorkflowImpl } from "./IWorkflowImpl";
+import { WalletDepositImpl } from "./wallet.deposit.impl";
+import { WalletWithdrawalImpl } from "./wallet.withdrawal.impl";
+import { WalletTransferImpl } from "./wallet.transfer.impl";
+import { IWorkflowImpl } from "./iworkflow.impl";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 
 @Injectable()

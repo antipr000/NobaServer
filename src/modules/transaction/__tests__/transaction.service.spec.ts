@@ -35,10 +35,10 @@ import { MonoCurrency } from "../../../modules/psp/domain/Mono";
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
-import { WorkflowFactory } from "../factory/WorkflowFactory";
-import { WalletDepositImpl } from "../factory/WalletDepositImpl";
-import { WalletWithdrawalImpl } from "../factory/WalletWithdrawalImpl";
-import { WalletTransferImpl } from "../factory/WalletTransferImpl";
+import { WorkflowFactory } from "../factory/workflow.factory";
+import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
+import { WalletWithdrawalImpl } from "../factory/wallet.withdrawal.impl";
+import { WalletTransferImpl } from "../factory/wallet.transfer.impl";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
