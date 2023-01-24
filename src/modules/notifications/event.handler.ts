@@ -1,6 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { CurrencyService } from "../common/currency.service";
 import { Logger } from "winston";
 import { EmailTemplates } from "./domain/EmailTemplates";
 import { Utils } from "../../core/utils/Utils";
@@ -28,6 +27,7 @@ import { SendDepositInitiatedEvent } from "./events/SendDepositInitiatedEvent";
 import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEvent";
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
+import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -41,7 +41,6 @@ export class EventHandler {
   constructor(
     configService: CustomConfigService,
     @Inject("EmailService") private readonly emailService: EmailService,
-    @Inject(CurrencyService) private readonly currencyService: CurrencyService,
   ) {}
 
   @OnEvent(`email.${NotificationEventType.SEND_OTP_EVENT}`)
@@ -431,27 +430,20 @@ export class EventHandler {
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`)
-  public async sendTransferCompletedEmail(payload: SendWithdrawalCompletedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
-
+  public async sendTransferCompletedEmail(payload: SendTransferCompletedEvent) {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        creditAmount: payload.params.creditAmount,
-        creditCurrency: payload.params.creditCurrency,
-        handle: payload.handle,
+        debitAmount: payload.params.debitAmount,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
-        exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
         processingFees: payload.params.processingFees,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        nobaFee: payload.params.nobaFees,
+        totalPrice: payload.params.totalPrice,
       },
     };
 
@@ -478,15 +470,5 @@ export class EventHandler {
     };
 
     await this.emailService.sendEmail(msg);
-  }
-
-  private async getCryptocurrencyNameFromTicker(ticker: string): Promise<string> {
-    const cryptoCurrency = await this.currencyService.getCryptocurrency(ticker);
-    // Quite unlikely this would happen
-    if (cryptoCurrency === null || cryptoCurrency === undefined) {
-      this.logger.error(`Unable to find cryptocurrency entry for ticker ${ticker}`);
-      return ticker;
-    }
-    return cryptoCurrency.name;
   }
 }

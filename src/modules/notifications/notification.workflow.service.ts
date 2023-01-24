@@ -48,48 +48,48 @@ export class NotificationWorkflowService {
     const transactionPayload = this.generateTransactionPayload(transaction, notificationWorkflowType);
     switch (notificationWorkflowType) {
       case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
-        consumer = await this.consumerService.findConsumerById(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           depositCompletedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT:
-        consumer = await this.consumerService.findConsumerById(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           depositFailedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT:
-        consumer = await this.consumerService.findConsumerById(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           withdrawalCompletedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT:
-        consumer = await this.consumerService.findConsumerById(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           withdrawalFailedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT:
-        consumer = await this.consumerService.findConsumerById(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           transferCompletedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
 
-        consumer = await this.consumerService.findConsumerById(transaction.creditConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
         payload = prepareNotificationPayload(consumer, {
           transferCompletedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
-        consumer = await this.consumerService.findConsumerById(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {});
         await this.notificationService.sendNotification(NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT, payload);
         break;

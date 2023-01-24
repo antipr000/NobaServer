@@ -50,7 +50,7 @@ export class VerificationService {
       sessionKey,
       consumerInformation,
     );
-    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
       address: consumerInformation.address,
@@ -169,7 +169,7 @@ export class VerificationService {
     sessionKey: string,
     documentInformation: DocumentInformation,
   ): Promise<string> {
-    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     let id: string;
     let newConsumerData: ConsumerProps;
     try {
@@ -212,7 +212,7 @@ export class VerificationService {
 
   async getDocumentVerificationResult(consumerID: string, verificationID: string): Promise<DocumentVerificationResult> {
     const result = await this.idvProvider.getDocumentVerificationResult(verificationID);
-    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
       verificationData: {
@@ -273,7 +273,7 @@ export class VerificationService {
       documentVerificationResult.documentVerificationResult,
     );
 
-    const consumer: Consumer = await this.consumerService.findConsumerById(consumerID);
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
       verificationData: {

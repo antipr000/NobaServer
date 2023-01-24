@@ -15,19 +15,22 @@ import { SendDocumentVerificationTechnicalFailureEvent } from "../events/SendDoc
 import { SendCardAddedEvent } from "../events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "../events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "../events/SendCardDeletedEvent";
-import { SendTransactionInitiatedEvent } from "../events/SendTransactionInitiatedEvent";
-import { SendCryptoFailedEvent } from "../events/SendCryptoFailedEvent";
-import { SendOrderExecutedEvent } from "../events/SendOrderExecutedEvent";
-import { SendOrderFailedEvent } from "../events/SendOrderFailedEvent";
 import { SendHardDeclineEvent } from "../events/SendHardDeclineEvent";
 import { CurrencyService } from "../../common/currency.service";
 import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.currency.service";
 import { EmailTemplates } from "../domain/EmailTemplates";
 import { Utils } from "../../../core/utils/Utils";
-import { TransactionStatus } from "../../transactions/domain/Types";
 import { EmailService } from "../emails/email.service";
 import { EventHandler } from "../event.handler";
 import { getMockEmailServiceWithDefaults } from "../mocks/mock.email.service";
+import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
+import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
+import { SendDepositInitiatedEvent } from "../events/SendDepositInitiatedEvent";
+import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
+import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
+import { TransactionParameters } from "../domain/TransactionNotificationParameters";
+import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
+import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 
 describe("EventHandlerService", () => {
   let currencyService: CurrencyService;
@@ -82,6 +85,7 @@ describe("EventHandlerService", () => {
       locale: "en",
       otp: "123456",
       name: "Fake",
+      handle: "fake-handle",
     });
 
     await eventHandler.sendOtp(payload);
@@ -380,338 +384,287 @@ describe("EventHandlerService", () => {
     });
   });
 
-  it("should call eventHandler with SendTransactionInitiated event", async () => {
-    const payload = new SendTransactionInitiatedEvent({
+  it("should call eventHandler with SendDepositCompleted event", async () => {
+    const payload = new SendDepositCompletedEvent({
       email: "fake+user@noba.com",
-      firstName: "Fake",
-      lastName: "Name",
-      locale: "en",
-      nobaUserID: "fake-noba-user-id",
+      name: "First",
+      handle: "fake-handle",
       params: {
-        transactionID: "fake-transaction-id",
-        transactionTimestamp: new Date("2010-10-10"),
-        paymentMethod: "fake-pm",
-        destinationWalletAddress: "fake-wallet",
-        last4Digits: "1234",
-        fiatCurrency: "USD",
-        conversionRate: 100,
-        processingFee: 2,
-        networkFee: 3,
-        nobaFee: 4,
-        totalPrice: 50,
-        cryptoAmount: 0.0123,
-        cryptocurrency: "ETH",
-        status: TransactionStatus.FIAT_INCOMING_INITIATED,
+        ...getTransactionParams(),
+        debitAmount: "USD",
+        creditAmount: "COP",
+        debitCurrency: 10,
+        exchangeRate: 0.0025,
       },
+      locale: "en",
     });
 
-    when(currencyService.getCryptocurrency("ETH")).thenResolve({
-      ticker: "ETH",
-      name: "Ethereum",
-      iconPath: "",
-      precision: 1,
-    });
-    await eventHandler.sendTransactionInitiatedEmail(payload);
-
+    await eventHandler.sendDepositCompletedEmail(payload);
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailService.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL["en"],
+      templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL["en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_email: payload.email,
-        user_id: payload.email,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        conversion_rate: payload.params.conversionRate,
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        cryptocurrency: "Ethereum",
-        crypto_expected: payload.params.cryptoAmount,
+        firstName: payload.name,
+        debitAmount: payload.params.debitAmount,
+        creditAmount: payload.params.creditAmount,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
       },
     });
   });
 
-  it("should call eventHandler with SendTransactionInitiated event and pass ticker itself when currencyRecord is not found", async () => {
-    const payload = new SendTransactionInitiatedEvent({
+  it("should call eventHandler with SendDepositFailed event", async () => {
+    const payload = new SendDepositFailedEvent({
       email: "fake+user@noba.com",
-      firstName: "Fake",
-      lastName: "Name",
-      locale: "en",
-      nobaUserID: "fake-noba-user-id",
+      name: "First",
+      handle: "fake-handle",
       params: {
-        transactionID: "fake-transaction-id",
-        transactionTimestamp: new Date("2010-10-10"),
-        paymentMethod: "fake-pm",
-        destinationWalletAddress: "fake-wallet",
-        last4Digits: "1234",
-        fiatCurrency: "USD",
-        conversionRate: 100,
-        processingFee: 2,
-        networkFee: 3,
-        nobaFee: 4,
-        totalPrice: 50,
-        cryptoAmount: 0.0123,
-        cryptocurrency: "ETH",
-        status: TransactionStatus.FIAT_INCOMING_INITIATED,
+        ...getTransactionParams(),
+        debitAmount: "USD",
+        creditAmount: "COP",
+        debitCurrency: 10,
+        exchangeRate: 0.0025,
+        reasonDeclined: "Reason",
       },
+      locale: "en",
     });
 
-    when(currencyService.getCryptocurrency("ETH")).thenResolve(null);
-    await eventHandler.sendTransactionInitiatedEmail(payload);
-
+    await eventHandler.sendDepositFailedEmail(payload);
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailService.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL["en"],
+      templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL["en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_email: payload.email,
-        user_id: payload.email,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        conversion_rate: payload.params.conversionRate,
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        cryptocurrency: "ETH",
-        crypto_expected: payload.params.cryptoAmount,
+        firstName: payload.name,
+        totalPrice: payload.params.totalPrice,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        reasonDeclined: payload.params.reasonDeclined,
       },
     });
   });
 
-  it("should call eventHandler with SendCryptoFailed event", async () => {
-    const payload = new SendCryptoFailedEvent({
+  it("should call eventHandler with SendDepositInitiated event", async () => {
+    const payload = new SendDepositInitiatedEvent({
       email: "fake+user@noba.com",
-      firstName: "Fake",
-      lastName: "Name",
-      locale: "en",
-      nobaUserID: "fake-noba-user-id",
+      name: "First",
+      handle: "fake-handle",
       params: {
-        transactionID: "fake-transaction-id",
-        transactionTimestamp: new Date("2010-10-10"),
-        paymentMethod: "fake-pm",
-        destinationWalletAddress: "fake-wallet",
-        last4Digits: "1234",
-        fiatCurrency: "USD",
-        conversionRate: 100,
-        processingFee: 2,
-        networkFee: 3,
-        nobaFee: 4,
-        totalPrice: 50,
-        cryptoAmount: 0.0123,
-        cryptocurrency: "ETH",
-        status: TransactionStatus.FIAT_INCOMING_INITIATED,
-        failureReason: "Failure Reason",
+        ...getTransactionParams(),
+        debitAmount: 1,
+        creditAmount: 5000,
+        debitCurrency: "USD",
+        exchangeRate: 0.0025,
+        reasonDeclined: "Reason",
       },
+      locale: "en",
     });
 
+    await eventHandler.sendDepositInitiatedEmail(payload);
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
-
-    when(currencyService.getCryptocurrency("ETH")).thenResolve({
-      ticker: "ETH",
-      name: "Ethereum",
-      iconPath: "",
-      precision: 1,
-    });
-
-    await eventHandler.sendCryptoFailedEmail(payload);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailService.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CRYPTO_FAILED_EMAIL["en"],
+      templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL["en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_email: payload.email,
-        user_id: payload.email,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        conversion_rate: payload.params.conversionRate,
-        crypto_expected: payload.params.cryptoAmount,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        reason_failed: payload.params.failureReason,
-        cryptocurrency: "Ethereum",
+        firstName: payload.name,
+        totalPrice: payload.params.totalPrice,
+        debitCurrency: payload.params.debitCurrency,
+        creditAmount: payload.params.creditAmount,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        nobaFee: payload.params.nobaFees,
       },
     });
   });
 
-  it("should call eventHandler with SendOrderExecuted event", async () => {
-    const payload = new SendOrderExecutedEvent({
+  it("should call eventHandler with SendWithdrawalCompleted event", async () => {
+    const payload = new SendWithdrawalCompletedEvent({
       email: "fake+user@noba.com",
-      firstName: "Fake",
-      lastName: "Name",
-      locale: "en",
-      nobaUserID: "fake-noba-user-id",
+      name: "First",
+      handle: "fake-handle",
       params: {
-        transactionID: "fake-transaction-id",
-        transactionTimestamp: new Date("2010-10-10"),
-        paymentMethod: "fake-pm",
-        destinationWalletAddress: "fake-wallet",
-        last4Digits: "1234",
-        fiatCurrency: "USD",
-        conversionRate: 100,
-        processingFee: 2,
-        networkFee: 3,
-        nobaFee: 4,
-        totalPrice: 50,
-        cryptoAmount: 0.0123,
-        cryptocurrency: "ETH",
-        status: TransactionStatus.FIAT_INCOMING_INITIATED,
-        transactionHash: "fake-hash",
-        settledTimestamp: new Date("2010-10-10"),
-        cryptoAmountExpected: 0.0122,
+        ...getTransactionParams(),
+        creditAmount: 50000,
+        debitCurrency: 10,
+        exchangeRate: 0.0025,
       },
+      locale: "en",
     });
 
-    when(currencyService.getCryptocurrency("ETH")).thenResolve({
-      ticker: "ETH",
-      name: "Ethereum",
-      iconPath: "",
-      precision: 1,
-    });
-
-    await eventHandler.sendOrderExecutedEmail(payload);
+    await eventHandler.sendWithdrawalCompletedEmail(payload);
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailService.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ORDER_EXECUTED_EMAIL["en"],
+      templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL["en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_email: payload.email,
-        user_id: payload.email,
-        transaction_hash: payload.params.transactionHash,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        settled_timestamp: payload.params.settledTimestamp.toLocaleString(),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        conversion_rate: payload.params.conversionRate,
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        cryptocurrency: "Ethereum",
-        crypto_received: payload.params.cryptoAmount,
-        crypto_expected: payload.params.cryptoAmountExpected,
+        firstName: payload.name,
+        creditAmount: payload.params.creditAmount,
+        creditCurrency: payload.params.creditCurrency,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
       },
     });
   });
 
-  it("should call eventHandler with SendOrderFailed event", async () => {
-    const payload = new SendOrderFailedEvent({
+  it("should call eventHandler with SendWithdrawalInitiated event", async () => {
+    const payload = new SendWithdrawalInitiatedEvent({
       email: "fake+user@noba.com",
-      firstName: "Fake",
-      lastName: "Name",
-      locale: "en",
-      nobaUserID: "fake-noba-user-id",
+      name: "First",
+      handle: "fake-handle",
       params: {
-        transactionID: "fake-transaction-id",
-        transactionTimestamp: new Date("2010-10-10"),
-        paymentMethod: "fake-pm",
-        destinationWalletAddress: "fake-wallet",
-        last4Digits: "1234",
-        fiatCurrency: "USD",
-        conversionRate: 100,
-        processingFee: 2,
-        networkFee: 3,
-        nobaFee: 4,
-        totalPrice: 50,
-        cryptoAmount: 0.0123,
-        cryptocurrency: "ETH",
-        status: TransactionStatus.FIAT_INCOMING_INITIATED,
-        failureReason: "Failure Reason",
+        ...getTransactionParams(),
+        withdrawalAmount: 5000,
+        creditCurrency: "COP",
+        exchangeRate: 0.0025,
+        debitCurrency: "USD",
       },
+      locale: "en",
     });
 
-    when(currencyService.getCryptocurrency("ETH")).thenResolve({
-      ticker: "ETH",
-      name: "Ethereum",
-      iconPath: "",
-      precision: 1,
-    });
-
-    await eventHandler.sendOrderFailedEmail(payload);
+    await eventHandler.sendWithdrawalInitiatedEmail(payload);
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailService.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ORDER_FAILED_EMAIL["en"],
+      templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL["en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_id: payload.email,
-        user_email: payload.email,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        conversion_rate: payload.params.conversionRate,
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        cryptocurrency: "Ethereum",
-        crypto_expected: payload.params.cryptoAmount,
-        reason_declined: payload.params.failureReason,
+        firstName: payload.name,
+        withdrawalAmount: payload.params.withdrawalAmount,
+        creditCurrency: payload.params.creditCurrency,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        debitCurrency: payload.params.debitCurrency,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        nobaFee: payload.params.nobaFees,
+        totalPrice: payload.params.totalPrice,
+      },
+    });
+  });
+
+  it("should call eventHandler with SendWithdrawalFailed event", async () => {
+    const payload = new SendWithdrawalFailedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      params: {
+        ...getTransactionParams(),
+        exchangeRate: 0.0025,
+        debitCurrency: "USD",
+        reasonDeclined: "Failed",
+      },
+      locale: "en",
+    });
+
+    await eventHandler.sendWithdrawalFailedEmail(payload);
+    const subtotal =
+      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL["en"],
+      dynamicTemplateData: {
+        firstName: payload.name,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        debitCurrency: payload.params.debitCurrency,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        nobaFee: payload.params.nobaFees,
+        totalPrice: payload.params.totalPrice,
+        reasonDeclined: payload.params.reasonDeclined,
+      },
+    });
+  });
+
+  it("should call eventHandler with SendTransferCompleted event", async () => {
+    const payload = new SendTransferCompletedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      params: {
+        ...getTransactionParams(),
+        debitAmount: 10,
+      },
+      locale: "en",
+    });
+
+    await eventHandler.sendTransferCompletedEmail(payload);
+
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL["en"],
+      dynamicTemplateData: {
+        firstName: payload.name,
+        debitAmount: payload.params.debitAmount,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        processingFees: payload.params.processingFees,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        nobaFee: payload.params.nobaFees,
+        totalPrice: payload.params.totalPrice,
       },
     });
   });
@@ -752,3 +705,14 @@ describe("EventHandlerService", () => {
     });
   });
 });
+
+function getTransactionParams(): TransactionParameters {
+  return {
+    transactionRef: "fake-transaction-ref",
+    createdTimestamp: new Date("2020-01-01").toUTCString(),
+    processingFees: 1,
+    nobaFees: 1,
+    totalPrice: 10,
+    fiatCurrencyCode: "COP",
+  };
+}
