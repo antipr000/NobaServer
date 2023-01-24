@@ -1,15 +1,15 @@
-export class SendOtpEvent {
+export class SendWalletTransferEvent {
   public readonly email: string;
-  public readonly otp: string;
   public readonly name: string;
   public readonly handle: string;
+  public readonly params: SendWalletTransferEvent;
   public readonly locale?: string;
 
-  constructor({ email, otp, name, handle, locale }) {
+  constructor({ email, name, handle, params, locale }) {
     this.email = email;
-    this.otp = otp;
     this.name = name;
     this.handle = handle;
+    this.params = params;
     this.locale = locale;
   }
 }

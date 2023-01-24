@@ -63,7 +63,7 @@ describe("NotificationService", () => {
   });
 
   describe("sendNotification", () => {
-    it("should send notification for transaction success with DEBIT side only", async () => {
+    it("should send notification for deposit success", async () => {
       const consumerID = v4();
       const consumer = getRandomConsumer(consumerID);
       const transaction = getRandomTransaction(consumerID);
@@ -71,25 +71,100 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
       await notificationWorflowService.sendNotification(
-        NotificationWorkflowTypes.TRANSACTION_COMPLETED_EVENT,
+        NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
         transaction.id,
       );
 
       const transactionNotificationPayload =
-        transactionNotificationMapper.toTransactionExecutedNotificationParameters(transaction);
+        transactionNotificationMapper.toDepositCompletedNotificationParameters(transaction);
 
       const notificationPayload = prepareNotificationPayload(consumer, {
-        transactionExecutedParams: transactionNotificationPayload,
+        depositCompletedParams: transactionNotificationPayload,
       });
       verify(
         notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
+          NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
           deepEqual(notificationPayload),
         ),
       ).once();
     });
 
-    it("should send notification for transaction success with DEBIT and CREDIT side", async () => {
+    it("should send notification for deposit failed", async () => {
+      const consumerID = v4();
+      const consumer = getRandomConsumer(consumerID);
+      const transaction = getRandomTransaction(consumerID);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT, transaction.id);
+
+      const transactionNotificationPayload =
+        transactionNotificationMapper.toDepositFailedNotificationParameters(transaction);
+
+      const notificationPayload = prepareNotificationPayload(consumer, {
+        depositFailedParams: transactionNotificationPayload,
+      });
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should send notification for withdrawal", async () => {
+      const consumerID = v4();
+      const consumer = getRandomConsumer(consumerID);
+      const transaction = getRandomTransaction(consumerID);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(
+        NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT,
+        transaction.id,
+      );
+
+      const transactionNotificationPayload =
+        transactionNotificationMapper.toWithdrawalCompletedNotificationParameters(transaction);
+
+      const notificationPayload = prepareNotificationPayload(consumer, {
+        withdrawalCompletedParams: transactionNotificationPayload,
+      });
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should send notification for withdrawal failed", async () => {
+      const consumerID = v4();
+      const consumer = getRandomConsumer(consumerID);
+      const transaction = getRandomTransaction(consumerID);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(
+        NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT,
+        transaction.id,
+      );
+
+      const transactionNotificationPayload =
+        transactionNotificationMapper.toWithdrawalFailedNotificationParameters(transaction);
+
+      const notificationPayload = prepareNotificationPayload(consumer, {
+        withdrawalFailedParams: transactionNotificationPayload,
+      });
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should send notification transfer success", async () => {
       const consumerID = v4();
       const consumerID2 = v4();
       const consumer = getRandomConsumer(consumerID);
@@ -100,125 +175,33 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
       await notificationWorflowService.sendNotification(
-        NotificationWorkflowTypes.TRANSACTION_COMPLETED_EVENT,
+        NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT,
         transaction.id,
       );
 
       const transactionNotificationPayload =
-        transactionNotificationMapper.toTransactionExecutedNotificationParameters(transaction);
+        transactionNotificationMapper.toTransferCompletedNotificationParameters(transaction);
 
       const notificationPayload = prepareNotificationPayload(consumer, {
-        transactionExecutedParams: transactionNotificationPayload,
+        transferCompletedParams: transactionNotificationPayload,
       });
 
       const notificationPayload2 = prepareNotificationPayload(consumer2, {
-        transactionExecutedParams: transactionNotificationPayload,
+        transferCompletedParams: transactionNotificationPayload,
       });
       verify(
         notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
+          NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
           deepEqual(notificationPayload),
         ),
       ).once();
 
       verify(
         notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT,
+          NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
           deepEqual(notificationPayload2),
         ),
       ).once();
-    });
-
-    it("should send transaction failure for DEBIT side", async () => {
-      const consumerID = v4();
-      const consumer = getRandomConsumer(consumerID);
-      const transaction = getRandomTransaction(consumerID);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
-
-      await notificationWorflowService.sendNotification(
-        NotificationWorkflowTypes.TRANSACTION_FAILED_EVENT,
-        transaction.id,
-      );
-
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toTransactionFailedNotificationParameters(transaction);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        transactionFailedParams: transactionNotificationPayload,
-      });
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
-          deepEqual(notificationPayload),
-        ),
-      ).once();
-    });
-
-    it("should send failure event for CREDIT side", async () => {
-      const consumerID = v4();
-      const consumer = getRandomConsumer(consumerID);
-      const transaction = getRandomTransaction(consumerID, null, WorkflowName.WALLET_WITHDRAWAL);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
-
-      await notificationWorflowService.sendNotification(
-        NotificationWorkflowTypes.TRANSACTION_FAILED_EVENT,
-        transaction.id,
-      );
-
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toTransactionFailedNotificationParameters(transaction);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        transactionFailedParams: transactionNotificationPayload,
-      });
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
-          deepEqual(notificationPayload),
-        ),
-      ).once();
-    });
-
-    it("should send transaction failure event for DEBIT side only when both sides are present", async () => {
-      const consumerID = v4();
-      const consumerID2 = v4();
-      const consumer = getRandomConsumer(consumerID);
-      const consumer2 = getRandomConsumer(consumerID2);
-      const transaction = getRandomTransaction(consumerID, consumerID2, WorkflowName.WALLET_TRANSFER);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      when(consumerService.getConsumer(consumerID2)).thenResolve(consumer2);
-      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
-
-      await notificationWorflowService.sendNotification(
-        NotificationWorkflowTypes.TRANSACTION_FAILED_EVENT,
-        transaction.id,
-      );
-
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toTransactionFailedNotificationParameters(transaction);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        transactionFailedParams: transactionNotificationPayload,
-      });
-
-      const notificationPayload2 = prepareNotificationPayload(consumer2, {
-        transactionFailedParams: transactionNotificationPayload,
-      });
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
-          deepEqual(notificationPayload),
-        ),
-      ).once();
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSACTION_FAILED_EVENT,
-          deepEqual(notificationPayload2),
-        ),
-      ).never();
     });
 
     it("should throw ServiceException when transaction is not found", async () => {
@@ -226,10 +209,7 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
 
       await expect(
-        notificationWorflowService.sendNotification(
-          NotificationWorkflowTypes.TRANSACTION_COMPLETED_EVENT,
-          transactionID,
-        ),
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, transactionID),
       ).rejects.toThrowError(ServiceException);
     });
 
@@ -271,8 +251,8 @@ function getRandomTransaction(
       break;
     case WorkflowName.WALLET_WITHDRAWAL:
       transaction.debitAmount = 100;
-      transaction.creditConsumerID = consumerID;
-      transaction.creditCurrency = Currency.COP;
+      transaction.debitConsumerID = consumerID;
+      transaction.debitCurrency = Currency.COP;
       break;
     case WorkflowName.WALLET_DEPOSIT:
       transaction.debitAmount = 100;

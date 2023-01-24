@@ -7,7 +7,6 @@ import { NotificationEventHandler, NotificationEventType } from "./domain/Notifi
 import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "./events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "./events/SendCardDeletedEvent";
-import { SendCryptoFailedEvent } from "./events/SendCryptoFailedEvent";
 import { SendDocumentVerificationPendingEvent } from "./events/SendDocumentVerificationPendingEvent";
 import { SendDocumentVerificationRejectedEvent } from "./events/SendDocumentVerificationRejectedEvent";
 import { SendDocumentVerificationTechnicalFailureEvent } from "./events/SendDocumentVerificationTechnicalFailureEvent";
@@ -16,12 +15,17 @@ import { SendKycApprovedNonUSEvent } from "./events/SendKycApprovedNonUSEvent";
 import { SendKycApprovedUSEvent } from "./events/SendKycApprovedUSEvent";
 import { SendKycDeniedEvent } from "./events/SendKycDeniedEvent";
 import { SendKycPendingOrFlaggedEvent } from "./events/SendKycPendingOrFlaggedEvent";
-import { SendOrderExecutedEvent } from "./events/SendOrderExecutedEvent";
-import { SendOrderFailedEvent } from "./events/SendOrderFailedEvent";
 import { SendOtpEvent } from "./events/SendOtpEvent";
-import { SendTransactionInitiatedEvent } from "./events/SendTransactionInitiatedEvent";
 import { SendWalletUpdateVerificationCodeEvent } from "./events/SendWalletUpdateVerificationCodeEvent";
 import { SendWelcomeMessageEvent } from "./events/SendWelcomeMessageEvent";
+import { SendDepositCompletedEvent } from "./events/SendDepositCompletedEvent";
+import { SendDepositInitiatedEvent } from "./events/SendDepositInitiatedEvent";
+import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
+import { SendWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
+import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEvent";
+import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
+import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
+import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 
 @Injectable()
 export class NotificationService {
@@ -49,6 +53,7 @@ export class NotificationService {
             email: payload.email,
             otp: payload.otp,
             name: payload.firstName,
+            handle: payload.handle,
             locale: payload.locale,
           }),
         );
@@ -204,58 +209,107 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT:
+      case NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
-          new SendTransactionInitiatedEvent({
+          new SendCollectionCompletedEvent({
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
             nobaUserID: payload.nobaUserID,
             locale: payload.locale,
-            params: payload.transactionInitiatedParams,
           }),
         );
         break;
-      case NotificationEventType.SEND_CRYPTO_FAILED_EVENT:
+      case NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
-          new SendCryptoFailedEvent({
+          new SendDepositCompletedEvent({
             email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
+            name: payload.firstName,
+            handle: payload.handle,
+            params: payload.depositCompletedParams,
             locale: payload.locale,
-            params: payload.cryptoFailedParams,
           }),
         );
         break;
-      case NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT:
+      case NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
-          new SendOrderExecutedEvent({
+          new SendDepositInitiatedEvent({
             email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
+            name: payload.firstName,
+            handle: payload.handle,
             locale: payload.locale,
-            params: payload.transactionExecutedParams,
+            params: payload.depositInitiatedParams,
           }),
         );
         break;
-      case NotificationEventType.SEND_TRANSACTION_FAILED_EVENT:
+      case NotificationEventType.SEND_DEPOSIT_FAILED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
-          new SendOrderFailedEvent({
+          new SendDepositFailedEvent({
             email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
+            name: payload.firstName,
+            handle: payload.handle,
             locale: payload.locale,
-            params: payload.transactionFailedParams,
+            params: payload.depositFailedParams,
           }),
         );
         break;
+
+      case NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendWithdrawalCompletedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.withdrawalCompletedParams,
+          }),
+        );
+        break;
+
+      case NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendWithdrawalInitiatedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.withdrawalInitiatedParams,
+          }),
+        );
+        break;
+
+      case NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendWithdrawalFailedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.withdrawalFailedParams,
+          }),
+        );
+        break;
+
+      case NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendWalletTransferEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.transferCompletedParams,
+          }),
+        );
+        break;
+
       case NotificationEventType.SEND_HARD_DECLINE_EVENT:
         this.eventEmitter.emitAsync(
           eventName,

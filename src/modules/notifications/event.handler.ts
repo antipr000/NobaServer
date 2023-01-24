@@ -1,6 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { CurrencyService } from "../common/currency.service";
 import { Logger } from "winston";
 import { EmailTemplates } from "./domain/EmailTemplates";
 import { Utils } from "../../core/utils/Utils";
@@ -20,12 +19,16 @@ import { SendDocumentVerificationTechnicalFailureEvent } from "./events/SendDocu
 import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "./events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "./events/SendCardDeletedEvent";
-import { SendTransactionInitiatedEvent } from "./events/SendTransactionInitiatedEvent";
-import { SendCryptoFailedEvent } from "./events/SendCryptoFailedEvent";
-import { SendOrderExecutedEvent } from "./events/SendOrderExecutedEvent";
-import { SendOrderFailedEvent } from "./events/SendOrderFailedEvent";
 import { SendHardDeclineEvent } from "./events/SendHardDeclineEvent";
 import { EmailService } from "./emails/email.service";
+import { SendDepositCompletedEvent } from "./events/SendDepositCompletedEvent";
+import { SendWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
+import { SendDepositInitiatedEvent } from "./events/SendDepositInitiatedEvent";
+import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
+import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEvent";
+import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
+import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
+import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -39,7 +42,6 @@ export class EventHandler {
   constructor(
     configService: CustomConfigService,
     @Inject("EmailService") private readonly emailService: EmailService,
-    @Inject(CurrencyService) private readonly currencyService: CurrencyService,
   ) {}
 
   @OnEvent(`email.${NotificationEventType.SEND_OTP_EVENT}`)
@@ -253,149 +255,212 @@ export class EventHandler {
     await this.emailService.sendEmail(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_INITIATED_EVENT}`)
-  public async sendTransactionInitiatedEmail(payload: SendTransactionInitiatedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
-
+  // TODO(jira/CRYPTO-604): Fix the parameters once template is ready
+  @OnEvent(`email.${NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT}`)
+  public async sendCollectionCompletedEvent(payload: SendCollectionCompletedEvent) {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSACTION_INITIATED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.COLLECTION_COMPLETED_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
         user_email: payload.email,
-        user_id: payload.email,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        conversion_rate: payload.params.conversionRate,
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        cryptocurrency: await this.getCryptocurrencyNameFromTicker(payload.params.cryptocurrency),
-        crypto_expected: payload.params.cryptoAmount,
+        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
       },
     };
 
     await this.emailService.sendEmail(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_CRYPTO_FAILED_EVENT}`)
-  public async sendCryptoFailedEmail(payload: SendCryptoFailedEvent) {
+  @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
+  public async sendDepositCompletedEmail(payload: SendDepositCompletedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CRYPTO_FAILED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_email: payload.email,
-        user_id: payload.email,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        conversion_rate: payload.params.conversionRate,
-        crypto_expected: payload.params.cryptoAmount,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        reason_failed: payload.params.failureReason,
-        cryptocurrency: await this.getCryptocurrencyNameFromTicker(payload.params.cryptocurrency),
+        firstName: payload.name,
+        debitAmount: payload.params.debitAmount,
+        creditAmount: payload.params.creditAmount,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
       },
     };
 
     await this.emailService.sendEmail(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_COMPLETED_EVENT}`)
-  public async sendOrderExecutedEmail(payload: SendOrderExecutedEvent) {
+  @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT}`)
+  public async sendDepositInitiatedEmail(payload: SendDepositInitiatedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ORDER_EXECUTED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_email: payload.email,
-        user_id: payload.email,
-        transaction_hash: payload.params.transactionHash,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        settled_timestamp: payload.params.settledTimestamp.toLocaleString(),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        conversion_rate: payload.params.conversionRate,
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        cryptocurrency: await this.getCryptocurrencyNameFromTicker(payload.params.cryptocurrency),
-        crypto_received: payload.params.cryptoAmount,
-        crypto_expected: payload.params.cryptoAmountExpected,
+        firstName: payload.name,
+        totalPrice: payload.params.totalPrice,
+        debitCurrency: payload.params.debitCurrency,
+        creditAmount: payload.params.creditAmount,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        nobaFee: payload.params.nobaFees,
       },
     };
 
     await this.emailService.sendEmail(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_TRANSACTION_FAILED_EVENT}`)
-  public async sendOrderFailedEmail(payload: SendOrderFailedEvent) {
+  @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
+  public async sendDepositFailedEmail(payload: SendDepositFailedEvent) {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFee) -
-      Utils.roundTo2DecimalNumber(payload.params.networkFee) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFee);
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ORDER_FAILED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        transaction_id: payload.params.transactionID,
-        user_id: payload.email,
-        user_email: payload.email,
-        fiat_currency_code: payload.params.fiatCurrency,
-        card_network: payload.params.paymentMethod,
-        last_four: payload.params.last4Digits,
-        order_date: payload.params.transactionTimestamp.toLocaleString(),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        conversion_rate: payload.params.conversionRate,
-        processing_fees: Utils.roundTo2DecimalString(payload.params.processingFee),
-        network_fees: Utils.roundTo2DecimalString(payload.params.networkFee),
-        noba_fee: Utils.roundTo2DecimalString(payload.params.nobaFee),
-        total_price: Utils.roundTo2DecimalString(payload.params.totalPrice),
-        cryptocurrency_code: payload.params.cryptocurrency,
-        cryptocurrency: await this.getCryptocurrencyNameFromTicker(payload.params.cryptocurrency),
-        crypto_expected: payload.params.cryptoAmount,
-        reason_declined: payload.params.failureReason,
+        firstName: payload.name,
+        totalPrice: payload.params.totalPrice,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        reasonDeclined: payload.params.reasonDeclined,
+      },
+    };
+
+    await this.emailService.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
+  public async sendWithdrawalCompletedEmail(payload: SendWithdrawalCompletedEvent) {
+    const subtotal =
+      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
+      dynamicTemplateData: {
+        firstName: payload.name,
+        creditAmount: payload.params.creditAmount,
+        creditCurrency: payload.params.creditCurrency,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+      },
+    };
+
+    await this.emailService.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT}`)
+  public async sendWithdrawalInitiatedEmail(payload: SendWithdrawalInitiatedEvent) {
+    const subtotal =
+      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL[payload.locale ?? "en"],
+      dynamicTemplateData: {
+        firstName: payload.name,
+        withdrawalAmount: payload.params.withdrawalAmount,
+        creditCurrency: payload.params.creditCurrency,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        debitCurrency: payload.params.debitCurrency,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        nobaFee: payload.params.nobaFees,
+        totalPrice: payload.params.totalPrice,
+      },
+    };
+
+    await this.emailService.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`)
+  public async sendWithdrawalFailedEmail(payload: SendWithdrawalFailedEvent) {
+    const subtotal =
+      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL[payload.locale ?? "en"],
+      dynamicTemplateData: {
+        firstName: payload.name,
+        handle: payload.handle,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        debitCurrency: payload.params.debitCurrency,
+        subtotal: subtotal,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        processingFees: payload.params.processingFees,
+        nobaFee: payload.params.nobaFees,
+        totalPrice: payload.params.totalPrice,
+        reasonDeclined: payload.params.reasonDeclined,
+      },
+    };
+
+    await this.emailService.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`)
+  public async sendTransferCompletedEmail(payload: SendTransferCompletedEvent) {
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
+      dynamicTemplateData: {
+        firstName: payload.name,
+        debitAmount: payload.params.debitAmount,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        processingFees: payload.params.processingFees,
+        fiatCurrencyCode: payload.params.fiatCurrencyCode,
+        nobaFee: payload.params.nobaFees,
+        totalPrice: payload.params.totalPrice,
       },
     };
 
@@ -422,15 +487,5 @@ export class EventHandler {
     };
 
     await this.emailService.sendEmail(msg);
-  }
-
-  private async getCryptocurrencyNameFromTicker(ticker: string): Promise<string> {
-    const cryptoCurrency = await this.currencyService.getCryptocurrency(ticker);
-    // Quite unlikely this would happen
-    if (cryptoCurrency === null || cryptoCurrency === undefined) {
-      this.logger.error(`Unable to find cryptocurrency entry for ticker ${ticker}`);
-      return ticker;
-    }
-    return cryptoCurrency.name;
   }
 }

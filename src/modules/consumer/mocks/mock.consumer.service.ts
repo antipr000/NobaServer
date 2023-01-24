@@ -9,7 +9,6 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
     new Error("Method not implemented"),
   );
   when(mockConsumerService.findConsumersByContactInfo(anything())).thenReject(new Error("Method not implemented"));
-  when(mockConsumerService.findConsumerById(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerIDByHandle(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerIDByReferralCode(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerByEmailOrPhone(anyString())).thenReject(new Error("Method not implemented"));

@@ -53,7 +53,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     switch (identityType) {
       case consumerIdentityIdentifier:
         try {
-          const consumer = await this.consumerService.findConsumerById(id);
+          const consumer = await this.consumerService.getConsumer(id);
           return {
             entity: consumer,
           };

@@ -227,7 +227,7 @@ describe("ConsumerService", () => {
     });
   });
 
-  describe("findConsumerById", () => {
+  describe("getConsumer", () => {
     it("should find the consumer", async () => {
       const email = "mock-user@noba.com";
 
@@ -238,7 +238,7 @@ describe("ConsumerService", () => {
       });
 
       when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
-      const response = await consumerService.findConsumerById(consumerID);
+      const response = await consumerService.getConsumer(consumerID);
       expect(response).toStrictEqual(consumer);
     });
 
@@ -246,7 +246,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumer("missing-consumer")).thenThrow(new NotFoundException());
 
       expect(async () => {
-        await consumerService.findConsumerById("missing-consumer");
+        await consumerService.getConsumer("missing-consumer");
       }).rejects.toThrow(NotFoundException);
     });
   });

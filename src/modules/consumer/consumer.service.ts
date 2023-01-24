@@ -352,10 +352,6 @@ export class ConsumerService {
     return consumerResult;
   }
 
-  async findConsumerById(consumerId: string): Promise<Consumer> {
-    return this.consumerRepo.getConsumer(consumerId);
-  }
-
   /**
    * Takes a consumer ID or handle and looks up the Consumer, then checks the various flags and KYC status
    * to ensure they are in good standing before finally returning the Consumer object.
@@ -692,19 +688,19 @@ export class ConsumerService {
   ): Promise<Employee> {
     if (allocationAmountInPesos < 0) {
       throw new ServiceException({
-        message: `'allocationAmountInPesos' should be greater than 0`,
+        message: "'allocationAmountInPesos' should be greater than 0",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
     if (!consumerID) {
       throw new ServiceException({
-        message: `'consumerID' should be provided`,
+        message: "'consumerID' should be provided",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
     if (!employerReferralID) {
       throw new ServiceException({
-        message: `'employerReferralID' should be provided`,
+        message: "'employerReferralID' should be provided",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
