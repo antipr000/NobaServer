@@ -38,7 +38,9 @@ describe("NotificationService", () => {
 
   describe("sendNotification", () => {
     it("should send notification", async () => {
-      await notificationWorkflowController.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, "test");
+      await notificationWorkflowController.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, {
+        transactionID: "test",
+      });
 
       verify(
         notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, "test"),
