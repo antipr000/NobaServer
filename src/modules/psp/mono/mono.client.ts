@@ -151,6 +151,7 @@ export class MonoClient {
             document_number: request.documentNumber,
             document_type: request.documentType,
           },
+          reference: request.transactionRef,
         },
       ],
     };

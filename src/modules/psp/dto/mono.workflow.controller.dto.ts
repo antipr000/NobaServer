@@ -24,9 +24,12 @@ export class MonoTransactionDTO {
   updatedTimestamp: Date;
 }
 
-export class MonoCreditRequestDTO {
+export class MonoWithdrawlRequestDTO {
   @ApiProperty()
   transactionID: string;
+
+  @ApiProperty()
+  transactionRef: string;
 
   @ApiProperty()
   amount: number;
@@ -50,4 +53,7 @@ export class MonoCreditRequestDTO {
 
   @ApiProperty()
   documentType: string;
+
+  @ApiProperty()
+  consumerID: string;
 }

@@ -9,6 +9,7 @@ export type CreateMonoTransactionRequest = {
 
 export type WithdrawMonoRequest = {
   transactionID: string;
+  transactionRef: string;
   amount: number;
   currency: string;
 

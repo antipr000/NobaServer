@@ -48,7 +48,6 @@ export class MonoService {
   }
 
   async withdrawFromNoba(request: WithdrawMonoRequest): Promise<MonoWithdrawal> {
-    const consumer: Consumer = await this.consumerService.getConsumer(request.consumerID);
     if (request.currency !== MonoCurrency.COP) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -56,8 +55,17 @@ export class MonoService {
       });
     }
 
+    const consumer: Consumer = await this.consumerService.getConsumer(request.consumerID);
+    if (!consumer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Consumer not found",
+      });
+    }
+
     return await this.monoClient.transfer({
       transactionID: request.transactionID,
+      transactionRef: request.transactionRef,
       amount: request.amount,
       currency: request.currency,
       bankAccountCode: request.bankAccountCode,

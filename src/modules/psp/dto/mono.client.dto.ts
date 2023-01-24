@@ -16,6 +16,7 @@ export type MonoClientCollectionLinkResponse = {
 
 export type MonoWithdrawalRequest = {
   transactionID: string;
+  transactionRef: string;
   amount: number;
   currency: MonoCurrency;
   consumerEmail: string;
