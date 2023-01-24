@@ -5,20 +5,66 @@ import { Logger } from "winston";
 import { Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
+import { CreateEmployerRequestDTO } from "./dto/employer.service.dto";
 
 @Injectable()
 export class EmployerService {
+  private readonly MAX_LEAD_DAYS = 5;
+
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async createEmployer(name: string, logoURI: string, referralID: string, bubbleID: string): Promise<Employer> {
+  private validateLeadDays(leadDays: number): void {
+    if (leadDays > this.MAX_LEAD_DAYS || leadDays < 1) {
+      throw new ServiceException({
+        message: `Lead days cannot be more than ${this.MAX_LEAD_DAYS}`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+  }
+
+  private validatePaymentSchedules(paymentSchedules: number[]): void {
+    const badSchedules = paymentSchedules.filter(schedule => schedule < 1 || schedule > 31);
+    const duplicateSchedules = paymentSchedules.filter(
+      (schedule, index) => paymentSchedules.indexOf(schedule) !== index,
+    );
+
+    if (badSchedules.length > 0) {
+      throw new ServiceException({
+        message: `Invalid payment schedules: ${badSchedules}`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (duplicateSchedules.length > 0) {
+      throw new ServiceException({
+        message: `Duplicate payment schedules: ${duplicateSchedules}`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+  }
+
+  async createEmployer(request: CreateEmployerRequestDTO): Promise<Employer> {
+    // Note - Don't replace it with "0". It will be treated as false.
+    if (request.leadDays === undefined || request.leadDays === null) {
+      request.leadDays = 1;
+    }
+    this.validateLeadDays(request.leadDays);
+
+    if (!request.paymentSchedules || request.paymentSchedules.length === 0) {
+      request.paymentSchedules = [31];
+    }
+    this.validatePaymentSchedules(request.paymentSchedules);
+
     return this.employerRepo.createEmployer({
-      name: name,
-      logoURI: logoURI,
-      referralID: referralID,
-      bubbleID: bubbleID,
+      name: request.name,
+      logoURI: request.logoURI,
+      referralID: request.referralID,
+      bubbleID: request.bubbleID,
+      leadDays: request.leadDays,
+      paymentSchedules: request.paymentSchedules,
     });
   }
 

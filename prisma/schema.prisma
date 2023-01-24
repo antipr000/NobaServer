@@ -94,6 +94,8 @@ model Employer {
   logoURI          String
   referralID       String     @unique()
   bubbleID         String     @unique()
+  leadDays         Int
+  paymentSchedules Int[]
   Employee         Employee[]
 
   @@index([referralID])

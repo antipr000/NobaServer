@@ -25,6 +25,8 @@ const getRandomEmployer = (): Employer => {
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
+    leadDays: 1,
+    paymentSchedules: [30],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -146,7 +148,84 @@ describe("BubbleServiceTests", () => {
     it("should register an employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
 
-      when(employerService.createEmployer(anyString(), anyString(), anyString(), anyString())).thenResolve(employer);
+      when(employerService.createEmployer(anything())).thenResolve(employer);
+
+      const result = await bubbleService.registerEmployerInNoba({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        paymentSchedules: employer.paymentSchedules,
+      });
+
+      expect(result).toEqual(employer.id);
+
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        paymentSchedules: employer.paymentSchedules,
+      });
+    });
+
+    it("shouldn't forward 'leadDays' if not set in the request to register an employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+
+      when(employerService.createEmployer(anything())).thenResolve(employer);
+
+      const result = await bubbleService.registerEmployerInNoba({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        paymentSchedules: employer.paymentSchedules,
+      });
+
+      expect(result).toEqual(employer.id);
+
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        paymentSchedules: employer.paymentSchedules,
+      });
+    });
+
+    it("shouldn't forward 'paymentSchedules' if not set in the request to register an employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+
+      when(employerService.createEmployer(anything())).thenResolve(employer);
+
+      const result = await bubbleService.registerEmployerInNoba({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+      });
+
+      expect(result).toEqual(employer.id);
+
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+      });
+    });
+
+    it("shouldn't forward both 'leadDays' & 'paymentSchedules' if they are not set in the request to register an employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+
+      when(employerService.createEmployer(anything())).thenResolve(employer);
 
       const result = await bubbleService.registerEmployerInNoba({
         name: employer.name,
@@ -157,16 +236,13 @@ describe("BubbleServiceTests", () => {
 
       expect(result).toEqual(employer.id);
 
-      const [
-        employerServiceCreateEmployerArgsName,
-        employerServiceCreateEmployerArgsLogoURI,
-        employerServiceCreateEmployerArgsReferralID,
-        employerServiceCreateEmployerArgsBubbleID,
-      ] = capture(employerService.createEmployer).last();
-      expect(employerServiceCreateEmployerArgsName).toEqual(employer.name);
-      expect(employerServiceCreateEmployerArgsBubbleID).toEqual(employer.bubbleID);
-      expect(employerServiceCreateEmployerArgsLogoURI).toEqual(employer.logoURI);
-      expect(employerServiceCreateEmployerArgsReferralID).toEqual(employer.referralID);
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+      });
     });
   });
 

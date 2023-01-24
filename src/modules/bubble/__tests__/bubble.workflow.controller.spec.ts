@@ -62,5 +62,53 @@ describe("BubbleWorkflowControllerTests", () => {
         referralID: "referralID",
       });
     });
+
+    it("should forwards the 'leadDays' in request to the BubbleService", async () => {
+      const requestBody = {
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        leadDays: 5,
+      };
+      when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
+
+      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+
+      expect(result).toEqual("nobaEmployerID");
+
+      const [bubbleServiceRegisterEmployerInNobaArgs] = capture(bubbleService.registerEmployerInNoba).last();
+      expect(bubbleServiceRegisterEmployerInNobaArgs).toEqual({
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        leadDays: 5,
+      });
+    });
+
+    it("should forwards the 'paymentSchedules' in request to the BubbleService", async () => {
+      const requestBody = {
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        paymentSchedules: [5],
+      };
+      when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
+
+      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+
+      expect(result).toEqual("nobaEmployerID");
+
+      const [bubbleServiceRegisterEmployerInNobaArgs] = capture(bubbleService.registerEmployerInNoba).last();
+      expect(bubbleServiceRegisterEmployerInNobaArgs).toEqual({
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        paymentSchedules: [5],
+      });
+    });
   });
 });

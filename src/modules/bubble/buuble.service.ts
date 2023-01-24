@@ -47,12 +47,14 @@ export class BubbleService {
   }
 
   async registerEmployerInNoba(request: RegisterEmployerRequest): Promise<string> {
-    const employer: Employer = await this.employerService.createEmployer(
-      request.name,
-      request.logoURI,
-      request.referralID,
-      request.bubbleID,
-    );
+    const employer: Employer = await this.employerService.createEmployer({
+      name: request.name,
+      referralID: request.referralID,
+      logoURI: request.logoURI,
+      bubbleID: request.bubbleID,
+      ...(request.leadDays && { leadDays: request.leadDays }),
+      ...(request.paymentSchedules && { paymentSchedules: request.paymentSchedules }),
+    });
 
     return employer.id;
   }

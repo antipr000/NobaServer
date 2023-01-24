@@ -67,6 +67,8 @@ const getRandomEmployer = (): Employer => {
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
+    leadDays: 1,
+    paymentSchedules: [30],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };

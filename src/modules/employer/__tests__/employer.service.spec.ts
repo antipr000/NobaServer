@@ -9,7 +9,7 @@ import { anything, capture, instance, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
 import { uuid } from "uuidv4";
 import { Employer } from "../domain/Employer";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -18,6 +18,8 @@ const getRandomEmployer = (): Employer => {
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
+    leadDays: 5,
+    paymentSchedules: [1, 15],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -63,12 +65,14 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       when(employerRepo.createEmployer(anything())).thenResolve(employer);
 
-      const createdEmployer = await employerService.createEmployer(
-        employer.name,
-        employer.logoURI,
-        employer.referralID,
-        employer.bubbleID,
-      );
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        paymentSchedules: employer.paymentSchedules,
+      });
 
       expect(createdEmployer).toEqual(employer);
 
@@ -78,7 +82,108 @@ describe("EmployerServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         bubbleID: employer.bubbleID,
+        leadDays: employer.leadDays,
+        paymentSchedules: employer.paymentSchedules,
       });
+    });
+
+    it("should set default 'leadDays' as '1' if not specified", async () => {
+      const employer = getRandomEmployer();
+      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        paymentSchedules: employer.paymentSchedules,
+      });
+
+      employer.leadDays = 1;
+      expect(createdEmployer).toEqual(employer);
+
+      const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
+      expect(propagatedEmployerCreateRequest).toEqual({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        bubbleID: employer.bubbleID,
+        leadDays: 1,
+        paymentSchedules: employer.paymentSchedules,
+      });
+    });
+
+    it("should set default 'paymentSchedule' as '[31]' if not specified", async () => {
+      const employer = getRandomEmployer();
+      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+      });
+
+      employer.paymentSchedules = [31];
+      expect(createdEmployer).toEqual(employer);
+
+      const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
+      expect(propagatedEmployerCreateRequest).toEqual({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        bubbleID: employer.bubbleID,
+        leadDays: employer.leadDays,
+        paymentSchedules: [31],
+      });
+    });
+
+    const invalidLeadDays = [0, -1, 6, 10];
+    test.each(invalidLeadDays)("should throw ServiceException if leadDays is set to: %s", async invalidLeadDay => {
+      const employer = getRandomEmployer();
+      employer.leadDays = invalidLeadDay;
+
+      try {
+        await employerService.createEmployer({
+          name: employer.name,
+          logoURI: employer.logoURI,
+          bubbleID: employer.bubbleID,
+          referralID: employer.referralID,
+          leadDays: employer.leadDays,
+          paymentSchedules: employer.paymentSchedules,
+        });
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+        expect(err.message).toEqual(expect.stringContaining("Lead days"));
+      }
+    });
+
+    it("should throw error if the PaymentSchedule is invalid", async () => {
+      const invalidPaymentSchedules: number[][] = [[0], [1, 15, 32], [15, 15], [15, 0]];
+
+      for (const invalidPaymentSchedule of invalidPaymentSchedules) {
+        const employer = getRandomEmployer();
+        employer.paymentSchedules = invalidPaymentSchedule as any;
+
+        try {
+          await employerService.createEmployer({
+            name: employer.name,
+            logoURI: employer.logoURI,
+            bubbleID: employer.bubbleID,
+            referralID: employer.referralID,
+            leadDays: employer.leadDays,
+            paymentSchedules: employer.paymentSchedules,
+          });
+          expect(true).toBeFalsy();
+        } catch (err) {
+          expect(err).toBeInstanceOf(ServiceException);
+          expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+          expect(err.message).toEqual(expect.stringContaining("payment schedules"));
+        }
+      }
     });
   });
 

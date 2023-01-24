@@ -39,6 +39,8 @@ export class SqlEmployerRepo implements IEmployerRepo {
         referralID: request.referralID,
         bubbleID: request.bubbleID,
         logoURI: request.logoURI,
+        leadDays: request.leadDays,
+        paymentSchedules: request.paymentSchedules,
       };
 
       const returnedEmployer: EmployerPrismaModel = await this.prismaService.employer.create({

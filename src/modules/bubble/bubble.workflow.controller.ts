@@ -25,6 +25,8 @@ export class BubbleWorkflowController {
       logoURI: requestBody.logoURI,
       name: requestBody.name,
       referralID: requestBody.referralID,
+      leadDays: requestBody.leadDays,
+      paymentSchedules: requestBody.paymentSchedules,
     });
     return nobaEmployerID;
   }

@@ -1,4 +1,4 @@
-export type RegisterEmployerRequest = {
+export type CreateEmployerRequestDTO = {
   name: string;
   logoURI: string;
   referralID: string;
