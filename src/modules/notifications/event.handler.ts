@@ -28,6 +28,7 @@ import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEvent";
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
+import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -248,6 +249,22 @@ export class EventHandler {
         card_network: payload.cardNetwork,
         last_four: payload.last4Digits,
         support_url: SUPPORT_URL,
+      },
+    };
+
+    await this.emailService.sendEmail(msg);
+  }
+
+  // TODO(jira/CRYPTO-604): Fix the parameters once template is ready
+  @OnEvent(`email.${NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT}`)
+  public async sendCollectionCompletedEvent(payload: SendCollectionCompletedEvent) {
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.COLLECTION_COMPLETED_EMAIL[payload.locale ?? "en"],
+      dynamicTemplateData: {
+        user_email: payload.email,
+        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
       },
     };
 

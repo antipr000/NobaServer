@@ -31,6 +31,7 @@ import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedE
 import { TransactionParameters } from "../domain/TransactionNotificationParameters";
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
+import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
 
 describe("EventHandlerService", () => {
   let currencyService: CurrencyService;
@@ -380,6 +381,29 @@ describe("EventHandlerService", () => {
         card_network: payload.cardNetwork,
         last_four: payload.last4Digits,
         support_url: SUPPORT_URL,
+      },
+    });
+  });
+
+  it("should call eventHandler with SendCollectionCompleted event", async () => {
+    const payload = new SendCollectionCompletedEvent({
+      email: "fake+user@noba.com",
+      firstName: "Fake",
+      lastName: "Name",
+      locale: "en",
+      nobaUserID: "fake-noba-user-id",
+    });
+
+    await eventHandler.sendCollectionCompletedEvent(payload);
+
+    const [emailRequest] = capture(emailService.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.COLLECTION_COMPLETED_EMAIL["en"],
+      dynamicTemplateData: {
+        user_email: payload.email,
+        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
       },
     });
   });

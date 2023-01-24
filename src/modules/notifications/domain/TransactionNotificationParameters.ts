@@ -45,6 +45,7 @@ export interface TransferCompletedNotificationParameters extends TransactionPara
   debitAmount: number;
 }
 
+// TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
   toTransactionParams(transaction: Transaction): TransactionParameters {
     return {
