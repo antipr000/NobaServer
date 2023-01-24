@@ -5,6 +5,9 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
   const mockConsumerService: ConsumerService = mock(ConsumerService);
 
   when(mockConsumerService.getConsumer(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerService.findConsumersByPublicInfo(anyString(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
   when(mockConsumerService.findConsumersByContactInfo(anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerById(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.findConsumerIDByHandle(anyString())).thenReject(new Error("Method not implemented"));

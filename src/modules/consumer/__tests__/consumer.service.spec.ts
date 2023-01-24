@@ -1216,16 +1216,20 @@ describe("ConsumerService", () => {
         id: "mockConsumer",
         phone: "+15559993333",
         email: "mock@mock.com",
+        firstName: "mock",
+        lastName: "mock",
       });
       const consumer2 = Consumer.createConsumer({
         id: "mockConsumer2",
         phone: "+15559993333",
         email: "mock2@mock.com",
+        firstName: "mock",
+        lastName: "mock",
       });
 
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
-        { id: "linkid2", phoneNumbers: [], emails: [consumer2.props.email] },
+        { phoneNumbers: [], emails: [consumer.props.email] },
+        { phoneNumbers: [], emails: [consumer2.props.email] },
       ];
 
       when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(Result.ok(consumer));
@@ -1237,8 +1241,8 @@ describe("ConsumerService", () => {
 
     it("should return null array if no consumers found", async () => {
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [], emails: ["mock-unknown@mock.com"] },
-        { id: "linkid2", phoneNumbers: [], emails: ["mock-unknown-2@mock.com"] },
+        { phoneNumbers: [], emails: ["mock-unknown@mock.com"] },
+        { phoneNumbers: [], emails: ["mock-unknown-2@mock.com"] },
       ];
 
       when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(Result.fail("Not found"));
@@ -1252,19 +1256,23 @@ describe("ConsumerService", () => {
       const consumer = Consumer.createConsumer({
         id: "mockConsumer",
         phone: "+15559993333",
+        firstName: "mock",
+        lastName: "mock",
       });
       const consumer2 = Consumer.createConsumer({
         id: "mockConsumer2",
         phone: "+15559993333",
+        firstName: "mock",
+        lastName: "mock",
       });
 
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [{ countryCode: "US", digits: "5553339999" }], emails: [] },
-        { id: "linkid2", phoneNumbers: [{ countryCode: "CO", digits: "5553339999" }], emails: [] },
+        { phoneNumbers: [{ countryCode: "US", digits: "5553339999" }], emails: [] },
+        { phoneNumbers: [{ countryCode: "CO", digits: "5553339999" }], emails: [] },
       ];
 
-      const contactInfo = { id: "linkid1", phoneNumbers: ["+15553339999"], emails: [] };
-      const contactInfo2 = { id: "linkid2", phoneNumbers: ["+575553339999"], emails: [] };
+      const contactInfo = { phoneNumbers: ["+15553339999"], emails: [] };
+      const contactInfo2 = { phoneNumbers: ["+575553339999"], emails: [] };
       when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
       when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
 
@@ -1283,16 +1291,55 @@ describe("ConsumerService", () => {
       });
 
       const contactListDTO = [
-        { id: "linkid1", phoneNumbers: [], emails: [consumer.props.email] },
-        { id: "linkid2", phoneNumbers: [], emails: [consumer2.props.email] },
+        { phoneNumbers: [], emails: [consumer.props.email] },
+        { phoneNumbers: [], emails: [consumer2.props.email] },
       ];
 
-      const contactInfo = { id: "linkid1", phoneNumbers: [], emails: ["mock@mock.com"] };
-      const contactInfo2 = { id: "linkid2", phoneNumbers: [], emails: ["mock2@mock.com"] };
+      const contactInfo = { phoneNumbers: [], emails: ["mock@mock.com"] };
+      const contactInfo2 = { phoneNumbers: [], emails: ["mock2@mock.com"] };
       when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
       when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
 
       await consumerService.findConsumersByContactInfo(contactListDTO);
+    });
+  });
+
+  describe("findConsumersByPublicInfo", () => {
+    it("should find consumers by public info", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mockConsumer",
+        phone: "+15559993333",
+        email: "mock@mock.com",
+        firstName: "jon",
+        lastName: "doe",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mockConsumer2",
+        phone: "+15559993333",
+        email: "mock2@mock.com",
+        firstName: "jon",
+        lastName: "snow",
+      });
+
+      const expectedConsumers = [consumer, consumer2];
+
+      when(consumerRepo.findConsumersByPublicInfo("jon", 3)).thenResolve(Result.ok<Array<Consumer>>(expectedConsumers));
+
+      const consumers = await consumerService.findConsumersByPublicInfo("jon", 3);
+      expect(consumers).toEqual(expectedConsumers);
+    });
+
+    it("should return empty array if no consumers found", async () => {
+      when(consumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.ok([]));
+
+      const consumers = await consumerService.findConsumersByPublicInfo("unknown", 2);
+      expect(consumers).toEqual([]);
+    });
+
+    it("should throw ServiceException if findConsumers fails", async () => {
+      when(consumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.fail("Prisma failed!"));
+
+      expect(consumerService.findConsumersByPublicInfo("unknown", 2)).rejects.toThrow(ServiceException);
     });
   });
 

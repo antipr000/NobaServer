@@ -2,7 +2,6 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 import { Logger } from "winston";
-import { ConsumerService } from "../consumer/consumer.service";
 import { Consumer } from "../consumer/domain/Consumer";
 import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { EmployeeService } from "../employee/employee.service";
@@ -30,12 +29,14 @@ export class BubbleService {
       });
     }
 
-    return this.bubbleClient.registerNewEmployee({
+    const employer: Employer = await this.employerService.getEmployerByID(nobaEmployee.employerID);
+
+    await this.bubbleClient.registerNewEmployee({
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,
       phone: consumer.props.phone,
-      employerID: nobaEmployee.employerID,
+      employerReferralID: employer.referralID,
       nobaEmployeeID: nobaEmployee.id,
       allocationAmountInPesos: nobaEmployee.allocationAmount,
     });

@@ -106,6 +106,7 @@ describe("BubbleServiceTests", () => {
       const employee = getRandomEmployee(consumer.props.id, employer.id);
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
       when(bubbleClient.registerNewEmployee(anything())).thenResolve();
 
       await bubbleService.createEmployeeInBubble(employee.id, consumer);
@@ -116,7 +117,7 @@ describe("BubbleServiceTests", () => {
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
         phone: consumer.props.phone,
-        employerID: employee.employerID,
+        employerReferralID: employer.referralID,
         nobaEmployeeID: employee.id,
         allocationAmountInPesos: employee.allocationAmount,
       });

@@ -14,7 +14,8 @@ import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
-import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 
 @Injectable()
 export class MonoClient {
@@ -42,6 +43,24 @@ export class MonoClient {
     return {
       "x-idempotency-key": convertToUUIDv4(idempotencyKeySeed),
     };
+  }
+
+  async getSupportedBanks(): Promise<Array<SupportedBanksDTO>> {
+    const url = `${this.baseUrl}/${this.apiVersion}/banks`;
+    const headers = {
+      ...this.getAuthorizationHeader(),
+    };
+
+    try {
+      const { data } = await axios.get(url, { headers });
+      return data["banks"];
+    } catch (e) {
+      this.logger.error(`Failed to fetch bank list from mono. ${JSON.stringify(e)}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        message: "Failed to fetch data from Mono",
+      });
+    }
   }
 
   async createCollectionLink(request: MonoClientCollectionLinkRequest): Promise<MonoClientCollectionLinkResponse> {

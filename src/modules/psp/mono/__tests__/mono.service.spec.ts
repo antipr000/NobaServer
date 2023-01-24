@@ -34,7 +34,7 @@ const getRandomMonoTransaction = (): MonoTransaction => {
   };
 };
 
-describe("SqlMonoRepoTests", () => {
+describe("MonoServiceTests", () => {
   jest.setTimeout(20000);
 
   let monoRepo: IMonoRepo;
@@ -83,6 +83,90 @@ describe("SqlMonoRepoTests", () => {
 
   afterEach(async () => {
     app.close();
+  });
+
+  describe("getSupportedBanks", () => {
+    it("should return supported banks", async () => {
+      when(monoClient.getSupportedBanks()).thenResolve([
+        {
+          code: "007",
+          id: "bank_705urpPYaZjD0DYLIZqRee",
+          name: "BANCOLOMBIA",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+        {
+          code: "051",
+          id: "bank_7BcCOfq1cz3JnJhe5Icsf0",
+          name: "DAVIVIENDA BANK",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+      ]);
+
+      const banks = await monoService.getSupportedBanks();
+      expect(banks.length).toBe(2);
+      expect(banks[0].name).toBe("Bancolombia");
+      expect(banks[1].name).toBe("Davivienda Bank");
+    });
+
+    it("should keep abbreviations in caps", async () => {
+      when(monoClient.getSupportedBanks()).thenResolve([
+        {
+          code: "023",
+          id: "bank_6SXxM8Z9OWdURWTHZwzE7p",
+          name: "J.P. MORGAN COLOMBIA",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+      ]);
+
+      const banks = await monoService.getSupportedBanks();
+      expect(banks).toHaveLength(1);
+      expect(banks[0].name).toBe("J.P. Morgan Colombia");
+    });
+
+    it("should keep 'DE' in lowers", async () => {
+      when(monoClient.getSupportedBanks()).thenResolve([
+        {
+          code: "023",
+          id: "bank_6SXxM8Z9OWdURWTHZwzE7p",
+          name: "BANCO DE OCCIDENTE",
+          supported_account_types: ["savings_account", "checking_account"],
+        },
+      ]);
+
+      const banks = await monoService.getSupportedBanks();
+      expect(banks).toHaveLength(1);
+      expect(banks[0].name).toBe("Banco de Occidente");
+    });
+
+    it("should preserve casing for <3 letter words", async () => {
+      when(monoClient.getSupportedBanks()).thenResolve([
+        {
+          code: "286",
+          id: "bank_5oWcTFt5ExaPzWQ1A6Nntn",
+          name: "JFK COOPERATIVA FINANCIERA",
+          supported_account_types: ["savings_account"],
+        },
+      ]);
+
+      const banks = await monoService.getSupportedBanks();
+      expect(banks).toHaveLength(1);
+      expect(banks[0].name).toBe("JFK Cooperativa Financiera");
+    });
+
+    it("should keep BBVA in all caps", async () => {
+      when(monoClient.getSupportedBanks()).thenResolve([
+        {
+          code: "013",
+          id: "bank_4MIx1B3IkXnAqZ9QsrTiTa",
+          name: "BBVA",
+          supported_account_types: ["savings_account", "checking_account", "electronic_deposit"],
+        },
+      ]);
+
+      const banks = await monoService.getSupportedBanks();
+      expect(banks).toHaveLength(1);
+      expect(banks[0].name).toBe("BBVA");
+    });
   });
 
   describe("getTransactionByNobaTransactionID", () => {

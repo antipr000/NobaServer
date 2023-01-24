@@ -56,6 +56,7 @@ import { RegisterWithEmployerDTO } from "./dto/RegisterWithEmployerDTO";
 import { LinkedEmployerDTO } from "./dto/LinkedEmployerDTO";
 import { Employee } from "../employee/domain/Employee";
 import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
+import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 
 @Roles(Role.User)
 @ApiBearerAuth("JWT-auth")
@@ -344,23 +345,49 @@ export class ConsumerController {
   ): Promise<ContactConsumerResponseDTO[]> {
     const consumers = await this.consumerService.findConsumersByContactInfo(requestBody);
 
-    const response = consumers.map((contact, i) => {
-      if (!contact) {
+    const response = consumers.map((consumer, i) => {
+      if (!consumer) {
         return {
-          id: requestBody[i].id,
           consumerID: null,
           handle: null,
+          firstName: null,
+          lastName: null,
         };
       }
 
       return {
-        id: requestBody[i].id,
-        consumerID: contact.props.id,
-        handle: contact.props.handle,
+        consumerID: consumer.props.id,
+        handle: consumer.props.handle,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
       };
     });
 
     return response;
+  }
+
+  @Get("/search")
+  @ApiOperation({ summary: "Search for consumers based on public information." })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [ContactConsumerResponseDTO],
+    description: "List of consumers that match the search criteria",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  async searchConsumers(
+    @Query("query") query: string,
+    @Query("") limitDTO: OptionalLimitQueryDTO,
+    @AuthUser() consumer: Consumer,
+  ): Promise<ContactConsumerResponseDTO[]> {
+    const consumers = await this.consumerService.findConsumersByPublicInfo(query, limitDTO.limit || 10);
+    return consumers.map(consumer => {
+      return {
+        consumerID: consumer.props.id,
+        handle: consumer.props.handle,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+      };
+    });
   }
 
   @Post("/wallets")
