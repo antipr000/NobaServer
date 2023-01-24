@@ -10,7 +10,7 @@ export class WalletTransferImpl implements IWorkflowImpl {
   private readonly workflowExecutor: WorkflowExecutor;
 
   async preprocessTransactionParams(
-    transactionDetails: any,
+    transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
   ): Promise<InitiateTransactionDTO> {
     if (transactionDetails.debitConsumerIDOrTag) {

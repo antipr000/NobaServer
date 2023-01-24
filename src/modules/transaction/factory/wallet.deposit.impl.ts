@@ -26,7 +26,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
   private readonly monoService: MonoService;
 
   async preprocessTransactionParams(
-    transactionDetails: any,
+    transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
   ): Promise<InitiateTransactionDTO> {
     if (transactionDetails.creditConsumerIDOrTag) {

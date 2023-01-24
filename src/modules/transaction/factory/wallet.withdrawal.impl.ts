@@ -21,7 +21,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
   private readonly workflowExecutor: WorkflowExecutor;
 
   async preprocessTransactionParams(
-    transactionDetails: any,
+    transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
   ): Promise<InitiateTransactionDTO> {
     /* 
