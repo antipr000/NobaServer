@@ -39,13 +39,13 @@ export class MonoWithdrawlRequestDTO {
 
   // Eventually save bank account info in consumer
   @ApiProperty()
-  bankAccountCode: string;
+  bankCode: string;
 
   @ApiProperty()
-  bankAccountNumber: string;
+  accountNumber: string;
 
   @ApiProperty()
-  bankAccountType: string;
+  accountType: string;
 
   // Eventually save bank document info in consumer
   @ApiProperty()

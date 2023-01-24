@@ -142,9 +142,9 @@ export class MonoClient {
           entity_id: request.transactionID, // Same as idempotency key
           payee: {
             bank_account: {
-              bank_code: request.bankAccountCode,
-              number: request.bankAccountNumber,
-              type: request.bankAccountType,
+              bank_code: request.bankCode,
+              number: request.accountNumber,
+              type: request.accountType,
             },
             name: request.consumerName,
             email: request.consumerEmail,

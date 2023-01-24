@@ -14,9 +14,9 @@ export type WithdrawMonoRequest = {
   currency: string;
 
   // Eventually save bank account info in consumer
-  bankAccountCode: string;
-  bankAccountNumber: string;
-  bankAccountType: string;
+  bankCode: string;
+  accountNumber: string;
+  accountType: string;
 
   // Eventually save bank document info in consumer
   documentNumber: string;

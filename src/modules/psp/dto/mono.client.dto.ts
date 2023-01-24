@@ -23,9 +23,9 @@ export type MonoWithdrawalRequest = {
   consumerName: string;
   documentNumber: string;
   documentType: string;
-  bankAccountCode: string;
-  bankAccountNumber: string;
-  bankAccountType: string;
+  bankCode: string;
+  accountNumber: string;
+  accountType: string;
 };
 
 export type MonoWithdrawalResponse = {
