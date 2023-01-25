@@ -21,6 +21,7 @@ export class SecretProvider {
       if (!master) {
         if (GLOBAL_SECRETS_CACHE[secretName]) {
           resolve(GLOBAL_SECRETS_CACHE[secretName]);
+          return;
         } else {
           console.warn(
             `Secret "${secretName}" is not configured in the master cache. Please define it in the master cache.`,
