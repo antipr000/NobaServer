@@ -5,8 +5,6 @@ import { PrismaService } from "../../../infraproviders/PrismaService";
 import { ICircleRepo } from "../repos/circle.repo";
 import { SQLCircleRepo } from "../repos/sql.circle.repo";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { IConsumerRepo } from "../../consumer/repos/consumer.repo";
-import { SQLConsumerRepo } from "../../consumer/repos/sql.consumer.repo";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { v4 } from "uuid";
 import { Utils } from "../../../core/utils/Utils";
@@ -14,7 +12,6 @@ import { Utils } from "../../../core/utils/Utils";
 describe("CircleRepoTests", () => {
   jest.setTimeout(20000);
 
-  let consumerRepo: IConsumerRepo;
   let circleRepo: ICircleRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
@@ -27,10 +24,9 @@ describe("CircleRepoTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLCircleRepo, SQLConsumerRepo],
+      providers: [PrismaService, SQLCircleRepo],
     }).compile();
 
-    consumerRepo = app.get<SQLConsumerRepo>(SQLConsumerRepo);
     circleRepo = app.get<SQLCircleRepo>(SQLCircleRepo);
     prismaService = app.get<PrismaService>(PrismaService);
   });
@@ -47,7 +43,7 @@ describe("CircleRepoTests", () => {
   describe("getCircleWalletID", () => {
     it("should get a circle wallet id", async () => {
       const consumer = getRandomUser();
-      const createdConsumer = await consumerRepo.createConsumer(consumer);
+      const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
       const result = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
@@ -65,7 +61,7 @@ describe("CircleRepoTests", () => {
   describe("addConsumerCircleWalletID", () => {
     it("should add a consumer circle wallet id", async () => {
       const consumer = getRandomUser();
-      const createdConsumer = await consumerRepo.createConsumer(consumer);
+      const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
       const result = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
@@ -78,7 +74,7 @@ describe("CircleRepoTests", () => {
 
     it("should fail to add duplicate consumer circle wallet id", async () => {
       const consumer = getRandomUser();
-      const createdConsumer = await consumerRepo.createConsumer(consumer);
+      const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
       await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
@@ -104,4 +100,21 @@ const getRandomUser = (): Consumer => {
     handle: `@${v4()}`,
   };
   return Consumer.createConsumer(props);
+};
+
+const createConsumer = async (prismaService: PrismaService, consumer: Consumer): Promise<Consumer> => {
+  const createdConsumer = await prismaService.consumer.create({
+    data: {
+      id: consumer.props.id,
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      email: consumer.props.email,
+      displayEmail: consumer.props.displayEmail,
+      phone: consumer.props.phone,
+      handle: consumer.props.handle,
+      referralCode: consumer.props.referralCode,
+    },
+  });
+
+  return Consumer.createConsumer(createdConsumer);
 };

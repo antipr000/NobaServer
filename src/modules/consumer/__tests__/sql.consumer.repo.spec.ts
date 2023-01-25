@@ -14,8 +14,11 @@ import { WalletStatus } from "@prisma/client";
 import { Address } from "../domain/Address";
 import { Utils } from "../../../core/utils/Utils";
 import { EmployerService } from "../../../modules/employer/employer.service";
-import { instance } from "ts-mockito";
+import { anyString, instance, verify, when } from "ts-mockito";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { KmsService } from "../../../modules/common/kms.service";
+import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -33,11 +36,12 @@ describe("ConsumerRepoTests", () => {
   let consumerRepo: IConsumerRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
-  let consumerMapper: ConsumerMapper;
+  let kmsService: KmsService;
   let employerService: EmployerService;
 
   beforeAll(async () => {
     employerService = getMockEmployerServiceWithDefaults();
+    kmsService = getMockKMSServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -54,12 +58,15 @@ describe("ConsumerRepoTests", () => {
           provide: EmployerService,
           useFactory: () => instance(employerService),
         },
+        {
+          provide: KmsService,
+          useFactory: () => instance(kmsService),
+        },
       ],
     }).compile();
 
     consumerRepo = app.get<SQLConsumerRepo>(SQLConsumerRepo);
     prismaService = app.get<PrismaService>(PrismaService);
-    consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
   });
 
   afterAll(async () => {
@@ -460,6 +467,29 @@ describe("ConsumerRepoTests", () => {
 
       expect(updatedConsumerRecord.props.locale).toBe("es");
       expect(consumerRecord.locale).toBe("es");
+    });
+
+    it("should encrypt SocialSecurityNumber if provided", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const updateRequest: Partial<ConsumerProps> = {
+        address: {
+          streetLine1: "Main st",
+          city: "irvene",
+          countryCode: "US",
+          regionCode: "CA",
+          postalCode: "123456",
+        },
+        socialSecurityNumber: "000000002",
+      };
+      when(kmsService.encryptString(anyString(), KmsKeyType.SSN)).thenResolve("encrypted-ssn");
+
+      await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
+
+      const updatedConsumer = await consumerRepo.getConsumer(consumer.props.id);
+      expect(updatedConsumer.props.socialSecurityNumber).toBe("encrypted-ssn");
+      verify(kmsService.encryptString("000000002", KmsKeyType.SSN)).once();
     });
   });
 

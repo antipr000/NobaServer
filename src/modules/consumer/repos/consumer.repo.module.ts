@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { KmsService } from "../../../../src/modules/common/kms.service";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { SQLConsumerRepo } from "./sql.consumer.repo";
+import { CommonModule } from "../../../modules/common/common.module";
 
 const ConsumerRepoProvider = {
   provide: "ConsumerRepo",
@@ -9,9 +9,9 @@ const ConsumerRepoProvider = {
 };
 
 @Module({
-  imports: [InfraProvidersModule],
+  imports: [InfraProvidersModule, CommonModule],
   controllers: [],
-  providers: [ConsumerRepoProvider, KmsService],
+  providers: [ConsumerRepoProvider],
   exports: [ConsumerRepoProvider], //Need to access in PublicController
 })
 export class ConsumerRepoModule {}

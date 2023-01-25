@@ -5,7 +5,7 @@ import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { ITransactionRepo } from "./repo/transaction.repo";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { TRANSACTION_REPO_PROVIDER } from "./repo/transaction.repo.module";
+import { TRANSACTION_REPO_PROVIDER, WITHDRAWAL_DETAILS_REPO_PROVIDER } from "./repo/transaction.repo.module";
 import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
@@ -20,12 +20,15 @@ import { TransactionVerification } from "../verification/domain/TransactionVerif
 import { VerificationService } from "../verification/verification.service";
 import { KYCStatus } from "@prisma/client";
 import { WorkflowFactory } from "./factory/workflow.factory";
+import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
+import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
 
 @Injectable()
 export class TransactionService {
   constructor(
     @Inject(TRANSACTION_REPO_PROVIDER) private readonly transactionRepo: ITransactionRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    @Inject(WITHDRAWAL_DETAILS_REPO_PROVIDER) private readonly withdrawalDetailsRepo: IWithdrawalDetailsRepo,
     private readonly consumerService: ConsumerService,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly verificationService: VerificationService,
@@ -304,5 +307,13 @@ export class TransactionService {
       includeInternalEvents,
     );
     return transactionEvents;
+  }
+
+  async getWithdrawalDetails(transactionID: string): Promise<WithdrawalDetails> {
+    return this.withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transactionID);
+  }
+
+  async addWithdrawalDetails(withdrawalDetails: InputWithdrawalDetails): Promise<WithdrawalDetails> {
+    return this.withdrawalDetailsRepo.addWithdrawalDetails(withdrawalDetails);
   }
 }
