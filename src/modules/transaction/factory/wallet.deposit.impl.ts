@@ -11,19 +11,27 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
 import { MonoService } from "../../psp/mono/mono.service";
 import { MonoCurrency } from "../../psp/domain/Mono";
+import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
+import { Utils } from "../../../core/utils/Utils";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
+import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
+import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 
 export class WalletDepositImpl implements IWorkflowImpl {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
+  private depositFeeAmount: number;
+  private depositFeePercentage: number;
 
-  @Inject()
-  private readonly exchangeRateService: ExchangeRateService;
-
-  @Inject()
-  private readonly workflowExecutor: WorkflowExecutor;
-
-  @Inject()
-  private readonly monoService: MonoService;
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: CustomConfigService,
+    private readonly exchangeRateService: ExchangeRateService,
+    private readonly workflowExecutor: WorkflowExecutor,
+    private readonly monoService: MonoService,
+  ) {
+    this.depositFeeAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeAmount;
+    this.depositFeePercentage = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeePercentage;
+  }
 
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
@@ -100,5 +108,68 @@ export class WalletDepositImpl implements IWorkflowImpl {
     });
 
     this.workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef);
+  }
+
+  async calculateExchangeRate(
+    amount: number,
+    amountCurrency: Currency,
+    desiredCurrency: Currency,
+    exchangeRateFlags: ExchangeRateFlags[],
+  ): Promise<QuoteResponseDTO> {
+    /* Investigate: 
+    - Add global parameters to control processing fees
+    - Add global parameters to control noba fees
+    - Add consumer check for user promos
+    - Add tier based fees
+    */
+
+    const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+      amountCurrency,
+      desiredCurrency,
+    );
+
+    if (!exchangeRateDTO) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "No exchange rate found for currency pair",
+      });
+    }
+
+    const bankRate = exchangeRateDTO.bankRate;
+    const nobaRate = exchangeRateDTO.nobaRate;
+
+    const isCollection = exchangeRateFlags.includes(ExchangeRateFlags.IS_COLLECTION);
+    if (desiredCurrency === Currency.USD) {
+      // nobaRate = 1/5000 = 0.0002
+      // COP amount Desired: USD
+      // 2.65% + 900 COP + VAT
+      // VAT = 119%
+      // 3.1535% + 1071 COP NOMINALLY
+      if (isCollection) {
+        const bankFeeCOP = (0.0265 * amount + 900) * 1.19;
+        const bankFeeUSD = bankFeeCOP * bankRate;
+
+        const nobaFeeUSD = Math.min(amount * bankRate * this.depositFeePercentage, this.depositFeeAmount);
+        const nobaFeeCOP = nobaFeeUSD / bankRate;
+
+        const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate);
+        const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
+          postExchangeAmount - nobaFeeUSD - bankFeeUSD,
+        );
+
+        return {
+          nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
+          processingFee: Utils.roundTo2DecimalString(bankFeeUSD),
+          totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + bankFeeUSD),
+          quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
+          quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
+          nobaRate: Utils.roundTo2DecimalString(nobaRate),
+        };
+      }
+    }
+    throw new ServiceException({
+      errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      message: "COP deposit not supported",
+    });
   }
 }

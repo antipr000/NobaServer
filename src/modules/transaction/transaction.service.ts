@@ -29,6 +29,7 @@ import { WorkflowFactory } from "./factory/workflow.factory";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { ExchangeRateFlags } from "./domain/ExchangeRateFlags";
 
 @Injectable()
 export class TransactionService {
@@ -153,6 +154,7 @@ export class TransactionService {
     amountCurrency: Currency,
     desiredCurrency: Currency,
     workflowName: WorkflowName,
+    exchangeRateOptions: ExchangeRateFlags[],
   ): Promise<QuoteResponseDTO> {
     if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({
@@ -168,84 +170,9 @@ export class TransactionService {
       });
     }
 
-    const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-      amountCurrency,
-      desiredCurrency,
-    );
-
-    if (!exchangeRateDTO) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: "No exchange rate found for currency pair",
-      });
-    }
-
-    /* Investigate: 
-    - Add global parameters to control processing fees
-    - Add global parameters to control noba fees
-    - Add consumer check for user promos
-    - Add tier based fees
-    */
-
-    const nobaRate = exchangeRateDTO.nobaRate;
-
     let res: QuoteResponseDTO;
-
-    switch (workflowName) {
-      case WorkflowName.WALLET_TRANSFER:
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Wallet transfer not valid workflow for quote",
-        });
-      case WorkflowName.WALLET_WITHDRAWAL:
-        if (desiredCurrency === Currency.COP) {
-          // Noba rate = 5000
-          const nobaFeeUSD = Math.min(amount * this.depositFeePercentage, this.depositFeeAmount);
-          const nobaFeeCOP = nobaFeeUSD * nobaRate;
-
-          const processingFeeCOP = 2975;
-          const processingFeeUSD = processingFeeCOP / nobaRate;
-
-          // Do fees get calculated postExchange or preExchange?
-          const postExchangeAmount = amount * nobaRate;
-          const postExchangeAmountWithBankFees = postExchangeAmount - nobaFeeCOP - processingFeeCOP;
-
-          res = {
-            nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
-            processingFee: Utils.roundTo2DecimalString(processingFeeUSD),
-            totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + processingFeeUSD),
-            quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
-            quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
-            nobaRate: Utils.roundTo2DecimalString(nobaRate),
-          };
-        } else {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "Non-COP withdrawal not supported",
-          });
-        }
-
-        break;
-      case WorkflowName.WALLET_DEPOSIT:
-        if (desiredCurrency === Currency.COP) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "COP deposit not supported",
-          });
-        } else {
-          // nobaRate = 1/5000
-          const bankFeeCOP = 0.031535 * amount + 1071;
-          const bankFeeUSD = bankFeeCOP * nobaRate;
-          const nobaFeeUSD = Math.min(amount * nobaRate * this.depositFeePercentage, this.depositFeeAmount);
-          const nobaFeeCOP = nobaFeeUSD / nobaRate;
-
-          const postBankAmount = amount - bankFee;
-          desiredAmountWithBankFees = postBankAmount / nobaRate;
-        }
-        break;
-    }
-
-    return res;
+    const workflowImpl = this.transactionFactory.getWorkflowImplementation(workflowName);
+    return workflowImpl.calculateExchangeRate(amount, amountCurrency, desiredCurrency, exchangeRateOptions);
   }
 
   async updateTransaction(transactionID: string, transactionDetails: UpdateTransactionDTO): Promise<Transaction> {

@@ -9,16 +9,22 @@ import { ExchangeRateDTO } from "../../common/dto/ExchangeRateDTO";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
+import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
+import { Utils } from "../../../core/utils/Utils";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 
 export class WalletWithdrawalImpl implements IWorkflowImpl {
-  @Inject(WINSTON_MODULE_PROVIDER)
-  private readonly logger: Logger;
+  private withdrawalFeeAmount: number;
 
-  @Inject()
-  private readonly exchangeRateService: ExchangeRateService;
-
-  @Inject()
-  private readonly workflowExecutor: WorkflowExecutor;
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: CustomConfigService,
+    private readonly exchangeRateService: ExchangeRateService,
+    private readonly workflowExecutor: WorkflowExecutor,
+  ) {
+    this.withdrawalFeeAmount = 1; // Eventually pull from config service
+  }
 
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
@@ -103,5 +109,65 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       transaction.debitAmount,
       transaction.transactionRef,
     );
+  }
+
+  async calculateExchangeRate(
+    amount: number,
+    amountCurrency: Currency,
+    desiredCurrency: Currency,
+    exchangeRateFlags: ExchangeRateFlags[],
+  ): Promise<QuoteResponseDTO> {
+    /* Investigate: 
+    - Add global parameters to control processing fees
+    - Add global parameters to control noba fees
+    - Add consumer check for user promos
+    - Add tier based fees
+    */
+
+    const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+      amountCurrency,
+      desiredCurrency,
+    );
+
+    if (!exchangeRateDTO) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "No exchange rate found for currency pair",
+      });
+    }
+
+    const bankRate = exchangeRateDTO.bankRate;
+    const nobaRate = exchangeRateDTO.nobaRate;
+
+    if (desiredCurrency === Currency.COP) {
+      // Start with amount USD -> Noba Fee -> Noba Rate -> Processing Fee -> COP
+      // Start with amount USD -> Post Exchange amount ->
+      // Noba rate = 5000
+      // 1 USDC FEE
+
+      const nobaFeeUSD = this.withdrawalFeeAmount;
+
+      const processingFeeCOP = 2500 * 1.19;
+      const processingFeeUSD = Utils.roundTo2DecimalNumber(processingFeeCOP / bankRate); // Ask gal if this could just be 1 USD
+
+      // Do fees get calculated postExchange or preExchange?
+      const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate); // COP
+      const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
+        (amount - nobaFeeUSD - processingFeeUSD) * nobaRate,
+      );
+
+      return {
+        nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
+        processingFee: Utils.roundTo2DecimalString(processingFeeUSD),
+        totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + processingFeeUSD),
+        quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
+        quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
+        nobaRate: Utils.roundTo2DecimalString(nobaRate),
+      };
+    }
+    throw new ServiceException({
+      errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      message: "Non-COP withdrawal not supported",
+    });
   }
 }

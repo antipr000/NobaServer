@@ -1,5 +1,8 @@
-import { Transaction } from "../domain/Transaction";
+import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { Transaction, WorkflowName } from "../domain/Transaction";
+import { Currency } from "../domain/TransactionTypes";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
+import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 
 export interface IWorkflowImpl {
   preprocessTransactionParams(
@@ -8,4 +11,11 @@ export interface IWorkflowImpl {
   ): Promise<InitiateTransactionDTO>;
 
   initiateWorkflow(transaction: Transaction): Promise<void>;
+
+  calculateExchangeRate(
+    amount: number,
+    amountCurrency: Currency,
+    desiredCurrency: Currency,
+    exchangeRateFlags: ExchangeRateFlags[],
+  ): Promise<QuoteResponseDTO>;
 }
