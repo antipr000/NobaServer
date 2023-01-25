@@ -117,13 +117,6 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     desiredCurrency: Currency,
     exchangeRateFlags: ExchangeRateFlags[],
   ): Promise<QuoteResponseDTO> {
-    /* Investigate: 
-    - Add global parameters to control processing fees
-    - Add global parameters to control noba fees
-    - Add consumer check for user promos
-    - Add tier based fees
-    */
-
     const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
       amountCurrency,
       desiredCurrency,
