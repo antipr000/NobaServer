@@ -46,6 +46,10 @@ describe("Consumers", () => {
   });
 
   describe("GET /consumers/paymentmethods/plaid/token", () => {
+    afterEach(async () => {
+      await integrationTestUtils.reset();
+    });
+
     it("should return 401 if not logged in as any identity", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/paymentmethods/plaid/token", JSON.stringify({}));
       const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
@@ -61,7 +65,7 @@ describe("Consumers", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);

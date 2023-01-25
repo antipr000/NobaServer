@@ -36,7 +36,7 @@ import { IncludeEventTypes } from "./dto/TransactionEventDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
 import { Transaction } from "./domain/Transaction";
 
-@Roles(Role.User)
+@Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
 @Controller("v2")
 @ApiHeaders(getCommonHeaders())

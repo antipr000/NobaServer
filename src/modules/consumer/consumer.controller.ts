@@ -58,7 +58,7 @@ import { Employee } from "../employee/domain/Employee";
 import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 
-@Roles(Role.User)
+@Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
 @Controller("v1/consumers")
 @ApiTags("Consumer")
