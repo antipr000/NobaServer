@@ -24,7 +24,7 @@ export class MonoTransactionDTO {
   updatedTimestamp: Date;
 }
 
-export class MonoWithdrawlRequestDTO {
+export class MonoWithdrawalRequestDTO {
   @ApiProperty()
   transactionID: string;
 
