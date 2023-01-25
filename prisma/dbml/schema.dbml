@@ -215,6 +215,7 @@ Table Transaction {
   updatedTimestamp DateTime
   transactionEvents TransactionEvent [not null]
   Mono Mono
+  WithdrawalDetails WithdrawalDetails [not null]
 }
 
 Table TransactionEvent {
@@ -295,6 +296,17 @@ Table ExchangeRate {
   bankRate Float [not null]
   nobaRate Float [not null]
   expirationTimestamp DateTime [not null]
+}
+
+Table WithdrawalDetails {
+  id String [pk]
+  bankCode String [not null]
+  accountNumber String [not null]
+  accountType String [not null]
+  documentNumber String [not null]
+  documentType String [not null]
+  transaction Transaction [not null]
+  transactionID String [unique, not null]
 }
 
 Enum IdentityType {
@@ -388,3 +400,5 @@ Ref: Transaction.creditConsumerID > Consumer.id [delete: Cascade]
 Ref: TransactionEvent.transactionID > Transaction.id [delete: Cascade]
 
 Ref: Mono.nobaTransactionID - Transaction.id [delete: Cascade]
+
+Ref: WithdrawalDetails.transactionID > Transaction.id [delete: Cascade]

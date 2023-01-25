@@ -229,14 +229,14 @@ model LimitConfiguration {
 }
 
 model Transaction {
-  id                String             @id @default(uuid())
-  transactionRef    String             @unique()
+  id                String              @id @default(uuid())
+  transactionRef    String              @unique()
   workflowName      String
-  debitConsumer     Consumer?          @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
+  debitConsumer     Consumer?           @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
   debitConsumerID   String?
-  creditConsumer    Consumer?          @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
+  creditConsumer    Consumer?           @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
   creditConsumerID  String?
-  status            String             @default("INITIATED")
+  status            String              @default("INITIATED")
   memo              String?
   sessionKey        String
   debitCurrency     String?
@@ -244,10 +244,11 @@ model Transaction {
   debitAmount       Float?
   creditAmount      Float?
   exchangeRate      Float?
-  createdTimestamp  DateTime?          @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp  DateTime?          @updatedAt // Marking optional so we don't need to set in tests
+  createdTimestamp  DateTime?           @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp  DateTime?           @updatedAt // Marking optional so we don't need to set in tests
   transactionEvents TransactionEvent[]
   Mono              Mono?
+  WithdrawalDetails WithdrawalDetails[]
 }
 
 model TransactionEvent {
@@ -341,6 +342,19 @@ model ExchangeRate {
   expirationTimestamp DateTime
 
   @@index([numeratorCurrency, denominatorCurrency])
+}
+
+model WithdrawalDetails {
+  id             String      @id @default(uuid())
+  bankCode       String
+  accountNumber  String
+  accountType    String
+  documentNumber String
+  documentType   String
+  transaction    Transaction @relation(fields: [transactionID], references: [id], onDelete: Cascade)
+  transactionID  String      @unique()
+
+  @@index([transactionID])
 }
 
 enum IdentityType {
