@@ -58,7 +58,7 @@ export class MonoWorkflowController {
   @Post("/wf/v1/mono/withdrawal")
   @ApiOperation({ summary: "Withdraw money from Noba Mono account into consumer account" })
   @ApiResponse({ status: HttpStatus.OK }) // What should be returned?
-  async withdrawFromNoba(@Body() request: MonoWithdrawalRequestDTO) {
+  async withdrawFromNoba(@Body() request: MonoDebitRequestDTO) {
     const res = await this.monoService.withdrawFromNoba({
       transactionID: request.transactionID,
       transactionRef: request.transactionRef,
