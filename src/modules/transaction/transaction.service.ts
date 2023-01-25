@@ -451,14 +451,7 @@ export class TransactionService {
         break;
     }
 
-    return {
-      quoteAmount: Utils.roundTo2DecimalString(desiredAmount),
-      quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmount),
-      nobaRate: nobaRate.toString(),
-      processingFee: processingFee.toString(),
-      nobaFee: nobaFee.toString(),
-      totalFee: totalFee.toString(),
-    };
+    return res;
   }
 
   async updateTransaction(transactionID: string, transactionDetails: UpdateTransactionDTO): Promise<Transaction> {
