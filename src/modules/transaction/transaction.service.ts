@@ -374,35 +374,28 @@ export class TransactionService {
       });
     }
 
-    //  Ignore for now
+    const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+      amountCurrency,
+      desiredCurrency,
+    );
 
-    // const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-    //   amountCurrency,
-    //   desiredCurrency,
-    // );
+    if (!exchangeRateDTO) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "No exchange rate found for currency pair",
+      });
+    }
 
-    // if (!exchangeRateDTO) {
-    //   throw new ServiceException({
-    //     errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-    //     message: "No exchange rate found for currency pair",
-    //   });
-    // }
-
-    /* TODO: 
+    /* Investigate: 
     - Add global parameters to control processing fees
     - Add global parameters to control noba fees
     - Add consumer check for user promos
     - Add tier based fees
     */
 
-    // TODO: Discuss with team about nobaRate. Hardcoding for now
-    const nobaRate = 0.005;
-    const bankRate = 4650;
-    const nobaSpread = bankRate * nobaRate;
+    const nobaRate = exchangeRateDTO.nobaRate;
 
-    let bankFee = 0;
-    let desiredAmount = 0;
-    let desiredAmountWithBankFees = 0;
+    let res: QuoteResponseDTO;
 
     switch (workflowName) {
       case WorkflowName.WALLET_TRANSFER:
@@ -412,29 +405,48 @@ export class TransactionService {
         });
       case WorkflowName.WALLET_WITHDRAWAL:
         if (desiredCurrency === Currency.COP) {
-          const postExchangeAmount = amount * (bankRate - nobaSpread);
-          desiredAmount = postExchangeAmount;
+          // Noba rate = 5000
+          const nobaFeeUSD = Math.min(amount * this.depositFeePercentage, this.depositFeeAmount);
+          const nobaFeeCOP = nobaFeeUSD * nobaRate;
 
-          const bankFee = 2975;
-          desiredAmountWithBankFees = postExchangeAmount - bankFee;
+          const processingFeeCOP = 2975;
+          const processingFeeUSD = processingFeeCOP / nobaRate;
+
+          // Do fees get calculated postExchange or preExchange?
+          const postExchangeAmount = amount * nobaRate;
+          const postExchangeAmountWithBankFees = postExchangeAmount - nobaFeeCOP - processingFeeCOP;
+
+          res = {
+            nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
+            processingFee: Utils.roundTo2DecimalString(processingFeeUSD),
+            totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + processingFeeUSD),
+            quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
+            quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
+            nobaRate: Utils.roundTo2DecimalString(nobaRate),
+          };
         } else {
-          // Not needed for now
-          //const postBankAmount = amount - 2975;
-          //desiredAmount = postBankAmount / (bankRate + nobaSpread);
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "Non-COP withdrawal not supported",
+          });
         }
 
         break;
       case WorkflowName.WALLET_DEPOSIT:
         if (desiredCurrency === Currency.COP) {
-          // Not needed for now
-          // const postExchangeAmount = amount * (bankRate - nobaSpread);
-          // desiredAmount = 0.95776 * postExchangeAmount - 1071;
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "COP deposit not supported",
+          });
         } else {
-          const bankFee = 0.031535 * amount + 1071;
-          desiredAmount = amount / (bankRate + nobaSpread);
+          // nobaRate = 1/5000
+          const bankFeeCOP = 0.031535 * amount + 1071;
+          const bankFeeUSD = bankFeeCOP * nobaRate;
+          const nobaFeeUSD = Math.min(amount * nobaRate * this.depositFeePercentage, this.depositFeeAmount);
+          const nobaFeeCOP = nobaFeeUSD / nobaRate;
 
           const postBankAmount = amount - bankFee;
-          desiredAmountWithBankFees = postBankAmount / (bankRate + nobaSpread);
+          desiredAmountWithBankFees = postBankAmount / nobaRate;
         }
         break;
     }
@@ -442,9 +454,10 @@ export class TransactionService {
     return {
       quoteAmount: Utils.roundTo2DecimalString(desiredAmount),
       quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmount),
-      exchangeRate: bankRate.toString(),
       nobaRate: nobaRate.toString(),
-      bankFee: bankFee.toString(),
+      processingFee: processingFee.toString(),
+      nobaFee: nobaFee.toString(),
+      totalFee: totalFee.toString(),
     };
   }
 

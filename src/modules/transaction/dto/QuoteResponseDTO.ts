@@ -1,6 +1,14 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export class QuoteResponseDTO {
+  // Return the following:
+  // X Noba Exchange Rate
+  // O Quote Before Fees
+  // O Quote After Fees
+  // O Processing Fee
+  // O Noba Fee
+  // O Total Fee
+
   @ApiProperty()
   quoteAmount: string;
 
@@ -8,11 +16,14 @@ export class QuoteResponseDTO {
   quoteAmountWithFees: string;
 
   @ApiProperty()
-  exchangeRate: string;
-
-  @ApiProperty()
   nobaRate: string;
 
   @ApiProperty()
-  bankFee: string;
+  processingFee: string;
+
+  @ApiProperty()
+  nobaFee: string;
+
+  @ApiProperty()
+  totalFee: string;
 }
