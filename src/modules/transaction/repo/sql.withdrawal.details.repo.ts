@@ -25,7 +25,7 @@ export class SQLWithdrawalDetailsRepo implements IWithdrawalDetailsRepo {
   @Inject()
   private readonly kmsService: KmsService;
 
-  async getWithdrawalDetails(transactionID: string): Promise<WithdrawalDetails> {
+  async getWithdrawalDetailsByTransactionID(transactionID: string): Promise<WithdrawalDetails> {
     try {
       const returnedWithdrawalDetails = await this.prismaService.withdrawalDetails.findUnique({
         where: { transactionID },

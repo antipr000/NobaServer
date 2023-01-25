@@ -310,7 +310,7 @@ export class TransactionService {
   }
 
   async getWithdrawalDetails(transactionID: string): Promise<WithdrawalDetails> {
-    return this.withdrawalDetailsRepo.getWithdrawalDetails(transactionID);
+    return this.withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transactionID);
   }
 
   async addWithdrawalDetails(withdrawalDetails: InputWithdrawalDetails): Promise<WithdrawalDetails> {

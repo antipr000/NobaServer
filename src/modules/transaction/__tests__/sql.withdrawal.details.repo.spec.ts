@@ -105,7 +105,7 @@ describe("SQLWithdrawalDetailsRepo tests", () => {
 
       await withdrawalDetailsRepo.addWithdrawalDetails(inputWithdrawalDetails);
 
-      const withdrawalDetails = await withdrawalDetailsRepo.getWithdrawalDetails(transactionID);
+      const withdrawalDetails = await withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transactionID);
 
       expect(withdrawalDetails.accountNumber).toBe("encrypted-account-number");
       expect(withdrawalDetails.transactionID).toBe(transactionID);
@@ -114,7 +114,7 @@ describe("SQLWithdrawalDetailsRepo tests", () => {
 
     it("should return null if withdrawal details not found", async () => {
       const transactionID = await createFakeTransaction(prismaService);
-      const withdrawalDetails = await withdrawalDetailsRepo.getWithdrawalDetails(transactionID);
+      const withdrawalDetails = await withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transactionID);
 
       expect(withdrawalDetails).toBeNull();
     });
