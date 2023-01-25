@@ -57,7 +57,7 @@ import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mo
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
-import { BubbleService } from "../../../modules/bubble/buuble.service";
+import { BubbleService } from "../../bubble/bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../../../modules/bubble/mocks/mock.bubble.service";
 
 const getRandomEmployer = (): Employer => {
@@ -67,6 +67,8 @@ const getRandomEmployer = (): Employer => {
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
+    leadDays: 1,
+    payrollDays: [30],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };

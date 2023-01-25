@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -12,4 +12,21 @@ export class RegisterEmployerRequestDTO {
 
   @ApiProperty()
   bubbleID: string;
+
+  @ApiPropertyOptional()
+  leadDays?: number;
+
+  @ApiPropertyOptional()
+  payrollDays?: number[];
+}
+
+export class UpdateEmployerRequestDTO {
+  @ApiPropertyOptional()
+  logoURI?: string;
+
+  @ApiPropertyOptional()
+  leadDays?: number;
+
+  @ApiPropertyOptional()
+  payrollDays?: number[];
 }

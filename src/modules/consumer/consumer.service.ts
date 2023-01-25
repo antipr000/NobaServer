@@ -45,7 +45,7 @@ import { EmployeeService } from "../employee/employee.service";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
 import { Employee } from "../employee/domain/Employee";
-import { BubbleService } from "../bubble/buuble.service";
+import { BubbleService } from "../bubble/bubble.service";
 
 @Injectable()
 export class ConsumerService {

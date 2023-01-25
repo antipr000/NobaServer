@@ -8,6 +8,8 @@ export const createTestEmployer = async (prismaService: PrismaService): Promise<
       bubbleID: uuid(),
       logoURI: "https://www.google.com",
       referralID: uuid(),
+      leadDays: 1,
+      payrollDays: [1, 15],
     },
   });
 

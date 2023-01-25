@@ -1,4 +1,4 @@
-export type RegisterEmployerRequest = {
+export type CreateEmployerRequestDTO = {
   name: string;
   logoURI: string;
   referralID: string;
@@ -7,8 +7,9 @@ export type RegisterEmployerRequest = {
   payrollDays?: number[];
 };
 
-export type UpdateNobaEmployerRequest = {
+export type UpdateEmployerRequestDTO = {
   logoURI?: string;
+  referralID?: string;
   leadDays?: number;
   payrollDays?: number[];
 };

@@ -68,6 +68,8 @@ Table Employer {
   logoURI String [not null]
   referralID String [unique, not null]
   bubbleID String [unique, not null]
+  leadDays Int
+  payrollDays Int[] [not null]
   Employee Employee [not null]
 }
 

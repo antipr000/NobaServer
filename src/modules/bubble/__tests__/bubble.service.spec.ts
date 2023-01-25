@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { uuid } from "uuidv4";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { EmployerService } from "../../../modules/employer/employer.service";
@@ -13,7 +13,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import { BubbleService } from "../buuble.service";
+import { BubbleService } from "../bubble.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { BubbleClient } from "../bubble.client";
 import { getMockBubbleClientWithDefaults } from "../mocks/mock.bubble.client";
@@ -25,6 +25,8 @@ const getRandomEmployer = (): Employer => {
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
+    leadDays: 1,
+    payrollDays: [30],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -146,7 +148,84 @@ describe("BubbleServiceTests", () => {
     it("should register an employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
 
-      when(employerService.createEmployer(anyString(), anyString(), anyString(), anyString())).thenResolve(employer);
+      when(employerService.createEmployer(anything())).thenResolve(employer);
+
+      const result = await bubbleService.registerEmployerInNoba({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollDays: employer.payrollDays,
+      });
+
+      expect(result).toEqual(employer.id);
+
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollDays: employer.payrollDays,
+      });
+    });
+
+    it("shouldn't forward 'leadDays' if not set in the request to register an employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+
+      when(employerService.createEmployer(anything())).thenResolve(employer);
+
+      const result = await bubbleService.registerEmployerInNoba({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        payrollDays: employer.payrollDays,
+      });
+
+      expect(result).toEqual(employer.id);
+
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        payrollDays: employer.payrollDays,
+      });
+    });
+
+    it("shouldn't forward 'payrollDays' if not set in the request to register an employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+
+      when(employerService.createEmployer(anything())).thenResolve(employer);
+
+      const result = await bubbleService.registerEmployerInNoba({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+      });
+
+      expect(result).toEqual(employer.id);
+
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+      });
+    });
+
+    it("shouldn't forward both 'leadDays' & 'payrollDays' if they are not set in the request to register an employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+
+      when(employerService.createEmployer(anything())).thenResolve(employer);
 
       const result = await bubbleService.registerEmployerInNoba({
         name: employer.name,
@@ -157,16 +236,13 @@ describe("BubbleServiceTests", () => {
 
       expect(result).toEqual(employer.id);
 
-      const [
-        employerServiceCreateEmployerArgsName,
-        employerServiceCreateEmployerArgsLogoURI,
-        employerServiceCreateEmployerArgsReferralID,
-        employerServiceCreateEmployerArgsBubbleID,
-      ] = capture(employerService.createEmployer).last();
-      expect(employerServiceCreateEmployerArgsName).toEqual(employer.name);
-      expect(employerServiceCreateEmployerArgsBubbleID).toEqual(employer.bubbleID);
-      expect(employerServiceCreateEmployerArgsLogoURI).toEqual(employer.logoURI);
-      expect(employerServiceCreateEmployerArgsReferralID).toEqual(employer.referralID);
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+      });
     });
   });
 
@@ -188,6 +264,70 @@ describe("BubbleServiceTests", () => {
       ] = capture(bubbleClient.updateEmployeeAllocationAmount).last();
       expect(bubbleClientUpdateEmployeeAllocationAmountArgsEmployeeID).toEqual(employee.id);
       expect(bubbleClientUpdateEmployeeAllocationAmountArgsNewAllocationAmount).toEqual(newAllocationAmount);
+    });
+  });
+
+  describe("updateEmployerInNoba", () => {
+    it("should update the 'leadDays' of employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+      const updatedLeadDays = 10;
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+
+      await bubbleService.updateEmployerInNoba(employer.referralID, { leadDays: updatedLeadDays });
+
+      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
+        employerService.updateEmployer,
+      ).last();
+      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
+      expect(propagatedLeadDaysToEmployerService).toEqual({ leadDays: updatedLeadDays });
+    });
+
+    it("should update the 'payrollDays' of employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+      const updatedPayrollDays = [17, 19];
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+
+      await bubbleService.updateEmployerInNoba(employer.referralID, { payrollDays: updatedPayrollDays });
+
+      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
+        employerService.updateEmployer,
+      ).last();
+      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
+      expect(propagatedLeadDaysToEmployerService).toEqual({ payrollDays: updatedPayrollDays });
+    });
+
+    it("should update the 'logoURI' of employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+      const updatedLogoURI = "new-logo-uri";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+
+      await bubbleService.updateEmployerInNoba(employer.referralID, { logoURI: updatedLogoURI });
+
+      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
+        employerService.updateEmployer,
+      ).last();
+      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
+      expect(propagatedLeadDaysToEmployerService).toEqual({ logoURI: updatedLogoURI });
+    });
+
+    it("should throw error if 'referralID' is not linked with an existing Employer", async () => {
+      const invalidReferralID = "invalid-referral-id";
+      when(employerService.getEmployerByReferralID(invalidReferralID)).thenResolve(null);
+
+      try {
+        await bubbleService.updateEmployerInNoba(invalidReferralID, { logoURI: "updatedLogoURI" });
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
+        expect(err.message).toEqual(expect.stringContaining("No employer found"));
+      }
     });
   });
 });
