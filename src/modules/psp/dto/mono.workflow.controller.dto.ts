@@ -36,24 +36,4 @@ export class MonoDebitRequestDTO {
 
   @ApiProperty()
   currency: string;
-
-  // Eventually save bank account info in consumer
-  @ApiProperty()
-  bankCode: string;
-
-  @ApiProperty()
-  accountNumber: string;
-
-  @ApiProperty()
-  accountType: string;
-
-  // Eventually save bank document info in consumer
-  @ApiProperty()
-  documentNumber: string;
-
-  @ApiProperty()
-  documentType: string;
-
-  @ApiProperty()
-  consumerID: string;
 }

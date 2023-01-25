@@ -14,6 +14,7 @@ import { CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { TransactionService } from "../../../modules/transaction/transaction.service";
 
 @Injectable()
 export class MonoService {
@@ -21,6 +22,7 @@ export class MonoService {
     @Inject(MONO_REPO_PROVIDER) private readonly monoRepo: IMonoRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly consumerService: ConsumerService,
+    private readonly transactionService: TransactionService,
     private readonly monoClient: MonoClient,
     private readonly monoWebhookHandlers: MonoWebhookHandlers,
   ) {}
@@ -47,7 +49,7 @@ export class MonoService {
     return await this.monoRepo.getMonoTransactionByCollectionLinkID(collectionLinkID);
   }
 
-  async withdrawFromNoba(request: DebitMonoRequest): Promise<MonoWithdrawal> {
+  async debitFromNoba(request: DebitMonoRequest): Promise<MonoWithdrawal> {
     if (request.currency !== MonoCurrency.COP) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -55,7 +57,25 @@ export class MonoService {
       });
     }
 
-    const consumer: Consumer = await this.consumerService.getConsumer(request.consumerID);
+    const [transaction, withdrawal] = await Promise.all([
+      this.transactionService.getTransactionByTransactionID(request.transactionID),
+      this.transactionService.getWithdrawalDetails(request.transactionID),
+    ]);
+    if (!transaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Transaction not found: ${request.transactionID}`,
+      });
+    }
+    if (!withdrawal) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Withdrawal details not found: ${request.transactionID}`,
+      });
+    }
+
+    // Is the consumer being credited in this transaction?
+    const consumer: Consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
     if (!consumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -68,11 +88,11 @@ export class MonoService {
       transactionRef: request.transactionRef,
       amount: request.amount,
       currency: request.currency,
-      bankCode: request.bankCode,
-      accountNumber: request.accountNumber,
-      accountType: request.accountType,
-      documentNumber: request.documentNumber,
-      documentType: request.documentType,
+      bankCode: withdrawal.bankCode,
+      accountNumber: withdrawal.accountNumber, // decrypt
+      accountType: withdrawal.accountType,
+      documentNumber: withdrawal.documentNumber,
+      documentType: withdrawal.documentType,
       consumerEmail: consumer.props.email,
       consumerName: `${consumer.props.firstName} ${consumer.props.lastName}`,
     });

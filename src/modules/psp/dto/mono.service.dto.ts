@@ -12,15 +12,4 @@ export type DebitMonoRequest = {
   transactionRef: string;
   amount: number;
   currency: string;
-
-  // Eventually save bank account info in consumer
-  bankCode: string;
-  accountNumber: string;
-  accountType: string;
-
-  // Eventually save bank document info in consumer
-  documentNumber: string;
-  documentType: string;
-
-  consumerID: string;
 };
