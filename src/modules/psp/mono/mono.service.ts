@@ -4,7 +4,7 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Logger } from "winston";
 import { MonoCurrency, MonoTransaction, MonoTransactionState, MonoWithdrawal } from "../domain/Mono";
 import { MonoClientCollectionLinkResponse } from "../dto/mono.client.dto";
-import { CreateMonoTransactionRequest, WithdrawMonoRequest } from "../dto/mono.service.dto";
+import { CreateMonoTransactionRequest, DebitMonoRequest } from "../dto/mono.service.dto";
 import { MonoClient } from "./mono.client";
 import { IMonoRepo } from "./repo/mono.repo";
 import { MONO_REPO_PROVIDER } from "./repo/mono.repo.module";
@@ -47,7 +47,7 @@ export class MonoService {
     return await this.monoRepo.getMonoTransactionByCollectionLinkID(collectionLinkID);
   }
 
-  async withdrawFromNoba(request: WithdrawMonoRequest): Promise<MonoWithdrawal> {
+  async withdrawFromNoba(request: DebitMonoRequest): Promise<MonoWithdrawal> {
     if (request.currency !== MonoCurrency.COP) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

@@ -7,8 +7,8 @@ import { Logger } from "winston";
 import {
   MonoClientCollectionLinkRequest,
   MonoClientCollectionLinkResponse,
-  MonoWithdrawalRequest,
-  MonoWithdrawalResponse,
+  MonoTransferRequest,
+  MonoTransferResponse,
 } from "../dto/mono.client.dto";
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
@@ -123,7 +123,7 @@ export class MonoClient {
   }
 
   // Only allow single transfer for now
-  async transfer(request: MonoWithdrawalRequest): Promise<MonoWithdrawalResponse> {
+  async transfer(request: MonoTransferRequest): Promise<MonoTransferResponse> {
     const url = `${this.baseUrl}/${this.apiVersion}/transfers`;
     const headers = {
       ...this.getAuthorizationHeader(),

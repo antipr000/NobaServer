@@ -14,7 +14,7 @@ export type MonoClientCollectionLinkResponse = {
   collectionLinkID: string;
 };
 
-export type MonoWithdrawalRequest = {
+export type MonoTransferRequest = {
   transactionID: string;
   transactionRef: string;
   amount: number;
@@ -28,7 +28,7 @@ export type MonoWithdrawalRequest = {
   accountType: string;
 };
 
-export type MonoWithdrawalResponse = {
+export type MonoTransferResponse = {
   withdrawalID: string;
   state: string;
   declinationReason?: string;

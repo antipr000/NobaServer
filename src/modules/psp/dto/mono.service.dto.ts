@@ -7,7 +7,7 @@ export type CreateMonoTransactionRequest = {
   consumerID: string;
 };
 
-export type WithdrawMonoRequest = {
+export type DebitMonoRequest = {
   transactionID: string;
   transactionRef: string;
   amount: number;
