@@ -12,5 +12,5 @@ export type WorkflowTransactionDTO = {
   debitAmount: number;
   creditAmount: number;
   exchangeRate: string;
-  status: "PENDING" | "SUCCESS" | "FAILED" | "IN_PROGRESS";
+  status: "INITIATED" | "COMPLETED" | "FAILED" | "PROCESSING" | "EXPIRED";
 };

@@ -204,10 +204,10 @@ export class VerificationService {
   public static getIdentityDocumentVerificationUrl({
     xNobaApiKey,
     sessionKey,
+    locale,
     requestPoa,
     requestSelfie,
     requestBack,
-    locale,
     xNobaSignature,
     xNobaTimestamp,
   }: {
@@ -216,6 +216,10 @@ export class VerificationService {
      * Unique verification key for this session
      */
     sessionKey: string;
+    /**
+     * Unique verification key for this session
+     */
+    locale: "en-us" | "es-419";
     /**
      * Request proof of address
      */
@@ -228,10 +232,6 @@ export class VerificationService {
      * Request photo of back of ID
      */
     requestBack: boolean;
-    /**
-     * Unique verification key for this session
-     */
-    locale: "en-us" | "es-419";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -248,10 +248,10 @@ export class VerificationService {
       },
       query: {
         sessionKey: sessionKey,
+        locale: locale,
         requestPOA: requestPoa,
         requestSelfie: requestSelfie,
         requestBack: requestBack,
-        locale: locale,
       },
       errors: {
         400: `Invalid request parameters`,

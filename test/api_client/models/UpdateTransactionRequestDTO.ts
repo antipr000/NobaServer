@@ -5,6 +5,6 @@
 import type { AddTransactionEventDTO } from "./AddTransactionEventDTO";
 
 export type UpdateTransactionRequestDTO = {
-  status?: "PENDING" | "SUCCESS" | "FAILED" | "IN_PROGRESS";
+  status?: "INITIATED" | "COMPLETED" | "FAILED" | "PROCESSING" | "EXPIRED";
   transactionEvent?: AddTransactionEventDTO;
 };

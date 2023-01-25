@@ -4,6 +4,7 @@
 import type { CircleDepositOrWithdrawalRequest } from "../models/CircleDepositOrWithdrawalRequest";
 import type { CircleFundsTransferRequestDTO } from "../models/CircleFundsTransferRequestDTO";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
+import type { SendNotificationRequestDTO } from "../models/SendNotificationRequestDTO";
 import type { UpdateTransactionRequestDTO } from "../models/UpdateTransactionRequestDTO";
 import type { WorkflowTransactionDTO } from "../models/WorkflowTransactionDTO";
 
@@ -66,7 +67,7 @@ export class WorkflowService {
   public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/wf/v1/mono/webhooks",
+      url: "/webhooks/mono",
       headers: {
         "mono-signature": monoSignature,
       },
@@ -209,6 +210,29 @@ export class WorkflowService {
       url: "/wf/v1/circle/wallets/{walletID}/transfer",
       path: {
         walletID: walletId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Send notification from workflow
+   * @returns any
+   * @throws ApiError
+   */
+  public static sendNotification({
+    notificationType,
+    requestBody,
+  }: {
+    notificationType: string;
+    requestBody: SendNotificationRequestDTO;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/wf/v1/notification/{notificationType}",
+      path: {
+        notificationType: notificationType,
       },
       body: requestBody,
       mediaType: "application/json",

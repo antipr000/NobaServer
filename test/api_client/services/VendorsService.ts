@@ -26,7 +26,7 @@ export class VendorsService {
   public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/wf/v1/mono/webhooks",
+      url: "/webhooks/mono",
       headers: {
         "mono-signature": monoSignature,
       },

@@ -11,7 +11,6 @@
  */
 import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
-
 import { ConsumerService } from "./api_client/services/ConsumerService";
 import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
 import {
@@ -28,12 +27,11 @@ import { PlaidTokenDTO } from "./api_client";
 import { ConsumerHandleDTO } from "./api_client/models/ConsumerHandleDTO";
 import { IntegrationTestUtility } from "./TestUtils";
 
-describe.skip("Consumers", () => {
+describe("Consumers", () => {
   jest.setTimeout(20000);
 
   let integrationTestUtils: IntegrationTestUtility;
   let TEST_TIMESTAMP;
-
   beforeAll(async () => {
     integrationTestUtils = await IntegrationTestUtility.setUp(port);
     TEST_TIMESTAMP = new Date().getTime().toString();
