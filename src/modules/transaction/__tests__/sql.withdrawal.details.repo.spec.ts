@@ -7,7 +7,7 @@ import { IWithdrawalDetailsRepo } from "../repo/withdrawal.details.repo";
 import { KmsService } from "../../../modules/common/kms.service";
 import { SQLWithdrawalDetailsRepo } from "../repo/sql.withdrawal.details.repo";
 import { anything, instance, when } from "ts-mockito";
-import { getMockKmsServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
+import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { InputTransaction, WorkflowName } from "../domain/Transaction";
 import { uuid } from "uuidv4";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
@@ -24,7 +24,7 @@ describe("SQLWithdrawalDetailsRepo tests", () => {
   let app: TestingModule;
 
   beforeAll(async () => {
-    kmsService = getMockKmsServiceWithDefaults();
+    kmsService = getMockKMSServiceWithDefaults();
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
     /**
      *
