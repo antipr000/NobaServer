@@ -15,9 +15,14 @@ import { InternalServiceErrorException } from "../../../core/exception/CommonApp
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
+import { KmsService } from "../../../modules/common/kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 @Injectable()
 export class MonoService {
+  @Inject()
+  private readonly kmsService: KmsService;
+
   constructor(
     @Inject(MONO_REPO_PROVIDER) private readonly monoRepo: IMonoRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -74,12 +79,20 @@ export class MonoService {
       });
     }
 
-    // Is the consumer being credited in this transaction?
-    const consumer: Consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+    const [consumer, accountNumber] = await Promise.all([
+      this.consumerService.getConsumer(transaction.creditConsumerID), // Is the consumer being credited in this transaction?
+      this.kmsService.decryptString(withdrawal.accountNumber, KmsKeyType.SSN), // Replace SSN with Account Number KMS config
+    ]);
     if (!consumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "Consumer not found",
+        message: `Consumer not found: ${transaction.creditConsumerID}`,
+      });
+    }
+    if (!accountNumber) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Account number failed decryption: ${accountNumber}`,
       });
     }
 
@@ -89,7 +102,7 @@ export class MonoService {
       amount: request.amount,
       currency: request.currency,
       bankCode: withdrawal.bankCode,
-      accountNumber: withdrawal.accountNumber, // decrypt
+      accountNumber: accountNumber,
       accountType: withdrawal.accountType,
       documentNumber: withdrawal.documentNumber,
       documentType: withdrawal.documentType,
