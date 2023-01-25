@@ -1,11 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  InputTransaction,
-  Transaction,
-  TransactionStatus,
-  UpdateTransaction,
-  WorkflowName,
-} from "./domain/Transaction";
+import { InputTransaction, Transaction, TransactionStatus, UpdateTransaction } from "./domain/Transaction";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { ITransactionRepo } from "./repo/transaction.repo";
@@ -14,7 +8,6 @@ import { Logger } from "winston";
 import { TRANSACTION_REPO_PROVIDER } from "./repo/transaction.repo.module";
 import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
-import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Currency } from "./domain/TransactionTypes";
@@ -23,12 +16,10 @@ import { ExchangeRateService } from "../common/exchangerate.service";
 import { AddTransactionEventDTO, TransactionEventDTO } from "./dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
 import { UpdateTransactionDTO } from "./dto/TransactionDTO";
-import { MonoService } from "../psp/mono/mono.service";
-import { MonoCurrency } from "../psp/domain/Mono";
-import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
 import { TransactionVerification } from "../verification/domain/TransactionVerification";
 import { VerificationService } from "../verification/verification.service";
 import { KYCStatus } from "@prisma/client";
+import { WorkflowFactory } from "./factory/workflow.factory";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -43,10 +34,9 @@ export class TransactionService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
     private readonly consumerService: ConsumerService,
-    private readonly workflowExecutor: WorkflowExecutor,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly verificationService: VerificationService,
-    private readonly monoService: MonoService,
+    private readonly transactionFactory: WorkflowFactory,
   ) {
     this.depositFeeAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeAmount;
     this.depositFeePercentage = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeePercentage;
@@ -86,165 +76,9 @@ export class TransactionService {
         message: "Must have consumer to initiate transaction",
       });
     }
+    const workflowImpl = this.transactionFactory.getWorkflowImplementation(transactionDetails.workflowName);
 
-    switch (transactionDetails.workflowName) {
-      case WorkflowName.WALLET_DEPOSIT:
-        if (transactionDetails.creditConsumerIDOrTag) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditConsumerIDOrTag cannot be set for WALLET_DEPOSIT workflow",
-          });
-        }
-
-        if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount and creditCurrency cannot be set for WALLET_DEPOSIT workflow",
-          });
-        }
-
-        if (transactionDetails.debitAmount <= 0) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount must be greater than 0 for WALLET_DEPOSIT workflow",
-          });
-        }
-
-        // COP limitation is temporary until we support other currencies
-        if (!transactionDetails.debitCurrency || transactionDetails.debitCurrency !== Currency.COP) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitCurrency must be set for WALLET_DEPOSIT workflow and must be COP",
-          });
-        }
-
-        transactionDetails.creditCurrency = Currency.USD;
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
-        delete transactionDetails.creditConsumerIDOrTag;
-
-        const exchangeRateToUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-          transactionDetails.debitCurrency,
-          transactionDetails.creditCurrency,
-        );
-
-        if (!exchangeRateToUSD) {
-          this.logger.error(
-            `Database is not seeded properly. Could not find exchange rate for ${transactionDetails.debitCurrency} - ${Currency.USD}`,
-          );
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.UNKNOWN, // 500 error because even though it's "known", it's not expected
-            message: "Could not find exchange rate",
-          });
-        }
-
-        transactionDetails.creditAmount = exchangeRateToUSD.nobaRate * transactionDetails.debitAmount;
-        transactionDetails.exchangeRate = exchangeRateToUSD.nobaRate;
-        break;
-      case WorkflowName.WALLET_WITHDRAWAL:
-        /* 
-          For a withdrawal, the following are true:
-           1. We set the debitConsumerIDOrTag to the initiating consumer (the consumer who is withdrawing)
-           2. CreditConsumerIDOrTag will never be set
-           3. Debit-side amount must be provided but currency will always be USD
-           4. Credit-side currency must be provided but credit amount will always be calculated
-        */
-        if (transactionDetails.creditConsumerIDOrTag) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditConsumerIDOrTag cannot be set for WALLET_WITHDRAWAL workflow",
-          });
-        }
-
-        if (transactionDetails.creditAmount) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount cannot be set for WALLET_WITHDRAWAL workflow",
-          });
-        }
-
-        if (transactionDetails.debitCurrency) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitCurrency cannot be set for WALLET_WITHDRAWAL workflow",
-          });
-        }
-
-        if (transactionDetails.debitAmount <= 0) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount must be greater than 0 for WALLET_WITHDRAWAL workflow",
-          });
-        }
-
-        if (!transactionDetails.creditCurrency) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditCurrency must be set for WALLET_WITHDRAWAL workflow",
-          });
-        }
-
-        transactionDetails.debitCurrency = Currency.USD;
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
-        delete transactionDetails.creditConsumerIDOrTag;
-
-        const exchangeRateFromUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-          transactionDetails.debitCurrency,
-          transactionDetails.creditCurrency,
-        );
-
-        if (!exchangeRateFromUSD) {
-          this.logger.error(
-            `Database is not seeded properly. Could not find exchange rate for ${Currency.USD} - ${transactionDetails.debitCurrency}`,
-          );
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.UNKNOWN, // 500 error because even though it's "known", it's not expected
-            message: "Could not find exchange rate",
-          });
-        }
-
-        transactionDetails.creditAmount = exchangeRateFromUSD.nobaRate * transactionDetails.debitAmount;
-        transactionDetails.exchangeRate = exchangeRateFromUSD.nobaRate;
-        break;
-      case WorkflowName.WALLET_TRANSFER:
-        if (transactionDetails.debitConsumerIDOrTag) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitConsumerIDOrTag cannot be set for WALLET_TRANSFER workflow",
-          });
-        }
-
-        if (transactionDetails.creditAmount || transactionDetails.creditCurrency) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "creditAmount and creditCurrency cannot be set for WALLET_TRANSFER workflow",
-          });
-        }
-
-        if (transactionDetails.debitAmount <= 0) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitAmount must be greater than 0 for WALLET_TRANSFER workflow",
-          });
-        }
-
-        if (!transactionDetails.debitCurrency) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "debitCurrency must be set for WALLET_TRANSFER workflow",
-          });
-        }
-
-        transactionDetails.debitConsumerIDOrTag = initiatingConsumer; // Debit consumer must always be the current consumer
-        transactionDetails.creditAmount = transactionDetails.debitAmount;
-        transactionDetails.creditCurrency = transactionDetails.debitCurrency;
-        transactionDetails.exchangeRate = 1;
-        break;
-      default:
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid workflow name",
-        });
-    }
+    transactionDetails = await workflowImpl.preprocessTransactionParams(transactionDetails, initiatingConsumer);
 
     const transaction: InputTransaction = {
       creditAmount: transactionDetails.creditAmount,
@@ -303,53 +137,7 @@ export class TransactionService {
       }
     }
 
-    switch (transactionDetails.workflowName) {
-      case WorkflowName.WALLET_TRANSFER:
-        this.workflowExecutor.executeConsumerWalletTransferWorkflow(
-          savedTransaction.debitConsumerID,
-          savedTransaction.creditConsumerID,
-          savedTransaction.debitAmount,
-          savedTransaction.transactionRef,
-        );
-        break;
-      case WorkflowName.WALLET_WITHDRAWAL:
-        if (transaction.creditConsumerID && transaction.debitConsumerID) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "Both credit consumer and debit consumer cannot be set for this type of transaction",
-          });
-        }
-        this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-          savedTransaction.debitConsumerID,
-          savedTransaction.debitAmount,
-          savedTransaction.transactionRef,
-        );
-        break;
-      case WorkflowName.WALLET_DEPOSIT:
-        if (transaction.creditConsumerID && transaction.debitConsumerID) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: "Both credit consumer and debit consumer cannot be set for this type of transaction",
-          });
-        }
-
-        // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
-        await this.monoService.createMonoTransaction({
-          amount: savedTransaction.debitAmount,
-          currency: savedTransaction.debitCurrency as MonoCurrency,
-          consumerID: savedTransaction.debitConsumerID,
-          nobaTransactionID: savedTransaction.id,
-        });
-
-        this.workflowExecutor.executeCreditConsumerWalletWorkflow(savedTransaction.id, savedTransaction.transactionRef);
-        break;
-      default:
-        throw new ServiceException({
-          // Shouldn't get here as validation done above, but good for completeness
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid workflow name",
-        });
-    }
+    await workflowImpl.initiateWorkflow(savedTransaction);
 
     return savedTransaction;
   }

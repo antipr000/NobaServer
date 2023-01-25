@@ -8,6 +8,8 @@ export class Employer {
   logoURI: string;
   referralID: string;
   bubbleID: string;
+  leadDays: number;
+  payrollDays: number[];
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
@@ -17,11 +19,15 @@ export class EmployerCreateRequest {
   logoURI: string;
   referralID: string;
   bubbleID: string;
+  leadDays: number;
+  payrollDays: number[];
 }
 
 export class EmployerUpdateRequest {
   logoURI?: string;
   referralID?: string;
+  leadDays?: number;
+  payrollDays?: number[];
 }
 
 export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) => {
@@ -30,6 +36,8 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     logoURI: Joi.string().required(),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
+    leadDays: Joi.number().required(),
+    payrollDays: Joi.array().items(Joi.number()).required(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -43,6 +51,8 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
   const employerJoiValidationKeys: KeysRequired<EmployerUpdateRequest> = {
     logoURI: Joi.string().optional(),
     referralID: Joi.string().optional(),
+    leadDays: Joi.number().optional(),
+    payrollDays: Joi.array().items(Joi.number()).optional(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -59,6 +69,8 @@ export const validateEmployer = (employer: Employer) => {
     logoURI: Joi.string().required(),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
+    leadDays: Joi.number().required(),
+    payrollDays: Joi.array().items(Joi.number()).required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -77,6 +89,8 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
     logoURI: employer.logoURI,
     referralID: employer.referralID,
     bubbleID: employer.bubbleID,
+    leadDays: employer.leadDays,
+    payrollDays: employer.payrollDays,
     createdTimestamp: employer.createdTimestamp,
     updatedTimestamp: employer.updatedTimestamp,
   };
