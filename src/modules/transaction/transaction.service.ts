@@ -33,21 +33,13 @@ import { ExchangeRateFlags } from "./domain/ExchangeRateFlags";
 
 @Injectable()
 export class TransactionService {
-  private depositFeeAmount: number;
-  private depositFeePercentage: number;
-
   constructor(
     @Inject(TRANSACTION_REPO_PROVIDER) private readonly transactionRepo: ITransactionRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly configService: CustomConfigService,
     private readonly consumerService: ConsumerService,
-    private readonly exchangeRateService: ExchangeRateService,
     private readonly verificationService: VerificationService,
     private readonly transactionFactory: WorkflowFactory,
-  ) {
-    this.depositFeeAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeAmount;
-    this.depositFeePercentage = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeePercentage;
-  }
+  ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
     const transaction: Transaction = await this.transactionRepo.getTransactionByTransactionRef(transactionRef);
@@ -170,7 +162,6 @@ export class TransactionService {
       });
     }
 
-    let res: QuoteResponseDTO;
     const workflowImpl = this.transactionFactory.getWorkflowImplementation(workflowName);
     return workflowImpl.calculateExchangeRate(amount, amountCurrency, desiredCurrency, exchangeRateOptions);
   }
