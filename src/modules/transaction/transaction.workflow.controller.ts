@@ -67,7 +67,7 @@ export class TransactionWorkflowController {
     return this.transactionWorkflowMapper.toWorkflowTransactionDTO(transaction);
   }
 
-  @Post("/debitFromBank")
+  @Post("/debitfrombank")
   @ApiTags("Workflow")
   @ApiOperation({ summary: "Debit money from Noba bank account into consumer account" })
   @ApiResponse({ status: HttpStatus.OK, type: WorkflowTransactionDTO })

@@ -311,14 +311,14 @@ export class TransactionService {
     ]);
     if (!transaction) {
       throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        errorCode: ServiceErrorCode.UNKNOWN,
         message: `Transaction not found: ${request.transactionID}`,
       });
     }
     if (!withdrawal) {
       throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `Withdrawal details not found: ${request.transactionID}`,
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Withdrawal details not found for transactionID: ${request.transactionID}`,
       });
     }
 
@@ -326,7 +326,7 @@ export class TransactionService {
     const debitBankResponse = await bank.debit({
       amount: request.amount,
       currency: request.currency,
-      consumerID: transaction.creditConsumerID, // Is the consumer being credited in this transaction?
+      consumerID: transaction.debitConsumerID,
       transactionID: request.transactionID,
       transactionRef: transaction.transactionRef,
       accountNumber: withdrawal.accountNumber,
