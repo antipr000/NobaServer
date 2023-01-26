@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
 import { WorkflowName } from "../domain/Transaction";
 import { Currency } from "../domain/TransactionTypes";
@@ -16,6 +16,6 @@ export class QuoteRequestDTO {
   @ApiProperty({ enum: WorkflowName })
   workflowName: WorkflowName;
 
-  @ApiProperty({ enum: ExchangeRateFlags })
-  exchangeRateFlags: ExchangeRateFlags[];
+  @ApiPropertyOptional({ enum: ExchangeRateFlags, isArray: true })
+  exchangeRateFlags?: ExchangeRateFlags[];
 }

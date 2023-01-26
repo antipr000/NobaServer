@@ -18,7 +18,6 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/Service
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Currency } from "./domain/TransactionTypes";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
-import { ExchangeRateService } from "../common/exchangerate.service";
 import { AddTransactionEventDTO, TransactionEventDTO } from "./dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
 import { UpdateTransactionDTO } from "./dto/TransactionDTO";
@@ -28,9 +27,6 @@ import { KYCStatus } from "@prisma/client";
 import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
-import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { ExchangeRateFlags } from "./domain/ExchangeRateFlags";
 
 @Injectable()
@@ -144,12 +140,12 @@ export class TransactionService {
     return savedTransaction;
   }
 
-  async calculateExchangeRate(
+  async getTransactionQuote(
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
     workflowName: WorkflowName,
-    exchangeRateOptions: ExchangeRateFlags[],
+    exchangeRateFlags: ExchangeRateFlags[],
   ): Promise<QuoteResponseDTO> {
     if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({
@@ -172,7 +168,7 @@ export class TransactionService {
     - Add tier based fees
     */
     const workflowImpl = this.transactionFactory.getWorkflowImplementation(workflowName);
-    return workflowImpl.calculateExchangeRate(amount, amountCurrency, desiredCurrency, exchangeRateOptions);
+    return workflowImpl.getTransactionQuote(amount, amountCurrency, desiredCurrency, exchangeRateFlags);
   }
 
   async updateTransaction(transactionID: string, transactionDetails: UpdateTransactionDTO): Promise<Transaction> {

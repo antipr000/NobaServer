@@ -12,10 +12,10 @@ export interface IWorkflowImpl {
 
   initiateWorkflow(transaction: Transaction): Promise<void>;
 
-  calculateExchangeRate(
+  getTransactionQuote(
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    exchangeRateFlags: ExchangeRateFlags[],
+    exchangeRateFlags?: ExchangeRateFlags[],
   ): Promise<QuoteResponseDTO>;
 }

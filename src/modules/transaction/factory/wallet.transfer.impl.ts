@@ -61,15 +61,15 @@ export class WalletTransferImpl implements IWorkflowImpl {
     );
   }
 
-  async calculateExchangeRate(
+  async getTransactionQuote(
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    exchangeRateFlags: ExchangeRateFlags[],
+    exchangeRateFlags?: ExchangeRateFlags[],
   ): Promise<QuoteResponseDTO> {
     throw new ServiceException({
       errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-      message: "Wallet transfer not valid workflow for quote",
+      message: "Wallet transfer is not a valid workflow for quote",
     });
   }
 }

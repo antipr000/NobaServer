@@ -110,11 +110,11 @@ export class WalletDepositImpl implements IWorkflowImpl {
     this.workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef);
   }
 
-  async calculateExchangeRate(
+  async getTransactionQuote(
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    exchangeRateFlags: ExchangeRateFlags[],
+    exchangeRateFlags?: ExchangeRateFlags[],
   ): Promise<QuoteResponseDTO> {
     const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
       amountCurrency,
@@ -131,7 +131,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
     const bankRate = exchangeRateDTO.bankRate;
     const nobaRate = exchangeRateDTO.nobaRate;
 
-    const isCollection = exchangeRateFlags.includes(ExchangeRateFlags.IS_COLLECTION);
+    const isCollection = exchangeRateFlags && exchangeRateFlags.includes(ExchangeRateFlags.IS_COLLECTION);
     if (desiredCurrency === Currency.USD) {
       // nobaRate = 1/5000 = 0.0002
       // COP amount Desired: USD
@@ -139,30 +139,54 @@ export class WalletDepositImpl implements IWorkflowImpl {
       // VAT = 119%
       // 3.1535% + 1071 COP NOMINALLY
       if (isCollection) {
-        const bankFeeCOP = (0.0265 * amount + 900) * 1.19;
+        const bankFeeCOP = 1.19 * (0.0265 * amount + 900);
+        // Convert to USD using bank rate
         const bankFeeUSD = bankFeeCOP * bankRate;
 
-        const nobaFeeUSD = Math.min(amount * bankRate * this.depositFeePercentage, this.depositFeeAmount);
-        const nobaFeeCOP = nobaFeeUSD / bankRate;
+        // Round up pesos fee to nearest .05 USD
+        const bankFeeUSDRounded = Utils.roundUpToNearest(bankFeeUSD, 0.05);
+
+        const nobaFeeUSD = this.depositFeeAmount;
 
         const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate);
         const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
-          postExchangeAmount - nobaFeeUSD - bankFeeUSD,
+          postExchangeAmount - nobaFeeUSD - bankFeeUSDRounded,
         );
 
         return {
           nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
-          processingFee: Utils.roundTo2DecimalString(bankFeeUSD),
-          totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + bankFeeUSD),
+          processingFee: Utils.roundTo2DecimalString(bankFeeUSDRounded),
+          totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + bankFeeUSDRounded),
           quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
           quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
-          nobaRate: Utils.roundTo2DecimalString(nobaRate),
+          nobaRate: nobaRate.toString(),
+        };
+      } else {
+        const bankFeeCOP = 0;
+        const bankFeeUSD = bankFeeCOP * bankRate;
+        const bankFeeUSDRounded = Utils.roundUpToNearest(bankFeeUSD, 0.05);
+
+        const nobaFeeUSD = this.depositFeeAmount; // Math.min(amount * bankRate * this.depositFeePercentage, this.depositFeeAmount);
+
+        const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate);
+        const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
+          postExchangeAmount - nobaFeeUSD - bankFeeUSDRounded,
+        );
+
+        return {
+          nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
+          processingFee: Utils.roundTo2DecimalString(bankFeeUSDRounded),
+          totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + bankFeeUSDRounded),
+          quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
+          quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
+          nobaRate: nobaRate.toString(),
         };
       }
+    } else {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "COP deposit not supported",
+      });
     }
-    throw new ServiceException({
-      errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-      message: "COP deposit not supported",
-    });
   }
 }

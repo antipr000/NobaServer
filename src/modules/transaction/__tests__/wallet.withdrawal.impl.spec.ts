@@ -180,7 +180,44 @@ describe("WalletWithdrawalImpl Tests", () => {
       await expect(walletWithdrawalImpl.initiateWorkflow(transaction)).rejects.toThrow(ServiceException);
     });
   });
+
+  describe("getTransactionQuote", () => {
+    it("should get a quote for a collection", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
+      const quote = await walletWithdrawalImpl.getTransactionQuote(50, Currency.USD, Currency.COP);
+      expect(quote).toEqual({
+        nobaFee: "0.00",
+        processingFee: "0.60",
+        totalFee: "0.60",
+        quoteAmount: "200000.00",
+        quoteAmountWithFees: "197600.00",
+        nobaRate: "4000",
+      });
+    });
+
+    it("should throw a ServiceException if exchange rate is undefined", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(null);
+      expect(async () => {
+        await walletWithdrawalImpl.getTransactionQuote(50, Currency.USD, Currency.COP);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw a ServiceException if the desired currency is not COP", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(exchangeRate);
+      expect(async () => {
+        await walletWithdrawalImpl.getTransactionQuote(50, Currency.COP, Currency.USD);
+      }).rejects.toThrow(ServiceException);
+    });
+  });
 });
+
+const exchangeRate = {
+  bankRate: 5000,
+  numeratorCurrency: Currency.USD,
+  denominatorCurrency: Currency.COP,
+  expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hrs
+  nobaRate: 4000,
+};
 
 const getRandomConsumer = (consumerID: string): Consumer => {
   const email = `${v4()}_${new Date().valueOf()}@noba.com`;

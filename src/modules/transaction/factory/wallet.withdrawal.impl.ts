@@ -23,7 +23,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     private readonly exchangeRateService: ExchangeRateService,
     private readonly workflowExecutor: WorkflowExecutor,
   ) {
-    this.withdrawalFeeAmount = 1; // Eventually pull from config service
+    this.withdrawalFeeAmount = 0; // Eventually pull from config service
   }
 
   async preprocessTransactionParams(
@@ -31,12 +31,12 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     initiatingConsumer: string,
   ): Promise<InitiateTransactionDTO> {
     /* 
-          For a withdrawal, the following are true:
-           1. We set the debitConsumerIDOrTag to the initiating consumer (the consumer who is withdrawing)
-           2. CreditConsumerIDOrTag will never be set
-           3. Debit-side amount must be provided but currency will always be USD
-           4. Credit-side currency must be provided but credit amount will always be calculated
-        */
+      For a withdrawal, the following are true:
+        1. We set the debitConsumerIDOrTag to the initiating consumer (the consumer who is withdrawing)
+        2. CreditConsumerIDOrTag will never be set
+        3. Debit-side amount must be provided but currency will always be USD
+        4. Credit-side currency must be provided but credit amount will always be calculated
+    */
     if (transactionDetails.creditConsumerIDOrTag) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -111,11 +111,11 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     );
   }
 
-  async calculateExchangeRate(
+  async getTransactionQuote(
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    exchangeRateFlags: ExchangeRateFlags[],
+    exchangeRateFlags?: ExchangeRateFlags[],
   ): Promise<QuoteResponseDTO> {
     const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
       amountCurrency,
@@ -142,25 +142,27 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
 
       const processingFeeCOP = 2500 * 1.19;
       const processingFeeUSD = Utils.roundTo2DecimalNumber(processingFeeCOP / bankRate); // Ask gal if this could just be 1 USD
+      const processingFeeUSDRounded = Utils.roundUpToNearest(processingFeeUSD, 0.05);
 
       // Do fees get calculated postExchange or preExchange?
       const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate); // COP
       const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
-        (amount - nobaFeeUSD - processingFeeUSD) * nobaRate,
+        (amount - nobaFeeUSD - processingFeeUSDRounded) * nobaRate,
       );
 
       return {
         nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
-        processingFee: Utils.roundTo2DecimalString(processingFeeUSD),
-        totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + processingFeeUSD),
+        processingFee: Utils.roundTo2DecimalString(processingFeeUSDRounded),
+        totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + processingFeeUSDRounded),
         quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
         quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
-        nobaRate: Utils.roundTo2DecimalString(nobaRate),
+        nobaRate: nobaRate.toString(),
       };
+    } else {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Non-COP withdrawal not supported",
+      });
     }
-    throw new ServiceException({
-      errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-      message: "Non-COP withdrawal not supported",
-    });
   }
 }

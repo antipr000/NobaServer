@@ -43,6 +43,10 @@ import { getMockWalletTransferImplWithDefaults } from "../mocks/mock.wallet.tran
 import { IWithdrawalDetailsRepo } from "../repo/withdrawal.details.repo";
 import { getMockWithdrawalDetailsRepoWithDefaults } from "../mocks/mock.withdrawal.repo";
 import { AccountType, DocumentType, InputWithdrawalDetails, WithdrawalDetails } from "../domain/WithdrawalDetails";
+import { WalletWithdrawalImpl } from "../factory/wallet.withdrawal.impl";
+import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
+import { getMockWalletWithdrawalImplWithDefaults } from "../mocks/mock.wallet.withdrawal.impl";
+import { getMockWalletDepositImplWithDefaults } from "../mocks/mock.wallet.deposit.impl";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -55,6 +59,8 @@ describe("TransactionServiceTests", () => {
   let exchangeRateService: ExchangeRateService;
   let workflowFactory: WorkflowFactory;
   let walletTransferImpl: WalletTransferImpl;
+  let walletWithdrawalImpl: WalletWithdrawalImpl;
+  let walletDepositImpl: WalletDepositImpl;
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
 
   beforeEach(async () => {
@@ -64,6 +70,8 @@ describe("TransactionServiceTests", () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     workflowFactory = getMockWorkflowFactoryWithDefaults();
     walletTransferImpl = getMockWalletTransferImplWithDefaults();
+    walletWithdrawalImpl = getMockWalletWithdrawalImplWithDefaults();
+    walletDepositImpl = getMockWalletDepositImplWithDefaults();
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
 
     const appConfigurations = {
@@ -271,105 +279,47 @@ describe("TransactionServiceTests", () => {
     });
   });
 
-  describe("calculateExchangeRate", () => {
+  describe("getTransactionQuote", () => {
     it("should return proper exchange rate calculations for conversion from USD to COP", async () => {
-      when(exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
-        numeratorCurrency: "USD",
-        denominatorCurrency: "COP",
-        bankRate: 5000,
-        nobaRate: 5000,
-      });
-      const quote = await transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP);
-      expect(quote.exchangeRate).toEqual("5000");
-      expect(quote.quoteAmount).toEqual("5000.00");
-      // 5000 - 1.19 * (0.0265 * 5000 + 900) = 3771.325
-      expect(quote.quoteAmountWithFees).toBe("3771.33");
-    });
+      when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_WITHDRAWAL)).thenReturn(
+        instance(walletWithdrawalImpl),
+      );
 
-    it("should return proper exchange rate calculations for conversion from COP to USD", async () => {
-      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
-        numeratorCurrency: "COP",
-        denominatorCurrency: "USD",
-        bankRate: 0.0002,
-        nobaRate: 0.0002,
+      when(walletWithdrawalImpl.getTransactionQuote(1, Currency.USD, Currency.COP, deepEqual([]))).thenResolve({
+        nobaFee: "1.99",
+        processingFee: "1.00",
+        totalFee: "2.99",
+        quoteAmount: "12.50",
+        quoteAmountWithFees: "9.51",
+        nobaRate: "0.00025",
       });
 
-      const quote = await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD);
+      const quote = await transactionService.getTransactionQuote(
+        1,
+        Currency.USD,
+        Currency.COP,
+        WorkflowName.WALLET_WITHDRAWAL,
+        [],
+      );
 
-      expect(quote.exchangeRate).toEqual("0.0002");
-      expect(quote.quoteAmount).toEqual("1.00");
-      // 3771.325 COP = 0.754265 USD
-      expect(quote.quoteAmountWithFees).toBe("0.75");
-    });
-
-    it("should throw ServiceException when base currency is not supported", async () => {
-      expect(
-        async () => await transactionService.calculateExchangeRate(5000, "INR" as any, Currency.USD),
-      ).rejects.toThrow(ServiceException);
-    });
-
-    it("should throw ServiceException when desired currency is not supported", async () => {
-      expect(
-        async () => await transactionService.calculateExchangeRate(5000, Currency.USD, "INR" as any),
-      ).rejects.toThrow(ServiceException);
-    });
-
-    it("should throw ServiceException when exchange rate is not found", async () => {
-      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(null);
-      expect(
-        async () => await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD),
-      ).rejects.toThrow(ServiceException);
-    });
-  });
-
-  describe("calculateExchangeRate", () => {
-    it("should return proper exchange rate calculations for conversion from USD to COP", async () => {
-      when(exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
-        numeratorCurrency: "USD",
-        denominatorCurrency: "COP",
-        bankRate: 5000,
-        nobaRate: 5000,
+      expect(quote).toEqual({
+        nobaFee: "1.99",
+        processingFee: "1.00",
+        totalFee: "2.99",
+        quoteAmount: "12.50",
+        quoteAmountWithFees: "9.51",
+        nobaRate: "0.00025",
       });
-      const quote = await transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP);
-      expect(quote.exchangeRate).toEqual("5000");
-      expect(quote.quoteAmount).toEqual("5000.00");
-      // 5000 - 1.19 * (0.0265 * 5000 + 900) = 3771.325
-      expect(quote.quoteAmountWithFees).toBe("3771.33");
     });
 
-    it("should return proper exchange rate calculations for conversion from COP to USD", async () => {
-      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
-        numeratorCurrency: "COP",
-        denominatorCurrency: "USD",
-        bankRate: 0.0002,
-        nobaRate: 0.0002,
-      });
+    it("should ensure only supported currencies are used", async () => {
+      expect(async () => {
+        await transactionService.getTransactionQuote(1, "XXX" as any, Currency.COP, WorkflowName.WALLET_WITHDRAWAL, []);
+      }).rejects.toThrowError(ServiceException);
 
-      const quote = await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD);
-
-      expect(quote.exchangeRate).toEqual("0.0002");
-      expect(quote.quoteAmount).toEqual("1.00");
-      // 3771.325 COP = 0.754265 USD
-      expect(quote.quoteAmountWithFees).toBe("0.75");
-    });
-
-    it("should throw ServiceException when base currency is not supported", async () => {
-      expect(
-        async () => await transactionService.calculateExchangeRate(5000, "INR" as any, Currency.USD),
-      ).rejects.toThrow(ServiceException);
-    });
-
-    it("should throw ServiceException when desired currency is not supported", async () => {
-      expect(
-        async () => await transactionService.calculateExchangeRate(5000, Currency.USD, "INR" as any),
-      ).rejects.toThrow(ServiceException);
-    });
-
-    it("should throw ServiceException when exchange rate is not found", async () => {
-      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(null);
-      expect(
-        async () => await transactionService.calculateExchangeRate(5000, Currency.COP, Currency.USD),
-      ).rejects.toThrow(ServiceException);
+      expect(async () => {
+        await transactionService.getTransactionQuote(1, Currency.USD, "XXX" as any, WorkflowName.WALLET_WITHDRAWAL, []);
+      }).rejects.toThrowError(ServiceException);
     });
   });
 

@@ -1,5 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import {
+  DEPOSIT_FEE_AMOUNT,
+  DEPOSIT_FEE_PERCENTAGE,
+  NOBA_CONFIG_KEY,
+  NOBA_TRANSACTION_CONFIG_KEY,
+  SERVER_LOG_FILE_PATH,
+} from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
@@ -19,6 +25,7 @@ import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
 import { ServiceException } from "../../../core/exception/ServiceException";
 import { MonoCurrency } from "../../../modules/psp/domain/Mono";
+import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
 
 describe("WalletDepositImpl Tests", () => {
   jest.setTimeout(20000);
@@ -36,6 +43,12 @@ describe("WalletDepositImpl Tests", () => {
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_TRANSACTION_CONFIG_KEY]: {
+          [DEPOSIT_FEE_AMOUNT]: "1",
+          [DEPOSIT_FEE_PERCENTAGE]: ".05",
+        },
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -184,7 +197,63 @@ describe("WalletDepositImpl Tests", () => {
       await expect(walletDepositImpl.initiateWorkflow(transaction)).rejects.toThrow(ServiceException);
     });
   });
+
+  describe("getTransactionQuote", () => {
+    it("should get a quote for a collection", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(exchangeRate);
+
+      const quote = await walletDepositImpl.getTransactionQuote(100000, Currency.COP, Currency.USD, [
+        ExchangeRateFlags.IS_COLLECTION,
+      ]);
+
+      expect(quote).toEqual({
+        nobaFee: "1.00",
+        processingFee: "0.90",
+        totalFee: "10.90",
+        quoteAmount: "25.00",
+        quoteAmountWithFees: "23.10",
+        nobaRate: "0.00025",
+      });
+    });
+
+    it("should get a quote for a non-collection", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(exchangeRate);
+
+      const quote = await walletDepositImpl.getTransactionQuote(100000, Currency.COP, Currency.USD, []);
+
+      expect(quote).toEqual({
+        nobaFee: "1.00",
+        processingFee: "0.00",
+        totalFee: "10.00",
+        quoteAmount: "25.00",
+        quoteAmountWithFees: "24.00",
+        nobaRate: "0.00025",
+      });
+    });
+
+    it("should throw a ServiceException if exchange rate is undefined", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(null);
+      expect(async () => {
+        await walletDepositImpl.getTransactionQuote(100, Currency.COP, Currency.USD);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw a ServiceException if the desired currency is not USD", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
+      expect(async () => {
+        await walletDepositImpl.getTransactionQuote(100, Currency.USD, Currency.COP);
+      }).rejects.toThrow(ServiceException);
+    });
+  });
 });
+
+const exchangeRate = {
+  bankRate: 0.00021,
+  numeratorCurrency: Currency.COP,
+  denominatorCurrency: Currency.USD,
+  expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hrs
+  nobaRate: 0.00025,
+};
 
 const getRandomConsumer = (consumerID: string): Consumer => {
   const email = `${v4()}_${new Date().valueOf()}@noba.com`;
