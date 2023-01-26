@@ -14,6 +14,7 @@ import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper"
 import { VerificationModule } from "../verification/verification.module";
 import { WorkflowFactoryModule } from "./factory/workflow.factory.module";
 import { MonoModule } from "../psp/mono/mono.module";
+import { BankFactoryModule } from "../psp/factory/bank.factory.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { MonoModule } from "../psp/mono/mono.module";
     ConsumerModule,
     CommonModule,
     WorkflowFactoryModule,
+    BankFactoryModule,
     MonoModule,
   ],
   controllers: [TransactionController, TransactionWorkflowController],

@@ -7,9 +7,10 @@ import { MonoRepoModule } from "./repo/mono.repo.module";
 import { MonoWebhookHandlers } from "./mono.webhook";
 import { MonoWorkflowController } from "./mono.workflow.controller";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
+import { CommonModule } from "src/modules/common/common.module";
 
 @Module({
-  imports: [InfraProvidersModule, MonoRepoModule, ConsumerModule],
+  imports: [InfraProvidersModule, MonoRepoModule, ConsumerModule, CommonModule],
   controllers: [MonoWorkflowController],
   providers: [MonoClient, MonoService, MonoWebhookHandlers, MonoWorkflowControllerMappers],
   exports: [MonoService],
