@@ -20,6 +20,8 @@ import { getMockConsumerServiceWithDefaults } from "../../../../modules/consumer
 import { MonoWebhookHandlers } from "../mono.webhook";
 import { getMockMonoWebhookHandlersWithDefaults } from "../mocks/mock.mono.webhook";
 import { CollectionIntentCreditedEvent } from "../../dto/mono.webhook.dto";
+import { getMockKMSServiceWithDefaults } from "../../../../modules/common/mocks/mock.kms.service";
+import { KmsService } from "../../../../modules/common/kms.service";
 
 const getRandomMonoTransaction = (): MonoTransaction => {
   return {
@@ -41,6 +43,7 @@ describe("MonoServiceTests", () => {
   let monoClient: MonoClient;
   let monoService: MonoService;
   let monoWebhookHandlers: MonoWebhookHandlers;
+  let kmsService: KmsService;
   let consumerService: ConsumerService;
   let app: TestingModule;
 
@@ -48,6 +51,7 @@ describe("MonoServiceTests", () => {
     monoRepo = getMockMonoRepoWithDefaults();
     monoClient = getMockMonoClientWithDefaults();
     monoWebhookHandlers = getMockMonoWebhookHandlersWithDefaults();
+    kmsService = getMockKMSServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
 
     const appConfigurations = {
@@ -73,6 +77,10 @@ describe("MonoServiceTests", () => {
         {
           provide: MonoWebhookHandlers,
           useFactory: () => instance(monoWebhookHandlers),
+        },
+        {
+          provide: KmsService,
+          useFactory: () => instance(kmsService),
         },
         MonoService,
       ],
